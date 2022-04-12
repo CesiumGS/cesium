@@ -6,6 +6,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import CesiumMath from "../Core/Math.js";
@@ -160,7 +161,7 @@ function UniformState() {
 
   this._invertClassificationColor = undefined;
 
-  this._imagerySplitPosition = 0.0;
+  this._splitPosition = 0.0;
   this._pixelSizePerMeter = undefined;
   this._geometricToleranceOverMeter = undefined;
 
@@ -190,8 +191,8 @@ Object.defineProperties(UniformState.prototype, {
       if (!BoundingRectangle.equals(viewport, this._viewport)) {
         BoundingRectangle.clone(viewport, this._viewport);
 
-        var v = this._viewport;
-        var vc = this._viewportCartesian4;
+        const v = this._viewport;
+        const vc = this._viewportCartesian4;
         vc.x = v.x;
         vc.y = v.y;
         vc.z = v.width;
@@ -279,7 +280,7 @@ Object.defineProperties(UniformState.prototype, {
    */
   inverseTransposeModel: {
     get: function () {
-      var m = this._inverseTransposeModel;
+      const m = this._inverseTransposeModel;
       if (this._inverseTransposeModelDirty) {
         this._inverseTransposeModelDirty = false;
 
@@ -964,12 +965,29 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
+   * @deprecated Use splitPosition instead.
    * @memberof UniformState.prototype
    * @type {Number}
    */
   imagerySplitPosition: {
     get: function () {
-      return this._imagerySplitPosition;
+      deprecationWarning(
+        "UniformState.imagerySplitPosition",
+        "czm_imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use czm_splitPosition instead."
+      );
+      return this._splitPosition;
+    },
+  },
+
+  /**
+   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
+   * @memberof UniformState.prototype
+   * @type {Number}
+   */
+  splitPosition: {
+    get: function () {
+      return this._splitPosition;
     },
   },
 
@@ -1073,7 +1091,7 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
 
-  var positionCartographic = camera.positionCartographic;
+  const positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
     uniformState._eyeHeight = -uniformState._ellipsoid.maximumRadius;
   } else {
@@ -1083,8 +1101,8 @@ function setCamera(uniformState, camera) {
   uniformState._encodedCameraPositionMCDirty = true;
 }
 
-var transformMatrix = new Matrix3();
-var sunCartographicScratch = new Cartographic();
+let transformMatrix = new Matrix3();
+const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
   if (
     !defined(
@@ -1097,7 +1115,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
     );
   }
 
-  var position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
+  let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
     frameState.time,
     uniformState._sunPositionWC
   );
@@ -1120,9 +1138,9 @@ function setSunAndMoonDirections(uniformState, frameState) {
   Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
   Cartesian3.normalize(position, position);
 
-  var projection = frameState.mapProjection;
-  var ellipsoid = projection.ellipsoid;
-  var sunCartographic = ellipsoid.cartesianToCartographic(
+  const projection = frameState.mapProjection;
+  const ellipsoid = projection.ellipsoid;
+  const sunCartographic = ellipsoid.cartesianToCartographic(
     uniformState._sunPositionWC,
     sunCartographicScratch
   );
@@ -1186,8 +1204,8 @@ UniformState.prototype.updatePass = function (pass) {
   this._pass = pass;
 };
 
-var EMPTY_ARRAY = [];
-var defaultLight = new SunLight();
+const EMPTY_ARRAY = [];
+const defaultLight = new SunLight();
 
 /**
  * Synchronizes frame state with the uniform state.  This is called
@@ -1202,7 +1220,7 @@ UniformState.prototype.update = function (frameState) {
   this._ellipsoid = frameState.mapProjection.ellipsoid;
   this._pixelRatio = frameState.pixelRatio;
 
-  var camera = frameState.camera;
+  const camera = frameState.camera;
   this.updateCamera(camera);
 
   if (frameState.mode === SceneMode.SCENE2D) {
@@ -1217,7 +1235,7 @@ UniformState.prototype.update = function (frameState) {
 
   setSunAndMoonDirections(this, frameState);
 
-  var light = defaultValue(frameState.light, defaultLight);
+  const light = defaultValue(frameState.light, defaultLight);
   if (light instanceof SunLight) {
     this._lightDirectionWC = Cartesian3.clone(
       this._sunDirectionWC,
@@ -1239,8 +1257,8 @@ UniformState.prototype.update = function (frameState) {
     );
   }
 
-  var lightColor = light.color;
-  var lightColorHdr = Cartesian3.fromElements(
+  const lightColor = light.color;
+  let lightColorHdr = Cartesian3.fromElements(
     lightColor.red,
     lightColor.green,
     lightColor.blue,
@@ -1251,7 +1269,7 @@ UniformState.prototype.update = function (frameState) {
     light.intensity,
     lightColorHdr
   );
-  var maximumComponent = Cartesian3.maximumComponent(lightColorHdr);
+  const maximumComponent = Cartesian3.maximumComponent(lightColorHdr);
   if (maximumComponent > 1.0) {
     Cartesian3.divideByScalar(
       lightColorHdr,
@@ -1262,8 +1280,8 @@ UniformState.prototype.update = function (frameState) {
     Cartesian3.clone(lightColorHdr, this._lightColor);
   }
 
-  var brdfLutGenerator = frameState.brdfLutGenerator;
-  var brdfLut = defined(brdfLutGenerator)
+  const brdfLutGenerator = frameState.brdfLutGenerator;
+  const brdfLut = defined(brdfLutGenerator)
     ? brdfLutGenerator.colorTexture
     : undefined;
   this._brdfLut = brdfLut;
@@ -1300,12 +1318,12 @@ UniformState.prototype.update = function (frameState) {
     this._temeToPseudoFixed
   );
 
-  // Convert the relative imagerySplitPosition to absolute pixel coordinates
-  this._imagerySplitPosition =
-    frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
-  var fov = camera.frustum.fov;
-  var viewport = this._viewport;
-  var pixelSizePerMeter;
+  // Convert the relative splitPosition to absolute pixel coordinates
+  this._splitPosition =
+    frameState.splitPosition * frameState.context.drawingBufferWidth;
+  const fov = camera.frustum.fov;
+  const viewport = this._viewport;
+  let pixelSizePerMeter;
   if (defined(fov)) {
     if (viewport.height > viewport.width) {
       pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.height;
@@ -1330,7 +1348,7 @@ UniformState.prototype.update = function (frameState) {
 
 function cleanViewport(uniformState) {
   if (uniformState._viewportDirty) {
-    var v = uniformState._viewport;
+    const v = uniformState._viewport;
     Matrix4.computeOrthographicOffCenter(
       v.x,
       v.x + v.width,
@@ -1449,8 +1467,8 @@ function cleanModelViewRelativeToEye(uniformState) {
   if (uniformState._modelViewRelativeToEyeDirty) {
     uniformState._modelViewRelativeToEyeDirty = false;
 
-    var mv = uniformState.modelView;
-    var mvRte = uniformState._modelViewRelativeToEye;
+    const mv = uniformState.modelView;
+    const mvRte = uniformState._modelViewRelativeToEye;
     mvRte[0] = mv[0];
     mvRte[1] = mv[1];
     mvRte[2] = mv[2];
@@ -1509,7 +1527,7 @@ function cleanNormal(uniformState) {
   if (uniformState._normalDirty) {
     uniformState._normalDirty = false;
 
-    var m = uniformState._normal;
+    const m = uniformState._normal;
     Matrix4.getMatrix3(uniformState.inverseModelView, m);
     Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
@@ -1520,7 +1538,7 @@ function cleanNormal3D(uniformState) {
   if (uniformState._normal3DDirty) {
     uniformState._normal3DDirty = false;
 
-    var m = uniformState._normal3D;
+    const m = uniformState._normal3D;
     Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
     Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
@@ -1555,7 +1573,7 @@ function cleanInverseNormal3D(uniformState) {
   }
 }
 
-var cameraPositionMC = new Cartesian3();
+const cameraPositionMC = new Cartesian3();
 
 function cleanEncodedCameraPositionMC(uniformState) {
   if (uniformState._encodedCameraPositionMCDirty) {
@@ -1573,13 +1591,13 @@ function cleanEncodedCameraPositionMC(uniformState) {
   }
 }
 
-var view2Dto3DPScratch = new Cartesian3();
-var view2Dto3DRScratch = new Cartesian3();
-var view2Dto3DUScratch = new Cartesian3();
-var view2Dto3DDScratch = new Cartesian3();
-var view2Dto3DCartographicScratch = new Cartographic();
-var view2Dto3DCartesian3Scratch = new Cartesian3();
-var view2Dto3DMatrix4Scratch = new Matrix4();
+const view2Dto3DPScratch = new Cartesian3();
+const view2Dto3DRScratch = new Cartesian3();
+const view2Dto3DUScratch = new Cartesian3();
+const view2Dto3DDScratch = new Cartesian3();
+const view2Dto3DCartographicScratch = new Cartographic();
+const view2Dto3DCartesian3Scratch = new Cartesian3();
+const view2Dto3DMatrix4Scratch = new Matrix4();
 
 function view2Dto3D(
   position2D,
@@ -1594,22 +1612,22 @@ function view2Dto3D(
   // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
   // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
   // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
-  var p = view2Dto3DPScratch;
+  const p = view2Dto3DPScratch;
   p.x = position2D.y;
   p.y = position2D.z;
   p.z = position2D.x;
 
-  var r = view2Dto3DRScratch;
+  const r = view2Dto3DRScratch;
   r.x = right2D.y;
   r.y = right2D.z;
   r.z = right2D.x;
 
-  var u = view2Dto3DUScratch;
+  const u = view2Dto3DUScratch;
   u.x = up2D.y;
   u.y = up2D.z;
   u.z = up2D.x;
 
-  var d = view2Dto3DDScratch;
+  const d = view2Dto3DDScratch;
   d.x = direction2D.y;
   d.y = direction2D.z;
   d.z = direction2D.x;
@@ -1624,7 +1642,7 @@ function view2Dto3D(
   // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
   // there's not really any corresponding location in the real world.  So clamp the unprojected
   // longitude and latitude to their valid ranges.
-  var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
+  const cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
   cartographic.longitude = CesiumMath.clamp(
     cartographic.longitude,
     -Math.PI,
@@ -1635,14 +1653,14 @@ function view2Dto3D(
     -CesiumMath.PI_OVER_TWO,
     CesiumMath.PI_OVER_TWO
   );
-  var ellipsoid = projection.ellipsoid;
-  var position3D = ellipsoid.cartographicToCartesian(
+  const ellipsoid = projection.ellipsoid;
+  const position3D = ellipsoid.cartographicToCartesian(
     cartographic,
     view2Dto3DCartesian3Scratch
   );
 
   // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-  var enuToFixed = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixed = Transforms.eastNorthUpToFixedFrame(
     position3D,
     ellipsoid,
     view2Dto3DMatrix4Scratch

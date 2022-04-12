@@ -111,24 +111,24 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var scene = viewer.scene;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const globe = scene.globe;
 
         scene.screenSpaceCameraController.enableCollisionDetection = false;
 
-        var longitude = -3.82518;
-        var latitude = 53.11728;
-        var height = -500.0;
-        var position = Cesium.Cartesian3.fromDegrees(
+        const longitude = -3.82518;
+        const latitude = 53.11728;
+        const height = -500.0;
+        const position = Cesium.Cartesian3.fromDegrees(
           longitude,
           latitude,
           height
         );
-        var url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
+        const url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           name: url,
           position: position,
           model: {
@@ -150,15 +150,15 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        var originalColor = Cesium.Color.BLACK;
-        var originalNearDistance = 1000.0;
-        var originalFarDistance = 1000000.0;
-        var originalNearAlpha = 0.0;
-        var originalFarAlpha = 1.0;
+        const originalColor = Cesium.Color.BLACK;
+        const originalNearDistance = 1000.0;
+        const originalFarDistance = 1000000.0;
+        const originalNearAlpha = 0.0;
+        const originalFarAlpha = 1.0;
 
-        var color = originalColor;
+        let color = originalColor;
 
-        var viewModel = {
+        const viewModel = {
           enabled: true,
           nearDistance: originalNearDistance,
           farDistance: originalFarDistance,
@@ -167,9 +167,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout.getObservable(viewModel, name).subscribe(update);
           }
@@ -195,22 +195,22 @@
         function update() {
           globe.undergroundColor = viewModel.enabled ? color : undefined;
 
-          var nearDistance = Number(viewModel.nearDistance);
+          let nearDistance = Number(viewModel.nearDistance);
           nearDistance = isNaN(nearDistance)
             ? originalNearDistance
             : nearDistance;
 
-          var farDistance = Number(viewModel.farDistance);
+          let farDistance = Number(viewModel.farDistance);
           farDistance = isNaN(farDistance) ? originalFarDistance : farDistance;
 
           if (nearDistance > farDistance) {
             nearDistance = farDistance;
           }
 
-          var nearAlpha = Number(viewModel.nearAlpha);
+          let nearAlpha = Number(viewModel.nearAlpha);
           nearAlpha = isNaN(nearAlpha) ? 0.0 : nearAlpha;
 
-          var farAlpha = Number(viewModel.farAlpha);
+          let farAlpha = Number(viewModel.farAlpha);
           farAlpha = isNaN(farAlpha) ? 1.0 : farAlpha;
 
           globe.undergroundColorAlphaByDistance.near = nearDistance;

@@ -113,7 +113,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = func
   }
   //>>includeEnd('debug');
 
-  var position = this._intervals.findDataForIntervalContainingDate(time);
+  const position = this._intervals.findDataForIntervalContainingDate(time);
   if (defined(position)) {
     return PositionProperty.convertToReferenceFrame(
       time,

@@ -26,29 +26,29 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/GroundPolylinePrimitive",
   function () {
-    var scene;
-    var context;
+    let scene;
+    let context;
 
-    var ellipsoid;
+    let ellipsoid;
 
-    var depthColor;
-    var polylineColor;
-    var polylineColorAttribute;
+    let depthColor;
+    let polylineColor;
+    let polylineColorAttribute;
 
-    var groundPolylineInstance;
-    var groundPolylinePrimitive;
-    var depthRectanglePrimitive;
+    let groundPolylineInstance;
+    let groundPolylinePrimitive;
+    let depthRectanglePrimitive;
 
-    var positions = Cartesian3.fromDegreesArray([0.01, 0.0, 0.03, 0.0]);
+    const positions = Cartesian3.fromDegreesArray([0.01, 0.0, 0.03, 0.0]);
 
-    var lookPosition = Cartesian3.fromDegrees(0.02, 0.0);
-    var lookPositionOffset = Cartesian3.fromDegrees(0.02, 0.0001);
+    const lookPosition = Cartesian3.fromDegrees(0.02, 0.0);
+    const lookPositionOffset = Cartesian3.fromDegrees(0.02, 0.0001);
 
-    var canvasWidth = 4;
-    var canvasHeight = 4;
+    const canvasWidth = 4;
+    const canvasHeight = 4;
 
     beforeAll(function () {
-      var canvas = createCanvas(canvasWidth, canvasHeight);
+      const canvas = createCanvas(canvasWidth, canvasHeight);
       scene = createScene({
         canvas: canvas,
       });
@@ -74,12 +74,12 @@ describe(
     }
 
     MockGlobePrimitive.prototype.update = function (frameState) {
-      var commandList = frameState.commandList;
-      var startLength = commandList.length;
+      const commandList = frameState.commandList;
+      const startLength = commandList.length;
       this._primitive.update(frameState);
 
-      for (var i = startLength; i < commandList.length; ++i) {
-        var command = commandList[i];
+      for (let i = startLength; i < commandList.length; ++i) {
+        const command = commandList[i];
         command.pass = this.pass;
       }
     };
@@ -101,11 +101,11 @@ describe(
       scene.camera.frustum.near = 0.1;
       scene.camera.frustum.far = 10000000000.0;
 
-      var depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 0.0, 1.0, 1.0)
       );
       depthColor = depthpolylineColorAttribute.value;
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
             ellipsoid: ellipsoid,
@@ -173,7 +173,7 @@ describe(
     });
 
     it("constructs with options", function () {
-      var geometryInstances = [];
+      const geometryInstances = [];
 
       groundPolylinePrimitive = new GroundPolylinePrimitive({
         geometryInstances: geometryInstances,
@@ -212,7 +212,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -229,7 +231,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      });
     });
 
     it("adds afterRender promise to frame state", function () {
@@ -297,7 +301,7 @@ describe(
       );
       groundPolylinePrimitive.show = false;
 
-      var ready = false;
+      let ready = false;
       groundPolylinePrimitive.readyPromise.then(function () {
         ready = true;
       });
@@ -320,7 +324,7 @@ describe(
         asynchronous: false,
       });
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       frameState.passes.render = false;
       frameState.passes.pick = false;
 
@@ -329,9 +333,9 @@ describe(
     });
 
     function coordinateOfPixelColor(rgba, color) {
-      for (var y = 0; y < canvasHeight; y++) {
-        for (var x = 0; x < canvasWidth; x++) {
-          var i = (y * canvasWidth + x) * 4;
+      for (let y = 0; y < canvasHeight; y++) {
+        for (let x = 0; x < canvasWidth; x++) {
+          const i = (y * canvasWidth + x) * 4;
           if (
             color[0] === rgba[i] &&
             color[1] === rgba[i + 1] &&
@@ -357,7 +361,7 @@ describe(
       });
 
       scene.groundPrimitives.add(primitive);
-      var coordinate;
+      let coordinate;
       expect(scene).toRenderAndCall(function (rgba) {
         coordinate = coordinateOfPixelColor(rgba, color);
         expect(coordinate).toBeDefined();
@@ -468,7 +472,7 @@ describe(
         return;
       }
 
-      var instance1 = new GeometryInstance({
+      const instance1 = new GeometryInstance({
         geometry: new GroundPolylineGeometry({
           positions: positions,
           granularity: 0.0,
@@ -484,7 +488,7 @@ describe(
         },
       });
 
-      var instance2 = new GeometryInstance({
+      const instance2 = new GeometryInstance({
         geometry: new GroundPolylineGeometry({
           positions: positions,
           granularity: 0.0,
@@ -529,9 +533,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -552,9 +556,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -576,7 +580,7 @@ describe(
         polylineColor
       );
 
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
       expect(attributes.color).toBeDefined();
@@ -604,8 +608,8 @@ describe(
       scene.groundPrimitives.removeAll();
       scene.groundPrimitives.destroyPrimitives = true;
 
-      var newColor = [255, 255, 255, 255];
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const newColor = [255, 255, 255, 255];
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
       expect(attributes.color).toBeDefined();
@@ -639,7 +643,7 @@ describe(
       scene.groundPrimitives.removeAll();
       scene.groundPrimitives.destroyPrimitives = true;
 
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
       expect(attributes.width).toBeDefined();
@@ -677,7 +681,7 @@ describe(
       scene.groundPrimitives.removeAll();
       scene.groundPrimitives.destroyPrimitives = true;
 
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
       expect(attributes.show).toBeDefined();
@@ -699,10 +703,10 @@ describe(
         return;
       }
 
-      var near = 10.0;
-      var far = 1000.0;
+      const near = 10.0;
+      const far = 1000.0;
 
-      var geometryInstance = new GeometryInstance({
+      const geometryInstance = new GeometryInstance({
         geometry: new GroundPolylineGeometry({
           positions: positions,
           granularity: 0.0,
@@ -730,11 +734,11 @@ describe(
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       scene.renderForSpecs();
 
-      var boundingSphere = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const boundingSphere = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       ).boundingSphere;
-      var center = boundingSphere.center;
-      var radius = boundingSphere.radius;
+      const center = boundingSphere.center;
+      const radius = boundingSphere.radius;
 
       scene.camera.lookAt(
         center,
@@ -782,10 +786,10 @@ describe(
         polylineColor
       );
 
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
-      var attributes2 = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes2 = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
       expect(attributes).toBe(attributes2);
@@ -802,7 +806,7 @@ describe(
         appearance: new PolylineColorAppearance(),
       });
 
-      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
+      const polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
@@ -825,7 +829,7 @@ describe(
       });
 
       scene.morphTo2D(0);
-      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
+      const polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
@@ -848,7 +852,7 @@ describe(
       });
 
       scene.morphToColumbusView(0);
-      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
+      const polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
@@ -896,7 +900,7 @@ describe(
       scene.groundPrimitives.add(depthRectanglePrimitive);
       scene.groundPrimitives.add(groundPolylinePrimitive);
 
-      var polylineColorCoordinate;
+      let polylineColorCoordinate;
       expect(scene).toRenderAndCall(function (rgba) {
         polylineColorCoordinate = coordinateOfPixelColor(rgba, polylineColor);
       });
@@ -972,7 +976,7 @@ describe(
         polylineColor
       );
 
-      var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+      const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
         "polyline on terrain"
       );
 
@@ -999,7 +1003,7 @@ describe(
         scene.renderForSpecs();
         return groundPolylinePrimitive.ready;
       }).then(function () {
-        var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
+        const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
           "polyline on terrain"
         );
         expect(function () {
@@ -1108,8 +1112,8 @@ describe(
 
     it("creating a synchronous primitive throws if initializeTerrainHeights wasn't called", function () {
       // Make it seem like initializeTerrainHeights was never called
-      var initPromise = ApproximateTerrainHeights._initPromise;
-      var terrainHeights = ApproximateTerrainHeights._terrainHeights;
+      const initPromise = ApproximateTerrainHeights._initPromise;
+      const terrainHeights = ApproximateTerrainHeights._terrainHeights;
       ApproximateTerrainHeights._initPromise = undefined;
       ApproximateTerrainHeights._terrainHeights = undefined;
 

@@ -35,7 +35,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml1 = [
+        const czml1 = [
           {
             id: "document",
             name: "CZML Geometries: Rectangle",
@@ -73,7 +73,7 @@
           },
         ];
 
-        var czml2 = [
+        const czml2 = [
           {
             id: "document",
             name: "CZML Geometries: Rectangle",
@@ -111,16 +111,16 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var promise1 = Cesium.CzmlDataSource.load(czml1);
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const promise1 = Cesium.CzmlDataSource.load(czml1);
         viewer.dataSources.add(promise1);
-        var promise2 = Cesium.CzmlDataSource.load(czml2);
+        const promise2 = Cesium.CzmlDataSource.load(czml2);
         viewer.dataSources.add(promise2);
 
         Sandcastle.addToolbarButton("Swap", function () {
-          Cesium.when.all([promise1, promise2]).then(function (results) {
-            var ds1 = results[0];
-            var ds2 = results[1];
+          Promise.all([promise1, promise2]).then(function (results) {
+            const ds1 = results[0];
+            const ds2 = results[1];
             if (viewer.dataSources.indexOf(ds1) === 0) {
               viewer.dataSources.raise(ds1);
             } else {

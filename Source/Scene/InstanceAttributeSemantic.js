@@ -7,7 +7,7 @@ import Check from "../Core/Check.js";
  *
  * @private
  */
-var InstanceAttributeSemantic = {
+const InstanceAttributeSemantic = {
   /**
    * Per-instance translation.
    *
@@ -38,7 +38,7 @@ var InstanceAttributeSemantic = {
    * @type {String}
    * @constant
    */
-  FEATURE_ID: "FEATURE_ID",
+  FEATURE_ID: "_FEATURE_ID",
 };
 
 /**
@@ -53,11 +53,11 @@ InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
   Check.typeOf.string("gltfSemantic", gltfSemantic);
   //>>includeEnd('debug')
 
-  var semantic = gltfSemantic;
+  let semantic = gltfSemantic;
 
   // Strip the set index from the semantic
-  var setIndexRegex = /^(\w+)_\d+$/;
-  var setIndexMatch = setIndexRegex.exec(gltfSemantic);
+  const setIndexRegex = /^(\w+)_\d+$/;
+  const setIndexMatch = setIndexRegex.exec(gltfSemantic);
   if (setIndexMatch !== null) {
     semantic = setIndexMatch[1];
   }

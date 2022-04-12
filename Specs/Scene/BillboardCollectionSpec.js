@@ -5,6 +5,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { createGuid } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { NearFarScalar } from "../../Source/Cesium.js";
@@ -22,27 +23,26 @@ import { VerticalOrigin } from "../../Source/Cesium.js";
 import createGlobe from "../createGlobe.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/BillboardCollection",
   function () {
-    var scene;
-    var context;
-    var camera;
-    var billboards;
+    let scene;
+    let context;
+    let camera;
+    let billboards;
 
-    var greenImage;
-    var blueImage;
-    var whiteImage;
-    var largeBlueImage;
+    let greenImage;
+    let blueImage;
+    let whiteImage;
+    let largeBlueImage;
 
     beforeAll(function () {
       scene = createScene();
       context = scene.context;
       camera = scene.camera;
 
-      return when.join(
+      return Promise.all([
         Resource.fetchImage("./Data/Images/Green2x2.png").then(function (
           result
         ) {
@@ -62,8 +62,8 @@ describe(
           result
         ) {
           largeBlueImage = result;
-        })
-      );
+        }),
+      ]);
     });
 
     afterAll(function () {
@@ -92,7 +92,7 @@ describe(
     });
 
     it("constructs a default billboard", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(b.show).toEqual(true);
       expect(b.position).toEqual(Cartesian3.ZERO);
       expect(b.pixelOffset).toEqual(Cartesian2.ZERO);
@@ -120,13 +120,13 @@ describe(
     });
 
     it("can add and remove before first update.", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       billboards.remove(b);
       scene.renderForSpecs();
     });
 
     it("explicitly constructs a billboard", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         show: false,
         position: new Cartesian3(1.0, 2.0, 3.0),
         pixelOffset: new Cartesian2(1.0, 2.0),
@@ -188,7 +188,7 @@ describe(
     });
 
     it("sets billboard properties", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       b.show = false;
       b.position = new Cartesian3(1.0, 2.0, 3.0);
       b.pixelOffset = new Cartesian2(1.0, 2.0);
@@ -241,36 +241,205 @@ describe(
       expect(b.disableDepthTestDistance).toEqual(10.0);
     });
 
+    it("required properties throw for undefined", function () {
+      const b = billboards.add();
+      b.show = false;
+      b.position = new Cartesian3(1.0, 2.0, 3.0);
+      b.pixelOffset = new Cartesian2(1.0, 2.0);
+      b.eyeOffset = new Cartesian3(1.0, 2.0, 3.0);
+      b.horizontalOrigin = HorizontalOrigin.LEFT;
+      b.verticalOrigin = VerticalOrigin.BOTTOM;
+      b.scale = 2.0;
+      b.color = new Color(1.0, 2.0, 3.0, 4.0);
+      b.rotation = 1.0;
+      b.alignedAxis = Cartesian3.UNIT_Z;
+      b.sizeInMeters = true;
+
+      expect(function () {
+        b.show = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.position = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffset = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.eyeOffset = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.horizontalOrigin = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.verticalOrigin = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scale = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.color = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.rotation = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.alignedAxis = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.sizeInMeters = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("optional properties handle undefined gracefully", function () {
+      const b = billboards.add();
+      b.image = greenImage;
+      b.width = 300.0;
+      b.height = 200.0;
+      b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+      b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+      b.disableDepthTestDistance = 10.0;
+
+      b.image = undefined;
+      b.width = undefined;
+      b.height = undefined;
+      b.scaleByDistance = undefined;
+      b.translucencyByDistance = undefined;
+      b.pixelOffsetScaleByDistance = undefined;
+      b.distanceDisplayCondition = undefined;
+      b.disableDepthTestDistance = undefined;
+
+      expect(b.image).not.toBeDefined();
+      expect(b.width).not.toBeDefined();
+      expect(b.height).not.toBeDefined();
+      expect(b.scaleByDistance).not.toBeDefined();
+      expect(b.translucencyByDistance).not.toBeDefined();
+      expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
+      expect(b.distanceDisplayCondition).not.toBeDefined();
+      expect(b.disableDepthTestDistance).not.toBeDefined();
+    });
+
+    it("properties throw for incorrect types", function () {
+      const b = billboards.add();
+      b.show = false;
+      b.position = new Cartesian3(1.0, 2.0, 3.0);
+      b.pixelOffset = new Cartesian2(1.0, 2.0);
+      b.eyeOffset = new Cartesian3(1.0, 2.0, 3.0);
+      b.horizontalOrigin = HorizontalOrigin.LEFT;
+      b.verticalOrigin = VerticalOrigin.BOTTOM;
+      b.scale = 2.0;
+      b.color = new Color(1.0, 2.0, 3.0, 4.0);
+      b.rotation = 1.0;
+      b.alignedAxis = Cartesian3.UNIT_Z;
+      b.width = 300.0;
+      b.height = 200.0;
+      b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+      b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.sizeInMeters = true;
+      b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+      b.disableDepthTestDistance = 10.0;
+
+      expect(function () {
+        b.show = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.position = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffset = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.eyeOffset = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.horizontalOrigin = "left";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.verticalOrigin = "bottom";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scale = "scale";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.color = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.rotation = "rotation";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.alignedAxis = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.width = "100px";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.height = "300px";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scaleByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.translucencyByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffsetScaleByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.sizeInMeters = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.distanceDisplayCondition = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.disableDepthTestDistance = "far";
+      }).toThrowDeveloperError();
+    });
+
+    it("image property setter creates image with GUID for non-uris", function () {
+      const b = billboards.add();
+      b.image = 42;
+      expect(b.image).not.toBe(42);
+      const guidLength = 36; // 32 hex digits + 4 dashes
+      expect(b._imageId.length).toBe(guidLength);
+    });
+
     it("is not destroyed", function () {
       expect(billboards.isDestroyed()).toEqual(false);
     });
 
     it("renders billboard in multiple passes", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
       camera.position = new Cartesian3(2.0, 0.0, 0.0);
+      scene.renderForSpecs();
 
-      var frameState = scene.frameState;
-      frameState.commandList.length = 0;
-      billboards.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
-      billboards.update(frameState);
-      expect(frameState.commandList.length).toEqual(2);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        const frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
 
-      frameState.commandList.length = 0;
-      billboards.blendOption = BlendOption.OPAQUE;
-      billboards.update(frameState);
-      expect(frameState.commandList.length).toEqual(1);
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.OPAQUE;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
 
-      frameState.commandList.length = 0;
-      billboards.blendOption = BlendOption.TRANSLUCENT;
-      billboards.update(frameState);
-      expect(frameState.commandList.length).toEqual(1);
+        frameState.commandList.length = 0;
+        billboards.blendOption = BlendOption.TRANSLUCENT;
+        billboards.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+      });
     });
 
     it("renders billboard with sizeInMeters", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
         width: 2.0,
@@ -278,15 +447,21 @@ describe(
         sizeInMeters: true,
       });
 
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(1e6, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(1e6, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("disables billboard scaleByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         scaleByDistance: new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
       });
       b.scaleByDistance = undefined;
@@ -294,7 +469,7 @@ describe(
     });
 
     it("disables billboard translucencyByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         translucencyByDistance: new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
       });
       b.translucencyByDistance = undefined;
@@ -302,7 +477,7 @@ describe(
     });
 
     it("disables billboard pixelOffsetScaleByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         pixelOffsetScaleByDistance: new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
       });
       b.pixelOffsetScaleByDistance = undefined;
@@ -310,74 +485,96 @@ describe(
     });
 
     it("renders billboard with scaleByDistance", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
         image: greenImage,
       });
 
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(4.0, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(4.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("renders billboard with translucencyByDistance", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
         image: greenImage,
       });
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      camera.position = new Cartesian3(4.0, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+        camera.position = new Cartesian3(4.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("renders billboard with pixelOffsetScaleByDistance", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         pixelOffset: new Cartesian2(1.0, 0.0),
         pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0),
         image: greenImage,
       });
 
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(4.0, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(4.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("does not render billboard if show is false", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
         width: 2.0,
         height: 2.0,
         sizeInMeters: true,
       });
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(2.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      billboards.show = false;
-      expect(scene).toRender([0, 0, 0, 255]);
+        billboards.show = false;
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("throws scaleByDistance with nearDistance === farDistance", function () {
-      var b = billboards.add();
-      var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const b = billboards.add();
+      const scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         b.scaleByDistance = scale;
       }).toThrowDeveloperError();
     });
 
     it("throws new billboard with invalid scaleByDistance (nearDistance === farDistance)", function () {
-      var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         billboards.add({
           scaleByDistance: scale,
@@ -386,23 +583,23 @@ describe(
     });
 
     it("throws scaleByDistance with nearDistance > farDistance", function () {
-      var b = billboards.add();
-      var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+      const b = billboards.add();
+      const scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
       expect(function () {
         b.scaleByDistance = scale;
       }).toThrowDeveloperError();
     });
 
     it("throws pixelOffsetScaleByDistance with nearDistance === farDistance", function () {
-      var b = billboards.add();
-      var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const b = billboards.add();
+      const scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         b.pixelOffsetScaleByDistance = scale;
       }).toThrowDeveloperError();
     });
 
     it("throws new billboard with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)", function () {
-      var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         billboards.add({
           pixelOffsetScaleByDistance: scale,
@@ -411,23 +608,23 @@ describe(
     });
 
     it("throws pixelOffsetScaleByDistance with nearDistance > farDistance", function () {
-      var b = billboards.add();
-      var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+      const b = billboards.add();
+      const scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
       expect(function () {
         b.pixelOffsetScaleByDistance = scale;
       }).toThrowDeveloperError();
     });
 
     it("throws translucencyByDistance with nearDistance === farDistance", function () {
-      var b = billboards.add();
-      var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const b = billboards.add();
+      const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         b.translucencyByDistance = translucency;
       }).toThrowDeveloperError();
     });
 
     it("throws new billboard with invalid translucencyByDistance (nearDistance === farDistance)", function () {
-      var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+      const translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
       expect(function () {
         billboards.add({
           translucencyByDistance: translucency,
@@ -436,32 +633,38 @@ describe(
     });
 
     it("throws translucencyByDistance with nearDistance > farDistance", function () {
-      var b = billboards.add();
-      var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+      const b = billboards.add();
+      const translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
       expect(function () {
         b.translucencyByDistance = translucency;
       }).toThrowDeveloperError();
     });
 
     it("renders billboard with distanceDisplayCondition", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
         distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
       });
 
-      camera.position = new Cartesian3(200.0, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+      scene.renderForSpecs();
 
-      camera.position = new Cartesian3(50.0, 0.0, 0.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
 
-      camera.position = new Cartesian3(5.0, 0.0, 0.0);
-      expect(scene).toRender([0, 0, 0, 255]);
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("throws new billboard with invalid distanceDisplayCondition (near >= far)", function () {
-      var dc = new DistanceDisplayCondition(100.0, 10.0);
+      const dc = new DistanceDisplayCondition(100.0, 10.0);
       expect(function () {
         billboards.add({
           distanceDisplayCondition: dc,
@@ -470,27 +673,32 @@ describe(
     });
 
     it("throws distanceDisplayCondition with near >= far", function () {
-      var b = billboards.add();
-      var dc = new DistanceDisplayCondition(100.0, 10.0);
+      const b = billboards.add();
+      const dc = new DistanceDisplayCondition(100.0, 10.0);
       expect(function () {
         b.distanceDisplayCondition = dc;
       }).toThrowDeveloperError();
     });
 
     it("renders with disableDepthTestDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: new Cartesian3(-1.0, 0.0, 0.0),
         image: greenImage,
       });
-      billboards.add({
+      const blue = billboards.add({
         position: Cartesian3.ZERO,
         image: blueImage,
       });
+      scene.renderForSpecs();
 
-      expect(scene).toRender([0, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b.ready && blue.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 0, 255, 255]);
 
-      b.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-      expect(scene).toRender([0, 255, 0, 255]);
+        b.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("throws with new billboard with disableDepthTestDistance less than 0.0", function () {
@@ -502,14 +710,14 @@ describe(
     });
 
     it("throws with disableDepthTestDistance set less than 0.0", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(function () {
         b.disableDepthTestDistance = -1.0;
       }).toThrowDeveloperError();
     });
 
     it("sets a removed billboard property", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       billboards.remove(b);
       b.show = false;
       expect(b.show).toEqual(false);
@@ -520,7 +728,7 @@ describe(
     });
 
     it("adds a billboard", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
 
@@ -529,10 +737,10 @@ describe(
     });
 
     it("removes the first billboard", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
 
@@ -545,10 +753,10 @@ describe(
     });
 
     it("removes the last billboard", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
 
@@ -561,7 +769,7 @@ describe(
     });
 
     it("removes the same billboard twice", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
       expect(billboards.length).toEqual(1);
@@ -584,10 +792,10 @@ describe(
     });
 
     it("adds and removes billboards", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
       expect(billboards.length).toEqual(2);
@@ -595,7 +803,7 @@ describe(
       expect(billboards.get(1)).toEqual(two);
 
       expect(billboards.remove(two)).toEqual(true);
-      var three = billboards.add({
+      const three = billboards.add({
         position: new Cartesian3(7.0, 8.0, 9.0),
       });
       expect(billboards.length).toEqual(2);
@@ -617,13 +825,13 @@ describe(
     });
 
     it("can check if it contains a billboard", function () {
-      var billboard = billboards.add();
+      const billboard = billboards.add();
 
       expect(billboards.contains(billboard)).toEqual(true);
     });
 
     it("returns false when checking if it contains a billboard it does not contain", function () {
-      var billboard = billboards.add();
+      const billboard = billboards.add();
       billboards.remove(billboard);
 
       expect(billboards.contains(billboard)).toEqual(false);
@@ -641,16 +849,16 @@ describe(
     it("sets and gets a texture atlas", function () {
       expect(billboards.textureAtlas).toBeUndefined();
 
-      var atlas = new TextureAtlas({ context: scene.context });
+      const atlas = new TextureAtlas({ context: scene.context });
       billboards.textureAtlas = atlas;
       expect(billboards.textureAtlas).toEqual(atlas);
     });
 
     it("destroys a texture atlas", function () {
-      var b = new BillboardCollection();
+      let b = new BillboardCollection();
       expect(b.destroyTextureAtlas).toEqual(true);
 
-      var atlas = new TextureAtlas({ context: scene.context });
+      const atlas = new TextureAtlas({ context: scene.context });
       b.textureAtlas = atlas;
       b = b.destroy();
 
@@ -658,10 +866,10 @@ describe(
     });
 
     it("does not destroy a texture atlas", function () {
-      var b = new BillboardCollection();
+      let b = new BillboardCollection();
       b.destroyTextureAtlas = false;
 
-      var atlas = new TextureAtlas({ context: scene.context });
+      const atlas = new TextureAtlas({ context: scene.context });
       b.rextureAtlas = atlas;
       b = b.destroy();
 
@@ -673,290 +881,469 @@ describe(
     });
 
     it("modifies and removes a billboard, then renders", function () {
-      var b1 = billboards.add({
+      const b1 = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
-      billboards.add({
+      const b2 = billboards.add({
         position: new Cartesian3(-1.0, 0.0, 0.0),
         image: largeBlueImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      b1.scale = 2.0;
-      billboards.remove(b1);
-      expect(scene).toRender([0, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b1.ready && b2.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        b1.scale = 2.0;
+        billboards.remove(b1);
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
     });
 
     it("renders a green billboard", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("adds and renders a billboard", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      billboards.add({
-        position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-        image: largeBlueImage,
-      });
+      return pollToPromise(function () {
+        return billboard.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
 
-      expect(scene).toRender([0, 0, 255, 255]);
+          const b2 = billboards.add({
+            position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+            image: largeBlueImage,
+          });
+
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return b2.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("removes and renders a billboard", function () {
-      billboards.add({
+      const greenBillboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
-      var blueBillboard = billboards.add({
+      const blueBillboard = billboards.add({
         position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
         image: largeBlueImage,
       });
 
-      expect(scene).toRender([0, 0, 255, 255]);
+      scene.renderForSpecs();
 
-      billboards.remove(blueBillboard);
-      expect(scene).toRender([0, 255, 0, 255]);
+      return pollToPromise(function () {
+        return greenBillboard.ready && blueBillboard.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        billboards.remove(blueBillboard);
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("removes all billboards and renders", function () {
-      billboards.add({
+      const billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      billboards.removeAll();
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return billboard.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        billboards.removeAll();
+        expect(scene).toRender([0, 0, 0, 255]);
+      });
     });
 
     it("removes all billboards, adds a billboard, and renders", function () {
-      billboards.add({
+      let billboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      billboards.removeAll();
-      billboards.add({
-        position: Cartesian3.ZERO,
-        image: largeBlueImage,
-      });
+      return pollToPromise(function () {
+        return billboard.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
 
-      expect(scene).toRender([0, 0, 255, 255]);
+          billboards.removeAll();
+          billboard = billboards.add({
+            position: Cartesian3.ZERO,
+            image: largeBlueImage,
+          });
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return billboard.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("renders with a different texture atlas", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      billboards.textureAtlas = new TextureAtlas({ context: scene.context });
-      b.image = blueImage;
-      expect(scene).toRender([0, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
+
+          billboards.textureAtlas = new TextureAtlas({
+            context: scene.context,
+          });
+          b.image = blueImage;
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("renders using billboard show property", function () {
-      var greenBillboard = billboards.add({
+      const greenBillboard = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
-      var blueBillboard = billboards.add({
+      const blueBillboard = billboards.add({
         show: false,
         position: Cartesian3.ZERO,
         image: largeBlueImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      greenBillboard.show = false;
-      blueBillboard.show = true;
+      return pollToPromise(function () {
+        return greenBillboard.ready && blueBillboard.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      expect(scene).toRender([0, 0, 255, 255]);
+        greenBillboard.show = false;
+        blueBillboard.show = true;
+
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
     });
 
     it("renders using billboard position property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      b.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      b.position = new Cartesian3(1.0, 0.0, 0.0); // Back in front of camera
-      expect(scene).toRender([0, 255, 0, 255]);
+        b.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        b.position = new Cartesian3(1.0, 0.0, 0.0); // Back in front of camera
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard scale property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      b.scale = 0.0;
-      expect(scene).toRender([0, 0, 0, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      b.scale = 2.0;
-      expect(scene).toRender([0, 255, 0, 255]);
+        b.scale = 0.0;
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        b.scale = 2.0;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard image property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      b.image = largeBlueImage;
-      expect(scene).toRender([0, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
+
+          b.image = largeBlueImage;
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("renders using billboard setImage function", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      b.setImage(createGuid(), largeBlueImage);
-      expect(scene).toRender([0, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
+
+          b.setImage(createGuid(), largeBlueImage);
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("renders using billboard setImageSubRegion function", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
 
-      var guid = createGuid();
+      return pollToPromise(function () {
+        return b.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
 
-      billboards.textureAtlas.addImage(guid, largeBlueImage);
-      b.setImageSubRegion(guid, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
-      expect(scene).toRender([0, 0, 255, 255]);
+          const guid = createGuid();
+
+          billboards.textureAtlas.addImage(guid, largeBlueImage);
+          b.setImageSubRegion(guid, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
+          scene.renderForSpecs();
+
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
     });
 
     it("renders using billboard color property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
       });
 
-      expect(scene).toRender([255, 255, 255, 255]);
+      scene.renderForSpecs();
 
-      b.color = new Color(1.0, 0.0, 1.0, 1.0);
-      expect(scene).toRender([255, 0, 255, 255]);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toRender([255, 255, 255, 255]);
 
-      // Update a second time since it goes through a different vertex array update path
-      b.color = new Color(0.0, 1.0, 0.0, 1.0);
-      expect(scene).toRender([0, 255, 0, 255]);
+        b.color = new Color(1.0, 0.0, 1.0, 1.0);
+        expect(scene).toRender([255, 0, 255, 255]);
+
+        // Update a second time since it goes through a different vertex array update path
+        b.color = new Color(0.0, 1.0, 0.0, 1.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard rotation property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.rotation = CesiumMath.PI_OVER_TWO;
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.rotation = CesiumMath.PI_OVER_TWO;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard aligned axis property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.alignedAxis = Cartesian3.UNIT_X;
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.alignedAxis = Cartesian3.UNIT_X;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard custom width property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.width = 300.0;
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.width = 300.0;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders using billboard custom height property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.height = 300.0;
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.height = 300.0;
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("renders bounding volume with debugShowBoundingVolume", function () {
-      billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
         scale: 0.5, // bring bounding volume in view
       });
       billboards.debugShowBoundingVolume = true;
 
-      expect(scene).notToRender([0, 0, 0, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).notToRender([0, 0, 0, 255]);
+      });
     });
 
     it("renders billboards when instancing is disabled", function () {
       // disable extension
-      var instancedArrays = context._instancedArrays;
+      const instancedArrays = context._instancedArrays;
       context._instancedArrays = undefined;
 
       expect(scene).toRender([0, 0, 0, 255]);
 
-      var b1 = billboards.add({
+      const b1 = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
-      expect(scene).toRender([0, 255, 0, 255]);
 
-      var b2 = billboards.add({
-        position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-        image: largeBlueImage,
-      });
-      expect(scene).toRender([0, 0, 255, 255]);
+      scene.renderForSpecs();
 
-      billboards.remove(b2);
-      expect(scene).toRender([0, 255, 0, 255]);
+      let b2;
+      return pollToPromise(function () {
+        return b1.ready;
+      })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
 
-      billboards.remove(b1);
-      expect(scene).toRender([0, 0, 0, 255]);
+          b2 = billboards.add({
+            position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+            image: largeBlueImage,
+          });
+          scene.renderForSpecs();
 
-      context._instancedArrays = instancedArrays;
+          return pollToPromise(function () {
+            return b2.ready;
+          });
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+
+          billboards.remove(b2);
+          expect(scene).toRender([0, 255, 0, 255]);
+
+          billboards.remove(b1);
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          context._instancedArrays = instancedArrays;
+        });
     });
 
     it("updates 10% of billboards", function () {
-      for (var i = 0; i < 10; ++i) {
+      for (let i = 0; i < 10; ++i) {
         billboards.add({
           position: Cartesian3.ZERO,
           image: whiteImage,
@@ -964,18 +1351,24 @@ describe(
         });
       }
 
-      // First render - default billboard color is white.
-      expect(scene).toRender([255, 255, 255, 255]);
+      scene.renderForSpecs();
 
-      billboards.get(3).color = new Color(0.0, 1.0, 0.0, 1.0);
+      return pollToPromise(function () {
+        return billboards.get(3).ready;
+      }).then(function () {
+        // First render - default billboard color is white.
+        expect(scene).toRender([255, 255, 255, 255]);
 
-      // Second render - billboard is green
-      expect(scene).toRender([0, 255, 0, 255]);
+        billboards.get(3).color = new Color(0.0, 1.0, 0.0, 1.0);
 
-      billboards.get(3).color = new Color(1.0, 0.0, 0.0, 1.0);
+        // Second render - billboard is green
+        expect(scene).toRender([0, 255, 0, 255]);
 
-      // Third render - update goes through a different vertex array update path
-      expect(scene).toRender([255, 0, 0, 255]);
+        billboards.get(3).color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        // Third render - update goes through a different vertex array update path
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
     });
 
     it("renders more than 16K billboards", function () {
@@ -983,7 +1376,7 @@ describe(
         return;
       }
 
-      for (var i = 0; i < 16 * 1024; ++i) {
+      for (let i = 0; i < 16 * 1024; ++i) {
         billboards.add({
           position: Cartesian3.ZERO,
           image: whiteImage,
@@ -993,134 +1386,188 @@ describe(
         });
       }
 
-      billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
       });
 
-      expect(scene).toRender([255, 255, 255, 255]);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toRender([255, 255, 255, 255]);
+      });
     });
 
     it("is picked", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
         id: "id",
       });
 
-      expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(b);
-        expect(result.id).toEqual("id");
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toEqual(b);
+          expect(result.id).toEqual("id");
+        });
       });
     });
 
     it("can change pick id", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
         id: "id",
       });
 
-      expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(b);
-        expect(result.id).toEqual("id");
-      });
+      scene.renderForSpecs();
 
-      b.id = "id2";
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toEqual(b);
+          expect(result.id).toEqual("id");
+        });
 
-      expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(b);
-        expect(result.id).toEqual("id2");
+        b.id = "id2";
+
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toEqual(b);
+          expect(result.id).toEqual("id2");
+        });
       });
     });
 
     it("is not picked", function () {
-      billboards.add({
+      const b = billboards.add({
         show: false,
         position: Cartesian3.ZERO,
         image: whiteImage,
       });
 
-      expect(scene).notToPick();
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        expect(scene).notToPick();
+      });
     });
 
     it("picks a billboard using scaleByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
       });
 
-      var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
-      b.scaleByDistance = scaleByDistance;
+      scene.renderForSpecs();
 
-      expect(scene).toPickPrimitive(b);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        const scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
+        b.scaleByDistance = scaleByDistance;
 
-      scaleByDistance.nearValue = 0.0;
-      scaleByDistance.farValue = 0.0;
-      b.scaleByDistance = scaleByDistance;
+        expect(scene).toPickPrimitive(b);
 
-      expect(scene).notToPick();
+        scaleByDistance.nearValue = 0.0;
+        scaleByDistance.farValue = 0.0;
+        b.scaleByDistance = scaleByDistance;
+
+        expect(scene).notToPick();
+      });
     });
 
     it("picks a billboard using translucencyByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: whiteImage,
       });
 
-      var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
-      b.translucencyByDistance = translucency;
+      scene.renderForSpecs();
 
-      expect(scene).toPickPrimitive(b);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        const translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
+        b.translucencyByDistance = translucency;
 
-      translucency.nearValue = 0.0;
-      translucency.farValue = 0.0;
-      b.translucencyByDistance = translucency;
+        expect(scene).toPickPrimitive(b);
 
-      expect(scene).notToPick();
+        translucency.nearValue = 0.0;
+        translucency.farValue = 0.0;
+        b.translucencyByDistance = translucency;
+
+        expect(scene).notToPick();
+      });
     });
 
     it("picks a billboard using pixelOffsetScaleByDistance", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         pixelOffset: new Cartesian2(0.0, 100.0),
         image: whiteImage,
       });
 
-      var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
-      b.pixelOffsetScaleByDistance = pixelOffsetScale;
+      scene.renderForSpecs();
 
-      expect(scene).toPickPrimitive(b);
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        const pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
+        b.pixelOffsetScaleByDistance = pixelOffsetScale;
 
-      pixelOffsetScale.nearValue = 10.0;
-      pixelOffsetScale.farValue = 10.0;
-      b.pixelOffsetScaleByDistance = pixelOffsetScale;
+        expect(scene).toPickPrimitive(b);
 
-      expect(scene).notToPick();
+        pixelOffsetScale.nearValue = 10.0;
+        pixelOffsetScale.farValue = 10.0;
+        b.pixelOffsetScaleByDistance = pixelOffsetScale;
+
+        expect(scene).notToPick();
+      });
     });
 
     it("can pick a billboard using the rotation property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.rotation = CesiumMath.PI_OVER_TWO;
-      expect(scene).toPickPrimitive(b);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.rotation = CesiumMath.PI_OVER_TWO;
+        expect(scene).toPickPrimitive(b);
+      });
     });
 
     it("can pick a billboard using the aligned axis property", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         image: greenImage,
       });
 
-      b.alignedAxis = Cartesian3.UNIT_X;
-      expect(scene).toPickPrimitive(b);
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return b.ready;
+      }).then(function () {
+        b.alignedAxis = Cartesian3.UNIT_X;
+        expect(scene).toPickPrimitive(b);
+      });
     });
 
     it("computes screen space position", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
       });
       scene.renderForSpecs();
@@ -1131,12 +1578,12 @@ describe(
     });
 
     it("stores screen space position in a result", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
       });
-      var result = new Cartesian2();
+      const result = new Cartesian2();
       scene.renderForSpecs();
-      var actual = b.computeScreenSpacePosition(scene, result);
+      const actual = b.computeScreenSpacePosition(scene, result);
       expect(actual).toEqual(result);
       expect(result).toEqualEpsilon(
         new Cartesian2(0.5, 0.5),
@@ -1145,7 +1592,7 @@ describe(
     });
 
     it("computes screen space position with pixelOffset", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         pixelOffset: new Cartesian2(0.5, 0.5),
       });
@@ -1157,7 +1604,7 @@ describe(
     });
 
     it("computes screen space position with eyeOffset", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
         eyeOffset: new Cartesian3(1.0, 1.0, 0.0),
       });
@@ -1169,7 +1616,7 @@ describe(
     });
 
     it("computes screen space position in Columbus view", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.fromDegrees(0.0, 0.0, 10.0),
       });
       scene.morphToColumbusView(0.0);
@@ -1182,7 +1629,7 @@ describe(
     });
 
     it("computes screen space position in 2D", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.fromDegrees(0.0, 0.0, 10.0),
       });
       scene.morphTo2D(0.0);
@@ -1195,7 +1642,7 @@ describe(
     });
 
     it("throws when computing screen space position when not in a collection", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: Cartesian3.ZERO,
       });
       billboards.remove(b);
@@ -1205,7 +1652,7 @@ describe(
     });
 
     it("throws when computing screen space position without scene", function () {
-      var b = billboards.add();
+      const b = billboards.add();
 
       expect(function () {
         b.computeScreenSpacePosition();
@@ -1213,22 +1660,22 @@ describe(
     });
 
     it("computes screen space bounding box", function () {
-      var width = 10;
-      var height = 15;
-      var scale = 1.5;
+      let width = 10;
+      let height = 15;
+      const scale = 1.5;
 
-      var b = billboards.add({
+      const b = billboards.add({
         width: width,
         height: height,
         scale: scale,
       });
 
-      var halfWidth = width * scale * 0.5;
-      var halfHeight = height * scale * 0.5;
+      const halfWidth = width * scale * 0.5;
+      const halfHeight = height * scale * 0.5;
       width = width * scale;
       height = height * scale;
 
-      var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+      const bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
       expect(bbox.x).toEqual(-halfWidth);
       expect(bbox.y).toEqual(-halfHeight);
       expect(bbox.width).toEqual(width);
@@ -1236,23 +1683,23 @@ describe(
     });
 
     it("computes screen space bounding box with result", function () {
-      var width = 10;
-      var height = 15;
-      var scale = 1.5;
+      let width = 10;
+      let height = 15;
+      const scale = 1.5;
 
-      var b = billboards.add({
+      const b = billboards.add({
         width: width,
         height: height,
         scale: scale,
       });
 
-      var halfWidth = width * scale * 0.5;
-      var halfHeight = height * scale * 0.5;
+      const halfWidth = width * scale * 0.5;
+      const halfHeight = height * scale * 0.5;
       width = width * scale;
       height = height * scale;
 
-      var result = new BoundingRectangle();
-      var bbox = Billboard.getScreenSpaceBoundingBox(
+      const result = new BoundingRectangle();
+      const bbox = Billboard.getScreenSpaceBoundingBox(
         b,
         Cartesian2.ZERO,
         result
@@ -1265,22 +1712,22 @@ describe(
     });
 
     it("computes screen space bounding box with vertical origin", function () {
-      var width = 10;
-      var height = 15;
-      var scale = 1.5;
+      let width = 10;
+      let height = 15;
+      const scale = 1.5;
 
-      var b = billboards.add({
+      const b = billboards.add({
         width: width,
         height: height,
         scale: scale,
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
 
-      var halfWidth = width * scale * 0.5;
+      const halfWidth = width * scale * 0.5;
       width = width * scale;
       height = height * scale;
 
-      var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+      let bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
       expect(bbox.x).toEqual(-halfWidth);
       expect(bbox.y).toEqual(-height);
       expect(bbox.width).toEqual(width);
@@ -1295,22 +1742,22 @@ describe(
     });
 
     it("computes screen space bounding box with horizontal origin", function () {
-      var width = 10;
-      var height = 15;
-      var scale = 1.5;
+      let width = 10;
+      let height = 15;
+      const scale = 1.5;
 
-      var b = billboards.add({
+      const b = billboards.add({
         width: width,
         height: height,
         scale: scale,
         horizontalOrigin: HorizontalOrigin.LEFT,
       });
 
-      var halfHeight = height * scale * 0.5;
+      const halfHeight = height * scale * 0.5;
       height = height * scale;
       width = width * scale;
 
-      var bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
+      let bbox = Billboard.getScreenSpaceBoundingBox(b, Cartesian2.ZERO);
       expect(bbox.x).toEqual(0);
       expect(bbox.y).toEqual(-halfHeight);
       expect(bbox.width).toEqual(width);
@@ -1325,7 +1772,7 @@ describe(
     });
 
     it("equals another billboard", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
         color: {
           red: 1.0,
@@ -1334,7 +1781,7 @@ describe(
           alpha: 1.0,
         },
       });
-      var b2 = billboards.add({
+      const b2 = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
         color: {
           red: 1.0,
@@ -1349,10 +1796,10 @@ describe(
     });
 
     it("does not equal another billboard", function () {
-      var b = billboards.add({
+      const b = billboards.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var b2 = billboards.add({
+      const b2 = billboards.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
 
@@ -1362,7 +1809,7 @@ describe(
 
     it("does not equal undefined", function () {
       // This tests the `BillboardCollection.equals` function itself, not simple equality.
-      var billboard = billboards.add();
+      const billboard = billboards.add();
       expect(billboard.equals(undefined)).toEqual(false);
     });
 
@@ -1373,61 +1820,67 @@ describe(
     });
 
     it("setImage throws without an id", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(function () {
         b.setImage(undefined, {});
       }).toThrowDeveloperError();
     });
 
     it("setImage throws without an inmage", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(function () {
         b.setImage("", undefined);
       }).toThrowDeveloperError();
     });
 
     it("setImageSubRegion throws without an id", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(function () {
         b.setImage(undefined, {});
       }).toThrowDeveloperError();
     });
 
     it("setImageSubRegion throws without a sub-region", function () {
-      var b = billboards.add();
+      const b = billboards.add();
       expect(function () {
         b.setImage("", undefined);
       }).toThrowDeveloperError();
     });
 
     it("computes bounding sphere in 3D", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, -50.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, 50.0),
       });
 
       scene.renderForSpecs();
-      var actual = scene.frameState.commandList[0].boundingVolume;
 
-      var positions = [one.position, two.position];
-      var expected = BoundingSphere.fromPoints(positions);
-      expect(actual.center).toEqual(expected.center);
-      expect(actual.radius).toEqual(expected.radius);
+      return pollToPromise(function () {
+        return one.ready && two.ready;
+      }).then(function () {
+        billboards.update(scene.frameState);
+        const actual = scene.frameState.commandList[0].boundingVolume;
+
+        const positions = [one.position, two.position];
+        const expected = BoundingSphere.fromPoints(positions);
+        expect(actual.center).toEqual(expected.center);
+        expect(actual.radius).toEqual(expected.radius);
+      });
     });
 
     it("computes bounding sphere in Columbus view", function () {
-      var projection = scene.mapProjection;
-      var ellipsoid = projection.ellipsoid;
+      const projection = scene.mapProjection;
+      const ellipsoid = projection.ellipsoid;
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, -50.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, 50.0),
       });
@@ -1435,40 +1888,45 @@ describe(
       // Update scene state
       scene.morphToColumbusView(0);
       scene.renderForSpecs();
-      var actual = scene.frameState.commandList[0].boundingVolume;
+      return pollToPromise(function () {
+        return one.ready && two.ready;
+      }).then(function () {
+        billboards.update(scene.frameState);
+        const actual = scene.frameState.commandList[0].boundingVolume;
 
-      var projectedPositions = [
-        projection.project(ellipsoid.cartesianToCartographic(one.position)),
-        projection.project(ellipsoid.cartesianToCartographic(two.position)),
-      ];
-      var expected = BoundingSphere.fromPoints(projectedPositions);
-      expected.center = new Cartesian3(
-        0.0,
-        expected.center.x,
-        expected.center.y
-      );
-      expect(actual.center).toEqualEpsilon(
-        expected.center,
-        CesiumMath.EPSILON8
-      );
-      expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
+        const projectedPositions = [
+          projection.project(ellipsoid.cartesianToCartographic(one.position)),
+          projection.project(ellipsoid.cartesianToCartographic(two.position)),
+        ];
+        const expected = BoundingSphere.fromPoints(projectedPositions);
+        expected.center = new Cartesian3(
+          0.0,
+          expected.center.x,
+          expected.center.y
+        );
+        expect(actual.center).toEqualEpsilon(
+          expected.center,
+          CesiumMath.EPSILON8
+        );
+        expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
+      });
     });
 
     it("computes bounding sphere in 2D", function () {
-      var projection = scene.mapProjection;
-      var ellipsoid = projection.ellipsoid;
+      const projection = scene.mapProjection;
+      const ellipsoid = projection.ellipsoid;
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, -50.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, 50.0),
       });
 
-      var maxRadii = ellipsoid.maximumRadius;
-      var orthoFrustum = new OrthographicOffCenterFrustum();
+      const maxRadii = ellipsoid.maximumRadius;
+      const orthoFrustum = new OrthographicOffCenterFrustum();
       orthoFrustum.right = maxRadii * Math.PI;
       orthoFrustum.left = -orthoFrustum.right;
       orthoFrustum.top = orthoFrustum.right;
@@ -1486,112 +1944,142 @@ describe(
 
       camera.frustum = orthoFrustum;
 
-      scene.renderForSpecs();
-      var actual = scene.frameState.commandList[0].boundingVolume;
+      return pollToPromise(function () {
+        return one.ready && two.ready;
+      }).then(function () {
+        billboards.update(scene.frameState);
+        const actual = scene.frameState.commandList[0].boundingVolume;
 
-      var projectedPositions = [
-        projection.project(ellipsoid.cartesianToCartographic(one.position)),
-        projection.project(ellipsoid.cartesianToCartographic(two.position)),
-      ];
-      var expected = BoundingSphere.fromPoints(projectedPositions);
-      expected.center = new Cartesian3(
-        0.0,
-        expected.center.x,
-        expected.center.y
-      );
-      expect(actual.center).toEqualEpsilon(
-        expected.center,
-        CesiumMath.EPSILON8
-      );
-      expect(actual.radius).toBeGreaterThan(expected.radius);
+        const projectedPositions = [
+          projection.project(ellipsoid.cartesianToCartographic(one.position)),
+          projection.project(ellipsoid.cartesianToCartographic(two.position)),
+        ];
+        const expected = BoundingSphere.fromPoints(projectedPositions);
+        expected.center = new Cartesian3(
+          0.0,
+          expected.center.x,
+          expected.center.y
+        );
+        expect(actual.center).toEqualEpsilon(
+          expected.center,
+          CesiumMath.EPSILON8
+        );
+        expect(actual.radius).toBeGreaterThan(expected.radius);
+      });
     });
 
     it("computes bounding sphere with pixel offset", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, -50.0),
         pixelOffset: new Cartesian2(0.0, 200.0),
       });
-      var two = billboards.add({
+      const two = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, 50.0),
         pixelOffset: new Cartesian2(0.0, 200.0),
       });
 
       scene.renderForSpecs();
-      var actual = scene.frameState.commandList[0].boundingVolume;
 
-      var positions = [one.position, two.position];
-      var bs = BoundingSphere.fromPoints(positions);
+      return pollToPromise(function () {
+        return one.ready && two.ready;
+      }).then(function () {
+        billboards.update(scene.frameState);
+        const actual = scene.frameState.commandList[0].boundingVolume;
 
-      var dimensions = new Cartesian2(1.0, 1.0);
-      var diff = Cartesian3.subtract(
-        actual.center,
-        camera.position,
-        new Cartesian3()
-      );
-      var vectorProjection = Cartesian3.multiplyByScalar(
-        camera.direction,
-        Cartesian3.dot(diff, camera.direction),
-        new Cartesian3()
-      );
-      var distance = Math.max(
-        0.0,
-        Cartesian3.magnitude(vectorProjection) - bs.radius
-      );
+        const positions = [one.position, two.position];
+        const bs = BoundingSphere.fromPoints(positions);
 
-      var pixelSize = camera.frustum.getPixelDimensions(
-        dimensions.x,
-        dimensions.y,
-        distance,
-        scene.pixelRatio,
-        new Cartesian2()
-      );
-      bs.radius +=
-        pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) +
-        pixelSize.y * one.pixelOffset.y;
+        const dimensions = new Cartesian2(1.0, 1.0);
+        const diff = Cartesian3.subtract(
+          actual.center,
+          camera.position,
+          new Cartesian3()
+        );
+        const vectorProjection = Cartesian3.multiplyByScalar(
+          camera.direction,
+          Cartesian3.dot(diff, camera.direction),
+          new Cartesian3()
+        );
+        const distance = Math.max(
+          0.0,
+          Cartesian3.magnitude(vectorProjection) - bs.radius
+        );
 
-      expect(actual.center).toEqual(bs.center);
-      expect(actual.radius).toEqual(bs.radius);
+        const pixelSize = camera.frustum.getPixelDimensions(
+          dimensions.x,
+          dimensions.y,
+          distance,
+          scene.pixelRatio,
+          new Cartesian2()
+        );
+        bs.radius +=
+          pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) +
+          pixelSize.y * one.pixelOffset.y;
+
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius).toEqual(bs.radius);
+      });
     });
 
     it("computes bounding sphere with non-centered origin", function () {
-      billboards.add({
+      let b = billboards.add({
         image: greenImage,
         position: Cartesian3.fromDegrees(-50.0, -50.0),
       });
-      scene.renderForSpecs();
-      var centeredRadius =
-        scene.frameState.commandList[0].boundingVolume.radius;
-      billboards.removeAll();
 
-      billboards.add({
-        image: greenImage,
-        position: Cartesian3.fromDegrees(-50.0, -50.0),
-        verticalOrigin: VerticalOrigin.TOP,
-      });
+      let centeredRadius, verticalRadius;
       scene.renderForSpecs();
-      var verticalRadius =
-        scene.frameState.commandList[0].boundingVolume.radius;
-      billboards.removeAll();
+      return pollToPromise(function () {
+        return b.ready;
+      })
+        .then(function () {
+          billboards.update(scene.frameState);
+          centeredRadius =
+            scene.frameState.commandList[0].boundingVolume.radius;
+          billboards.removeAll();
 
-      billboards.add({
-        image: greenImage,
-        position: Cartesian3.fromDegrees(-50.0, -50.0),
-        horizontalOrigin: HorizontalOrigin.LEFT,
-      });
-      scene.renderForSpecs();
-      var horizontalRadius =
-        scene.frameState.commandList[0].boundingVolume.radius;
+          b = billboards.add({
+            image: greenImage,
+            position: Cartesian3.fromDegrees(-50.0, -50.0),
+            verticalOrigin: VerticalOrigin.TOP,
+          });
 
-      expect(verticalRadius).toEqual(2 * centeredRadius);
-      expect(horizontalRadius).toEqual(2 * centeredRadius);
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          billboards.update(scene.frameState);
+          verticalRadius =
+            scene.frameState.commandList[0].boundingVolume.radius;
+          billboards.removeAll();
+
+          b = billboards.add({
+            image: greenImage,
+            position: Cartesian3.fromDegrees(-50.0, -50.0),
+            horizontalOrigin: HorizontalOrigin.LEFT,
+          });
+
+          return pollToPromise(function () {
+            return b.ready;
+          });
+        })
+        .then(function () {
+          billboards.update(scene.frameState);
+          const horizontalRadius =
+            scene.frameState.commandList[0].boundingVolume.radius;
+
+          expect(verticalRadius).toEqual(2 * centeredRadius);
+          expect(horizontalRadius).toEqual(2 * centeredRadius);
+        });
     });
 
     it("can create a billboard using a URL", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green2x2.png",
       });
 
@@ -1608,7 +2096,7 @@ describe(
     it("sets billboard width and height based on loaded image width and height", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green1x4.png",
       });
 
@@ -1635,7 +2123,7 @@ describe(
     it("does not cancel image load when a billboard is set to the same URL repeatedly", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green.png",
       });
 
@@ -1654,7 +2142,7 @@ describe(
     it("ignores calls to set image equal to the current value after load", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green2x2.png",
       });
 
@@ -1674,7 +2162,7 @@ describe(
     });
 
     it("can create a billboard using a function", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         image: function () {
           return greenImage;
         },
@@ -1682,50 +2170,71 @@ describe(
 
       // the image property will be an autogenerated id if not provided
       expect(one.image).toBeDefined();
-      expect(scene).toRender([0, 255, 0, 255]);
+
+      scene.renderForSpecs();
+
+      return pollToPromise(function () {
+        return one.ready;
+      }).then(function () {
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("can create a billboard using a function and id", function () {
-      var one = billboards.add({
+      const one = billboards.add({
         imageId: "Foo",
         image: function () {
           return greenImage;
         },
       });
 
-      // the image property will be an autogenerated id if not provided
-      expect(one.image).toEqual("Foo");
-      expect(scene).toRender([0, 255, 0, 255]);
+      scene.renderForSpecs();
+      return pollToPromise(function () {
+        return one.ready;
+      }).then(function () {
+        // the image property will be an autogenerated id if not provided
+        expect(one.image).toEqual("Foo");
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("can create a billboard using another billboard image", function () {
-      var createImage = jasmine
+      const createImage = jasmine
         .createSpy("createImage")
         .and.returnValue(greenImage);
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: createImage,
       });
 
+      let two;
       scene.renderForSpecs();
+      return pollToPromise(function () {
+        return one.ready;
+      })
+        .then(function () {
+          expect(createImage.calls.count()).toEqual(1);
 
-      expect(createImage.calls.count()).toEqual(1);
+          two = billboards.add({
+            image: one.image,
+          });
 
-      var two = billboards.add({
-        image: one.image,
-      });
-
-      scene.renderForSpecs();
-
-      expect(two.image).toEqual(one.image);
-      expect(createImage.calls.count()).toEqual(1);
-      expect(scene).toRender([0, 255, 0, 255]);
+          scene.renderForSpecs();
+          return pollToPromise(function () {
+            return one.ready;
+          });
+        })
+        .then(function () {
+          expect(two.image).toEqual(one.image);
+          expect(createImage.calls.count()).toEqual(1);
+          expect(scene).toRender([0, 255, 0, 255]);
+        });
     });
 
     it("can create a billboard using a subregion of an image", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Red16x16.png",
         imageSubRegion: new BoundingRectangle(0.0, 0.0, 2.0, 3.0),
       });
@@ -1742,7 +2251,7 @@ describe(
     it("sets billboard width and height based on subregion width and height", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Red16x16.png",
         imageSubRegion: new BoundingRectangle(0.0, 0.0, 1.0, 2.0),
       });
@@ -1761,7 +2270,7 @@ describe(
     it("can change image while an image is loading", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green.png",
       });
 
@@ -1778,11 +2287,11 @@ describe(
       return pollToPromise(function () {
         return one.ready;
       }).then(function () {
-        var deferred = when.defer();
+        const deferred = defer();
 
         // render and yield control several times to make sure the
         // green image doesn't clobber the blue
-        var iterations = 10;
+        let iterations = 10;
 
         function renderAndCheck() {
           expect(scene).toRender([0, 0, 255, 255]);
@@ -1804,7 +2313,7 @@ describe(
     it("can set image to undefined while an image is loading", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green.png",
       });
 
@@ -1818,11 +2327,11 @@ describe(
       expect(one.ready).toEqual(false);
       expect(one.image).toBeUndefined();
 
-      var deferred = when.defer();
+      const deferred = defer();
 
       // render and yield control several times to make sure the
       // green image never loads
-      var iterations = 10;
+      let iterations = 10;
 
       function renderAndCheck() {
         expect(scene).toRender([0, 0, 0, 255]);
@@ -1843,17 +2352,17 @@ describe(
     it("does not crash when removing a billboard that is loading", function () {
       scene.renderForSpecs();
 
-      var one = billboards.add({
+      const one = billboards.add({
         image: "./Data/Images/Green.png",
       });
 
       billboards.remove(one);
 
-      var deferred = when.defer();
+      const deferred = defer();
 
       // render and yield control several times to make sure the
       // green image doesn't crash when it loads
-      var iterations = 10;
+      let iterations = 10;
 
       function renderAndCheck() {
         expect(scene).toRender([0, 0, 0, 255]);
@@ -1874,12 +2383,12 @@ describe(
     it("can add a billboard without a globe", function () {
       scene.globe = undefined;
 
-      var billboardsWithoutGlobe = new BillboardCollection({
+      const billboardsWithoutGlobe = new BillboardCollection({
         scene: scene,
       });
 
-      var position = Cartesian3.fromDegrees(-73.0, 40.0);
-      var b = billboardsWithoutGlobe.add({
+      const position = Cartesian3.fromDegrees(-73.0, 40.0);
+      const b = billboardsWithoutGlobe.add({
         position: position,
       });
 
@@ -1890,7 +2399,7 @@ describe(
     });
 
     describe("height referenced billboards", function () {
-      var billboardsWithHeight;
+      let billboardsWithHeight;
       beforeEach(function () {
         scene.globe = createGlobe();
         billboardsWithHeight = new BillboardCollection({
@@ -1900,7 +2409,7 @@ describe(
       });
 
       it("explicitly constructs a billboard with height reference", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
         });
 
@@ -1908,7 +2417,7 @@ describe(
       });
 
       it("set billboard height reference property", function () {
-        var b = billboardsWithHeight.add();
+        const b = billboardsWithHeight.add();
         b.heightReference = HeightReference.CLAMP_TO_GROUND;
 
         expect(b.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -1923,7 +2432,7 @@ describe(
       });
 
       it("set height reference property creates a height update callback", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
         b.heightReference = HeightReference.CLAMP_TO_GROUND;
@@ -1931,7 +2440,7 @@ describe(
       });
 
       it("updates the callback when the height reference changes", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
@@ -1948,7 +2457,7 @@ describe(
       });
 
       it("changing the position updates the callback", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
@@ -1960,13 +2469,13 @@ describe(
       });
 
       it("callback updates the position", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
         expect(scene.globe.callback).toBeDefined();
 
-        var cartographic = scene.globe.ellipsoid.cartesianToCartographic(
+        let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
           b._clampedPosition
         );
         expect(cartographic.height).toEqual(0.0);
@@ -1983,7 +2492,7 @@ describe(
       });
 
       it("changing the terrain provider", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
@@ -1991,7 +2500,7 @@ describe(
 
         spyOn(b, "_updateClamping").and.callThrough();
 
-        var terrainProvider = new CesiumTerrainProvider({
+        const terrainProvider = new CesiumTerrainProvider({
           url: "made/up/url",
           requestVertexNormals: true,
         });
@@ -2011,7 +2520,7 @@ describe(
       });
 
       it("changing height reference without a scene throws DeveloperError", function () {
-        var b = billboards.add({
+        const b = billboards.add({
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
 
@@ -2032,7 +2541,7 @@ describe(
       });
 
       it("changing height reference without a globe throws DeveloperError", function () {
-        var b = billboardsWithHeight.add({
+        const b = billboardsWithHeight.add({
           position: Cartesian3.fromDegrees(-72.0, 40.0),
         });
 

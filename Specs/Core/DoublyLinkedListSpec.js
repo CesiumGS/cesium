@@ -2,15 +2,15 @@ import { DoublyLinkedList } from "../../Source/Cesium.js";
 
 describe("Core/DoublyLinkedList", function () {
   it("constructs", function () {
-    var list = new DoublyLinkedList();
+    const list = new DoublyLinkedList();
     expect(list.head).not.toBeDefined();
     expect(list.tail).not.toBeDefined();
     expect(list.length).toEqual(0);
   });
 
   it("adds items", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
 
     //   node
     //  ^     ^
@@ -25,7 +25,7 @@ describe("Core/DoublyLinkedList", function () {
     expect(node.previous).not.toBeDefined();
     expect(node.next).not.toBeDefined();
 
-    var node2 = list.add(2);
+    const node2 = list.add(2);
 
     //  node <-> node2
     //  ^         ^
@@ -42,7 +42,7 @@ describe("Core/DoublyLinkedList", function () {
 
     expect(node.next).toEqual(node2);
 
-    var node3 = list.add(3);
+    const node3 = list.add(3);
 
     //  node <-> node2 <-> node3
     //  ^                    ^
@@ -61,8 +61,8 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("removes from a list with one item", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
 
     list.remove(node);
 
@@ -72,9 +72,9 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("removes head of list", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
 
     list.remove(node);
 
@@ -84,9 +84,9 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("removes tail of list", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
 
     list.remove(node2);
 
@@ -96,10 +96,10 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("removes middle of list", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
 
     list.remove(node2);
 
@@ -109,8 +109,8 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("removes nothing", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
 
     list.remove(undefined);
 
@@ -121,7 +121,7 @@ describe("Core/DoublyLinkedList", function () {
 
   function expectOrder(list, nodes) {
     // Assumes at least one node is in the list
-    var length = nodes.length;
+    const length = nodes.length;
 
     expect(list.length).toEqual(length);
 
@@ -130,10 +130,10 @@ describe("Core/DoublyLinkedList", function () {
     expect(list.tail).toEqual(nodes[length - 1]);
 
     // Verify that linked list has nodes in the expected order
-    var node = list.head;
-    for (var i = 0; i < length; ++i) {
-      var nextNode = i === length - 1 ? undefined : nodes[i + 1];
-      var previousNode = i === 0 ? undefined : nodes[i - 1];
+    let node = list.head;
+    for (let i = 0; i < length; ++i) {
+      const nextNode = i === length - 1 ? undefined : nodes[i + 1];
+      const previousNode = i === 0 ? undefined : nodes[i - 1];
 
       expect(node).toEqual(nodes[i]);
       expect(node.next).toEqual(nextNode);
@@ -144,12 +144,12 @@ describe("Core/DoublyLinkedList", function () {
   }
 
   it("splices nextNode before node", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
-    var node5 = list.add(5);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
+    const node5 = list.add(5);
 
     // Before:
     //
@@ -171,12 +171,12 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices nextNode after node", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
-    var node5 = list.add(5);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
+    const node5 = list.add(5);
 
     // Before:
     //
@@ -198,11 +198,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices nextNode immediately before node", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //
@@ -224,11 +224,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices nextNode immediately after node", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //
@@ -244,10 +244,10 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices node === nextNode", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
 
     // Before:
     //
@@ -263,11 +263,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices when nextNode was tail", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //
@@ -288,11 +288,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices when node was tail", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //
@@ -313,11 +313,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices when nextNode was head", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //
@@ -338,11 +338,11 @@ describe("Core/DoublyLinkedList", function () {
   });
 
   it("splices when node was head", function () {
-    var list = new DoublyLinkedList();
-    var node = list.add(1);
-    var node2 = list.add(2);
-    var node3 = list.add(3);
-    var node4 = list.add(4);
+    const list = new DoublyLinkedList();
+    const node = list.add(1);
+    const node2 = list.add(2);
+    const node3 = list.add(3);
+    const node4 = list.add(4);
 
     // Before:
     //

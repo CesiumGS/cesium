@@ -89,7 +89,7 @@ PositionProperty.prototype.getValueInReferenceFrame =
  */
 PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
-var scratchMatrix3 = new Matrix3();
+const scratchMatrix3 = new Matrix3();
 
 /**
  * @private
@@ -112,7 +112,7 @@ PositionProperty.convertToReferenceFrame = function (
     return Cartesian3.clone(value, result);
   }
 
-  var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+  let icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
   if (!defined(icrfToFixed)) {
     icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(
       time,

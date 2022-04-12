@@ -13,9 +13,9 @@ function typedArrayToArray(array) {
   return array;
 }
 
-function equals(util, customEqualiyTesters, a, b) {
+function equals(util, a, b) {
   a = typedArrayToArray(a);
   b = typedArrayToArray(b);
-  return util.equals(a, b, customEqualiyTesters);
+  return util.equals(a, b);
 }
 export default equals;

@@ -11,13 +11,13 @@ import { EntityCollection } from "../../Source/Cesium.js";
 import { ReferenceProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/ReferenceProperty", function () {
-  var time = JulianDate.now();
+  const time = JulianDate.now();
 
   it("constructor sets expected values", function () {
-    var collection = new EntityCollection();
-    var objectId = "testId";
-    var propertyNames = ["foo", "bar", "baz"];
-    var property = new ReferenceProperty(collection, objectId, propertyNames);
+    const collection = new EntityCollection();
+    const objectId = "testId";
+    const propertyNames = ["foo", "bar", "baz"];
+    const property = new ReferenceProperty(collection, objectId, propertyNames);
 
     expect(property.targetCollection).toBe(collection);
     expect(property.targetId).toEqual(objectId);
@@ -25,11 +25,11 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("fromString sets expected values", function () {
-    var collection = new EntityCollection();
-    var objectId = "testId";
-    var propertyNames = ["foo", "bar", "baz"];
+    const collection = new EntityCollection();
+    const objectId = "testId";
+    const propertyNames = ["foo", "bar", "baz"];
 
-    var property = ReferenceProperty.fromString(
+    const property = ReferenceProperty.fromString(
       collection,
       "testId#foo.bar.baz"
     );
@@ -40,10 +40,10 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("fromString works with escaped values", function () {
-    var collection = new EntityCollection();
-    var objectId = "#identif\\#ier.";
-    var propertyNames = ["propertyName", ".abc\\", "def"];
-    var property = ReferenceProperty.fromString(
+    const collection = new EntityCollection();
+    const objectId = "#identif\\#ier.";
+    const propertyNames = ["propertyName", ".abc\\", "def"];
+    const property = ReferenceProperty.fromString(
       collection,
       "\\#identif\\\\\\#ier\\.#propertyName.\\.abc\\\\.def"
     );
@@ -54,17 +54,17 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("properly tracks resolved property", function () {
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.billboard = new BillboardGraphics();
     testObject.billboard.scale = new ConstantProperty(5);
 
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
     collection.add(testObject);
 
     // Basic property resolution
-    var property = ReferenceProperty.fromString(
+    const property = ReferenceProperty.fromString(
       collection,
       "testId#billboard.scale"
     );
@@ -73,7 +73,7 @@ describe("DataSources/ReferenceProperty", function () {
     expect(property.resolvedProperty).toBe(testObject.billboard.scale);
     expect(property.getValue(time)).toEqual(5);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     // A change to exist target property is reflected in reference.
@@ -107,7 +107,7 @@ describe("DataSources/ReferenceProperty", function () {
     listener.calls.reset();
 
     // Adding a new object should re-wire the reference.
-    var testObject2 = new Entity({
+    const testObject2 = new Entity({
       id: "testId",
     });
     testObject2.billboard = new BillboardGraphics();
@@ -131,7 +131,7 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("works with position properties", function () {
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.position = new ConstantPositionProperty(
@@ -139,11 +139,11 @@ describe("DataSources/ReferenceProperty", function () {
       ReferenceFrame.FIXED
     );
 
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
     collection.add(testObject);
 
     // Basic property resolution
-    var property = ReferenceProperty.fromString(collection, "testId#position");
+    let property = ReferenceProperty.fromString(collection, "testId#position");
     expect(property.isConstant).toEqual(true);
     expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
     expect(property.getValue(time)).toEqual(testObject.position.getValue(time));
@@ -166,17 +166,17 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("works with material properties", function () {
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.addProperty("testMaterial");
     testObject.testMaterial = new ColorMaterialProperty(Color.WHITE);
 
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
     collection.add(testObject);
 
     // Basic property resolution
-    var property = ReferenceProperty.fromString(
+    let property = ReferenceProperty.fromString(
       collection,
       "testId#testMaterial"
     );
@@ -199,13 +199,13 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("equals works", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var left = ReferenceProperty.fromString(
+    const left = ReferenceProperty.fromString(
       entityCollection,
       "objectId#foo.bar"
     );
-    var right = ReferenceProperty.fromString(
+    let right = ReferenceProperty.fromString(
       entityCollection,
       "objectId#foo.bar"
     );
@@ -235,27 +235,27 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("does not raise definition changed when target entity has not changed.", function () {
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.billboard = new BillboardGraphics();
     testObject.billboard.scale = new ConstantProperty(5);
 
-    var otherObject = new Entity({
+    const otherObject = new Entity({
       id: "other",
     });
 
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
     collection.add(testObject);
     collection.add(otherObject);
 
-    var property = ReferenceProperty.fromString(
+    const property = ReferenceProperty.fromString(
       collection,
       "testId#billboard.scale"
     );
     expect(property.resolvedProperty).toBe(testObject.billboard.scale);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     collection.remove(otherObject);
@@ -265,18 +265,18 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("attaches to a target entity created later", function () {
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
 
-    var property = ReferenceProperty.fromString(
+    const property = ReferenceProperty.fromString(
       collection,
       "testId#billboard.scale"
     );
     expect(property.resolvedProperty).toBeUndefined();
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var otherObject = new Entity({
+    const otherObject = new Entity({
       id: "other",
     });
     collection.add(otherObject);
@@ -284,7 +284,7 @@ describe("DataSources/ReferenceProperty", function () {
     expect(listener).not.toHaveBeenCalled();
     expect(property.resolvedProperty).toBeUndefined();
 
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.billboard = new BillboardGraphics();
@@ -358,33 +358,36 @@ describe("DataSources/ReferenceProperty", function () {
   });
 
   it("getValue returns undefined if target entity can not be resolved", function () {
-    var collection = new EntityCollection();
-    var property = ReferenceProperty.fromString(collection, "testId#foo.bar");
+    const collection = new EntityCollection();
+    const property = ReferenceProperty.fromString(collection, "testId#foo.bar");
     expect(property.getValue(time)).toBeUndefined();
   });
 
   it("getValue returns undefined if target property can not be resolved", function () {
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
 
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     collection.add(testObject);
 
-    var property = ReferenceProperty.fromString(collection, "testId#billboard");
+    const property = ReferenceProperty.fromString(
+      collection,
+      "testId#billboard"
+    );
     expect(property.getValue(time)).toBeUndefined();
   });
 
   it("getValue returns undefined if sub-property of target property can not be resolved", function () {
-    var collection = new EntityCollection();
+    const collection = new EntityCollection();
 
-    var testObject = new Entity({
+    const testObject = new Entity({
       id: "testId",
     });
     testObject.billboard = new BillboardGraphics();
     collection.add(testObject);
 
-    var property = ReferenceProperty.fromString(
+    const property = ReferenceProperty.fromString(
       collection,
       "testId#billboard.foo"
     );

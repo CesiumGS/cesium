@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import ArcGisMapServerImageryProvider from "./ArcGisMapServerImageryProvider.js";
 import BingMapsImageryProvider from "./BingMapsImageryProvider.js";
 import TileMapServiceImageryProvider from "./TileMapServiceImageryProvider.js";
@@ -24,7 +23,7 @@ function createFactory(Type) {
 
 // These values are the list of supported external imagery
 // assets in the Cesium ion beta. They are subject to change.
-var ImageryProviderMapping = {
+const ImageryProviderMapping = {
   ARCGIS_MAPSERVER: createFactory(ArcGisMapServerImageryProvider),
   BING: createFactory(BingMapsImageryProvider),
   GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
@@ -60,7 +59,7 @@ var ImageryProviderMapping = {
 function IonImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var assetId = options.assetId;
+  const assetId = options.assetId;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.assetId", assetId);
   //>>includeEnd('debug');
@@ -155,16 +154,19 @@ function IonImageryProvider(options) {
   this._tileCredits = undefined;
   this._errorEvent = new Event();
 
-  var that = this;
-  var endpointResource = IonResource._createEndpointResource(assetId, options);
+  const that = this;
+  const endpointResource = IonResource._createEndpointResource(
+    assetId,
+    options
+  );
 
   // A simple cache to avoid making repeated requests to ion for endpoints we've
   // already retrieved. This exists mainly to support Bing caching to reduce
   // world imagery sessions, but provides a small boost of performance in general
   // if constantly reloading assets
-  var cacheKey =
+  const cacheKey =
     options.assetId.toString() + options.accessToken + options.server;
-  var promise = IonImageryProvider._endpointCache[cacheKey];
+  let promise = IonImageryProvider._endpointCache[cacheKey];
   if (!defined(promise)) {
     promise = endpointResource.fetchJson();
     IonImageryProvider._endpointCache[cacheKey] = promise;
@@ -172,26 +174,24 @@ function IonImageryProvider(options) {
 
   this._readyPromise = promise.then(function (endpoint) {
     if (endpoint.type !== "IMAGERY") {
-      return when.reject(
-        new RuntimeError(
-          "Cesium ion asset " + assetId + " is not an imagery asset."
-        )
+      return Promise.reject(
+        new RuntimeError(`Cesium ion asset ${assetId} is not an imagery asset.`)
       );
     }
 
-    var imageryProvider;
-    var externalType = endpoint.externalType;
+    let imageryProvider;
+    const externalType = endpoint.externalType;
     if (!defined(externalType)) {
       imageryProvider = new TileMapServiceImageryProvider({
         url: new IonResource(endpoint, endpointResource),
       });
     } else {
-      var factory = ImageryProviderMapping[externalType];
+      const factory = ImageryProviderMapping[externalType];
 
       if (!defined(factory)) {
-        return when.reject(
+        return Promise.reject(
           new RuntimeError(
-            "Unrecognized Cesium ion imagery type: " + externalType
+            `Unrecognized Cesium ion imagery type: ${externalType}`
           )
         );
       }
@@ -481,7 +481,7 @@ IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
   }
   //>>includeEnd('debug');
 
-  var innerCredits = this._imageryProvider.getTileCredits(x, y, level);
+  const innerCredits = this._imageryProvider.getTileCredits(x, y, level);
   if (!defined(innerCredits)) {
     return this._tileCredits;
   }

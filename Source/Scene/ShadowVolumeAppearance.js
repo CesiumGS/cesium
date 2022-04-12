@@ -38,11 +38,11 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
   };
 
   // Compute shader dependencies
-  var colorShaderDependencies = new ShaderDependencies();
+  const colorShaderDependencies = new ShaderDependencies();
   colorShaderDependencies.requiresTextureCoordinates = extentsCulling;
   colorShaderDependencies.requiresEC = !appearance.flat;
 
-  var pickShaderDependencies = new ShaderDependencies();
+  const pickShaderDependencies = new ShaderDependencies();
   pickShaderDependencies.requiresTextureCoordinates = extentsCulling;
 
   if (appearance instanceof PerInstanceColorAppearance) {
@@ -50,8 +50,7 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
     colorShaderDependencies.requiresNormalEC = !appearance.flat;
   } else {
     // Scan material source for what hookups are needed. Assume czm_materialInput materialInput.
-    var materialShaderSource =
-      appearance.material.shaderSource + "\n" + appearance.fragmentShaderSource;
+    const materialShaderSource = `${appearance.material.shaderSource}\n${appearance.fragmentShaderSource}`;
 
     colorShaderDependencies.normalEC =
       materialShaderSource.indexOf("materialInput.normalEC") !== -1 ||
@@ -84,10 +83,10 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
   Check.typeOf.bool("columbusView2D", columbusView2D);
   //>>includeEnd('debug');
 
-  var appearance = this._appearance;
-  var dependencies = this._colorShaderDependencies;
+  const appearance = this._appearance;
+  const dependencies = this._colorShaderDependencies;
 
-  var defines = [];
+  const defines = [];
   if (!columbusView2D && !this._planarExtents) {
     defines.push("SPHERICAL");
   }
@@ -130,7 +129,7 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
     defines.push("FLAT");
   }
 
-  var materialSource = "";
+  let materialSource = "";
   if (!(appearance instanceof PerInstanceColorAppearance)) {
     materialSource = appearance.material.shaderSource;
   }
@@ -148,9 +147,9 @@ ShadowVolumeAppearance.prototype.createPickFragmentShader = function (
   Check.typeOf.bool("columbusView2D", columbusView2D);
   //>>includeEnd('debug');
 
-  var dependencies = this._pickShaderDependencies;
+  const dependencies = this._pickShaderDependencies;
 
-  var defines = ["PICK"];
+  const defines = ["PICK"];
   if (!columbusView2D && !this._planarExtents) {
     defines.push("SPHERICAL");
   }
@@ -239,9 +238,9 @@ ShadowVolumeAppearance.prototype.createPickVertexShader = function (
   );
 };
 
-var longitudeExtentsCartesianScratch = new Cartesian3();
-var longitudeExtentsCartographicScratch = new Cartographic();
-var longitudeExtentsEncodeScratch = {
+const longitudeExtentsCartesianScratch = new Cartesian3();
+const longitudeExtentsCartographicScratch = new Cartographic();
+const longitudeExtentsEncodeScratch = {
   high: 0.0,
   low: 0.0,
 };
@@ -255,32 +254,33 @@ function createShadowVolumeAppearanceVS(
   mapProjection,
   projectionExtentDefines
 ) {
-  var allDefines = defines.slice();
+  const allDefines = defines.slice();
 
   if (projectionExtentDefines.eastMostYhighDefine === "") {
-    var eastMostCartographic = longitudeExtentsCartographicScratch;
+    const eastMostCartographic = longitudeExtentsCartographicScratch;
     eastMostCartographic.longitude = CesiumMath.PI;
     eastMostCartographic.latitude = 0.0;
     eastMostCartographic.height = 0.0;
-    var eastMostCartesian = mapProjection.project(
+    const eastMostCartesian = mapProjection.project(
       eastMostCartographic,
       longitudeExtentsCartesianScratch
     );
-    var encoded = EncodedCartesian3.encode(
+    let encoded = EncodedCartesian3.encode(
       eastMostCartesian.x,
       longitudeExtentsEncodeScratch
     );
-    projectionExtentDefines.eastMostYhighDefine =
-      "EAST_MOST_X_HIGH " +
-      encoded.high.toFixed((encoded.high + "").length + 1);
-    projectionExtentDefines.eastMostYlowDefine =
-      "EAST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+    projectionExtentDefines.eastMostYhighDefine = `EAST_MOST_X_HIGH ${encoded.high.toFixed(
+      `${encoded.high}`.length + 1
+    )}`;
+    projectionExtentDefines.eastMostYlowDefine = `EAST_MOST_X_LOW ${encoded.low.toFixed(
+      `${encoded.low}`.length + 1
+    )}`;
 
-    var westMostCartographic = longitudeExtentsCartographicScratch;
+    const westMostCartographic = longitudeExtentsCartographicScratch;
     westMostCartographic.longitude = -CesiumMath.PI;
     westMostCartographic.latitude = 0.0;
     westMostCartographic.height = 0.0;
-    var westMostCartesian = mapProjection.project(
+    const westMostCartesian = mapProjection.project(
       westMostCartographic,
       longitudeExtentsCartesianScratch
     );
@@ -288,11 +288,12 @@ function createShadowVolumeAppearanceVS(
       westMostCartesian.x,
       longitudeExtentsEncodeScratch
     );
-    projectionExtentDefines.westMostYhighDefine =
-      "WEST_MOST_X_HIGH " +
-      encoded.high.toFixed((encoded.high + "").length + 1);
-    projectionExtentDefines.westMostYlowDefine =
-      "WEST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+    projectionExtentDefines.westMostYhighDefine = `WEST_MOST_X_HIGH ${encoded.high.toFixed(
+      `${encoded.high}`.length + 1
+    )}`;
+    projectionExtentDefines.westMostYlowDefine = `WEST_MOST_X_LOW ${encoded.low.toFixed(
+      `${encoded.low}`.length + 1
+    )}`;
   }
 
   if (columbusView2D) {
@@ -426,7 +427,7 @@ function pointLineDistance(point1, point2, point) {
   );
 }
 
-var points2DScratch = [
+const points2DScratch = [
   new Cartesian2(),
   new Cartesian2(),
   new Cartesian2(),
@@ -439,19 +440,19 @@ function addTextureCoordinateRotationAttributes(
   attributes,
   textureCoordinateRotationPoints
 ) {
-  var points2D = points2DScratch;
+  const points2D = points2DScratch;
 
-  var minXYCorner = Cartesian2.unpack(
+  const minXYCorner = Cartesian2.unpack(
     textureCoordinateRotationPoints,
     0,
     points2D[0]
   );
-  var maxYCorner = Cartesian2.unpack(
+  const maxYCorner = Cartesian2.unpack(
     textureCoordinateRotationPoints,
     2,
     points2D[1]
   );
-  var maxXCorner = Cartesian2.unpack(
+  const maxXCorner = Cartesian2.unpack(
     textureCoordinateRotationPoints,
     4,
     points2D[2]
@@ -464,9 +465,9 @@ function addTextureCoordinateRotationAttributes(
     value: [maxYCorner.x, maxYCorner.y, maxXCorner.x, maxXCorner.y],
   });
 
-  var inverseExtentX =
+  const inverseExtentX =
     1.0 / pointLineDistance(minXYCorner, maxYCorner, maxXCorner);
-  var inverseExtentY =
+  const inverseExtentY =
     1.0 / pointLineDistance(minXYCorner, maxXCorner, maxYCorner);
 
   attributes.uvMinAndExtents = new GeometryInstanceAttribute({
@@ -477,27 +478,27 @@ function addTextureCoordinateRotationAttributes(
   });
 }
 
-var cartographicScratch = new Cartographic();
-var cornerScratch = new Cartesian3();
-var northWestScratch = new Cartesian3();
-var southEastScratch = new Cartesian3();
-var highLowScratch = { high: 0.0, low: 0.0 };
+const cartographicScratch = new Cartographic();
+const cornerScratch = new Cartesian3();
+const northWestScratch = new Cartesian3();
+const southEastScratch = new Cartesian3();
+const highLowScratch = { high: 0.0, low: 0.0 };
 function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
   // Compute corner positions in double precision
-  var carto = cartographicScratch;
+  const carto = cartographicScratch;
   carto.height = 0.0;
 
   carto.longitude = rectangle.west;
   carto.latitude = rectangle.south;
 
-  var southWestCorner = projection.project(carto, cornerScratch);
+  const southWestCorner = projection.project(carto, cornerScratch);
 
   carto.latitude = rectangle.north;
-  var northWest = projection.project(carto, northWestScratch);
+  const northWest = projection.project(carto, northWestScratch);
 
   carto.longitude = rectangle.east;
   carto.latitude = rectangle.south;
-  var southEast = projection.project(carto, southEastScratch);
+  const southEast = projection.project(carto, southEastScratch);
 
   // Since these positions are all in the 2D plane, there's a lot of zeros
   // and a lot of repetition. So we only need to encode 4 values.
@@ -507,9 +508,9 @@ function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
   // z: y value for northWest
   // w: x value for southEast
 
-  var valuesHigh = [0, 0, 0, 0];
-  var valuesLow = [0, 0, 0, 0];
-  var encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
+  const valuesHigh = [0, 0, 0, 0];
+  const valuesLow = [0, 0, 0, 0];
+  let encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
   valuesHigh[0] = encoded.high;
   valuesLow[0] = encoded.low;
 
@@ -540,11 +541,11 @@ function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
   });
 }
 
-var enuMatrixScratch = new Matrix4();
-var inverseEnuScratch = new Matrix4();
-var rectanglePointCartesianScratch = new Cartesian3();
-var rectangleCenterScratch = new Cartographic();
-var pointsCartographicScratch = [
+const enuMatrixScratch = new Matrix4();
+const inverseEnuScratch = new Matrix4();
+const rectanglePointCartesianScratch = new Cartesian3();
+const rectangleCenterScratch = new Cartographic();
+const pointsCartographicScratch = [
   new Cartographic(),
   new Cartographic(),
   new Cartographic(),
@@ -572,26 +573,29 @@ function computeRectangleBounds(
   northVectorResult
 ) {
   // Compute center of rectangle
-  var centerCartographic = Rectangle.center(rectangle, rectangleCenterScratch);
+  const centerCartographic = Rectangle.center(
+    rectangle,
+    rectangleCenterScratch
+  );
   centerCartographic.height = height;
-  var centerCartesian = Cartographic.toCartesian(
+  const centerCartesian = Cartographic.toCartesian(
     centerCartographic,
     ellipsoid,
     rectanglePointCartesianScratch
   );
-  var enuMatrix = Transforms.eastNorthUpToFixedFrame(
+  const enuMatrix = Transforms.eastNorthUpToFixedFrame(
     centerCartesian,
     ellipsoid,
     enuMatrixScratch
   );
-  var inverseEnu = Matrix4.inverse(enuMatrix, inverseEnuScratch);
+  const inverseEnu = Matrix4.inverse(enuMatrix, inverseEnuScratch);
 
-  var west = rectangle.west;
-  var east = rectangle.east;
-  var north = rectangle.north;
-  var south = rectangle.south;
+  const west = rectangle.west;
+  const east = rectangle.east;
+  const north = rectangle.north;
+  const south = rectangle.south;
 
-  var cartographics = pointsCartographicScratch;
+  const cartographics = pointsCartographicScratch;
   cartographics[0].latitude = south;
   cartographics[0].longitude = west;
   cartographics[1].latitude = north;
@@ -601,8 +605,8 @@ function computeRectangleBounds(
   cartographics[3].latitude = south;
   cartographics[3].longitude = east;
 
-  var longitudeCenter = (west + east) * 0.5;
-  var latitudeCenter = (north + south) * 0.5;
+  const longitudeCenter = (west + east) * 0.5;
+  const latitudeCenter = (north + south) * 0.5;
 
   cartographics[4].latitude = south;
   cartographics[4].longitude = longitudeCenter;
@@ -613,13 +617,13 @@ function computeRectangleBounds(
   cartographics[7].latitude = latitudeCenter;
   cartographics[7].longitude = east;
 
-  var minX = Number.POSITIVE_INFINITY;
-  var maxX = Number.NEGATIVE_INFINITY;
-  var minY = Number.POSITIVE_INFINITY;
-  var maxY = Number.NEGATIVE_INFINITY;
-  for (var i = 0; i < 8; i++) {
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (let i = 0; i < 8; i++) {
     cartographics[i].height = height;
-    var pointCartesian = Cartographic.toCartesian(
+    const pointCartesian = Cartographic.toCartesian(
       cartographics[i],
       ellipsoid,
       rectanglePointCartesianScratch
@@ -632,13 +636,13 @@ function computeRectangleBounds(
     maxY = Math.max(maxY, pointCartesian.y);
   }
 
-  var southWestCorner = southWestCornerResult;
+  const southWestCorner = southWestCornerResult;
   southWestCorner.x = minX;
   southWestCorner.y = minY;
   southWestCorner.z = 0.0;
   Matrix4.multiplyByPoint(enuMatrix, southWestCorner, southWestCorner);
 
-  var southEastCorner = eastVectorResult;
+  const southEastCorner = eastVectorResult;
   southEastCorner.x = maxX;
   southEastCorner.y = minY;
   southEastCorner.z = 0.0;
@@ -646,7 +650,7 @@ function computeRectangleBounds(
   // make eastward vector
   Cartesian3.subtract(southEastCorner, southWestCorner, eastVectorResult);
 
-  var northWestCorner = northVectorResult;
+  const northWestCorner = northVectorResult;
   northWestCorner.x = minX;
   northWestCorner.y = maxY;
   northWestCorner.z = 0.0;
@@ -655,9 +659,9 @@ function computeRectangleBounds(
   Cartesian3.subtract(northWestCorner, southWestCorner, northVectorResult);
 }
 
-var eastwardScratch = new Cartesian3();
-var northwardScratch = new Cartesian3();
-var encodeScratch = new EncodedCartesian3();
+const eastwardScratch = new Cartesian3();
+const northwardScratch = new Cartesian3();
+const encodeScratch = new EncodedCartesian3();
 /**
  * Gets an attributes object containing:
  * - 3 high-precision points as 6 GeometryInstanceAttributes. These points are used to compute eye-space planes.
@@ -694,9 +698,9 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   Check.typeOf.object("projection", projection);
   //>>includeEnd('debug');
 
-  var corner = cornerScratch;
-  var eastward = eastwardScratch;
-  var northward = northwardScratch;
+  const corner = cornerScratch;
+  const eastward = eastwardScratch;
+  const northward = northwardScratch;
   computeRectangleBounds(
     boundingRectangle,
     ellipsoid,
@@ -706,13 +710,13 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
     northward
   );
 
-  var attributes = {};
+  const attributes = {};
   addTextureCoordinateRotationAttributes(
     attributes,
     textureCoordinateRotationPoints
   );
 
-  var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
+  const encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
 
   attributes.southWest_HIGH = new GeometryInstanceAttribute({
     componentDatatype: ComponentDatatype.FLOAT,
@@ -743,27 +747,27 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   return attributes;
 };
 
-var spherePointScratch = new Cartesian3();
+const spherePointScratch = new Cartesian3();
 function latLongToSpherical(latitude, longitude, ellipsoid, result) {
-  var cartographic = cartographicScratch;
+  const cartographic = cartographicScratch;
   cartographic.latitude = latitude;
   cartographic.longitude = longitude;
   cartographic.height = 0.0;
 
-  var spherePoint = Cartographic.toCartesian(
+  const spherePoint = Cartographic.toCartesian(
     cartographic,
     ellipsoid,
     spherePointScratch
   );
 
   // Project into plane with vertical for latitude
-  var magXY = Math.sqrt(
+  const magXY = Math.sqrt(
     spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
   );
 
   // Use fastApproximateAtan2 for alignment with shader
-  var sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  var sphereLongitude = CesiumMath.fastApproximateAtan2(
+  const sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
+  const sphereLongitude = CesiumMath.fastApproximateAtan2(
     spherePoint.x,
     spherePoint.y
   );
@@ -774,7 +778,7 @@ function latLongToSpherical(latitude, longitude, ellipsoid, result) {
   return result;
 }
 
-var sphericalScratch = new Cartesian2();
+const sphericalScratch = new Cartesian2();
 /**
  * Gets an attributes object containing:
  * - the southwest corner of a rectangular area in spherical coordinates, as well as the inverse of the latitude/longitude range.
@@ -811,28 +815,28 @@ ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   //>>includeEnd('debug');
 
   // rectangle cartographic coords !== spherical because it's on an ellipsoid
-  var southWestExtents = latLongToSpherical(
+  const southWestExtents = latLongToSpherical(
     boundingRectangle.south,
     boundingRectangle.west,
     ellipsoid,
     sphericalScratch
   );
 
-  var south = southWestExtents.x;
-  var west = southWestExtents.y;
+  let south = southWestExtents.x;
+  let west = southWestExtents.y;
 
-  var northEastExtents = latLongToSpherical(
+  const northEastExtents = latLongToSpherical(
     boundingRectangle.north,
     boundingRectangle.east,
     ellipsoid,
     sphericalScratch
   );
-  var north = northEastExtents.x;
-  var east = northEastExtents.y;
+  let north = northEastExtents.x;
+  let east = northEastExtents.y;
 
   // If the bounding rectangle crosses the IDL, rotate the spherical extents so the cross no longer happens.
   // This rotation must happen in the shader too.
-  var rotationRadians = 0.0;
+  let rotationRadians = 0.0;
   if (west > east) {
     rotationRadians = CesiumMath.PI - west;
     west = -CesiumMath.PI;
@@ -845,10 +849,10 @@ ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   north += CesiumMath.EPSILON5;
   east += CesiumMath.EPSILON5;
 
-  var longitudeRangeInverse = 1.0 / (east - west);
-  var latitudeRangeInverse = 1.0 / (north - south);
+  const longitudeRangeInverse = 1.0 / (east - west);
+  const latitudeRangeInverse = 1.0 / (north - south);
 
-  var attributes = {
+  const attributes = {
     sphericalExtents: new GeometryInstanceAttribute({
       componentDatatype: ComponentDatatype.FLOAT,
       componentsPerAttribute: 4,

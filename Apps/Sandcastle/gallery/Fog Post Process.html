@@ -30,7 +30,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
@@ -38,7 +38,7 @@
           window.alert("This browser does not support the fog post process.");
         }
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(40866),
         });
 
@@ -58,45 +58,46 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        var fragmentShaderSource =
-          "float getDistance(sampler2D depthTexture, vec2 texCoords) \n" +
-          "{ \n" +
-          "    float depth = czm_unpackDepth(texture2D(depthTexture, texCoords)); \n" +
-          "    if (depth == 0.0) { \n" +
-          "        return czm_infinity; \n" +
-          "    } \n" +
-          "    vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth); \n" +
-          "    return -eyeCoordinate.z / eyeCoordinate.w; \n" +
-          "} \n" +
-          "float interpolateByDistance(vec4 nearFarScalar, float distance) \n" +
-          "{ \n" +
-          "    float startDistance = nearFarScalar.x; \n" +
-          "    float startValue = nearFarScalar.y; \n" +
-          "    float endDistance = nearFarScalar.z; \n" +
-          "    float endValue = nearFarScalar.w; \n" +
-          "    float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0); \n" +
-          "    return mix(startValue, endValue, t); \n" +
-          "} \n" +
-          "vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor) \n" +
-          "{ \n" +
-          "    return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a); \n" +
-          "} \n" +
-          "uniform sampler2D colorTexture; \n" +
-          "uniform sampler2D depthTexture; \n" +
-          "uniform vec4 fogByDistance; \n" +
-          "uniform vec4 fogColor; \n" +
-          "varying vec2 v_textureCoordinates; \n" +
-          "void main(void) \n" +
-          "{ \n" +
-          "    float distance = getDistance(depthTexture, v_textureCoordinates); \n" +
-          "    vec4 sceneColor = texture2D(colorTexture, v_textureCoordinates); \n" +
-          "    float blendAmount = interpolateByDistance(fogByDistance, distance); \n" +
-          "    vec4 finalFogColor = vec4(fogColor.rgb, fogColor.a * blendAmount); \n" +
-          "    gl_FragColor = alphaBlend(finalFogColor, sceneColor); \n" +
-          "} \n";
+        const fragmentShaderSource = `
+          float getDistance(sampler2D depthTexture, vec2 texCoords) 
+          { 
+              float depth = czm_unpackDepth(texture2D(depthTexture, texCoords)); 
+              if (depth == 0.0) { 
+                  return czm_infinity; 
+              } 
+              vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth); 
+              return -eyeCoordinate.z / eyeCoordinate.w; 
+          } 
+          float interpolateByDistance(vec4 nearFarScalar, float distance) 
+          { 
+              float startDistance = nearFarScalar.x; 
+              float startValue = nearFarScalar.y; 
+              float endDistance = nearFarScalar.z; 
+              float endValue = nearFarScalar.w; 
+              float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0); 
+              return mix(startValue, endValue, t); 
+          } 
+          vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor) 
+          { 
+              return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a); 
+          } 
+          uniform sampler2D colorTexture; 
+          uniform sampler2D depthTexture; 
+          uniform vec4 fogByDistance; 
+          uniform vec4 fogColor; 
+          varying vec2 v_textureCoordinates; 
+          void main(void) 
+          { 
+              float distance = getDistance(depthTexture, v_textureCoordinates); 
+              vec4 sceneColor = texture2D(colorTexture, v_textureCoordinates); 
+              float blendAmount = interpolateByDistance(fogByDistance, distance); 
+              vec4 finalFogColor = vec4(fogColor.rgb, fogColor.a * blendAmount); 
+              gl_FragColor = alphaBlend(finalFogColor, sceneColor); 
+          }
+          `;
 
-        var ellipsoid = viewer.scene.globe.ellipsoid;
-        var postProcessStage = viewer.scene.postProcessStages.add(
+        const ellipsoid = viewer.scene.globe.ellipsoid;
+        const postProcessStage = viewer.scene.postProcessStages.add(
           new Cesium.PostProcessStage({
             fragmentShader: fragmentShaderSource,
             uniforms: {

@@ -115,7 +115,7 @@ CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   }
   //>>includeEnd('debug');
 
-  var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
+  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
     time
   );
   if (defined(innerProperty)) {

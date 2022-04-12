@@ -32,7 +32,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
           shadows: true,
         });
@@ -61,24 +61,24 @@
           viewer.scene.highDynamicRange = checked;
         });
 
-        var url =
+        const url =
           "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
-        var position = Cesium.Cartesian3.fromRadians(
+        const position = Cesium.Cartesian3.fromRadians(
           -1.9516424279517286,
           0.6322397098422969,
           1239.0006814631095
         );
-        var heading = Cesium.Math.toRadians(-15.0);
-        var pitch = 0;
-        var roll = 0;
-        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+        const heading = Cesium.Math.toRadians(-15.0);
+        const pitch = 0;
+        const roll = 0;
+        const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           position,
           hpr
         );
-        var scale = 10.0;
+        const scale = 10.0;
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           name: url,
           position: position,
           orientation: orientation,

@@ -336,7 +336,7 @@ ImageryProvider.prototype.pickFeatures = function (
   DeveloperError.throwInstantiationError();
 };
 
-var ktx2Regex = /\.ktx2$/i;
+const ktx2Regex = /\.ktx2$/i;
 
 // TODO: This can definitely return a (Promise for) ImageBitmap, and also
 // whatever loadKTX / loadCRN actually return.  Can it ever return a Canvas?
@@ -359,7 +359,7 @@ ImageryProvider.loadImage = function (imageryProvider, url) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  var resource = Resource.createIfNeeded(url);
+  const resource = Resource.createIfNeeded(url);
 
   if (ktx2Regex.test(resource.url)) {
     return loadKTX2(resource);

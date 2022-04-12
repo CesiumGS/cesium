@@ -4,8 +4,8 @@ describe("Core/HermitePolynomialApproximation", function () {
   //The results of these specs were validated against STK Components
   //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
 
-  var xTable = [0, 60, 120, 180, 240, 300, 360, 420];
-  var yTable = [
+  const xTable = [0, 60, 120, 180, 240, 300, 360, 420];
+  const yTable = [
     13378137.0,
     0,
     13374128.3576279,
@@ -23,7 +23,7 @@ describe("Core/HermitePolynomialApproximation", function () {
     13182183.953374,
     0,
   ];
-  var dyTable = [
+  const dyTable = [
     0.0,
     0,
     -133.614738921601,
@@ -42,41 +42,41 @@ describe("Core/HermitePolynomialApproximation", function () {
     0,
   ];
 
-  var yTableCombined = new Array(yTable.length * 2);
+  const yTableCombined = new Array(yTable.length * 2);
 
-  for (var i = 0; i < yTable.length / 2; ++i) {
+  for (let i = 0; i < yTable.length / 2; ++i) {
     yTableCombined[i * 4 + 0] = yTable[i * 2 + 0];
     yTableCombined[i * 4 + 1] = yTable[i * 2 + 1];
     yTableCombined[i * 4 + 2] = dyTable[i * 2 + 0];
     yTableCombined[i * 4 + 3] = dyTable[i * 2 + 1];
   }
 
-  var x = 100.0;
+  const x = 100.0;
 
   it("interpolating produces correct results.", function () {
     // Since we want a zero order calculation we need to switch to a yStride of 4.
-    var result = HermitePolynomialApproximation.interpolateOrderZero(
+    const result = HermitePolynomialApproximation.interpolateOrderZero(
       x,
       xTable,
       yTableCombined,
       4
     );
-    var expectedResult = 13367002.870928625;
+    const expectedResult = 13367002.870928625;
     //The accuracy is lower because we are no longer using derivative info
     expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
   });
 
   it("interpolating produces correct results with a result parameter.", function () {
     // Since we want a zero order calculation we need to switch to a yStride of 4.
-    var result = new Array(4);
-    var returnedResult = HermitePolynomialApproximation.interpolateOrderZero(
+    const result = new Array(4);
+    const returnedResult = HermitePolynomialApproximation.interpolateOrderZero(
       x,
       xTable,
       yTableCombined,
       4,
       result
     );
-    var expectedResult = 13367002.870928625;
+    const expectedResult = 13367002.870928625;
     expect(result).toBe(returnedResult);
     //The accuracy is lower because we are no longer using derivative info
     expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
@@ -99,7 +99,7 @@ describe("Core/HermitePolynomialApproximation", function () {
   });
 
   it("higher order interpolation produces correct results.", function () {
-    var result = HermitePolynomialApproximation.interpolate(
+    const result = HermitePolynomialApproximation.interpolate(
       x,
       xTable,
       yTableCombined,
@@ -107,7 +107,7 @@ describe("Core/HermitePolynomialApproximation", function () {
       1,
       1
     );
-    var expectedResult = [13367002.870928625, 0.0, -222.65168787012135, 0.0];
+    const expectedResult = [13367002.870928625, 0.0, -222.65168787012135, 0.0];
     expect(result).toEqualEpsilon(expectedResult, 1e-8);
   });
 });

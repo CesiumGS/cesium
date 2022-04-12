@@ -5,8 +5,8 @@ import { viewerPerformanceWatchdogMixin } from "../../../Source/Cesium.js";
 describe(
   "Widgets/Viewer/viewerPerformanceWatchdogMixin",
   function () {
-    var container;
-    var viewer;
+    let container;
+    let viewer;
     beforeEach(function () {
       container = document.createElement("div");
       container.id = "container";

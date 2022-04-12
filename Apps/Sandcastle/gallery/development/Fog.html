@@ -50,14 +50,14 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
         //The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           enabled: true,
           density: 0,
           sse: 0,
@@ -66,7 +66,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
@@ -122,9 +122,9 @@
         viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
         Sandcastle.addToolbarButton("Snap", function () {
-          var container = document.getElementById("cesiumContainer");
-          var tmpH = container.style.height;
-          var tmpW = container.style.width;
+          const container = document.getElementById("cesiumContainer");
+          const tmpH = container.style.height;
+          const tmpW = container.style.width;
 
           container.style.height = "600px";
           container.style.width = "800px";

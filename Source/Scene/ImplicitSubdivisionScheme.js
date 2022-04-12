@@ -7,7 +7,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-var ImplicitSubdivisionScheme = {
+const ImplicitSubdivisionScheme = {
   /**
    * A quadtree divides a parent tile into four children, split at the midpoint
    * of the x and y dimensions of the bounding box

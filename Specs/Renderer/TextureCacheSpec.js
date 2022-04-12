@@ -5,7 +5,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/TextureCache",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -16,10 +16,10 @@ describe(
     });
 
     it("adds and removes", function () {
-      var cache = new TextureCache();
+      const cache = new TextureCache();
 
-      var keyword = "texture";
-      var texture = new Texture({
+      const keyword = "texture";
+      const texture = new Texture({
         context: context,
         width: 1.0,
         height: 1.0,
@@ -42,10 +42,10 @@ describe(
     });
 
     it("has a cache hit", function () {
-      var cache = new TextureCache(context);
+      const cache = new TextureCache(context);
 
-      var keyword = "texture";
-      var texture = new Texture({
+      const keyword = "texture";
+      const texture = new Texture({
         context: context,
         width: 1.0,
         height: 1.0,
@@ -53,7 +53,7 @@ describe(
 
       cache.addTexture(keyword, texture);
 
-      var texture2 = cache.getTexture(keyword);
+      const texture2 = cache.getTexture(keyword);
       expect(texture2).toBeDefined();
       expect(texture).toBe(texture2);
       expect(cache._textures[keyword].count).toEqual(2);
@@ -70,10 +70,10 @@ describe(
     });
 
     it("avoids thrashing", function () {
-      var cache = new TextureCache();
+      const cache = new TextureCache();
 
-      var keyword = "texture";
-      var texture = new Texture({
+      const keyword = "texture";
+      const texture = new Texture({
         context: context,
         width: 1.0,
         height: 1.0,
@@ -83,7 +83,7 @@ describe(
 
       texture.destroy();
 
-      var texture2 = cache.getTexture(keyword); // still a cache hit
+      const texture2 = cache.getTexture(keyword); // still a cache hit
 
       cache.destroyReleasedTextures(); // does not destroy
       expect(texture.isDestroyed()).toEqual(false);
@@ -99,10 +99,10 @@ describe(
     });
 
     it("is destroyed", function () {
-      var cache = new TextureCache();
+      const cache = new TextureCache();
 
-      var keyword = "texture";
-      var texture = new Texture({
+      const keyword = "texture";
+      const texture = new Texture({
         context: context,
         width: 1.0,
         height: 1.0,
@@ -117,7 +117,7 @@ describe(
     });
 
     it("is not destroyed", function () {
-      var cache = new TextureCache();
+      const cache = new TextureCache();
       expect(cache.isDestroyed()).toEqual(false);
     });
   },

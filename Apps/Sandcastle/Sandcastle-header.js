@@ -1,9 +1,9 @@
 (function () {
   "use strict";
 
-  var defaultAction;
-  var bucket = window.location.href;
-  var pos = bucket.lastIndexOf("/");
+  let defaultAction;
+  let bucket = window.location.href;
+  const pos = bucket.lastIndexOf("/");
   if (pos > 0 && pos < bucket.length - 1) {
     bucket = bucket.substring(pos + 1);
   }
@@ -29,15 +29,15 @@
     },
     addToggleButton: function (text, checked, onchange, toolbarID) {
       window.Sandcastle.declare(onchange);
-      var input = document.createElement("input");
+      const input = document.createElement("input");
       input.checked = checked;
       input.type = "checkbox";
       input.style.pointerEvents = "none";
-      var label = document.createElement("label");
+      const label = document.createElement("label");
       label.appendChild(input);
       label.appendChild(document.createTextNode(text));
       label.style.pointerEvents = "none";
-      var button = document.createElement("button");
+      const button = document.createElement("button");
       button.type = "button";
       button.className = "cesium-button";
       button.appendChild(label);
@@ -53,7 +53,7 @@
     },
     addToolbarButton: function (text, onclick, toolbarID) {
       window.Sandcastle.declare(onclick);
-      var button = document.createElement("button");
+      const button = document.createElement("button");
       button.type = "button";
       button.className = "cesium-button";
       button.onclick = function () {
@@ -73,11 +73,11 @@
       defaultAction = options[0].onselect;
     },
     addToolbarMenu: function (options, toolbarID) {
-      var menu = document.createElement("select");
+      const menu = document.createElement("select");
       menu.className = "cesium-button";
       menu.onchange = function () {
         window.Sandcastle.reset();
-        var item = options[menu.selectedIndex];
+        const item = options[menu.selectedIndex];
         if (item && typeof item.onselect === "function") {
           item.onselect();
         }
@@ -88,8 +88,8 @@
         defaultAction = options[0].onselect;
       }
 
-      for (var i = 0, len = options.length; i < len; ++i) {
-        var option = document.createElement("option");
+      for (let i = 0, len = options.length; i < len; ++i) {
+        const option = document.createElement("option");
         option.textContent = options[i].text;
         option.value = options[i].value;
         menu.appendChild(option);

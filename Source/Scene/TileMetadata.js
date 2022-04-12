@@ -3,15 +3,15 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a 3D Tile. This represents the <code>3DTILES_metadata</code>
- * extension on a single {@link Cesium3DTile}
+ * Metadata about a 3D Tile. This represents the tile metadata JSON (3D Tiles 1.1)
+ * or the <code>3DTILES_metadata</code> extension on a single {@link Cesium3DTile}
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.tile The extension JSON attached to the tile.
- * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
+ * @param {Object} options.tile Either the tile metadata JSON (3D Tiles 1.1), or the extension JSON attached to the tile.
+ * @param {MetadataClass} options.class The class that the tile metadata conforms to.
  *
  * @alias TileMetadata
  * @constructor
@@ -20,17 +20,18 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 export default function TileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const tile = options.tile;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tile", options.tile);
+  Check.typeOf.object("options.tile", tile);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
-  this._class = options.class;
-
-  var tileMetadata = options.tile;
-  this._properties = tileMetadata.properties;
-  this._extensions = tileMetadata.extensions;
-  this._extras = tileMetadata.extras;
+  this._class = metadataClass;
+  this._properties = tile.properties;
+  this._extensions = tile.extensions;
+  this._extras = tile.extras;
 }
 
 Object.defineProperties(TileMetadata.prototype, {
@@ -52,7 +53,7 @@ Object.defineProperties(TileMetadata.prototype, {
    * Extras in the JSON object.
    *
    * @memberof TileMetadata.prototype
-   * @type {*}
+   * @type {Object}
    * @readonly
    * @private
    */

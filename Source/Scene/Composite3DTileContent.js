@@ -1,9 +1,9 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Represents the contents of a
@@ -30,8 +30,10 @@ function Composite3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._contents = [];
-  this._readyPromise = when.defer();
-  this._groupMetadata = undefined;
+  this._readyPromise = defer();
+
+  this._metadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
 }
@@ -39,9 +41,9 @@ function Composite3DTileContent(
 Object.defineProperties(Composite3DTileContent.prototype, {
   featurePropertiesDirty: {
     get: function () {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         if (contents[i].featurePropertiesDirty) {
           return true;
         }
@@ -50,9 +52,9 @@ Object.defineProperties(Composite3DTileContent.prototype, {
       return false;
     },
     set: function (value) {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         contents[i].featurePropertiesDirty = value;
       }
     },
@@ -156,6 +158,27 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+   * both stores the content metadata and propagates the content metadata to all of its children.
+   * @memberof Composite3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
+        contents[i].metadata = value;
+      }
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a tile in the composite.
    * @memberof Composite3DTileContent.prototype
    */
@@ -172,36 +195,34 @@ Object.defineProperties(Composite3DTileContent.prototype, {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
-        contents[i].groupMetadata = value;
+      this._group = value;
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
+        contents[i].group = value;
       }
     },
   },
 });
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset, factory) {
   byteOffset = defaultValue(byteOffset, 0);
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Composite Tile version 1 is supported. Version " +
-        version +
-        " is not."
+      `Only Composite Tile version 1 is supported. Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
@@ -209,21 +230,21 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
   // Skip byteLength
   byteOffset += sizeOfUint32;
 
-  var tilesLength = view.getUint32(byteOffset, true);
+  const tilesLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var contentPromises = [];
+  const contentPromises = [];
 
-  for (var i = 0; i < tilesLength; ++i) {
-    var tileType = getMagic(uint8Array, byteOffset);
+  for (let i = 0; i < tilesLength; ++i) {
+    const tileType = getMagic(uint8Array, byteOffset);
 
     // Tile byte length is stored after magic and version
-    var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
+    const tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
 
-    var contentFactory = factory[tileType];
+    const contentFactory = factory[tileType];
 
     if (defined(contentFactory)) {
-      var innerContent = contentFactory(
+      const innerContent = contentFactory(
         content._tileset,
         content._tile,
         content._resource,
@@ -234,19 +255,18 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
       contentPromises.push(innerContent.readyPromise);
     } else {
       throw new RuntimeError(
-        "Unknown tile content type, " + tileType + ", inside Composite tile"
+        `Unknown tile content type, ${tileType}, inside Composite tile`
       );
     }
 
     byteOffset += tileByteLength;
   }
 
-  when
-    .all(contentPromises)
+  Promise.all(contentPromises)
     .then(function () {
       content._readyPromise.resolve(content);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       content._readyPromise.reject(error);
     });
 }
@@ -271,25 +291,25 @@ Composite3DTileContent.prototype.applyDebugSettings = function (
   enabled,
   color
 ) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyDebugSettings(enabled, color);
   }
 };
 
 Composite3DTileContent.prototype.applyStyle = function (style) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyStyle(style);
   }
 };
 
 Composite3DTileContent.prototype.update = function (tileset, frameState) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].update(tileset, frameState);
   }
 };
@@ -299,9 +319,9 @@ Composite3DTileContent.prototype.isDestroyed = function () {
 };
 
 Composite3DTileContent.prototype.destroy = function () {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].destroy();
   }
   return destroyObject(this);

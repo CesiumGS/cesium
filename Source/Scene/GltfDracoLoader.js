@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import when from "../ThirdParty/when.js";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -28,12 +28,12 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function GltfDracoLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resourceCache = options.resourceCache;
-  var gltf = options.gltf;
-  var draco = options.draco;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var cacheKey = options.cacheKey;
+  const resourceCache = options.resourceCache;
+  const gltf = options.gltf;
+  const draco = options.draco;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -54,7 +54,7 @@ export default function GltfDracoLoader(options) {
   this._decodePromise = undefined;
   this._decodedData = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -112,8 +112,8 @@ Object.defineProperties(GltfDracoLoader.prototype, {
  * @private
  */
 GltfDracoLoader.prototype.load = function () {
-  var resourceCache = this._resourceCache;
-  var bufferViewLoader = resourceCache.loadBufferView({
+  const resourceCache = this._resourceCache;
+  const bufferViewLoader = resourceCache.loadBufferView({
     gltf: this._gltf,
     bufferViewId: this._draco.bufferView,
     gltfResource: this._gltfResource,
@@ -123,7 +123,7 @@ GltfDracoLoader.prototype.load = function () {
   this._bufferViewLoader = bufferViewLoader;
   this._state = ResourceLoaderState.LOADING;
 
-  var that = this;
+  const that = this;
 
   bufferViewLoader.promise
     .then(function () {
@@ -134,7 +134,7 @@ GltfDracoLoader.prototype.load = function () {
       that._bufferViewTypedArray = bufferViewLoader.typedArray;
       that._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -145,7 +145,7 @@ GltfDracoLoader.prototype.load = function () {
 function handleError(dracoLoader, error) {
   dracoLoader.unload();
   dracoLoader._state = ResourceLoaderState.FAILED;
-  var errorMessage = "Failed to load Draco";
+  const errorMessage = "Failed to load Draco";
   dracoLoader._promise.reject(dracoLoader.getError(errorMessage, error));
 }
 
@@ -170,28 +170,32 @@ GltfDracoLoader.prototype.process = function (frameState) {
     return;
   }
 
-  var draco = this._draco;
-  var gltf = this._gltf;
-  var bufferViews = gltf.bufferViews;
-  var bufferViewId = draco.bufferView;
-  var bufferView = bufferViews[bufferViewId];
-  var compressedAttributes = draco.attributes;
+  const draco = this._draco;
+  const gltf = this._gltf;
+  const bufferViews = gltf.bufferViews;
+  const bufferViewId = draco.bufferView;
+  const bufferView = bufferViews[bufferViewId];
+  const compressedAttributes = draco.attributes;
 
-  var decodeOptions = {
-    array: this._bufferViewTypedArray,
+  const decodeOptions = {
+    // Need to make a copy of the typed array otherwise the underlying
+    // ArrayBuffer may be accessed on both the worker and the main thread. This
+    // leads to errors such as "ArrayBuffer at index 0 is already detached".
+    // PERFORMANCE_IDEA: Look into SharedArrayBuffer to get around this.
+    array: new Uint8Array(this._bufferViewTypedArray),
     bufferView: bufferView,
     compressedAttributes: compressedAttributes,
     dequantizeInShader: true,
   };
 
-  var decodePromise = DracoLoader.decodeBufferView(decodeOptions);
+  const decodePromise = DracoLoader.decodeBufferView(decodeOptions);
 
   if (!defined(decodePromise)) {
     // Cannot schedule task this frame
     return;
   }
 
-  var that = this;
+  const that = this;
   this._decodePromise = decodePromise
     .then(function (results) {
       if (that.isDestroyed()) {
@@ -207,7 +211,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

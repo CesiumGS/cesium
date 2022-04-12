@@ -23,11 +23,11 @@ import Matrix4 from "./Matrix4.js";
  * // Create geometry for a box, and two instances that refer to it.
  * // One instance positions the box on the bottom and colored aqua.
  * // The other instance positions the box on the top and color white.
- * var geometry = Cesium.BoxGeometry.fromDimensions({
+ * const geometry = Cesium.BoxGeometry.fromDimensions({
  *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  * });
- * var instanceBottom = new Cesium.GeometryInstance({
+ * const instanceBottom = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
  *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
@@ -36,7 +36,7 @@ import Matrix4 from "./Matrix4.js";
  *   },
  *   id : 'bottom'
  * });
- * var instanceTop = new Cesium.GeometryInstance({
+ * const instanceTop = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
  *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 3000000.0), new Cesium.Matrix4()),

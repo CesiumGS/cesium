@@ -35,21 +35,21 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/Primitive",
   function () {
-    var scene;
-    var context;
+    let scene;
+    let context;
 
-    var frameStateContext;
-    var frameState;
+    let frameStateContext;
+    let frameState;
 
-    var ellipsoid;
+    let ellipsoid;
 
-    var rectangle1;
-    var rectangle2;
+    let rectangle1;
+    let rectangle2;
 
-    var rectangleInstance1;
-    var rectangleInstance2;
+    let rectangleInstance1;
+    let rectangleInstance2;
 
-    var primitive;
+    let primitive;
 
     beforeAll(function () {
       scene = createScene();
@@ -68,7 +68,7 @@ describe(
     beforeEach(function () {
       scene.morphTo3D(0);
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum = new PerspectiveFrustum();
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -83,7 +83,7 @@ describe(
       rectangle1 = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
       rectangle2 = Rectangle.fromDegrees(70.0, 20.0, 80.0, 30.0);
 
-      var translation = Cartesian3.multiplyByScalar(
+      let translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rectangle1)),
           new Cartesian3()
@@ -151,10 +151,10 @@ describe(
     });
 
     it("Constructs with options", function () {
-      var geometryInstances = {};
-      var appearance = {};
-      var depthFailAppearance = {};
-      var modelMatrix = Matrix4.fromUniformScale(5.0);
+      const geometryInstances = {};
+      const appearance = {};
+      const depthFailAppearance = {};
+      const modelMatrix = Matrix4.fromUniformScale(5.0);
 
       primitive = new Primitive({
         geometryInstances: geometryInstances,
@@ -320,7 +320,7 @@ describe(
         asynchronous: false,
       });
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       frameState.commandList.length = 0;
 
       // set scene3DOnly to true so that the geometry is not split due to the IDL
@@ -368,24 +368,24 @@ describe(
     });
 
     it("renders RTC", function () {
-      var dimensions = new Cartesian3(400.0, 300.0, 500.0);
-      var positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
-      var boxModelMatrix = Matrix4.multiplyByTranslation(
+      const dimensions = new Cartesian3(400.0, 300.0, 500.0);
+      const positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
+      const boxModelMatrix = Matrix4.multiplyByTranslation(
         Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
         new Matrix4()
       );
 
-      var boxGeometry = BoxGeometry.createGeometry(
+      const boxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           dimensions: dimensions,
         })
       );
 
-      var positions = boxGeometry.attributes.position.values;
-      var newPositions = new Float32Array(positions.length);
-      for (var i = 0; i < positions.length; ++i) {
+      const positions = boxGeometry.attributes.position.values;
+      const newPositions = new Float32Array(positions.length);
+      for (let i = 0; i < positions.length; ++i) {
         newPositions[i] = positions[i];
       }
       boxGeometry.attributes.position.values = newPositions;
@@ -398,14 +398,14 @@ describe(
         boxGeometry.boundingSphere
       );
 
-      var boxGeometryInstance = new GeometryInstance({
+      const boxGeometryInstance = new GeometryInstance({
         geometry: boxGeometry,
         attributes: {
           color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5),
         },
       });
 
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: boxGeometryInstance,
         appearance: new PerInstanceColorAppearance({
           closed: true,
@@ -416,8 +416,8 @@ describe(
       });
 
       // create test camera
-      var camera = scene.camera;
-      var testCamera = new Camera(scene);
+      const camera = scene.camera;
+      const testCamera = new Camera(scene);
       testCamera.viewBoundingSphere(boxGeometry.boundingSphere);
       scene.camera = testCamera;
 
@@ -428,8 +428,8 @@ describe(
     });
 
     it("renders with depth fail appearance", function () {
-      var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-      var translation = Cartesian3.multiplyByScalar(
+      const rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
           new Cartesian3()
@@ -437,7 +437,7 @@ describe(
         100.0,
         new Cartesian3()
       );
-      var rectInstance = new GeometryInstance({
+      const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           ellipsoid: ellipsoid,
@@ -449,7 +449,7 @@ describe(
           color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
         },
       });
-      var p0 = new Primitive({
+      const p0 = new Primitive({
         geometryInstances: rectInstance,
         appearance: new PerInstanceColorAppearance({
           translucent: false,
@@ -457,7 +457,7 @@ describe(
         asynchronous: false,
       });
 
-      var rectInstance2 = new GeometryInstance({
+      const rectInstance2 = new GeometryInstance({
         geometry: new RectangleGeometry({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           ellipsoid: ellipsoid,
@@ -474,7 +474,7 @@ describe(
           ),
         },
       });
-      var p1 = new Primitive({
+      const p1 = new Primitive({
         geometryInstances: rectInstance2,
         appearance: new PerInstanceColorAppearance({
           translucent: false,
@@ -494,8 +494,8 @@ describe(
     });
 
     it("pick with depth fail appearance", function () {
-      var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-      var translation = Cartesian3.multiplyByScalar(
+      const rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
           new Cartesian3()
@@ -503,7 +503,7 @@ describe(
         100.0,
         new Cartesian3()
       );
-      var rectInstance = new GeometryInstance({
+      const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           ellipsoid: ellipsoid,
@@ -515,7 +515,7 @@ describe(
           color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
         },
       });
-      var p0 = new Primitive({
+      const p0 = new Primitive({
         geometryInstances: rectInstance,
         appearance: new PerInstanceColorAppearance({
           translucent: false,
@@ -523,7 +523,7 @@ describe(
         asynchronous: false,
       });
 
-      var rectInstance2 = new GeometryInstance({
+      const rectInstance2 = new GeometryInstance({
         geometry: new RectangleGeometry({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           ellipsoid: ellipsoid,
@@ -540,7 +540,7 @@ describe(
           ),
         },
       });
-      var p1 = new Primitive({
+      const p1 = new Primitive({
         geometryInstances: rectInstance2,
         appearance: new PerInstanceColorAppearance({
           translucent: false,
@@ -578,7 +578,7 @@ describe(
 
     it("RTC throws if the scene is not 3D only", function () {
       scene.frameState.scene3DOnly = false;
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: rectangleInstance1,
         appearance: new PerInstanceColorAppearance({
           closed: true,
@@ -601,11 +601,11 @@ describe(
       });
 
       primitive.update(frameState);
-      var commands = frameState.commandList;
+      const commands = frameState.commandList;
       expect(commands.length).toEqual(1);
       expect(commands[0].modelMatrix).toEqual(primitive.modelMatrix);
 
-      var modelMatrix = Matrix4.fromUniformScale(10.0);
+      const modelMatrix = Matrix4.fromUniformScale(10.0);
       primitive.modelMatrix = modelMatrix;
 
       commands.length = 0;
@@ -615,7 +615,7 @@ describe(
     });
 
     it("updates model matrix for more than one instance in 3D with equal model matrices in 3D only scene", function () {
-      var modelMatrix = Matrix4.fromUniformScale(2.0);
+      let modelMatrix = Matrix4.fromUniformScale(2.0);
       rectangleInstance1.modelMatrix = modelMatrix;
       rectangleInstance2.modelMatrix = modelMatrix;
 
@@ -627,7 +627,7 @@ describe(
 
       frameState.scene3DOnly = true;
 
-      var commands = frameState.commandList;
+      const commands = frameState.commandList;
       commands.length = 0;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
@@ -643,21 +643,21 @@ describe(
     });
 
     it("computes model matrix when given one for a single instance and for the primitive in 3D only", function () {
-      var instanceModelMatrix = Matrix4.fromUniformScale(2.0);
+      const instanceModelMatrix = Matrix4.fromUniformScale(2.0);
 
-      var dimensions = new Cartesian3(400000.0, 300000.0, 500000.0);
-      var positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
-      var primitiveModelMatrix = Matrix4.multiplyByTranslation(
+      const dimensions = new Cartesian3(400000.0, 300000.0, 500000.0);
+      const positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
+      const primitiveModelMatrix = Matrix4.multiplyByTranslation(
         Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
         new Matrix4()
       );
 
-      var boxGeometry = BoxGeometry.fromDimensions({
+      const boxGeometry = BoxGeometry.fromDimensions({
         vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
         dimensions: dimensions,
       });
-      var boxGeometryInstance = new GeometryInstance({
+      const boxGeometryInstance = new GeometryInstance({
         geometry: boxGeometry,
         modelMatrix: instanceModelMatrix,
         attributes: {
@@ -674,7 +674,7 @@ describe(
         asynchronous: false,
       });
 
-      var expectedModelMatrix = Matrix4.multiplyTransformation(
+      const expectedModelMatrix = Matrix4.multiplyTransformation(
         primitiveModelMatrix,
         instanceModelMatrix,
         new Matrix4()
@@ -682,7 +682,7 @@ describe(
 
       frameState.scene3DOnly = true;
 
-      var commands = frameState.commandList;
+      const commands = frameState.commandList;
       commands.length = 0;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
@@ -699,13 +699,13 @@ describe(
       frameState.mode = SceneMode.COLUMBUS_VIEW;
       frameState.scene3DOnly = false;
 
-      var commands = frameState.commandList;
+      const commands = frameState.commandList;
       commands.length = 0;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
       expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
 
-      var modelMatrix = Matrix4.fromUniformScale(10.0);
+      const modelMatrix = Matrix4.fromUniformScale(10.0);
       primitive.modelMatrix = modelMatrix;
 
       commands.length = 0;
@@ -724,12 +724,12 @@ describe(
       frameState.mode = SceneMode.SCENE2D;
       frameState.scene3DOnly = false;
 
-      var commands = frameState.commandList;
+      const commands = frameState.commandList;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
       expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
 
-      var modelMatrix = Matrix4.fromUniformScale(10.0);
+      const modelMatrix = Matrix4.fromUniformScale(10.0);
       primitive.modelMatrix = modelMatrix;
 
       commands.length = 0;
@@ -750,8 +750,8 @@ describe(
       scene.camera.setView({ destination: rectangle1 });
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).not.toEqual(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -801,7 +801,7 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      let attributes = primitive.getGeometryInstanceAttributes("rectangle1");
       expect(attributes.color).toBeDefined();
       expect(attributes.show).toBeDefined();
 
@@ -820,13 +820,13 @@ describe(
 
       scene.camera.setView({ destination: rectangle1 });
       scene.primitives.add(primitive);
-      var pixels;
+      let pixels;
       expect(scene).toRenderAndCall(function (rgba) {
         pixels = rgba;
         expect(rgba).not.toEqual([0, 0, 0, 255]);
       });
 
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes = primitive.getGeometryInstanceAttributes("rectangle1");
       expect(attributes.color).toBeDefined();
       attributes.color = [255, 255, 255, 255];
 
@@ -847,7 +847,7 @@ describe(
       scene.camera.setView({ destination: rectangle1 });
       expect(scene).notToRender([0, 0, 0, 255]);
 
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes = primitive.getGeometryInstanceAttributes("rectangle1");
       expect(attributes.show).toBeDefined();
       attributes.show = [0];
 
@@ -863,7 +863,7 @@ describe(
 
       verifyPrimitiveRender(primitive, rectangle1);
 
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes = primitive.getGeometryInstanceAttributes("rectangle1");
       expect(attributes.boundingSphere).toBeDefined();
     });
 
@@ -872,10 +872,10 @@ describe(
         return;
       }
 
-      var near = 10000.0;
-      var far = 1000000.0;
-      var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-      var translation = Cartesian3.multiplyByScalar(
+      const near = 10000.0;
+      const far = 1000000.0;
+      const rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const translation = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(
           ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
           new Cartesian3()
@@ -883,7 +883,7 @@ describe(
         2.0,
         new Cartesian3()
       );
-      var rectInstance = new GeometryInstance({
+      const rectInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           ellipsoid: ellipsoid,
@@ -910,10 +910,10 @@ describe(
       scene.camera.setView({ destination: rect });
       scene.renderForSpecs();
 
-      var boundingSphere = primitive.getGeometryInstanceAttributes("rect")
+      const boundingSphere = primitive.getGeometryInstanceAttributes("rect")
         .boundingSphere;
-      var center = boundingSphere.center;
-      var radius = boundingSphere.radius;
+      const center = boundingSphere.center;
+      const radius = boundingSphere.radius;
 
       scene.camera.lookAt(
         center,
@@ -935,11 +935,11 @@ describe(
     });
 
     it("primitive with display condition properly transforms boundingSphere", function () {
-      var near = 10000.0;
-      var far = 1000000.0;
-      var translation = new Cartesian3(10, 20, 30);
+      const near = 10000.0;
+      const far = 1000000.0;
+      const translation = new Cartesian3(10, 20, 30);
 
-      var cylinder = new GeometryInstance({
+      const cylinder = new GeometryInstance({
         id: "cylinder",
         vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
         geometry: new CylinderGeometry({
@@ -968,16 +968,16 @@ describe(
       scene.frameState.scene3DOnly = true;
       scene.renderForSpecs();
 
-      var boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
+      const boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
         .boundingSphere;
-      var center = boundingSphere.center;
+      const center = boundingSphere.center;
       expect(center).toEqual(translation);
     });
 
     it("primitive without display condition properly transforms boundingSphere", function () {
-      var translation = new Cartesian3(10, 20, 30);
+      const translation = new Cartesian3(10, 20, 30);
 
-      var cylinder = new GeometryInstance({
+      const cylinder = new GeometryInstance({
         id: "cylinder",
         vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
         geometry: new CylinderGeometry({
@@ -1002,9 +1002,9 @@ describe(
       scene.frameState.scene3DOnly = true;
       scene.renderForSpecs();
 
-      var boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
+      const boundingSphere = primitive.getGeometryInstanceAttributes("cylinder")
         .boundingSphere;
-      var center = boundingSphere.center;
+      const center = boundingSphere.center;
       expect(center).toEqual(translation);
     });
 
@@ -1017,8 +1017,8 @@ describe(
 
       verifyPrimitiveRender(primitive, rectangle1);
 
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
-      var attributes2 = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes2 = primitive.getGeometryInstanceAttributes("rectangle1");
       expect(attributes).toBe(attributes2);
     });
 
@@ -1124,7 +1124,7 @@ describe(
       scene.primitives.add(primitive);
 
       return pollToPromise(function () {
-        for (var i = 0; i < frameState.afterRender.length; ++i) {
+        for (let i = 0; i < frameState.afterRender.length; ++i) {
           frameState.afterRender[i]();
           return true;
         }
@@ -1136,7 +1136,7 @@ describe(
           .then(function () {
             fail("should not be called");
           })
-          .otherwise(function (e) {
+          .catch(function (e) {
             expect(e).toBe(primitive._error);
             // Use toThrow since the error is thrown by RequireJS for the web worker import script
             expect(function () {
@@ -1164,7 +1164,7 @@ describe(
       scene.frameState.afterRender.length = 0;
 
       return pollToPromise(function () {
-        for (var i = 0; i < frameState.afterRender.length; ++i) {
+        for (let i = 0; i < frameState.afterRender.length; ++i) {
           frameState.afterRender[i]();
           return true;
         }
@@ -1213,7 +1213,7 @@ describe(
     });
 
     it("can mix valid and invalid geometry", function () {
-      var instances = [];
+      const instances = [];
       instances.push(rectangleInstance1);
       instances.push(
         new GeometryInstance({
@@ -1281,7 +1281,7 @@ describe(
       });
 
       primitive.update(frameState);
-      var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+      const attributes = primitive.getGeometryInstanceAttributes("rectangle1");
 
       expect(function () {
         attributes.color = undefined;
@@ -1306,7 +1306,9 @@ describe(
         scene.render();
         return primitive.ready;
       }).then(function () {
-        var attributes = primitive.getGeometryInstanceAttributes("rectangle1");
+        const attributes = primitive.getGeometryInstanceAttributes(
+          "rectangle1"
+        );
         expect(function () {
           attributes.color = undefined;
         }).toThrowDeveloperError();
@@ -1370,10 +1372,10 @@ describe(
         }),
       });
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       return pollToPromise(function () {
         primitive.update(frameState);
-        for (var i = 0; i < frameState.afterRender.length; ++i) {
+        for (let i = 0; i < frameState.afterRender.length; ++i) {
           frameState.afterRender[i]();
         }
         return primitive.ready;

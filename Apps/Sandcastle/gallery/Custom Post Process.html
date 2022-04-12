@@ -35,12 +35,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        const position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706
+        );
+        const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
         viewer.trackedEntity = viewer.entities.add({
           name: url,
           position: position,
@@ -49,25 +52,26 @@
           },
         });
 
-        var fragmentShaderSource =
-          "uniform sampler2D colorTexture; \n" +
-          "varying vec2 v_textureCoordinates; \n" +
-          "const int KERNEL_WIDTH = 16; \n" +
-          "void main(void) \n" +
-          "{ \n" +
-          "    vec2 step = czm_pixelRatio / czm_viewport.zw; \n" +
-          "    vec2 integralPos = v_textureCoordinates - mod(v_textureCoordinates, 8.0 * step); \n" +
-          "    vec3 averageValue = vec3(0.0); \n" +
-          "    for (int i = 0; i < KERNEL_WIDTH; i++) \n" +
-          "    { \n" +
-          "        for (int j = 0; j < KERNEL_WIDTH; j++) \n" +
-          "        { \n" +
-          "            averageValue += texture2D(colorTexture, integralPos + step * vec2(i, j)).rgb; \n" +
-          "        } \n" +
-          "    } \n" +
-          "    averageValue /= float(KERNEL_WIDTH * KERNEL_WIDTH); \n" +
-          "    gl_FragColor = vec4(averageValue, 1.0); \n" +
-          "} \n";
+        const fragmentShaderSource = `
+          uniform sampler2D colorTexture; 
+          varying vec2 v_textureCoordinates; 
+          const int KERNEL_WIDTH = 16; 
+          void main(void) 
+          { 
+              vec2 step = czm_pixelRatio / czm_viewport.zw; 
+              vec2 integralPos = v_textureCoordinates - mod(v_textureCoordinates, 8.0 * step); 
+              vec3 averageValue = vec3(0.0); 
+              for (int i = 0; i < KERNEL_WIDTH; i++) 
+              { 
+                  for (int j = 0; j < KERNEL_WIDTH; j++) 
+                  { 
+                      averageValue += texture2D(colorTexture, integralPos + step * vec2(i, j)).rgb; 
+                  } 
+              } 
+              averageValue /= float(KERNEL_WIDTH * KERNEL_WIDTH); 
+              gl_FragColor = vec4(averageValue, 1.0); 
+          }
+          `;
         viewer.scene.postProcessStages.add(
           new Cesium.PostProcessStage({
             fragmentShader: fragmentShaderSource,

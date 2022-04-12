@@ -13,8 +13,7 @@ import Request from "../Core/Request.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
-import protobuf from "../ThirdParty/protobuf-minimal.js";
-import when from "../ThirdParty/when.js";
+import protobuf from "../ThirdParty/protobufjs.js";
 
 /**
  * @private
@@ -80,8 +79,8 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  *
  * @example
- * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
- * var gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
+ * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+ * const gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
  *     metadata : geeMetadata
  * });
  *
@@ -182,11 +181,11 @@ function GoogleEarthEnterpriseImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var metadata;
+  let metadata;
   if (defined(options.metadata)) {
     metadata = options.metadata;
   } else {
-    var resource = Resource.createIfNeeded(options.url);
+    const resource = Resource.createIfNeeded(options.url);
     metadata = new GoogleEarthEnterpriseMetadata(resource);
   }
   this._metadata = metadata;
@@ -204,7 +203,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
     ellipsoid: options.ellipsoid,
   });
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -222,13 +221,13 @@ function GoogleEarthEnterpriseImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  var that = this;
-  var metadataError;
+  const that = this;
+  let metadataError;
   this._readyPromise = metadata.readyPromise
     .then(function (result) {
       if (!metadata.imageryPresent) {
-        var e = new RuntimeError(
-          "The server " + metadata.url + " doesn't have imagery"
+        const e = new RuntimeError(
+          `The server ${metadata.url} doesn't have imagery`
         );
         metadataError = TileProviderError.handleError(
           metadataError,
@@ -240,14 +239,14 @@ function GoogleEarthEnterpriseImageryProvider(options) {
           undefined,
           e
         );
-        return when.reject(e);
+        return Promise.reject(e);
       }
 
       TileProviderError.handleSuccess(metadataError);
       that._ready = result;
       return result;
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -258,7 +257,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
         undefined,
         e
       );
-      return when.reject(e);
+      return Promise.reject(e);
     });
 }
 
@@ -527,10 +526,10 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
   }
   //>>includeEnd('debug');
 
-  var metadata = this._metadata;
-  var info = metadata.getTileInformation(x, y, level);
+  const metadata = this._metadata;
+  const info = metadata.getTileInformation(x, y, level);
   if (defined(info)) {
-    var credit = metadata.providers[info.imageryProvider];
+    const credit = metadata.providers[info.imageryProvider];
     if (defined(credit)) {
       return [credit];
     }
@@ -568,13 +567,13 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
   }
   //>>includeEnd('debug');
 
-  var invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
-  var metadata = this._metadata;
-  var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-  var info = metadata.getTileInformation(x, y, level);
+  const invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
+  const metadata = this._metadata;
+  const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+  const info = metadata.getTileInformation(x, y, level);
   if (!defined(info)) {
     if (metadata.isValid(quadKey)) {
-      var metadataRequest = new Request({
+      const metadataRequest = new Request({
         throttle: request.throttle,
         throttleByServer: request.throttleByServer,
         type: request.type,
@@ -583,14 +582,14 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
       metadata.populateSubtree(x, y, level, metadataRequest);
       return undefined; // No metadata so return undefined so we can be loaded later
     }
-    return invalidImage; // Image doesn't exist
+    return Promise.resolve(invalidImage); // Image doesn't exist
   }
 
   if (!info.hasImagery()) {
     // Already have info and there isn't any imagery here
-    return invalidImage;
+    return Promise.resolve(invalidImage);
   }
-  var promise = buildImageResource(
+  const promise = buildImageResource(
     this,
     info,
     x,
@@ -604,16 +603,16 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
 
   return promise.then(function (image) {
     decodeGoogleEarthEnterpriseData(metadata.key, image);
-    var a = new Uint8Array(image);
-    var type;
+    let a = new Uint8Array(image);
+    let type;
 
-    var protoImagery = metadata.protoImagery;
+    const protoImagery = metadata.protoImagery;
     if (!defined(protoImagery) || !protoImagery) {
       type = getImageType(a);
     }
 
     if (!defined(type) && (!defined(protoImagery) || protoImagery)) {
-      var message = decodeEarthImageryPacket(a);
+      const message = decodeEarthImageryPacket(a);
       type = message.imageType;
       a = message.imageData;
     }
@@ -655,19 +654,19 @@ GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function (
 // Functions to handle imagery packets
 //
 function buildImageResource(imageryProvider, info, x, y, level, request) {
-  var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-  var version = info.imageryVersion;
+  const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+  let version = info.imageryVersion;
   version = defined(version) && version > 0 ? version : 1;
 
   return imageryProvider._metadata.resource.getDerivedResource({
-    url: "flatfile?f1-0" + quadKey + "-i." + version.toString(),
+    url: `flatfile?f1-0${quadKey}-i.${version.toString()}`,
     request: request,
   });
 }
 
 // Detects if a Uint8Array is a JPEG or PNG
 function getImageType(image) {
-  var jpeg = "JFIF";
+  const jpeg = "JFIF";
   if (
     image[6] === jpeg.charCodeAt(0) &&
     image[7] === jpeg.charCodeAt(1) &&
@@ -677,7 +676,7 @@ function getImageType(image) {
     return "image/jpeg";
   }
 
-  var png = "PNG";
+  const png = "PNG";
   if (
     image[1] === png.charCodeAt(0) &&
     image[2] === png.charCodeAt(1) &&
@@ -692,11 +691,12 @@ function getImageType(image) {
 // Decodes an Imagery protobuf into the message
 // Partially generated with the help of protobuf.js static generator
 function decodeEarthImageryPacket(data) {
-  var reader = protobuf.Reader.create(data);
-  var end = reader.len;
-  var message = {};
+  const reader = protobuf.Reader.create(data);
+  const end = reader.len;
+  const message = {};
   while (reader.pos < end) {
-    var tag = reader.uint32();
+    const tag = reader.uint32();
+    let copyrightIds;
     switch (tag >>> 3) {
       case 1:
         message.imageType = reader.uint32();
@@ -711,12 +711,12 @@ function decodeEarthImageryPacket(data) {
         message.imageAlpha = reader.bytes();
         break;
       case 5:
-        var copyrightIds = message.copyrightIds;
+        copyrightIds = message.copyrightIds;
         if (!defined(copyrightIds)) {
           copyrightIds = message.copyrightIds = [];
         }
         if ((tag & 7) === 2) {
-          var end2 = reader.uint32() + reader.pos;
+          const end2 = reader.uint32() + reader.pos;
           while (reader.pos < end2) {
             copyrightIds.push(reader.uint32());
           }
@@ -730,7 +730,7 @@ function decodeEarthImageryPacket(data) {
     }
   }
 
-  var imageType = message.imageType;
+  const imageType = message.imageType;
   if (defined(imageType)) {
     switch (imageType) {
       case 0:
@@ -746,7 +746,7 @@ function decodeEarthImageryPacket(data) {
     }
   }
 
-  var alphaType = message.alphaType;
+  const alphaType = message.alphaType;
   if (defined(alphaType) && alphaType !== 0) {
     console.log(
       "GoogleEarthEnterpriseImageryProvider: External alpha not supported."

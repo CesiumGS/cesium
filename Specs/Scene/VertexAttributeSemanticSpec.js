@@ -2,7 +2,7 @@ import { VertexAttributeSemantic } from "../../Source/Cesium.js";
 
 describe("Scene/VertexAttributeSemantic", function () {
   it("hasSetIndex", function () {
-    var semantics = [
+    const semantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.NORMAL,
       VertexAttributeSemantic.TANGENT,
@@ -13,10 +13,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
     ];
 
-    var hasSetIndex = [false, false, false, true, true, true, true, true];
+    const hasSetIndex = [false, false, false, true, true, true, true, true];
 
-    var semanticsLength = semantics.length;
-    for (var i = 0; i < semanticsLength; ++i) {
+    const semanticsLength = semantics.length;
+    for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.hasSetIndex(semantics[i])).toBe(
         hasSetIndex[i]
       );
@@ -36,7 +36,7 @@ describe("Scene/VertexAttributeSemantic", function () {
   });
 
   it("fromGltfSemantic", function () {
-    var gltfSemantics = [
+    const gltfSemantics = [
       "POSITION",
       "NORMAL",
       "TANGENT",
@@ -50,12 +50,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       "WEIGHTS_1",
       "_FEATURE_ID_0",
       "_FEATURE_ID_1",
-      "_BATCHID",
-      "BATCHID",
       "_OTHER",
     ];
 
-    var expectedSemantics = [
+    const expectedSemantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.NORMAL,
       VertexAttributeSemantic.TANGENT,
@@ -69,13 +67,11 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
       VertexAttributeSemantic.FEATURE_ID,
-      VertexAttributeSemantic.FEATURE_ID,
-      VertexAttributeSemantic.FEATURE_ID,
       undefined,
     ];
 
-    var semanticsLength = gltfSemantics.length;
-    for (var i = 0; i < semanticsLength; ++i) {
+    const semanticsLength = gltfSemantics.length;
+    for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromGltfSemantic(gltfSemantics[i])).toBe(
         expectedSemantics[i]
       );
@@ -89,7 +85,7 @@ describe("Scene/VertexAttributeSemantic", function () {
   });
 
   it("fromPntsSemantic", function () {
-    var pntsSemantics = [
+    const pntsSemantics = [
       "POSITION",
       "POSITION_QUANTIZED",
       "RGBA",
@@ -100,7 +96,7 @@ describe("Scene/VertexAttributeSemantic", function () {
       "BATCH_ID",
     ];
 
-    var expectedSemantics = [
+    const expectedSemantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.COLOR,
@@ -111,8 +107,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
     ];
 
-    var semanticsLength = pntsSemantics.length;
-    for (var i = 0; i < semanticsLength; ++i) {
+    const semanticsLength = pntsSemantics.length;
+    for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromPntsSemantic(pntsSemantics[i])).toBe(
         expectedSemantics[i]
       );
@@ -132,7 +128,7 @@ describe("Scene/VertexAttributeSemantic", function () {
   });
 
   it("getGlslType", function () {
-    var semantics = [
+    const semantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.NORMAL,
       VertexAttributeSemantic.TANGENT,
@@ -143,7 +139,7 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
     ];
 
-    var expectedShaderTypes = [
+    const expectedShaderTypes = [
       "vec3",
       "vec3",
       "vec3",
@@ -154,8 +150,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       "int",
     ];
 
-    var semanticsLength = semantics.length;
-    for (var i = 0; i < semanticsLength; ++i) {
+    const semanticsLength = semantics.length;
+    for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getGlslType(semantics[i])).toBe(
         expectedShaderTypes[i]
       );
@@ -175,7 +171,7 @@ describe("Scene/VertexAttributeSemantic", function () {
   });
 
   it("getVariableName", function () {
-    var semantics = [
+    const semantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.NORMAL,
       VertexAttributeSemantic.TANGENT,
@@ -186,10 +182,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
     ];
 
-    var expectedVariableName = [
-      "position",
-      "normal",
-      "tangent",
+    const expectedVariableName = [
+      "positionMC",
+      "normalMC",
+      "tangentMC",
       "texCoord",
       "color",
       "joints",
@@ -197,8 +193,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       "featureId",
     ];
 
-    var semanticsLength = semantics.length;
-    for (var i = 0; i < semanticsLength; ++i) {
+    const semanticsLength = semantics.length;
+    for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getVariableName(semantics[i])).toBe(
         expectedVariableName[i]
       );
@@ -211,7 +207,7 @@ describe("Scene/VertexAttributeSemantic", function () {
         VertexAttributeSemantic.FEATURE_ID,
         0
       )
-    ).toBe("featureId0");
+    ).toBe("featureId_0");
   });
 
   it("getVariableName throws if semantic is undefined", function () {

@@ -73,7 +73,8 @@ CallbackProperty.prototype.setCallback = function (callback, isConstant) {
   }
   //>>includeEnd('debug');
 
-  var changed = this._callback !== callback || this._isConstant !== isConstant;
+  const changed =
+    this._callback !== callback || this._isConstant !== isConstant;
 
   this._callback = callback;
   this._isConstant = isConstant;

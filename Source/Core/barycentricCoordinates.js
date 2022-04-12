@@ -4,9 +4,9 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
-var scratchCartesian1 = new Cartesian3();
-var scratchCartesian2 = new Cartesian3();
-var scratchCartesian3 = new Cartesian3();
+const scratchCartesian1 = new Cartesian3();
+const scratchCartesian2 = new Cartesian3();
+const scratchCartesian3 = new Cartesian3();
 
 /**
  * Computes the barycentric coordinates for a point with respect to a triangle.
@@ -18,12 +18,12 @@ var scratchCartesian3 = new Cartesian3();
  * @param {Cartesian2|Cartesian3} p1 The second point of the triangle, corresponding to the barycentric y-axis.
  * @param {Cartesian2|Cartesian3} p2 The third point of the triangle, corresponding to the barycentric z-axis.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+ * @returns {Cartesian3|undefined} The modified result parameter or a new Cartesian3 instance if one was not provided. If the triangle is degenerate the function will return undefined.
  *
  * @example
  * // Returns Cartesian3.UNIT_X
- * var p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
- * var b = Cesium.barycentricCoordinates(p,
+ * const p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
+ * const b = Cesium.barycentricCoordinates(p,
  *   new Cesium.Cartesian3(-1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
@@ -41,14 +41,14 @@ function barycentricCoordinates(point, p0, p1, p2, result) {
   }
 
   // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
-  var v0;
-  var v1;
-  var v2;
-  var dot00;
-  var dot01;
-  var dot02;
-  var dot11;
-  var dot12;
+  let v0;
+  let v1;
+  let v2;
+  let dot00;
+  let dot01;
+  let dot02;
+  let dot11;
+  let dot12;
 
   if (!defined(p0.z)) {
     if (Cartesian2.equalsEpsilon(point, p0, CesiumMath.EPSILON14)) {
@@ -94,16 +94,15 @@ function barycentricCoordinates(point, p0, p1, p2, result) {
 
   result.y = dot11 * dot02 - dot01 * dot12;
   result.z = dot00 * dot12 - dot01 * dot02;
-  var q = dot00 * dot11 - dot01 * dot01;
+  const q = dot00 * dot11 - dot01 * dot01;
 
-  // This is done to avoid dividing by infinity causing a NaN
-  if (result.y !== 0) {
-    result.y /= q;
-  }
-  if (result.z !== 0) {
-    result.z /= q;
+  // Triangle is degenerate
+  if (q === 0) {
+    return undefined;
   }
 
+  result.y /= q;
+  result.z /= q;
   result.x = 1.0 - result.y - result.z;
   return result;
 }

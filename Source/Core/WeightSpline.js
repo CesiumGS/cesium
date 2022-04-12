@@ -23,14 +23,14 @@ import Spline from "./Spline.js";
  *
  *
  * @example
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
- * var spline = new Cesium.WeightSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
+ * const spline = new Cesium.WeightSpline({
  *     times : times,
  *     weights : weights
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  *
  * @see LinearSpline
  * @see HermiteSpline
@@ -40,8 +40,8 @@ import Spline from "./Spline.js";
 function WeightSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var weights = options.weights;
-  var times = options.times;
+  const weights = options.weights;
+  const times = options.times;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("weights", weights);
@@ -135,21 +135,21 @@ WeightSpline.prototype.clampTime = Spline.prototype.clampTime;
  *                             in the array <code>times</code>.
  */
 WeightSpline.prototype.evaluate = function (time, result) {
-  var weights = this.weights;
-  var times = this.times;
+  const weights = this.weights;
+  const times = this.times;
 
-  var i = (this._lastTimeIndex = this.findTimeInterval(
+  const i = (this._lastTimeIndex = this.findTimeInterval(
     time,
     this._lastTimeIndex
   ));
-  var u = (time - times[i]) / (times[i + 1] - times[i]);
+  const u = (time - times[i]) / (times[i + 1] - times[i]);
 
   if (!defined(result)) {
     result = new Array(this._count);
   }
 
-  for (var j = 0; j < this._count; j++) {
-    var index = i * this._count + j;
+  for (let j = 0; j < this._count; j++) {
+    const index = i * this._count + j;
     result[j] = weights[index] * (1.0 - u) + weights[index + this._count] * u;
   }
 

@@ -6,92 +6,87 @@ As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. Cesiu
 
 All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request.
 
-- [Running the Tests](#running-the-tests)
-  - [Run All Tests](#run-all-tests)
-    - [Run with WebGL validation](#run-with-webgl-validation)
-    - [Run with WebGL stub](#run-with-webgl-stub)
-  - [Select a Test to Run](#select-a-test-to-run)
-  - [Run Only WebGL Tests](#run-only-webgl-tests)
-  - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
-  - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
-  - [Run All Tests with Coverage](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-  - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
-- [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
-- [`testfailure` Label for Issues](#testfailure-label-for-issues)
-- [Writing Tests](#writing-tests)
-  - [Directory Organization](#directory-organization)
-  - [Bottom-Up Unit Testing](#bottom-up-unit-testing)
-  - [Test Code is Code](#test-code-is-code)
-  - [Testing Basics](#testing-basics)
-  - [Comparing Floating-Point Values](#comparing-floating-point-values)
-  - [Testing Exceptions](#testing-exceptions)
-  - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
-  - [Rendering Tests](#rendering-tests)
-  - [GLSL](#glsl)
-  - [Spies](#spies)
-  - [Test Data and Services](#test-data-and-services)
-  - [Promises](#promises)
-  - [Mocks](#mocks)
-  - [Categories](#categories)
-- [Manual Testing](#manual-testing)
-- [Pragmatic Advice](#pragmatic-advice)
-  - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
-  - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
-- [Resources](#resources)
+- [Testing Guide](#testing-guide)
+  - [Running the Tests](#running-the-tests)
+    - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
+      - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
+      - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
+      - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
+      - [Run Only WebGL Tests](#run-only-webgl-tests)
+      - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
+      - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
+      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+    - [Run Coverage](#run-coverage)
+  - [`testfailure` Label for Issues](#testfailure-label-for-issues)
+  - [Writing Tests](#writing-tests)
+    - [Directory Organization](#directory-organization)
+    - [Bottom-Up Unit Testing](#bottom-up-unit-testing)
+    - [Test Code is Code](#test-code-is-code)
+    - [Testing Basics](#testing-basics)
+    - [Comparing Floating-Point Values](#comparing-floating-point-values)
+    - [Testing Exceptions](#testing-exceptions)
+    - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
+    - [Rendering Tests](#rendering-tests)
+    - [GLSL](#glsl)
+    - [Spies](#spies)
+    - [Test Data and Services](#test-data-and-services)
+    - [Promises](#promises)
+    - [Mocks](#mocks)
+    - [Categories](#categories)
+  - [Manual Testing](#manual-testing)
+  - [Pragmatic Advice](#pragmatic-advice)
+    - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
+    - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
+  - [Resources](#resources)
 
 ## Running the Tests
 
 The CesiumJS tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework. Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**. Jasmine also calls an assertion, an **expectation**.
 
-When running CesiumJS locally, browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
+### Running Tests on the Command Line with Karma
 
-### Run All Tests
+[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
 
-Runs all the tests. As of CesiumJS 1.15, on a decent laptop, they run in about a minute in Chrome. It is important that the tests run quickly so we run them often.
+To run all tests with Karma, run `npm run test`.
 
-When all the tests pass, the page looks like this:
+When all tests pass, output looks like this:
 
-![](1.jpg)
+![](test.jpg)
 
-When one or more tests fail, the page looks like this:
+When one or more tests fail, output looks like this:
 
-![](2.jpg)
+![](test-fail.jpg)
 
-In this case, the number of failing tests is listed at the top, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack. The top several functions of the call stack are inside Jasmine and can be ignored. Above, the file and line of interest for the first failing test starts with an `@`:
+The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
-```
-@http://localhost:8080/Specs/Renderer/FramebufferSpec.js:637:13
-```
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
 
-Click on the failed test to rerun just that test. This is useful for saving time when fixing an issue as it avoids rerunning all the tests. Always rerun _all_ the tests before opening a pull request.
+When running CesiumJS locally, first [build the code](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/BuildGuide#build-the-code) and choose any of the following test options:
 
-#### Run with WebGL validation
+#### Run Tests with a Specific Browser or Browsers
 
-The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call. We use this when doing the monthly CesiumJS release and when making changes to CesiumJS's renderer.
+`npm run test -- --browsers Firefox,Chrome,Edge`
 
-#### Run with WebGL stub
+#### Run All Tests with WebGL Validation
 
-The **Run with WebGL stub** link passes a query parameter to the tests to use CesiumJS's WebGL stub. This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL. This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
+This option enables extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.
 
-### Select a Test to Run
+`npm run test-webgl-validation`
 
-This option loads the test page without running any tests.
+#### Run All Tests with WebGL Stub
 
-![](3.jpg)
+This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL. This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
 
-We can then use the browser's built-in search to find a test or suite and run only that. For example, below just the tests for `Cartesian3` were run.
+`npm run test-webgl-stub`
 
-![](7.jpg)
-
-This uses a query parameter to select the test/suite to run so refreshing the page will run just that test/suite again.
-
-Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request.
-
-### Run Only WebGL Tests
+#### Run Only WebGL Tests
 
 Suites can have a category associated with them. This option runs all tests in the `WebGL` category, which includes all tests that use WebGL (basically anything that requires creating a `Viewer`, `CesiumWidget`, `Scene`, or `Context`).
 
-### Run Only Non-WebGL Tests
+`npm run test-webgl`
+
+#### Run Only Non-WebGL Tests
 
 Likewise, this option runs all tests not in the WebGL category.
 
@@ -99,17 +94,37 @@ Perhaps surprisingly, this is the bulk of CesiumJS tests, which include math and
 
 These tests run quickly (for example, 15 seconds compared to 60) and are very reliable across systems since they do not rely on the underlying WebGL implementation, which can vary based on the browser, OS, driver, and GPU.
 
-### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
+`npm run test-non-webgl`
+
+#### Run All Tests Against the Minified Release Version of CesiumJS
 
 Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`). This option runs the tests using this instead of individual CesiumJS source files.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run minifyRelease`). This option runs the tests using this instead of individual CesiumJS source files. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options. When testing against built Cesium.js, the specs need to be built as well with `npm run build-specs`.
 
-The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
+`npm run test-release`
 
-See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
+#### Run a Single Test or Suite
 
-## Run Coverage
+Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+
+Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+
+`npm run test -- --includeName Cartesian2`
+
+Similarly, test suites can be excluded with the `--excludeName` flag.
+
+#### Using Browser Debugging Tools
+
+If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
+
+`npm run test -- --debug`
+
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+
+![](8.jpg)
+
+### Run Coverage
 
 We use [istanbul](https://istanbul.js.org/) via [karma-coverage](https://github.com/karma-runner/karma-coverage) to generate code coverage reports. It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
@@ -151,52 +166,6 @@ It is possible to have 100% code coverage with two tests: one test where `a` and
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**. Be mindful of this when writing tests. On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable. Use your knowledge of the implementation to devise the best strategy.
 
-### Running Tests on the Command Line with Karma
-
-[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
-
-To run all tests with Karma, run `npm run test`.
-
-When all tests pass, output looks like this:
-
-![](test.jpg)
-
-When one or more tests fail, output looks like this:
-
-![](test-fail.jpg)
-
-The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
-
-It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
-
-#### Run Tests with a Specific Browser or Browsers
-
-`npm run test -- --browsers Firefox,Chrome,Edge`
-
-#### Run All Tests with WebGL Validation
-
-`npm run test-webgl-validation`
-
-#### Run All Tests with WebGL Stub
-
-`npm run test-webgl-stub`
-
-#### Run Only WebGL Tests with Karma
-
-`npm run test-webgl`
-
-#### Run Only Non-WebGL Tests with Karma
-
-`npm run test-non-webgl`
-
-#### Run All Tests Against the Minified Release Version of CesiumJS
-
-`npm run test-release`
-
-#### Run a Single Test or Suite
-
-Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
-
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.
@@ -236,7 +205,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 
 describe("Cartesian3", function () {
   it("construct with default values", function () {
-    var cartesian = new Cartesian3();
+    const cartesian = new Cartesian3();
     expect(cartesian.x).toEqual(0.0);
     expect(cartesian.y).toEqual(0.0);
     expect(cartesian.z).toEqual(0.0);
@@ -262,8 +231,8 @@ We often can't rely on an exact floating-point comparison. In this case, use `to
 
 ```javascript
 it("angleBetween works for acute angles", function () {
-  var x = new Cartesian3(0.0, 1.0, 0.0);
-  var y = new Cartesian3(1.0, 1.0, 0.0);
+  const x = new Cartesian3(0.0, 1.0, 0.0);
+  const y = new Cartesian3(1.0, 1.0, 0.0);
   expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
     CesiumMath.EPSILON14
@@ -311,7 +280,7 @@ it("fromDegrees throws with no latitude", function () {
 The Jasmine functions `beforeAll` and `afterAll` are used to run a function before and after, respectively, all the tests in a suite. Likewise, `beforeEach` and `afterEach` run a function before and after each test is run. For example, here is a common pattern from [DebugModelMatrixPrimitiveSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/DebugModelMatrixPrimitiveSpec.js):
 
 ```javascript
-var scene;
+let scene;
 
 beforeAll(function () {
   scene = createScene();
@@ -330,7 +299,7 @@ Above, `scene` is scoped at the suite-level, so all tests in the file have acces
 
 ```javascript
 it("renders", function () {
-  var p = scene.primitives.add(new DebugModelMatrixPrimitive());
+  const p = scene.primitives.add(new DebugModelMatrixPrimitive());
   expect(scene).notToRender([0, 0, 0, 255]);
 });
 ```
@@ -367,7 +336,7 @@ CesiumJS adds several custom Jasmine matchers to make the rendering tests more c
 
 ```javascript
 it("renders", function () {
-  var p = scene.primitives.add(new DebugModelMatrixPrimitive());
+  const p = scene.primitives.add(new DebugModelMatrixPrimitive());
   expect(scene).notToRender([0, 0, 0, 255]);
 });
 
@@ -410,7 +379,7 @@ For reliability across WebGL implementations, use complex expectations in `toRen
 Similar custom matchers are used for picking tests:
 
 ```javascript
-var b = billboards.add(/* ... */);
+const b = billboards.add(/* ... */);
 expect(scene).toPickPrimitive(b); // Can also use toPickAndCall() and toDrillPickAndCall()
 
 b.show = false;
@@ -450,7 +419,7 @@ Uniforms, the model matrix, and various depth options can be provided. In additi
 
 ```javascript
 it("can declare automatic uniforms", function () {
-  var fs =
+  const fs =
     "void main() { " +
     "  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); " +
     "}";
@@ -466,7 +435,7 @@ it("can declare automatic uniforms", function () {
 GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU. Under-the-hood, CesiumJS contains a library of GLSL identifiers and functions. These are unit tested by writing a simple fragment shader that outputs white if the test passes. For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Renderer/BuiltinFunctionsSpec.js);
 
 ```javascript
-var context;
+let context;
 
 beforeAll(function () {
   context = createContext();
@@ -477,7 +446,7 @@ afterAll(function () {
 });
 
 it("has czm_transpose (2x2)", function () {
-  var fs =
+  const fs =
     "void main() { " +
     "  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); " +
     "  mat2 mt = mat2(1.0, 3.0, 2.0, 4.0); " +
@@ -504,9 +473,9 @@ Here is an excerpt from [TweenCollectionSpec.js](https://github.com/CesiumGS/ces
 
 ```javascript
 it("add() adds with a duration of zero", function () {
-  var complete = jasmine.createSpy("complete");
+  const complete = jasmine.createSpy("complete");
 
-  var tweens = new TweenCollection();
+  const tweens = new TweenCollection();
   tweens.add({
     startObject: {},
     stopObject: {},
@@ -525,7 +494,7 @@ Spies can also provide more information about the function call (or calls). Here
 
 ```javascript
 it("Zooms to longitude, latitude, height", function () {
-  var viewModel = new GeocoderViewModel({
+  const viewModel = new GeocoderViewModel({
     scene: scene,
   });
 
@@ -555,7 +524,7 @@ it("Applies the right render state", function () {
   spyOn(RenderState, "fromCache").and.callThrough();
 
   return loadModelJson(texturedBoxModel.gltf).then(function (model) {
-    var rs = {
+    const rs = {
       frontFace: WebGLConstants.CCW,
       cull: {
         enabled: true,
@@ -593,14 +562,14 @@ For asynchronous testing, Jasmine's `it` function uses a `done` callback. For be
 Here is an excerpt from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/ModelSpec.js):
 
 ```javascript
-var texturedBoxUrl = "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf";
-var texturedBoxModel;
+const texturedBoxUrl = "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf";
+const texturedBoxModel;
 
-var cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
-var cesiumAirModel;
+const cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
+const cesiumAirModel;
 
 beforeAll(function () {
-  var modelPromises = [];
+  const modelPromises = [];
   modelPromises.push(
     loadModel(texturedBoxUrl).then(function (model) {
       texturedBoxModel = model;
@@ -612,7 +581,7 @@ beforeAll(function () {
     })
   );
 
-  return when.all(modelPromises);
+  return Promise.all(modelPromises);
 });
 ```
 
@@ -622,7 +591,7 @@ Here is an implementation of `loadModel`:
 
 ```javascript
 function loadModelJson(gltf) {
-  var model = primitives.add(new Model());
+  const model = primitives.add(new Model());
 
   return pollToPromise(
     function () {
@@ -643,7 +612,7 @@ Since loading a model requires asynchronous requests and creating WebGL resource
 
 ```javascript
 it("can create a billboard using a URL", function () {
-  var b = billboards.add({
+  const b = billboards.add({
     image: "./Data/Images/Green.png",
   });
   expect(b.ready).toEqual(false);
@@ -662,9 +631,9 @@ To test if a promises rejects, we call `fail` in the resolve function and put th
 
 ```javascript
 it("rejects readyPromise on error", function () {
-  var baseUrl = "//tiledArcGisMapServer.invalid";
+  const baseUrl = "//tiledArcGisMapServer.invalid";
 
-  var provider = new ArcGisMapServerImageryProvider({
+  const provider = new ArcGisMapServerImageryProvider({
     url: baseUrl,
   });
 
@@ -672,7 +641,7 @@ it("rejects readyPromise on error", function () {
     .then(function () {
       fail("should not resolve");
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       expect(e.message).toContain(baseUrl);
       expect(provider.ready).toBe(false);
     });
@@ -692,7 +661,7 @@ function MockPrimitive(command) {
 }
 
 it("debugCommandFilter filters commands", function () {
-  var c = new DrawCommand({
+  const c = new DrawCommand({
     pass: Pass.OPAQUE,
   });
   c.execute = function () {};
@@ -724,7 +693,7 @@ import createScene from "../createScene.js";
 describe(
   "Scene/DebugModelMatrixPrimitive",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();

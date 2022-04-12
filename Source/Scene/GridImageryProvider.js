@@ -3,11 +3,10 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import when from "../ThirdParty/when.js";
 
-var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
-var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
-var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
+const defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
+const defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
+const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
  * @typedef {Object} GridImageryProvider.ConstructorOptions
@@ -149,7 +148,7 @@ function GridImageryProvider(options) {
   // We only need a single canvas since all tiles will be the same
   this._canvas = this._createGridCanvas();
 
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(GridImageryProvider.prototype, {
@@ -330,11 +329,11 @@ Object.defineProperties(GridImageryProvider.prototype, {
  * Draws a grid of lines into a canvas.
  */
 GridImageryProvider.prototype._drawGrid = function (context) {
-  var minPixel = 0;
-  var maxPixel = this._canvasSize;
-  for (var x = 0; x <= this._cells; ++x) {
-    var nx = x / this._cells;
-    var val = 1 + nx * (maxPixel - 1);
+  const minPixel = 0;
+  const maxPixel = this._canvasSize;
+  for (let x = 0; x <= this._cells; ++x) {
+    const nx = x / this._cells;
+    const val = 1 + nx * (maxPixel - 1);
 
     context.moveTo(val, minPixel);
     context.lineTo(val, maxPixel);
@@ -348,21 +347,21 @@ GridImageryProvider.prototype._drawGrid = function (context) {
  * Render a grid into a canvas with background and glow
  */
 GridImageryProvider.prototype._createGridCanvas = function () {
-  var canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = this._canvasSize;
   canvas.height = this._canvasSize;
-  var minPixel = 0;
-  var maxPixel = this._canvasSize;
+  const minPixel = 0;
+  const maxPixel = this._canvasSize;
 
-  var context = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
   // Fill the background
-  var cssBackgroundColor = this._backgroundColor.toCssColorString();
+  const cssBackgroundColor = this._backgroundColor.toCssColorString();
   context.fillStyle = cssBackgroundColor;
   context.fillRect(minPixel, minPixel, maxPixel, maxPixel);
 
   // Glow for grid lines
-  var cssGlowColor = this._glowColor.toCssColorString();
+  const cssGlowColor = this._glowColor.toCssColorString();
   context.strokeStyle = cssGlowColor;
   // Wide
   context.lineWidth = this._glowWidth;
@@ -374,7 +373,7 @@ GridImageryProvider.prototype._createGridCanvas = function () {
   this._drawGrid(context);
 
   // Grid lines
-  var cssColor = this._color.toCssColorString();
+  const cssColor = this._color.toCssColorString();
   // Border
   context.strokeStyle = cssColor;
   context.lineWidth = 2;
@@ -411,7 +410,7 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @returns {HTMLCanvasElement} The resolved image as a Canvas DOM object.
  */
 GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
-  return this._canvas;
+  return Promise.resolve(this._canvas);
 };
 
 /**

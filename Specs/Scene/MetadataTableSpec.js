@@ -6,7 +6,7 @@ describe("Scene/MetadataTable", function () {
     return;
   }
 
-  var enums = {
+  const enums = {
     myEnum: {
       values: [
         {
@@ -26,34 +26,35 @@ describe("Scene/MetadataTable", function () {
   };
 
   it("creates metadata table with default values", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(metadataTable.count).toBe(10);
-    expect(metadataTable.class).toBeUndefined();
   });
 
   it("creates metadata table", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
 
-    var expectedPropertyNames = ["height", "name"];
+    const expectedPropertyNames = ["height", "name"];
 
     expect(metadataTable.count).toBe(2);
     expect(metadataTable.getPropertyIds().sort()).toEqual(
@@ -66,7 +67,9 @@ describe("Scene/MetadataTable", function () {
 
   it("constructor throws without count", function () {
     expect(function () {
-      return new MetadataTable({});
+      return new MetadataTable({
+        class: {},
+      });
     }).toThrowDeveloperError();
   });
 
@@ -74,27 +77,39 @@ describe("Scene/MetadataTable", function () {
     expect(function () {
       return new MetadataTable({
         count: 0,
+        class: {},
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws if class is undefined", function () {
+    expect(function () {
+      return new MetadataTable({
+        count: 1,
+        class: undefined,
       });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.hasProperty("height")).toBe(false);
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -103,15 +118,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -120,21 +136,22 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -143,8 +160,9 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasProperty throws without propertyId", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(function () {
       metadataTable.hasProperty();
@@ -152,22 +170,24 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no properties", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -176,16 +196,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -194,22 +215,23 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -218,8 +240,9 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("hasPropertyBySemantic throws without semantic", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(function () {
       metadataTable.hasPropertyBySemantic(undefined);
@@ -227,27 +250,29 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyIds returns empty array when there are no properties", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getPropertyIds().length).toBe(0);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -256,21 +281,22 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -279,71 +305,75 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
       name: {
         type: "STRING",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
 
-    var results = [];
-    var returnedResults = metadataTable.getPropertyIds(results);
+    const results = [];
+    const returnedResults = metadataTable.getPropertyIds(results);
 
     expect(results).toBe(returnedResults);
     expect(results.sort()).toEqual(["height", "name"]);
   });
 
   it("getProperty", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "INT8",
+        type: "SCALAR",
+        componentType: "INT8",
       },
     };
 
-    var propertyValues = [-128, 10];
+    const propertyValues = [-128, 10];
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: {
         propertyInt8: propertyValues,
       },
     });
 
-    var length = propertyValues.length;
-    for (var i = 0; i < length; ++i) {
-      var value = metadataTable.getProperty(i, "propertyInt8");
+    const length = propertyValues.length;
+    for (let i = 0; i < length; ++i) {
+      const value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(propertyValues[i]);
     }
   });
 
   it("getProperty returns undefined when there's no properties", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getProperty(0, "height")).toBeUndefined();
   });
 
   it("getProperty returns undefined when there's no property with the given property ID", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -352,14 +382,14 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getProperty returns the default value when the property is missing", function () {
-    var position = [0.0, 0.0, 0.0];
+    const position = [0, 0, 0];
+    const defaultBoundingSphere = [0, 0, 0, 1];
 
-    var properties = {
+    const properties = {
       position: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
-        optional: true,
+        required: false,
         default: position,
       },
       name: {
@@ -368,36 +398,48 @@ describe("Scene/MetadataTable", function () {
       type: {
         type: "ENUM",
         enumType: "myEnum",
-        optional: true,
+        required: false,
         default: "Other",
       },
+      boundingSphere: {
+        type: "SCALAR",
+        componentType: "FLOAT64",
+        array: true,
+        count: 4,
+        default: defaultBoundingSphere,
+      },
     };
-    var propertyValues = {
+    const propertyValues = {
       name: ["A", "B"],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
       enums: enums,
     });
 
-    var value = metadataTable.getProperty(0, "position");
+    const value = metadataTable.getProperty(0, "position");
     expect(value).toEqual(Cartesian3.unpack(position));
 
     expect(metadataTable.getProperty(0, "type")).toBe("Other");
+
+    const sphere = metadataTable.getProperty(0, "boundingSphere");
+    expect(sphere).toEqual(defaultBoundingSphere);
+    expect(sphere).not.toBe(defaultBoundingSphere); // it should clone the value
   });
 
   it("getProperty throws without index", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -408,15 +450,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getProperty throws without propertyId", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -427,15 +470,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getProperty throws if index is out of bounds", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -452,28 +496,29 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty sets values", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "INT8",
+        type: "SCALAR",
+        componentType: "INT8",
       },
     };
 
-    var propertyValues = [0, 0];
-    var valuesToSet = [-128, 10];
+    const propertyValues = [0, 0];
+    const valuesToSet = [-128, 10];
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: {
         propertyInt8: propertyValues,
       },
     });
 
-    var length = valuesToSet.length;
-    for (var i = 0; i < length; ++i) {
+    const length = valuesToSet.length;
+    for (let i = 0; i < length; ++i) {
       expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
         true
       );
-      var value = metadataTable.getProperty(i, "propertyInt8");
+      let value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(valuesToSet[i]);
       // Test setting / getting again
       expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
@@ -485,15 +530,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty returns false if the property ID doesn't exist", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -502,15 +548,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty throws without index", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -521,15 +568,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty throws without propertyId", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -540,15 +588,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty throws without value", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -559,15 +608,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setProperty throws if index is out of bounds", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -585,22 +635,24 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no class", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBeUndefined();
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -609,16 +661,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -627,16 +680,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyBySemantic throws without index", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -647,16 +701,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyBySemantic throws without semantic", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -667,16 +722,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyBySemantic throws if index is out of bounds", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -694,8 +750,9 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic doesn't set property value when there's no class", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
@@ -703,15 +760,16 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic returns false if the semantic doesn't exist", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -720,16 +778,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -739,16 +798,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic throws without index", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -759,16 +819,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -779,16 +840,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -799,16 +861,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("setPropertyBySemantic throws if index is out of bounds", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -826,21 +889,22 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArray returns typed array", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
 
-    var expectedTypedArray = new Float32Array([1.0, 2.0]);
+    const expectedTypedArray = new Float32Array([1.0, 2.0]);
 
     expect(metadataTable.getPropertyTypedArray("height")).toEqual(
       expectedTypedArray
@@ -848,16 +912,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArray returns undefined if property does not exist", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -866,8 +931,9 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArray throws if propertyId is undefined", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(function () {
@@ -876,22 +942,23 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArrayBySemantic returns typed array", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
 
-    var expectedTypedArray = new Float32Array([1.0, 2.0]);
+    const expectedTypedArray = new Float32Array([1.0, 2.0]);
 
     expect(metadataTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
       expectedTypedArray
@@ -899,16 +966,17 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArrayBySemantic returns undefined if semantic does not exist", function () {
-    var properties = {
+    const properties = {
       height: {
-        type: "FLOAT32",
+        type: "SCALAR",
+        componentType: "FLOAT32",
       },
     };
-    var propertyValues = {
+    const propertyValues = {
       height: [1.0, 2.0],
     };
 
-    var metadataTable = MetadataTester.createMetadataTable({
+    const metadataTable = MetadataTester.createMetadataTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -919,8 +987,9 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getPropertyTypedArrayBySemantic throws if semantic is undefined", function () {
-    var metadataTable = new MetadataTable({
+    const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(function () {

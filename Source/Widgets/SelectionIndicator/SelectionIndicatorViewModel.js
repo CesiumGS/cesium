@@ -6,8 +6,8 @@ import EasingFunction from "../../Core/EasingFunction.js";
 import SceneTransforms from "../../Scene/SceneTransforms.js";
 import knockout from "../../ThirdParty/knockout.js";
 
-var screenSpacePos = new Cartesian2();
-var offScreen = "-1000px";
+const screenSpacePos = new Cartesian2();
+const offScreen = "-1000px";
 
 /**
  * The view model for {@link SelectionIndicator}.
@@ -79,7 +79,7 @@ function SelectionIndicatorViewModel(
 
   knockout.defineProperty(this, "_transform", {
     get: function () {
-      return "scale(" + this._scale + ")";
+      return `scale(${this._scale})`;
     },
   });
 
@@ -106,7 +106,7 @@ function SelectionIndicatorViewModel(
  */
 SelectionIndicatorViewModel.prototype.update = function () {
   if (this.showSelection && defined(this.position)) {
-    var screenPosition = this.computeScreenSpacePosition(
+    const screenPosition = this.computeScreenSpacePosition(
       this.position,
       screenSpacePos
     );
@@ -114,11 +114,11 @@ SelectionIndicatorViewModel.prototype.update = function () {
       this._screenPositionX = offScreen;
       this._screenPositionY = offScreen;
     } else {
-      var container = this._container;
-      var containerWidth = container.parentNode.clientWidth;
-      var containerHeight = container.parentNode.clientHeight;
-      var indicatorSize = this._selectionIndicatorElement.clientWidth;
-      var halfSize = indicatorSize * 0.5;
+      const container = this._container;
+      const containerWidth = container.parentNode.clientWidth;
+      const containerHeight = container.parentNode.clientHeight;
+      const indicatorSize = this._selectionIndicatorElement.clientWidth;
+      const halfSize = indicatorSize * 0.5;
 
       screenPosition.x =
         Math.min(
@@ -131,8 +131,8 @@ SelectionIndicatorViewModel.prototype.update = function () {
           containerHeight + indicatorSize
         ) - halfSize;
 
-      this._screenPositionX = Math.floor(screenPosition.x + 0.25) + "px";
-      this._screenPositionY = Math.floor(screenPosition.y + 0.25) + "px";
+      this._screenPositionX = `${Math.floor(screenPosition.x + 0.25)}px`;
+      this._screenPositionY = `${Math.floor(screenPosition.y + 0.25)}px`;
     }
   }
 };

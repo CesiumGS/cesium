@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 
 /**
@@ -26,13 +25,13 @@ import Check from "./Check.js";
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
- * Cesium.when(promise, function(updatedPositions) {
+ * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * Promise.resolve(promise).then(function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
  * });
@@ -50,20 +49,20 @@ function sampleTerrain(terrainProvider, level, positions) {
 }
 
 function doSampling(terrainProvider, level, positions) {
-  var tilingScheme = terrainProvider.tilingScheme;
+  const tilingScheme = terrainProvider.tilingScheme;
 
-  var i;
+  let i;
 
   // Sort points into a set of tiles
-  var tileRequests = []; // Result will be an Array as it's easier to work with
-  var tileRequestSet = {}; // A unique set
+  const tileRequests = []; // Result will be an Array as it's easier to work with
+  const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
-    var xy = tilingScheme.positionToTileXY(positions[i], level);
-    var key = xy.toString();
+    const xy = tilingScheme.positionToTileXY(positions[i], level);
+    const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
       // When tile is requested for the first time
-      var value = {
+      const value = {
         x: xy.x,
         y: xy.y,
         level: level,
@@ -80,21 +79,21 @@ function doSampling(terrainProvider, level, positions) {
   }
 
   // Send request for each required tile
-  var tilePromises = [];
+  const tilePromises = [];
   for (i = 0; i < tileRequests.length; ++i) {
-    var tileRequest = tileRequests[i];
-    var requestPromise = tileRequest.terrainProvider.requestTileGeometry(
+    const tileRequest = tileRequests[i];
+    const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
       tileRequest.y,
       tileRequest.level
     );
-    var tilePromise = requestPromise
+    const tilePromise = requestPromise
       .then(createInterpolateFunction(tileRequest))
-      .otherwise(createMarkFailedFunction(tileRequest));
+      .catch(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
   }
 
-  return when.all(tilePromises, function () {
+  return Promise.all(tilePromises).then(function () {
     return positions;
   });
 }
@@ -111,7 +110,7 @@ function doSampling(terrainProvider, level, positions) {
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {
-  var height = terrainData.interpolateHeight(
+  const height = terrainData.interpolateHeight(
     rectangle,
     position.longitude,
     position.latitude
@@ -127,17 +126,17 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
 }
 
 function createInterpolateFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
-  var rectangle = tileRequest.tilingScheme.tileXYToRectangle(
+  const tilePositions = tileRequest.positions;
+  const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
     tileRequest.y,
     tileRequest.level
   );
   return function (terrainData) {
-    var isMeshRequired = false;
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
-      var isHeightAssigned = interpolateAndAssignHeight(
+    let isMeshRequired = false;
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
+      const isHeightAssigned = interpolateAndAssignHeight(
         position,
         terrainData,
         rectangle
@@ -153,7 +152,7 @@ function createInterpolateFunction(tileRequest) {
 
     if (!isMeshRequired) {
       // all position heights were interpolated - we don't need the mesh
-      return when.resolve();
+      return Promise.resolve();
     }
 
     // create the mesh - and interpolate all the positions again
@@ -171,8 +170,8 @@ function createInterpolateFunction(tileRequest) {
       .then(function () {
         // mesh has been created - so go through every position (maybe again)
         //  and re-interpolate the heights - presumably using the mesh this time
-        for (var i = 0; i < tilePositions.length; ++i) {
-          var position = tilePositions[i];
+        for (let i = 0; i < tilePositions.length; ++i) {
+          const position = tilePositions[i];
           // if it doesn't work this time - that's fine, we tried.
           interpolateAndAssignHeight(position, terrainData, rectangle);
         }
@@ -181,10 +180,10 @@ function createInterpolateFunction(tileRequest) {
 }
 
 function createMarkFailedFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
+  const tilePositions = tileRequest.positions;
   return function () {
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
       position.height = undefined;
     }
   };

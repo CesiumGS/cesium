@@ -6,6 +6,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -16,13 +17,12 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Transforms from "../Core/Transforms.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
-import addDefaults from "../ThirdParty/GltfPipeline/addDefaults.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
-import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
-import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
-import when from "../ThirdParty/when.js";
+import addDefaults from "./GltfPipeline/addDefaults.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import parseGlb from "./GltfPipeline/parseGlb.js";
+import updateVersion from "./GltfPipeline/updateVersion.js";
 import Axis from "./Axis.js";
 import ModelLoadResources from "./ModelLoadResources.js";
 import ModelUtility from "./ModelUtility.js";
@@ -32,9 +32,9 @@ import SceneMode from "./SceneMode.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";
 import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
 
-var boundingSphereCartesian3Scratch = new Cartesian3();
+const boundingSphereCartesian3Scratch = new Cartesian3();
 
-var ModelState = ModelUtility.ModelState;
+const ModelState = ModelUtility.ModelState;
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +66,7 @@ var ModelState = ModelUtility.ModelState;
 function ClassificationModel(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var gltf = options.gltf;
+  let gltf = options.gltf;
   if (gltf instanceof ArrayBuffer) {
     gltf = new Uint8Array(gltf);
   }
@@ -90,11 +90,11 @@ function ClassificationModel(options) {
     }
   });
 
-  var gltfNodes = gltf.nodes;
-  var gltfMeshes = gltf.meshes;
+  const gltfNodes = gltf.nodes;
+  const gltfMeshes = gltf.meshes;
 
-  var gltfNode = gltfNodes[0];
-  var meshId = gltfNode.mesh;
+  const gltfNode = gltfNodes[0];
+  const meshId = gltfNode.mesh;
   if (gltfNodes.length !== 1 || !defined(meshId)) {
     throw new RuntimeError(
       "Only one node is supported for classification and it must have a mesh."
@@ -107,19 +107,19 @@ function ClassificationModel(options) {
     );
   }
 
-  var gltfPrimitives = gltfMeshes[0].primitives;
+  const gltfPrimitives = gltfMeshes[0].primitives;
   if (gltfPrimitives.length !== 1) {
     throw new RuntimeError(
       "Only one primitive per mesh is supported when using b3dm for classification."
     );
   }
 
-  var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
+  const gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
   if (!defined(gltfPositionAttribute)) {
     throw new RuntimeError("The mesh must have a position attribute.");
   }
 
-  var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
+  const gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
   if (!defined(gltfBatchIdAttribute)) {
     throw new RuntimeError("The mesh must have a batch id attribute.");
   }
@@ -146,7 +146,7 @@ function ClassificationModel(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -155,7 +155,7 @@ function ClassificationModel(options) {
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -262,7 +262,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    *
    * @example
    * // Center in WGS84 coordinates
-   * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+   * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
    */
   boundingSphere: {
     get: function () {
@@ -274,13 +274,13 @@ Object.defineProperties(ClassificationModel.prototype, {
       }
       //>>includeEnd('debug');
 
-      var modelMatrix = this.modelMatrix;
-      var nonUniformScale = Matrix4.getScale(
+      const modelMatrix = this.modelMatrix;
+      const nonUniformScale = Matrix4.getScale(
         modelMatrix,
         boundingSphereCartesian3Scratch
       );
 
-      var scaledBoundingSphere = this._scaledBoundingSphere;
+      const scaledBoundingSphere = this._scaledBoundingSphere;
       scaledBoundingSphere.center = Cartesian3.multiplyComponents(
         this._boundingSphere.center,
         nonUniformScale,
@@ -456,17 +456,17 @@ Object.defineProperties(ClassificationModel.prototype, {
 ///////////////////////////////////////////////////////////////////////////
 
 function addBuffersToLoadResources(model) {
-  var gltf = model.gltf;
-  var loadResources = model._loadResources;
+  const gltf = model.gltf;
+  const loadResources = model._loadResources;
   ForEach.buffer(gltf, function (buffer, id) {
     loadResources.buffers[id] = buffer.extras._pipeline.source;
   });
 }
 
 function parseBufferViews(model) {
-  var bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltf.bufferViews;
 
-  var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
+  const vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
   // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
   ForEach.bufferView(model.gltf, function (bufferView, id) {
@@ -475,15 +475,15 @@ function parseBufferViews(model) {
     }
   });
 
-  var indexBuffersToCreate = model._loadResources.indexBuffersToCreate;
-  var indexBufferIds = {};
+  const indexBuffersToCreate = model._loadResources.indexBuffersToCreate;
+  const indexBufferIds = {};
 
   // The Cesium Renderer requires knowing the datatype for an index buffer
   // at creation type, which is not part of the glTF bufferview so loop
   // through glTF accessors to create the bufferview's index buffer.
   ForEach.accessor(model.gltf, function (accessor) {
-    var bufferViewId = accessor.bufferView;
-    var bufferView = bufferViews[bufferViewId];
+    const bufferViewId = accessor.bufferView;
+    const bufferView = bufferViews[bufferViewId];
 
     if (
       bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER &&
@@ -499,19 +499,19 @@ function parseBufferViews(model) {
 }
 
 function createVertexBuffer(bufferViewId, model) {
-  var loadResources = model._loadResources;
-  var bufferViews = model.gltf.bufferViews;
-  var bufferView = bufferViews[bufferViewId];
-  var vertexBuffer = loadResources.getBuffer(bufferView);
+  const loadResources = model._loadResources;
+  const bufferViews = model.gltf.bufferViews;
+  const bufferView = bufferViews[bufferViewId];
+  const vertexBuffer = loadResources.getBuffer(bufferView);
   model._buffers[bufferViewId] = vertexBuffer;
   model._geometryByteLength += vertexBuffer.byteLength;
 }
 
 function createIndexBuffer(bufferViewId, componentType, model) {
-  var loadResources = model._loadResources;
-  var bufferViews = model.gltf.bufferViews;
-  var bufferView = bufferViews[bufferViewId];
-  var indexBuffer = {
+  const loadResources = model._loadResources;
+  const bufferViews = model.gltf.bufferViews;
+  const bufferView = bufferViews[bufferViewId];
+  const indexBuffer = {
     typedArray: loadResources.getBuffer(bufferView),
     indexDatatype: componentType,
   };
@@ -520,28 +520,28 @@ function createIndexBuffer(bufferViewId, componentType, model) {
 }
 
 function createBuffers(model) {
-  var loadResources = model._loadResources;
+  const loadResources = model._loadResources;
 
   if (loadResources.pendingBufferLoads !== 0) {
     return;
   }
 
-  var vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
-  var indexBuffersToCreate = loadResources.indexBuffersToCreate;
+  const vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
+  const indexBuffersToCreate = loadResources.indexBuffersToCreate;
 
   while (vertexBuffersToCreate.length > 0) {
     createVertexBuffer(vertexBuffersToCreate.dequeue(), model);
   }
 
   while (indexBuffersToCreate.length > 0) {
-    var i = indexBuffersToCreate.dequeue();
+    const i = indexBuffersToCreate.dequeue();
     createIndexBuffer(i.id, i.componentType, model);
   }
 }
 
 function modifyShaderForQuantizedAttributes(shader, model) {
-  var primitive = model.gltf.meshes[0].primitives[0];
-  var result = ModelUtility.modifyShaderForQuantizedAttributes(
+  const primitive = model.gltf.meshes[0].primitives[0];
+  const result = ModelUtility.modifyShaderForQuantizedAttributes(
     model.gltf,
     primitive,
     shader
@@ -558,35 +558,35 @@ function modifyShader(shader, callback) {
 }
 
 function createProgram(model) {
-  var gltf = model.gltf;
+  const gltf = model.gltf;
 
-  var positionName = ModelUtility.getAttributeOrUniformBySemantic(
+  const positionName = ModelUtility.getAttributeOrUniformBySemantic(
     gltf,
     "POSITION"
   );
-  var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(
+  const batchIdName = ModelUtility.getAttributeOrUniformBySemantic(
     gltf,
     "_BATCHID"
   );
 
-  var attributeLocations = {};
+  const attributeLocations = {};
   attributeLocations[positionName] = 0;
   attributeLocations[batchIdName] = 1;
 
-  var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(
+  const modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(
     gltf,
     "MODELVIEWPROJECTION"
   );
 
-  var uniformDecl;
-  var toClip;
+  let uniformDecl;
+  let toClip;
 
   if (!defined(modelViewProjectionName)) {
-    var projectionName = ModelUtility.getAttributeOrUniformBySemantic(
+    const projectionName = ModelUtility.getAttributeOrUniformBySemantic(
       gltf,
       "PROJECTION"
     );
-    var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(
+    let modelViewName = ModelUtility.getAttributeOrUniformBySemantic(
       gltf,
       "MODELVIEW"
     );
@@ -598,39 +598,20 @@ function createProgram(model) {
     }
 
     uniformDecl =
-      "uniform mat4 " +
-      modelViewName +
-      ";\n" +
-      "uniform mat4 " +
-      projectionName +
-      ";\n";
-    toClip =
-      projectionName +
-      " * " +
-      modelViewName +
-      " * vec4(" +
-      positionName +
-      ", 1.0)";
+      `uniform mat4 ${modelViewName};\n` + `uniform mat4 ${projectionName};\n`;
+    toClip = `${projectionName} * ${modelViewName} * vec4(${positionName}, 1.0)`;
   } else {
-    uniformDecl = "uniform mat4 " + modelViewProjectionName + ";\n";
-    toClip = modelViewProjectionName + " * vec4(" + positionName + ", 1.0)";
+    uniformDecl = `uniform mat4 ${modelViewProjectionName};\n`;
+    toClip = `${modelViewProjectionName} * vec4(${positionName}, 1.0)`;
   }
 
-  var computePosition = "    vec4 positionInClipCoords = " + toClip + ";\n";
+  const computePosition = `    vec4 positionInClipCoords = ${toClip};\n`;
 
-  var vs =
-    "attribute vec3 " +
-    positionName +
-    ";\n" +
-    "attribute float " +
-    batchIdName +
-    ";\n" +
-    uniformDecl +
-    "void main() {\n" +
-    computePosition +
-    "    gl_Position = czm_depthClamp(positionInClipCoords);\n" +
-    "}\n";
-  var fs =
+  let vs =
+    `attribute vec3 ${positionName};\n` +
+    `attribute float ${batchIdName};\n${uniformDecl}void main() {\n${computePosition}    gl_Position = czm_depthClamp(positionInClipCoords);\n` +
+    `}\n`;
+  const fs =
     "#ifdef GL_EXT_frag_depth\n" +
     "#extension GL_EXT_frag_depth : enable\n" +
     "#endif\n" +
@@ -644,8 +625,8 @@ function createProgram(model) {
     vs = modifyShaderForQuantizedAttributes(vs, model);
   }
 
-  var drawVS = modifyShader(vs, model._vertexShaderLoaded);
-  var drawFS = modifyShader(fs, model._classificationShaderLoaded);
+  const drawVS = modifyShader(vs, model._vertexShaderLoaded);
+  const drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
   model._shaderProgram = {
     vertexShaderSource: drawVS,
@@ -662,29 +643,29 @@ function getAttributeLocations() {
 }
 
 function createVertexArray(model) {
-  var loadResources = model._loadResources;
+  const loadResources = model._loadResources;
   if (!loadResources.finishedBuffersCreation() || defined(model._vertexArray)) {
     return;
   }
 
-  var rendererBuffers = model._buffers;
-  var gltf = model.gltf;
-  var accessors = gltf.accessors;
-  var meshes = gltf.meshes;
-  var primitives = meshes[0].primitives;
+  const rendererBuffers = model._buffers;
+  const gltf = model.gltf;
+  const accessors = gltf.accessors;
+  const meshes = gltf.meshes;
+  const primitives = meshes[0].primitives;
 
-  var primitive = primitives[0];
-  var attributeLocations = getAttributeLocations();
-  var attributes = {};
+  const primitive = primitives[0];
+  const attributeLocations = getAttributeLocations();
+  const attributes = {};
   ForEach.meshPrimitiveAttribute(primitive, function (
     accessorId,
     attributeName
   ) {
     // Skip if the attribute is not used by the material, e.g., because the asset
     // was exported with an attribute that wasn't used and the asset wasn't optimized.
-    var attributeLocation = attributeLocations[attributeName];
+    const attributeLocation = attributeLocations[attributeName];
     if (defined(attributeLocation)) {
-      var a = accessors[accessorId];
+      const a = accessors[accessorId];
       attributes[attributeName] = {
         index: attributeLocation,
         vertexBuffer: rendererBuffers[a.bufferView],
@@ -696,9 +677,9 @@ function createVertexArray(model) {
     }
   });
 
-  var indexBuffer;
+  let indexBuffer;
   if (defined(primitive.indices)) {
-    var accessor = accessors[primitive.indices];
+    const accessor = accessors[primitive.indices];
     indexBuffer = rendererBuffers[accessor.bufferView];
   }
   model._vertexArray = {
@@ -707,7 +688,7 @@ function createVertexArray(model) {
   };
 }
 
-var gltfSemanticUniforms = {
+const gltfSemanticUniforms = {
   PROJECTION: function (uniformState, model) {
     return ModelUtility.getGltfSemanticUniforms().PROJECTION(
       uniformState,
@@ -739,7 +720,7 @@ function createUniformMap(model, context) {
     return;
   }
 
-  var uniformMap = {};
+  const uniformMap = {};
   ForEach.technique(model.gltf, function (technique) {
     ForEach.techniqueUniform(technique, function (uniform, uniformName) {
       if (
@@ -780,31 +761,31 @@ function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
 }
 
 function createPrimitive(model) {
-  var batchTable = model._batchTable;
+  const batchTable = model._batchTable;
 
-  var uniformMap = model._uniformMap;
-  var vertexArray = model._vertexArray;
+  let uniformMap = model._uniformMap;
+  const vertexArray = model._vertexArray;
 
-  var gltf = model.gltf;
-  var accessors = gltf.accessors;
-  var gltfMeshes = gltf.meshes;
-  var primitive = gltfMeshes[0].primitives[0];
-  var ix = accessors[primitive.indices];
+  const gltf = model.gltf;
+  const accessors = gltf.accessors;
+  const gltfMeshes = gltf.meshes;
+  const primitive = gltfMeshes[0].primitives[0];
+  const ix = accessors[primitive.indices];
 
-  var positionAccessor = primitive.attributes.POSITION;
-  var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-  var boundingSphere = BoundingSphere.fromCornerPoints(
+  const positionAccessor = primitive.attributes.POSITION;
+  const minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
+  const boundingSphere = BoundingSphere.fromCornerPoints(
     Cartesian3.fromArray(minMax.min),
     Cartesian3.fromArray(minMax.max)
   );
 
-  var offset;
-  var count;
+  let offset;
+  let count;
   if (defined(ix)) {
     count = ix.count;
     offset = ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType); // glTF has offset in bytes.  Cesium has offsets in indices
   } else {
-    var positions = accessors[primitive.attributes.POSITION];
+    const positions = accessors[primitive.attributes.POSITION];
     count = positions.count;
     offset = 0;
   }
@@ -819,20 +800,20 @@ function createPrimitive(model) {
 
   // Add uniforms for decoding quantized attributes if used
   if (model.extensionsUsed.WEB3D_quantized_attributes) {
-    var quantizedUniformMap = createUniformsForQuantizedAttributes(
+    const quantizedUniformMap = createUniformsForQuantizedAttributes(
       model,
       primitive
     );
     uniformMap = combine(uniformMap, quantizedUniformMap);
   }
 
-  var attribute = vertexArray.attributes.POSITION;
-  var componentDatatype = attribute.componentDatatype;
-  var typedArray = attribute.vertexBuffer;
-  var byteOffset = typedArray.byteOffset;
-  var bufferLength =
+  let attribute = vertexArray.attributes.POSITION;
+  let componentDatatype = attribute.componentDatatype;
+  let typedArray = attribute.vertexBuffer;
+  let byteOffset = typedArray.byteOffset;
+  let bufferLength =
     typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-  var positionsBuffer = ComponentDatatype.createArrayBufferView(
+  let positionsBuffer = ComponentDatatype.createArrayBufferView(
     componentDatatype,
     typedArray.buffer,
     byteOffset,
@@ -845,15 +826,15 @@ function createPrimitive(model) {
   byteOffset = typedArray.byteOffset;
   bufferLength =
     typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-  var vertexBatchIds = ComponentDatatype.createArrayBufferView(
+  let vertexBatchIds = ComponentDatatype.createArrayBufferView(
     componentDatatype,
     typedArray.buffer,
     byteOffset,
     bufferLength
   );
 
-  var buffer = vertexArray.indexBuffer.typedArray;
-  var indices;
+  const buffer = vertexArray.indexBuffer.typedArray;
+  let indices;
   if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
     indices = new Uint16Array(
       buffer.buffer,
@@ -872,20 +853,20 @@ function createPrimitive(model) {
   vertexBatchIds = arraySlice(vertexBatchIds);
   indices = arraySlice(indices, offset, offset + count);
 
-  var batchIds = [];
-  var indexCounts = [];
-  var indexOffsets = [];
-  var batchedIndices = [];
+  const batchIds = [];
+  const indexCounts = [];
+  const indexOffsets = [];
+  const batchedIndices = [];
 
-  var currentId = vertexBatchIds[indices[0]];
+  let currentId = vertexBatchIds[indices[0]];
   batchIds.push(currentId);
   indexOffsets.push(0);
 
-  var batchId;
-  var indexOffset;
-  var indexCount;
-  var indicesLength = indices.length;
-  for (var j = 1; j < indicesLength; ++j) {
+  let batchId;
+  let indexOffset;
+  let indexCount;
+  const indicesLength = indices.length;
+  for (let j = 1; j < indicesLength; ++j) {
     batchId = vertexBatchIds[indices[j]];
     if (batchId !== currentId) {
       indexOffset = indexOffsets[indexOffsets.length - 1];
@@ -921,11 +902,13 @@ function createPrimitive(model) {
     })
   );
 
-  var shader = model._shaderProgram;
-  var vertexShaderSource = shader.vertexShaderSource;
-  var fragmentShaderSource = shader.fragmentShaderSource;
-  var attributeLocations = shader.attributeLocations;
-  var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
+  const shader = model._shaderProgram;
+  const vertexShaderSource = shader.vertexShaderSource;
+  const fragmentShaderSource = shader.fragmentShaderSource;
+  const attributeLocations = shader.attributeLocations;
+  const pickId = defined(model._pickIdLoaded)
+    ? model._pickIdLoaded()
+    : undefined;
 
   model._primitive = new Vector3DTilePrimitive({
     classificationType: model._classificationType,
@@ -955,7 +938,7 @@ function createPrimitive(model) {
 }
 
 function createRuntimeNodes(model) {
-  var loadResources = model._loadResources;
+  const loadResources = model._loadResources;
   if (!loadResources.finished()) {
     return;
   }
@@ -964,16 +947,16 @@ function createRuntimeNodes(model) {
     return;
   }
 
-  var gltf = model.gltf;
-  var nodes = gltf.nodes;
-  var gltfNode = nodes[0];
+  const gltf = model.gltf;
+  const nodes = gltf.nodes;
+  const gltfNode = nodes[0];
   model._nodeMatrix = ModelUtility.getTransform(gltfNode, model._nodeMatrix);
 
   createPrimitive(model);
 }
 
 function createResources(model, frameState) {
-  var context = frameState.context;
+  const context = frameState.context;
 
   ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
   createBuffers(model); // using glTF bufferViews
@@ -985,8 +968,8 @@ function createResources(model, frameState) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-var scratchComputedTranslation = new Cartesian4();
-var scratchComputedMatrixIn2D = new Matrix4();
+const scratchComputedTranslation = new Cartesian4();
+const scratchComputedMatrixIn2D = new Matrix4();
 
 function updateNodeModelMatrix(
   model,
@@ -994,10 +977,10 @@ function updateNodeModelMatrix(
   justLoaded,
   projection
 ) {
-  var computedModelMatrix = model._computedModelMatrix;
+  let computedModelMatrix = model._computedModelMatrix;
 
   if (model._mode !== SceneMode.SCENE3D && !model._ignoreCommands) {
-    var translation = Matrix4.getColumn(
+    const translation = Matrix4.getColumn(
       computedModelMatrix,
       3,
       scratchComputedTranslation
@@ -1010,8 +993,8 @@ function updateNodeModelMatrix(
       );
       model._rtcCenter = model._rtcCenter3D;
     } else {
-      var center = model.boundingSphere.center;
-      var to2D = Transforms.wgs84To2DModelMatrix(
+      const center = model.boundingSphere.center;
+      const to2D = Transforms.wgs84To2DModelMatrix(
         projection,
         center,
         scratchComputedMatrixIn2D
@@ -1033,7 +1016,7 @@ function updateNodeModelMatrix(
     }
   }
 
-  var primitive = model._primitive;
+  const primitive = model._primitive;
 
   if (modelTransformChanged || justLoaded) {
     Matrix4.multiplyTransformation(
@@ -1072,23 +1055,23 @@ ClassificationModel.prototype.update = function (frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
+  const supportsWebP = FeatureDetection.supportsWebP();
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     this._state = ModelState.LOADING;
     if (this._state !== ModelState.FAILED) {
-      var extensions = this.gltf.extensions;
+      const extensions = this.gltf.extensions;
       if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-        var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+        const center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
         if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
           this._rtcCenter3D = center;
 
-          var projection = frameState.mapProjection;
-          var ellipsoid = projection.ellipsoid;
-          var cartographic = ellipsoid.cartesianToCartographic(
+          const projection = frameState.mapProjection;
+          const ellipsoid = projection.ellipsoid;
+          const cartographic = ellipsoid.cartesianToCartographic(
             this._rtcCenter3D
           );
-          var projectedCart = projection.project(cartographic);
+          const projectedCart = projection.project(cartographic);
           Cartesian3.fromElements(
             projectedCart.z,
             projectedCart.x,
@@ -1107,8 +1090,8 @@ ClassificationModel.prototype.update = function (frameState) {
     }
   }
 
-  var loadResources = this._loadResources;
-  var justLoaded = false;
+  const loadResources = this._loadResources;
+  let justLoaded = false;
 
   if (this._state === ModelState.LOADING) {
     // Transition from LOADING -> LOADED once resources are downloaded and created.
@@ -1142,23 +1125,23 @@ ClassificationModel.prototype.update = function (frameState) {
     }
   }
 
-  var show = this.show;
+  const show = this.show;
 
   if ((show && this._state === ModelState.LOADED) || justLoaded) {
     this._dirty = false;
-    var modelMatrix = this.modelMatrix;
+    const modelMatrix = this.modelMatrix;
 
-    var modeChanged = frameState.mode !== this._mode;
+    const modeChanged = frameState.mode !== this._mode;
     this._mode = frameState.mode;
 
     // ClassificationModel's model matrix needs to be updated
-    var modelTransformChanged =
+    const modelTransformChanged =
       !Matrix4.equals(this._modelMatrix, modelMatrix) || modeChanged;
 
     if (modelTransformChanged || justLoaded) {
       Matrix4.clone(modelMatrix, this._modelMatrix);
 
-      var computedModelMatrix = this._computedModelMatrix;
+      const computedModelMatrix = this._computedModelMatrix;
       Matrix4.clone(modelMatrix, computedModelMatrix);
       if (this._upAxis === Axis.Y) {
         Matrix4.multiplyTransformation(
@@ -1189,7 +1172,7 @@ ClassificationModel.prototype.update = function (frameState) {
 
   if (justLoaded) {
     // Called after modelMatrix update.
-    var model = this;
+    const model = this;
     frameState.afterRender.push(function () {
       model._ready = true;
       model._readyPromise.resolve(model);

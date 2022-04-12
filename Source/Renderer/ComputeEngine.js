@@ -19,11 +19,11 @@ function ComputeEngine(context) {
   this._context = context;
 }
 
-var renderStateScratch;
-var drawCommandScratch = new DrawCommand({
+let renderStateScratch;
+const drawCommandScratch = new DrawCommand({
   primitiveType: PrimitiveType.TRIANGLES,
 });
-var clearCommandScratch = new ClearCommand({
+const clearCommandScratch = new ClearCommand({
   color: new Color(0.0, 0.0, 0.0, 0.0),
 });
 
@@ -83,27 +83,27 @@ ComputeEngine.prototype.execute = function (computeCommand) {
   Check.defined("computeCommand.outputTexture", computeCommand.outputTexture);
   //>>includeEnd('debug');
 
-  var outputTexture = computeCommand.outputTexture;
-  var width = outputTexture.width;
-  var height = outputTexture.height;
+  const outputTexture = computeCommand.outputTexture;
+  const width = outputTexture.width;
+  const height = outputTexture.height;
 
-  var context = this._context;
-  var vertexArray = defined(computeCommand.vertexArray)
+  const context = this._context;
+  const vertexArray = defined(computeCommand.vertexArray)
     ? computeCommand.vertexArray
     : context.getViewportQuadVertexArray();
-  var shaderProgram = defined(computeCommand.shaderProgram)
+  const shaderProgram = defined(computeCommand.shaderProgram)
     ? computeCommand.shaderProgram
     : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
-  var framebuffer = createFramebuffer(context, outputTexture);
-  var renderState = createRenderState(width, height);
-  var uniformMap = computeCommand.uniformMap;
+  const framebuffer = createFramebuffer(context, outputTexture);
+  const renderState = createRenderState(width, height);
+  const uniformMap = computeCommand.uniformMap;
 
-  var clearCommand = clearCommandScratch;
+  const clearCommand = clearCommandScratch;
   clearCommand.framebuffer = framebuffer;
   clearCommand.renderState = renderState;
   clearCommand.execute(context);
 
-  var drawCommand = drawCommandScratch;
+  const drawCommand = drawCommandScratch;
   drawCommand.vertexArray = vertexArray;
   drawCommand.renderState = renderState;
   drawCommand.shaderProgram = shaderProgram;

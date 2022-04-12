@@ -1,8 +1,8 @@
 export default function dataUriToBuffer(dataUri) {
-  var binaryString = atob(dataUri.split(",")[1]);
-  var length = binaryString.length;
-  var bytes = new Uint8Array(length);
-  for (var i = 0; i < length; ++i) {
+  const binaryString = atob(dataUri.split(",")[1]);
+  const length = binaryString.length;
+  const bytes = new Uint8Array(length);
+  for (let i = 0; i < length; ++i) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;

@@ -9,6 +9,29 @@ import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
+ * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
+ *
+ * @type {number[]}
+ */
+const includesReverseAxis = [
+  3034, // ETRS89-extended / LCC Europe
+  3035, // ETRS89-extended / LAEA Europe
+  3042, // ETRS89 / UTM zone 30N (N-E)
+  3043, // ETRS89 / UTM zone 31N (N-E)
+  3044, // ETRS89 / UTM zone 32N (N-E)
+];
+
+/**
+ * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
+ *
+ * @type {number[]}
+ */
+const excludesReverseAxis = [
+  4471, // Mayotte
+  4559, // French Antilles
+];
+
+/**
  * @typedef {Object} WebMapServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapServiceImageryProvider constructor
@@ -45,6 +68,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+ * @property {Resource|String} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -68,7 +92,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  *
  * @example
- * var provider = new Cesium.WebMapServiceImageryProvider({
+ * const provider = new Cesium.WebMapServiceImageryProvider({
  *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')
@@ -180,9 +204,13 @@ function WebMapServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(options.url);
+  this._getFeatureInfoUrl = defaultValue(
+    options.getFeatureInfoUrl,
+    options.url
+  );
 
-  var pickFeatureResource = resource.clone();
+  const resource = Resource.createIfNeeded(options.url);
+  const pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -203,7 +231,7 @@ function WebMapServiceImageryProvider(options) {
     );
   }
 
-  var that = this;
+  const that = this;
   this._reload = undefined;
   if (defined(options.times)) {
     this._timeDynamicImagery = new TimeDynamicImagery({
@@ -220,7 +248,7 @@ function WebMapServiceImageryProvider(options) {
     });
   }
 
-  var parameters = {};
+  const parameters = {};
   parameters.layers = options.layers;
   parameters.bbox =
     "{westProjected},{southProjected},{eastProjected},{northProjected}";
@@ -239,6 +267,25 @@ function WebMapServiceImageryProvider(options) {
         ? "EPSG:3857"
         : "CRS:84"
     );
+
+    // The axis order in previous versions of the WMS specifications was to always use easting (x or lon ) and northing (y or
+    // lat). WMS 1.3.0 specifies that, depending on the particular CRS, the x axis may or may not be oriented West-to-East,
+    // and the y axis may or may not be oriented South-to-North. The WMS portrayal operation shall account for axis order.
+    // This affects some of the EPSG codes that were commonly used such as ESPG:4326. The current implementation
+    // makes sure that coordinates passed to the server (as part of the GetMap BBOX parameter) as well as those advertised
+    // in the capabilities document reflect the inverse axe orders for EPSG codes between 4000 and 5000.
+    //  - Taken from Section 9.1.3 of https://download.osgeo.org/mapserver/docs/MapServer-56.pdf
+    const parts = parameters.crs.split(":");
+    if (parts[0] === "EPSG" && parts.length === 2) {
+      const code = Number(parts[1]);
+      if (
+        (code >= 4000 && code < 5000 && !excludesReverseAxis.includes(code)) ||
+        includesReverseAxis.includes(code)
+      ) {
+        parameters.bbox =
+          "{southProjected},{westProjected},{northProjected},{eastProjected}";
+      }
+    }
   } else {
     // SRS for WMS 1.1.0 or 1.1.1.
     parameters.srs = defaultValue(
@@ -253,7 +300,7 @@ function WebMapServiceImageryProvider(options) {
   resource.setQueryParameters(parameters, true);
   pickFeatureResource.setQueryParameters(parameters, true);
 
-  var pickFeatureParams = {
+  const pickFeatureParams = {
     query_layers: options.layers,
     info_format: "{format}",
   };
@@ -296,8 +343,8 @@ function WebMapServiceImageryProvider(options) {
 }
 
 function requestImage(imageryProvider, col, row, level, request, interval) {
-  var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-  var tileProvider = imageryProvider._tileProvider;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const tileProvider = imageryProvider._tileProvider;
 
   if (defined(dynamicIntervalData)) {
     // We set the query parameters within the tile provider, because it is managing the query.
@@ -315,8 +362,8 @@ function pickFeatures(
   latitude,
   interval
 ) {
-  var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-  var tileProvider = imageryProvider._tileProvider;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const tileProvider = imageryProvider._tileProvider;
 
   if (defined(dynamicIntervalData)) {
     // We set the query parameters within the tile provider, because it is managing the query.
@@ -569,6 +616,18 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
       this._timeDynamicImagery.times = value;
     },
   },
+
+  /**
+   * Gets the getFeatureInfo URL of the WMS server.
+   * @memberof WebMapServiceImageryProvider.prototype
+   * @type {Resource|String}
+   * @readonly
+   */
+  getFeatureInfoUrl: {
+    get: function () {
+      return this._getFeatureInfoUrl;
+    },
+  },
 });
 
 /**
@@ -606,9 +665,9 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var result;
-  var timeDynamicImagery = this._timeDynamicImagery;
-  var currentInterval;
+  let result;
+  const timeDynamicImagery = this._timeDynamicImagery;
+  let currentInterval;
 
   // Try and load from cache
   if (defined(timeDynamicImagery)) {
@@ -651,8 +710,8 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
   longitude,
   latitude
 ) {
-  var timeDynamicImagery = this._timeDynamicImagery;
-  var currentInterval = defined(timeDynamicImagery)
+  const timeDynamicImagery = this._timeDynamicImagery;
+  const currentInterval = defined(timeDynamicImagery)
     ? timeDynamicImagery.currentInterval
     : undefined;
 
@@ -700,8 +759,8 @@ WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
 ]);
 
 function objectToLowercase(obj) {
-  var result = {};
-  for (var key in obj) {
+  const result = {};
+  for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       result[key.toLowerCase()] = obj[key];
     }

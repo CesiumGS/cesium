@@ -2,7 +2,7 @@
 "use strict";
 
 module.exports = function (config) {
-  var options = {
+  const options = {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: "..",
 
@@ -46,7 +46,7 @@ module.exports = function (config) {
     },
 
     // list of files to exclude
-    exclude: ["Specs/SpecList.js", "Specs/SpecRunner.js", "Specs/spec-main.js"],
+    exclude: ["Specs/SpecList.js"],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -83,7 +83,7 @@ module.exports = function (config) {
       },
     },
 
-    // Rediculous large values because travis is slow.
+    // Ridiculous large values because travis is slow.
     captureTimeout: 120000,
     browserDisconnectTolerance: 3,
     browserDisconnectTimeout: 120000,

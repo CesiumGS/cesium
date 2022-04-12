@@ -59,8 +59,8 @@
          * @returns {Promise<GeocoderService.Result[]>}
          */
         OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
-          var endpoint = "https://nominatim.openstreetmap.org/search";
-          var resource = new Cesium.Resource({
+          const endpoint = "https://nominatim.openstreetmap.org/search";
+          const resource = new Cesium.Resource({
             url: endpoint,
             queryParameters: {
               format: "json",
@@ -69,7 +69,7 @@
           });
 
           return resource.fetchJson().then(function (results) {
-            var bboxDegrees;
+            let bboxDegrees;
             return results.map(function (resultObject) {
               bboxDegrees = resultObject.boundingbox;
               return {
@@ -85,7 +85,7 @@
           });
         };
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           geocoder: new OpenStreetMapNominatimGeocoder(),
         });
 

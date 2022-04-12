@@ -25,7 +25,7 @@ import Matrix4 from "./Matrix4.js";
  * @param {Number} [options.far=500000000.0] The far clipping plane distance.
  *
  * @example
- * var frustum = new Cesium.PerspectiveOffCenterFrustum({
+ * const frustum = new Cesium.PerspectiveOffCenterFrustum({
  *     left : -1.0,
  *     right : 1.0,
  *     top : 1.0,
@@ -108,12 +108,12 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  var t = frustum.top;
-  var b = frustum.bottom;
-  var r = frustum.right;
-  var l = frustum.left;
-  var n = frustum.near;
-  var f = frustum.far;
+  const t = frustum.top;
+  const b = frustum.bottom;
+  const r = frustum.right;
+  const l = frustum.left;
+  const n = frustum.near;
+  const f = frustum.far;
 
   if (
     t !== frustum._top ||
@@ -189,10 +189,10 @@ Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
   },
 });
 
-var getPlanesRight = new Cartesian3();
-var getPlanesNearCenter = new Cartesian3();
-var getPlanesFarCenter = new Cartesian3();
-var getPlanesNormal = new Cartesian3();
+const getPlanesRight = new Cartesian3();
+const getPlanesNearCenter = new Cartesian3();
+const getPlanesFarCenter = new Cartesian3();
+const getPlanesNormal = new Cartesian3();
 /**
  * Creates a culling volume for this frustum.
  *
@@ -203,8 +203,8 @@ var getPlanesNormal = new Cartesian3();
  *
  * @example
  * // Check if a bounding volume intersects the frustum.
- * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
- * var intersect = cullingVolume.computeVisibility(boundingVolume);
+ * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+ * const intersect = cullingVolume.computeVisibility(boundingVolume);
  */
 PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   position,
@@ -225,26 +225,26 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   }
   //>>includeEnd('debug');
 
-  var planes = this._cullingVolume.planes;
+  const planes = this._cullingVolume.planes;
 
-  var t = this.top;
-  var b = this.bottom;
-  var r = this.right;
-  var l = this.left;
-  var n = this.near;
-  var f = this.far;
+  const t = this.top;
+  const b = this.bottom;
+  const r = this.right;
+  const l = this.left;
+  const n = this.near;
+  const f = this.far;
 
-  var right = Cartesian3.cross(direction, up, getPlanesRight);
+  const right = Cartesian3.cross(direction, up, getPlanesRight);
 
-  var nearCenter = getPlanesNearCenter;
+  const nearCenter = getPlanesNearCenter;
   Cartesian3.multiplyByScalar(direction, n, nearCenter);
   Cartesian3.add(position, nearCenter, nearCenter);
 
-  var farCenter = getPlanesFarCenter;
+  const farCenter = getPlanesFarCenter;
   Cartesian3.multiplyByScalar(direction, f, farCenter);
   Cartesian3.add(position, farCenter, farCenter);
 
-  var normal = getPlanesNormal;
+  const normal = getPlanesNormal;
 
   //Left plane computation
   Cartesian3.multiplyByScalar(right, l, normal);
@@ -254,7 +254,7 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   Cartesian3.cross(normal, up, normal);
   Cartesian3.normalize(normal, normal);
 
-  var plane = planes[0];
+  let plane = planes[0];
   if (!defined(plane)) {
     plane = planes[0] = new Cartesian4();
   }
@@ -353,18 +353,18 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
  *
  * @example
  * // Example 2
  * // Get the width and height of a pixel if the near plane was set to 'distance'.
  * // For example, get the size of a pixel of an image on a billboard.
- * var position = camera.position;
- * var direction = camera.direction;
- * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
- * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
- * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
+ * const position = camera.position;
+ * const direction = camera.direction;
+ * const toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
+ * const toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
+ * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
  */
 PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
   drawingBufferWidth,
@@ -401,12 +401,12 @@ PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
   }
   //>>includeEnd('debug');
 
-  var inverseNear = 1.0 / this.near;
-  var tanTheta = this.top * inverseNear;
-  var pixelHeight =
+  const inverseNear = 1.0 / this.near;
+  let tanTheta = this.top * inverseNear;
+  const pixelHeight =
     (2.0 * pixelRatio * distance * tanTheta) / drawingBufferHeight;
   tanTheta = this.right * inverseNear;
-  var pixelWidth =
+  const pixelWidth =
     (2.0 * pixelRatio * distance * tanTheta) / drawingBufferWidth;
 
   result.x = pixelWidth;

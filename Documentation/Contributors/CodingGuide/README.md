@@ -14,35 +14,37 @@ This guide applies to CesiumJS and all parts of the Cesium ecosystem written in 
 
 To some extent, this guide can be summarized as _make new code similar to existing code_.
 
-- [Naming](#naming)
-- [Formatting](#formatting)
-- [Linting](#linting)
-- [Units](#units)
-- [Basic Code Construction](#basic-code-construction)
-- [Functions](#functions)
-  - [`options` Parameters](#options-parameters)
-  - [Default Parameter Values](#default-parameter-values)
-  - [Throwing Exceptions](#throwing-exceptions)
-  - [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
-- [Classes](#classes)
-  - [Constructor Functions](#constructor-functions)
-  - [`from` Constructors](#from-constructors)
-  - [`to` Functions](#to-functions)
-  - [Use Prototype Functions for Fundamental Classes Sparingly](#use-prototype-functions-for-fundamental-classes-sparingly)
-  - [Static Constants](#static-constants)
-  - [Private Functions](#private-functions)
-  - [Property Getter/Setters](#property-gettersetters)
-  - [Shadowed Property](#shadowed-property)
-  - [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
-- [Design](#design)
-  - [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
-- [Third-Party Libraries](#third-party-libraries)
-- [Widgets](#widgets)
-- [GLSL](#glsl)
-  - [Naming](#naming-1)
-  - [Formatting](#formatting-1)
-  - [Performance](#performance)
-- [Resources](#resources)
+- [Coding Guide](#coding-guide)
+  - [Naming](#naming)
+  - [Formatting](#formatting)
+  - [Linting](#linting)
+  - [Units](#units)
+  - [Basic Code Construction](#basic-code-construction)
+  - [Functions](#functions)
+    - [`options` Parameters](#options-parameters)
+    - [Default Parameter Values](#default-parameter-values)
+    - [Throwing Exceptions](#throwing-exceptions)
+    - [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
+  - [Classes](#classes)
+    - [Constructor Functions](#constructor-functions)
+    - [`from` Constructors](#from-constructors)
+    - [`to` Functions](#to-functions)
+    - [Use Prototype Functions for Fundamental Classes Sparingly](#use-prototype-functions-for-fundamental-classes-sparingly)
+    - [Static Constants](#static-constants)
+    - [Private Functions](#private-functions)
+    - [Property Getter/Setters](#property-gettersetters)
+    - [Shadowed Property](#shadowed-property)
+    - [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
+  - [Design](#design)
+    - [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
+  - [Third-Party Libraries](#third-party-libraries)
+  - [Widgets](#widgets)
+    - [Knockout subscriptions](#knockout-subscriptions)
+  - [GLSL](#glsl)
+    - [Naming](#naming-1)
+    - [Formatting](#formatting-1)
+    - [Performance](#performance)
+  - [Resources](#resources)
 
 ## Naming
 
@@ -55,7 +57,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 ```javascript
 this.minimumPixelSize = 1.0; // Class property
 
-var bufferViews = gltf.bufferViews; // Local variable
+const bufferViews = gltf.bufferViews; // Local variable
 ```
 
 - Private (by convention) members start with an underscore, e.g.,
@@ -81,19 +83,19 @@ Ellipsoid.WGS84; // Not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 - Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 
 ```javascript
-var primitivesLength = primitives.length;
+const primitivesLength = primitives.length;
 ```
 
 is better written as
 
 ```javascript
-var length = primitives.length;
+const length = primitives.length;
 ```
 
 - When accessing an outer-scope's `this` in a closure, name the variable `that`, e.g.,
 
 ```javascript
-var that = this;
+const that = this;
 this._showTouch = createCommand(function () {
   that._touch = true;
 });
@@ -188,7 +190,7 @@ Cartesian3.fromDegrees = function (
 - :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
 
 ```javascript
-var i = 1;
+const i = 1;
 
 if (i === 1) {
   // ...
@@ -202,24 +204,24 @@ if (i !== 1) {
 - To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., unless `f` is an integer,
 
 ```javascript
-var f = 1;
+const f = 1;
 ```
 
 is better written as
 
 ```javascript
-var f = 1.0;
+const f = 1.0;
 ```
 
 - Declare variables where they are first used. For example,
 
 ```javascript
-var i;
-var m;
-var models = [
+let i;
+let m;
+const models = [
   /* ... */
 ];
-var length = models.length;
+const length = models.length;
 for (i = 0; i < length; ++i) {
   m = models[i];
   // Use m
@@ -229,22 +231,24 @@ for (i = 0; i < length; ++i) {
 is better written as
 
 ```javascript
-var models = [
+const models = [
   /* ... */
 ];
-var length = models.length;
-for (var i = 0; i < length; ++i) {
-  var m = models[i];
+const length = models.length;
+for (let i = 0; i < length; ++i) {
+  const m = models[i];
   // Use m
 }
 ```
 
-- Variables have function-level, not block-level scope. Do not rely on variable hoisting, i.e., using a variable before it is declared, e.g.,
+- `let` and `const` variables have block-level scope. Do not rely on variable hoisting, i.e., using a variable before it is declared, e.g.,
 
 ```javascript
 console.log(i); // i is undefined here.  Never use a variable before it is declared.
-var i = 0.0;
+let i = 0.0;
 ```
+
+- A `const` variables is preferred when a value is not updated. This ensures immutability.
 
 - :speedboat: Avoid redundant nested property access. This
 
@@ -257,7 +261,7 @@ scene.environmentState.isMoonVisible = false;
 is better written as
 
 ```javascript
-var environmentState = scene.environmentState;
+const environmentState = scene.environmentState;
 environmentState.isSkyAtmosphereVisible = true;
 environmentState.isSunVisible = true;
 environmentState.isMoonVisible = false;
@@ -267,8 +271,8 @@ environmentState.isMoonVisible = false;
 
 ```javascript
 function radiiEquals(left, right) {
-  var leftRadius = left.radius;
-  var rightRadius = right.radius;
+  const leftRadius = left.radius;
+  const rightRadius = right.radius;
   return leftRadius === rightRadius;
 }
 ```
@@ -285,12 +289,12 @@ function radiiEquals(left, right) {
 - Test if a variable is defined using Cesium's `defined` function, e.g.,
 
 ```javascript
-var v = undefined;
+const v = undefined;
 if (defined(v)) {
   // False
 }
 
-var u = {};
+const u = {};
 if (defined(u)) {
   // True
 }
@@ -300,7 +304,7 @@ if (defined(u)) {
 
 ```javascript
 
-    var ModelAnimationState = {
+    const ModelAnimationState = {
         STOPPED : 0,
         ANIMATING : 1
     };
@@ -331,10 +335,10 @@ byteOffset += sizeOfUint32; // Skip length field
 
 ```javascript
 Cesium3DTileset.prototype.update = function (frameState) {
-  var tiles = this._processingQueue;
-  var length = tiles.length;
+  const tiles = this._processingQueue;
+  const length = tiles.length;
 
-  for (var i = length - 1; i >= 0; --i) {
+  for (let i = length - 1; i >= 0; --i) {
     tiles[i].process(this, frameState);
   }
 
@@ -353,10 +357,10 @@ Cesium3DTileset.prototype.update = function (frameState) {
 };
 
 function processTiles(tileset, frameState) {
-  var tiles = tileset._processingQueue;
-  var length = tiles.length;
+  const tiles = tileset._processingQueue;
+  const length = tiles.length;
 
-  for (var i = length - 1; i >= 0; --i) {
+  for (let i = length - 1; i >= 0; --i) {
     tiles[i].process(tileset, frameState);
   }
 }
@@ -401,13 +405,13 @@ function getTransform(node) {
 :art: Many Cesium functions take an `options` parameter to support optional parameters, self-documenting code, and forward compatibility. For example, consider:
 
 ```javascript
-var sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
+const sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
 ```
 
 It is not clear what the numeric values represent, and the caller needs to know the order of parameters. If this took an `options` parameter, it would look like this:
 
 ```javascript
-var sphere = new SphereGeometry({
+const sphere = new SphereGeometry({
   radius: 10.0,
   stackPartitions: 32,
   slicePartitions: 16,
@@ -418,7 +422,7 @@ var sphere = new SphereGeometry({
 - :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation. Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance. Constructor functions for non-math classes are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots. For example,
 
 ```javascript
-var p = new Cartesian3({
+const p = new Cartesian3({
   x: 1.0,
   y: 2.0,
   z: 3.0,
@@ -428,7 +432,7 @@ var p = new Cartesian3({
 is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of
 
 ```javascript
-var p = new Cartesian3(1.0, 2.0, 3.0);
+const p = new Cartesian3(1.0, 2.0, 3.0);
 ```
 
 ### Default Parameter Values
@@ -513,7 +517,7 @@ Cartesian3.unpackArray = function (array, result) {
 ```javascript
 Cartesian3.maximumComponent = function (cartesian) {
   //>>includeStart('debug', pragmas.debug);
-  var c = cartesian;
+  const c = cartesian;
   Check.typeOf.object("cartesian", cartesian);
   //>>includeEnd('debug');
 
@@ -539,20 +543,20 @@ if (typeof WebGLRenderingContext === "undefined") {
 Cesium uses required `result` parameters to avoid implicit memory allocation. For example,
 
 ```javascript
-var sum = Cartesian3.add(v0, v1);
+const sum = Cartesian3.add(v0, v1);
 ```
 
 would have to implicitly allocate a new `Cartesian3` object for the returned sum. Instead, `Cartesian3.add` requires a `result` parameter:
 
 ```javascript
-var result = new Cartesian3();
-var sum = Cartesian3.add(v0, v1, result); // Result and sum reference the same object
+const result = new Cartesian3();
+const sum = Cartesian3.add(v0, v1, result); // Result and sum reference the same object
 ```
 
 This makes allocations explicit to the caller, which allows the caller to, for example, reuse the result object in a file-scoped scratch variable:
 
 ```javascript
-var scratchDistance = new Cartesian3();
+const scratchDistance = new Cartesian3();
 
 Cartesian3.distance = function (left, right) {
   Cartesian3.subtract(left, right, scratchDistance);
@@ -598,20 +602,20 @@ function Cartesian3(x, y, z) {
 - Create an instance of a class (an _object_) by calling the constructor function with `new`:
 
 ```javascript
-var p = new Cartesian3(1.0, 2.0, 3.0);
+const p = new Cartesian3(1.0, 2.0, 3.0);
 ```
 
 - :speedboat: Assign to all the property members of a class in the constructor function. This allows JavaScript engines to use a hidden class and avoid entering dictionary mode. Assign `undefined` if no initial value makes sense. Do not add properties to an object, e.g.,
 
 ```javascript
-var p = new Cartesian3(1.0, 2.0, 3.0);
+const p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
 ```
 
 - :speedboat: For the same reason, do not change the type of a property, e.g., assign a string to a number, e.g.,
 
 ```javascript
-var p = new Cartesian3(1.0, 2.0, 3.0);
+const p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = "Cesium"; // Changes x to a string, slows down property access
 ```
 
@@ -627,7 +631,7 @@ p.x = "Cesium"; // Changes x to a string, slows down property access
   prefer
 
   ```javascript
-  var x = 2;
+  const x = 2;
   this._x = x;
   this._xSquared = x * x;
   ```
@@ -640,7 +644,7 @@ It is often convenient to construct objects from other parameters. Since JavaScr
 functions prefixed with `from` to construct objects in this way. For example:
 
 ```javascript
-var p = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
+const p = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
 ```
 
 These are implemented with an optional `result` parameter, which allows callers to pass in a scratch variable:
@@ -668,7 +672,7 @@ Functions that start with `to` return a new type of object, e.g.,
 
 ```javascript
 Cartesian3.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+  return "(${this.x}, ${this.y}, ${this.z})";
 };
 ```
 
@@ -677,13 +681,13 @@ Cartesian3.prototype.toString = function () {
 :art: Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly. For example, `Cartesian3` does not have a prototype `add` function like this:
 
 ```javascript
-var v2 = v0.add(v1, result);
+const v2 = v0.add(v1, result);
 ```
 
 Instead, this is written as
 
 ```javascript
-var v2 = Cartesian3.add(v0, v1, result);
+const v2 = Cartesian3.add(v0, v1, result);
 ```
 
 The only exceptions are
@@ -733,10 +737,10 @@ Cesium3DTileset.prototype.update = function(frameState) {
 };
 
 Cesium3DTileset.prototype._processTiles(tileset, frameState) {
-    var tiles = this._processingQueue;
-    var length = tiles.length;
+    const tiles = this._processingQueue;
+    const length = tiles.length;
 
-    for (var i = length - 1; i >= 0; --i) {
+    for (let i = length - 1; i >= 0; --i) {
         tiles[i].process(tileset, frameState);
     }
 }
@@ -751,10 +755,10 @@ Cesium3DTileset.prototype.update = function (frameState) {
 };
 
 function processTiles(tileset, frameState) {
-  var tiles = tileset._processingQueue;
-  var length = tiles.length;
+  const tiles = tileset._processingQueue;
+  const length = tiles.length;
 
-  for (var i = length - 1; i >= 0; --i) {
+  for (let i = length - 1; i >= 0; --i) {
     tiles[i].process(tileset, frameState);
   }
 }
@@ -800,8 +804,8 @@ Object.defineProperties(UniformState.prototype, {
       if (!BoundingRectangle.equals(viewport, this._viewport)) {
         BoundingRectangle.clone(viewport, this._viewport);
 
-        var v = this._viewport;
-        var vc = this._viewportCartesian4;
+        const v = this._viewport;
+        const vc = this._viewportCartesian4;
         vc.x = v.x;
         vc.y = v.y;
         vc.z = v.width;
@@ -891,7 +895,7 @@ Modules (files) should only reference modules in the same level or a lower level
 - WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 
 ```javascript
-var primitive = new Primitive(/* ... */);
+const primitive = new Primitive(/* ... */);
 expect(content.isDestroyed()).toEqual(false);
 primitive.destroy();
 expect(content.isDestroyed()).toEqual(true);

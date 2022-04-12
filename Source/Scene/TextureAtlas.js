@@ -10,7 +10,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
-import when from "../ThirdParty/when.js";
 
 // The atlas is made up of regions of space called nodes that contain images or child nodes.
 function TextureAtlasNode(
@@ -27,7 +26,7 @@ function TextureAtlasNode(
   this.imageIndex = imageIndex;
 }
 
-var defaultInitialSize = new Cartesian2(16.0, 16.0);
+const defaultInitialSize = new Cartesian2(16.0, 16.0);
 
 /**
  * A TextureAtlas stores multiple images in one square texture and keeps
@@ -52,8 +51,8 @@ var defaultInitialSize = new Cartesian2(16.0, 16.0);
  */
 function TextureAtlas(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
-  var initialSize = defaultValue(options.initialSize, defaultInitialSize);
+  const borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+  const initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.context)) {
@@ -75,6 +74,7 @@ function TextureAtlas(options) {
   this._textureCoordinates = [];
   this._guid = createGuid();
   this._idHash = {};
+  this._indexHash = {};
   this._initialSize = initialSize;
 
   this._root = undefined;
@@ -155,36 +155,36 @@ Object.defineProperties(TextureAtlas.prototype, {
 
 // Builds a larger texture and copies the old texture into the new one.
 function resizeAtlas(textureAtlas, image) {
-  var context = textureAtlas._context;
-  var numImages = textureAtlas.numberOfImages;
-  var scalingFactor = 2.0;
-  var borderWidthInPixels = textureAtlas._borderWidthInPixels;
+  const context = textureAtlas._context;
+  const numImages = textureAtlas.numberOfImages;
+  const scalingFactor = 2.0;
+  const borderWidthInPixels = textureAtlas._borderWidthInPixels;
   if (numImages > 0) {
-    var oldAtlasWidth = textureAtlas._texture.width;
-    var oldAtlasHeight = textureAtlas._texture.height;
-    var atlasWidth =
+    const oldAtlasWidth = textureAtlas._texture.width;
+    const oldAtlasHeight = textureAtlas._texture.height;
+    const atlasWidth =
       scalingFactor * (oldAtlasWidth + image.width + borderWidthInPixels);
-    var atlasHeight =
+    const atlasHeight =
       scalingFactor * (oldAtlasHeight + image.height + borderWidthInPixels);
-    var widthRatio = oldAtlasWidth / atlasWidth;
-    var heightRatio = oldAtlasHeight / atlasHeight;
+    const widthRatio = oldAtlasWidth / atlasWidth;
+    const heightRatio = oldAtlasHeight / atlasHeight;
 
     // Create new node structure, putting the old root node in the bottom left.
-    var nodeBottomRight = new TextureAtlasNode(
+    const nodeBottomRight = new TextureAtlasNode(
       new Cartesian2(oldAtlasWidth + borderWidthInPixels, borderWidthInPixels),
       new Cartesian2(atlasWidth, oldAtlasHeight)
     );
-    var nodeBottomHalf = new TextureAtlasNode(
+    const nodeBottomHalf = new TextureAtlasNode(
       new Cartesian2(),
       new Cartesian2(atlasWidth, oldAtlasHeight),
       textureAtlas._root,
       nodeBottomRight
     );
-    var nodeTopHalf = new TextureAtlasNode(
+    const nodeTopHalf = new TextureAtlasNode(
       new Cartesian2(borderWidthInPixels, oldAtlasHeight + borderWidthInPixels),
       new Cartesian2(atlasWidth, atlasHeight)
     );
-    var nodeMain = new TextureAtlasNode(
+    const nodeMain = new TextureAtlasNode(
       new Cartesian2(),
       new Cartesian2(atlasWidth, atlasHeight),
       nodeBottomHalf,
@@ -192,8 +192,8 @@ function resizeAtlas(textureAtlas, image) {
     );
 
     // Resize texture coordinates.
-    for (var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
-      var texCoord = textureAtlas._textureCoordinates[i];
+    for (let i = 0; i < textureAtlas._textureCoordinates.length; i++) {
+      const texCoord = textureAtlas._textureCoordinates[i];
       if (defined(texCoord)) {
         texCoord.x *= widthRatio;
         texCoord.y *= heightRatio;
@@ -203,14 +203,14 @@ function resizeAtlas(textureAtlas, image) {
     }
 
     // Copy larger texture.
-    var newTexture = new Texture({
+    const newTexture = new Texture({
       context: textureAtlas._context,
       width: atlasWidth,
       height: atlasHeight,
       pixelFormat: textureAtlas._pixelFormat,
     });
 
-    var framebuffer = new Framebuffer({
+    const framebuffer = new Framebuffer({
       context: context,
       colorTextures: [textureAtlas._texture],
       destroyAttachments: false,
@@ -226,8 +226,8 @@ function resizeAtlas(textureAtlas, image) {
     textureAtlas._root = nodeMain;
   } else {
     // First image exceeds initialSize
-    var initialWidth = scalingFactor * (image.width + 2 * borderWidthInPixels);
-    var initialHeight =
+    let initialWidth = scalingFactor * (image.width + 2 * borderWidthInPixels);
+    let initialHeight =
       scalingFactor * (image.height + 2 * borderWidthInPixels);
     if (initialWidth < textureAtlas._initialSize.x) {
       initialWidth = textureAtlas._initialSize.x;
@@ -265,10 +265,10 @@ function findNode(textureAtlas, node, image) {
       return undefined;
     }
 
-    var nodeWidth = node.topRight.x - node.bottomLeft.x;
-    var nodeHeight = node.topRight.y - node.bottomLeft.y;
-    var widthDifference = nodeWidth - image.width;
-    var heightDifference = nodeHeight - image.height;
+    const nodeWidth = node.topRight.x - node.bottomLeft.x;
+    const nodeHeight = node.topRight.y - node.bottomLeft.y;
+    const widthDifference = nodeWidth - image.width;
+    const heightDifference = nodeHeight - image.height;
 
     // Node is smaller than the image.
     if (widthDifference < 0 || heightDifference < 0) {
@@ -287,7 +287,7 @@ function findNode(textureAtlas, node, image) {
         new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y)
       );
       // Only make a second child if the border gives enough space.
-      var childNode2BottomLeftX =
+      const childNode2BottomLeftX =
         node.bottomLeft.x + image.width + textureAtlas._borderWidthInPixels;
       if (childNode2BottomLeftX < node.topRight.x) {
         node.childNode2 = new TextureAtlasNode(
@@ -303,7 +303,7 @@ function findNode(textureAtlas, node, image) {
         new Cartesian2(node.topRight.x, node.bottomLeft.y + image.height)
       );
       // Only make a second child if the border gives enough space.
-      var childNode2BottomLeftY =
+      const childNode2BottomLeftY =
         node.bottomLeft.y + image.height + textureAtlas._borderWidthInPixels;
       if (childNode2BottomLeftY < node.topRight.y) {
         node.childNode2 = new TextureAtlasNode(
@@ -324,20 +324,20 @@ function findNode(textureAtlas, node, image) {
 
 // Adds image of given index to the texture atlas. Called from addImage and addImages.
 function addImage(textureAtlas, image, index) {
-  var node = findNode(textureAtlas, textureAtlas._root, image);
+  const node = findNode(textureAtlas, textureAtlas._root, image);
   if (defined(node)) {
     // Found a node that can hold the image.
     node.imageIndex = index;
 
     // Add texture coordinate and write to texture
-    var atlasWidth = textureAtlas._texture.width;
-    var atlasHeight = textureAtlas._texture.height;
-    var nodeWidth = node.topRight.x - node.bottomLeft.x;
-    var nodeHeight = node.topRight.y - node.bottomLeft.y;
-    var x = node.bottomLeft.x / atlasWidth;
-    var y = node.bottomLeft.y / atlasHeight;
-    var w = nodeWidth / atlasWidth;
-    var h = nodeHeight / atlasHeight;
+    const atlasWidth = textureAtlas._texture.width;
+    const atlasHeight = textureAtlas._texture.height;
+    const nodeWidth = node.topRight.x - node.bottomLeft.x;
+    const nodeHeight = node.topRight.y - node.bottomLeft.y;
+    const x = node.bottomLeft.x / atlasWidth;
+    const y = node.bottomLeft.y / atlasHeight;
+    const w = nodeWidth / atlasWidth;
+    const h = nodeHeight / atlasHeight;
     textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
     textureAtlas._texture.copyFrom({
       source: image,
@@ -352,6 +352,66 @@ function addImage(textureAtlas, image, index) {
 
   textureAtlas._guid = createGuid();
 }
+
+function getIndex(atlas, image) {
+  if (!defined(atlas) || atlas.isDestroyed()) {
+    return -1;
+  }
+
+  const index = atlas.numberOfImages;
+
+  addImage(atlas, image, index);
+
+  return index;
+}
+
+/**
+ * If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {Number|undefined} The image index, or undefined if the image does not exist in the atlas.
+ */
+TextureAtlas.prototype.getImageIndex = function (id) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  //>>includeEnd('debug');
+
+  return this._indexHash[id];
+};
+
+/**
+ * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
+ * the existing index is used.
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @param {HTMLImageElement|HTMLCanvasElement} image An image or canvas to add to the texture atlas.
+ * @returns {Number} The image index.
+ */
+TextureAtlas.prototype.addImageSync = function (id, image) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  if (!defined(image)) {
+    throw new DeveloperError("image is required.");
+  }
+  //>>includeEnd('debug');
+
+  let index = this._indexHash[id];
+  if (defined(index)) {
+    // we're already aware of this source
+    return index;
+  }
+
+  index = getIndex(this, image);
+  // store the promise
+  this._idHash[id] = Promise.resolve(index);
+  this._indexHash[id] = index;
+  // but return the value synchronously
+  return index;
+};
 
 /**
  * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
@@ -372,7 +432,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
   }
   //>>includeEnd('debug');
 
-  var indexPromise = this._idHash[id];
+  let indexPromise = this._idHash[id];
   if (defined(indexPromise)) {
     // we're already aware of this source
     return indexPromise;
@@ -390,21 +450,14 @@ TextureAtlas.prototype.addImage = function (id, image) {
     //>>includeEnd('debug');
   } else if (typeof image === "string" || image instanceof Resource) {
     // Get a resource
-    var resource = Resource.createIfNeeded(image);
+    const resource = Resource.createIfNeeded(image);
     image = resource.fetchImage();
   }
 
-  var that = this;
-
-  indexPromise = when(image, function (image) {
-    if (that.isDestroyed()) {
-      return -1;
-    }
-
-    var index = that.numberOfImages;
-
-    addImage(that, image, index);
-
+  const that = this;
+  indexPromise = Promise.resolve(image).then(function (image) {
+    const index = getIndex(that, image);
+    that._indexHash[id] = index;
     return index;
   });
 
@@ -432,28 +485,26 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
   }
   //>>includeEnd('debug');
 
-  var indexPromise = this._idHash[id];
+  const indexPromise = this._idHash[id];
   if (!defined(indexPromise)) {
-    throw new RuntimeError(
-      'image with id "' + id + '" not found in the atlas.'
-    );
+    throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
   }
 
-  var that = this;
-  return when(indexPromise, function (index) {
+  const that = this;
+  return Promise.resolve(indexPromise).then(function (index) {
     if (index === -1) {
       // the atlas is destroyed
       return -1;
     }
-    var atlasWidth = that._texture.width;
-    var atlasHeight = that._texture.height;
-    var numImages = that.numberOfImages;
+    const atlasWidth = that._texture.width;
+    const atlasHeight = that._texture.height;
+    const numImages = that.numberOfImages;
 
-    var baseRegion = that._textureCoordinates[index];
-    var x = baseRegion.x + subRegion.x / atlasWidth;
-    var y = baseRegion.y + subRegion.y / atlasHeight;
-    var w = subRegion.width / atlasWidth;
-    var h = subRegion.height / atlasHeight;
+    const baseRegion = that._textureCoordinates[index];
+    const x = baseRegion.x + subRegion.x / atlasWidth;
+    const y = baseRegion.y + subRegion.y / atlasHeight;
+    const w = subRegion.width / atlasWidth;
+    const h = subRegion.height / atlasHeight;
     that._textureCoordinates.push(new BoundingRectangle(x, y, w, h));
     that._guid = createGuid();
 

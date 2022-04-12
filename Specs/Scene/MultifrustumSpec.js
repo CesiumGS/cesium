@@ -21,28 +21,28 @@ import { BillboardCollection } from "../../Source/Cesium.js";
 import { BlendingState } from "../../Source/Cesium.js";
 import { TextureAtlas } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
-import { when } from "../../Source/Cesium.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe(
   "Scene/Multifrustum",
   function () {
-    var scene;
-    var context;
-    var primitives;
-    var atlas;
+    let scene;
+    let context;
+    let primitives;
+    let atlas;
 
-    var greenImage;
-    var blueImage;
-    var whiteImage;
+    let greenImage;
+    let blueImage;
+    let whiteImage;
 
-    var logDepth;
+    let logDepth;
 
     beforeAll(function () {
       scene = createScene();
       logDepth = scene.logarithmicDepthBuffer;
       scene.destroyForSpecs();
 
-      return when.join(
+      return Promise.all([
         Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
           greenImage = image;
         }),
@@ -51,8 +51,8 @@ describe(
         }),
         Resource.fetchImage("./Data/Images/White.png").then(function (image) {
           whiteImage = image;
-        })
-      );
+        }),
+      ]);
     });
 
     beforeEach(function () {
@@ -62,7 +62,7 @@ describe(
 
       scene.logarithmicDepthBuffer = false;
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.position = new Cartesian3();
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -79,9 +79,9 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var billboard0;
-    var billboard1;
-    var billboard2;
+    let billboard0;
+    let billboard1;
+    let billboard2;
 
     function createBillboards() {
       atlas = new TextureAtlas({
@@ -93,7 +93,7 @@ describe(
       // ANGLE Workaround
       atlas.texture.sampler = Sampler.NEAREST;
 
-      var billboards = new BillboardCollection();
+      let billboards = new BillboardCollection();
       billboards.textureAtlas = atlas;
       billboards.destroyTextureAtlas = false;
       billboard0 = billboards.add({
@@ -120,81 +120,87 @@ describe(
       });
       primitives.add(billboards);
 
-      return billboards;
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return billboard0.ready && billboard1.ready && billboard2.ready;
+      });
     }
 
     it("renders primitive in closest frustum", function () {
-      createBillboards();
+      return createBillboards().then(function () {
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toEqual(0);
+          expect(rgba[1]).not.toEqual(0);
+          expect(rgba[2]).toEqual(0);
+          expect(rgba[3]).toEqual(255);
+        });
 
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toEqual(0);
-        expect(rgba[1]).not.toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
-      });
-
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toEqual(0);
-        expect(rgba[1]).not.toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toEqual(0);
+          expect(rgba[1]).not.toEqual(0);
+          expect(rgba[2]).toEqual(0);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
     it("renders primitive in middle frustum", function () {
-      createBillboards();
-      billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
+      return createBillboards().then(function () {
+        billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
-      expect(scene).toRender([0, 0, 255, 255]);
-      expect(scene).toRender([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
     });
 
     it("renders primitive in last frustum", function () {
-      createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 0.0);
-      billboard0.color = color;
-      billboard1.color = color;
+      return createBillboards().then(function () {
+        const color = new Color(1.0, 1.0, 1.0, 0.0);
+        billboard0.color = color;
+        billboard1.color = color;
 
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(scene).toRender([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
+      });
     });
 
     it("renders primitive in last frustum with debugShowFrustums", function () {
-      createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 1.0);
-      billboard0.color = color;
-      billboard1.color = color;
+      return createBillboards().then(function () {
+        const color = new Color(1.0, 1.0, 1.0, 1.0);
+        billboard0.color = color;
+        billboard1.color = color;
 
-      spyOn(DrawCommand.prototype, "execute");
+        spyOn(DrawCommand.prototype, "execute");
 
-      scene.debugShowFrustums = true;
-      scene.renderForSpecs();
+        scene.debugShowFrustums = true;
+        scene.renderForSpecs();
 
-      expect(DrawCommand.prototype.execute).toHaveBeenCalled();
+        expect(DrawCommand.prototype.execute).toHaveBeenCalled();
 
-      var calls = DrawCommand.prototype.execute.calls.all();
-      var billboardCall;
-      var i;
-      for (i = 0; i < calls.length; ++i) {
-        if (calls[i].object.owner instanceof BillboardCollection) {
-          billboardCall = calls[i];
-          break;
+        const calls = DrawCommand.prototype.execute.calls.all();
+        let billboardCall;
+        let i;
+        for (i = 0; i < calls.length; ++i) {
+          if (calls[i].object.owner instanceof BillboardCollection) {
+            billboardCall = calls[i];
+            break;
+          }
         }
-      }
 
-      expect(billboardCall).toBeDefined();
-      expect(billboardCall.args.length).toEqual(2);
+        expect(billboardCall).toBeDefined();
+        expect(billboardCall.args.length).toEqual(2);
 
-      var found = false;
-      var sources =
-        billboardCall.object.shaderProgram.fragmentShaderSource.sources;
-      for (var j = 0; j < sources.length; ++j) {
-        if (sources[j].indexOf("czm_Debug_main") !== -1) {
-          found = true;
-          break;
+        let found = false;
+        const sources =
+          billboardCall.object.shaderProgram.fragmentShaderSource.sources;
+        for (let j = 0; j < sources.length; ++j) {
+          if (sources[j].indexOf("czm_Debug_main") !== -1) {
+            found = true;
+            break;
+          }
         }
-      }
-      expect(found).toBe(true);
+        expect(found).toBe(true);
+      });
     });
 
     function createPrimitive(bounded, closestFrustum) {
@@ -212,7 +218,7 @@ describe(
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
 
-        var that = this;
+        const that = this;
         this._um = {
           u_color: function () {
             return that.color;
@@ -224,7 +230,7 @@ describe(
       }
       Primitive.prototype.update = function (frameState) {
         if (!defined(this._sp)) {
-          var vs = "";
+          let vs = "";
           vs += "attribute vec4 position;";
           vs += "void main()";
           vs += "{";
@@ -233,27 +239,27 @@ describe(
             ? "    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);"
             : "";
           vs += "}";
-          var fs = "";
+          let fs = "";
           fs += "uniform vec4 u_color;";
           fs += "void main()";
           fs += "{";
           fs += "    gl_FragColor = u_color;";
           fs += "}";
 
-          var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-          var maximum = Cartesian3.multiplyByScalar(
+          const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
+          const maximum = Cartesian3.multiplyByScalar(
             dimensions,
             0.5,
             new Cartesian3()
           );
-          var minimum = Cartesian3.negate(maximum, new Cartesian3());
-          var geometry = BoxGeometry.createGeometry(
+          const minimum = Cartesian3.negate(maximum, new Cartesian3());
+          const geometry = BoxGeometry.createGeometry(
             new BoxGeometry({
               minimum: minimum,
               maximum: maximum,
             })
           );
-          var attributeLocations = GeometryPipeline.createAttributeLocations(
+          const attributeLocations = GeometryPipeline.createAttributeLocations(
             geometry
           );
           this._va = VertexArray.fromGeometry({
@@ -301,7 +307,7 @@ describe(
     }
 
     it("renders primitive with undefined bounding volume", function () {
-      var primitive = createPrimitive(false);
+      const primitive = createPrimitive(false);
       primitives.add(primitive);
 
       expect(scene).toRender([255, 255, 0, 255]);
@@ -309,28 +315,29 @@ describe(
     });
 
     it("renders only in the closest frustum", function () {
-      createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 0.0);
-      billboard0.color = color;
-      billboard1.color = color;
-      billboard2.color = color;
+      return createBillboards().then(function () {
+        const color = new Color(1.0, 1.0, 1.0, 0.0);
+        billboard0.color = color;
+        billboard1.color = color;
+        billboard2.color = color;
 
-      var primitive = createPrimitive(true, true);
-      primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
-      primitives.add(primitive);
+        const primitive = createPrimitive(true, true);
+        primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
+        primitives.add(primitive);
 
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).not.toEqual(0);
-        expect(rgba[1]).not.toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
-      });
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).not.toEqual(0);
+          expect(rgba[1]).not.toEqual(0);
+          expect(rgba[2]).toEqual(0);
+          expect(rgba[3]).toEqual(255);
+        });
 
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).not.toEqual(0);
-        expect(rgba[1]).not.toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).not.toEqual(0);
+          expect(rgba[1]).not.toEqual(0);
+          expect(rgba[2]).toEqual(0);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -339,12 +346,11 @@ describe(
     });
 
     it("does not crash when near plane is greater than or equal to the far plane", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum.far = 1000.0;
       camera.position = new Cartesian3(0.0, 0.0, 1e12);
 
-      createBillboards();
-      scene.renderForSpecs();
+      return createBillboards();
     });
 
     it("log depth uses less frustums", function () {
@@ -352,14 +358,14 @@ describe(
         return;
       }
 
-      createBillboards();
+      return createBillboards().then(function () {
+        scene.render();
+        expect(scene.frustumCommandsList.length).toEqual(3);
 
-      scene.render();
-      expect(scene.frustumCommandsList.length).toEqual(3);
-
-      scene.logarithmicDepthBuffer = true;
-      scene.render();
-      expect(scene.frustumCommandsList.length).toEqual(1);
+        scene.logarithmicDepthBuffer = true;
+        scene.render();
+        expect(scene.frustumCommandsList.length).toEqual(1);
+      });
     });
   },
   "WebGL"

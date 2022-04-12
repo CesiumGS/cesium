@@ -2,6 +2,7 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,7 +12,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import BingMapsStyle from "./BingMapsStyle.js";
 import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -56,7 +56,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * var bing = new Cesium.BingMapsImageryProvider({
+ * const bing = new Cesium.BingMapsImageryProvider({
  *     url : 'https://dev.virtualearth.net',
  *     key : 'get-yours-at-https://www.bingmapsportal.com/',
  *     mapStyle : Cesium.BingMapsStyle.AERIAL
@@ -67,7 +67,7 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 function BingMapsImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var accessKey = options.key;
+  const accessKey = options.key;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
@@ -178,9 +178,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    '<a href="http://www.bing.com"><img src="' +
-      BingMapsImageryProvider.logoUrl +
-      '" title="Bing Imagery"/></a>'
+    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -198,9 +196,9 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
-  var tileProtocol = this._tileProtocol;
+  let tileProtocol = this._tileProtocol;
 
   // For backward compatibility reasons, the tileProtocol may end with
   // a `:`. Remove it.
@@ -213,27 +211,27 @@ function BingMapsImageryProvider(options) {
     }
   } else {
     // use http if the document's protocol is http, otherwise use https
-    var documentProtocol = document.location.protocol;
+    const documentProtocol = document.location.protocol;
     tileProtocol = documentProtocol === "http:" ? "http" : "https";
   }
 
-  var metadataResource = this._resource.getDerivedResource({
-    url: "REST/v1/Imagery/Metadata/" + this._mapStyle,
+  const metadataResource = this._resource.getDerivedResource({
+    url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
     queryParameters: {
       incl: "ImageryProviders",
       key: this._key,
       uriScheme: tileProtocol,
     },
   });
-  var that = this;
-  var metadataError;
+  const that = this;
+  let metadataError;
 
   function metadataSuccess(data) {
     if (data.resourceSets.length !== 1) {
       metadataFailure();
       return;
     }
-    var resource = data.resourceSets[0].resources[0];
+    const resource = data.resourceSets[0].resources[0];
 
     that._tileWidth = resource.imageWidth;
     that._tileHeight = resource.imageHeight;
@@ -241,17 +239,17 @@ function BingMapsImageryProvider(options) {
     that._imageUrlSubdomains = resource.imageUrlSubdomains;
     that._imageUrlTemplate = resource.imageUrl;
 
-    var attributionList = (that._attributionList = resource.imageryProviders);
+    let attributionList = (that._attributionList = resource.imageryProviders);
     if (!attributionList) {
       attributionList = that._attributionList = [];
     }
 
     for (
-      var attributionIndex = 0, attributionLength = attributionList.length;
+      let attributionIndex = 0, attributionLength = attributionList.length;
       attributionIndex < attributionLength;
       ++attributionIndex
     ) {
-      var attribution = attributionList[attributionIndex];
+      const attribution = attributionList[attributionIndex];
 
       if (attribution.credit instanceof Credit) {
         // If attribution.credit has already been created
@@ -261,15 +259,15 @@ function BingMapsImageryProvider(options) {
       }
 
       attribution.credit = new Credit(attribution.attribution);
-      var coverageAreas = attribution.coverageAreas;
+      const coverageAreas = attribution.coverageAreas;
 
       for (
-        var areaIndex = 0, areaLength = attribution.coverageAreas.length;
+        let areaIndex = 0, areaLength = attribution.coverageAreas.length;
         areaIndex < areaLength;
         ++areaIndex
       ) {
-        var area = coverageAreas[areaIndex];
-        var bbox = area.bbox;
+        const area = coverageAreas[areaIndex];
+        const bbox = area.bbox;
         area.bbox = new Rectangle(
           CesiumMath.toRadians(bbox[1]),
           CesiumMath.toRadians(bbox[0]),
@@ -285,8 +283,7 @@ function BingMapsImageryProvider(options) {
   }
 
   function metadataFailure(e) {
-    var message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = `An error occurred while accessing ${metadataResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -300,16 +297,16 @@ function BingMapsImageryProvider(options) {
     that._readyPromise.reject(new RuntimeError(message));
   }
 
-  var cacheKey = metadataResource.url;
+  const cacheKey = metadataResource.url;
   function requestMetadata() {
-    var promise = metadataResource.fetchJsonp("jsonp");
+    const promise = metadataResource.fetchJsonp("jsonp");
     BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   }
 
-  var promise = BingMapsImageryProvider._metadataCache[cacheKey];
+  const promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (defined(promise)) {
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   } else {
     requestMetadata();
   }
@@ -595,7 +592,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   },
 });
 
-var rectangleScratch = new Rectangle();
+const rectangleScratch = new Rectangle();
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
@@ -616,13 +613,17 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
   }
   //>>includeEnd('debug');
 
-  var rectangle = this._tilingScheme.tileXYToRectangle(
+  const rectangle = this._tilingScheme.tileXYToRectangle(
     x,
     y,
     level,
     rectangleScratch
   );
-  var result = getRectangleAttribution(this._attributionList, level, rectangle);
+  const result = getRectangleAttribution(
+    this._attributionList,
+    level,
+    rectangle
+  );
 
   return result;
 };
@@ -656,20 +657,20 @@ BingMapsImageryProvider.prototype.requestImage = function (
   }
   //>>includeEnd('debug');
 
-  var promise = ImageryProvider.loadImage(
+  const promise = ImageryProvider.loadImage(
     this,
     buildImageResource(this, x, y, level, request)
   );
 
   if (defined(promise)) {
-    return promise.otherwise(function (error) {
+    return promise.catch(function (error) {
       // One cause of an error here is that the image we tried to load was zero-length.
       // This isn't actually a problem, since it indicates that there is no tile.
       // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
       if (defined(error.blob) && error.blob.size === 0) {
         return DiscardEmptyTilePolicy.EMPTY_IMAGE;
       }
-      return when.reject(error);
+      return Promise.reject(error);
     });
   }
 
@@ -709,10 +710,10 @@ BingMapsImageryProvider.prototype.pickFeatures = function (
  * @see BingMapsImageryProvider#quadKeyToTileXY
  */
 BingMapsImageryProvider.tileXYToQuadKey = function (x, y, level) {
-  var quadkey = "";
-  for (var i = level; i >= 0; --i) {
-    var bitmask = 1 << i;
-    var digit = 0;
+  let quadkey = "";
+  for (let i = level; i >= 0; --i) {
+    const bitmask = 1 << i;
+    let digit = 0;
 
     if ((x & bitmask) !== 0) {
       digit |= 1;
@@ -737,12 +738,12 @@ BingMapsImageryProvider.tileXYToQuadKey = function (x, y, level) {
  * @see BingMapsImageryProvider#tileXYToQuadKey
  */
 BingMapsImageryProvider.quadKeyToTileXY = function (quadkey) {
-  var x = 0;
-  var y = 0;
-  var level = quadkey.length - 1;
-  for (var i = level; i >= 0; --i) {
-    var bitmask = 1 << i;
-    var digit = +quadkey[level - i];
+  let x = 0;
+  let y = 0;
+  const level = quadkey.length - 1;
+  for (let i = level; i >= 0; --i) {
+    const bitmask = 1 << i;
+    const digit = +quadkey[level - i];
 
     if ((digit & 1) !== 0) {
       x |= bitmask;
@@ -787,10 +788,10 @@ Object.defineProperties(BingMapsImageryProvider, {
 });
 
 function buildImageResource(imageryProvider, x, y, level, request) {
-  var imageUrl = imageryProvider._imageUrlTemplate;
+  const imageUrl = imageryProvider._imageUrlTemplate;
 
-  var subdomains = imageryProvider._imageUrlSubdomains;
-  var subdomainIndex = (x + y + level) % subdomains.length;
+  const subdomains = imageryProvider._imageUrlSubdomains;
+  const subdomainIndex = (x + y + level) % subdomains.length;
 
   return imageryProvider._resource.getDerivedResource({
     url: imageUrl,
@@ -808,32 +809,32 @@ function buildImageResource(imageryProvider, x, y, level, request) {
   });
 }
 
-var intersectionScratch = new Rectangle();
+const intersectionScratch = new Rectangle();
 
 function getRectangleAttribution(attributionList, level, rectangle) {
   // Bing levels start at 1, while ours start at 0.
   ++level;
 
-  var result = [];
+  const result = [];
 
   for (
-    var attributionIndex = 0, attributionLength = attributionList.length;
+    let attributionIndex = 0, attributionLength = attributionList.length;
     attributionIndex < attributionLength;
     ++attributionIndex
   ) {
-    var attribution = attributionList[attributionIndex];
-    var coverageAreas = attribution.coverageAreas;
+    const attribution = attributionList[attributionIndex];
+    const coverageAreas = attribution.coverageAreas;
 
-    var included = false;
+    let included = false;
 
     for (
-      var areaIndex = 0, areaLength = attribution.coverageAreas.length;
+      let areaIndex = 0, areaLength = attribution.coverageAreas.length;
       !included && areaIndex < areaLength;
       ++areaIndex
     ) {
-      var area = coverageAreas[areaIndex];
+      const area = coverageAreas[areaIndex];
       if (level >= area.zoomMin && level <= area.zoomMax) {
-        var intersection = Rectangle.intersection(
+        const intersection = Rectangle.intersection(
           rectangle,
           area.bbox,
           intersectionScratch

@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import ConditionsExpression from "./ConditionsExpression.js";
 import Expression from "./Expression.js";
 
@@ -83,15 +82,15 @@ function Cesium3DTileStyle(style) {
 
   this._colorShaderTranslucent = false;
 
-  var promise;
+  let promise;
   if (typeof style === "string" || style instanceof Resource) {
-    var resource = Resource.createIfNeeded(style);
+    const resource = Resource.createIfNeeded(style);
     promise = resource.fetchJson(style);
   } else {
-    promise = when.resolve(style);
+    promise = Promise.resolve(style);
   }
 
-  var that = this;
+  const that = this;
   this._readyPromise = promise.then(function (styleJson) {
     setup(that, styleJson);
     return that;
@@ -129,11 +128,11 @@ function setup(that, styleJson) {
   that.labelHorizontalOrigin = styleJson.labelHorizontalOrigin;
   that.labelVerticalOrigin = styleJson.labelVerticalOrigin;
 
-  var meta = {};
+  const meta = {};
   if (defined(styleJson.meta)) {
-    var defines = styleJson.defines;
-    var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
-    for (var property in metaJson) {
+    const defines = styleJson.defines;
+    const metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
+    for (const property in metaJson) {
       if (metaJson.hasOwnProperty(property)) {
         meta[property] = new Expression(metaJson[property], defines);
       }
@@ -146,7 +145,7 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  var defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT)
+  const defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT)
     .defines;
 
   if (!defined(value)) {
@@ -248,13 +247,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
    * });
    * style.show.evaluate(feature); // returns true or false depending on the feature's properties
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override show expression with a custom function
    * style.show = {
    *     evaluate : function(feature) {
@@ -263,19 +262,19 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * };
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override show expression with a boolean
    * style.show = true;
    * };
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override show expression with a string
    * style.show = '${Height} > 0';
    * };
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override show expression with a condition
    * style.show = {
    *     conditions: [
@@ -320,13 +319,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     color : '(${Temperature} > 90) ? color("red") : color("white")'
    * });
    * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override color expression with a custom function
    * style.color = {
    *     evaluateColor : function(feature, result) {
@@ -335,12 +334,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * };
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override color expression with a string
    * style.color = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override color expression with a condition
    * style.color = {
    *     conditions : [
@@ -385,13 +384,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
    * });
    * style.pointSize.evaluate(feature); // returns a Number
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointSize expression with a custom function
    * style.pointSize = {
    *     evaluate : function(feature) {
@@ -400,17 +399,17 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * };
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointSize expression with a number
    * style.pointSize = 1.0;
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointSize expression with a string
    * style.pointSize = '${height} / 10';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointSize expression with a condition
    * style.pointSize =  {
    *     conditions : [
@@ -457,12 +456,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointOutlineColor expression with a string
    * style.pointOutlineColor = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointOutlineColor expression with a condition
    * style.pointOutlineColor = {
    *     conditions : [
@@ -510,12 +509,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointOutlineWidth expression with a string
    * style.pointOutlineWidth = '5';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override pointOutlineWidth expression with a condition
    * style.pointOutlineWidth = {
    *     conditions : [
@@ -563,12 +562,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelColor expression with a string
    * style.labelColor = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelColor expression with a condition
    * style.labelColor = {
    *     conditions : [
@@ -614,12 +613,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelOutlineColor expression with a string
    * style.labelOutlineColor = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelOutlineColor expression with a condition
    * style.labelOutlineColor = {
    *     conditions : [
@@ -667,12 +666,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelOutlineWidth expression with a string
    * style.labelOutlineWidth = '5';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelOutlineWidth expression with a condition
    * style.labelOutlineWidth = {
    *     conditions : [
@@ -720,13 +719,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     font : '(${Temperature} > 90) ? "30px Helvetica" : "24px Helvetica"'
    * });
    * style.font.evaluate(feature); // returns a String
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override font expression with a custom function
    * style.font = {
    *     evaluate : function(feature) {
@@ -771,13 +770,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
    * });
    * style.labelStyle.evaluate(feature); // returns a LabelStyle
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelStyle expression with a custom function
    * style.labelStyle = {
    *     evaluate : function(feature) {
@@ -822,13 +821,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     labelText : '(${Temperature} > 90) ? ">90" : "<=90"'
    * });
    * style.labelText.evaluate(feature); // returns a String
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelText expression with a custom function
    * style.labelText = {
    *     evaluate : function(feature) {
@@ -873,12 +872,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override backgroundColor expression with a string
    * style.backgroundColor = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override backgroundColor expression with a condition
    * style.backgroundColor = {
    *     conditions : [
@@ -926,7 +925,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override backgroundPadding expression with a string
    * style.backgroundPadding = 'vec2(5.0, 7.0)';
    * style.backgroundPadding.evaluate(feature); // returns a Cartesian2
@@ -970,12 +969,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override backgroundEnabled expression with a string
    * style.backgroundEnabled = 'true';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override backgroundEnabled expression with a condition
    * style.backgroundEnabled = {
    *     conditions : [
@@ -1023,7 +1022,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override scaleByDistance expression with a string
    * style.scaleByDistance = 'vec4(1.5e2, 2.0, 1.5e7, 0.5)';
    * style.scaleByDistance.evaluate(feature); // returns a Cartesian4
@@ -1067,7 +1066,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override translucencyByDistance expression with a string
    * style.translucencyByDistance = 'vec4(1.5e2, 1.0, 1.5e7, 0.2)';
    * style.translucencyByDistance.evaluate(feature); // returns a Cartesian4
@@ -1111,7 +1110,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override distanceDisplayCondition expression with a string
    * style.distanceDisplayCondition = 'vec2(0.0, 5.5e6)';
    * style.distanceDisplayCondition.evaluate(feature); // returns a Cartesian2
@@ -1155,12 +1154,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override heightOffset expression with a string
    * style.heightOffset = '2.0';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override heightOffset expression with a condition
    * style.heightOffset = {
    *     conditions : [
@@ -1206,12 +1205,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override anchorLineEnabled expression with a string
    * style.anchorLineEnabled = 'true';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override anchorLineEnabled expression with a condition
    * style.anchorLineEnabled = {
    *     conditions : [
@@ -1259,12 +1258,12 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override anchorLineColor expression with a string
    * style.anchorLineColor = 'color("blue")';
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override anchorLineColor expression with a condition
    * style.anchorLineColor = {
    *     conditions : [
@@ -1312,13 +1311,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
    * });
    * style.image.evaluate(feature); // returns a String
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override image expression with a custom function
    * style.image = {
    *     evaluate : function(feature) {
@@ -1363,7 +1362,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override disableDepthTestDistance expression with a string
    * style.disableDepthTestDistance = '1000.0';
    * style.disableDepthTestDistance.evaluate(feature); // returns a Number
@@ -1407,13 +1406,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     horizontalOrigin : HorizontalOrigin.LEFT
    * });
    * style.horizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override horizontalOrigin expression with a custom function
    * style.horizontalOrigin = {
    *     evaluate : function(feature) {
@@ -1460,13 +1459,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     verticalOrigin : VerticalOrigin.TOP
    * });
    * style.verticalOrigin.evaluate(feature); // returns a VerticalOrigin
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override verticalOrigin expression with a custom function
    * style.verticalOrigin = {
    *     evaluate : function(feature) {
@@ -1511,13 +1510,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
          * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
-         * var style = new Cesium3DTileStyle({
+         * const style = new Cesium3DTileStyle({
          *     labelHorizontalOrigin : HorizontalOrigin.LEFT
          * });
          * style.labelHorizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
          *
          * @example
-         * var style = new Cesium.Cesium3DTileStyle();
+         * const style = new Cesium.Cesium3DTileStyle();
          * // Override labelHorizontalOrigin expression with a custom function
          * style.labelHorizontalOrigin = {
          *     evaluate : function(feature) {
@@ -1564,13 +1563,13 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     labelVerticalOrigin : VerticalOrigin.TOP
    * });
    * style.labelVerticalOrigin.evaluate(feature); // returns a VerticalOrigin
    *
    * @example
-   * var style = new Cesium.Cesium3DTileStyle();
+   * const style = new Cesium.Cesium3DTileStyle();
    * // Override labelVerticalOrigin expression with a custom function
    * style.labelVerticalOrigin = {
    *     evaluate : function(feature) {
@@ -1609,7 +1608,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
    *
    * @example
-   * var style = new Cesium3DTileStyle({
+   * const style = new Cesium3DTileStyle({
    *     meta : {
    *         description : '"Building id ${id} has height ${Height}."'
    *     }
@@ -1752,7 +1751,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
  * @private
  */
 Cesium3DTileStyle.prototype.getVariables = function () {
-  var variables = [];
+  let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
     variables.push.apply(variables, this.color.getVariables());

@@ -5,7 +5,7 @@ import Resource from "./Resource.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-var url = "https://dev.virtualearth.net/REST/v1/Locations";
+const url = "https://dev.virtualearth.net/REST/v1/Locations";
 
 /**
  * Provides geocoding through Bing Maps.
@@ -14,10 +14,11 @@ var url = "https://dev.virtualearth.net/REST/v1/Locations";
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.key A key to use with the Bing Maps geocoding service
+ * @param {String} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
 function BingMapsGeocoderService(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var key = options.key;
+  const key = options.key;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(key)) {
     throw new DeveloperError("options.key is required.");
@@ -26,11 +27,17 @@ function BingMapsGeocoderService(options) {
 
   this._key = key;
 
+  const queryParameters = {
+    key: key,
+  };
+
+  if (defined(options.culture)) {
+    queryParameters.culture = options.culture;
+  }
+
   this._resource = new Resource({
     url: url,
-    queryParameters: {
-      key: key,
-    },
+    queryParameters: queryParameters,
   });
 }
 
@@ -71,7 +78,7 @@ BingMapsGeocoderService.prototype.geocode = function (query) {
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');
 
-  var resource = this._resource.getDerivedResource({
+  const resource = this._resource.getDerivedResource({
     queryParameters: {
       query: query,
     },
@@ -82,14 +89,14 @@ BingMapsGeocoderService.prototype.geocode = function (query) {
       return [];
     }
 
-    var results = result.resourceSets[0].resources;
+    const results = result.resourceSets[0].resources;
 
     return results.map(function (resource) {
-      var bbox = resource.bbox;
-      var south = bbox[0];
-      var west = bbox[1];
-      var north = bbox[2];
-      var east = bbox[3];
+      const bbox = resource.bbox;
+      const south = bbox[0];
+      const west = bbox[1];
+      const north = bbox[2];
+      const east = bbox[3];
       return {
         displayName: resource.name,
         destination: Rectangle.fromDegrees(west, south, east, north),
