@@ -415,7 +415,7 @@ function generateDocumentation() {
 gulp.task("generateDocumentation", generateDocumentation);
 
 gulp.task("generateDocumentation-watch", function () {
-  return generateDocumentation().done(function () {
+  return generateDocumentation().then(function () {
     console.log("Listening for changes in documentation...");
     return gulp.watch(sourceFiles, gulp.series("generateDocumentation"));
   });
