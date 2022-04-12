@@ -755,8 +755,8 @@ describe(
           const rootNode = scene.nodes[0];
           const skin = rootNode.skin;
           expect(skin.inverseBindMatrices).toEqual([
-            Matrix4.IDENTITY,
-            Matrix4.IDENTITY,
+            Matrix4.ZERO,
+            Matrix4.ZERO,
           ]);
         }
       );
@@ -883,9 +883,8 @@ describe(
         expect(cubicSplineRotation.samplers.length).toEqual(1);
 
         sampler = cubicSplineRotation.samplers[0];
-        // For this particular animation, the input and output are not the same length.
-        expect(sampler.input.length).toEqual(5);
-        expect(sampler.output.length).toEqual(15);
+        // For cubic spline interpolation, each keyframe requires 3 output entries
+        expect(sampler.output.length).toEqual(sampler.input.length * 3);
         expect(sampler.interpolation).toEqual(
           ModelComponents.InterpolationType.CUBICSPLINE
         );
