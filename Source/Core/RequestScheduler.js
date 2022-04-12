@@ -376,7 +376,7 @@ RequestScheduler.getServerKey = function (url) {
  *
  * @param {Request} request The request object.
  *
- * @returns {when.Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
+ * @returns {Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
  *
  * @private
  */

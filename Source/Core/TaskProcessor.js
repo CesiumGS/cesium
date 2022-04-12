@@ -226,7 +226,7 @@ const emptyTransferableObjectArray = [];
  * @param {Object} parameters Any input data that will be posted to the worker.
  * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
  *                                      transferred to the worker instead of copied.
- * @returns {when.Promise.<Object>|undefined} Either a promise that will resolve to the result when available, or undefined
+ * @returns {Promise.<Object>|undefined} Either a promise that will resolve to the result when available, or undefined
  *                    if there are too many active tasks,
  *
  * @example
@@ -293,7 +293,7 @@ TaskProcessor.prototype.scheduleTask = function (
  * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
  * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
  * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {when.Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ * @returns {Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
  */
 TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
   if (!defined(this._worker)) {

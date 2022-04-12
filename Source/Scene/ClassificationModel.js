@@ -327,7 +327,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    * </p>
    *
    * @memberof ClassificationModel.prototype
-   * @type {when.Promise.<ClassificationModel>}
+   * @type {Promise.<ClassificationModel>}
    * @readonly
    *
    * @see ClassificationModel#ready

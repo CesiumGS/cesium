@@ -23,7 +23,7 @@ function GeocoderService() {}
  *
  * @param {String} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
- * @returns {when.Promise.<GeocoderService.Result[]>}
+ * @returns {Promise.<GeocoderService.Result[]>}
  */
 GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
 export default GeocoderService;

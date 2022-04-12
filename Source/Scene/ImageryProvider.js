@@ -135,7 +135,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ImageryProvider.prototype
-   * @type {when.Promise.<Boolean>}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -296,7 +296,7 @@ ImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {HTMLImageElement|HTMLCanvasElement|ImageBitmap|when.Promise.<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {HTMLImageElement|HTMLCanvasElement|ImageBitmap|Promise.<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.
@@ -319,7 +319,7 @@ ImageryProvider.prototype.requestImage = function (x, y, level, request) {
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {when.Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
@@ -349,7 +349,7 @@ const ktx2Regex = /\.ktx2$/i;
  *
  * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
  * @param {Resource|String} url The URL of the image.
- * @returns {when.Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

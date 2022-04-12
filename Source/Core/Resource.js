@@ -361,7 +361,7 @@ let supportsImageBitmapOptionsPromise;
 /**
  * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
  *
- * @returns {when.Promise.<Boolean>} A promise that resolves to true if this browser supports creating an ImageBitmap with options.
+ * @returns {Promise.<Boolean>} A promise that resolves to true if this browser supports creating an ImageBitmap with options.
  *
  * @private
  */
@@ -723,7 +723,7 @@ Resource.prototype.getDerivedResource = function (options) {
  *
  * @param {Error} [error] The error that was encountered.
  *
- * @returns {when.Promise.<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
+ * @returns {Promise.<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
  *
  * @private
  */
@@ -795,7 +795,7 @@ Resource.prototype.appendForwardSlash = function () {
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @returns {when.Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
  * // load a single URL asynchronously
@@ -826,7 +826,7 @@ Resource.prototype.fetchArrayBuffer = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {when.Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchArrayBuffer = function (options) {
   const resource = new Resource(options);
@@ -839,7 +839,7 @@ Resource.fetchArrayBuffer = function (options) {
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @returns {when.Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
  * // load a single URL asynchronously
@@ -870,7 +870,7 @@ Resource.prototype.fetchBlob = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {when.Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchBlob = function (options) {
   const resource = new Resource(options);
@@ -887,7 +887,7 @@ Resource.fetchBlob = function (options) {
  * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {Boolean} [options.flipY=false] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
  * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
- * @returns {when.Promise.<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1089,7 +1089,7 @@ function fetchImage(options) {
  * @param {Boolean} [options.preferBlob=false]  If true, we will load the image via a blob.
  * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
- * @returns {when.Promise.<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchImage = function (options) {
   const resource = new Resource(options);
@@ -1107,7 +1107,7 @@ Resource.fetchImage = function (options) {
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @returns {when.Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
  * // load text from a URL, setting a custom header
@@ -1145,7 +1145,7 @@ Resource.prototype.fetchText = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {when.Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchText = function (options) {
   const resource = new Resource(options);
@@ -1161,7 +1161,7 @@ Resource.fetchText = function (options) {
  * adds 'Accept: application/json,&#42;&#47;&#42;;q=0.01' to the request headers, if not
  * already specified.
  *
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1206,7 +1206,7 @@ Resource.prototype.fetchJson = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJson = function (options) {
   const resource = new Resource(options);
@@ -1219,7 +1219,7 @@ Resource.fetchJson = function (options) {
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @returns {when.Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1255,7 +1255,7 @@ Resource.prototype.fetchXML = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {when.Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchXML = function (options) {
   const resource = new Resource(options);
@@ -1266,7 +1266,7 @@ Resource.fetchXML = function (options) {
  * Requests a resource using JSONP.
  *
  * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1361,7 +1361,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJsonp = function (options) {
   const resource = new Resource(options);
@@ -1498,7 +1498,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1533,7 +1533,7 @@ Resource.prototype.fetch = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetch = function (options) {
   const resource = new Resource(options);
@@ -1554,7 +1554,7 @@ Resource.fetch = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1590,7 +1590,7 @@ Resource.prototype.delete = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.delete = function (options) {
   const resource = new Resource(options);
@@ -1612,7 +1612,7 @@ Resource.delete = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1647,7 +1647,7 @@ Resource.prototype.head = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.head = function (options) {
   const resource = new Resource(options);
@@ -1668,7 +1668,7 @@ Resource.head = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1703,7 +1703,7 @@ Resource.prototype.options = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.options = function (options) {
   const resource = new Resource(options);
@@ -1726,7 +1726,7 @@ Resource.options = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1765,7 +1765,7 @@ Resource.prototype.post = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.post = function (options) {
   const resource = new Resource(options);
@@ -1787,7 +1787,7 @@ Resource.post = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1826,7 +1826,7 @@ Resource.prototype.put = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.put = function (options) {
   const resource = new Resource(options);
@@ -1848,7 +1848,7 @@ Resource.put = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1887,7 +1887,7 @@ Resource.prototype.patch = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
- * @returns {when.Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.patch = function (options) {
   const resource = new Resource(options);

@@ -84,7 +84,7 @@ if (defined(Object.create)) {
  * @param {Object} [options] An object with the following properties:
  * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {when.Promise.<IonResource>} A Promise to am instance representing the Cesium ion Asset.
+ * @returns {Promise.<IonResource>} A Promise to am instance representing the Cesium ion Asset.
  *
  * @example
  * //Load a Cesium3DTileset with asset ID of 124624234

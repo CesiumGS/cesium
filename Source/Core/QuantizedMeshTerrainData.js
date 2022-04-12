@@ -283,7 +283,7 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
  * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
  * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
  * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
- * @returns {when.Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
+ * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
  */
@@ -424,7 +424,7 @@ const upsampleTaskProcessor = new TaskProcessor(
  * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
  * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
  * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {when.Promise.<QuantizedMeshTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
+ * @returns {Promise.<QuantizedMeshTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
  *          or undefined if too many asynchronous upsample operations are in progress and the request has been
  *          deferred.
  */

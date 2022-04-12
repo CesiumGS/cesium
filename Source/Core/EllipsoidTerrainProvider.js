@@ -101,7 +101,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {when.Promise.<Boolean>}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -163,7 +163,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
  * @param {Number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {when.Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */

@@ -800,7 +800,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
  * @param {Number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {when.Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  *
@@ -1003,7 +1003,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {when.Promise.<Boolean>}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -1206,7 +1206,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {when.Promise.<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {Promise.<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

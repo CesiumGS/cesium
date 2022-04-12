@@ -480,7 +480,7 @@ Object.defineProperties(Primitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Primitive.prototype
-   * @type {when.Promise.<Primitive>}
+   * @type {Promise.<Primitive>}
    * @readonly
    */
   readyPromise: {

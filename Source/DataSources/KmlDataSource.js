@@ -3666,7 +3666,7 @@ function KmlDataSource(options) {
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
  *
- * @returns {when.Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+ * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -3835,7 +3835,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {when.Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+ * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
 KmlDataSource.prototype.load = function (data, options) {
   //>>includeStart('debug', pragmas.debug);

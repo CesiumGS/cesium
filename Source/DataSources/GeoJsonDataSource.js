@@ -609,7 +609,7 @@ function GeoJsonDataSource(name) {
  * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {when.Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
+ * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
  */
 GeoJsonDataSource.load = function (data, options) {
   return new GeoJsonDataSource().load(data, options);
@@ -898,7 +898,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
  * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
- * @returns {when.Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
+ * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.load = function (data, options) {
   //>>includeStart('debug', pragmas.debug);

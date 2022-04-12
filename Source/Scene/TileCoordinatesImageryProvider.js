@@ -262,7 +262,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof TileCoordinatesImageryProvider.prototype
-   * @type {when.Promise.<Boolean>}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {

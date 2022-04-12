@@ -301,7 +301,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof GroundPolylinePrimitive.prototype
-   * @type {when.Promise.<GroundPolylinePrimitive>}
+   * @type {Promise.<GroundPolylinePrimitive>}
    * @readonly
    */
   readyPromise: {
@@ -334,7 +334,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPolylinePrimitive synchronously.
  *
- * @returns {when.Promise.<void>} A promise that will resolve once the terrain heights have been loaded.
+ * @returns {Promise.<void>} A promise that will resolve once the terrain heights have been loaded.
  */
 GroundPolylinePrimitive.initializeTerrainHeights = function () {
   return ApproximateTerrainHeights.initialize();

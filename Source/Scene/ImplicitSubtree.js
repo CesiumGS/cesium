@@ -684,7 +684,7 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
  * @param {ImplicitSubtree} subtree The subtree
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @param {Uint8Array} internalBuffer The binary chunk of the subtree file
- * @returns {when.Promise.<Object>} A promise resolving to the dictionary of active buffers
+ * @returns {Promise.<Object>} A promise resolving to the dictionary of active buffers
  * @private
  */
 function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {

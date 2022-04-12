@@ -94,7 +94,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
    * Gets a promise that resolves when the texture atlas is ready to use.
    * @memberof OctahedralProjectedCubeMap.prototype
-   * @type {when.Promise.<void>}
+   * @type {Promise.<void>}
    * @readonly
    */
   readyPromise: {

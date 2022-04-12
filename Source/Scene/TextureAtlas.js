@@ -420,7 +420,7 @@ TextureAtlas.prototype.addImageSync = function (id, image) {
  * @param {String} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|String|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
- * @returns {when.Promise.<Number>} A Promise for the image index.
+ * @returns {Promise.<Number>} A Promise for the image index.
  */
 TextureAtlas.prototype.addImage = function (id, image) {
   //>>includeStart('debug', pragmas.debug);
@@ -473,7 +473,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
  * @param {String} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
  *
- * @returns {when.Promise.<Number>} A Promise for the image index.
+ * @returns {Promise.<Number>} A Promise for the image index.
  */
 TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);

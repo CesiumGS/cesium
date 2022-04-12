@@ -19,7 +19,7 @@ import Check from "./Check.js";
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Number} level The terrain level-of-detail from which to query terrain heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
- * @returns {when.Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
+ * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
  *
  * @see sampleTerrainMostDetailed
  *

@@ -366,7 +366,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof GroundPrimitive.prototype
-   * @type {when.Promise.<GroundPrimitive>}
+   * @type {Promise.<GroundPrimitive>}
    * @readonly
    */
   readyPromise: {
@@ -691,7 +691,7 @@ function updateAndQueueCommands(
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPrimitive synchronously.
  *
- * @returns {when.Promise.<void>} A promise that will resolve once the terrain heights have been loaded.
+ * @returns {Promise.<void>} A promise that will resolve once the terrain heights have been loaded.
  *
  */
 GroundPrimitive.initializeTerrainHeights = function () {
