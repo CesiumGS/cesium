@@ -315,3 +315,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Justin Peter](https://github.com/themagicnacho)
 - [Gu Miao](https://github.com/Gu-Miao)
 - [Shen WeiQun](https://github.com/ShenWeiQun)
+- [Jiang Heng](https://github.com/jiangheng90)
