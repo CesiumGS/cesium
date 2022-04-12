@@ -413,7 +413,7 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
  *          Image or a Canvas DOM object.
  */
 GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
-  return this._canvas;
+  return Promise.resolve(this._canvas);
 };
 
 /**

@@ -395,10 +395,16 @@ gulp.task("prepare", function (done) {
 
 //Builds the documentation
 function generateDocumentation() {
-  child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
-    stdio: "inherit",
-    env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
-  });
+  const argv = yargs.argv;
+  const generatePrivateDocumentation = argv.private ? "--private" : "";
+
+  child_process.execSync(
+    `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
+    {
+      stdio: "inherit",
+      env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
+    }
+  );
 
   const stream = gulp
     .src("Documentation/Images/**")
@@ -409,7 +415,7 @@ function generateDocumentation() {
 gulp.task("generateDocumentation", generateDocumentation);
 
 gulp.task("generateDocumentation-watch", function () {
-  return generateDocumentation().done(function () {
+  return generateDocumentation().then(function () {
     console.log("Listening for changes in documentation...");
     return gulp.watch(sourceFiles, gulp.series("generateDocumentation"));
   });
@@ -461,10 +467,8 @@ gulp.task(
         "Apps/**",
         "!Apps/Sandcastle/gallery/development/**",
         "Source/**",
-        "Specs/**",
         "ThirdParty/**",
         "favicon.ico",
-        "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
         "LICENSE.md",
