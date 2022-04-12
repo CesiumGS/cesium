@@ -1197,7 +1197,11 @@ function requestSingleContent(tile) {
     .then(function (arrayBuffer) {
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content finishes loading
-        singleContentFailed(tile, tileset);
+        singleContentFailed(
+          tile,
+          tileset,
+          "Tile was unloaded while content was processing"
+        );
         return;
       }
 
@@ -1215,7 +1219,11 @@ function requestSingleContent(tile) {
       return content.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
           // Tile is unloaded before the content finishes processing
-          singleContentFailed(tile, tileset);
+          singleContentFailed(
+            tile,
+            tileset,
+            "Tile was unloaded while content was processing"
+          );
           return;
         }
         updateExpireDate(tile);
