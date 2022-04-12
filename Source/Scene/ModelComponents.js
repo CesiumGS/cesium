@@ -868,7 +868,7 @@ function AnimationSampler() {
   /**
    * The keyframe data of the animation.
    *
-   * @type {Number[]|Cartesian3[]|Cartesian4[]}
+   * @type {Number[]|Cartesian3[]|Quaternion[]}
    * @private
    */
   this.output = undefined;
@@ -902,6 +902,7 @@ function AnimationTarget() {
 
 /**
  * An animation channel linking an animation sampler and the target it animates.
+ *
  * @alias {ModelComponents.AnimationChannel}
  * @constructor
  *

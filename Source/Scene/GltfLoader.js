@@ -463,7 +463,7 @@ function loadAccessor(
   defaultCallback
 ) {
   const accessor = gltf.accessors[accessorId];
-  const bufferViewId = defined(accessor) ? accessor.bufferView : undefined;
+  const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
     const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
     bufferViewLoader.promise.then(function (bufferViewLoader) {
