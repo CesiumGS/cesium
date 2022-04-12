@@ -75,8 +75,11 @@ function VoxelBoxShape() {
    * @readonly
    */
   this.shaderUniforms = {
-    boxMinBounds: new Cartesian3(),
-    boxMaxBounds: new Cartesian3(),
+    boxScaleUvToBoundsUv: new Cartesian3(),
+    boxTranslateUvToBoundsUv: new Cartesian3(),
+    boxScaleUvToBounds: new Cartesian3(),
+    boxTranslateUvToBounds: new Cartesian3(),
+    boxTransformUvToBounds: new Matrix4(),
   };
 
   /**
@@ -84,7 +87,7 @@ function VoxelBoxShape() {
    * @readonly
    */
   this.shaderDefines = {
-    BOX_INTERSECTION_COUNT: 1,
+    BOX_INTERSECTION_COUNT: 1, // never changes
     BOX_BOUNDED: undefined,
     BOX_XY_PLANE: undefined,
     BOX_XZ_PLANE: undefined,
@@ -95,6 +98,31 @@ function VoxelBoxShape() {
 const scratchTranslation = new Cartesian3();
 const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
+const scratchTransformLocalToBounds = new Matrix4();
+const scratchBoundsTranslation = new Cartesian3();
+const scratchBoundsScale = new Cartesian3();
+
+const transformUvToLocal = Matrix4.fromRotationTranslation(
+  Matrix3.fromUniformScale(2.0, new Matrix3()),
+  new Cartesian3(-1.0, -1.0, -1.0),
+  new Matrix4()
+);
+
+const transformXYZToZYX = Matrix4.fromRotation(
+  Matrix3.fromColumnMajorArray(
+    [0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0],
+    new Matrix3()
+  ),
+  new Matrix4()
+);
+
+const transformXYZToXZY = Matrix4.fromRotation(
+  Matrix3.fromColumnMajorArray(
+    [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
+    new Matrix3()
+  ),
+  new Matrix4()
+);
 
 /**
  * Update the shape's state.
@@ -130,10 +158,10 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
 
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
-  // Not visible if:
+  // Box is not visible if:
   // - any of the min bounds exceed the max bounds
-  // - two or more of the min bounds equal the max bounds (line and point respectively)
-  // - scale is 0 for any component
+  // - two or more of the min bounds equal the max bounds (line / point)
+  // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   if (
     minBounds.x > maxBounds.x ||
     minBounds.y > maxBounds.y ||
@@ -174,27 +202,113 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
 
-  shaderUniforms.minBounds = Cartesian3.clone(
-    minBounds,
-    shaderUniforms.minBounds
-  );
-  shaderUniforms.maxBounds = Cartesian3.clone(
-    maxBounds,
-    shaderUniforms.maxBounds
-  );
+  // To keep things simple, clear the defines every frame
+  shaderDefines["BOX_BOUNDED"] = undefined;
+  shaderDefines["BOX_XY_PLANE"] = undefined;
+  shaderDefines["BOX_XZ_PLANE"] = undefined;
+  shaderDefines["BOX_YZ_PLANE"] = undefined;
 
-  const hasBounds =
-    !Cartesian3.equals(minBounds, defaultMinBounds) &&
-    !Cartesian3.equals(maxBounds, defaultMaxBounds);
-  shaderDefines.BOX_BOUNDS = hasBounds ? 1 : undefined;
+  if (
+    minBounds.x !== defaultMinBounds.x ||
+    minBounds.y !== defaultMinBounds.y ||
+    minBounds.z !== defaultMinBounds.z ||
+    maxBounds.x !== defaultMaxBounds.x ||
+    maxBounds.y !== defaultMaxBounds.y ||
+    maxBounds.z !== defaultMaxBounds.z
+  ) {
+    shaderDefines["BOX_BOUNDED"] = true;
+
+    // inverse(scale)
+    // inverse(maxBoundsUv - minBoundsUv)
+    // inverse((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
+    // inverse(0.5 * (maxBounds - minBounds))
+    // 2.0 / (maxBounds - minBounds) // with divide by zero protection
+    const boundsScaleLocalToBounds = Cartesian3.fromElements(
+      2.0 / (minBounds.x === maxBounds.x ? 1.0 : maxBounds.x - minBounds.x),
+      2.0 / (minBounds.y === maxBounds.y ? 1.0 : maxBounds.y - minBounds.y),
+      2.0 / (minBounds.z === maxBounds.z ? 1.0 : maxBounds.z - minBounds.z),
+      scratchBoundsScale
+    );
+
+    // -inverse(scale) * translation // affine inverse
+    // -inverse(scale) * 0.5 * (minBounds + maxBounds)
+    const boundsTranslateLocalToBounds = Cartesian3.fromElements(
+      -boundsScaleLocalToBounds.x * 0.5 * (minBounds.x + maxBounds.x),
+      -boundsScaleLocalToBounds.y * 0.5 * (minBounds.y + maxBounds.y),
+      -boundsScaleLocalToBounds.z * 0.5 * (minBounds.z + maxBounds.z),
+      scratchBoundsTranslation
+    );
+
+    let transformLocalToBounds = Matrix4.fromRotationTranslation(
+      Matrix3.fromScale(boundsScaleLocalToBounds),
+      boundsTranslateLocalToBounds,
+      scratchTransformLocalToBounds
+    );
+
+    if (
+      minBounds.x === maxBounds.x ||
+      minBounds.y === maxBounds.y ||
+      minBounds.z === maxBounds.z
+    ) {
+      let transformAxisConversion;
+      if (minBounds.x === maxBounds.x) {
+        shaderDefines["BOX_YZ_PLANE"] = true;
+        transformAxisConversion = transformXYZToZYX;
+      } else if (minBounds.y === maxBounds.y) {
+        shaderDefines["BOX_XZ_PLANE"] = true;
+        transformAxisConversion = transformXYZToXZY;
+      } else if (minBounds.z === maxBounds.z) {
+        shaderDefines["BOX_XY_PLANE"] = true;
+        transformAxisConversion = Matrix4.IDENTITY;
+      }
+      transformLocalToBounds = Matrix4.multiply(
+        transformAxisConversion,
+        transformLocalToBounds,
+        transformLocalToBounds
+      );
+    }
+
+    shaderUniforms.boxTransformUvToBounds = Matrix4.multiplyTransformation(
+      transformLocalToBounds,
+      transformUvToLocal,
+      shaderUniforms.boxTransformUvToBounds
+    );
+    shaderUniforms.boxScaleUvToBounds = Matrix4.getScale(
+      shaderUniforms.boxTransformUvToBounds,
+      shaderUniforms.boxScaleUvToBounds
+    );
+    shaderUniforms.boxTranslateUvToBounds = Matrix4.getTranslation(
+      shaderUniforms.boxTransformUvToBounds,
+      shaderUniforms.boxTranslateUvToBounds
+    );
+
+    // Go from UV space to bounded UV space:
+    // delerp(posUv, minBoundsUv, maxBoundsUv)
+    // (posUv - minBoundsUv) / (maxBoundsUv - minBoundsUv)
+    // posUv / (maxBoundsUv - minBoundsUv) - minBoundsUv / (maxBoundsUv - minBoundsUv)
+    // scale = 1.0 / (maxBoundsUv - minBoundsUv)
+    // scale = 1.0 / ((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
+    // scale = 2.0 / (maxBounds - minBounds)
+    // translation = -minBoundsUv / ((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
+    // translation = -2.0 * (minBounds * 0.5 + 0.5) / (maxBounds - minBounds)
+    // translation = -scale * (minBounds * 0.5 + 0.5)
+    shaderUniforms.boxScaleUvToBoundsUv = Cartesian3.clone(
+      boundsScaleLocalToBounds,
+      shaderUniforms.boxScaleUvToBoundsUv
+    );
+    shaderUniforms.boxTranslateUvToBoundsUv = Cartesian3.fromElements(
+      -boundsScaleLocalToBounds.x * (minBounds.x * 0.5 + 0.5),
+      -boundsScaleLocalToBounds.y * (minBounds.y * 0.5 + 0.5),
+      -boundsScaleLocalToBounds.z * (minBounds.z * 0.5 + 0.5),
+      shaderUniforms.boxTranslateUvToBoundsUv
+    );
+  }
 
   return true;
 };
 
-const scratchMinBounds = new Cartesian3();
-const scratchMaxBounds = new Cartesian3();
-const scratchMinLerp = new Cartesian3();
-const scratchMaxLerp = new Cartesian3();
+const scratchTileMinBounds = new Cartesian3();
+const scratchTileMaxBounds = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified tile.
@@ -222,33 +336,30 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
+  const minBounds = this._minBounds;
+  const maxBounds = this._maxBounds;
   const sizeAtLevel = 1.0 / Math.pow(2, tileLevel);
 
-  const minBounds = Cartesian3.lerp(
-    this._minBounds,
-    this._maxBounds,
-    Cartesian3.fromElements(
-      sizeAtLevel * tileX,
-      sizeAtLevel * tileY,
-      sizeAtLevel * tileZ,
-      scratchMinLerp
-    ),
-    scratchMinBounds
+  const tileMinBounds = Cartesian3.fromElements(
+    CesiumMath.lerp(minBounds.x, maxBounds.x, sizeAtLevel * tileX),
+    CesiumMath.lerp(minBounds.y, maxBounds.y, sizeAtLevel * tileY),
+    CesiumMath.lerp(minBounds.z, maxBounds.z, sizeAtLevel * tileZ),
+    scratchTileMinBounds
   );
 
-  const maxBounds = Cartesian3.lerp(
-    this._minBounds,
-    this._maxBounds,
-    Cartesian3.fromElements(
-      sizeAtLevel * (tileX + 1),
-      sizeAtLevel * (tileY + 1),
-      sizeAtLevel * (tileZ + 1),
-      scratchMaxLerp
-    ),
-    scratchMaxBounds
+  const tileMaxBounds = Cartesian3.fromElements(
+    CesiumMath.lerp(minBounds.x, maxBounds.x, sizeAtLevel * (tileX + 1)),
+    CesiumMath.lerp(minBounds.y, maxBounds.y, sizeAtLevel * (tileY + 1)),
+    CesiumMath.lerp(minBounds.z, maxBounds.z, sizeAtLevel * (tileZ + 1)),
+    scratchTileMaxBounds
   );
 
-  return getBoxChunkObb(minBounds, maxBounds, this.shapeTransform, result);
+  return getBoxChunkObb(
+    tileMinBounds,
+    tileMaxBounds,
+    this.shapeTransform,
+    result
+  );
 };
 
 /**

@@ -1299,6 +1299,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     // Set member variables when the shape is dirty
     const dimensions = provider.dimensions;
     this._stepSizeUv = shape.computeApproximateStepSize(dimensions);
+    //  TODO: check which of the `multiply` can be `multiplyTransformation`
     this._transformPositionWorldToUv = Matrix4.multiply(
       transformPositionLocalToUv,
       transformPositionWorldToLocal,
@@ -1899,8 +1900,11 @@ function buildDrawCommands(that, context) {
   // Shape specific defines
   for (const key in shapeDefines) {
     if (shapeDefines.hasOwnProperty(key)) {
-      const value = shapeDefines[key];
+      let value = shapeDefines[key];
+      // if value is undefined, don't define it
+      // if value is true, define it to nothing
       if (defined(value)) {
+        value = value === true ? undefined : value;
         shaderBuilder.addDefine(key, value, ShaderDestination.FRAGMENT);
       }
     }

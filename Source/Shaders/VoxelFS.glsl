@@ -194,9 +194,26 @@ uniform float u_stepSize;
 #endif
 
 #if defined(SHAPE_BOX)
-    #define BOX_INTERSECTION_COUNT 1
-    uniform vec2 u_boxMinBounds;
-    uniform vec2 u_boxMaxBounds;
+    /* Box defines:
+    #define BOX_INTERSECTION_COUNT ### // always 1
+    #define BOX_BOUNDED
+    #define BOX_XY_PLANE
+    #define BOX_XZ_PLANE
+    #define BOX_YZ_PLANE
+    */
+
+    // Box uniforms:
+    #if defined(BOX_BOUNDED)
+        uniform vec3 u_boxScaleUvToBoundsUv;
+        uniform vec3 u_boxTranslateUvToBoundsUv;
+        #if defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
+            uniform mat4 u_boxTransformUvToBounds;
+        #else
+            // Similar to u_boxTransformUvToBounds but fewer instructions needed.
+            uniform vec3 u_boxScaleUvToBounds;
+            uniform vec3 u_boxTranslateUvToBounds;
+        #endif
+    #endif
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
@@ -240,6 +257,7 @@ uniform float u_stepSize;
     #define CYLINDER_INTERSECTION_COUNT ### // the total number of enter and exit points for all the constituent intersections
     */
 
+    // Cylinder uniforms
     #if defined(CYLINDER_INNER)
         uniform float u_something;    
     #endif
@@ -372,41 +390,28 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
 #endif
 
 #if defined(SHAPE_BOX)
-vec2 intersectBoxShape(Ray ray, out Intersections ix)
+void intersectBoxShape(Ray ray, out Intersections ix)
 {
-    #if defined(BOX_BOUNDED)
-        vec3 pos = 0.5 * (u_minBounds + u_maxBounds);
-        vec3 scale = 0.5 * (u_maxBounds - u_minBounds);
-        
-        if (any(equal(scale, vec3(0.0)))) {
-            // Transform the ray into unit space on Z plane
-            Ray flatRay;
-            if (scale.x == 0.0) {
-                flatRay = Ray(
-                    (ray.pos.yzx - pos.yzx) / vec3(scale.yz, 1.0),
-                    ray.dir.yzx / vec3(scale.yz, 1.0)
-                );
-            } else if (scale.y == 0.0) {
-                flatRay = Ray(
-                    (ray.pos.xzy - pos.xzy) / vec3(scale.xz, 1.0),
-                    ray.dir.xzy / vec3(scale.xz, 1.0)
-                );
-            } else if (scale.z == 0.0) {
-                flatRay = Ray(
-                    (ray.pos.xyz - pos.xyz) / vec3(scale.xy, 1.0),
-                    ray.dir.xyz / vec3(scale.xy, 1.0)
-                );
-            }
-            return intersectUnitSquare(flatRay);
-        } else {
-            // Transform the ray into "unit space"
-            Ray unitRay = Ray((ray.pos - pos) / scale, ray.dir / scale);
-            return intersectUnitCube(unitRay);
-        }
+    #if !defined(BOX_BOUNDED)
+        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+        // Direction is scaled as well to be in sync with position. 
+        ray.pos = ray.pos * 2.0 - 1.0;
+        ray.dir = ray.dir * 2.0;
+        vec2 entryExit = intersectUnitCube(ray);
+    #elif defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
+        // Transform the ray into unit square space on Z plane
+        ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
+        ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
+        vec2 entryExit = intersectUnitSquare(ray);
+    #else
+        // Transform the ray into unit cube space
+        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxTranslateUvToBounds;
+        ray.dir *= u_boxScaleUvToBounds;
+        vec2 entryExit = intersectUnitCube(ray);
     #endif
 
-            return intersectUnitCube(ray);
-
+    ix.intersections[0] = vec2(entryExit.x, POSITIVE_ENTRY);
+    ix.intersections[1] = vec2(entryExit.y, POSITIVE_EXIT);
 }
 #endif
 
@@ -925,11 +930,9 @@ float intersectDepth(vec2 fragCoord, vec2 screenUv, vec3 positionUv, vec3 direct
 #endif
 
 vec2 intersectScene(vec2 fragCoord, vec2 screenUv, vec3 positionUv, vec3 directionUv, out Intersections ix) {
+    Ray ray = Ray(positionUv, directionUv);
+    
     // Do a ray-shape intersection to find the exact starting and ending points.
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position. 
-    Ray ray = Ray(positionUv * 2.0 - 1.0, directionUv * 2.0);
-
     #if defined(SHAPE_BOX)
         intersectBoxShape(ray, ix);
     #elif defined(SHAPE_ELLIPSOID)
@@ -968,11 +971,11 @@ vec2 intersectScene(vec2 fragCoord, vec2 screenUv, vec3 positionUv, vec3 directi
 
 #if defined(SHAPE_BOX)
 vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
-    vec3 positionShape = positionUv;
-    #if defined(BOUNDS)
-        positionShape = (positionShape - u_minBoundsUv) * u_inverseBoundsUv; // [0,1]
+    #if defined(BOX_BOUNDED)
+        return positionUv * u_boxScaleUvToBoundsUv + u_boxTranslateUvToBoundsUv;
+    #else
+        return positionUv;
     #endif
-    return positionShape;
 }
 #endif
 
@@ -1422,7 +1425,7 @@ void main()
     vec2 entryExitT = intersectScene(fragCoord.xy, screenUv, viewPosUv, viewDirUv, ix);    
 
     // Exit early if the scene was completely missed.
-    if (entryExitT == vec2(NO_HIT)) {
+    if (entryExitT.x == NO_HIT) {
         discard;
     }
 
@@ -1526,7 +1529,7 @@ void main()
         // Check if there's more intersections.
         if (currT > endT) {
             vec2 entryExitT = nextIntersection(ix);
-            if (entryExitT == vec2(NO_HIT)) {
+            if (entryExitT.x == NO_HIT) {
                 break;
             } else {
                 // Found another intersection. Keep raymarching.

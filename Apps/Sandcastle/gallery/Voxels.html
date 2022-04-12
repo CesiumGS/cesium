@@ -397,21 +397,6 @@
 
         Sandcastle.addToolbarMenu([
           {
-            text: "Ellipsoid - Procedural Tile",
-            onselect: function () {
-              const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.ELLIPSOID
-              );
-              const primitive = createPrimitive(provider, customShaderColor);
-              primitive.readyPromise.then(function () {
-                console.log(primitive.boundingSphere.center);
-                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
-                  duration: 0.0,
-                });
-              });
-            },
-          },
-          {
             text: "Box - Procedural Tile",
             onselect: function () {
               const provider = new ProceduralSingleTileVoxelProvider(
@@ -474,6 +459,11 @@
                 Cesium.VoxelShapeType.ELLIPSOID
               );
               const primitive = createPrimitive(provider, customShaderColor);
+              primitive.readyPromise.then(function () {
+                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
+                  duration: 0.0,
+                });
+              });
             },
           },
           {
