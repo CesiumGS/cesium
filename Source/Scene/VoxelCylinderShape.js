@@ -401,8 +401,8 @@ VoxelCylinderShape.prototype.update = function (
   if (hasWedge) {
     shaderDefines["CYLINDER_WEDGE"] = true;
     shaderDefines["CYLINDER_WEDGE_INDEX"] = intersectionCount;
-    shaderUniforms.minAngle = minAngle;
-    shaderUniforms.maxAngle = maxAngle;
+    shaderUniforms.cylinderMinAngle = minAngle;
+    shaderUniforms.cylinderMaxAngle = maxAngle;
 
     const minAngleUv =
       (minAngle - defaultMinAngle) / (defaultMaxAngle - defaultMinAngle);

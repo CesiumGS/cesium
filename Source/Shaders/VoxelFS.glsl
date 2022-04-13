@@ -315,14 +315,14 @@ struct Ray {
 };
 
 #if defined(JITTER)
-#define HASHSCALE 50.0
 float hash(vec2 p)
 {
-	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE);
+	vec3 p3 = fract(vec3(p.xyx) * 50.0); // magic number = hashscale
 	p3 += dot(p3, p3.yzx + 19.19);
 	return fract((p3.x + p3.y) * p3.z);
 }
 #endif
+
 float signNoZero(float v) {
     return (v < 0.0) ? -1.0 : 1.0;
 }
@@ -499,8 +499,7 @@ vec2 initializeIntersections(inout Intersections ix) {
 #endif
 
 #if defined(SHAPE_BOX)
-// Unit cube from [-1, +1]
-vec2 intersectUnitCube(Ray ray)
+vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
@@ -967,7 +966,7 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
             setIntersectionPair(ix, ELLIPSOID_WEDGE_REGULAR, wedgeIntersect);
         #elif defined(ELLIPSOID_WEDGE_FLIPPED)
             vec2 planeIntersectWest = intersectHalfSpace(ray, west);
-            vec2 planeIntersectEast = intersectHalfSpace(ray, east);
+            vec2 planeIntersectEast = intersectHalfSpace(ray, east + czm_pi);
             setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 0, planeIntersectWest);
             setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 1, planeIntersectEast);
         #endif
@@ -1061,7 +1060,7 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
     #elif defined(CYLINDER_WEDGE_FLIPPED)
         vec2 planeIntersectMinAngle = intersectHalfSpace(outerRay, u_cylinderMinAngle);
-        vec2 planeIntersectMaxAngle = intersectHalfSpace(outerRay, u_cylinderMaxAngle);
+        vec2 planeIntersectMaxAngle = intersectHalfSpace(outerRay, u_cylinderMaxAngle + czm_pi);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, planeIntersectMinAngle);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, planeIntersectMaxAngle);
     #endif
