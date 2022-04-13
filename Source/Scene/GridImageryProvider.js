@@ -407,7 +407,7 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {HTMLCanvasElement} The resolved image as a Canvas DOM object.
+ * @returns {Promise<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
  */
 GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
   return Promise.resolve(this._canvas);
