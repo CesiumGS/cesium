@@ -538,31 +538,6 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
 }
 #endif
 
-#if defined(SHAPE_BOX)
-void intersectBoxShape(Ray ray, out Intersections ix)
-{
-    #if !defined(BOX_BOUNDED)
-        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-        // Direction is scaled as well to be in sync with position. 
-        ray.pos = ray.pos * 2.0 - 1.0;
-        ray.dir = ray.dir * 2.0;
-        vec2 entryExit = intersectUnitCube(ray);
-    #elif defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
-        // Transform the ray into unit square space on Z plane
-        ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
-        ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
-        vec2 entryExit = intersectUnitSquare(ray);
-    #else
-        // Transform the ray into unit cube space
-        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxTranslateUvToBounds;
-        ray.dir *= u_boxScaleUvToBounds;
-        vec2 entryExit = intersectUnitCube(ray);
-    #endif
-
-    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, entryExit);
-}
-#endif
-
 #if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_REGULAR)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_REGULAR))
 vec2 intersectWedge(Ray ray, float minAngle, float maxAngle)
 {    
@@ -736,78 +711,6 @@ vec2 intersectRegularCone(Ray ray, float latitude) {
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID)
-void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
-{
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position. 
-    ray.pos = ray.pos * 2.0 - 1.0;
-    ray.dir *= 2.0;
-    
-    // Outer ellipsoid
-    vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
-    setIntersectionPair(ix, ELLIPSOID_OUTER, outerIntersect);
-
-    // Exit early if the outer ellipsoid was missed.
-    if (outerIntersect.x == NO_HIT) {
-        return;
-    }
-
-    // Inner ellipsoid
-    #if defined(ELLIPSOID_INNER)
-        Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
-        vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        setIntersectionPair(ix, ELLIPSOID_INNER, innerIntersect);
-    #endif
-        
-    // Bottom cone
-    #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
-        // Flip the inputs because the intersection function expects a cone growing towards +Z.
-        float flippedSouth = -u_ellipsoidRectangle.y; // [-halfPi,+halfPi]
-        Ray flippedRay = ray;
-        flippedRay.dir.z *= -1.0;
-        flippedRay.pos.z *= -1.0;
-        
-        #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR)
-            vec2 bottomConeIntersection = intersectRegularCone(flippedRay, flippedSouth);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_REGULAR, bottomConeIntersection);
-        #elif defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
-            vec4 bottomConeIntersection = intersectFlippedCone(flippedRay, flippedSouth);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_FLIPPED + 0, bottomConeIntersection.xy);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_FLIPPED + 1, bottomConeIntersection.zw);
-        #endif
-    #endif
-
-    // Top cone        
-    #if defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
-        float north = u_ellipsoidRectangle.w; // [-halfPi,+halfPi]
-        #if defined(ELLIPSOID_CONE_TOP_REGULAR)
-            vec2 topConeIntersection = intersectRegularCone(ray, north);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_REGULAR, topConeIntersection);
-        #elif defined(ELLIPSOID_CONE_TOP_FLIPPED)
-            vec4 topConeIntersection = intersectFlippedCone(ray, north);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_FLIPPED + 0, topConeIntersection.xy);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_FLIPPED + 1, topConeIntersection.zw);
-        #endif
-    #endif
-
-    // Wedge
-    #if defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED)
-        float west = u_ellipsoidRectangle.x; // [-pi,+pi]
-        float east = u_ellipsoidRectangle.z; // [-pi,+pi]
-        #if defined(ELLIPSOID_WEDGE_REGULAR)
-            vec2 wedgeIntersect = intersectWedge(ray, west, east);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_REGULAR, wedgeIntersect);
-        #elif defined(ELLIPSOID_WEDGE_FLIPPED)
-            vec2 planeIntersectWest = intersectHalfSpace(ray, west);
-            vec2 planeIntersectEast = intersectHalfSpace(ray, east);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 0, planeIntersectWest);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 1, planeIntersectEast);
-        #endif
-    #endif
-}
-#endif
-
 #if defined(SHAPE_CYLINDER)
 vec2 intersectUnitCylinder(Ray ray)
 {
@@ -890,141 +793,6 @@ vec2 intersectInfiniteUnitCylinder(Ray ray)
 }
 #endif
 
-#if defined(SHAPE_CYLINDER)
-void intersectCylinderShape(Ray ray, inout Intersections ix)
-{
-    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER) || defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        Ray outerRay = Ray(ray.pos * u_cylinderScaleUvToBounds + u_cylinderTranslateUvToBounds, ray.dir * u_cylinderScaleUvToBounds);
-    #else
-        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-        // Direction is scaled as well to be in sync with position.
-        Ray outerRay = Ray(ray.pos * 2.0 - 1.0, ray.dir * 2.0);
-    #endif
-
-    #if defined(CYLINDER_HEIGHT_ZERO)
-        vec2 outerIntersect = intersectUnitCircle(outerRay);
-    #else
-        vec2 outerIntersect = intersectUnitCylinder(outerRay);
-    #endif
-
-    setIntersectionPair(ix, CYLINDER_OUTER_INDEX, outerIntersect);
-
-    if (outerIntersect.x == NO_HIT) {
-        return;
-    }
-
-    #if defined(CYLINDER_INNER_OUTER_EQUAL) 
-        // When the cylinder is perfectly thin it's necessary to sandwich the
-        // inner cylinder intersection inside the outer cylinder intersection.
-        
-        // Without this special case,
-        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
-        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
-        // side of the cylinder to be invisible because it will think the ray
-        // is still inside the inner (negative) cylinder after exiting the
-        // outer (positive) cylinder. 
-
-        // With this special case,
-        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
-        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
-
-        // Note: If sortIntersections() changes its sorting function
-        // from bubble sort to something else, this code may need to change.
-        setIntersection(ix, 0, outerIntersect.x, true, true); // positive, enter
-        setIntersection(ix, 1, outerIntersect.x, false, true); // negative, enter
-        setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
-        setIntersection(ix, 3, outerIntersect.y, true, false); //  positive, exit
-    #elif defined(CYLINDER_INNER)
-        Ray innerRay = Ray(ray.pos * u_cylinderScaleUvToInnerBounds + u_cylinderTranslateUvToInnerBounds, ray.dir * u_cylinderScaleUvToInnerBounds);
-        vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
-        setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
-    #endif
-
-    #if defined(CYLINDER_WEDGE_REGULAR)
-        vec2 wedgeIntersect = intersectWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
-    #elif defined(CYLINDER_WEDGE_FLIPPED)
-        vec2 planeIntersectMinAngle = intersectHalfSpace(outerRay, u_cylinderMinAngle);
-        vec2 planeIntersectMaxAngle = intersectHalfSpace(outerRay, u_cylinderMaxAngle);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, planeIntersectMinAngle);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, planeIntersectMaxAngle);
-    #endif
-}
-#endif
-
-void intersectShape(Ray ray, out Intersections ix) {
-    #if defined(SHAPE_BOX)
-        intersectBoxShape(ray, ix);
-    #elif defined(SHAPE_ELLIPSOID)
-        intersectEllipsoidShape(ray, ix);
-    #elif defined(SHAPE_CYLINDER)
-        intersectCylinderShape(ray, ix);
-    #endif
-}
-
-#if defined(DEPTH_TEST)
-float intersectDepth(vec2 screenCoord, Ray ray) {
-    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenCoord));
-    if (logDepthOrDepth != 0.0) {
-        // Calculate how far the ray must travel before it hits the depth buffer.
-        vec4 eyeCoordinateDepth = czm_screenToEyeCoordinates(screenCoord, logDepthOrDepth);
-        eyeCoordinateDepth /= eyeCoordinateDepth.w;
-        vec3 depthPositionUv = vec3(u_transformPositionViewToUv * eyeCoordinateDepth);
-        return dot(depthPositionUv - ray.pos, ray.dir);
-    } else {
-        // There's no depth at this position so set it to some really far value.
-        return +INF_HIT;
-    }
-}
-#endif
-
-vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Intersections ix) {
-    Ray ray = Ray(positionUv, directionUv);
-    
-    // Do a ray-shape intersection to find the exact starting and ending points.
-    intersectShape(ray, ix);
-
-    // Check if the positive shape was completely missed, and if so, exit early.
-    float entryPositiveShapeT = getIntersection(ix, 0);
-    if (entryPositiveShapeT == NO_HIT) {
-        return vec2(NO_HIT);
-    }
-
-    // Intersect depth texture
-    #if defined(DEPTH_TEST)
-        float depthT = intersectDepth(screenCoord, ray);
-        setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(depthT, +INF_HIT));
-    #endif
-
-    // Find the first intersection interval
-    #if (SCENE_INTERSECTION_COUNT > 1)
-        vec2 entryExitT = initializeIntersections(ix);
-    #else
-        float exitPositiveShapeT = getIntersection(ix, 1);
-        vec2 entryExitT = vec2(entryPositiveShapeT, exitPositiveShapeT);
-    #endif
-
-    // Intersection is invalid when start and end are behind the ray.
-    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
-        return vec2(NO_HIT);
-    }
-    
-    // Set start to 0.0 when ray is inside the shape.
-    entryExitT.x = max(entryExitT.x, 0.0);
-
-    return entryExitT;
-}
-
-#if defined(SHAPE_BOX)
-vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
-    #if defined(BOX_BOUNDED)
-        return positionUv * u_boxScaleUvToBoundsUv + u_boxTranslateUvToBoundsUv;
-    #else
-        return positionUv;
-    #endif
-}
-#endif
-
 #if defined(SHAPE_ELLIPSOID)
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1
@@ -1101,6 +869,112 @@ float ellipseDistanceAnalytical(vec2 pos, vec2 radii) {
 }
 #endif
 
+#if defined(SHAPE_BOX)
+void intersectBoxShape(Ray ray, out Intersections ix)
+{
+    #if !defined(BOX_BOUNDED)
+        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+        // Direction is scaled as well to be in sync with position. 
+        ray.pos = ray.pos * 2.0 - 1.0;
+        ray.dir = ray.dir * 2.0;
+        vec2 entryExit = intersectUnitCube(ray);
+    #elif defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
+        // Transform the ray into unit square space on Z plane
+        ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
+        ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
+        vec2 entryExit = intersectUnitSquare(ray);
+    #else
+        // Transform the ray into unit cube space
+        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxTranslateUvToBounds;
+        ray.dir *= u_boxScaleUvToBounds;
+        vec2 entryExit = intersectUnitCube(ray);
+    #endif
+
+    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, entryExit);
+}
+#endif
+
+#if defined(SHAPE_BOX)
+vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
+    #if defined(BOX_BOUNDED)
+        return positionUv * u_boxScaleUvToBoundsUv + u_boxTranslateUvToBoundsUv;
+    #else
+        return positionUv;
+    #endif
+}
+#endif
+
+#if defined(SHAPE_ELLIPSOID)
+void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position. 
+    ray.pos = ray.pos * 2.0 - 1.0;
+    ray.dir *= 2.0;
+    
+    // Outer ellipsoid
+    vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
+    setIntersectionPair(ix, ELLIPSOID_OUTER, outerIntersect);
+
+    // Exit early if the outer ellipsoid was missed.
+    if (outerIntersect.x == NO_HIT) {
+        return;
+    }
+
+    // Inner ellipsoid
+    #if defined(ELLIPSOID_INNER)
+        Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
+        vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
+        setIntersectionPair(ix, ELLIPSOID_INNER, innerIntersect);
+    #endif
+        
+    // Bottom cone
+    #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
+        // Flip the inputs because the intersection function expects a cone growing towards +Z.
+        float flippedSouth = -u_ellipsoidRectangle.y; // [-halfPi,+halfPi]
+        Ray flippedRay = ray;
+        flippedRay.dir.z *= -1.0;
+        flippedRay.pos.z *= -1.0;
+        
+        #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR)
+            vec2 bottomConeIntersection = intersectRegularCone(flippedRay, flippedSouth);
+            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_REGULAR, bottomConeIntersection);
+        #elif defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
+            vec4 bottomConeIntersection = intersectFlippedCone(flippedRay, flippedSouth);
+            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_FLIPPED + 0, bottomConeIntersection.xy);
+            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_FLIPPED + 1, bottomConeIntersection.zw);
+        #endif
+    #endif
+
+    // Top cone        
+    #if defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
+        float north = u_ellipsoidRectangle.w; // [-halfPi,+halfPi]
+        #if defined(ELLIPSOID_CONE_TOP_REGULAR)
+            vec2 topConeIntersection = intersectRegularCone(ray, north);
+            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_REGULAR, topConeIntersection);
+        #elif defined(ELLIPSOID_CONE_TOP_FLIPPED)
+            vec4 topConeIntersection = intersectFlippedCone(ray, north);
+            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_FLIPPED + 0, topConeIntersection.xy);
+            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_FLIPPED + 1, topConeIntersection.zw);
+        #endif
+    #endif
+
+    // Wedge
+    #if defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED)
+        float west = u_ellipsoidRectangle.x; // [-pi,+pi]
+        float east = u_ellipsoidRectangle.z; // [-pi,+pi]
+        #if defined(ELLIPSOID_WEDGE_REGULAR)
+            vec2 wedgeIntersect = intersectWedge(ray, west, east);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_REGULAR, wedgeIntersect);
+        #elif defined(ELLIPSOID_WEDGE_FLIPPED)
+            vec2 planeIntersectWest = intersectHalfSpace(ray, west);
+            vec2 planeIntersectEast = intersectHalfSpace(ray, east);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 0, planeIntersectWest);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 1, planeIntersectEast);
+        #endif
+    #endif
+}
+#endif
+
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     // 1) Convert positionUv [0,1] to local space [-1,+1] to normalized cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
@@ -1129,6 +1003,68 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     #endif
 
     return vec3(longitude, latitude, height);
+}
+#endif
+
+#if defined(SHAPE_CYLINDER)
+void intersectCylinderShape(Ray ray, inout Intersections ix)
+{
+    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER) || defined(CYLINDER_HEIGHT_NON_DEFAULT)
+        Ray outerRay = Ray(ray.pos * u_cylinderScaleUvToBounds + u_cylinderTranslateUvToBounds, ray.dir * u_cylinderScaleUvToBounds);
+    #else
+        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+        // Direction is scaled as well to be in sync with position.
+        Ray outerRay = Ray(ray.pos * 2.0 - 1.0, ray.dir * 2.0);
+    #endif
+
+    #if defined(CYLINDER_HEIGHT_ZERO)
+        vec2 outerIntersect = intersectUnitCircle(outerRay);
+    #else
+        vec2 outerIntersect = intersectUnitCylinder(outerRay);
+    #endif
+
+    setIntersectionPair(ix, CYLINDER_OUTER_INDEX, outerIntersect);
+
+    if (outerIntersect.x == NO_HIT) {
+        return;
+    }
+
+    #if defined(CYLINDER_INNER_OUTER_EQUAL) 
+        // When the cylinder is perfectly thin it's necessary to sandwich the
+        // inner cylinder intersection inside the outer cylinder intersection.
+        
+        // Without this special case,
+        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
+        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
+        // side of the cylinder to be invisible because it will think the ray
+        // is still inside the inner (negative) cylinder after exiting the
+        // outer (positive) cylinder. 
+
+        // With this special case,
+        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
+        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
+
+        // Note: If sortIntersections() changes its sorting function
+        // from bubble sort to something else, this code may need to change.
+        setIntersection(ix, 0, outerIntersect.x, true, true); // positive, enter
+        setIntersection(ix, 1, outerIntersect.x, false, true); // negative, enter
+        setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
+        setIntersection(ix, 3, outerIntersect.y, true, false); //  positive, exit
+    #elif defined(CYLINDER_INNER)
+        Ray innerRay = Ray(ray.pos * u_cylinderScaleUvToInnerBounds + u_cylinderTranslateUvToInnerBounds, ray.dir * u_cylinderScaleUvToInnerBounds);
+        vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
+        setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
+    #endif
+
+    #if defined(CYLINDER_WEDGE_REGULAR)
+        vec2 wedgeIntersect = intersectWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
+    #elif defined(CYLINDER_WEDGE_FLIPPED)
+        vec2 planeIntersectMinAngle = intersectHalfSpace(outerRay, u_cylinderMinAngle);
+        vec2 planeIntersectMaxAngle = intersectHalfSpace(outerRay, u_cylinderMaxAngle);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, planeIntersectMinAngle);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, planeIntersectMaxAngle);
+    #endif
 }
 #endif
 
@@ -1169,6 +1105,69 @@ vec3 transformFromUvToShapeSpace(in vec3 positionUv) {
     #elif defined(SHAPE_CYLINDER)
         return transformFromUvToCylinderSpace(positionUv);
     #endif
+}
+
+void intersectShape(Ray ray, out Intersections ix) {
+    #if defined(SHAPE_BOX)
+        intersectBoxShape(ray, ix);
+    #elif defined(SHAPE_ELLIPSOID)
+        intersectEllipsoidShape(ray, ix);
+    #elif defined(SHAPE_CYLINDER)
+        intersectCylinderShape(ray, ix);
+    #endif
+}
+
+#if defined(DEPTH_TEST)
+float intersectDepth(vec2 screenCoord, Ray ray) {
+    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenCoord));
+    if (logDepthOrDepth != 0.0) {
+        // Calculate how far the ray must travel before it hits the depth buffer.
+        vec4 eyeCoordinateDepth = czm_screenToEyeCoordinates(screenCoord, logDepthOrDepth);
+        eyeCoordinateDepth /= eyeCoordinateDepth.w;
+        vec3 depthPositionUv = vec3(u_transformPositionViewToUv * eyeCoordinateDepth);
+        return dot(depthPositionUv - ray.pos, ray.dir);
+    } else {
+        // There's no depth at this position so set it to some really far value.
+        return +INF_HIT;
+    }
+}
+#endif
+
+vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Intersections ix) {
+    Ray ray = Ray(positionUv, directionUv);
+    
+    // Do a ray-shape intersection to find the exact starting and ending points.
+    intersectShape(ray, ix);
+
+    // Check if the positive shape was completely missed, and if so, exit early.
+    float entryPositiveShapeT = getIntersection(ix, 0);
+    if (entryPositiveShapeT == NO_HIT) {
+        return vec2(NO_HIT);
+    }
+
+    // Add depth to the list of intersections
+    #if defined(DEPTH_TEST)
+        float depthT = intersectDepth(screenCoord, ray);
+        setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(depthT, +INF_HIT));
+    #endif
+
+    // Find the first intersection interval
+    #if (SCENE_INTERSECTION_COUNT > 1)
+        vec2 entryExitT = initializeIntersections(ix);
+    #else
+        float exitPositiveShapeT = getIntersection(ix, 1);
+        vec2 entryExitT = vec2(entryPositiveShapeT, exitPositiveShapeT);
+    #endif
+
+    // Intersection is invalid when start and end are behind the ray.
+    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
+        return vec2(NO_HIT);
+    }
+    
+    // Set start to 0.0 when ray is inside the shape.
+    entryExitT.x = max(entryExitT.x, 0.0);
+
+    return entryExitT;
 }
 
 // --------------------------------------------------------
