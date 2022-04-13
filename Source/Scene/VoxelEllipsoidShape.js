@@ -153,6 +153,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const defaultMinBounds = VoxelEllipsoidShape.DefaultMinBounds;
   const defaultMaxBounds = VoxelEllipsoidShape.DefaultMaxBounds;
 
+  // Clamp the longitude / latitude to the valid range
   const west = CesiumMath.clamp(
     minBounds.x,
     defaultMinBounds.x,
@@ -180,7 +181,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const minHeight = Math.max(minBounds.z, -minRadius);
   const maxHeight = Math.max(maxBounds.z, -minRadius);
 
-  // The closest and farthest a point can be from the center of the ellipsoid.
+  // Compute the closest and farthest a point can be from the center of the ellipsoid.
   const innerExtent = Cartesian3.add(
     radii,
     Cartesian3.fromElements(minHeight, minHeight, minHeight, scratchInner),
@@ -243,6 +244,17 @@ VoxelEllipsoidShape.prototype.update = function (
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
 
+  // To keep things simple, clear the defines every time
+  shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = undefined;
+  shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = undefined;
+  shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = undefined;
+  shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = undefined;
+  shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = undefined;
+  shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = undefined;
+  shaderDefines["ELLIPSOID_OUTER"] = undefined;
+  shaderDefines["ELLIPSOID_INNER"] = undefined;
+  shaderDefines["ELLIPSOID_INTERSECTION_COUNT"] = undefined;
+
   shaderUniforms.ellipsoidRectangle = Cartesian4.fromElements(
     west,
     south,
@@ -272,7 +284,8 @@ VoxelEllipsoidShape.prototype.update = function (
   const rectangleWidth = Rectangle.computeWidth(this._rectangle);
   const hasInnerEllipsoid = !Cartesian3.equals(innerExtent, Cartesian3.ZERO);
   const hasWedgeRegular =
-    rectangleWidth >= CesiumMath.PI && rectangleWidth < CesiumMath.TWO_PI;
+    rectangleWidth >= CesiumMath.PI &&
+    CesiumMath.lessThan(rectangleWidth, CesiumMath.TWO_PI, absEpsilon);
   const hasWedgeFlipped = rectangleWidth < CesiumMath.PI;
   const hasTopConeRegular = north >= 0.0 && north < +CesiumMath.PI_OVER_TWO;
   const hasTopConeFlipped = north < 0.0;
@@ -283,12 +296,12 @@ VoxelEllipsoidShape.prototype.update = function (
   let intersectionCount = 0;
 
   // Intersects an outer ellipsoid for the max height.
-  shaderDefines["ELLIPSOID_OUTER"] = intersectionCount * 2;
+  shaderDefines["ELLIPSOID_OUTER"] = intersectionCount;
   intersectionCount += 1;
 
   // Intersects an inner ellipsoid for the min height.
   if (hasInnerEllipsoid) {
-    shaderDefines["ELLIPSOID_INNER"] = intersectionCount * 2;
+    shaderDefines["ELLIPSOID_INNER"] = intersectionCount;
     intersectionCount += 1;
 
     // The percent of space that is between the inner and outer ellipsoid.
@@ -305,50 +318,33 @@ VoxelEllipsoidShape.prototype.update = function (
       innerScale,
       shaderUniforms.ellipsoidInnerRadiiUv
     );
-  } else {
-    shaderDefines["ELLIPSOID_INNER"] = undefined;
   }
 
   // Intersects a wedge for the min and max longitude.
   if (hasWedgeRegular) {
-    shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = intersectionCount * 2;
-    shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = undefined;
+    shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = intersectionCount;
     intersectionCount += 1;
   } else if (hasWedgeFlipped) {
-    shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = intersectionCount * 2;
+    shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = intersectionCount;
     intersectionCount += 2;
-  } else {
-    shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = undefined;
   }
 
   // Intersects a cone for min latitude
   if (hasBottomConeRegular) {
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = intersectionCount * 2;
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = undefined;
+    shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = intersectionCount;
     intersectionCount += 1;
   } else if (hasBottomConeFlipped) {
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = intersectionCount * 2;
+    shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = intersectionCount;
     intersectionCount += 2;
-  } else {
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = undefined;
   }
 
   // Intersects a cone for max latitude
   if (hasTopConeRegular) {
-    shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = intersectionCount * 2;
-    shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = undefined;
+    shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = intersectionCount;
     intersectionCount += 1;
   } else if (hasTopConeFlipped) {
-    shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = intersectionCount * 2;
+    shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = intersectionCount;
     intersectionCount += 2;
-  } else {
-    shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = undefined;
-    shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = undefined;
   }
 
   shaderDefines["ELLIPSOID_INTERSECTION_COUNT"] = intersectionCount;

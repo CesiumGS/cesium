@@ -88,6 +88,7 @@ function VoxelBoxShape() {
    */
   this.shaderDefines = {
     BOX_INTERSECTION_COUNT: 1, // never changes
+    BOX_INTERSECTION_INDEX: 0, // never changes
     BOX_BOUNDED: undefined,
     BOX_XY_PLANE: undefined,
     BOX_XZ_PLANE: undefined,
@@ -202,7 +203,7 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
 
-  // To keep things simple, clear the defines every frame
+  // To keep things simple, clear the defines every time
   shaderDefines["BOX_BOUNDED"] = undefined;
   shaderDefines["BOX_XY_PLANE"] = undefined;
   shaderDefines["BOX_XZ_PLANE"] = undefined;

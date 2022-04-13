@@ -138,10 +138,6 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 
 #define NO_HIT (-czm_infinity)
 #define INF_HIT (czm_infinity * 0.5)
-#define POSITIVE_ENTRY 0.0
-#define POSITIVE_EXIT 1.0
-#define NEGATIVE_ENTRY 2.0
-#define NEGATIVE_EXIT 3.0
 
 uniform ivec3 u_dimensions; // does not include padding
 #if defined(PADDING)
@@ -196,6 +192,7 @@ uniform float u_stepSize;
 #if defined(SHAPE_BOX)
     /* Box defines:
     #define BOX_INTERSECTION_COUNT ### // always 1
+    #define BOX_INTERSECTION_INDEX ### // always 0
     #define BOX_BOUNDED
     #define BOX_XY_PLANE
     #define BOX_XZ_PLANE
@@ -230,10 +227,12 @@ uniform float u_stepSize;
     */
 
     // Ellipsoid uniforms
-    uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi]. 
     uniform vec3 u_ellipsoidRadiiUv; // [0,1]
     uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 
+    #if defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED) || defined(ELLIPSOID_CONE_BOT_REGULAR) || defined(ELLIPSOID_CONE_BOT_FLIPPED) || defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
+        uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi].
+    #endif
     #if defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED)
         uniform float u_ellipsoidWestUv;
         uniform float u_ellipsoidInverseLongitudeRangeUv;
@@ -277,25 +276,19 @@ uniform float u_stepSize;
 #endif
 
 #if defined(DEPTH_TEST)
-    #define DEPTH_INTERSECTION_IDX (SHAPE_INTERSECTION_COUNT * 2)
+    #define DEPTH_INTERSECTION_INDEX SHAPE_INTERSECTION_COUNT
     #define SCENE_INTERSECTION_COUNT (SHAPE_INTERSECTION_COUNT + 1)
 #else
     #define SCENE_INTERSECTION_COUNT SHAPE_INTERSECTION_COUNT
 #endif
 
-struct Intersections {
-    vec2 intersections[SCENE_INTERSECTION_COUNT * 2];
-    int index;
-};
-
+// --------------------------------------------------------
+// Misc math
+// --------------------------------------------------------
 struct Ray {
     vec3 pos;
     vec3 dir;
 };
-
-// --------------------------------------------------------
-// Misc math
-// --------------------------------------------------------
 
 #if defined(JITTER)
 #define HASHSCALE 50.0
@@ -349,6 +342,131 @@ vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
 // --------------------------------------------------------
 // Intersection tests, shape coordinate conversions, etc
 // --------------------------------------------------------
+struct Intersections {
+    // Don't access these member variables directly - call the functions instead.
+
+    #if (SCENE_INTERSECTION_COUNT > 1)
+        // Store an array of intersections. Each intersection is composed of:
+        //  x for the T value
+        //  y for the shape type - which encodes positive vs negative and entering vs exiting
+        // For example:
+        //  y = 0: positive shape entry
+        //  y = 1: positive shape exit
+        //  y = 2: negative shape entry
+        //  y = 3: negative shape exit
+        vec2 intersections[SCENE_INTERSECTION_COUNT * 2];
+
+        // Maintain state for future nextIntersection calls
+        int index;
+        int surroundCount;
+        bool surroundIsPositive;
+    #else
+        // When there's only one positive shape intersection none of the extra stuff is needed.
+        float intersections[2];
+    #endif
+};
+
+// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
+#if (SCENE_INTERSECTION_COUNT > 1)
+    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) ix.intersections[index * 2 + 0] = vec2(entryExit.x, float(index > 0) * 2.0 + 0.0); ix.intersections[index * 2 + 1] = vec2(entryExit.y, float(index > 0) * 2.0 + 1.0)
+#else
+    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) ix.intersections[0] = entryExit.x; ix.intersections[1] = entryExit.y
+#endif
+
+// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
+#if (SCENE_INTERSECTION_COUNT > 1)
+    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) ix.intersections[index].x
+#else
+    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) ix.intersections[index]
+#endif
+
+#if (SCENE_INTERSECTION_COUNT > 1)
+vec2 nextIntersection(inout Intersections ix) {
+    vec2 entryExitT = vec2(NO_HIT);
+
+    const int passCount = SCENE_INTERSECTION_COUNT * 2;
+    for (int i = 0; i < passCount; i++) {
+        // The loop should be: for (i = ix.index; i < passCount; ++i) {...} but WebGL1 cannot
+        // loop with non-constant condition, so it has to continue instead.
+        if (i < ix.index) {
+            continue;
+        }
+
+        vec2 intersect = ix.intersections[i];
+        float t = intersect.x;
+        bool currShapeIsPositive = intersect.y < 2.0;
+        bool enter = mod(intersect.y, 2.0) == 0.0;
+
+        ix.surroundCount += enter ? +1 : -1;
+        ix.surroundIsPositive = currShapeIsPositive ? enter : ix.surroundIsPositive;
+        
+        // entering positive or exiting negative
+        if (ix.surroundCount == 1 && ix.surroundIsPositive && enter == currShapeIsPositive) {
+            entryExitT.x = t;
+        }
+        
+        // exiting positive or entering negative after being inside positive
+        // TODO: Can this be simplified?
+        bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
+        bool enterNegativeFromPositive = enter && !currShapeIsPositive && ix.surroundCount == 2 && ix.surroundIsPositive;
+        if (exitPositive || enterNegativeFromPositive) {
+            entryExitT.y = t;
+
+            // entry and exit have been found, so the loop can stop
+            if (exitPositive) {
+                // After exiting positive shape there is nothing left to intersect, so jump to the end index.
+                ix.index = SCENE_INTERSECTION_COUNT * 2;
+            } else {
+                // There could be more intersections against the positive shape in the future.
+                ix.index = i + 1;
+            }
+            break;
+        }
+    }
+
+    return entryExitT;
+}
+#endif
+
+#if (SCENE_INTERSECTION_COUNT > 1)
+vec2 initializeIntersections(inout Intersections ix) {
+    // Sort the intersections from min T to max T with bubble sort.
+    // Note: If this sorting function changes, some of the intersection test may
+    // need to be updated. Search for "bubble sort" to find those areas.
+    const int passes = SCENE_INTERSECTION_COUNT * 2 - 1;
+    for (int n = passes; n > 0; --n) {
+        for (int i = 0; i < passes; ++i) {
+            // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
+            // loop with non-constant condition, so it has to break early instead
+            if (i >= n) { break; }
+            
+            vec2 intersect0 = ix.intersections[i + 0];
+            vec2 intersect1 = ix.intersections[i + 1];
+
+            float t0 = intersect0.x;
+            float t1 = intersect1.x;
+            float b0 = intersect0.y;
+            float b1 = intersect1.y;
+
+            float tmin = min(t0, t1);
+            float tmax = max(t0, t1);
+            float bmin = tmin == t0 ? b0 : b1;
+            float bmax = tmin == t0 ? b1 : b0;
+
+            ix.intersections[i + 0] = vec2(tmin, bmin);
+            ix.intersections[i + 1] = vec2(tmax, bmax);            
+        }
+    }
+
+    // Prepare initial state for nextIntersection
+    ix.index = 0;
+    ix.surroundCount = 0;
+    ix.surroundIsPositive = false;
+
+    return nextIntersection(ix);
+}
+#endif
+
 #if defined(SHAPE_BOX)
 // Unit cube from [-1, +1]
 vec2 intersectUnitCube(Ray ray)
@@ -410,8 +528,7 @@ void intersectBoxShape(Ray ray, out Intersections ix)
         vec2 entryExit = intersectUnitCube(ray);
     #endif
 
-    ix.intersections[0] = vec2(entryExit.x, POSITIVE_ENTRY);
-    ix.intersections[1] = vec2(entryExit.y, POSITIVE_EXIT);
+    setIntersection(ix, BOX_INTERSECTION_INDEX, entryExit);
 }
 #endif
 
@@ -545,14 +662,14 @@ vec2 intersectDoubleEndedCone(Ray ray, float latitude)
 vec4 intersectFlippedCone(Ray ray, float latitude) {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    vec2 ix = intersectDoubleEndedCone(ray, latitude);
+    vec2 intersect = intersectDoubleEndedCone(ray, latitude);
 
-    if (ix.x == NO_HIT) {
+    if (intersect.x == NO_HIT) {
         return vec4(NO_HIT);
     }
 
-    float tmin = ix.x;
-    float tmax = ix.y;
+    float tmin = intersect.x;
+    float tmax = intersect.y;
     float h1 = o.z + tmin * d.z;
     float h2 = o.z + tmax * d.z;
 
@@ -570,14 +687,14 @@ vec4 intersectFlippedCone(Ray ray, float latitude) {
 vec2 intersectRegularCone(Ray ray, float latitude) {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    vec2 ix = intersectDoubleEndedCone(ray, latitude);
+    vec2 intersect = intersectDoubleEndedCone(ray, latitude);
 
-    if (ix.x == NO_HIT) {
+    if (intersect.x == NO_HIT) {
         return vec2(NO_HIT);
     }
 
-    float tmin = ix.x;
-    float tmax = ix.y;
+    float tmin = intersect.x;
+    float tmax = intersect.y;
     float h1 = o.z + tmin * d.z;
     float h2 = o.z + tmax * d.z;
 
@@ -591,10 +708,14 @@ vec2 intersectRegularCone(Ray ray, float latitude) {
 #if defined(SHAPE_ELLIPSOID)
 void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
 {
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position. 
+    ray.pos = ray.pos * 2.0 - 1.0;
+    ray.dir *= 2.0;
+    
     // Outer ellipsoid
     vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
-    ix.intersections[ELLIPSOID_OUTER + 0] = vec2(outerIntersect.x, POSITIVE_ENTRY);
-    ix.intersections[ELLIPSOID_OUTER + 1] = vec2(outerIntersect.y, POSITIVE_EXIT);
+    setIntersection(ix, ELLIPSOID_OUTER, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
     if (outerIntersect.x == NO_HIT) {
@@ -605,8 +726,7 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
     #if defined(ELLIPSOID_INNER)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
         vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        ix.intersections[ELLIPSOID_INNER + 0] = vec2(innerIntersect.x, NEGATIVE_ENTRY);
-        ix.intersections[ELLIPSOID_INNER + 1] = vec2(innerIntersect.y, NEGATIVE_EXIT);
+        setIntersection(ix, ELLIPSOID_INNER, innerIntersect);
     #endif
         
     // Bottom cone
@@ -619,14 +739,11 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
         
         #if defined(ELLIPSOID_CONE_BOT_REGULAR)
             vec2 botConeIx = intersectRegularCone(flippedRay, flippedSouth);
-            ix.intersections[ELLIPSOID_CONE_BOT_REGULAR + 0] = vec2(botConeIx.x, -1.0);
-            ix.intersections[ELLIPSOID_CONE_BOT_REGULAR + 1] = vec2(botConeIx.y, -1.0);
+            setIntersection(ix, ELLIPSOID_CONE_BOT_REGULAR, botConeIx);
         #elif defined(ELLIPSOID_CONE_BOT_FLIPPED)
             vec4 botConeIx = intersectFlippedCone(flippedRay, flippedSouth);
-            ix.intersections[ELLIPSOID_CONE_BOT_FLIPPED + 0] = vec2(botConeIx.x, -1.0);
-            ix.intersections[ELLIPSOID_CONE_BOT_FLIPPED + 1] = vec2(botConeIx.y, -1.0);
-            ix.intersections[ELLIPSOID_CONE_BOT_FLIPPED + 2] = vec2(botConeIx.z, -1.0);
-            ix.intersections[ELLIPSOID_CONE_BOT_FLIPPED + 3] = vec2(botConeIx.w, -1.0);
+            setIntersection(ix, ELLIPSOID_CONE_BOT_FLIPPED + 0, botConeIx.xy);
+            setIntersection(ix, ELLIPSOID_CONE_BOT_FLIPPED + 1, botConeIx.zw);
         #endif
     #endif
 
@@ -635,14 +752,11 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
         float north = u_ellipsoidRectangle.w;
         #if defined(ELLIPSOID_CONE_TOP_REGULAR)
             vec2 topConeIntersect = intersectRegularCone(ray, north);
-            ix.intersections[ELLIPSOID_CONE_TOP_REGULAR + 0] = vec2(topConeIntersect.x, -1.0);
-            ix.intersections[ELLIPSOID_CONE_TOP_REGULAR + 1] = vec2(topConeIntersect.y, -1.0);
+            setIntersection(ix, ELLIPSOID_CONE_TOP_REGULAR, topConeIntersect);
         #elif defined(ELLIPSOID_CONE_TOP_FLIPPED)
             vec4 topConeIntersect = intersectFlippedCone(ray, north);
-            ix.intersections[ELLIPSOID_CONE_TOP_FLIPPED + 0] = vec2(topConeIntersect.x, -1.0);
-            ix.intersections[ELLIPSOID_CONE_TOP_FLIPPED + 1] = vec2(topConeIntersect.y, -1.0);
-            ix.intersections[ELLIPSOID_CONE_TOP_FLIPPED + 2] = vec2(topConeIntersect.z, -1.0);
-            ix.intersections[ELLIPSOID_CONE_TOP_FLIPPED + 3] = vec2(topConeIntersect.w, -1.0);
+            setIntersection(ix, ELLIPSOID_CONE_TOP_FLIPPED + 0, topConeIntersect.xy);
+            setIntersection(ix, ELLIPSOID_CONE_TOP_FLIPPED + 1, topConeIntersect.zw);
         #endif
     #endif
 
@@ -652,15 +766,12 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix)
         float east = u_ellipsoidRectangle.z; // [-pi,+pi]
         #if defined(ELLIPSOID_WEDGE_REGULAR)
             vec2 wedgeIntersect = intersectWedge(ray, west, east);
-            ix.intersections[ELLIPSOID_WEDGE_REGULAR + 0] = vec2(wedgeIntersect.x, -1.0);
-            ix.intersections[ELLIPSOID_WEDGE_REGULAR + 1] = vec2(wedgeIntersect.y, -1.0);
+            setIntersection(ix, ELLIPSOID_WEDGE_REGULAR, wedgeIntersect);
         #elif defined(ELLIPSOID_WEDGE_FLIPPED)
             vec2 planeIntersectWest = intersectHalfSpace(ray, west);
             vec2 planeIntersectEast = intersectHalfSpace(ray, east);
-            ix.intersections[ELLIPSOID_WEDGE_FLIPPED + 0] = vec2(planeIntersectWest.x, -1.0);
-            ix.intersections[ELLIPSOID_WEDGE_FLIPPED + 1] = vec2(planeIntersectWest.y, -1.0);
-            ix.intersections[ELLIPSOID_WEDGE_FLIPPED + 2] = vec2(planeIntersectEast.x, -1.0);
-            ix.intersections[ELLIPSOID_WEDGE_FLIPPED + 3] = vec2(planeIntersectEast.y, -1.0);
+            setIntersection(ix, ELLIPSOID_WEDGE_FLIPPED + 0, planeIntersectWest);
+            setIntersection(ix, ELLIPSOID_WEDGE_FLIPPED + 1, planeIntersectEast);
         #endif
     #endif
 }
@@ -782,8 +893,7 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
             return;
         }
 
-        ix.intersections[0] = vec2(outerIntersect.x, float(0));
-        ix.intersections[1] = vec2(outerIntersect.y, float(1));
+        setIntersection(ix, BOX_INTERSECTION_INDEX, outerIntersect);
         
         #if defined(BOUNDS_0_MIN)
             vec3 innerScale = vec3(minRadius, minRadius, 1.0);
@@ -828,91 +938,6 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
 }
 #endif
 
-void sortIntersections(inout Intersections ix) {
-    // Sort the intersections from min T to max T with bubble sort.
-    // Note: If this sorting function changes, some of the intersection test may
-    // need to be updated. Search for "bubble sort" to find those areas.
-    const int passes = SCENE_INTERSECTION_COUNT * 2 - 1;
-    for (int n = passes; n > 0; --n) {
-        for (int i = 0; i < passes; ++i) {
-            // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
-            // loop with non-constant condition, so it has to break early instead
-            if (i >= n) { break; }
-            
-            vec2 intersect0 = ix.intersections[i + 0];
-            vec2 intersect1 = ix.intersections[i + 1];
-
-            float t0 = intersect0.x;
-            float t1 = intersect1.x;
-            float b0 = intersect0.y;
-            float b1 = intersect1.y;
-
-            float tmin = min(t0, t1);
-            float tmax = max(t0, t1);
-            float bmin = tmin == t0 ? b0 : b1;
-            float bmax = tmin == t0 ? b1 : b0;
-
-            ix.intersections[i + 0] = vec2(tmin, bmin);
-            ix.intersections[i + 1] = vec2(tmax, bmax);            
-        }
-    }
-}
-
-vec2 nextIntersection(inout Intersections ix) {
-    vec2 entryExitT = vec2(NO_HIT);
-    
-    #if (SCENE_INTERSECTION_COUNT == 1)
-        if (ix.index == 0) {
-            entryExitT.x = ix.intersections[0].x;
-            entryExitT.y = ix.intersections[1].x;
-            ix.index += 1;
-        }
-    #else
-        int surroundCount = 0;
-        bool surroundIsPositive = false;
-        const int passCount = SCENE_INTERSECTION_COUNT * 2;
-        for (int i = 0; i < passCount; i++)
-        {
-            vec2 intersect = ix.intersections[i];
-            float t = intersect.x;
-            bool currShapeIsPositive = intersect.y < 2.0;
-            bool enter = mod(intersect.y, 2.0) == 0.0;
-
-            surroundCount += enter ? +1 : -1;
-            surroundIsPositive = currShapeIsPositive ? enter : surroundIsPositive;
-            
-            // The loop should be: for (i = ix.index; i < passCount; ++i) {...} but WebGL1 cannot
-            // loop with non-constant condition, so it has to continue instead.
-            if (i < ix.index) {
-                continue;
-            }
-
-            // entering positive or exiting negative
-            if (surroundCount == 1 && surroundIsPositive && enter == currShapeIsPositive) {
-                entryExitT.x = t;
-            }
-            
-            // exiting positive or entering negative after being inside positive
-            // TODO: Can this be simplified?
-            bool exitPositive = !enter && currShapeIsPositive && surroundCount == 0;
-            bool enterNegativeFromPositive = enter && !currShapeIsPositive && surroundCount == 2 && surroundIsPositive;
-            if (exitPositive || enterNegativeFromPositive) {
-                entryExitT.y = t;
-
-                // entry and exit have been found, so the loop can stop
-                if (exitPositive) {
-                    ix.index = SCENE_INTERSECTION_COUNT * 2;
-                } else {
-                    ix.index = i + 1;
-                }
-                break;
-            }
-        }
-    #endif
-
-    return entryExitT;
-}
-
 #if defined(DEPTH_TEST)
 float intersectDepth(vec2 fragCoord, vec2 screenUv, vec3 positionUv, vec3 directionUv) {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenUv));
@@ -941,22 +966,24 @@ vec2 intersectScene(vec2 fragCoord, vec2 screenUv, vec3 positionUv, vec3 directi
         intersectCylinderShape(ray, ix);f
     #endif
 
-    // Exit early if the shape was completely missed
-    if (ix.intersections[0].x == NO_HIT) {
+    // Check if the positive shape was completely missed, and if so, exit early.
+    float entryPositiveShapeT = getIntersection(ix, 0);
+    if (entryPositiveShapeT == NO_HIT) {
         return vec2(NO_HIT);
     }
 
     #if defined(DEPTH_TEST)
         float depthT = intersectDepth(fragCoord, screenUv, positionUv, directionUv);
-        ix.intersections[DEPTH_INTERSECTION_IDX + 0] = vec2(depthT, NEGATIVE_ENTRY);
-        ix.intersections[DEPTH_INTERSECTION_IDX + 1] = vec2(+INF_HIT, NEGATIVE_EXIT);
+        setIntersection(ix, DEPTH_INTERSECTION_INDEX, vec2(depthT, +INF_HIT));
     #endif
 
-    sortIntersections(ix);
-
     // Find the first intersection interval
-    ix.index = 0;
-    vec2 entryExitT = nextIntersection(ix);
+    #if (SCENE_INTERSECTION_COUNT > 1)
+        vec2 entryExitT = initializeIntersections(ix);
+    #else
+        float exitPositiveShapeT = getIntersection(ix, 1);
+        vec2 entryExitT = vec2(entryPositiveShapeT, exitPositiveShapeT);
+    #endif
 
     // Intersection is invalid when start and end are behind the ray.
     if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
@@ -1070,20 +1097,16 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     float longitude = (atan(geodeticSurfaceNormal.y, geodeticSurfaceNormal.x) + czm_pi) / czm_twoPi; // 5
     float latitude = (asin(geodeticSurfaceNormal.z) + czm_piOverTwo) / czm_pi; // 6
 
-    // #if (defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED))
-    // {
-    //     longitude = (longitude - u_ellipsoidWestUv) * u_ellipsoidInverseLongitudeRangeUv;
-    // }
-    // #endif
-    // #if (defined(ELLIPSOID_CONE_BOT_REGULAR) || defined(ELLIPSOID_CONE_BOT_FLIPPED) || defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED))
-    // {
-    //     latitude = (latitude - u_ellipsoidSouthUv) * u_ellipsoidInverseLatitudeRangeUv;
-    // }
-    // #endif
+    #if (defined(ELLIPSOID_WEDGE_REGULAR) || defined(ELLIPSOID_WEDGE_FLIPPED))
+        longitude = (longitude - u_ellipsoidWestUv) * u_ellipsoidInverseLongitudeRangeUv;
+    #endif
+
+    #if (defined(ELLIPSOID_CONE_BOT_REGULAR) || defined(ELLIPSOID_CONE_BOT_FLIPPED) || defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED))
+        latitude = (latitude - u_ellipsoidSouthUv) * u_ellipsoidInverseLatitudeRangeUv;
+    #endif
+    
     #if (defined(ELLIPSOID_INNER))
-    {
         height *= u_ellipsoidInverseHeightDifferenceUv;
-    }
     #endif
 
     return vec3(longitude, latitude, height);
@@ -1528,15 +1551,19 @@ void main()
 
         // Check if there's more intersections.
         if (currT > endT) {
-            vec2 entryExitT = nextIntersection(ix);
-            if (entryExitT.x == NO_HIT) {
+            #if (SCENE_INTERSECTION_COUNT == 1)
                 break;
-            } else {
-                // Found another intersection. Keep raymarching.
-                currT += entryExitT.x;
-                endT += entryExitT.y;
-                positionUv += entryExitT.x * viewDirUv;
-            }
+            #else
+                vec2 entryExitT = nextIntersection(ix);
+                if (entryExitT.x == NO_HIT) {
+                    break;
+                } else {
+                    // Found another intersection. Keep raymarching.
+                    currT += entryExitT.x;
+                    endT += entryExitT.y;
+                    positionUv += entryExitT.x * viewDirUv;
+                }
+            #endif
         }
 
         // Traverse the tree from the current ray position.
