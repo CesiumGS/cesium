@@ -85,7 +85,7 @@ function VoxelEllipsoidShape() {
   this._translation = new Cartesian3();
 
   /**
-   * @type {Matrix3
+   * @type {Matrix3}
    */
   this._rotation = new Matrix3();
 
@@ -245,15 +245,11 @@ VoxelEllipsoidShape.prototype.update = function (
   const shaderDefines = this.shaderDefines;
 
   // To keep things simple, clear the defines every time
-  shaderDefines["ELLIPSOID_INTERSECTION_COUNT"] = undefined;
-  shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = undefined;
-  shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = undefined;
-  shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = undefined;
-  shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = undefined;
-  shaderDefines["ELLIPSOID_CONE_TOP_REGULAR"] = undefined;
-  shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = undefined;
-  shaderDefines["ELLIPSOID_OUTER"] = undefined;
-  shaderDefines["ELLIPSOID_INNER"] = undefined;
+  for (const key in shaderDefines) {
+    if (shaderDefines.hasOwnProperty(key)) {
+      shaderDefines[key] = undefined;
+    }
+  }
 
   shaderUniforms.ellipsoidRectangle = Cartesian4.fromElements(
     west,
@@ -292,7 +288,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const hasBottomConeRegular = south <= 0.0 && south > -CesiumMath.PI_OVER_TWO;
   const hasBottomConeFlipped = south > 0.0;
 
-  // Determine how many intersections there are going to be.
+  // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
 
   // Intersects an outer ellipsoid for the max height.
