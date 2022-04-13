@@ -114,6 +114,7 @@ function VoxelEllipsoidShape() {
    * @readonly
    */
   this.shaderDefines = {
+    ELLIPSOID_INTERSECTION_COUNT: undefined,
     ELLIPSOID_WEDGE_REGULAR: undefined,
     ELLIPSOID_WEDGE_FLIPPED: undefined,
     ELLIPSOID_CONE_BOTTOM_REGULAR: undefined,
@@ -122,7 +123,6 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_CONE_TOP_FLIPPED: undefined,
     ELLIPSOID_OUTER: undefined,
     ELLIPSOID_INNER: undefined,
-    ELLIPSOID_INTERSECTION_COUNT: undefined,
   };
 }
 
@@ -245,6 +245,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const shaderDefines = this.shaderDefines;
 
   // To keep things simple, clear the defines every time
+  shaderDefines["ELLIPSOID_INTERSECTION_COUNT"] = undefined;
   shaderDefines["ELLIPSOID_WEDGE_REGULAR"] = undefined;
   shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = undefined;
   shaderDefines["ELLIPSOID_CONE_BOTTOM_REGULAR"] = undefined;
@@ -253,7 +254,6 @@ VoxelEllipsoidShape.prototype.update = function (
   shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = undefined;
   shaderDefines["ELLIPSOID_OUTER"] = undefined;
   shaderDefines["ELLIPSOID_INNER"] = undefined;
-  shaderDefines["ELLIPSOID_INTERSECTION_COUNT"] = undefined;
 
   shaderUniforms.ellipsoidRectangle = Cartesian4.fromElements(
     west,

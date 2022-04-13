@@ -53,14 +53,6 @@ function VoxelCylinderShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * Check if the shape is visible. For example, if the shape has zero scale it will be invisible.
-   * The update function must be called before accessing this value.
-   * @type {Boolean}
-   * @readonly
-   */
-  this.isVisible = false;
-
-  /**
    * @type {Number}
    * @private
    */
@@ -95,6 +87,29 @@ function VoxelCylinderShape() {
    * @private
    */
   this._maximumAngle = VoxelCylinderShape.DefaultMaxBounds.z;
+
+  /**
+   * @type {Object.<string, any>}
+   * @readonly
+   */
+  this.shaderUniforms = {
+    cylinderInnerRadiusUv: 0.0,
+    cylinderMinAngleUv: 0.0,
+    cylinderInverseAngleUv: 0.0,
+  };
+
+  /**
+   * @type {Object.<string, any>}
+   * @readonly
+   */
+  this.shaderDefines = {
+    CYLINDER_INTERSECTION_COUNT: undefined,
+    CYLINDER_INNER: undefined,
+    CYLINDER_OUTER: undefined,
+    CYLINDER_INNER_OUTER_EQUAL: undefined,
+    CYLINDER_WEDGE_REGULAR: undefined,
+    CYLINDER_WEDGE_FLIPPED: undefined,
+  };
 }
 
 const scratchTestAngles = new Array(6);
@@ -220,50 +235,63 @@ VoxelCylinderShape.prototype.update = function (
   Check.typeOf.object("maxBounds", maxBounds);
   //>>includeEnd('debug');
 
-  // Don't let the scale be 0, it will screw up a bunch of math
-  const scaleEps = CesiumMath.EPSILON8;
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
-  if (Math.abs(scale.x) < scaleEps) {
-    scale.x = CesiumMath.signNotZero(scale.x) * scaleEps;
-  }
-  if (Math.abs(scale.y) < scaleEps) {
-    scale.y = CesiumMath.signNotZero(scale.y) * scaleEps;
-  }
-  if (Math.abs(scale.z) < scaleEps) {
-    scale.z = CesiumMath.signNotZero(scale.z) * scaleEps;
-  }
+  const defaultMinBounds = VoxelCylinderShape.DefaultMinBounds;
+  const defaultMaxBounds = VoxelCylinderShape.DefaultMaxBounds;
 
-  // // If two or more of the scales are 0 the shape will not render.
-  // // If the X scale or Y scale is 0 the shape will appear as a square/rectangle.
-  // // If the Z scale is 0 the shape will appear as an circle/ellipse.
-  // const xIsZero = scale.x === 0.0;
-  // const yIsZero = scale.y === 0.0;
-  // const zIsZero = scale.z === 0.0;
-  // if (xIsZero + yIsZero + zIsZero >= 2) {
-  //   this.isVisible = false;
-  //   return;
-  // }
+  // Clamp the radii to the valid range
+  const minRadius = CesiumMath.clamp(
+    minBounds.x,
+    defaultMinBounds.x,
+    defaultMaxBounds.x
+  );
+  const maxRadius = CesiumMath.clamp(
+    maxBounds.x,
+    defaultMinBounds.x,
+    defaultMaxBounds.x
+  );
 
-  this._minimumRadius = minBounds.x; // [0,1]
-  this._maximumRadius = maxBounds.x; // [0,1]
-  this._minimumHeight = minBounds.y; // [-1,+1]
-  this._maximumHeight = maxBounds.y; // [-1,+1]
-  this._minimumAngle = CesiumMath.negativePiToPi(minBounds.z); // [-halfPi,+halfPi]
-  this._maximumAngle = CesiumMath.negativePiToPi(maxBounds.z); // [-halfPi,+halfPi]
+  // Clamp the heights to the valid range
+  const minHeight = CesiumMath.clamp(
+    minBounds.y,
+    defaultMinBounds.y,
+    defaultMaxBounds.y
+  );
+  const maxHeight = CesiumMath.clamp(
+    maxBounds.y,
+    defaultMinBounds.y,
+    defaultMaxBounds.y
+  );
 
-  const minRadius = this._minimumRadius;
-  const maxRadius = this._maximumRadius;
-  const minHeight = this._minimumHeight;
-  const maxHeight = this._maximumHeight;
-  const minAngle = this._minimumAngle;
-  const maxAngle = this._maximumAngle;
+  // Clamp the angles to the valid range
+  const minAngle = CesiumMath.negativePiToPi(minBounds.z);
+  const maxAngle = CesiumMath.negativePiToPi(maxBounds.z);
 
-  // Exit early if the bounds make the shape invisible.
+  const outerExtent = Cartesian3.fromElements(
+    scale.x * maxRadius,
+    scale.y * maxRadius,
+    scale.z * 0.5 * (maxHeight - minHeight)
+  );
+
+  // Exit early if the shape is not visible.
   // Note that minAngle may be greater than maxAngle when crossing the 180th meridian.
-  if (minRadius > maxRadius || minHeight > maxHeight) {
-    this.isVisible = false;
-    return;
+  const absEpsilon = CesiumMath.EPSILON10;
+  if (
+    minRadius > maxRadius ||
+    minHeight > maxHeight ||
+    CesiumMath.equalsEpsilon(outerExtent.x, 0.0, undefined, absEpsilon) ||
+    CesiumMath.equalsEpsilon(outerExtent.y, 0.0, undefined, absEpsilon) ||
+    CesiumMath.equalsEpsilon(outerExtent.z, 0.0, undefined, absEpsilon)
+  ) {
+    return false;
   }
+
+  this._minimumRadius = minRadius; // [0,1]
+  this._maximumRadius = maxRadius; // [0,1]
+  this._minimumHeight = minHeight; // [-1,+1]
+  this._maximumHeight = maxHeight; // [-1,+1]
+  this._minimumAngle = minAngle; // [-halfPi,+halfPi]
+  this._maximumAngle = maxAngle; // [-halfPi,+halfPi]
 
   this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
 
@@ -289,7 +317,18 @@ VoxelCylinderShape.prototype.update = function (
     this.boundingSphere
   );
 
-  this.isVisible = true;
+  const shaderUniforms = this.shaderUniforms;
+  const shaderDefines = this.shaderDefines;
+
+  // To keep things simple, clear the defines every time
+  shaderDefines["CYLINDER_INTERSECTION_COUNT"] = undefined;
+  shaderDefines["CYLINDER_INNER"] = undefined;
+  shaderDefines["CYLINDER_OUTER"] = undefined;
+  shaderDefines["CYLINDER_INNER_OUTER_EQUAL"] = undefined;
+  shaderDefines["CYLINDER_WEDGE_REGULAR"] = undefined;
+  shaderDefines["CYLINDER_WEDGE_FLIPPED"] = undefined;
+
+  return true;
 };
 
 /**
