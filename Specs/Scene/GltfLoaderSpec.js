@@ -755,8 +755,8 @@ describe(
           const rootNode = scene.nodes[0];
           const skin = rootNode.skin;
           expect(skin.inverseBindMatrices).toEqual([
-            Matrix4.ZERO,
-            Matrix4.ZERO,
+            Matrix4.IDENTITY,
+            Matrix4.IDENTITY,
           ]);
         }
       );

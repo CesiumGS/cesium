@@ -1,5 +1,4 @@
 import arrayFill from "../Core/arrayFill.js";
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -9,8 +8,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import Sampler from "../Renderer/Sampler.js";
@@ -460,53 +457,34 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
 
 function loadDefaultAccessorValues(accessor, values) {
   const accessorType = accessor.type;
-  switch (accessorType) {
-    case "SCALAR":
-      return arrayFill(values, 0);
-    case "VEC2":
-      return arrayFill(values, Cartesian2.clone(Cartesian2.ZERO));
-    case "VEC3":
-      return arrayFill(values, Cartesian3.clone(Cartesian3.ZERO));
-    case "VEC4":
-      return arrayFill(values, Cartesian4.clone(Cartesian4.ZERO));
-    case "MAT2":
-      return arrayFill(values, Matrix2.clone(Matrix2.ZERO));
-    case "MAT3":
-      return arrayFill(values, Matrix3.clone(Matrix3.ZERO));
-    case "MAT4":
-      return arrayFill(values, Matrix4.clone(Matrix4.ZERO));
+  if (accessorType === AttributeType.SCALAR) {
+    return arrayFill(values, 0);
   }
+
+  const MathType = AttributeType.getMathType(accessorType);
+  return arrayFill(values, MathType.clone(MathType.ZERO));
 }
 
 function loadAccessorValues(accessor, packedTypedArray, values, useQuaternion) {
   const accessorType = accessor.type;
   const accessorCount = accessor.count;
 
-  for (let i = 0; i < accessorCount; i++) {
-    switch (accessorType) {
-      case "SCALAR":
-        values[i] = packedTypedArray[i];
-        break;
-      case "VEC2":
-        values[i] = Cartesian2.fromArray(packedTypedArray, i * 2);
-        break;
-      case "VEC3":
-        values[i] = Cartesian3.fromArray(packedTypedArray, i * 3);
-        break;
-      case "VEC4":
-        // vec4s are converted to quaternions for animation
-        values[i] = useQuaternion
-          ? Quaternion.unpack(packedTypedArray, i * 4)
-          : Cartesian4.fromArray(packedTypedArray, i * 4);
-        break;
-      case "MAT2":
-        values[i] = Matrix2.unpack(packedTypedArray, i * 4);
-        break;
-      case "MAT3":
-        values[i] = Matrix3.unpack(packedTypedArray, i * 9);
-        break;
-      case "MAT4":
-        values[i] = Matrix4.unpack(packedTypedArray, i * 16);
+  if (accessorType === AttributeType.SCALAR) {
+    for (let i = 0; i < accessorCount; i++) {
+      values[i] = packedTypedArray[i];
+    }
+  } else if (accessorType === AttributeType.VEC4 && useQuaternion) {
+    for (let i = 0; i < accessorCount; i++) {
+      values[i] = Quaternion.unpack(packedTypedArray, i * 4);
+    }
+  } else {
+    const MathType = AttributeType.getMathType(accessorType);
+    const numberOfComponents = AttributeType.getNumberOfComponents(
+      accessorType
+    );
+
+    for (let i = 0; i < accessorCount; i++) {
+      values[i] = MathType.unpack(packedTypedArray, i * numberOfComponents);
     }
   }
 
@@ -1522,7 +1500,10 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
       inverseBindMatricesAccessorId
     );
   } else {
-    skin.inverseBindMatrices = arrayFill(new Array(jointsLength), Matrix4.ZERO);
+    skin.inverseBindMatrices = arrayFill(
+      new Array(jointsLength),
+      Matrix4.IDENTITY
+    );
   }
 
   return skin;
@@ -1585,18 +1566,10 @@ function loadAnimationSampler(loader, gltf, gltfSampler) {
   animationSampler.input = loadAccessor(loader, gltf, inputAccessorId);
 
   const gltfInterpolation = gltfSampler.interpolation;
-  switch (gltfInterpolation) {
-    case "STEP":
-      animationSampler.interpolation = InterpolationType.STEP;
-      break;
-    case "CUBICSPLINE":
-      animationSampler.interpolation = InterpolationType.CUBICSPLINE;
-      break;
-    case "LINEAR":
-    default:
-      animationSampler.interpolation = InterpolationType.LINEAR;
-      break;
-  }
+  animationSampler.interpolation = defaultValue(
+    InterpolationType[gltfInterpolation],
+    InterpolationType.LINEAR
+  );
 
   const outputAccessorId = gltfSampler.output;
   animationSampler.output = loadAccessor(loader, gltf, outputAccessorId, true);
@@ -1615,20 +1588,9 @@ function loadAnimationTarget(gltfTarget, nodes) {
   }
 
   animationTarget.node = nodes[nodeIndex];
-  switch (gltfTarget.path) {
-    case "translation":
-      animationTarget.path = AnimatedPropertyType.TRANSLATION;
-      break;
-    case "rotation":
-      animationTarget.path = AnimatedPropertyType.ROTATION;
-      break;
-    case "scale":
-      animationTarget.path = AnimatedPropertyType.SCALE;
-      break;
-    case "weights":
-      animationTarget.path = AnimatedPropertyType.WEIGHTS;
-      break;
-  }
+
+  const path = gltfTarget.path.toUpperCase();
+  animationTarget.path = AnimatedPropertyType[path];
 
   return animationTarget;
 }
