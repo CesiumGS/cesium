@@ -296,7 +296,7 @@ ImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {HTMLImageElement|HTMLCanvasElement|ImageBitmap|Promise.<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.
@@ -338,6 +338,10 @@ ImageryProvider.prototype.pickFeatures = function (
 
 const ktx2Regex = /\.ktx2$/i;
 
+// TODO: This can definitely return a (Promise for) ImageBitmap, and also
+// whatever loadKTX / loadCRN actually return.  Can it ever return a Canvas?
+// Tons of providers pass through calls to this method, so their return types
+// are also wrong.
 /**
  * Loads an image from a given URL.  If the server referenced by the URL already has
  * too many requests pending, this function will instead return undefined, indicating

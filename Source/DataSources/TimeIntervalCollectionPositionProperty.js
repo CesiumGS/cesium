@@ -57,6 +57,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * Gets the interval collection.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
    * @type {TimeIntervalCollection}
+   * @readonly
    */
   intervals: {
     get: function () {
@@ -81,7 +82,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
  *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 TimeIntervalCollectionPositionProperty.prototype.getValue = function (
   time,
@@ -96,7 +97,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValue = function (
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
