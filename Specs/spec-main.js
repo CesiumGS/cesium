@@ -1,5 +1,6 @@
 import customizeJasmine from "./customizeJasmine.js";
-import { defined, queryToObject } from "../Source/Cesium.js";
+import defined from "../Source/Core/defined.js";
+import queryToObject from "../Source/Core/queryToObject.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 

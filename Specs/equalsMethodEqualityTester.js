@@ -1,4 +1,4 @@
-import { defined } from "../Source/Cesium.js";
+import defined from "../Source/Core/defined.js";
 
 function equalsMethodEqualityTester(a, b) {
   let to_run;
