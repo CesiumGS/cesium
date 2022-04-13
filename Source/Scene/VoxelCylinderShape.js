@@ -97,10 +97,10 @@ function VoxelCylinderShape() {
     cylinderTranslateUvToBounds: new Cartesian3(),
     cylinderScaleUvToInnerBounds: new Cartesian3(),
     cylinderTranslateUvToInnerBounds: new Cartesian3(),
-    cylinderInnerRadiusUv: 0.0,
-    cylinderInverseRadiusRangeUv: 0.0,
-    cylinderMinHeightUv: 0.0,
-    cylinderInverseHeightRangeUv: 0.0,
+    cylinderScaleRadiusUvToBoundsRadiusUv: 0.0,
+    cylinderOffsetRadiusUvToBoundsRadiusUv: 0.0,
+    cylinderScaleHeightUvToBoundsHeightUv: 0.0,
+    cylinderOffsetHeightUvToBoundsHeightUv: 0.0,
     cylinderMinAngle: 0.0,
     cylinderMaxAngle: 0.0,
     cylinderMinAngleUv: 0.0,
@@ -358,19 +358,44 @@ VoxelCylinderShape.prototype.update = function (
       shaderUniforms.cylinderTranslateUvToInnerBounds
     );
 
-    shaderUniforms.cylinderInnerRadiusUv = minRadius / defaultMaxRadius;
-    shaderUniforms.cylinderInverseRadiusRangeUv =
-      1.0 / (maxRadius / defaultMaxRadius - minRadius / defaultMaxRadius);
+    // delerp(radius, minRadius, maxRadius)
+    // (radius - minRadius) / (maxRadius - minRadius)
+    // radius / (maxRadius - minRadius) - minRadius / (maxRadius - minRadius)
+    // scale = 1.0 / (maxRadius - minRadius)
+    // offset = -minRadius / (maxRadius - minRadius)
+    // offset = minRadius / (minRadius - maxRadius)
+
+    const scale = 1.0 / (maxRadius - minRadius);
+    const offset = minRadius / (minRadius - maxRadius);
+
+    shaderUniforms.cylinderScaleRadiusUvToBoundsRadiusUv = scale;
+    shaderUniforms.cylinderOffsetRadiusUvToBoundsRadiusUv = offset;
   }
 
   if (!isDefaultHeight) {
-    shaderUniforms.cylinderMinHeightUv = minHeight * 0.5 + 0.5;
-    shaderUniforms.cylinderInverseHeightRangeUv = 2.0 / (maxHeight - minHeight);
     shaderDefines["CYLINDER_HEIGHT_NON_DEFAULT"] = true;
 
     if (minHeight === maxHeight) {
       shaderDefines["CYLINDER_HEIGHT_ZERO"] = true;
     }
+
+    // delerp(heightUv, minHeightUv, maxHeightUv)
+    // (heightUv - minHeightUv) / (maxHeightUv - minHeightUv)
+    // heightUv / (maxHeightUv - minHeightUv) - minHeightUv / (maxHeightUv - minHeightUv)
+    // scale = 1.0 / (maxHeightUv - minHeightUv)
+    // scale = 1.0 / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))
+    // scale = 2.0 / (maxHeight - minHeight)
+    // offset = -minHeightUv / (maxHeightUv - minHeightUv)
+    // offset = -minHeightUv / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))
+    // offset = -2.0 * (minHeight * 0.5 + 0.5) / (maxHeight - minHeight)
+    // offset = -(minHeight + 1.0) / (maxHeight - minHeight)
+    // offset = (minHeight + 1.0) / (minHeight - maxHeight)
+
+    const scale = 2.0 / (maxHeight - minHeight);
+    const offset = (minHeight + 1.0) / (minHeight - maxHeight);
+
+    shaderUniforms.cylinderScaleHeightUvToBoundsHeightUv = scale;
+    shaderUniforms.cylinderOffsetHeightUvToBoundsHeightUv = offset;
   }
 
   if (hasWedge) {

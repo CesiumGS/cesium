@@ -270,8 +270,8 @@ uniform float u_stepSize;
     #endif
 
     #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-        uniform float u_cylinderInnerRadiusUv;
-        uniform float u_cylinderInverseRadiusRangeUv;
+        uniform float u_cylinderScaleRadiusUvToBoundsRadiusUv;
+        uniform float u_cylinderOffsetRadiusUvToBoundsRadiusUv;
     #endif
 
     #if defined(CYLINDER_INNER)
@@ -279,8 +279,8 @@ uniform float u_stepSize;
         uniform vec3 u_cylinderTranslateUvToInnerBounds;
     #endif
     #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        uniform float u_cylinderMinHeightUv;
-        uniform float u_cylinderInverseHeightRangeUv;
+        uniform float u_cylinderScaleHeightUvToBoundsHeightUv;
+        uniform float u_cylinderOffsetHeightUvToBoundsHeightUv;
     #endif
     #if defined(CYLINDER_WEDGE)
         uniform float u_cylinderMinAngle;
@@ -1144,11 +1144,11 @@ vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
     // and set the shape space position to 1 (front) or 0 (back) accordingly.
     
     #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-        radius = (radius - u_cylinderInnerRadiusUv) * u_cylinderInverseRadiusRangeUv;
+        radius = radius * u_cylinderScaleRadiusUvToBoundsRadiusUv + u_cylinderOffsetRadiusUvToBoundsRadiusUv;
     #endif
 
     #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        height = (height - u_cylinderMinHeightUv) * u_cylinderInverseHeightRangeUv;
+        height = height * u_cylinderScaleHeightUvToBoundsHeightUv + u_cylinderOffsetHeightUvToBoundsHeightUv;
     #endif
 
     #if defined(CYLINDER_WEDGE_REGULAR)
