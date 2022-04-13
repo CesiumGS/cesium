@@ -112,8 +112,6 @@ Alternatively, test suites can be run from the command line with the `includeNam
 
 `npm run test -- --includeName Cartesian2`
 
-Similarly, test suites can be excluded with the `--excludeName` flag.
-
 #### Using Browser Debugging Tools
 
 If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:

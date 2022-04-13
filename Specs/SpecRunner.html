@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Jasmine Spec Runner v4.0.1</title>
+
+    <link
+      rel="stylesheet"
+      href="../node_modules/jasmine-core/lib/jasmine-core/jasmine.css"
+    />
+
+    <script src="../node_modules/jasmine-core/lib/jasmine-core/jasmine.js"></script>
+    <script src="../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
+    <script src="../node_modules/jasmine-core/lib/jasmine-core/boot0.js"></script>
+    <script type="module" src="./spec-main.js"></script>
+    <script src="../node_modules/jasmine-core/lib/jasmine-core/boot1.js"></script>
+  </head>
+  <body>
+    <script>
+      if (window.location.search.indexOf("built") !== -1) {
+        if (window.location.search.indexOf("release") !== -1) {
+          document.write('<script src="../Build/Cesium/Cesium.js"><\/script>');
+        } else {
+          document.write(
+            '<script src="../Build/CesiumUnminified/Cesium.js"><\/script>'
+          );
+        }
+        document.write('<script src="../Build/Specs/Specs.js"><\/script>');
+      } else {
+        window.CESIUM_BASE_URL = "../Source/";
+        document.write('<script type="module" src="./SpecList.js"><\/script>');
+      }
+    </script>
+  </body>
+</html>

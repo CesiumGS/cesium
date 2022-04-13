@@ -43,7 +43,7 @@ function makeThrowFunction(debug, Type, name) {
           }
 
           if (exception) {
-            result = exception instanceof Type;
+            result = exception instanceof Type || exception.name === name;
           }
 
           let message;

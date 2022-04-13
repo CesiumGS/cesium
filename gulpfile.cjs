@@ -126,6 +126,7 @@ const filesToConvertES6 = [
   "!Source/Workers/transferTypedArrayTest.js",
   "!Specs/karma-main.js",
   "!Specs/karma.conf.cjs",
+  "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
 ];
@@ -995,7 +996,6 @@ gulp.task("test", function (done) {
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
   const debug = argv.debug ? false : true;
   const includeName = argv.includeName ? argv.includeName : "";
-  const excludeName = argv.excludeName ? argv.excludeName : "";
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1049,8 +1049,8 @@ gulp.task("test", function (done) {
         args: [
           includeCategory,
           excludeCategory,
+          "--grep",
           includeName,
-          excludeName,
           webglValidation,
           webglStub,
           release,
