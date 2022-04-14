@@ -434,6 +434,17 @@ When documenting an overloaded function, you must write two block comments with 
 
 Normally, each overload would get its own entry in the documentation. This may not always be desirable, so blocks with a `@variation` tag value greater than 1 will be discarded when generating the documentation (but will still be considered when [generating TypeScript typings](#typescript)).
 
+NOTE: due to a [long-standing bug in the `prettier` library](https://github.com/prettier/prettier/issues/12653), you must protect overloaded function declarations from automatic style cleanup. Either exclude the file from consideration by adding a line to `.prettierignore`, or add a `prettier-ignore` comment and create a block using braces like this:
+
+```javascript
+// prettier-ignore
+{
+  /**
+   * ...
+   */
+}
+```
+
 ## Private
 
 Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide/README.md#design)).

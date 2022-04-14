@@ -989,8 +989,7 @@ function ScreenSpaceEventHandler(element) {
   };
   this._isPinching = false;
   this._isTouchHolding = false;
-  this._lastSeenTouchEvent =
-    -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
+  this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
   this._primaryStartPosition = new Cartesian2();
   this._primaryPosition = new Cartesian2();
@@ -1013,6 +1012,8 @@ function ScreenSpaceEventHandler(element) {
   registerListeners(this);
 }
 
+// prettier-ignore
+{
 /**
  * @variation 2
  * @param {ScreenSpaceEventHandler.PositionedEventCallback} action Function to be executed when the input event occurs.
@@ -1055,7 +1056,7 @@ function ScreenSpaceEventHandler(element) {
  * @see ScreenSpaceEventHandler#getInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
  */
-
+}
 ScreenSpaceEventHandler.prototype.setInputAction = function (
   action,
   type,

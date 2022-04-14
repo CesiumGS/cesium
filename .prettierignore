@@ -27,9 +27,6 @@ Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/Workers/**/*
 Apps/Sandcastle/ThirdParty
-# Prevent Prettier from wrecking JSDoc function overload. Remove when
-# https://github.com/prettier/prettier/issues/12653 is resolved.
-Source/Core/ScreenSpaceEventHandler.js
 
 !Source/Workers/cesiumWorkerBootstrapper.js
 !Source/Workers/transferTypedArrayTest.js
