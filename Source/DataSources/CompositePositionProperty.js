@@ -86,7 +86,7 @@ Object.defineProperties(CompositePositionProperty.prototype, {
  * Gets the value of the property at the provided time in the fixed frame.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 CompositePositionProperty.prototype.getValue = function (time, result) {

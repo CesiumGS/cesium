@@ -68,6 +68,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * Gets the reference frame in which the position is defined.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
    * @type {ReferenceFrame}
+   * @readonly
    * @default ReferenceFrame.FIXED;
    */
   referenceFrame: {

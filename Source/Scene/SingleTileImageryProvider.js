@@ -454,7 +454,7 @@ SingleTileImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {HTMLImageElement|ImageBitmap} The resolved image
+ * @returns {Promise.<ImageryTypes>|undefined} The resolved image
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
