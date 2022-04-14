@@ -120,7 +120,7 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_WEDGE_REGULAR: undefined,
     ELLIPSOID_WEDGE_FLIPPED: undefined,
     ELLIPSOID_WEDGE_INDEX: undefined,
-    ELLIPSOID_ANGLE_FLIPPED: undefined,
+    ELLIPSOID_WEDGE_ANGLE_FLIPPED: undefined,
     ELLIPSOID_CONE_BOTTOM: undefined,
     ELLIPSOID_CONE_BOTTOM_REGULAR: undefined,
     ELLIPSOID_CONE_BOTTOM_FLIPPED: undefined,
@@ -132,6 +132,7 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_OUTER: undefined,
     ELLIPSOID_OUTER_INDEX: undefined,
     ELLIPSOID_INNER: undefined,
+    ELLIPSOID_INNER_OUTER_EQUAL: undefined,
     ELLIPSOID_INNER_INDEX: undefined,
     ELLIPSOID_IS_SPHERE: undefined,
   };
@@ -313,14 +314,6 @@ VoxelEllipsoidShape.prototype.update = function (
 
   const isSphere = radii.x === radii.y && radii.y === radii.z;
 
-  if (isAngleFlipped) {
-    shaderDefines["ELLIPSOID_ANGLE_FLIPPED"] = true;
-  }
-
-  if (isSphere) {
-    shaderDefines["ELLIPSOID_IS_SPHERE"] = true;
-  }
-
   // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
 
@@ -349,6 +342,14 @@ VoxelEllipsoidShape.prototype.update = function (
       shaderUniforms.ellipsoidRadiiUv.z * innerScale,
       shaderUniforms.ellipseInnerRadiiUv
     );
+  }
+
+  if (isSphere) {
+    shaderDefines["ELLIPSOID_IS_SPHERE"] = true;
+  }
+
+  if (minHeight === maxHeight) {
+    shaderDefines["ELLIPSOID_INNER_OUTER_EQUAL"] = true;
   }
 
   // Intersects a wedge for the min and max longitude.
@@ -381,6 +382,10 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderUniforms.ellipsoidWestUv = westUv;
     shaderUniforms.ellipsoidScaleLongitudeUvToBoundsLongitudeUv = scale;
     shaderUniforms.ellipsoidOffsetLongitudeUvToBoundsLongitudeUv = offset;
+  }
+
+  if (isAngleFlipped) {
+    shaderDefines["ELLIPSOID_WEDGE_ANGLE_FLIPPED"] = true;
   }
 
   if (hasBottomCone || hasTopCone) {
