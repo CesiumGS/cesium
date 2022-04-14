@@ -860,7 +860,9 @@ function Components() {
   this.forwardAxis = undefined;
 
   /**
-   * A world-space transform to apply to the primitives.
+   * A world-space transform to apply to the primitives. This is most often
+   * used for the 3D Tiles 1.0 RTC_CENTER transform, though there are some
+   * additional uses (e.g. .pnts uses a quantized volume offset)
    *
    * @type {Matrix4}
    * @private
