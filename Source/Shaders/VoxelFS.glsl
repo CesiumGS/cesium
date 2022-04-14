@@ -233,6 +233,7 @@ uniform float u_stepSize;
     #define ELLIPSOID_OUTER_INDEX ###
     #define ELLIPSOID_INNER ### // when there's an inner ellipsoid
     #define ELLIPSOID_INNER_INDEX ###
+    #define ELLIPSOID_IS_SPHERE
     */
 
     // Ellipsoid uniforms
@@ -1002,16 +1003,19 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
 
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
-    // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
-    // Then convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization so that math can be done with ellipses instead of ellipsoids.
-    vec3 posEllipsoid = (positionUv * 2.0 - 1.0) * u_ellipsoidRadiiUv;
-    vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
-
-    vec3 geodeticSurfaceNormal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv);
-    float longitude = (atan(geodeticSurfaceNormal.y, geodeticSurfaceNormal.x) + czm_pi) / czm_twoPi;
-    float latitude = (asin(geodeticSurfaceNormal.z) + czm_piOverTwo) / czm_pi;
-    float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv);
-
+    // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
+    // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    vec3 positionLocal = positionUv * 2.0 - 1.0;
+    #if defined(ELLIPSOID_IS_SPHERE)
+        vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv.x;
+        vec3 normal = normalize(posEllipsoid);
+    #else
+        vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
+        vec3 normal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv); // geodetic surface normal
+    #endif
+    
+    // Compute longitude
+    float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
     #if defined(ELLIPSOID_WEDGE)
         #if defined(ELLIPSOID_ANGLE_FLIPPED)
             longitude += float(longitude <= u_ellipsoidWestUv);
@@ -1019,12 +1023,29 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
         longitude = longitude * u_ellipsoidScaleLongitudeUvToBoundsLongitudeUv + u_ellipsoidOffsetLongitudeUvToBoundsLongitudeUv;
     #endif
 
+    // Compute latitude
+    float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
     #if (defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP))
         latitude = latitude * u_ellipsoidScaleLatitudeUvToBoundsLatitudeUv + u_ellipsoidOffsetLatitudeUvToBoundsLatitudeUv;
     #endif
-    
-    #if (defined(ELLIPSOID_INNER))
-        height *= u_ellipsoidInverseHeightDifferenceUv;
+
+    // Compute height
+    #if defined(ELLIPSOID_IS_SPHERE)
+        #if defined(ELLIPSOID_INNER)
+            float height = (length(posEllipsoid) - u_ellipseInnerRadiiUv.x) * u_ellipsoidInverseHeightDifferenceUv;
+        #else
+            float height = length(posEllipsoid);
+        #endif
+    #else
+        #if defined(ELLIPSOID_INNER)
+            // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84).
+            // This is an optimization so that math can be done with ellipses instead of ellipsoids.
+            vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
+            float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv) * u_ellipsoidInverseHeightDifferenceUv;
+        #else
+            // TODO: this is probably not correct
+            float height = length(posEllipsoid);
+        #endif
     #endif
 
     return vec3(longitude, latitude, height);

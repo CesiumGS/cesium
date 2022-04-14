@@ -4,6 +4,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import knockout from "../../ThirdParty/knockout.js";
 import getElement from "../getElement.js";
 import InspectorShared from "../InspectorShared.js";
@@ -134,7 +135,7 @@ function VoxelInspector(container, scene) {
   const ellipsoidMinBounds = Cartesian3.fromElements(
     VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).x,
     VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).y,
-    -6356752.3142451793, // The deepest height for WGS84
+    -Ellipsoid.WGS84.maximumRadius,
     new Cartesian3()
   );
   const ellipsoidMaxBounds = Cartesian3.fromElements(

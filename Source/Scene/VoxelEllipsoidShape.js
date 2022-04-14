@@ -133,6 +133,7 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_OUTER_INDEX: undefined,
     ELLIPSOID_INNER: undefined,
     ELLIPSOID_INNER_INDEX: undefined,
+    ELLIPSOID_IS_SPHERE: undefined,
   };
 }
 
@@ -310,8 +311,14 @@ VoxelEllipsoidShape.prototype.update = function (
   const hasBottomConeFlipped = south > 0.0;
   const hasBottomCone = hasBottomConeRegular || hasBottomConeFlipped;
 
+  const isSphere = radii.x === radii.y && radii.y === radii.z;
+
   if (isAngleFlipped) {
     shaderDefines["ELLIPSOID_ANGLE_FLIPPED"] = true;
+  }
+
+  if (isSphere) {
+    shaderDefines["ELLIPSOID_IS_SPHERE"] = true;
   }
 
   // Keep track of how many intersections there are going to be.
