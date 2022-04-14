@@ -108,6 +108,7 @@ const filesToClean = [
   "!Source/Workers/transferTypedArrayTest.js",
   "Source/ThirdParty/Shaders/*.js",
   "Specs/SpecList.js",
+  "Specs/jasmine/**",
   "Apps/Sandcastle/jsHintOptions.js",
   "Apps/Sandcastle/gallery/gallery-index.js",
   "Apps/Sandcastle/templates/bucket.css",
@@ -272,6 +273,16 @@ gulp.task("build-specs", function buildSpecs() {
         return bundle.write({
           file: "Build/Specs/Specs.js",
           format: "iife",
+        });
+      })
+      .then(function () {
+        // Copy jasmine runner files
+        return globby([
+          "node_modules/jasmine-core/lib/jasmine-core",
+          "!node_modules/jasmine-core/lib/jasmine-core/example",
+        ]).then(function (files) {
+          const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
+          return streamToPromise(stream);
         });
       })
       .then(function () {
