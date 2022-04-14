@@ -242,19 +242,21 @@ uniform float u_stepSize;
     #if defined(ELLIPSOID_WEDGE) || defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
         uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi].
     #endif
-    #if defined(ELLIPSOID_WEDGE)
+    #if defined(ELLIPSOID_WEDGE) && defined(ELLIPSOID_ANGLE_FLIPPED)
         uniform float u_ellipsoidWestUv;
+    #endif
+    #if defined(ELLIPSOID_WEDGE)
         uniform float u_ellipsoidScaleLongitudeUvToBoundsLongitudeUv;
         uniform float u_ellipsoidOffsetLongitudeUvToBoundsLongitudeUv;
     #endif
     #if defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
-        uniform float u_ellipsoidSouthUv; 
-        uniform float u_ellipsoidInverseLatitudeRangeUv;
+        uniform float u_ellipsoidScaleLatitudeUvToBoundsLatitudeUv;
+        uniform float u_ellipsoidOffsetLatitudeUvToBoundsLatitudeUv;
     #endif
     #if defined(ELLIPSOID_INNER)
         uniform float u_ellipsoidInverseHeightDifferenceUv;
         uniform float u_ellipsoidInverseInnerScaleUv;
-        uniform vec3 u_ellipsoidInnerRadiiUv; // [0,1]
+        uniform vec2 u_ellipseInnerRadiiUv; // [0,1]
     #endif
 #endif
 
@@ -692,19 +694,18 @@ vec4 intersectFlippedCone(Ray ray, float latitude) {
     vec2 intersect = intersectDoubleEndedCone(ray, latitude);
 
     if (intersect.x == NO_HIT) {
-        return vec4(NO_HIT);
+        return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
     }
 
     float tmin = intersect.x;
     float tmax = intersect.y;
-    float h1 = o.z + tmin * d.z;
-    float h2 = o.z + tmax * d.z;
+    float zmin = o.z + tmin * d.z;
+    float zmax = o.z + tmax * d.z;
 
     // One interval
-    if (h1 < 0.0 && h2 < 0.0) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-    else if (h1 < 0.0) return vec4(-INF_HIT, tmax, NO_HIT, NO_HIT);
-    else if (h2 < 0.0) return vec4(tmin, +INF_HIT, NO_HIT, NO_HIT);
-    else if (tmin < 0.0) return vec4(tmax, +INF_HIT, NO_HIT, NO_HIT);
+    if (zmin < 0.0 && zmax < 0.0) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
+    else if (zmin < 0.0) return vec4(-INF_HIT, tmax, NO_HIT, NO_HIT);
+    else if (zmax < 0.0) return vec4(tmin, +INF_HIT, NO_HIT, NO_HIT);
     // Two intervals
     else return vec4(-INF_HIT, tmin, tmax, +INF_HIT);
 }
@@ -722,12 +723,12 @@ vec2 intersectRegularCone(Ray ray, float latitude) {
 
     float tmin = intersect.x;
     float tmax = intersect.y;
-    float h1 = o.z + tmin * d.z;
-    float h2 = o.z + tmax * d.z;
+    float zmin = o.z + tmin * d.z;
+    float zmax = o.z + tmax * d.z;
 
-    if (h1 < 0.0 && h2 < 0.0) return vec2(NO_HIT);
-    else if (h1 < 0.0) return vec2(tmax, +INF_HIT);
-    else if (h2 < 0.0) return vec2(-INF_HIT, tmin);
+    if (zmin < 0.0 && zmax < 0.0) return vec2(NO_HIT);
+    else if (zmin < 0.0) return vec2(tmax, +INF_HIT);
+    else if (zmax < 0.0) return vec2(-INF_HIT, tmin);
     else return vec2(tmin, tmax);
 }
 #endif
@@ -948,19 +949,22 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
         setIntersectionPair(ix, ELLIPSOID_INNER_INDEX, innerIntersect);
     #endif
         
-    // Bottom cone
-    #if defined(ELLIPSOID_CONE_BOTTOM)
-        // Flip the inputs because the intersection function expects a cone growing towards +Z.
-        float flippedSouth = -u_ellipsoidRectangle.y; // [-halfPi,+halfPi]
+    // Flip the ray because the intersection function expects a cone growing towards +Z.
+    #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
         Ray flippedRay = ray;
         flippedRay.dir.z *= -1.0;
         flippedRay.pos.z *= -1.0;
-        
+    #endif
+
+    // Bottom cone
+    #if defined(ELLIPSOID_CONE_BOTTOM)
         #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR)
+            float flippedSouth = -u_ellipsoidRectangle.y; // [-halfPi,+halfPi]
             vec2 bottomConeIntersection = intersectRegularCone(flippedRay, flippedSouth);
             setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX, bottomConeIntersection);
         #elif defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
-            vec4 bottomConeIntersection = intersectFlippedCone(flippedRay, flippedSouth);
+            float south = u_ellipsoidRectangle.y;
+            vec4 bottomConeIntersection = intersectFlippedCone(ray, south);
             setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX + 0, bottomConeIntersection.xy);
             setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX + 1, bottomConeIntersection.zw);
         #endif
@@ -968,12 +972,13 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
 
     // Top cone        
     #if defined(ELLIPSOID_CONE_TOP)
-        float north = u_ellipsoidRectangle.w; // [-halfPi,+halfPi]
         #if defined(ELLIPSOID_CONE_TOP_REGULAR)
+            float north = u_ellipsoidRectangle.w; // [-halfPi,+halfPi]
             vec2 topConeIntersection = intersectRegularCone(ray, north);
             setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX, topConeIntersection);
         #elif defined(ELLIPSOID_CONE_TOP_FLIPPED)
-            vec4 topConeIntersection = intersectFlippedCone(ray, north);
+            float flippedNorth = -u_ellipsoidRectangle.w; // [-halfPi,+halfPi]
+            vec4 topConeIntersection = intersectFlippedCone(flippedRay, flippedNorth);
             setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX + 0, topConeIntersection.xy);
             setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX + 1, topConeIntersection.zw);
         #endif
@@ -997,18 +1002,15 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
 
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
-    // 1) Convert positionUv [0,1] to local space [-1,+1] to normalized cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
-    // 2) Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization so that math can be done with ellipses instead of ellipsoids.
-    // 3) Compute height from inner ellipse.
-    // 4) Compute geodetic surface normal.
-    // 5) Compute longitude from geodetic surface normal.
-    // 6) Compute latitude from geodetic surface normal.
-    vec3 pos3D = (positionUv * 2.0 - 1.0) * u_ellipsoidRadiiUv; // 1
-    vec2 pos2D = vec2(length(pos3D.xy), pos3D.z); // 2
-    float height = ellipseDistanceIterative(pos2D, u_ellipsoidInnerRadiiUv.xz); // 3
-    vec3 geodeticSurfaceNormal = normalize(pos3D *  u_ellipsoidInverseRadiiSquaredUv); // 4
-    float longitude = (atan(geodeticSurfaceNormal.y, geodeticSurfaceNormal.x) + czm_pi) / czm_twoPi; // 5
-    float latitude = (asin(geodeticSurfaceNormal.z) + czm_piOverTwo) / czm_pi; // 6
+    // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    // Then convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization so that math can be done with ellipses instead of ellipsoids.
+    vec3 posEllipsoid = (positionUv * 2.0 - 1.0) * u_ellipsoidRadiiUv;
+    vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
+
+    vec3 geodeticSurfaceNormal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv);
+    float longitude = (atan(geodeticSurfaceNormal.y, geodeticSurfaceNormal.x) + czm_pi) / czm_twoPi;
+    float latitude = (asin(geodeticSurfaceNormal.z) + czm_piOverTwo) / czm_pi;
+    float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv);
 
     #if defined(ELLIPSOID_WEDGE)
         #if defined(ELLIPSOID_ANGLE_FLIPPED)
@@ -1018,7 +1020,7 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     #endif
 
     #if (defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP))
-        latitude = (latitude - u_ellipsoidSouthUv) * u_ellipsoidInverseLatitudeRangeUv;
+        latitude = latitude * u_ellipsoidScaleLatitudeUvToBoundsLatitudeUv + u_ellipsoidOffsetLatitudeUvToBoundsLatitudeUv;
     #endif
     
     #if (defined(ELLIPSOID_INNER))
@@ -1507,7 +1509,6 @@ void main()
     float currT = entryExitT.x;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
-    gl_FragColor = vec4(transformFromUvToShapeSpace(positionUv).xxx, 1.0); return;
 
     vec4 colorAccum = vec4(0.0);
 

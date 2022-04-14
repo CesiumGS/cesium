@@ -102,12 +102,12 @@ function VoxelEllipsoidShape() {
     ellipsoidScaleLongitudeUvToBoundsLongitudeUv: 0.0,
     ellipsoidOffsetLongitudeUvToBoundsLongitudeUv: 0.0,
     // Cone uniforms
-    ellipsoidSouthUv: 0.0,
-    ellipsoidInverseLatitudeRangeUv: 0.0,
+    ellipsoidScaleLatitudeUvToBoundsLatitudeUv: 0.0,
+    ellipsoidOffsetLatitudeUvToBoundsLatitudeUv: 0.0,
     // Inner ellipsoid uniforms
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipsoidInverseInnerScaleUv: 0.0,
-    ellipsoidInnerRadiiUv: new Cartesian3(),
+    ellipseInnerRadiiUv: new Cartesian2(),
   };
 
   /**
@@ -293,6 +293,7 @@ VoxelEllipsoidShape.prototype.update = function (
 
   const isAngleFlipped = east < west;
   const rectangleWidth = Rectangle.computeWidth(this._rectangle);
+  const rectangleHeight = Rectangle.computeHeight(this._rectangle);
   const hasInnerEllipsoid = !Cartesian3.equals(innerExtent, Cartesian3.ZERO);
 
   const hasWedgeRegular =
@@ -336,10 +337,10 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderUniforms.ellipsoidInverseInnerScaleUv = 1.0 / innerScale;
 
     // The inner ellipsoid radii scaled to [0,innerScale]. The max inner ellipsoid radius will equal innerScale and others will be less.
-    shaderUniforms.ellipsoidInnerRadiiUv = Cartesian3.multiplyByScalar(
-      shaderUniforms.ellipsoidRadiiUv,
-      innerScale,
-      shaderUniforms.ellipsoidInnerRadiiUv
+    shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidRadiiUv.x * innerScale,
+      shaderUniforms.ellipsoidRadiiUv.z * innerScale,
+      shaderUniforms.ellipseInnerRadiiUv
     );
   }
 
@@ -373,6 +374,24 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderUniforms.ellipsoidWestUv = westUv;
     shaderUniforms.ellipsoidScaleLongitudeUvToBoundsLongitudeUv = scale;
     shaderUniforms.ellipsoidOffsetLongitudeUvToBoundsLongitudeUv = offset;
+  }
+
+  if (hasBottomCone || hasTopCone) {
+    // delerp(latitudeUv, minLatitudeUv, maxLatitudeUv)
+    // (latitudeUv - minLatitudeUv) / (maxLatitudeUv - minLatitudeUv)
+    // latitudeUv / (maxLatitudeUv - minLatitudeUv) - minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
+    // scale = 1.0 / (maxLatitudeUv - minLatitudeUv)
+    // scale = 1.0 / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
+    // scale = 2.0 * pi / (maxLatitude - minLatitude)
+    // offset = -minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
+    // offset = -((minLatitude - pi) / (2.0 * pi)) / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
+    // offset = -(minLatitude - pi) / (maxLatitude - minLatitude)
+
+    const scale = defaultLatitudeLength / rectangleHeight;
+    const offset = -(south - defaultMinLatitude) / rectangleHeight;
+
+    shaderUniforms.ellipsoidScaleLatitudeUvToBoundsLatitudeUv = scale;
+    shaderUniforms.ellipsoidOffsetLatitudeUvToBoundsLatitudeUv = offset;
   }
 
   // Intersects a cone for min latitude
