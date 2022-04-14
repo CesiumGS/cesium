@@ -18,6 +18,7 @@ Generally, just follow the patterns that are already in comparable parts of the 
 - [Classes](#classes)
 - [Properties and Constants](#properties-and-constants)
 - [Functions and Callbacks](#functions-and-callbacks)
+  - [Overloaded Functions](#overloaded-functions)
 - [Private](#private)
 - [Layout Reference](#layout-reference)
   - [Constructor Function](#constructor-function)
@@ -408,6 +409,30 @@ Queue.prototype.sort = function (compareFunction) {
  * }
  */
 ```
+
+### Overloaded Functions
+
+JSDoc supports declarating functions with more than one call signature. For example, suppose you wish to document a function `range` that returns a "Range" object, and can be invoked with either separate `start` and `end` arguments (`range(1,2)`), or an options-object (`range({start: 1, end: 2, inclusive: true})`).
+
+When documenting an overloaded function, you must write two block comments with **no whitespace** between them, resulting in the exact string `*//**` in the middle. The block for each overload must include a `@variation` tag with a different integer value. The value of the `variation` tag will not appear in the documentation, but will be used internally by JSDoc to distinguish between overloads.
+
+```javascript
+/**
+ * Get a Range from the provided start and end values.
+ * @variation 0
+ *
+ * @param {number} start
+ * @param {number} end
+ * @returns {Range}
+ *//**
+ * Get a Range based on the provided options
+ * @param {Object} options
+ * @param {number} options.start
+ * @param {number} options.end
+ * @param {boolean} [options.inclusive=false]
+```
+
+Normally, each overload would get its own entry in the documentation. This may not always be desirable, so blocks with a `@variation` tag value greater than 1 will be discarded when generating the documentation (but will still be considered when [generating TypeScript typings](#typescript)).
 
 ## Private
 
