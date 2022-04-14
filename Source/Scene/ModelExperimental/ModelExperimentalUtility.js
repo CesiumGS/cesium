@@ -281,3 +281,26 @@ ModelExperimentalUtility.correctModelMatrix = function (
 
   return result;
 };
+
+ModelExperimentalUtility.getAxisCorrectionMatrix = function (
+  upAxis,
+  forwardAxis,
+  result
+) {
+  if (!defined(result)) {
+    result = new Matrix4();
+  }
+
+  if (upAxis === Axis.Y) {
+    result = Matrix4.clone(Axis.Y_UP_TO_Z_UP, result);
+  } else if (upAxis === Axis.X) {
+    result = Matrix4.clone(Axis.X_UP_TO_Z_UP, result);
+  }
+
+  if (forwardAxis === Axis.Z) {
+    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+    result = Matrix4.multiplyTransformation(result, Axis.Z_UP_TO_X_UP, result);
+  }
+
+  return result;
+};

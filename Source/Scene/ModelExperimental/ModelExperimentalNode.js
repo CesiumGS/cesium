@@ -47,11 +47,18 @@ export default function ModelExperimentalNode(options) {
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+
+  let instancingNodeTransform = Matrix4.clone(transformToRoot);
+  instancingNodeTransform = Matrix4.multiply(
+    instancingNodeTransform,
     transform,
+    instancingNodeTransform
+  );
+  this._instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
+    instancingNodeTransform,
     components.upAxis,
     components.forwardAxis,
-    this._axisCorrectedTransform
+    instancingNodeTransform
   );
 
   this._transformDirty = false;
@@ -149,11 +156,17 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-        value,
+
+      const instancingNodeTransform = Matrix4.multiply(
+        this._transformToRoot,
+        this._transform,
+        this._instancingNodeTransform
+      );
+      this._instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
+        instancingNodeTransform,
         this._sceneGraph.components.upAxis,
         this._sceneGraph.components.forwardAxis,
-        this._axisCorrectedTransform
+        this._instancingNodeTransform
       );
     },
   },
@@ -174,14 +187,16 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's axis corrected local space transform. Used in instancing.
+   * Variation on the node transform used in instancing. This is the product
+   * <code>transformToRoot * transform * axisCorrection</code>.
+   *
    * @type {Matrix4}
    * @private
    * @readonly
    */
-  axisCorrectedTransform: {
+  instancingNodeTransform: {
     get: function () {
-      return this._axisCorrectedTransform;
+      return this._instancingNodeTransform;
     },
   },
 

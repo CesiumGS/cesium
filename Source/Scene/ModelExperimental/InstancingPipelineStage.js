@@ -150,7 +150,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       );
     };
     uniformMap.u_instance_nodeTransform = function () {
-      return renderResources.runtimeNode.axisCorrectedTransform;
+      return renderResources.runtimeNode.instancingNodeTransform;
     };
     shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
   } else {

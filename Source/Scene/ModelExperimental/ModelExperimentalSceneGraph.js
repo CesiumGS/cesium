@@ -58,6 +58,8 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._modelComponents = options.modelComponents;
 
+  this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix();
+
   /**
    * Pipeline stages to apply across the model.
    *
