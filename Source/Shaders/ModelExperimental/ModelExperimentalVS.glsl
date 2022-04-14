@@ -30,7 +30,7 @@ void main()
 
     // Compute the bitangent according to the formula in the glTF spec.
     // Normal and tangents can be affected by morphing and skinning, so
-    // the bitangent should be computed until their values are finalized.
+    // the bitangent should not be computed until their values are finalized.
     #ifdef HAS_BITANGENTS
     attributes.bitangentMC = normalize(cross(attributes.normalMC, attributes.tangentMC) * attributes.tangentSignMC);
     #endif
