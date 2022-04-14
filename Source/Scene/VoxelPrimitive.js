@@ -1229,12 +1229,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
   const shapeDirty = compoundTransformDirty || minBoundsDirty || maxBoundsDirty;
 
-  // Update the shape on the first frame or if it's dirty.
-  // If the shape is visible it will do some extra work.
-  if (
-    (!this._ready || shapeDirty) &&
-    (this._shapeVisible = shape.update(compoundTransform, minBounds, maxBounds))
-  ) {
+  if (shapeDirty) {
     if (compoundTransformDirty) {
       this._compoundModelMatrixOld = Matrix4.clone(
         compoundTransform,
@@ -1247,7 +1242,14 @@ VoxelPrimitive.prototype.update = function (frameState) {
     if (maxBoundsDirty) {
       this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
     }
+  }
 
+  // Update the shape on the first frame or if it's dirty.
+  // If the shape is visible it will need to do some extra work.
+  if (
+    (!this._ready || shapeDirty) &&
+    (this._shapeVisible = shape.update(compoundTransform, minBounds, maxBounds))
+  ) {
     // Rebuild the shader if any of the shape defines changed.
     const shapeDefines = shape.shaderDefines;
     const shapeDefinesOld = this._shapeDefinesOld;
@@ -2282,6 +2284,7 @@ function buildDrawCommands(that, context) {
   that._drawCommandPick = drawCommandPick;
 
   // console.log(drawCommand.shaderProgram._fragmentShaderText);
+  console.log("recompile");
 }
 
 /**

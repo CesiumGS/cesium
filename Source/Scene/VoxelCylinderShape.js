@@ -191,22 +191,21 @@ VoxelCylinderShape.prototype.update = function (
   const minAngle = CesiumMath.negativePiToPi(minBounds.z);
   const maxAngle = CesiumMath.negativePiToPi(maxBounds.z);
 
-  const outerExtent = Cartesian3.fromElements(
-    scale.x * maxRadius,
-    scale.y * maxRadius,
-    scale.z * 0.5 * (maxHeight - minHeight)
-  );
-
   // Exit early if the shape is not visible.
   // Note that minAngle may be greater than maxAngle when crossing the 180th meridian.
+
+  // Cylinder is not visible if:
+  // - maxRadius is zero (line)
+  // - minHeight is greater than minHeight
+  // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   const absEpsilon = CesiumMath.EPSILON10;
   if (
     maxRadius === 0.0 ||
     minRadius > maxRadius ||
     minHeight > maxHeight ||
-    CesiumMath.equalsEpsilon(outerExtent.x, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(outerExtent.y, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(outerExtent.z, 0.0, undefined, absEpsilon)
+    CesiumMath.equalsEpsilon(scale.x, 0.0, undefined, absEpsilon) ||
+    CesiumMath.equalsEpsilon(scale.y, 0.0, undefined, absEpsilon) ||
+    CesiumMath.equalsEpsilon(scale.z, 0.0, undefined, absEpsilon)
   ) {
     return false;
   }
@@ -318,8 +317,9 @@ VoxelCylinderShape.prototype.update = function (
       shaderDefines["CYLINDER_INNER_OUTER_EQUAL"] = true;
     } else {
       shaderDefines["CYLINDER_INNER_INDEX"] = intersectionCount;
-      intersectionCount += 1;
     }
+
+    intersectionCount += 1;
   }
 
   if (!isDefaultOuterCylinder || hasInnerCylinder || !isDefaultHeight) {

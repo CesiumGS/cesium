@@ -767,7 +767,7 @@ vec2 intersectUnitCircle(Ray ray) {
 }
 #endif
 
-#if defined(SHAPE_CYLINDER) && defined(CYLINDER_INNER) && !defined(CYLINDER_INNER_OUTER_EQUAL)
+#if defined(SHAPE_CYLINDER) && defined(CYLINDER_INNER)
 vec2 intersectInfiniteUnitCylinder(Ray ray)
 {
     vec3 o = ray.pos;
@@ -1028,31 +1028,34 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         return;
     }
 
-    #if defined(CYLINDER_INNER_OUTER_EQUAL) 
-        // When the cylinder is perfectly thin it's necessary to sandwich the
-        // inner cylinder intersection inside the outer cylinder intersection.
-        
-        // Without this special case,
-        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
-        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
-        // side of the cylinder to be invisible because it will think the ray
-        // is still inside the inner (negative) cylinder after exiting the
-        // outer (positive) cylinder. 
-
-        // With this special case,
-        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
-        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
-
-        // Note: If sortIntersections() changes its sorting function
-        // from bubble sort to something else, this code may need to change.
-        setIntersection(ix, 0, outerIntersect.x, true, true); // positive, enter
-        setIntersection(ix, 1, outerIntersect.x, false, true); // negative, enter
-        setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
-        setIntersection(ix, 3, outerIntersect.y, true, false); //  positive, exit
-    #elif defined(CYLINDER_INNER)
+    #if defined(CYLINDER_INNER)
         Ray innerRay = Ray(ray.pos * u_cylinderScaleUvToInnerBounds + u_cylinderTranslateUvToInnerBounds, ray.dir * u_cylinderScaleUvToInnerBounds);
         vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
-        setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
+
+        #if defined(CYLINDER_INNER_OUTER_EQUAL) 
+            // When the cylinder is perfectly thin it's necessary to sandwich the
+            // inner cylinder intersection inside the outer cylinder intersection.
+            
+            // Without this special case,
+            // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
+            // [outerMin, innerMin, outerMax, innerMax] which will cause the back
+            // side of the cylinder to be invisible because it will think the ray
+            // is still inside the inner (negative) cylinder after exiting the
+            // outer (positive) cylinder. 
+
+            // With this special case,
+            // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
+            // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
+
+            // Note: If sortIntersections() changes its sorting function
+            // from bubble sort to something else, this code may need to change.
+            setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
+            setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
+            setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
+            setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+        #else
+            setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
+        #endif
     #endif
 
     #if defined(CYLINDER_WEDGE_REGULAR)
