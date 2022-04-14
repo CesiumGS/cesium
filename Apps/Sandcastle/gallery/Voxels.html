@@ -84,6 +84,8 @@
               break;
             }
             case Cesium.VoxelShapeType.CYLINDER: {
+              this.minBounds = new Cesium.Cartesian3(0.0, -1.0, +0.2);
+              this.maxBounds = new Cesium.Cartesian3(1.0, +1.0, -0.2);
               break;
             }
           }

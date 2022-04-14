@@ -104,7 +104,8 @@ function VoxelCylinderShape() {
     cylinderMinAngle: 0.0,
     cylinderMaxAngle: 0.0,
     cylinderMinAngleUv: 0.0,
-    cylinderInverseAngleRangeUv: 0.0,
+    cylinderScaleAngleUvToBoundsAngleUv: 0.0,
+    cylinderOffsetAngleUvToBoundsAngleUv: 0.0,
   };
 
   /**
@@ -120,6 +121,7 @@ function VoxelCylinderShape() {
     CYLINDER_INNER_INDEX: undefined,
     CYLINDER_HEIGHT_NON_DEFAULT: undefined,
     CYLINDER_HEIGHT_ZERO: undefined,
+    CYLINDER_ANGLE_FLIPPED: undefined,
     CYLINDER_WEDGE_INDEX: undefined,
     CYLINDER_WEDGE_REGULAR: undefined,
     CYLINDER_WEDGE_FLIPPED: undefined,
@@ -162,6 +164,7 @@ VoxelCylinderShape.prototype.update = function (
   const defaultMaxHeight = VoxelCylinderShape.DefaultMaxBounds.y;
   const defaultMinAngle = VoxelCylinderShape.DefaultMinBounds.z;
   const defaultMaxAngle = VoxelCylinderShape.DefaultMaxBounds.z;
+  const defaultAngleWidth = defaultMaxAngle - defaultMinAngle;
 
   // Clamp the radii to the valid range
   const minRadius = CesiumMath.clamp(
@@ -196,7 +199,7 @@ VoxelCylinderShape.prototype.update = function (
 
   // Cylinder is not visible if:
   // - maxRadius is zero (line)
-  // - minHeight is greater than minHeight
+  // - minHeight is greater than maxHeight
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   const absEpsilon = CesiumMath.EPSILON10;
   if (
@@ -246,8 +249,8 @@ VoxelCylinderShape.prototype.update = function (
   const isDefaultHeight =
     minHeight === defaultMinHeight && maxHeight === defaultMaxHeight;
 
-  const angleWidth =
-    maxAngle - minAngle + (maxAngle < minAngle) * CesiumMath.TWO_PI;
+  const isAngleFlipped = maxAngle < minAngle;
+  const angleWidth = maxAngle - minAngle + isAngleFlipped * CesiumMath.TWO_PI;
   const hasWedgeRegular =
     angleWidth >= CesiumMath.PI &&
     CesiumMath.lessThan(angleWidth, CesiumMath.TWO_PI, absEpsilon);
@@ -398,20 +401,34 @@ VoxelCylinderShape.prototype.update = function (
     shaderUniforms.cylinderOffsetHeightUvToBoundsHeightUv = offset;
   }
 
+  if (isAngleFlipped) {
+    shaderDefines["CYLINDER_ANGLE_FLIPPED"] = true;
+  }
+
   if (hasWedge) {
     shaderDefines["CYLINDER_WEDGE"] = true;
     shaderDefines["CYLINDER_WEDGE_INDEX"] = intersectionCount;
+
     shaderUniforms.cylinderMinAngle = minAngle;
     shaderUniforms.cylinderMaxAngle = maxAngle;
 
-    const minAngleUv =
-      (minAngle - defaultMinAngle) / (defaultMaxAngle - defaultMinAngle);
-    const maxAngleUv =
-      (maxAngle - defaultMinAngle) / (defaultMaxAngle - defaultMinAngle);
+    // delerp(angleUv, minAngleUv, maxAngleUv)
+    // (angelUv - minAngleUv) / (maxAngleUv - minAngleUv)
+    // angleUv / (maxAngleUv - minAngleUv) - minAngleUv / (maxAngleUv - minAngleUv)
+    // scale = 1.0 / (maxAngleUv - minAngleUv)
+    // scale = 1.0 / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
+    // scale = 2.0 * pi / (maxAngle - minAngle)
+    // offset = -minAngleUv / (maxAngleUv - minAngleUv)
+    // offset = -((minAngle - pi) / (2.0 * pi)) / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
+    // offset = -(minAngle - pi) / (maxAngle - minAngle)
+
+    const minAngleUv = (minAngle - defaultMinAngle) / defaultAngleWidth;
+    const scale = defaultAngleWidth / angleWidth;
+    const offset = -(minAngle - defaultMinAngle) / angleWidth;
 
     shaderUniforms.cylinderMinAngleUv = minAngleUv;
-    shaderUniforms.cylinderInverseAngleRangeUv =
-      1.0 / (maxAngleUv - minAngleUv);
+    shaderUniforms.cylinderScaleAngleUvToBoundsAngleUv = scale;
+    shaderUniforms.cylinderOffsetAngleUvToBoundsAngleUv = offset;
 
     if (hasWedgeRegular) {
       // Intersects a wedge for the min and max longitude.
@@ -591,108 +608,27 @@ VoxelCylinderShape.DefaultMinBounds = new Cartesian3(0.0, -1.0, -CesiumMath.PI);
  */
 VoxelCylinderShape.DefaultMaxBounds = new Cartesian3(1.0, +1.0, +CesiumMath.PI);
 
-const scratchTestAngles = new Array(6);
+const maxTestAngles = 7;
 
 // Preallocated arrays for all of the possible test angle counts
-const scratchPositions = [
-  new Array(),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-  new Array(
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3(),
-    new Cartesian3()
-  ),
-];
+/**
+ * @type {Number[]}
+ * @ignore
+ */
+const scratchTestAngles = new Array(maxTestAngles);
+
+/**
+ * @type {Cartesian3[][]}
+ * @ignore
+ */
+const scratchTestPositions = new Array(maxTestAngles + 1);
+for (let i = 0; i <= maxTestAngles; i++) {
+  const positionsLength = i * 4;
+  scratchTestPositions[i] = new Array(positionsLength);
+  for (let j = 0; j < positionsLength; j++) {
+    scratchTestPositions[i][j] = new Cartesian3();
+  }
+}
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
@@ -744,6 +680,7 @@ function getCylinderChunkObb(
     return result;
   }
 
+  // TODO: this is not always working. See OrientedBoundingBox.fromRectangle for ideas to improve.
   let testAngleCount = 0;
   const testAngles = scratchTestAngles;
   const halfPi = CesiumMath.PI_OVER_TWO;
@@ -752,13 +689,13 @@ function getCylinderChunkObb(
   testAngles[testAngleCount++] = angleEnd;
 
   if (angleStart > angleEnd) {
-    if (angleStart > 0.0 && angleEnd > 0.0) {
+    if (angleStart <= 0.0 || angleEnd >= 0.0) {
       testAngles[testAngleCount++] = 0.0;
     }
-    if (angleStart > +halfPi && angleEnd > +halfPi) {
+    if (angleStart <= +halfPi || angleEnd >= +halfPi) {
       testAngles[testAngleCount++] = +halfPi;
     }
-    if (angleStart > -halfPi && angleEnd > -halfPi) {
+    if (angleStart <= -halfPi || angleEnd >= -halfPi) {
       testAngles[testAngleCount++] = -halfPi;
     }
     // It will always cross the 180th meridian
@@ -775,7 +712,14 @@ function getCylinderChunkObb(
     }
   }
 
-  const positions = scratchPositions[testAngleCount];
+  const isAngleFlipped = angleEnd < angleStart;
+  const angleWidth = angleEnd - angleStart + isAngleFlipped * CesiumMath.TWO_PI;
+
+  testAngles[testAngleCount++] = CesiumMath.negativePiToPi(
+    angleStart + angleWidth * 0.5
+  );
+
+  const positions = scratchTestPositions[testAngleCount];
 
   for (let i = 0; i < testAngleCount; i++) {
     const angle = testAngles[i];

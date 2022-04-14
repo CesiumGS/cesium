@@ -216,6 +216,8 @@ uniform float u_stepSize;
 #if defined(SHAPE_ELLIPSOID)
     /* Ellipsoid defines:
     #define ELLIPSOID_INTERSECTION_COUNT ### // the total number of enter and exit points for all the constituent intersections
+    #define ELLIPSOID_WEDGE
+    #define ELLIPSOID_WEDGE_INDEX ###
     #define ELLIPSOID_WEDGE_REGULAR ### // when there's a wedge 
     #define ELLIPSOID_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
     #define ELLIPSOID_CONE_BOTTOM_REGULAR ### // when there's a bottom cone
@@ -258,6 +260,8 @@ uniform float u_stepSize;
     #define CYLINDER_INNER_INDEX ### // when there's an inner cylinder
     #define CYLINDER_HEIGHT_NON_DEFAULT ### //
     #define CYLINDER_HEIGHT_ZERO // when the height is 0
+    #define CYLINDER_ANGLE_FLIPPED //
+    #define CYLINDER_WEDGE //
     #define CYLINDER_WEDGE_INDEX // 
     #define CYLINDER_WEDGE_REGULAR ### // when there's a wedge
     #define CYLINDER_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
@@ -286,7 +290,8 @@ uniform float u_stepSize;
         uniform float u_cylinderMinAngle;
         uniform float u_cylinderMaxAngle;
         uniform float u_cylinderMinAngleUv;
-        uniform float u_cylinderInverseAngleRangeUv;
+        uniform float u_cylinderScaleAngleUvToBoundsAngleUv;
+        uniform float u_cylinderOffsetAngleUvToBoundsAngleUv;
     #endif
 #endif
 
@@ -538,7 +543,7 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
 #endif
 
 #if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_REGULAR)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_REGULAR))
-vec2 intersectWedge(Ray ray, float minAngle, float maxAngle)
+vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 {    
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
@@ -586,6 +591,15 @@ vec2 intersectHalfSpace(Ray ray, float angle)
 
     if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
     else return vec2(-INF_HIT, t);
+}
+#endif
+
+#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_FLIPPED)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_FLIPPED))
+vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
+{    
+    vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
+    vec2 planeIntersectMax = intersectHalfSpace(ray, maxAngle + czm_pi);
+    return vec4(planeIntersectMin, planeIntersectMax);
 }
 #endif
 
@@ -962,13 +976,12 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
         float west = u_ellipsoidRectangle.x; // [-pi,+pi]
         float east = u_ellipsoidRectangle.z; // [-pi,+pi]
         #if defined(ELLIPSOID_WEDGE_REGULAR)
-            vec2 wedgeIntersect = intersectWedge(ray, west, east);
+            vec2 wedgeIntersect = intersectRegularWedge(ray, west, east);
             setIntersectionPair(ix, ELLIPSOID_WEDGE_REGULAR, wedgeIntersect);
         #elif defined(ELLIPSOID_WEDGE_FLIPPED)
-            vec2 planeIntersectWest = intersectHalfSpace(ray, west);
-            vec2 planeIntersectEast = intersectHalfSpace(ray, east + czm_pi);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 0, planeIntersectWest);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 1, planeIntersectEast);
+            vec4 wedgeIntersect = intersectFlippedWedge(ray, west, east);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 0, wedgeIntersect.xy);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_FLIPPED + 1, wedgeIntersect.zw);
         #endif
     #endif
 }
@@ -1047,7 +1060,7 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
             // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
             // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
 
-            // Note: If sortIntersections() changes its sorting function
+            // Note: If initializeIntersections() changes its sorting function
             // from bubble sort to something else, this code may need to change.
             setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
             setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
@@ -1059,13 +1072,12 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
     #endif
 
     #if defined(CYLINDER_WEDGE_REGULAR)
-        vec2 wedgeIntersect = intersectWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
+        vec2 wedgeIntersect = intersectRegularWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
     #elif defined(CYLINDER_WEDGE_FLIPPED)
-        vec2 planeIntersectMinAngle = intersectHalfSpace(outerRay, u_cylinderMinAngle);
-        vec2 planeIntersectMaxAngle = intersectHalfSpace(outerRay, u_cylinderMaxAngle + czm_pi);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, planeIntersectMinAngle);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, planeIntersectMaxAngle);
+        vec4 wedgeIntersect = intersectFlippedWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, wedgeIntersect.xy);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, wedgeIntersect.zw);
     #endif
 }
 #endif
@@ -1089,10 +1101,11 @@ vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
         height = height * u_cylinderScaleHeightUvToBoundsHeightUv + u_cylinderOffsetHeightUvToBoundsHeightUv;
     #endif
 
-    #if defined(CYLINDER_WEDGE_REGULAR)
-        angle = (angle - u_cylinderMinAngleUv) * u_cylinderInverseAngleRangeUv;
-    #elif defined(CYLINDER_WEDGE_FLIPPED)
-        angle = (angle - u_cylinderMinAngleUv) * u_cylinderInverseAngleRangeUv;
+    #if defined(CYLINDER_WEDGE)
+        #if defined(CYLINDER_ANGLE_FLIPPED)
+            angle += float(angle <= u_cylinderMinAngleUv);
+        #endif
+        angle = angle * u_cylinderScaleAngleUvToBoundsAngleUv + u_cylinderOffsetAngleUvToBoundsAngleUv;
     #endif
 
     return vec3(radius, height, angle);

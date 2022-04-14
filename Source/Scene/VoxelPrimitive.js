@@ -2505,7 +2505,6 @@ function debugDraw(that, frameState) {
   const frameNumber = frameState.frameNumber;
   const traversal = that._traversal;
   const polylines = that._debugPolylines;
-  const shapeVisible = that._shape.isVisible;
   polylines.removeAll();
 
   function makePolylineLineSegment(startPos, endPos, color, thickness) {
@@ -2556,9 +2555,7 @@ function debugDraw(that, frameState) {
     }
   }
 
-  if (shapeVisible) {
-    drawTile(traversal.rootNode);
-  }
+  drawTile(traversal.rootNode);
 
   const axisThickness = 10.0;
   makePolylineLineSegment(
