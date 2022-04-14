@@ -893,6 +893,52 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 }
 
 /**
+ * @typedef {Object} ScreenSpaceEventHandler.PositionedEvent
+ *
+ * An Event that occurs at a single position on screen
+ *
+ * @property {Cartesian2} position
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.TwoPointEvent
+ *
+ * An Event that occurs at a two positions on screen
+ *
+ * @property {Cartesian2} position1
+ * @property {Cartesian2} position2
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.MotionEvent
+ *
+ * An Event that starts at one position and ends at another
+ *
+ * @property {Cartesian2} startPosition
+ * @property {Cartesian2} endPosition
+ *
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.TwoPointMotionEvent
+ *
+ * An Event that starts at a two positions on screen and moves to two other positions
+ *
+ * @property {Cartesian2} position1
+ * @property {Cartesian2} position2
+ * @property {Cartesian2} previousPosition1
+ * @property {Cartesian2} previousPosition2
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.EventCallback
+ *
+ * The callback invoked when a screenspace event triggers an event listener.
+ *
+ * @param {ScreenSpaceEventHandler.PositionedEvent|ScreenSpaceEventHandler.MotionEvent|ScreenSpaceEventHandler.TwoPointEvent|ScreenSpaceEventHandler.TwoPointMotionEvent|number} event The event which triggered the listener
+ */
+
+/**
  * Handles user input events. Custom functions can be added to be executed on
  * when the user enters input.
  *
@@ -934,11 +980,10 @@ function ScreenSpaceEventHandler(element) {
   registerListeners(this);
 }
 
-// TODO: document callback signature for each type of event
 /**
  * Set a function to be executed on an input event.
  *
- * @param {Function} action Function to be executed when the input event occurs.
+ * @param {ScreenSpaceEventHandler.EventCallback} action Function to be executed when the input event occurs.
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
  * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
