@@ -232,7 +232,11 @@ gulp.task("build", async function () {
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(createWorkers(), createGalleryList());
+  return Promise.join(
+    createWorkers(),
+    createGalleryList(),
+    generateThirdParty()
+  );
 });
 
 gulp.task("build-watch", function () {
@@ -1681,6 +1685,132 @@ function createSpecList() {
   });
 
   fs.writeFileSync(path.join("Specs", "SpecList.js"), contents);
+}
+
+/**
+ * Reads `ThirdParty.extra.json` file
+ * @param path {string}
+ * @param discoveredDependencies {Array<string>}
+ * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ */
+function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
+  if (!fs.existsSync(path)) {
+    return Promise.resolve([]);
+  }
+
+  const fsReadFile = Promise.promisify(fs.readFile);
+
+  return fsReadFile(path).then(function (contents) {
+    const thirdPartyExtra = JSON.parse(contents);
+    return Promise.map(thirdPartyExtra, function (module) {
+      if (!discoveredDependencies.includes(module.name)) {
+        // If this is not a npm module, return existing info
+        if (!packageJson.devDependencies[module.name]) {
+          discoveredDependencies.push(module.name);
+          return Promise.resolve(module);
+        }
+
+        return getLicenseDataFromPackage(module.name, discoveredDependencies);
+      }
+    });
+  });
+}
+
+const licenseOverrides = {
+  dompurify: "Apache-2.0", // dompurify is available as both MPL-2.0 OR Apache-2.0
+  pako: "MIT", // pako is MIT, and zlib is attributed separately
+};
+
+/**
+ * Extracts name, license, and url from `package.json` file
+ *
+ * @param packageName {string} Name of package
+ * @param discoveredDependencies {Array<string>}
+ * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
+ */
+function getLicenseDataFromPackage(packageName, discoveredDependencies) {
+  if (discoveredDependencies.includes(packageName)) {
+    return Promise.resolve([]);
+  }
+  discoveredDependencies.push(packageName);
+
+  let promise;
+  const packagePath = path.join("node_modules", packageName, "package.json");
+  const fsReadFile = Promise.promisify(fs.readFile);
+
+  if (fs.existsSync(packagePath)) {
+    //Package exists at top-level, so use it.
+    promise = fsReadFile(packagePath);
+  } else {
+    return Promise.reject(
+      new Error(`Unable to find ${packageName} license information`)
+    );
+  }
+
+  return promise.then(function (contents) {
+    const packageJson = JSON.parse(contents);
+
+    // Check for license
+    let licenseField = licenseOverrides[packageName];
+
+    if (!licenseField) {
+      licenseField = packageJson.license;
+    }
+
+    if (!licenseField && packageJson.licenses) {
+      licenseField = packageJson.licenses[0].type;
+    }
+
+    if (!licenseField) {
+      console.log(`No license found for ${packageName}`);
+      licenseField = "NONE";
+    }
+
+    let version = packageJson.version;
+    if (!packageJson.version) {
+      console.log(`No version information found for ${packageName}`);
+      version = "NONE";
+    }
+
+    return {
+      name: packageName,
+      license: licenseField,
+      version: version,
+      url: `https://www.npmjs.com/package/${packageName}`,
+    };
+  });
+}
+
+function generateThirdParty() {
+  let licenseJson = [];
+  const discoveredDependencies = [];
+  const fsWriteFile = Promise.promisify(fs.writeFile);
+
+  return getLicenseDataFromThirdPartyExtra(
+    "ThirdParty.extra.json",
+    discoveredDependencies
+  )
+    .then(function (licenseInfo) {
+      licenseJson = licenseJson.concat(licenseInfo);
+    })
+    .then(function () {
+      licenseJson.sort(function (a, b) {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      });
+
+      return fsWriteFile(
+        "ThirdParty.json",
+        JSON.stringify(licenseJson, null, 2)
+      );
+    });
 }
 
 function createGalleryList() {

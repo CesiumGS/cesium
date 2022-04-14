@@ -1,0 +1,87 @@
+[
+    {
+      "name": "autolinker"
+    },
+    {
+        "name": "basis_universal",
+        "license": "Apache-2.0",
+        "version": "1.15",
+        "url": "https://github.com/BinomialLLC/basis_universal"
+    },
+    {
+        "name": "bitmap-sdf"
+    },
+    {
+        "name": "dompurify",
+        "license": "Apache-2.0"
+    },
+    {
+        "name": "draco3d"
+    },
+    {
+        "name": "earcut"
+    },
+    {
+        "name": "grapheme-splitter"
+    },
+    {
+        "name": "jsep"
+    },
+    {
+        "name": "kdbush"
+    },
+    {
+        "name": "Knockout",
+        "license": "MIT",
+        "version": "3.5.1",
+        "url": "https://knockoutjs.com/"
+    },
+    {
+        "name": "Knockout ES5 plugin",
+        "license": "MIT",
+        "version": "0.4.6",
+        "url": "https://github.com/SteveSanderson/knockout-es5"
+    },
+    {
+        "name": "ktc-parse"
+    },
+    {
+        "name": "lerc"
+    },
+    {
+        "name": "mersenne-twister"
+    },
+    {
+        "name": "meshoptimizer"
+    },
+    {
+        "name": "nosleep.js"
+    },
+    {
+        "name": "pako"
+    },
+    {
+        "name": "protobufjs"
+    },
+    {
+        "name": "rbush"
+    },
+    {
+        "name": "requirejs",
+        "license": "MIT",
+        "version": "2.1.20",
+        "url": "https://www.npmjs.com/package/requirejs"
+    },
+    {
+        "name": "topojson-client"
+    },
+    {
+        "name": "tween.js"
+    },
+    {
+        "name": "urijs"
+    },
+    {
+        "name": "@zip.js/zip.js"
+    }
+]

@@ -1,107 +1,143 @@
 [
-    {
-      "name": "Autolinker.js",
-      "license": "MIT",
-      "url": "https://github.com/gregjacobs/Autolinker.js"
-    },
-    {
-        "name": "bitmap-sdf",
-        "license": "MIT",
-        "url": "https://github.com/dy/bitmap-sdf"
-    },
-    {
-        "name": "DOMPurify",
-        "license": "Apache-2.0",
-        "url": "https://github.com/cure53/DOMPurify"
-    },
-    {
-        "name": "Draco",
-        "license": "Apache-2.0",
-        "url": "https://github.com/google/draco"
-    },
-    {
-        "name": "earcut",
-        "license": "ISC",
-        "url": "https://github.com/mapbox/earcut"
-    },
-    {
-        "name": "GraphemeSplitter",
-        "license": "MIT",
-        "url": "https://github.com/orling/grapheme-splitter"
-    },
-    {
-        "name": "jsep",
-        "license": "MIT",
-        "url": "https://github.com/EricSmekens/jsep"
-    },
-    {
-        "name": "kdbush",
-        "license": "ISC",
-        "url": "https://github.com/mourner/kdbush"
-    },
-    {
-        "name": "KTX-Parse",
-        "license": "MIT",
-        "url": "https://github.com/donmccurdy/KTX-Parse/"
-    },
-    {
-        "name": "LERC",
-        "license": "Apache-2.0",
-        "url": "http://github.com/Esri/lerc/"
-    },
-    {
-        "name": "mersenne-twister.js",
-        "license": "BSD-3-Clause",
-        "url": "https://gist.github.com/banksean/300494"
-    },
-    {
-        "name": "meshoptimizer",
-        "license": "MIT",
-        "url": "https://github.com/zeux/meshoptimizer/blob/master/LICENSE.md"
-    },
-    {
-        "name": "NoSleep.js",
-        "license": "MIT",
-        "url": "https://github.com/richtr/NoSleep.js"
-    },
-    {
-        "name": "pako",
-        "license": "MIT",
-        "url": "https://github.com/nodeca/pako"
-    },
-    {
-        "name": "protobuf",
-        "license": "BSD-3-Clause",
-        "url": "https://github.com/dcodeIO/ProtoBuf.js"
-    },
-    {
-        "name": "rbush",
-        "license": "MIT",
-        "url": "https://github.com/mourner/rbush"
-    },
-    {
-        "name": "requirejs",
-        "url": "https://www.npmjs.com/package/requirejs",
-        "license": "MIT"
-      },
-    {
-        "name": "topojson-client",
-        "license": "ISC",
-        "url": "https://github.com/topojson/topojson-client"
-    },
-    {
-        "name": "tween.js",
-        "license": "MIT",
-        "url": "https://github.com/sole/tween.js"
-    },
-    {
-        "name": "URI.js",
-        "license": "MIT",
-        "url": "http://medialize.github.io/URI.js/"
-    },
-    {
-        "name": "zip.js",
-        "license": "BSD-3-Clause",
-        "url": "https://github.com/gildas-lormeau/zip.js"
-    },
+  {
+    "name": "@zip.js/zip.js",
+    "license": "BSD-3-Clause",
+    "version": "2.4.2",
+    "url": "https://www.npmjs.com/package/@zip.js/zip.js"
+  },
+  {
+    "name": "autolinker",
+    "license": "MIT",
+    "version": "3.14.3",
+    "url": "https://www.npmjs.com/package/autolinker"
+  },
+  {
+    "name": "basis_universal",
+    "license": "Apache-2.0",
+    "version": "1.15",
+    "url": "https://github.com/BinomialLLC/basis_universal"
+  },
+  {
+    "name": "bitmap-sdf",
+    "license": "MIT",
+    "version": "1.0.3",
+    "url": "https://www.npmjs.com/package/bitmap-sdf"
+  },
+  {
+    "name": "dompurify",
+    "license": "Apache-2.0",
+    "version": "2.3.5",
+    "url": "https://www.npmjs.com/package/dompurify"
+  },
+  {
+    "name": "draco3d",
+    "license": "Apache-2.0",
+    "version": "1.5.2",
+    "url": "https://www.npmjs.com/package/draco3d"
+  },
+  {
+    "name": "earcut",
+    "license": "ISC",
+    "version": "2.2.3",
+    "url": "https://www.npmjs.com/package/earcut"
+  },
+  {
+    "name": "grapheme-splitter",
+    "license": "MIT",
+    "version": "1.0.4",
+    "url": "https://www.npmjs.com/package/grapheme-splitter"
+  },
+  {
+    "name": "jsep",
+    "license": "MIT",
+    "version": "0.3.5",
+    "url": "https://www.npmjs.com/package/jsep"
+  },
+  {
+    "name": "kdbush",
+    "license": "ISC",
+    "version": "3.0.0",
+    "url": "https://www.npmjs.com/package/kdbush"
+  },
+  {
+    "name": "Knockout",
+    "license": "MIT",
+    "version": "3.5.1",
+    "url": "https://knockoutjs.com/"
+  },
+  {
+    "name": "Knockout ES5 plugin",
+    "license": "MIT",
+    "version": "0.4.6",
+    "url": "https://github.com/SteveSanderson/knockout-es5"
+  },
+  {
+    "name": "ktc-parse"
+  },
+  {
+    "name": "lerc",
+    "license": "Apache-2.0",
+    "version": "2.0.0",
+    "url": "https://www.npmjs.com/package/lerc"
+  },
+  {
+    "name": "mersenne-twister",
+    "license": "MIT",
+    "version": "1.1.0",
+    "url": "https://www.npmjs.com/package/mersenne-twister"
+  },
+  {
+    "name": "meshoptimizer",
+    "license": "MIT",
+    "version": "0.16.1",
+    "url": "https://www.npmjs.com/package/meshoptimizer"
+  },
+  {
+    "name": "nosleep.js",
+    "license": "MIT",
+    "version": "0.9.0",
+    "url": "https://www.npmjs.com/package/nosleep.js"
+  },
+  {
+    "name": "pako",
+    "license": "MIT",
+    "version": "1.0.11",
+    "url": "https://www.npmjs.com/package/pako"
+  },
+  {
+    "name": "protobufjs",
+    "license": "BSD-3-Clause",
+    "version": "6.7.0",
+    "url": "https://www.npmjs.com/package/protobufjs"
+  },
+  {
+    "name": "rbush",
+    "license": "MIT",
+    "version": "3.0.1",
+    "url": "https://www.npmjs.com/package/rbush"
+  },
+  {
+    "name": "requirejs",
+    "license": "MIT",
+    "version": "2.1.20",
+    "url": "https://www.npmjs.com/package/requirejs"
+  },
+  {
+    "name": "topojson-client",
+    "license": "ISC",
+    "version": "3.1.0",
+    "url": "https://www.npmjs.com/package/topojson-client"
+  },
+  {
+    "name": "tween.js",
+    "license": "MIT",
+    "version": "16.6.0",
+    "url": "https://www.npmjs.com/package/tween.js"
+  },
+  {
+    "name": "urijs",
+    "license": "MIT",
+    "version": "1.19.7",
+    "url": "https://www.npmjs.com/package/urijs"
+  }
 ]
