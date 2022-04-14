@@ -98,12 +98,10 @@ function VoxelEllipsoidShape() {
     ellipsoidRadiiUv: new Cartesian3(),
     ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     // Wedge uniforms
-    ellipsoidWestUv: 0.0,
-    ellipsoidScaleLongitudeUvToBoundsLongitudeUv: 0.0,
-    ellipsoidOffsetLongitudeUvToBoundsLongitudeUv: 0.0,
+    ellipsoidMinLongitudeUv: 0.0,
+    ellipsoidLongitudeUvScaleAndOffset: new Cartesian2(),
     // Cone uniforms
-    ellipsoidScaleLatitudeUvToBoundsLatitudeUv: 0.0,
-    ellipsoidOffsetLatitudeUvToBoundsLatitudeUv: 0.0,
+    ellipsoidLatitudeUvScaleAndOffset: new Cartesian2(),
     // Inner ellipsoid uniforms
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipsoidInverseInnerScaleUv: 0.0,
@@ -379,9 +377,12 @@ VoxelEllipsoidShape.prototype.update = function (
     const scale = defaultLongitudeLength / rectangleWidth;
     const offset = -(west - defaultMinLongitude) / rectangleWidth;
 
-    shaderUniforms.ellipsoidWestUv = westUv;
-    shaderUniforms.ellipsoidScaleLongitudeUvToBoundsLongitudeUv = scale;
-    shaderUniforms.ellipsoidOffsetLongitudeUvToBoundsLongitudeUv = offset;
+    shaderUniforms.ellipsoidMinLongitudeUv = westUv;
+    shaderUniforms.ellipsoidLongitudeUvScaleAndOffset = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.ellipsoidLongitudeUvScaleAndOffset
+    );
   }
 
   if (isAngleFlipped) {
@@ -402,8 +403,11 @@ VoxelEllipsoidShape.prototype.update = function (
     const scale = defaultLatitudeLength / rectangleHeight;
     const offset = -(south - defaultMinLatitude) / rectangleHeight;
 
-    shaderUniforms.ellipsoidScaleLatitudeUvToBoundsLatitudeUv = scale;
-    shaderUniforms.ellipsoidOffsetLatitudeUvToBoundsLatitudeUv = offset;
+    shaderUniforms.ellipsoidLatitudeUvScaleAndOffset = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.ellipsoidLatitudeUvScaleAndOffset
+    );
   }
 
   // Intersects a cone for min latitude

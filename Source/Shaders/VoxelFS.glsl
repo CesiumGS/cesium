@@ -193,22 +193,21 @@ uniform float u_stepSize;
     /* Box defines:
     #define BOX_INTERSECTION_COUNT ### // always 1
     #define BOX_INTERSECTION_INDEX ### // always 0
-    #define BOX_BOUNDED
-    #define BOX_XY_PLANE
-    #define BOX_XZ_PLANE
-    #define BOX_YZ_PLANE
+    #define BOX_IS_BOUNDED
+    #define BOX_IS_RECTANGLE
     */
 
     // Box uniforms:
-    #if defined(BOX_BOUNDED)
+    #if defined(BOX_IS_BOUNDED)
         uniform vec3 u_boxScaleUvToBoundsUv;
-        uniform vec3 u_boxTranslateUvToBoundsUv;
-        #if defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
+        uniform vec3 u_boxOffsetUvToBoundsUv;
+        #if defined(BOX_IS_RECTANGLE)
+            // This matrix bakes in an axis conversion so that the math works for XY plane.
             uniform mat4 u_boxTransformUvToBounds;
         #else
             // Similar to u_boxTransformUvToBounds but fewer instructions needed.
             uniform vec3 u_boxScaleUvToBounds;
-            uniform vec3 u_boxTranslateUvToBounds;
+            uniform vec3 u_boxOffsetUvToBounds;
         #endif
     #endif
 #endif
@@ -239,21 +238,20 @@ uniform float u_stepSize;
 
     // Ellipsoid uniforms
     uniform vec3 u_ellipsoidRadiiUv; // [0,1]
-    uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
-
+    #if !defined(ELLIPSOID_IS_SPHERE)
+        uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
+    #endif
     #if defined(ELLIPSOID_WEDGE) || defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
         uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi].
     #endif
-    #if defined(ELLIPSOID_WEDGE) && defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
-        uniform float u_ellipsoidWestUv;
-    #endif
     #if defined(ELLIPSOID_WEDGE)
-        uniform float u_ellipsoidScaleLongitudeUvToBoundsLongitudeUv;
-        uniform float u_ellipsoidOffsetLongitudeUvToBoundsLongitudeUv;
+        uniform vec2 u_ellipsoidLongitudeUvScaleAndOffset;
+        #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
+            uniform float u_ellipsoidMinLongitudeUv;
+        #endif
     #endif
     #if defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
-        uniform float u_ellipsoidScaleLatitudeUvToBoundsLatitudeUv;
-        uniform float u_ellipsoidOffsetLatitudeUvToBoundsLatitudeUv;
+        uniform vec2 u_ellipsoidLatitudeUvScaleAndOffset;
     #endif
     #if defined(ELLIPSOID_INNER) && !defined(ELLIPSOID_INNER_OUTER_EQUAL)
         uniform float u_ellipsoidInverseHeightDifferenceUv;
@@ -272,11 +270,11 @@ uniform float u_stepSize;
     #define CYLINDER_INNER_INDEX ### // when there's an inner cylinder
     #define CYLINDER_HEIGHT_NON_DEFAULT ### //
     #define CYLINDER_HEIGHT_ZERO // when the height is 0
-    #define CYLINDER_ANGLE_FLIPPED //
     #define CYLINDER_WEDGE //
     #define CYLINDER_WEDGE_INDEX // 
     #define CYLINDER_WEDGE_REGULAR ### // when there's a wedge
     #define CYLINDER_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
+    #define CYLINDER_WEDGE_ANGLE_FLIPPED //
     */
 
     // Cylinder uniforms
@@ -284,26 +282,21 @@ uniform float u_stepSize;
         uniform vec3 u_cylinderScaleUvToBounds;
         uniform vec3 u_cylinderTranslateUvToBounds;
     #endif
-
-    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-        uniform float u_cylinderScaleRadiusUvToBoundsRadiusUv;
-        uniform float u_cylinderOffsetRadiusUvToBoundsRadiusUv;
-    #endif
-
     #if defined(CYLINDER_INNER) && !defined(CYLINDER_INNER_OUTER_EQUAL)
-        uniform vec3 u_cylinderScaleUvToInnerBounds;
-        uniform vec3 u_cylinderTranslateUvToInnerBounds;
+        uniform float u_cylinderInverseInnerRadiusUv;
+    #endif
+    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
+        uniform vec2 u_cylinderRadiusUvScaleAndOffset;
     #endif
     #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        uniform float u_cylinderScaleHeightUvToBoundsHeightUv;
-        uniform float u_cylinderOffsetHeightUvToBoundsHeightUv;
+        uniform vec2 u_cylinderHeightUvScaleAndOffset;
     #endif
     #if defined(CYLINDER_WEDGE)
-        uniform float u_cylinderMinAngle;
-        uniform float u_cylinderMaxAngle;
-        uniform float u_cylinderMinAngleUv;
-        uniform float u_cylinderScaleAngleUvToBoundsAngleUv;
-        uniform float u_cylinderOffsetAngleUvToBoundsAngleUv;
+        uniform vec2 u_cylinderAngleMinMax;
+        uniform vec2 u_cylinderAngleUvScaleAndOffset;
+        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED)
+            uniform float u_cylinderMinAngleUv;
+        #endif
     #endif
 #endif
 
@@ -896,21 +889,22 @@ float ellipseDistanceAnalytical(vec2 pos, vec2 radii) {
 #if defined(SHAPE_BOX)
 void intersectBoxShape(Ray ray, out Intersections ix)
 {
-    #if !defined(BOX_BOUNDED)
-        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-        // Direction is scaled as well to be in sync with position. 
-        ray.pos = ray.pos * 2.0 - 1.0;
-        ray.dir = ray.dir * 2.0;
+    #if defined(BOX_IS_BOUNDED)
+        // Transform the ray into unit cube space
+        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxOffsetUvToBounds;
+        ray.dir *= u_boxScaleUvToBounds;
         vec2 entryExit = intersectUnitCube(ray);
-    #elif defined(BOX_XY_PLANE) || defined(BOX_XZ_PLANE) || defined(BOX_YZ_PLANE)
+    #elif defined(BOX_IS_RECTANGLE)
         // Transform the ray into unit square space on Z plane
+        // This matrix bakes in an axis conversion so that the math works for XY plane.
         ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
         ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
         vec2 entryExit = intersectUnitSquare(ray);
     #else
-        // Transform the ray into unit cube space
-        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxTranslateUvToBounds;
-        ray.dir *= u_boxScaleUvToBounds;
+        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+        // Direction is scaled as well to be in sync with position. 
+        ray.pos = ray.pos * 2.0 - 1.0;
+        ray.dir = ray.dir * 2.0;
         vec2 entryExit = intersectUnitCube(ray);
     #endif
 
@@ -920,8 +914,8 @@ void intersectBoxShape(Ray ray, out Intersections ix)
 
 #if defined(SHAPE_BOX)
 vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
-    #if defined(BOX_BOUNDED)
-        return positionUv * u_boxScaleUvToBoundsUv + u_boxTranslateUvToBoundsUv;
+    #if defined(BOX_IS_BOUNDED)
+        return positionUv * u_boxScaleUvToBoundsUv + u_boxOffsetUvToBoundsUv;
     #else
         return positionUv;
     #endif
@@ -945,33 +939,31 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_INNER)
-        #if defined(ELLIPSOID_INNER_OUTER_EQUAL) 
-            // When the ellipsoid is perfectly thin it's necessary to sandwich the
-            // inner ellipsoid intersection inside the outer ellipsoid intersection.
-            
-            // Without this special case,
-            // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
-            // [outerMin, innerMin, outerMax, innerMax] which will cause the back
-            // side of the ellipsoid to be invisible because it will think the ray
-            // is still inside the inner (negative) ellipsoid after exiting the
-            // outer (positive) ellipsoid. 
+    #if defined(ELLIPSOID_INNER_OUTER_EQUAL) 
+        // When the ellipsoid is perfectly thin it's necessary to sandwich the
+        // inner ellipsoid intersection inside the outer ellipsoid intersection.
+        
+        // Without this special case,
+        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
+        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
+        // side of the ellipsoid to be invisible because it will think the ray
+        // is still inside the inner (negative) ellipsoid after exiting the
+        // outer (positive) ellipsoid. 
 
-            // With this special case,
-            // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
-            // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
+        // With this special case,
+        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
+        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
 
-            // Note: If initializeIntersections() changes its sorting function
-            // from bubble sort to something else, this code may need to change.
-            setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
-            setIntersection(ix, 1, outerIntersect.x, false, true);  // negative, enter
-            setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
-            setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
-        #else
-            Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
-            vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-            setIntersectionPair(ix, ELLIPSOID_INNER_INDEX, innerIntersect);
-        #endif
+        // Note: If initializeIntersections() changes its sorting function
+        // from bubble sort to something else, this code may need to change.
+        setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
+        setIntersection(ix, 1, outerIntersect.x, false, true);  // negative, enter
+        setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
+        setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+    #elif defined(ELLIPSOID_INNER)
+        Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
+        vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
+        setIntersectionPair(ix, ELLIPSOID_INNER_INDEX, innerIntersect);
     #endif
         
     // Flip the ray because the intersection function expects a cone growing towards +Z.
@@ -1043,15 +1035,15 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
     #if defined(ELLIPSOID_WEDGE)
         #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
-            longitude += float(longitude <= u_ellipsoidWestUv);
+            longitude += float(longitude <= u_ellipsoidMinLongitudeUv);
         #endif
-        longitude = longitude * u_ellipsoidScaleLongitudeUvToBoundsLongitudeUv + u_ellipsoidOffsetLongitudeUvToBoundsLongitudeUv;
+        longitude = longitude * u_ellipsoidLongitudeUvScaleAndOffset.x + u_ellipsoidLongitudeUvScaleAndOffset.y;
     #endif
 
     // Compute latitude
     float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
     #if (defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP))
-        latitude = latitude * u_ellipsoidScaleLatitudeUvToBoundsLatitudeUv + u_ellipsoidOffsetLatitudeUvToBoundsLatitudeUv;
+        latitude = latitude * u_ellipsoidLatitudeUvScaleAndOffset.x + u_ellipsoidLatitudeUvScaleAndOffset.y;
     #endif
 
     // Compute height
@@ -1130,16 +1122,16 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
         setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
     #elif defined(CYLINDER_INNER)
-        Ray innerRay = Ray(ray.pos * u_cylinderScaleUvToInnerBounds + u_cylinderTranslateUvToInnerBounds, ray.dir * u_cylinderScaleUvToInnerBounds);
+        Ray innerRay = Ray(outerRay.pos * u_cylinderInverseInnerRadiusUv, outerRay.dir * u_cylinderInverseInnerRadiusUv);
         vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
         setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
     #endif
 
     #if defined(CYLINDER_WEDGE_REGULAR)
-        vec2 wedgeIntersect = intersectRegularWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
+        vec2 wedgeIntersect = intersectRegularWedge(outerRay, u_cylinderAngleMinMax.x, u_cylinderAngleMinMax.y);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
     #elif defined(CYLINDER_WEDGE_FLIPPED)
-        vec4 wedgeIntersect = intersectFlippedWedge(outerRay, u_cylinderMinAngle, u_cylinderMaxAngle);
+        vec4 wedgeIntersect = intersectFlippedWedge(outerRay, u_cylinderAngleMinMax.x, u_cylinderAngleMinMax.y);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, wedgeIntersect.xy);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, wedgeIntersect.zw);
     #endif
@@ -1159,23 +1151,23 @@ vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
     #else
         float radius = length(positionLocal.xy); // [0,1]
         #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-            radius = radius * u_cylinderScaleRadiusUvToBoundsRadiusUv + u_cylinderOffsetRadiusUvToBoundsRadiusUv;
+            radius = radius * u_cylinderRadiusUvScaleAndOffset.x + u_cylinderRadiusUvScaleAndOffset.y;
         #endif
     #endif
     
     // Compute height
     float height = positionUv.z; // [0,1]
     #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        height = height * u_cylinderScaleHeightUvToBoundsHeightUv + u_cylinderOffsetHeightUvToBoundsHeightUv;
+        height = height * u_cylinderHeightUvScaleAndOffset.x + u_cylinderHeightUvScaleAndOffset.y;
     #endif
 
     // Compute angle
     float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
     #if defined(CYLINDER_WEDGE)
-        #if defined(CYLINDER_ANGLE_FLIPPED)
+        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED)
             angle += float(angle <= u_cylinderMinAngleUv);
         #endif
-        angle = angle * u_cylinderScaleAngleUvToBoundsAngleUv + u_cylinderOffsetAngleUvToBoundsAngleUv;
+        angle = angle * u_cylinderAngleUvScaleAndOffset.x + u_cylinderAngleUvScaleAndOffset.y;
     #endif
 
     return vec3(radius, height, angle);

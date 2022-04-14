@@ -1,4 +1,5 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
@@ -95,17 +96,12 @@ function VoxelCylinderShape() {
   this.shaderUniforms = {
     cylinderScaleUvToBounds: new Cartesian3(),
     cylinderTranslateUvToBounds: new Cartesian3(),
-    cylinderScaleUvToInnerBounds: new Cartesian3(),
-    cylinderTranslateUvToInnerBounds: new Cartesian3(),
-    cylinderScaleRadiusUvToBoundsRadiusUv: 0.0,
-    cylinderOffsetRadiusUvToBoundsRadiusUv: 0.0,
-    cylinderScaleHeightUvToBoundsHeightUv: 0.0,
-    cylinderOffsetHeightUvToBoundsHeightUv: 0.0,
-    cylinderMinAngle: 0.0,
-    cylinderMaxAngle: 0.0,
+    cylinderInverseInnerRadiusUv: 0.0,
+    cylinderAngleMinMax: new Cartesian2(),
+    cylinderRadiusUvScaleAndOffset: new Cartesian2(),
+    cylinderHeightUvScaleAndOffset: new Cartesian2(),
+    cylinderAngleUvScaleAndOffset: new Cartesian2(),
     cylinderMinAngleUv: 0.0,
-    cylinderScaleAngleUvToBoundsAngleUv: 0.0,
-    cylinderOffsetAngleUvToBoundsAngleUv: 0.0,
   };
 
   /**
@@ -121,7 +117,7 @@ function VoxelCylinderShape() {
     CYLINDER_INNER_INDEX: undefined,
     CYLINDER_HEIGHT_NON_DEFAULT: undefined,
     CYLINDER_HEIGHT_ZERO: undefined,
-    CYLINDER_ANGLE_FLIPPED: undefined,
+    CYLINDER_WEDGE_ANGLE_FLIPPED: undefined,
     CYLINDER_WEDGE_INDEX: undefined,
     CYLINDER_WEDGE_REGULAR: undefined,
     CYLINDER_WEDGE_FLIPPED: undefined,
@@ -326,40 +322,7 @@ VoxelCylinderShape.prototype.update = function (
   }
 
   if (!isDefaultOuterCylinder || hasInnerCylinder || !isDefaultHeight) {
-    const boundsScaleLocalToInnerBounds = Cartesian3.fromElements(
-      1.0 / minRadius,
-      1.0 / minRadius,
-      1.0 / (maxHeight === minHeight ? 1.0 : 0.5 * (maxHeight - minHeight)),
-      scratchBoundsScale
-    );
-
-    // -inverse(scale) * translation // affine inverse
-    // -inverse(scale) * 0.5 * (minHeight + maxHeight)
-    const boundsTranslateLocalToInnerBounds = Cartesian3.fromElements(
-      0.0,
-      0.0,
-      -boundsScaleLocalToInnerBounds.z * 0.5 * (minHeight + maxHeight),
-      scratchBoundsTranslation
-    );
-
-    const transformLocalToBounds = Matrix4.fromRotationTranslation(
-      Matrix3.fromScale(boundsScaleLocalToInnerBounds),
-      boundsTranslateLocalToInnerBounds,
-      scratchTransformLocalToBounds
-    );
-    const transformUvToBounds = Matrix4.multiplyTransformation(
-      transformLocalToBounds,
-      transformUvToLocal,
-      scratchTransformUvToBounds
-    );
-    shaderUniforms.cylinderScaleUvToInnerBounds = Matrix4.getScale(
-      transformUvToBounds,
-      shaderUniforms.cylinderScaleUvToInnerBounds
-    );
-    shaderUniforms.cylinderTranslateUvToInnerBounds = Matrix4.getTranslation(
-      transformUvToBounds,
-      shaderUniforms.cylinderTranslateUvToInnerBounds
-    );
+    shaderUniforms.cylinderInverseInnerRadiusUv = maxRadius / minRadius;
 
     // delerp(radius, minRadius, maxRadius)
     // (radius - minRadius) / (maxRadius - minRadius)
@@ -371,8 +334,11 @@ VoxelCylinderShape.prototype.update = function (
     const scale = 1.0 / (maxRadius - minRadius);
     const offset = minRadius / (minRadius - maxRadius);
 
-    shaderUniforms.cylinderScaleRadiusUvToBoundsRadiusUv = scale;
-    shaderUniforms.cylinderOffsetRadiusUvToBoundsRadiusUv = offset;
+    shaderUniforms.cylinderRadiusUvScaleAndOffset = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.cylinderRadiusUvScaleAndOffset
+    );
   }
 
   if (!isDefaultHeight) {
@@ -397,20 +363,40 @@ VoxelCylinderShape.prototype.update = function (
     const scale = 2.0 / (maxHeight - minHeight);
     const offset = (minHeight + 1.0) / (minHeight - maxHeight);
 
-    shaderUniforms.cylinderScaleHeightUvToBoundsHeightUv = scale;
-    shaderUniforms.cylinderOffsetHeightUvToBoundsHeightUv = offset;
+    shaderUniforms.cylinderHeightUvScaleAndOffset = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.cylinderHeightUvScaleAndOffset
+    );
   }
 
   if (isAngleFlipped) {
-    shaderDefines["CYLINDER_ANGLE_FLIPPED"] = true;
+    shaderDefines["CYLINDER_WEDGE_ANGLE_FLIPPED"] = true;
   }
 
+  // Intersects a wedge for the min and max longitude.
   if (hasWedge) {
     shaderDefines["CYLINDER_WEDGE"] = true;
     shaderDefines["CYLINDER_WEDGE_INDEX"] = intersectionCount;
 
-    shaderUniforms.cylinderMinAngle = minAngle;
-    shaderUniforms.cylinderMaxAngle = maxAngle;
+    if (hasWedgeRegular) {
+      shaderDefines["CYLINDER_WEDGE_REGULAR"] = true;
+      intersectionCount += 1;
+    } else if (hasWedgeFlipped) {
+      shaderDefines["CYLINDER_WEDGE_FLIPPED"] = true;
+      intersectionCount += 2;
+    }
+
+    shaderUniforms.cylinderAngleMinMax = Cartesian2.fromElements(
+      minAngle,
+      maxAngle,
+      shaderUniforms.cylinderAngleMinMax
+    );
+
+    if (isAngleFlipped) {
+      const minAngleUv = (minAngle - defaultMinAngle) / defaultAngleWidth;
+      shaderUniforms.cylinderMinAngleUv = minAngleUv;
+    }
 
     // delerp(angleUv, minAngleUv, maxAngleUv)
     // (angelUv - minAngleUv) / (maxAngleUv - minAngleUv)
@@ -422,22 +408,14 @@ VoxelCylinderShape.prototype.update = function (
     // offset = -((minAngle - pi) / (2.0 * pi)) / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
     // offset = -(minAngle - pi) / (maxAngle - minAngle)
 
-    const minAngleUv = (minAngle - defaultMinAngle) / defaultAngleWidth;
     const scale = defaultAngleWidth / angleWidth;
     const offset = -(minAngle - defaultMinAngle) / angleWidth;
 
-    shaderUniforms.cylinderMinAngleUv = minAngleUv;
-    shaderUniforms.cylinderScaleAngleUvToBoundsAngleUv = scale;
-    shaderUniforms.cylinderOffsetAngleUvToBoundsAngleUv = offset;
-
-    if (hasWedgeRegular) {
-      // Intersects a wedge for the min and max longitude.
-      shaderDefines["CYLINDER_WEDGE_REGULAR"] = true;
-      intersectionCount += 1;
-    } else if (hasWedgeFlipped) {
-      shaderDefines["CYLINDER_WEDGE_FLIPPED"] = true;
-      intersectionCount += 2;
-    }
+    shaderUniforms.cylinderAngleUvScaleAndOffset = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.cylinderAngleUvScaleAndOffset
+    );
   }
 
   shaderDefines["CYLINDER_INTERSECTION_COUNT"] = intersectionCount;
