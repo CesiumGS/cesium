@@ -408,6 +408,9 @@ struct Intersections {
 #endif
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
+#define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection(ix, (index) * 2 + 0), getIntersection(ix, (index) * 2 + 1))
+
+// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
 #if (SCENE_INTERSECTION_COUNT > 1)
     #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
 #else
@@ -470,13 +473,13 @@ vec2 nextIntersection(inout Intersections ix) {
 #endif
 
 #if (SCENE_INTERSECTION_COUNT > 1)
-vec2 initializeIntersections(inout Intersections ix) {
+void initializeIntersections(inout Intersections ix) {
     // Sort the intersections from min T to max T with bubble sort.
     // Note: If this sorting function changes, some of the intersection test may
     // need to be updated. Search for "bubble sort" to find those areas.
-    const int passes = SCENE_INTERSECTION_COUNT * 2 - 1;
-    for (int n = passes; n > 0; --n) {
-        for (int i = 0; i < passes; ++i) {
+    const int sortPasses = SCENE_INTERSECTION_COUNT * 2 - 1;
+    for (int n = sortPasses; n > 0; --n) {
+        for (int i = 0; i < sortPasses; ++i) {
             // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
             // loop with non-constant condition, so it has to break early instead
             if (i >= n) { break; }
@@ -503,8 +506,6 @@ vec2 initializeIntersections(inout Intersections ix) {
     ix.index = 0;
     ix.surroundCount = 0;
     ix.surroundIsPositive = false;
-
-    return nextIntersection(ix);
 }
 #endif
 
@@ -1216,9 +1217,9 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
     // Do a ray-shape intersection to find the exact starting and ending points.
     intersectShape(ray, ix);
 
-    // Check if the positive shape was completely missed, and if so, exit early.
-    float entryPositiveShapeT = getIntersection(ix, 0);
-    if (entryPositiveShapeT == NO_HIT) {
+    // Exit early if the positive shape was completely missed or behind the ray.
+    vec2 entryExitT = getIntersectionPair(ix, 0);
+    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
         return vec2(NO_HIT);
     }
 
@@ -1228,21 +1229,21 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
         setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(depthT, +INF_HIT));
     #endif
 
-    // Find the first intersection interval
+    // Find the first intersection that's in front of the ray
     #if (SCENE_INTERSECTION_COUNT > 1)
-        vec2 entryExitT = initializeIntersections(ix);
+        initializeIntersections(ix);
+        for (int i = 0; i < SCENE_INTERSECTION_COUNT; i++) {
+            entryExitT = nextIntersection(ix);
+            if (entryExitT.y > 0.0) {
+                // Set start to 0.0 when ray is inside the shape.
+                entryExitT.x = max(entryExitT.x, 0.0);
+                break;
+            }
+        }
     #else
-        float exitPositiveShapeT = getIntersection(ix, 1);
-        vec2 entryExitT = vec2(entryPositiveShapeT, exitPositiveShapeT);
+        // Set start to 0.0 when ray is inside the shape.
+        entryExitT.x = max(entryExitT.x, 0.0);
     #endif
-
-    // Intersection is invalid when start and end are behind the ray.
-    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
-        return vec2(NO_HIT);
-    }
-    
-    // Set start to 0.0 when ray is inside the shape.
-    entryExitT.x = max(entryExitT.x, 0.0);
 
     return entryExitT;
 }
