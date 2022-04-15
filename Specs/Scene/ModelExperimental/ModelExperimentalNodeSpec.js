@@ -3,7 +3,9 @@ import {
   Cartesian3,
   InstancingPipelineStage,
   Matrix4,
+  Math as CesiumMath,
   ModelExperimentalNode,
+  ModelExperimentalUtility,
   ModelMatrixUpdateStage,
 } from "../../../Source/Cesium.js";
 
@@ -216,5 +218,48 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node._transformDirty).toBe(true);
     expect(Matrix4.equals(node.transform, newTransform)).toBe(true);
     expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
+  });
+
+  it("updateTransforms updates matrices", function () {
+    const node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    const axisCorrected = ModelExperimentalUtility.correctModelMatrix(
+      Matrix4.IDENTITY,
+      mockSceneGraph.components.upAxis,
+      mockSceneGraph.components.forwardAxis,
+      new Matrix4()
+    );
+
+    expect(Matrix4.equals(node.computedTransform, Matrix4.IDENTITY)).toBe(true);
+    expect(Matrix4.equals(node.axisCorrectedTransform, axisCorrected)).toBe(
+      true
+    );
+
+    const newTransform = Matrix4.multiplyByTranslation(
+      Matrix4.IDENTITY,
+      new Cartesian3(10, 0, 0),
+      new Matrix4()
+    );
+
+    node.transform = newTransform;
+    node.updateTransforms();
+
+    const expected = Matrix4.multiply(
+      newTransform,
+      axisCorrected,
+      new Matrix4()
+    );
+
+    expect(Matrix4.equals(node.computedTransform, newTransform)).toBe(true);
+    expect(
+      Matrix4.equalsEpsilon(node.axisCorrectedTransform, expected),
+      CesiumMath.EPSILON8
+    ).toBe(true);
   });
 });
