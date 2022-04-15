@@ -102,6 +102,8 @@ function VoxelEllipsoidShape() {
     ellipsoidLongitudeUvScaleAndOffset: new Cartesian2(),
     // Cone uniforms
     ellipsoidLatitudeUvScaleAndOffset: new Cartesian2(),
+    ellipsoidMinLatitudeCosSqrHalfAngle: 0.0,
+    ellipsoidMaxLatitudeCosSqrHalfAngle: 0.0,
     // Inner ellipsoid uniforms
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipsoidInverseInnerScaleUv: 0.0,
@@ -122,10 +124,12 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_CONE_BOTTOM: undefined,
     ELLIPSOID_CONE_BOTTOM_REGULAR: undefined,
     ELLIPSOID_CONE_BOTTOM_FLIPPED: undefined,
+    ELLIPSOID_CONE_BOTTOM_FLAT: undefined,
     ELLIPSOID_CONE_BOTTOM_INDEX: undefined,
     ELLIPSOID_CONE_TOP: undefined,
     ELLIPSOID_CONE_TOP_REGULAR: undefined,
     ELLIPSOID_CONE_TOP_FLIPPED: undefined,
+    ELLIPSOID_CONE_TOP_FLAT: undefined,
     ELLIPSOID_CONE_TOP_INDEX: undefined,
     ELLIPSOID_OUTER: undefined,
     ELLIPSOID_OUTER_INDEX: undefined,
@@ -302,13 +306,19 @@ VoxelEllipsoidShape.prototype.update = function (
   const hasWedgeFlipped = rectangleWidth < CesiumMath.PI;
   const hasWedge = hasWedgeRegular || hasWedgeFlipped;
 
-  const hasTopConeRegular = north >= 0.0 && north < +CesiumMath.PI_OVER_TWO;
-  const hasTopConeFlipped = north < 0.0;
-  const hasTopCone = hasTopConeRegular || hasTopConeFlipped;
+  const flatConeEpsilon = CesiumMath.EPSILON4; // 0.0001 radians = 0.00573 degrees
+  const hasTopConeRegular =
+    north > +flatConeEpsilon && north < defaultMaxLatitude;
+  const hasTopConeFlipped = north < -flatConeEpsilon;
+  const hasTopConeFlat = north >= -flatConeEpsilon && north <= +flatConeEpsilon;
+  const hasTopCone = hasTopConeRegular || hasTopConeFlipped || hasTopConeFlat;
 
-  const hasBottomConeRegular = south <= 0.0 && south > -CesiumMath.PI_OVER_TWO;
-  const hasBottomConeFlipped = south > 0.0;
-  const hasBottomCone = hasBottomConeRegular || hasBottomConeFlipped;
+  const hasBottomConeRegular =
+    south > defaultMinLatitude && south < -flatConeEpsilon;
+  const hasBottomConeFlipped = south > +flatConeEpsilon;
+  const hasBottomConeFlat = south === 0.0;
+  const hasBottomCone =
+    hasBottomConeRegular || hasBottomConeFlipped || hasBottomConeFlat;
 
   const isSphere = radii.x === radii.y && radii.y === radii.z;
 
@@ -408,6 +418,19 @@ VoxelEllipsoidShape.prototype.update = function (
       offset,
       shaderUniforms.ellipsoidLatitudeUvScaleAndOffset
     );
+
+    const minAngle = hasBottomConeRegular ? -south : south;
+    const maxAngle = hasTopConeFlipped ? -north : north;
+    const minCosHalfAngle = Math.cos(
+      CesiumMath.PI_OVER_TWO - Math.abs(minAngle)
+    );
+    const maxCosHalfAngle = Math.cos(
+      CesiumMath.PI_OVER_TWO - Math.abs(maxAngle)
+    );
+    shaderUniforms.ellipsoidMinLatitudeCosSqrHalfAngle =
+      minCosHalfAngle * minCosHalfAngle;
+    shaderUniforms.ellipsoidMaxLatitudeCosSqrHalfAngle =
+      maxCosHalfAngle * maxCosHalfAngle;
   }
 
   // Intersects a cone for min latitude
@@ -421,6 +444,9 @@ VoxelEllipsoidShape.prototype.update = function (
     } else if (hasBottomConeFlipped) {
       shaderDefines["ELLIPSOID_CONE_BOTTOM_FLIPPED"] = true;
       intersectionCount += 2;
+    } else if (hasBottomConeFlat) {
+      shaderDefines["ELLIPSOID_CONE_BOTTOM_FLAT"] = true;
+      intersectionCount += 1;
     }
   }
 
@@ -435,6 +461,9 @@ VoxelEllipsoidShape.prototype.update = function (
     } else if (hasTopConeFlipped) {
       shaderDefines["ELLIPSOID_CONE_TOP_FLIPPED"] = true;
       intersectionCount += 2;
+    } else if (hasTopConeFlat) {
+      shaderDefines["ELLIPSOID_CONE_TOP_FLAT"] = true;
+      intersectionCount += 1;
     }
   }
 
