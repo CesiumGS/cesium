@@ -90,19 +90,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.runtimeNode = runtimeNode;
 
   /**
-   * The transform from the node's local space to scene graph space for this node.
-   *
-   * @type {Matrix4}
-   *
-   * @private
-   */
-  this.transform = Matrix4.multiplyTransformation(
-    runtimeNode.transformToRoot,
-    runtimeNode.transform,
-    new Matrix4()
-  );
-
-  /**
    * An array of objects describing vertex attributes that will eventually
    * be used to create a {@link VertexArray} for the draw command. Attributes
    * at the node level may be needed for extensions such as EXT_mesh_gpu_instancing.
