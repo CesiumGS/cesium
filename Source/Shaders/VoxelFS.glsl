@@ -218,6 +218,7 @@ uniform float u_stepSize;
     #define ELLIPSOID_WEDGE
     #define ELLIPSOID_WEDGE_REGULAR ### // when there's a wedge 
     #define ELLIPSOID_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
+    #define ELLIPSOID_WEDGE_FLAT ###
     #define ELLIPSOID_WEDGE_INDEX ###
     #define ELLIPSOID_WEDGE_ANGLE_FLIPPED //
     #define ELLIPSOID_CONE_BOTTOM
@@ -247,11 +248,18 @@ uniform float u_stepSize;
         uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi].
     #endif
     #if defined(ELLIPSOID_WEDGE)
-        uniform vec2 u_ellipsoidLongitudeUvScaleAndOffset;
-        #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
+        #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED) || defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY) || defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            uniform float u_ellipsoidEmptyMidpointLongitudeUv;
+        #endif
+        #if defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
             uniform float u_ellipsoidMinLongitudeUv;
         #endif
+        #if defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            uniform float u_ellipsoidMaxLongitudeUv;
+        #endif
+        uniform vec2 u_ellipsoidLongitudeUvScaleAndOffset;
     #endif
+
     #if defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
         uniform vec2 u_ellipsoidLatitudeUvScaleAndOffset;
     #endif
@@ -282,6 +290,7 @@ uniform float u_stepSize;
     #define CYLINDER_WEDGE_INDEX // 
     #define CYLINDER_WEDGE_REGULAR ### // when there's a wedge
     #define CYLINDER_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
+    #define CYLINDER_WEDGE_FLAT
     #define CYLINDER_WEDGE_ANGLE_FLIPPED //
     #define CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY
     #define CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY
@@ -564,6 +573,36 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
 }
 #endif
 
+#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_FLAT) || defined(ELLIPSOID_CONE_TOP_FLAT))
+vec2 intersectZPlane(Ray ray)
+{
+    float o = ray.pos.z;
+    float d = ray.dir.z;
+    float t = -o / d;
+    float s = sign(o);
+
+    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
+    else return vec2(-INF_HIT, t);
+}
+#endif
+
+#if (defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_WEDGE_FLIPPED) || defined(ELLIPSOID_WEDGE_FLAT))) || (defined(SHAPE_CYLINDER) && (defined(CYLINDER_WEDGE_FLIPPED) || defined(CYLINDER_WEDGE_FLAT)))
+vec2 intersectHalfSpace(Ray ray, float angle)
+{    
+    vec2 o = ray.pos.xy;
+    vec2 d = ray.dir.xy;
+    vec2 n = vec2(sin(angle), -cos(angle));
+    
+    float a = dot(o, n);
+    float b = dot(d, n);
+    float t = -a / b;
+    float s = sign(a);
+
+    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
+    else return vec2(-INF_HIT, t);
+}
+#endif
+
 #if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_REGULAR)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_REGULAR))
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 {    
@@ -596,36 +635,6 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
     else if (e == g && f == h) return vec2(-INF_HIT, tmin);
     else if (e != g && f != h) return vec2(tmax, +INF_HIT);
     else return vec2(NO_HIT);
-}
-#endif
-
-#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_FLIPPED)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_FLIPPED))
-vec2 intersectHalfSpace(Ray ray, float angle)
-{    
-    vec2 o = ray.pos.xy;
-    vec2 d = ray.dir.xy;
-    vec2 n = vec2(sin(angle), -cos(angle));
-    
-    float a = dot(o, n);
-    float b = dot(d, n);
-    float t = -a / b;
-    float s = sign(a);
-
-    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
-    else return vec2(-INF_HIT, t);
-}
-#endif
-
-#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_FLAT) || defined(ELLIPSOID_CONE_TOP_FLAT))
-vec2 intersectZPlane(Ray ray)
-{
-    float o = ray.pos.z;
-    float d = ray.dir.z;
-    float t = -o / d;
-    float s = sign(o);
-
-    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
-    else return vec2(-INF_HIT, t);
 }
 #endif
 
@@ -1042,6 +1051,9 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
             vec4 wedgeIntersect = intersectFlippedWedge(ray, west, east);
             setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 0, wedgeIntersect.xy);
             setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 1, wedgeIntersect.zw);
+        #elif defined(ELLIPSOID_WEDGE_FLAT)
+            vec2 wedgeIntersect = intersectHalfSpace(ray, west);
+            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX, wedgeIntersect);
         #endif
     #endif
 }
@@ -1065,8 +1077,17 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
     #if defined(ELLIPSOID_WEDGE)
         #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
-            longitude += float(longitude <= u_ellipsoidMinLongitudeUv);
+            // Comparing against u_ellipsoidMinAngleUv has precision problems. u_ellipsoidEmptyMidpointAngleUv is more conservative.
+            longitude += float(longitude < u_ellipsoidEmptyMidpointAngleUv);
         #endif
+
+        // When the min or max angle is near the -pi/+pi discontinuity there may be flickering as both sides of the voxel data are read.
+        #if defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
+            longitude = longitude > u_ellipsoidEmptyMidpointLongitudeUv ? u_ellipsoidMinLongitudeUv : longitude;
+        #elif defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            longitude = longitude < u_ellipsoidEmptyMidpointLongitudeUv ? u_ellipsoidMaxLongitudeUv : longitude;
+        #endif
+
         longitude = longitude * u_ellipsoidLongitudeUvScaleAndOffset.x + u_ellipsoidLongitudeUvScaleAndOffset.y;
     #endif
 
@@ -1164,6 +1185,9 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         vec4 wedgeIntersect = intersectFlippedWedge(outerRay, u_cylinderAngleMinMax.x, u_cylinderAngleMinMax.y);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, wedgeIntersect.xy);
         setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, wedgeIntersect.zw);
+    #elif defined(CYLINDER_WEDGE_FLAT)
+        vec2 wedgeIntersect = intersectHalfSpace(ray, u_cylinderAngleMinMax.x);
+        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
     #endif
 }
 #endif
@@ -1598,9 +1622,6 @@ void main()
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
 
-    // gl_FragColor = vec4(positionUv, 1.0); return;
-    // gl_FragColor = vec4(transformFromUvToShapeSpace(positionUv).zzz, 1.0); return;
-    
     vec4 colorAccum = vec4(0.0);
 
     #if defined(DESPECKLE)

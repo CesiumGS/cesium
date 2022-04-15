@@ -99,6 +99,8 @@ function VoxelEllipsoidShape() {
     ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     // Wedge uniforms
     ellipsoidMinLongitudeUv: 0.0,
+    ellipsoidMaxLongitudeUv: 0.0,
+    ellipsoidEmptyMidpointLongitudeUv: 0.0,
     ellipsoidLongitudeUvScaleAndOffset: new Cartesian2(),
     // Cone uniforms
     ellipsoidLatitudeUvScaleAndOffset: new Cartesian2(),
@@ -117,10 +119,13 @@ function VoxelEllipsoidShape() {
   this.shaderDefines = {
     ELLIPSOID_INTERSECTION_COUNT: undefined,
     ELLIPSOID_WEDGE: undefined,
+    ELLIPSOID_WEDGE_INDEX: undefined,
     ELLIPSOID_WEDGE_REGULAR: undefined,
     ELLIPSOID_WEDGE_FLIPPED: undefined,
-    ELLIPSOID_WEDGE_INDEX: undefined,
+    ELLIPSOID_WEDGE_FLAT: undefined,
     ELLIPSOID_WEDGE_ANGLE_FLIPPED: undefined,
+    ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY: undefined,
+    ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY: undefined,
     ELLIPSOID_CONE_BOTTOM: undefined,
     ELLIPSOID_CONE_BOTTOM_REGULAR: undefined,
     ELLIPSOID_CONE_BOTTOM_FLIPPED: undefined,
@@ -167,6 +172,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const defaultMinLongitude = VoxelEllipsoidShape.DefaultMinBounds.x;
   const defaultMaxLongitude = VoxelEllipsoidShape.DefaultMaxBounds.x;
   const defaultLongitudeLength = defaultMaxLongitude - defaultMinLongitude;
+  const defaultLongitudeHalfLength = 0.5 * defaultLongitudeLength;
   const defaultMinLatitude = VoxelEllipsoidShape.DefaultMinBounds.y;
   const defaultMaxLatitude = VoxelEllipsoidShape.DefaultMaxBounds.y;
   const defaultLatitudeLength = defaultMaxLatitude - defaultMinLatitude;
@@ -212,15 +218,20 @@ VoxelEllipsoidShape.prototype.update = function (
   );
   const maxExtent = Cartesian3.maximumComponent(outerExtent);
 
+  const zeroScaleEpsilon = CesiumMath.EPSILON10;
+  const angleDiscontinuityEpsilon = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
+  const wedgeEpsilon = CesiumMath.EPSILON10;
+  const coneEpsilon = CesiumMath.EPSILON10;
+  const flatConeEpsilon = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
+
   // Exit early if the shape is not visible.
   // Note that west may be greater than east when crossing the 180th meridian.
-  const absEpsilon = CesiumMath.EPSILON10;
   if (
     south > north ||
     minHeight > maxHeight ||
-    CesiumMath.equalsEpsilon(outerExtent.x, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(outerExtent.y, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(outerExtent.z, 0.0, undefined, absEpsilon)
+    CesiumMath.equalsEpsilon(outerExtent.x, 0.0, undefined, zeroScaleEpsilon) ||
+    CesiumMath.equalsEpsilon(outerExtent.y, 0.0, undefined, zeroScaleEpsilon) ||
+    CesiumMath.equalsEpsilon(outerExtent.z, 0.0, undefined, zeroScaleEpsilon)
   ) {
     return false;
   }
@@ -295,28 +306,32 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderUniforms.ellipsoidInverseRadiiSquaredUv
   );
 
-  const isAngleFlipped = east < west;
-  const rectangleWidth = Rectangle.computeWidth(this._rectangle);
   const rectangleHeight = Rectangle.computeHeight(this._rectangle);
   const hasInnerEllipsoid = !Cartesian3.equals(innerExtent, Cartesian3.ZERO);
 
+  const isAngleFlipped = east < west;
+  const angleWidth = east - west + isAngleFlipped * defaultLongitudeLength;
   const hasWedgeRegular =
-    rectangleWidth >= CesiumMath.PI &&
-    CesiumMath.lessThan(rectangleWidth, CesiumMath.TWO_PI, absEpsilon);
-  const hasWedgeFlipped = rectangleWidth < CesiumMath.PI;
-  const hasWedge = hasWedgeRegular || hasWedgeFlipped;
+    angleWidth > defaultLongitudeHalfLength + wedgeEpsilon &&
+    angleWidth < defaultLongitudeLength - wedgeEpsilon;
+  const hasWedgeFlipped =
+    angleWidth < defaultLongitudeHalfLength - wedgeEpsilon;
+  const hasWedgeFlat =
+    angleWidth >= defaultLongitudeHalfLength - wedgeEpsilon &&
+    angleWidth <= defaultLongitudeHalfLength + wedgeEpsilon;
+  const hasWedge = hasWedgeRegular || hasWedgeFlipped || hasWedgeFlat;
 
-  const flatConeEpsilon = CesiumMath.EPSILON4; // 0.0001 radians = 0.00573 degrees
   const hasTopConeRegular =
-    north > +flatConeEpsilon && north < defaultMaxLatitude;
+    north > +flatConeEpsilon && north < defaultMaxLatitude - coneEpsilon;
   const hasTopConeFlipped = north < -flatConeEpsilon;
   const hasTopConeFlat = north >= -flatConeEpsilon && north <= +flatConeEpsilon;
   const hasTopCone = hasTopConeRegular || hasTopConeFlipped || hasTopConeFlat;
 
   const hasBottomConeRegular =
-    south > defaultMinLatitude && south < -flatConeEpsilon;
+    south > defaultMinLatitude + coneEpsilon && south < -flatConeEpsilon;
   const hasBottomConeFlipped = south > +flatConeEpsilon;
-  const hasBottomConeFlat = south === 0.0;
+  const hasBottomConeFlat =
+    south >= -flatConeEpsilon && south <= +flatConeEpsilon;
   const hasBottomCone =
     hasBottomConeRegular || hasBottomConeFlipped || hasBottomConeFlat;
 
@@ -334,6 +349,10 @@ VoxelEllipsoidShape.prototype.update = function (
   if (hasInnerEllipsoid) {
     shaderDefines["ELLIPSOID_INNER"] = true;
     shaderDefines["ELLIPSOID_INNER_INDEX"] = intersectionCount;
+    if (minHeight === maxHeight) {
+      shaderDefines["ELLIPSOID_INNER_OUTER_EQUAL"] = true;
+    }
+
     intersectionCount += 1;
 
     // The percent of space that is between the inner and outer ellipsoid.
@@ -356,10 +375,6 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderDefines["ELLIPSOID_IS_SPHERE"] = true;
   }
 
-  if (minHeight === maxHeight) {
-    shaderDefines["ELLIPSOID_INNER_OUTER_EQUAL"] = true;
-  }
-
   // Intersects a wedge for the min and max longitude.
   if (hasWedge) {
     shaderDefines["ELLIPSOID_WEDGE"] = true;
@@ -371,7 +386,39 @@ VoxelEllipsoidShape.prototype.update = function (
     } else if (hasWedgeFlipped) {
       shaderDefines["ELLIPSOID_WEDGE_FLIPPED"] = true;
       intersectionCount += 2;
+    } else if (hasWedgeFlat) {
+      shaderDefines["ELLIPSOID_WEDGE_FLAT"] = true;
+      intersectionCount += 1;
     }
+
+    const isMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
+      west,
+      defaultMinLongitude,
+      undefined,
+      angleDiscontinuityEpsilon
+    );
+    const isMaxAngleDiscontinuity = CesiumMath.equalsEpsilon(
+      east,
+      defaultMaxLongitude,
+      undefined,
+      angleDiscontinuityEpsilon
+    );
+
+    if (isMinAngleDiscontinuity) {
+      shaderDefines["ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY"] = true;
+    }
+    if (isMaxAngleDiscontinuity) {
+      shaderDefines["ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY"] = true;
+    }
+
+    const westUv = (west - defaultMinLongitude) / defaultLongitudeLength;
+    const eastUv = (east - defaultMinLongitude) / defaultLongitudeLength;
+    const emptyAngleWidthUv = 1.0 - angleWidth / defaultLongitudeLength;
+
+    shaderUniforms.ellipsoidMinLongitudeUv = westUv;
+    shaderUniforms.ellipsoidMaxLongitudeUv = eastUv;
+    shaderUniforms.ellipsoidEmptyMidpointLongitudeUv =
+      (eastUv + 0.5 * emptyAngleWidthUv) % 1.0;
 
     // delerp(longitudeUv, minLongitudeUv, maxLongitudeUv)
     // (longitudeUv - minLongitudeUv) / (maxLongitudeUv - minLongitudeUv)
@@ -382,12 +429,8 @@ VoxelEllipsoidShape.prototype.update = function (
     // offset = -minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
     // offset = -((minLongitude - pi) / (2.0 * pi)) / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
     // offset = -(minLongitude - pi) / (maxLongitude - minLongitude)
-
-    const westUv = (west - defaultMinLongitude) / defaultLongitudeLength;
-    const scale = defaultLongitudeLength / rectangleWidth;
-    const offset = -(west - defaultMinLongitude) / rectangleWidth;
-
-    shaderUniforms.ellipsoidMinLongitudeUv = westUv;
+    const scale = defaultLongitudeLength / angleWidth;
+    const offset = -(west - defaultMinLongitude) / angleWidth;
     shaderUniforms.ellipsoidLongitudeUvScaleAndOffset = Cartesian2.fromElements(
       scale,
       offset,
