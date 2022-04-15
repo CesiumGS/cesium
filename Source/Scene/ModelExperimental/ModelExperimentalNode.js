@@ -299,7 +299,7 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
  * Updates the computed transforms needed for rendering (computedTransform)
  * and instancing (axisCorrectedTransform).
  *
- * @privates
+ * @private
  */
 ModelExperimentalNode.prototype.updateTransforms = function () {
   this._computedTransform = Matrix4.multiply(
