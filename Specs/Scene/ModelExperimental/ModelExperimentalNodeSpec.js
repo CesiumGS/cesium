@@ -41,6 +41,35 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     },
   };
 
+  const scratchMatrix = new Matrix4();
+  function verifyTransforms(transform, transformToRoot, runtimeNode) {
+    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
+      true
+    );
+
+    // instancingNodeTransform is only defined when the node has instances.
+    if (defined(runtimeNode.node.instances)) {
+      const product = Matrix4.multiply(
+        runtimeNode.transformToRoot,
+        runtimeNode.transform,
+        scratchMatrix
+      );
+      const corrected = ModelExperimentalUtility.correctModelMatrix(
+        product,
+        mockSceneGraph.components.upAxis,
+        mockSceneGraph.components.forwardAxis,
+        scratchMatrix
+      );
+      expect(
+        Matrix4.equals(runtimeNode.instancingNodeTransform, corrected)
+      ).toBe(true);
+    } else {
+      expect(runtimeNode.instancingNodeTransform).not.toBeDefined();
+    }
+  }
+
   it("throws for undefined node", function () {
     expect(function () {
       return new ModelExperimentalNode({
@@ -146,35 +175,6 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
   });
-
-  const scratchMatrix = new Matrix4();
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
-    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
-      true
-    );
-
-    // instancingNodeTransform is only defined when the node has instances.
-    if (defined(runtimeNode.node.instances)) {
-      const product = Matrix4.multiply(
-        runtimeNode.transformToRoot,
-        runtimeNode.transform,
-        scratchMatrix
-      );
-      const corrected = ModelExperimentalUtility.correctModelMatrix(
-        product,
-        mockSceneGraph.components.upAxis,
-        mockSceneGraph.components.forwardAxis,
-        scratchMatrix
-      );
-      expect(
-        Matrix4.equals(runtimeNode.instancingNodeTransform, corrected)
-      ).toBe(true);
-    } else {
-      expect(runtimeNode.instancingNodeTransform).not.toBeDefined();
-    }
-  }
 
   it("getChild throws for undefined index", function () {
     const node = new ModelExperimentalNode({

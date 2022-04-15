@@ -19,6 +19,7 @@ import {
   PrimitiveType,
   Matrix2,
   Matrix4,
+  Math as CesiumMath,
   MetadataComponentType,
   MetadataType,
   ModelComponents,
@@ -31,6 +32,7 @@ import {
   TextureMinificationFilter,
   TextureWrap,
   VertexAttributeSemantic,
+  Quaternion,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
@@ -61,6 +63,12 @@ describe(
       "./Data/Models/GltfLoader/SimpleMorph/glTF/SimpleMorph.gltf";
     const simpleSkin =
       "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+    const animatedTriangle =
+      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+    const animatedMorphCube =
+      "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
+    const interpolationTest =
+      "./Data/Models/InterpolationTest/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -709,6 +717,8 @@ describe(
         expect(weightsAttribute.byteOffset).toBe(160);
         expect(weightsAttribute.byteStride).toBe(16);
 
+        expect(components.skins).toEqual([skin]);
+
         expect(skin.joints.length).toBe(2);
         expect(skin.joints[0]).toBe(nodes[1]);
         expect(skin.joints[1]).toBe(nodes[2]);
@@ -750,6 +760,162 @@ describe(
           ]);
         }
       );
+    });
+
+    it("loads AnimatedTriangle", function () {
+      return loadGltf(animatedTriangle).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const animations = components.animations;
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBe(12);
+
+        const animation = animations[0];
+        expect(animation.samplers.length).toEqual(1);
+
+        const sampler = animation.samplers[0];
+        const expectedInput = [0, 0.25, 0.5, 0.75, 1.0];
+        const expectedOutput = [
+          new Quaternion(0.0, 0.0, 0.0, 1.0),
+          new Quaternion(0.0, 0.0, 0.707, 0.707),
+          new Quaternion(0.0, 0.0, 1.0, 0.0),
+          new Quaternion(0.0, 0.0, 0.707, -0.707),
+          new Quaternion(0.0, 0.0, 0.0, 1.0),
+        ];
+        expect(sampler.input).toEqual(expectedInput);
+        expect(sampler.interpolation).toEqual(
+          ModelComponents.InterpolationType.LINEAR
+        );
+
+        const length = expectedOutput.length;
+        for (let i = 0; i < length; i++) {
+          expect(
+            Quaternion.equalsEpsilon(
+              sampler.output[i],
+              expectedOutput[i],
+              CesiumMath.EPSILON3
+            )
+          ).toBe(true);
+        }
+
+        expect(animation.channels.length).toEqual(1);
+        const channel = animation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(rootNode);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.ROTATION
+        );
+      });
+    });
+
+    it("loads AnimatedMorphCube", function () {
+      return loadGltf(animatedMorphCube).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const animations = components.animations;
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBe(12);
+
+        const animation = animations[0];
+        expect(animation.samplers.length).toEqual(1);
+
+        const sampler = animation.samplers[0];
+        expect(sampler.input.length).toEqual(127);
+        expect(sampler.interpolation).toEqual(
+          ModelComponents.InterpolationType.LINEAR
+        );
+        expect(sampler.output.length).toEqual(254);
+
+        expect(animation.channels.length).toEqual(1);
+        const channel = animation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(rootNode);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.WEIGHTS
+        );
+      });
+    });
+
+    it("loads InterpolationTest", function () {
+      return loadGltf(interpolationTest).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const nodes = components.nodes;
+        const animations = components.animations;
+
+        const stepScaleAnimation = animations[0];
+        expect(stepScaleAnimation.samplers.length).toEqual(1);
+
+        let sampler = stepScaleAnimation.samplers[0];
+        expect(sampler.input.length).toEqual(sampler.output.length);
+        expect(sampler.interpolation).toEqual(
+          ModelComponents.InterpolationType.STEP
+        );
+        expect(sampler.output[0] instanceof Cartesian3).toBe(true);
+
+        expect(stepScaleAnimation.channels.length).toEqual(1);
+        let channel = stepScaleAnimation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(nodes[0]);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.SCALE
+        );
+
+        const cubicSplineRotation = animations[4];
+        console.log(cubicSplineRotation);
+        expect(cubicSplineRotation.samplers.length).toEqual(1);
+
+        sampler = cubicSplineRotation.samplers[0];
+        // For cubic spline interpolation, each keyframe requires 3 output entries
+        expect(sampler.output.length).toEqual(sampler.input.length * 3);
+        expect(sampler.interpolation).toEqual(
+          ModelComponents.InterpolationType.CUBICSPLINE
+        );
+        expect(sampler.output[0] instanceof Quaternion).toBe(true);
+
+        expect(cubicSplineRotation.channels.length).toEqual(1);
+        channel = cubicSplineRotation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(nodes[6]);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.ROTATION
+        );
+
+        const linearTranslation = animations[8];
+        expect(linearTranslation.samplers.length).toEqual(1);
+
+        sampler = linearTranslation.samplers[0];
+        expect(sampler.input.length).toEqual(sampler.output.length);
+        expect(sampler.interpolation).toEqual(
+          ModelComponents.InterpolationType.LINEAR
+        );
+        expect(sampler.output[0] instanceof Cartesian3).toBe(true);
+
+        expect(linearTranslation.channels.length).toEqual(1);
+        channel = linearTranslation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(nodes[10]);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.TRANSLATION
+        );
+      });
     });
 
     it("loads Triangle", function () {
