@@ -1,9 +1,11 @@
 import {
   Axis,
   Cartesian3,
+  defined,
   InstancingPipelineStage,
   Matrix4,
   ModelExperimentalNode,
+  ModelExperimentalUtility,
   ModelMatrixUpdateStage,
 } from "../../../Source/Cesium.js";
 
@@ -12,8 +14,24 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   const mockChildNode = {
     transform: Matrix4.IDENTITY,
   };
-  const transform = Matrix4.clone(Matrix4.IDENTITY);
-  const transformToRoot = Matrix4.clone(Matrix4.IDENTITY);
+
+  // prettier-ignore
+  const transform = new Matrix4(
+    0.0, 0.0, 0.0, 1.0,
+    0.0, 0.0, 0.0, 2.0,
+    0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0, 1.0
+  );
+
+  // z-up-to-y-up is a common root transform in glTFs used in 3D Tiles
+  // prettier-ignore
+  const transformToRoot = new Matrix4(
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, -1.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  );
+
   const mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     runtimeNodes: [mockChildNode, mockNode],
@@ -129,12 +147,33 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.runtimePrimitives).toEqual([]);
   });
 
+  const scratchMatrix = new Matrix4();
   function verifyTransforms(transform, transformToRoot, runtimeNode) {
     expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
     expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
     expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
       true
     );
+
+    // instancingNodeTransform is only defined when the node has instances.
+    if (defined(runtimeNode.node.instances)) {
+      const product = Matrix4.multiply(
+        runtimeNode.transformToRoot,
+        runtimeNode.transform,
+        scratchMatrix
+      );
+      const corrected = ModelExperimentalUtility.correctModelMatrix(
+        product,
+        mockSceneGraph.components.upAxis,
+        mockSceneGraph.components.forwardAxis,
+        scratchMatrix
+      );
+      expect(
+        Matrix4.equals(runtimeNode.instancingNodeTransform, corrected)
+      ).toBe(true);
+    } else {
+      expect(runtimeNode.instancingNodeTransform).not.toBeDefined();
+    }
   }
 
   it("getChild throws for undefined index", function () {

@@ -36,10 +36,11 @@ export default function ModelExperimentalNode(options) {
   const sceneGraph = options.sceneGraph;
   const transform = options.transform;
   const transformToRoot = options.transformToRoot;
+  const node = options.node;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
-  this._node = options.node;
+  this._node = node;
 
   const components = sceneGraph.components;
 
@@ -48,18 +49,23 @@ export default function ModelExperimentalNode(options) {
 
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
 
-  let instancingNodeTransform = Matrix4.clone(transformToRoot);
-  instancingNodeTransform = Matrix4.multiply(
-    instancingNodeTransform,
-    transform,
-    instancingNodeTransform
-  );
-  this._instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
-    instancingNodeTransform,
-    components.upAxis,
-    components.forwardAxis,
-    instancingNodeTransform
-  );
+  // for instancing, the transform is computed differently.
+  let instancingNodeTransform;
+  if (defined(node.instances)) {
+    instancingNodeTransform = Matrix4.clone(transformToRoot);
+    instancingNodeTransform = Matrix4.multiply(
+      instancingNodeTransform,
+      transform,
+      instancingNodeTransform
+    );
+    instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
+      instancingNodeTransform,
+      components.upAxis,
+      components.forwardAxis,
+      instancingNodeTransform
+    );
+  }
+  this._instancingNodeTransform = instancingNodeTransform;
 
   this._transformDirty = false;
 
@@ -157,17 +163,19 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
 
-      const instancingNodeTransform = Matrix4.multiply(
-        this._transformToRoot,
-        this._transform,
-        this._instancingNodeTransform
-      );
-      this._instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
-        instancingNodeTransform,
-        this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis,
-        this._instancingNodeTransform
-      );
+      if (defined(this._node.instances)) {
+        const instancingNodeTransform = Matrix4.multiply(
+          this._transformToRoot,
+          this._transform,
+          this._instancingNodeTransform
+        );
+        this._instancingNodeTransform = ModelExperimentalUtility.correctModelMatrix(
+          instancingNodeTransform,
+          this._sceneGraph.components.upAxis,
+          this._sceneGraph.components.forwardAxis,
+          this._instancingNodeTransform
+        );
+      }
     },
   },
 
