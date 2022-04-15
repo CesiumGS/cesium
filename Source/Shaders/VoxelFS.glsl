@@ -890,17 +890,17 @@ float ellipseDistanceAnalytical(vec2 pos, vec2 radii) {
 #if defined(SHAPE_BOX)
 void intersectBoxShape(Ray ray, out Intersections ix)
 {
-    #if defined(BOX_IS_BOUNDED)
-        // Transform the ray into unit cube space
-        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxOffsetUvToBounds;
-        ray.dir *= u_boxScaleUvToBounds;
-        vec2 entryExit = intersectUnitCube(ray);
-    #elif defined(BOX_IS_RECTANGLE)
+    #if defined(BOX_IS_RECTANGLE)
         // Transform the ray into unit square space on Z plane
         // This matrix bakes in an axis conversion so that the math works for XY plane.
         ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
         ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
         vec2 entryExit = intersectUnitSquare(ray);
+    #elif defined(BOX_IS_BOUNDED)
+        // Transform the ray into unit cube space
+        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxOffsetUvToBounds;
+        ray.dir *= u_boxScaleUvToBounds;
+        vec2 entryExit = intersectUnitCube(ray);
     #else
         // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
         // Direction is scaled as well to be in sync with position. 
