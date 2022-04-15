@@ -124,6 +124,7 @@ function VoxelCylinderShape() {
     CYLINDER_WEDGE_REGULAR: undefined,
     CYLINDER_WEDGE_FLIPPED: undefined,
     CYLINDER_WEDGE_FLAT: undefined,
+    CYLINDER_WEDGE_EMPTY: undefined,
     CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY: undefined,
     CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY: undefined,
   };
@@ -260,11 +261,15 @@ VoxelCylinderShape.prototype.update = function (
   const hasWedgeRegular =
     angleWidth > defaultHalfAngleWidth + wedgeEpsilon &&
     angleWidth < defaultAngleWidth - wedgeEpsilon;
-  const hasWedgeFlipped = angleWidth < defaultHalfAngleWidth - wedgeEpsilon;
+  const hasWedgeFlipped =
+    angleWidth > wedgeEpsilon &&
+    angleWidth < defaultHalfAngleWidth - wedgeEpsilon;
   const hasWedgeFlat =
     angleWidth >= defaultHalfAngleWidth - wedgeEpsilon &&
     angleWidth <= defaultHalfAngleWidth + wedgeEpsilon;
-  const hasWedge = hasWedgeRegular || hasWedgeFlipped || hasWedgeFlat;
+  const hasWedgeEmpty = angleWidth <= wedgeEpsilon;
+  const hasWedge =
+    hasWedgeRegular || hasWedgeFlipped || hasWedgeFlat || hasWedgeEmpty;
 
   const isMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
     minAngle,
@@ -356,10 +361,8 @@ VoxelCylinderShape.prototype.update = function (
     // scale = 1.0 / (maxRadius - minRadius)
     // offset = -minRadius / (maxRadius - minRadius)
     // offset = minRadius / (minRadius - maxRadius)
-
     const scale = 1.0 / (maxRadius - minRadius);
     const offset = minRadius / (minRadius - maxRadius);
-
     shaderUniforms.cylinderRadiusUvScaleAndOffset = Cartesian2.fromElements(
       scale,
       offset,
@@ -412,6 +415,9 @@ VoxelCylinderShape.prototype.update = function (
     } else if (hasWedgeFlat) {
       shaderDefines["CYLINDER_WEDGE_FLAT"] = true;
       intersectionCount += 1;
+    } else if (hasWedgeEmpty) {
+      shaderDefines["CYLINDER_WEDGE_EMPTY"] = true;
+      intersectionCount += 2;
     }
 
     if (isMinAngleDiscontinuity) {
@@ -445,10 +451,8 @@ VoxelCylinderShape.prototype.update = function (
     // offset = -minAngleUv / (maxAngleUv - minAngleUv)
     // offset = -((minAngle - pi) / (2.0 * pi)) / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
     // offset = -(minAngle - pi) / (maxAngle - minAngle)
-
     const scale = defaultAngleWidth / angleWidth;
     const offset = -(minAngle - defaultMinAngle) / angleWidth;
-
     shaderUniforms.cylinderAngleUvScaleAndOffset = Cartesian2.fromElements(
       scale,
       offset,

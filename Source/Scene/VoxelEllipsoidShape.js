@@ -123,6 +123,7 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_WEDGE_REGULAR: undefined,
     ELLIPSOID_WEDGE_FLIPPED: undefined,
     ELLIPSOID_WEDGE_FLAT: undefined,
+    ELLIPSOID_WEDGE_EMPTY: undefined,
     ELLIPSOID_WEDGE_ANGLE_FLIPPED: undefined,
     ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY: undefined,
     ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY: undefined,
@@ -315,11 +316,14 @@ VoxelEllipsoidShape.prototype.update = function (
     angleWidth > defaultLongitudeHalfLength + wedgeEpsilon &&
     angleWidth < defaultLongitudeLength - wedgeEpsilon;
   const hasWedgeFlipped =
+    angleWidth > wedgeEpsilon &&
     angleWidth < defaultLongitudeHalfLength - wedgeEpsilon;
   const hasWedgeFlat =
     angleWidth >= defaultLongitudeHalfLength - wedgeEpsilon &&
     angleWidth <= defaultLongitudeHalfLength + wedgeEpsilon;
-  const hasWedge = hasWedgeRegular || hasWedgeFlipped || hasWedgeFlat;
+  const hasWedgeEmpty = angleWidth <= wedgeEpsilon;
+  const hasWedge =
+    hasWedgeRegular || hasWedgeFlipped || hasWedgeFlat || hasWedgeEmpty;
 
   const hasTopConeRegular =
     north > +flatConeEpsilon && north < defaultMaxLatitude - coneEpsilon;
@@ -389,6 +393,9 @@ VoxelEllipsoidShape.prototype.update = function (
     } else if (hasWedgeFlat) {
       shaderDefines["ELLIPSOID_WEDGE_FLAT"] = true;
       intersectionCount += 1;
+    } else if (hasWedgeEmpty) {
+      shaderDefines["ELLIPSOID_WEDGE_EMPTY"] = true;
+      intersectionCount += 2;
     }
 
     const isMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
@@ -452,10 +459,8 @@ VoxelEllipsoidShape.prototype.update = function (
     // offset = -minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
     // offset = -((minLatitude - pi) / (2.0 * pi)) / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
     // offset = -(minLatitude - pi) / (maxLatitude - minLatitude)
-
     const scale = defaultLatitudeLength / rectangleHeight;
     const offset = -(south - defaultMinLatitude) / rectangleHeight;
-
     shaderUniforms.ellipsoidLatitudeUvScaleAndOffset = Cartesian2.fromElements(
       scale,
       offset,
