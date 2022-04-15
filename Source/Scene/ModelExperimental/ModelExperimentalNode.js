@@ -46,10 +46,16 @@ export default function ModelExperimentalNode(options) {
 
   const components = sceneGraph.components;
 
+  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
+  this._computedTransform = Matrix4.multiply(
+    transformToRoot,
+    transform,
+    new Matrix4()
+  );
+
   this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
     transform,
     components.upAxis,
@@ -166,9 +172,10 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The transforms of all the node's ancestors. Multiplying this with the node's
-   * local transform will result in a transform from the node's local space to
-   * the model's scene graph space.
+   * The transforms of all the node's ancestors, not including this node's
+   * transform.
+   *
+   * @see ModelExperimentalNode#computedTransform
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -177,6 +184,17 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   transformToRoot: {
     get: function () {
       return this._transformToRoot;
+    },
+  },
+
+  /**
+   * A transform from the node's local space to the model's scene graph space.
+   * This is the product of transformToRoot * transform
+   * @readonly
+   */
+  computedTransform: {
+    get function() {
+      return this._computedTransform;
     },
   },
 
