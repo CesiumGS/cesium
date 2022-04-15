@@ -395,7 +395,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       },
       uniformMap: {},
       runtimeNode: {
-        axisCorrectedTransform: Matrix4.IDENTITY,
+        instancingNodeTransform: Matrix4.IDENTITY,
       },
     };
 
@@ -430,7 +430,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(uniformMap.u_instance_modifiedModelView()).toEqual(Matrix4.ZERO);
 
       expect(uniformMap.u_instance_nodeTransform()).toEqual(
-        runtimeNode.axisCorrectedTransform
+        runtimeNode.instancingNodeTransform
       );
     });
   });
