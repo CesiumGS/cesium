@@ -50,17 +50,19 @@ export default function ModelExperimentalNode(options) {
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._computedTransform = Matrix4.multiply(
+  const computedTransform = Matrix4.multiply(
     transformToRoot,
     transform,
     new Matrix4()
   );
+  this._computedTransform = computedTransform;
 
+  // for instancing
   this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-    transform,
+    computedTransform,
     components.upAxis,
     components.forwardAxis,
-    this._axisCorrectedTransform
+    new Matrix4()
   );
 
   this._transformDirty = false;
@@ -162,12 +164,6 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-        value,
-        this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis,
-        this._axisCorrectedTransform
-      );
     },
   },
 
@@ -193,7 +189,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    * @readonly
    */
   computedTransform: {
-    get function() {
+    get: function () {
       return this._computedTransform;
     },
   },
@@ -297,6 +293,27 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the computed transforms needed for rendering (computedTransform)
+ * and instancing (axisCorrectedTransform).
+ *
+ * @privates
+ */
+ModelExperimentalNode.prototype.updateTransforms = function () {
+  this._computedTransform = Matrix4.multiply(
+    this._transformToRoot,
+    this._transform,
+    this._computedTransform
+  );
+
+  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+    this._computedTransform,
+    this._sceneGraph.components.upAxis,
+    this._sceneGraph.components.forwardAxis,
+    this._axisCorrectedTransform
+  );
 };
 
 /**

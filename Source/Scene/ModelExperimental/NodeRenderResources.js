@@ -1,6 +1,5 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
-import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
