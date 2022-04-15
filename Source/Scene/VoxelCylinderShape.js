@@ -102,6 +102,8 @@ function VoxelCylinderShape() {
     cylinderHeightUvScaleAndOffset: new Cartesian2(),
     cylinderAngleUvScaleAndOffset: new Cartesian2(),
     cylinderMinAngleUv: 0.0,
+    cylinderMaxAngleUv: 0.0,
+    cylinderEmptyMidpointAngleUv: 0.0,
   };
 
   /**
@@ -121,6 +123,8 @@ function VoxelCylinderShape() {
     CYLINDER_WEDGE_INDEX: undefined,
     CYLINDER_WEDGE_REGULAR: undefined,
     CYLINDER_WEDGE_FLIPPED: undefined,
+    CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY: undefined,
+    CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY: undefined,
   };
 }
 
@@ -190,6 +194,10 @@ VoxelCylinderShape.prototype.update = function (
   const minAngle = CesiumMath.negativePiToPi(minBounds.z);
   const maxAngle = CesiumMath.negativePiToPi(maxBounds.z);
 
+  const zeroScaleEpsilon = CesiumMath.EPSILON10;
+  const angleDiscontinuityEpsilon = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
+  const wedgeDetectionEpsilon = CesiumMath.EPSILON10;
+
   // Exit early if the shape is not visible.
   // Note that minAngle may be greater than maxAngle when crossing the 180th meridian.
 
@@ -197,14 +205,14 @@ VoxelCylinderShape.prototype.update = function (
   // - maxRadius is zero (line)
   // - minHeight is greater than maxHeight
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
-  const absEpsilon = CesiumMath.EPSILON10;
+
   if (
     maxRadius === 0.0 ||
     minRadius > maxRadius ||
     minHeight > maxHeight ||
-    CesiumMath.equalsEpsilon(scale.x, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(scale.y, 0.0, undefined, absEpsilon) ||
-    CesiumMath.equalsEpsilon(scale.z, 0.0, undefined, absEpsilon)
+    CesiumMath.equalsEpsilon(scale.x, 0.0, undefined, zeroScaleEpsilon) ||
+    CesiumMath.equalsEpsilon(scale.y, 0.0, undefined, zeroScaleEpsilon) ||
+    CesiumMath.equalsEpsilon(scale.z, 0.0, undefined, zeroScaleEpsilon)
   ) {
     return false;
   }
@@ -246,12 +254,25 @@ VoxelCylinderShape.prototype.update = function (
     minHeight === defaultMinHeight && maxHeight === defaultMaxHeight;
 
   const isAngleFlipped = maxAngle < minAngle;
-  const angleWidth = maxAngle - minAngle + isAngleFlipped * CesiumMath.TWO_PI;
+  const angleWidth = maxAngle - minAngle + isAngleFlipped * defaultAngleWidth;
   const hasWedgeRegular =
     angleWidth >= CesiumMath.PI &&
-    CesiumMath.lessThan(angleWidth, CesiumMath.TWO_PI, absEpsilon);
+    CesiumMath.lessThan(angleWidth, defaultAngleWidth, wedgeDetectionEpsilon);
   const hasWedgeFlipped = angleWidth < CesiumMath.PI;
   const hasWedge = hasWedgeRegular || hasWedgeFlipped;
+
+  const isMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
+    minAngle,
+    defaultMinAngle,
+    undefined,
+    angleDiscontinuityEpsilon
+  );
+  const isMaxAngleDiscontinuity = CesiumMath.equalsEpsilon(
+    maxAngle,
+    defaultMaxAngle,
+    undefined,
+    angleDiscontinuityEpsilon
+  );
 
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
@@ -393,10 +414,14 @@ VoxelCylinderShape.prototype.update = function (
       shaderUniforms.cylinderAngleMinMax
     );
 
-    if (isAngleFlipped) {
-      const minAngleUv = (minAngle - defaultMinAngle) / defaultAngleWidth;
-      shaderUniforms.cylinderMinAngleUv = minAngleUv;
-    }
+    const minAngleUv = (minAngle - defaultMinAngle) / defaultAngleWidth;
+    const maxAngleUv = (maxAngle - defaultMinAngle) / defaultAngleWidth;
+    const emptyAngleWidthUv = 1.0 - angleWidth / defaultAngleWidth;
+
+    shaderUniforms.cylinderMinAngleUv = minAngleUv;
+    shaderUniforms.cylinderMaxAngleUv = maxAngleUv;
+    shaderUniforms.cylinderEmptyMidpointAngleUv =
+      (maxAngleUv + 0.5 * emptyAngleWidthUv) % 1.0;
 
     // delerp(angleUv, minAngleUv, maxAngleUv)
     // (angelUv - minAngleUv) / (maxAngleUv - minAngleUv)
@@ -419,6 +444,13 @@ VoxelCylinderShape.prototype.update = function (
   }
 
   shaderDefines["CYLINDER_INTERSECTION_COUNT"] = intersectionCount;
+
+  if (isMinAngleDiscontinuity) {
+    shaderDefines["CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY"] = true;
+  }
+  if (isMaxAngleDiscontinuity) {
+    shaderDefines["CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY"] = true;
+  }
 
   return true;
 };
@@ -691,7 +723,8 @@ function getCylinderChunkObb(
   }
 
   const isAngleFlipped = angleEnd < angleStart;
-  const angleWidth = angleEnd - angleStart + isAngleFlipped * CesiumMath.TWO_PI;
+  const defaultAngleWidth = defaultMaxAngle - defaultMinAngle;
+  const angleWidth = angleEnd - angleStart + isAngleFlipped * defaultAngleWidth;
 
   testAngles[testAngleCount++] = CesiumMath.negativePiToPi(
     angleStart + angleWidth * 0.5

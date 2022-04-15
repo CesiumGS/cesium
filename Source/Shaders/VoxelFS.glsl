@@ -283,6 +283,8 @@ uniform float u_stepSize;
     #define CYLINDER_WEDGE_REGULAR ### // when there's a wedge
     #define CYLINDER_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
     #define CYLINDER_WEDGE_ANGLE_FLIPPED //
+    #define CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY
+    #define CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY
     */
 
     // Cylinder uniforms
@@ -302,8 +304,14 @@ uniform float u_stepSize;
     #if defined(CYLINDER_WEDGE)
         uniform vec2 u_cylinderAngleMinMax;
         uniform vec2 u_cylinderAngleUvScaleAndOffset;
-        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED)
+        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED) || defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY) || defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            uniform float u_cylinderEmptyMidpointAngleUv;
+        #endif
+        #if defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
             uniform float u_cylinderMinAngleUv;
+        #endif
+        #if defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            uniform float u_cylinderMaxAngleUv;
         #endif
     #endif
 #endif
@@ -1187,8 +1195,17 @@ vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
     float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
     #if defined(CYLINDER_WEDGE)
         #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED)
-            angle += float(angle <= u_cylinderMinAngleUv);
+            // Comparing against u_cylinderMinAngleUv has precision problems. u_cylinderEmptyMidpointAngleUv is more conservative.
+            angle += float(angle < u_cylinderEmptyMidpointAngleUv);
         #endif
+
+        // When the min or max angle is near the -pi/+pi discontinuity there may be flickering as both sides of the voxel data are read.
+        #if defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
+            angle = angle > u_cylinderEmptyMidpointAngleUv ? u_cylinderMinAngleUv : angle;
+        #elif defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
+            angle = angle < u_cylinderEmptyMidpointAngleUv ? u_cylinderMaxAngleUv : angle;
+        #endif
+
         angle = angle * u_cylinderAngleUvScaleAndOffset.x + u_cylinderAngleUvScaleAndOffset.y;
     #endif
 
@@ -1581,6 +1598,9 @@ void main()
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
 
+    // gl_FragColor = vec4(positionUv, 1.0); return;
+    // gl_FragColor = vec4(transformFromUvToShapeSpace(positionUv).zzz, 1.0); return;
+    
     vec4 colorAccum = vec4(0.0);
 
     #if defined(DESPECKLE)
