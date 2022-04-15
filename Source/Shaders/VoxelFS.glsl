@@ -408,7 +408,7 @@ struct Intersections {
 #endif
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection(ix, (index) * 2 + 0), getIntersection(ix, (index) * 2 + 1))
+#define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
 #if (SCENE_INTERSECTION_COUNT > 1)
