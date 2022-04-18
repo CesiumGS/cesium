@@ -34,9 +34,11 @@ import SplitDirection from "../SplitDirection.js";
  */
 export default function ModelExperimentalSceneGraph(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const components = options.modelComponents;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.model", options.model);
-  Check.typeOf.object("options.modelComponents", options.modelComponents);
+  Check.typeOf.object("options.modelComponents", components);
   //>>includeEnd('debug');
 
   /**
@@ -57,7 +59,7 @@ export default function ModelExperimentalSceneGraph(options) {
    *
    * @private
    */
-  this._modelComponents = options.modelComponents;
+  this._components = components;
 
   /**
    * Pipeline stages to apply across the model.
@@ -147,6 +149,12 @@ export default function ModelExperimentalSceneGraph(options) {
   this._boundingSphere = undefined;
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
+  this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+    components.upAxis,
+    components.forwardAxis,
+    new Matrix4()
+  );
+
   initialize(this);
 }
 
@@ -161,7 +169,7 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
    */
   components: {
     get: function () {
-      return this._modelComponents;
+      return this._components;
     },
   },
 
@@ -178,6 +186,22 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
       return this._computedModelMatrix;
     },
   },
+
+  /**
+   * A matrix to correct from y-up in some model formats (e.g. glTF) to the
+   * z-up coordinate system Cesium uses.
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  axisCorrectionMatrix: {
+    get: function () {
+      return this._axisCorrectionMatrix;
+    },
+  },
+
   /**
    * The bounding sphere containing all the primitives in the scene graph.
    *
@@ -194,7 +218,7 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
-  const components = sceneGraph._modelComponents;
+  const components = sceneGraph._components;
   const scene = components.scene;
 
   computeModelMatrix(sceneGraph);
@@ -253,7 +277,7 @@ function initialize(sceneGraph) {
 }
 
 function computeModelMatrix(sceneGraph) {
-  const components = sceneGraph._modelComponents;
+  const components = sceneGraph._components;
   const model = sceneGraph._model;
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
@@ -262,10 +286,9 @@ function computeModelMatrix(sceneGraph) {
     sceneGraph._computedModelMatrix
   );
 
-  sceneGraph._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph._computedModelMatrix,
-    components.upAxis,
-    components.forwardAxis,
+    sceneGraph._axisCorrectionMatrix,
     sceneGraph._computedModelMatrix
   );
 

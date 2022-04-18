@@ -252,9 +252,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     );
   });
 
-  it("correctModelMatrix works", function () {
-    const modelMatrix = Matrix4.IDENTITY;
-
+  it("getAxisCorrectionMatrix works", function () {
     const expectedYToZMatrix = Axis.Y_UP_TO_Z_UP;
     const expectedXToZMatrix = Axis.X_UP_TO_Z_UP;
     const expectedCombinedMatrix = Matrix4.multiplyTransformation(
@@ -263,29 +261,36 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
       new Matrix4()
     );
 
-    const resultMatrix = ModelExperimentalUtility.correctModelMatrix(
-      modelMatrix,
+    // If already in ECEF, this should return identity
+    let resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+      Axis.Z,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, Matrix4.IDENTITY)).toBe(true);
+
+    // This is the most common case, glTF uses y-up, z-forward
+    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+      Axis.Y,
+      Axis.Z,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
+
+    // Other cases
+    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
       Axis.Y,
       Axis.X,
       new Matrix4()
     );
     expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
 
-    ModelExperimentalUtility.correctModelMatrix(
-      modelMatrix,
+    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
       Axis.X,
       Axis.Y,
-      resultMatrix
+      new Matrix4()
     );
     expect(Matrix4.equals(resultMatrix, expectedXToZMatrix)).toBe(true);
-
-    ModelExperimentalUtility.correctModelMatrix(
-      modelMatrix,
-      Axis.Y,
-      Axis.Z,
-      resultMatrix
-    );
-    expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
   });
 
   it("getAttributeBySemantic works", function () {

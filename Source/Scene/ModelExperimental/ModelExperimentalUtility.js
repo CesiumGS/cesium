@@ -281,3 +281,36 @@ ModelExperimentalUtility.correctModelMatrix = function (
 
   return result;
 };
+
+/**
+ * Model matrices in a model file (e.g. glTF) are typically in a different
+ * coordinate system, such as with y-up instead of z-up as in 3D Tiles.
+ * a matrix that will correct this such that z is up, x is forward.
+ *
+ * @param {Axis} upAxis The original up direction
+ * @param {Axis} forwardAxis The original forward direction
+ * @param {Matrix4} result The matrix in which to store the result.
+ * @return {Matrix4} The axis correction matrix
+ *
+ * @private
+ */
+ModelExperimentalUtility.getAxisCorrectionMatrix = function (
+  upAxis,
+  forwardAxis,
+  result
+) {
+  result = Matrix4.clone(Matrix4.IDENTITY, result);
+
+  if (upAxis === Axis.Y) {
+    result = Matrix4.clone(Axis.Y_UP_TO_Z_UP, result);
+  } else if (upAxis === Axis.X) {
+    result = Matrix4.clone(Axis.X_UP_TO_Z_UP, result);
+  }
+
+  if (forwardAxis === Axis.Z) {
+    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+    result = Matrix4.multiplyTransformation(result, Axis.Z_UP_TO_X_UP, result);
+  }
+
+  return result;
+};
