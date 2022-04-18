@@ -394,9 +394,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         },
       },
       uniformMap: {},
-      runtimeNode: {
-        axisCorrectedTransform: Matrix4.IDENTITY,
-      },
+      runtimeNode: {},
     };
 
     return loadI3dm(i3dmInstancedOrientation, {
@@ -429,8 +427,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
       expect(uniformMap.u_instance_modifiedModelView()).toEqual(Matrix4.ZERO);
 
+      // TODO: fix this
       expect(uniformMap.u_instance_nodeTransform()).toEqual(
-        runtimeNode.axisCorrectedTransform
+        runtimeNode.computedTransform
       );
     });
   });

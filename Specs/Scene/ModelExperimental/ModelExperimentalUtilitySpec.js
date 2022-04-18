@@ -262,7 +262,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     );
 
     // If already in ECEF, this should return identity
-    let resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+    let resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
       Axis.Z,
       Axis.X,
       new Matrix4()
@@ -270,7 +270,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expect(Matrix4.equals(resultMatrix, Matrix4.IDENTITY)).toBe(true);
 
     // This is the most common case, glTF uses y-up, z-forward
-    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
       Axis.Y,
       Axis.Z,
       new Matrix4()
@@ -278,14 +278,14 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
 
     // Other cases
-    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
       Axis.Y,
       Axis.X,
       new Matrix4()
     );
     expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
 
-    resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
       Axis.X,
       Axis.Y,
       new Matrix4()

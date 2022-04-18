@@ -5,7 +5,6 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
@@ -44,8 +43,6 @@ export default function ModelExperimentalNode(options) {
 
   this._name = node.name; // Helps with debugging
 
-  const components = sceneGraph.components;
-
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
@@ -56,15 +53,6 @@ export default function ModelExperimentalNode(options) {
     new Matrix4()
   );
   this._computedTransform = computedTransform;
-
-  // for instancing
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-    computedTransform,
-    components.upAxis,
-    components.forwardAxis,
-    new Matrix4()
-  );
-
   this._transformDirty = false;
 
   // Will be set by the scene graph after the skins have been created
@@ -198,19 +186,6 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's axis corrected local space transform. Used in instancing.
-   *
-   * @type {Matrix4}
-   * @private
-   * @readonly
-   */
-  axisCorrectedTransform: {
-    get: function () {
-      return this._axisCorrectedTransform;
-    },
-  },
-
-  /**
    * The node's original transform, as specified in the model. Does not include transformations from the node's ancestors.
    *
    * @memberof ModelExperimentalNode.prototype
@@ -299,23 +274,15 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
 };
 
 /**
- * Updates the computed transforms needed for rendering (computedTransform)
- * and instancing (axisCorrectedTransform).
+ * Updates the computed transform used for rendering and instancing
  *
  * @private
  */
-ModelExperimentalNode.prototype.updateTransforms = function () {
+ModelExperimentalNode.prototype.updateComputedTransform = function () {
   this._computedTransform = Matrix4.multiply(
     this._transformToRoot,
     this._transform,
     this._computedTransform
-  );
-
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-    this._computedTransform,
-    this._sceneGraph.components.upAxis,
-    this._sceneGraph.components.forwardAxis,
-    this._axisCorrectedTransform
   );
 };
 
