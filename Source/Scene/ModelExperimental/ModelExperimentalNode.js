@@ -46,15 +46,23 @@ export default function ModelExperimentalNode(options) {
 
   const components = sceneGraph.components;
 
+  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+  const computedTransform = Matrix4.multiply(
+    transformToRoot,
     transform,
+    new Matrix4()
+  );
+  this._computedTransform = computedTransform;
+
+  // For instancing
+  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+    computedTransform,
     components.upAxis,
     components.forwardAxis,
-    this._axisCorrectedTransform
+    new Matrix4()
   );
 
   this._transformDirty = false;
@@ -156,19 +164,14 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-        value,
-        this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis,
-        this._axisCorrectedTransform
-      );
     },
   },
 
   /**
-   * The transforms of all the node's ancestors. Multiplying this with the node's
-   * local transform will result in a transform from the node's local space to
-   * the model's scene graph space.
+   * The transforms of all the node's ancestors, not including this node's
+   * transform.
+   *
+   * @see ModelExperimentalNode#computedTransform
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -177,6 +180,20 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   transformToRoot: {
     get: function () {
       return this._transformToRoot;
+    },
+  },
+
+  /**
+   * A transform from the node's local space to the model's scene graph space.
+   * This is the product of transformToRoot * transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  computedTransform: {
+    get: function () {
+      return this._computedTransform;
     },
   },
 
@@ -279,6 +296,27 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the computed transforms needed for rendering (computedTransform)
+ * and instancing (axisCorrectedTransform).
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateTransforms = function () {
+  this._computedTransform = Matrix4.multiply(
+    this._transformToRoot,
+    this._transform,
+    this._computedTransform
+  );
+
+  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+    this._computedTransform,
+    this._sceneGraph.components.upAxis,
+    this._sceneGraph.components.forwardAxis,
+    this._axisCorrectedTransform
+  );
 };
 
 /**

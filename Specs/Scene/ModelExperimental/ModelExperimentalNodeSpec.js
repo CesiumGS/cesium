@@ -1,9 +1,12 @@
 import {
   Axis,
   Cartesian3,
+  defaultValue,
   InstancingPipelineStage,
   Matrix4,
+  Math as CesiumMath,
   ModelExperimentalNode,
+  ModelExperimentalUtility,
   ModelMatrixUpdateStage,
 } from "../../../Source/Cesium.js";
 
@@ -23,12 +26,45 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     },
   };
 
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
+  const scratchMatrix = new Matrix4();
+  function verifyTransforms(
+    transform,
+    transformToRoot,
+    runtimeNode,
+    originalTransform
+  ) {
+    originalTransform = defaultValue(originalTransform, transform);
+
     expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(
+      Matrix4.equals(runtimeNode.originalTransform, originalTransform)
+    ).toBe(true);
     expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
       true
     );
+
+    const computedTransform = Matrix4.multiplyTransformation(
+      transformToRoot,
+      transform,
+      scratchMatrix
+    );
+    expect(
+      Matrix4.equals(runtimeNode.computedTransform, computedTransform)
+    ).toBe(true);
+
+    const axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+      computedTransform,
+      mockSceneGraph.components.upAxis,
+      mockSceneGraph.components.forwardAxis,
+      scratchMatrix
+    );
+    expect(
+      Matrix4.equalsEpsilon(
+        runtimeNode.axisCorrectedTransform,
+        axisCorrectedTransform
+      ),
+      CesiumMath.EPSILON8
+    ).toBe(true);
   }
 
   it("throws for undefined node", function () {
@@ -216,5 +252,29 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node._transformDirty).toBe(true);
     expect(Matrix4.equals(node.transform, newTransform)).toBe(true);
     expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
+  });
+
+  it("updateTransforms updates matrices", function () {
+    const node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    verifyTransforms(transform, transformToRoot, node);
+
+    const newTransform = Matrix4.multiplyByTranslation(
+      Matrix4.IDENTITY,
+      new Cartesian3(10, 0, 0),
+      new Matrix4()
+    );
+
+    node.transform = newTransform;
+    node.updateTransforms();
+
+    const originalTransform = transform;
+    verifyTransforms(newTransform, transformToRoot, node, originalTransform);
   });
 });
