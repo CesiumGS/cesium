@@ -48,8 +48,7 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     new Matrix4()
   );
 
-  // Update runtimeNode.computedTransform and related matrices
-  runtimeNode.updateTransforms();
+  runtimeNode.updateComputedTransform();
 
   for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
