@@ -145,19 +145,21 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     );
 
     // The i3dm format applies the instancing transforms in world space.
-    // Since instancing matrices come from a vertex attribute rather than a
-    // uniform and appear in the middle of the modelView matrix product,
-    // czm_model can't be used. Instead, we split the matrix into two parts,
-    // modifiedModelView and nodeTransform and handle this in
-    // LegacyInstancingStageVS.glsl. Conceptually the product looks like this:
+    // Instancing matrices come from a vertex attribute rather than a
+    // uniform, and they are multiplied in the middle of the modelView matrix
+    // product. This means czm_modelView can't be used. Instead, we split the
+    // matrix into two parts, modifiedModelView and nodeTransform, and handle
+    // this in LegacyInstancingStageVS.glsl. Conceptually the product looks like
+    // this:
     //
     // modelView = u_modifiedModelView * a_instanceTransform * u_nodeTransform
     uniformMap.u_instance_modifiedModelView = function () {
       // Model matrix without the node hierarchy or axis correction
       // (see u_instance_nodeTransform).
       const modifiedModelMatrix = Matrix4.multiplyTransformation(
-        // Since this is 3D Tiles, model.modelMatrix is the computed tile
-        // transform (which includes tileset.modelMatrix)
+        // For 3D Tiles, model.modelMatrix is the computed tile
+        // transform (which includes tileset.modelMatrix). This always applies
+        // for i3dm, since such models are always part of a tileset.
         renderResources.model.modelMatrix,
         // For i3dm models, components.transform contains the RTC_CENTER
         // translation.
@@ -172,13 +174,14 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         modelViewScratch
       );
     };
+
     uniformMap.u_instance_nodeTransform = function () {
       // nodeTransform = axisCorrection * nodeHierarchyTransform
       return Matrix4.multiplyTransformation(
         // glTF y-up to 3D Tiles z-up
         sceneGraph.axisCorrectionMatrix,
         // This transforms from the node's coordinate system to the root
-        // of the hierarchy
+        // of the node hierarchy
         renderResources.runtimeNode.computedTransform,
         nodeTransformScratch
       );

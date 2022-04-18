@@ -238,7 +238,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
   });
 
-  it("updateComputedTransform updates matrices", function () {
+  it("updateComputedTransform updates computedTransform matrix", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,

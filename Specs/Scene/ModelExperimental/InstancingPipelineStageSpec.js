@@ -414,6 +414,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const shaderBuilder = renderResources.shaderBuilder;
       const uniformMap = renderResources.uniformMap;
       const runtimeNode = renderResources.runtimeNode;
+
+      // Add the loaded components to the mocked render resources, as the
+      // uniform callbacks need to access this.
       renderResources.model.sceneGraph.components = components;
 
       scene.renderForSpecs();
@@ -438,7 +441,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const model = renderResources.model;
       const sceneGraph = model.sceneGraph;
 
-      // For i3dm, the model view matrix chain has to be broken so the shader
+      // For i3dm, the model view matrix chain has to be broken up so the shader
       // can insert the instancing transform attribute.
       //
       // modifiedModelView = view * modelMatrix * rtcTransform

@@ -241,8 +241,9 @@ ModelExperimentalUtility.createBoundingSphere = function (
 
 /**
  * Model matrices in a model file (e.g. glTF) are typically in a different
- * coordinate system, such as with y-up instead of z-up as in 3D Tiles.
- * a matrix that will correct this such that z is up, x is forward.
+ * coordinate system, such as with y-up instead of z-up in 3D Tiles.
+ * This function returns a matrix that will correct this such that z is up,
+ * and x is forward.
  *
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
