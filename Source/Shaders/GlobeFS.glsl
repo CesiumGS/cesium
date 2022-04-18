@@ -489,7 +489,7 @@ void main()
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
             
-            const float modifier = 0.175;
+            const float modifier = 0.15;
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
         #else
@@ -498,7 +498,7 @@ void main()
                 groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 1.6);
             #endif
             
-            const float groundAtmosphereModifier = 0.175;
+            const float groundAtmosphereModifier = 0.15;
             vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, clamp(groundAtmosphereColor.a + groundAtmosphereModifier, 0.0, 1.0));
 
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
