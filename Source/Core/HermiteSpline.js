@@ -159,8 +159,10 @@ function generateNatural(points) {
  *
  * const p0 = spline.evaluate(times[0]);
  *
- * @see CatmullRomSpline
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see LinearSpline
+ * @see CatmullRomSpline
  * @see QuaternionSpline
  * @see WeightSpline
  */

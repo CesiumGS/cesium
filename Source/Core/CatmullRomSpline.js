@@ -140,6 +140,8 @@ const lastTangentScratch = new Cartesian3();
  * const p0 = spline.evaluate(times[i]);         // equal to positions[i]
  * const p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
  *
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see HermiteSpline
  * @see LinearSpline
  * @see QuaternionSpline

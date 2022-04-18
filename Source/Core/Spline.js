@@ -1,8 +1,10 @@
+import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
+import CesiumMath from "./Math.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
+import Quaternion from "./Quaternion.js";
 
 /**
  * Creates a curve parameterized and evaluated by time. This type describes an interface
@@ -12,9 +14,10 @@ import CesiumMath from "./Math.js";
  * @constructor
  *
  * @see CatmullRomSpline
- * @see HermiteSpline
  * @see LinearSpline
+ * @see HermiteSpline
  * @see QuaternionSpline
+ * @see WeightSpline
  */
 function Spline() {
   /**
@@ -33,6 +36,35 @@ function Spline() {
 
   DeveloperError.throwInstantiationError();
 }
+
+/**
+ * Gets the type of the point. This helps a spline determine how to interpolate
+ * and return its values.
+ *
+ * @param {Number|Cartesian3|Quaternion} point
+ * @returns {*} The type of the point.
+ *
+ * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or Number.
+ *
+ * @private
+ */
+Spline.getPointType = function (point) {
+  if (typeof point === "number") {
+    return Number;
+  }
+  if (point instanceof Cartesian3) {
+    return Cartesian3;
+  }
+  if (point instanceof Quaternion) {
+    return Quaternion;
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "point must be a Cartesian3, Quaternion, Number, or Number array."
+  );
+  //>>includeEnd('debug');
+};
 
 /**
  * Evaluates the curve at a given time.
@@ -156,4 +188,5 @@ Spline.prototype.clampTime = function (time) {
   const times = this.times;
   return CesiumMath.clamp(time, times[0], times[times.length - 1]);
 };
+
 export default Spline;

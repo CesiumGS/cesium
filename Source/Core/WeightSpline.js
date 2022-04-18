@@ -32,6 +32,8 @@ import Spline from "./Spline.js";
  *
  * const p0 = spline.evaluate(times[0]);
  *
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see LinearSpline
  * @see HermiteSpline
  * @see CatmullRomSpline

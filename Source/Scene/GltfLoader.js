@@ -1616,7 +1616,9 @@ function loadAnimation(loader, gltf, gltfAnimation, nodes) {
 
   const samplers = new Array(samplersLength);
   for (i = 0; i < samplersLength; i++) {
-    samplers[i] = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+    const sampler = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+    sampler.index = i;
+    samplers[i] = sampler;
   }
 
   const gltfChannels = gltfAnimation.channels;
@@ -1644,7 +1646,9 @@ function loadAnimations(loader, gltf, nodes) {
   const animationsLength = gltf.animations.length;
   const animations = new Array(animationsLength);
   for (i = 0; i < animationsLength; ++i) {
-    animations[i] = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+    const animation = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+    animation.index = i;
+    animations[i] = animation;
   }
 
   return animations;

@@ -850,6 +850,15 @@ const AnimatedPropertyType = {
  */
 function AnimationSampler() {
   /**
+   * The index of the sampler in the glTF animation. This is useful for
+   * identifying the sampler so that its data can be cached.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
+  /**
    * The timesteps of the animation.
    *
    * @type {Number[]}
@@ -942,6 +951,15 @@ function Animation() {
    * @private
    */
   this.name = undefined;
+
+  /**
+   * The index of the animation in the glTF. This is useful for distinguishing
+   * animations from each other if they are not given names in the glTF.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
 
   /**
    * The samplers used in this animation.

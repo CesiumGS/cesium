@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import ConstantSpline from "../Core/ConstantSpline.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import LinearSpline from "../Core/LinearSpline.js";
@@ -94,19 +95,6 @@ const cachedAnimationSplines = {};
 function getAnimationSplineKey(model, animationName, samplerName) {
   return `${model.cacheKey}//${animationName}/${samplerName}`;
 }
-
-function ConstantSpline(value) {
-  this._value = value;
-}
-ConstantSpline.prototype.evaluate = function (time, result) {
-  return this._value;
-};
-ConstantSpline.prototype.wrapTime = function (time) {
-  return 0.0;
-};
-ConstantSpline.prototype.clampTime = function (time) {
-  return 0.0;
-};
 
 function SteppedSpline(backingSpline) {
   this._spline = backingSpline;
