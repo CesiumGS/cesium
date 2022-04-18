@@ -470,7 +470,10 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   }
 };
 
-ModelExperimentalSceneGraph.prototype.update = function (frameState) {
+ModelExperimentalSceneGraph.prototype.update = function (
+  frameState,
+  updateForAnimations
+) {
   let i, j, k;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -479,6 +482,10 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
       const nodeUpdateStage = runtimeNode.updateStages[j];
       nodeUpdateStage.update(runtimeNode, this, frameState);
+    }
+
+    if (updateForAnimations) {
+      this.updateJointMatrices();
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
@@ -503,6 +510,11 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   }
 };
 
+/**
+ * Updates the joint matrices for the skins and nodes of the model.
+ *
+ * @private
+ */
 ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
   const model = this._model;
   const skinnedNodes = model._skinnedNodes;

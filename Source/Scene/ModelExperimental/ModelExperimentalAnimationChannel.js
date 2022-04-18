@@ -1,12 +1,13 @@
 import Check from "../../Core/Check.js";
-import ConstantSpline from "../Core/ConstantSpline.js";
+import ConstantSpline from "../../Core/ConstantSpline.js";
 import defaultValue from "../../Core/defaultValue.js";
-import LinearSpline from "../Core/LinearSpline.js";
+import InterpolationType from "../InterpolationType.js";
+import LinearSpline from "../../Core/LinearSpline.js";
 import ModelComponents from "../ModelComponents.js";
+import MorphWeightSpline from "../../Core/MorphWeightSpline.js";
 import SteppedSpline from "../../Core/SteppedSpline.js";
-import QuaternionSpline from "../Core/QuaternionSpline.js";
+import QuaternionSpline from "../../Core/QuaternionSpline.js";
 
-const InterpolationType = ModelComponents.InterpolationType;
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
 /**
@@ -40,9 +41,8 @@ function ModelExperimentalAnimationChannel(options) {
   this._runtimeAnimation = runtimeAnimation;
   this._runtimeNode = runtimeNode;
 
-  // A channel can have multiple splines if it animates the morph weights
-  // of a model. The weights for each target are separated into individual splines.
-  this._splines = undefined;
+  this._spline = undefined;
+  this._pathString = undefined;
 
   initialize(this);
 }
@@ -82,13 +82,29 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
 });
 
 function createSpline(times, points, interpolation, path) {
+  if (times.length === 1 && points.length === 1) {
+    return new ConstantSpline(points[0]);
+  }
+
+  if (path === AnimatedPropertyType.WEIGHTS) {
+    return new MorphWeightSpline({
+      times: times,
+      weights: points,
+      interpolation: interpolation,
+    });
+  }
+
   switch (interpolation) {
     case InterpolationType.STEP:
       return new SteppedSpline({
         times: times,
         points: points,
       });
+    case InterpolationType.CUBICSPLINE:
+      // TODO
+      return;
     case InterpolationType.LINEAR:
+    default:
       if (path === AnimatedPropertyType.ROTATION) {
         return new QuaternionSpline({
           times: times,
@@ -99,8 +115,6 @@ function createSpline(times, points, interpolation, path) {
         times: times,
         points: points,
       });
-    case InterpolationType.CUBICSPLINE:
-      return;
   }
 }
 
@@ -112,30 +126,29 @@ function initialize(runtimeChannel) {
   const points = sampler.output;
 
   const target = channel.target;
+  const interpolation = channel.interpolation;
+  const path = target.path;
+  const spline = createSpline(times, points, interpolation, path);
 
-  const splines = [];
+  runtimeChannel._spline = spline;
 
-  if (times.length === 1 && points.length === 1) {
-    splines.push(new ConstantSpline(points[0]));
+  let pathString;
+  switch (path) {
+    case AnimatedPropertyType.TRANSLATION:
+      pathString = "translation";
+      break;
+    case AnimatedPropertyType.ROTATION:
+      pathString = "rotation";
+      break;
+    case AnimatedPropertyType.SCALE:
+      pathString = "scale";
+      break;
+    case AnimatedPropertyType.WEIGHTS:
+      pathString = "morphWeights";
+      break;
   }
 
-  // If the points are an array of morph weights,
-  // separate them each into their own arrays of points
-  if (typeof points[0] === Number) {
-    const runtimeNode = runtimeChannel._runtimeNode;
-    // need to add runtimeNode.morphWeights
-    const morphTargetCount = runtimeNode.morphWeights.length;
-    for (let i = 0; i < morphTargetCount; i++) {
-      const morphTargetPoints = [];
-      // TODO
-    }
-  } else {
-    const interpolation = channel.interpolation;
-
-    const path = target.path;
-    const spline = createSpline(times, points, interpolation, path);
-    splines.push(spline);
-  }
+  runtimeChannel._pathString = pathString;
 }
 
 /**
@@ -143,19 +156,13 @@ function initialize(runtimeChannel) {
  *
  * @param {Number} time The local animation time.
  */
-
 ModelExperimentalAnimationChannel.prototype.animate = function (time) {
-  // might not be efficent to do a switch statement; is it possible to
-  // pass stuff to the node better?
-  // or maybe, store a reference to the property itself? and update?
-
-  const splines = this._splines;
-  const length = splines.length;
-  for (let i = 0; i < length; i++) {
-    const value = splines[i].evaluate(time);
-
-    // TODO: update node
-  }
+  const spline = this._spline;
+  const pathString = this._pathString;
+  this._runtimeNode[pathString] = spline.evaluate(
+    time,
+    this._runtimeNode[pathString]
+  );
 };
 
 export default ModelExperimentalAnimationChannel;

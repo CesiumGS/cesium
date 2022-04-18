@@ -1,8 +1,8 @@
-import defaultValue from "../Core/defaultValue.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
-import ModelAnimationState from "./ModelAnimationState.js";
+import defaultValue from "../../Core/defaultValue.js";
+import Event from "../../Core/Event.js";
+import JulianDate from "../../Core/JulianDate.js";
+import ModelAnimationLoop from ".././ModelAnimationLoop.js";
+import ModelAnimationState from ".././ModelAnimationState.js";
 import ModelExperimentalAnimationChannel from "../ModelExperimental/ModelExperimentalAnimationChannel.js";
 
 /**
@@ -127,9 +127,6 @@ function ModelExperimentalAnimation(model, animation, options) {
 
   initialize(this);
 }
-
-// TODO: write initialize function that builds animation from samplers and channels
-// see ModelAnimationCache
 
 Object.defineProperties(ModelExperimentalAnimation.prototype, {
   /**

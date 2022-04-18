@@ -145,7 +145,7 @@ const lastTangentScratch = new Cartesian3();
  * @see HermiteSpline
  * @see LinearSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function CatmullRomSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

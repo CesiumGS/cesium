@@ -5,8 +5,8 @@ import Event from "../../Core/Event.js";
 import JulianDate from "../../Core/JulianDate.js";
 import CesiumMath from "../../Core/Math.js";
 import ModelExperimentalAnimation from "./ModelExperimentalAnimation.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
-import ModelAnimationState from "./ModelAnimationState.js";
+import ModelAnimationLoop from ".././ModelAnimationLoop.js";
+import ModelAnimationState from ".././ModelAnimationState.js";
 
 /**
  * A collection of active model animations.  Access this using {@link ModelExperimental#activeAnimations}.
@@ -55,7 +55,7 @@ Object.defineProperties(ModelExperimentalAnimationCollection.prototype, {
   /**
    * The number of animations in the collection.
    *
-   * @memberof ModelAnimationCollection.prototype
+   * @memberof ModelExperimentalAnimationCollection.prototype
    *
    * @type {Number}
    * @readonly
@@ -67,10 +67,8 @@ Object.defineProperties(ModelExperimentalAnimationCollection.prototype, {
   },
 });
 
-function add(collection, index, options) {
+function addAnimation(collection, animation, options) {
   const model = collection._model;
-  const animations = model.sceneGraph.components.animations;
-  const animation = animations[index];
   const scheduledAnimation = new ModelExperimentalAnimation(
     model,
     animation,
@@ -172,12 +170,12 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
   }
   //>>includeEnd('debug');
 
-  if (defined(options.index)) {
-    return add(this, options.index, options);
+  let index = options.index;
+  if (defined(index)) {
+    return addAnimation(this, animations[index], options);
   }
 
   // Find the index of the animation with the given name
-  let index;
   const length = animations.length;
   for (let i = 0; i < length; ++i) {
     if (animations[i].name === options.name) {
@@ -192,7 +190,7 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
   }
   //>>includeEnd('debug');
 
-  return add(this, index, options);
+  return addAnimation(this, animations[index], options);
 };
 
 /**
@@ -241,7 +239,7 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
   const animations = model.sceneGraph.components.animations;
   const length = animations.length;
   for (let i = 0; i < length; ++i) {
-    scheduledAnimations.push(add(this, i, options));
+    scheduledAnimations.push(addAnimation(this, i, options));
   }
   return scheduledAnimations;
 };
@@ -338,14 +336,6 @@ ModelExperimentalAnimationCollection.prototype.get = function (index) {
 
   return this._scheduledAnimations[index];
 };
-
-function animateChannels(runtimeAnimation, localAnimationTime) {
-  const channelEvaluators = runtimeAnimation.channelEvaluators;
-  const length = channelEvaluators.length;
-  for (let i = 0; i < length; ++i) {
-    channelEvaluators[i](localAnimationTime);
-  }
-}
 
 const animationsToRemove = [];
 
@@ -467,8 +457,6 @@ ModelExperimentalAnimationCollection.prototype.update = function (frameState) {
         runtimeAnimation.startTime,
         runtimeAnimation.stopTime
       );
-
-      animateChannels(runtimeAnimation, localAnimationTime);
 
       if (scheduledAnimation.update.numberOfListeners > 0) {
         scheduledAnimation._updateEventTime = localAnimationTime;

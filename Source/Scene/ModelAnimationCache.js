@@ -5,11 +5,11 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import LinearSpline from "../Core/LinearSpline.js";
 import Matrix4 from "../Core/Matrix4.js";
+import MorphWeightSpline from "../Core/MorphWeightSpline.js";
 import Quaternion from "../Core/Quaternion.js";
 import QuaternionSpline from "../Core/QuaternionSpline.js";
 import Spline from "../Core/Spline.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
-import WeightSpline from "../Core/WeightSpline.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import AttributeType from "./AttributeType.js";
@@ -158,7 +158,7 @@ ModelAnimationCache.getAnimationSpline = function (
           points: controlPoints,
         });
       } else if (path === "weights") {
-        spline = new WeightSpline({
+        spline = new MorphWeightSpline({
           times: times,
           weights: controlPoints,
         });

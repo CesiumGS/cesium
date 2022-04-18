@@ -164,7 +164,7 @@ function generateNatural(points) {
  * @see LinearSpline
  * @see CatmullRomSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function HermiteSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

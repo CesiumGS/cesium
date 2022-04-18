@@ -9,6 +9,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
+import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -42,6 +43,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
@@ -161,6 +163,9 @@ export default function ModelExperimental(options) {
 
   this._texturesLoaded = false;
   this._defaultTexture = undefined;
+
+  this._activeAnimations = new ModelExperimentalAnimationCollection(this);
+  this._clampAnimations = defaultValue(options.clampAnimations, true);
 
   const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
@@ -393,6 +398,37 @@ Object.defineProperties(ModelExperimental.prototype, {
   loader: {
     get: function () {
       return this._loader;
+    },
+  },
+
+  /**
+   * The currently playing glTF animations.
+   *
+   * @memberof ModelExperimental.prototype
+   * @type {ModelExperimentalAnimationCollection}
+   * @readonly
+   */
+
+  activeAnimations: {
+    get: function () {
+      return this._activeAnimations;
+    },
+  },
+
+  /**
+   * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+   *
+   * @memberof ModelExperimental.prototype
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  clampAnimations: {
+    get: function () {
+      return this._clampAnimations;
+    },
+    set: function (value) {
+      this._clampAnimations = value;
     },
   },
 
@@ -1213,7 +1249,8 @@ ModelExperimental.prototype.update = function (frameState) {
     this._shadowsDirty = false;
   }
 
-  this._sceneGraph.update(frameState);
+  const updateForAnimations = this._activeAnimations.update(frameState);
+  this._sceneGraph.update(frameState, updateForAnimations);
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.

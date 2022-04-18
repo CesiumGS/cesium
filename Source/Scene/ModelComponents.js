@@ -811,20 +811,6 @@ function Scene() {
 }
 
 /**
- * The type of interpolation used in an animation.
- *
- * @alias {ModelComponents.InterpolationType}
- * @enum {Number}
- *
- * @private
- */
-const InterpolationType = {
-  STEP: 0,
-  LINEAR: 1,
-  CUBICSPLINE: 2,
-};
-
-/**
  * The property of the node that is targeted by an animation.
  *
  * @alias {ModelComponents.AnimatedPropertyType}
@@ -869,7 +855,7 @@ function AnimationSampler() {
   /**
    * The method used to interpolate between the animation's keyframe data.
    *
-   * @type {ModelComponents.InterpolationType}
+   * @type {InterpolationType}
    * @private
    */
   this.interpolation = undefined;
@@ -1382,7 +1368,6 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
-ModelComponents.InterpolationType = Object.freeze(InterpolationType);
 ModelComponents.AnimatedPropertyType = Object.freeze(AnimatedPropertyType);
 ModelComponents.AnimationSampler = AnimationSampler;
 ModelComponents.AnimationTarget = AnimationTarget;

@@ -17,7 +17,7 @@ import Quaternion from "./Quaternion.js";
  * @see LinearSpline
  * @see HermiteSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function Spline() {
   /**

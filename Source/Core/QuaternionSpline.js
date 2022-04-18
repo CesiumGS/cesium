@@ -46,7 +46,7 @@ function createEvaluateFunction(spline) {
  * @see HermiteSpline
  * @see CatmullRomSpline
  * @see LinearSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function QuaternionSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

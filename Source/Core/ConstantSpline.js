@@ -21,7 +21,7 @@ import Spline from "./Spline.js";
  * @see HermiteSpline
  * @see CatmullRomSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function ConstantSpline(value) {
   this._value = value;

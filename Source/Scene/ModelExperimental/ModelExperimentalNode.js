@@ -1,3 +1,4 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -6,6 +7,8 @@ import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
+import Quaternion from "../../Core/Quaternion.js";
 
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
@@ -48,6 +51,11 @@ export default function ModelExperimentalNode(options) {
 
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
+
+  const hasMatrix = defined(node.matrix);
+  this._transformComponents = hasMatrix
+    ? undefined
+    : new TranslationRotationScale(node.translation, node.rotation, node.scale);
 
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
@@ -181,6 +189,93 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
+   * The node's local space translation. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  translation: {
+    get: function () {
+      return this._transformComponents.translation;
+    },
+    set: function (value) {
+      const transformComponents = this._transformComponents;
+      const currentTranslation = transformComponents.translation;
+      if (Cartesian3.equals(currentTranslation, value)) {
+        return;
+      }
+
+      transformComponents.translation = Cartesian3.clone(
+        value,
+        transformComponents.translation
+      );
+
+      updateTransformFromComponents(this, transformComponents);
+    },
+  },
+
+  /**
+   * The node's local space rotation. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Quaternion}
+   *
+   * @private
+   */
+  rotation: {
+    get: function () {
+      return this._transformComponents.rotation;
+    },
+    set: function (value) {
+      const transformComponents = this._transformComponents;
+      const currentRotation = transformComponents.rotation;
+      if (Quaternion.equals(currentRotation, value)) {
+        return;
+      }
+
+      transformComponents.rotation = Quaternion.clone(
+        value,
+        transformComponents.rotation
+      );
+
+      updateTransformFromComponents(this, transformComponents);
+    },
+  },
+
+  /**
+   * The node's local space scale. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._transformComponents.scale;
+    },
+    set: function (value) {
+      const transformComponents = this._transformComponents;
+      const currentScale = transformComponents.scale;
+      if (Cartesian3.equals(currentScale, value)) {
+        return;
+      }
+
+      transformComponents.scale = Cartesian3.clone(
+        value,
+        transformComponents.scale
+      );
+
+      updateTransformFromComponents(this, transformComponents);
+    },
+  },
+
+  /**
    * The node's axis corrected local space transform. Used in instancing.
    *
    * @type {Matrix4}
@@ -232,6 +327,22 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
   },
 });
+
+function updateTransformFromComponents(runtimeNode, transformComponents) {
+  runtimeNode._transformDirty = true;
+
+  runtimeNode._transform = Matrix4.fromTranslationRotationScale(
+    transformComponents,
+    runtimeNode._transform
+  );
+
+  runtimeNode._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+    runtimeNode._transform,
+    runtimeNode._sceneGraph.components.upAxis,
+    runtimeNode._sceneGraph.components.forwardAxis,
+    runtimeNode._axisCorrectedTransform
+  );
+}
 
 /**
  * Returns the child with the given index.
@@ -288,12 +399,15 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
  * @private
  */
 ModelExperimentalNode.prototype.updateJointMatrices = function () {
-  if (!defined(this._runtimeSkin)) {
+  const runtimeSkin = this._runtimeSkin;
+  if (!defined(runtimeSkin)) {
     return;
   }
 
+  runtimeSkin.updateJointMatrices();
+
   const computedJointMatrices = this._computedJointMatrices;
-  const skinJointMatrices = this._runtimeSkin.jointMatrices;
+  const skinJointMatrices = runtimeSkin.jointMatrices;
   const length = skinJointMatrices.length;
 
   for (let i = 0; i < length; i++) {
