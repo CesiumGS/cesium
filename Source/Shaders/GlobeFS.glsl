@@ -498,7 +498,8 @@ void main()
                 groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 1.6);
             #endif
             
-            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, groundAtmosphereColor.a + 0.3);
+            const float groundAtmosphereModifier = 0.175;
+            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, clamp(groundAtmosphereColor.a + groundAtmosphereModifier, 0.0, 1.0));
 
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float fadeInDist = u_nightFadeDistance.x;
