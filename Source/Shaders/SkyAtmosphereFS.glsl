@@ -18,9 +18,8 @@ void main (void)
     float opacity;
     float translucent;
 
-
 #ifdef PER_FRAGMENT_ATMOSPHERE
-    computeAtmosphericScattering(
+    computeAtmosphereScattering(
         v_outerPositionWC,
         lightDirection,
         rayleighColor,

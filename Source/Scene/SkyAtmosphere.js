@@ -15,6 +15,7 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
+import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
 import Axis from "./Axis.js";
@@ -238,7 +239,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
   if (flags !== this._flags) {
     this._flags = flags;
 
-    const defines = [];
+    const defines = ["SKY_ATMOSPHERE"];
 
     if (colorCorrect) {
       defines.push("COLOR_CORRECT");
@@ -254,12 +255,12 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
 
     const vs = new ShaderSource({
       defines: defines,
-      sources: [AtmosphereCommon, SkyAtmosphereVS],
+      sources: [AtmosphereCommon, SkyAtmosphereCommon, SkyAtmosphereVS],
     });
 
     const fs = new ShaderSource({
       defines: defines,
-      sources: [AtmosphereCommon, SkyAtmosphereFS],
+      sources: [AtmosphereCommon, SkyAtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyAtmosphere = ShaderProgram.fromCache({

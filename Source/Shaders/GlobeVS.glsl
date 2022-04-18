@@ -222,7 +222,8 @@ void main()
 #endif
 
     vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(position3DWC));
-    computeAtmosphericScattering(
+
+    computeAtmosphereScattering(
         position3DWC,
         lightDirection,
         v_atmosphereRayleighColor,

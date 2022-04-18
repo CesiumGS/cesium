@@ -15,7 +15,7 @@ void main(void)
     vec3 lightDirection = getLightDirection(positionWC.xyz);
 
 #ifndef PER_FRAGMENT_ATMOSPHERE
-    computeAtmosphericScattering(
+    computeAtmosphereScattering(
         positionWC.xyz,
         lightDirection,
         v_rayleighColor,

@@ -19,6 +19,7 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import GlobeFS from "../Shaders/GlobeFS.js";
 import GlobeVS from "../Shaders/GlobeVS.js";
+import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
@@ -590,7 +591,7 @@ function makeShadersDirty(globe) {
     (globe._material.shaderSource.match(/slope/) ||
       globe._material.shaderSource.match("normalEC"));
 
-  const fragmentSources = [GroundAtmosphere];
+  const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
     defined(globe._material) &&
     (!requireNormals || globe._terrainProvider.requestVertexNormals)
@@ -604,7 +605,7 @@ function makeShadersDirty(globe) {
   fragmentSources.push(GlobeFS);
 
   globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-    sources: [GroundAtmosphere, GlobeVS],
+    sources: [AtmosphereCommon, GroundAtmosphere, GlobeVS],
     defines: defines,
   });
 

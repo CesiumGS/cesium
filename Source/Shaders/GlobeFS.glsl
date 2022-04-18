@@ -449,13 +449,15 @@ void main()
         float opacity;
 
         vec3 positionWC;
+        vec3 lightDirection;
+
 
         // When the camera is far away (camera distance > nightFadeOutDistance), the scattering is computed in the fragment shader.
         // Otherwise, the scattering is computed in the vertex shader.
         #ifdef PER_FRAGMENT_GROUND_ATMOSPHERE
             positionWC = computeEllipsoidPosition();
-            vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
-            computeAtmosphericScattering(
+            lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
+            computeAtmosphereScattering(
                 positionWC,
                 lightDirection,
                 rayleighColor,
@@ -464,6 +466,7 @@ void main()
             );
         #else
             positionWC = v_positionMC;
+            lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
             rayleighColor = v_atmosphereRayleighColor;
             mieColor = v_atmosphereMieColor;
             opacity = v_atmosphereOpacity;
@@ -472,7 +475,7 @@ void main()
         rayleighColor = colorCorrect(rayleighColor);
         mieColor = colorCorrect(mieColor);
 
-        vec4 groundAtmosphereColor = computeFinalColor(positionWC, dynamicLighting, atmosphereLightDirection, rayleighColor, mieColor, opacity);
+        vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity, 0.0);
 
         // Fog is applied to tiles selected for fog, close to the Eartth.
         #ifdef FOG
@@ -499,7 +502,8 @@ void main()
             #endif
             
             const float groundAtmosphereModifier = 0.15;
-            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, clamp(groundAtmosphereColor.a + groundAtmosphereModifier, 0.0, 1.0));
+            float transmittance = 1.0 - groundAtmosphereColor.a;
+            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, clamp(transmittance + groundAtmosphereModifier, 0.0, 1.0));
 
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float fadeInDist = u_nightFadeDistance.x;
