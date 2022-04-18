@@ -57,7 +57,7 @@ export default function ModelExperimentalNode(options) {
   );
   this._computedTransform = computedTransform;
 
-  // for instancing
+  // For instancing
   this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
     computedTransform,
     components.upAxis,
@@ -185,7 +185,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * A transform from the node's local space to the model's scene graph space.
-   * This is the product transformToRoot * transform.
+   * This is the product of transformToRoot * transform.
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
