@@ -1,6 +1,7 @@
 import {
   Axis,
   Cartesian3,
+  defaultValue,
   InstancingPipelineStage,
   Matrix4,
   Math as CesiumMath,
@@ -25,12 +26,45 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     },
   };
 
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
+  const scratchMatrix = new Matrix4();
+  function verifyTransforms(
+    transform,
+    transformToRoot,
+    runtimeNode,
+    originalTransform
+  ) {
+    originalTransform = defaultValue(originalTransform, transform);
+
     expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(
+      Matrix4.equals(runtimeNode.originalTransform, originalTransform)
+    ).toBe(true);
     expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
       true
     );
+
+    const computedTransform = Matrix4.multiplyTransformation(
+      transformToRoot,
+      transform,
+      scratchMatrix
+    );
+    expect(
+      Matrix4.equals(runtimeNode.computedTransform, computedTransform)
+    ).toBe(true);
+
+    const axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+      computedTransform,
+      mockSceneGraph.components.upAxis,
+      mockSceneGraph.components.forwardAxis,
+      scratchMatrix
+    );
+    expect(
+      Matrix4.equalsEpsilon(
+        runtimeNode.axisCorrectedTransform,
+        axisCorrectedTransform
+      ),
+      CesiumMath.EPSILON8
+    ).toBe(true);
   }
 
   it("throws for undefined node", function () {
@@ -229,17 +263,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       children: [0],
     });
 
-    const axisCorrected = ModelExperimentalUtility.correctModelMatrix(
-      Matrix4.IDENTITY,
-      mockSceneGraph.components.upAxis,
-      mockSceneGraph.components.forwardAxis,
-      new Matrix4()
-    );
-
-    expect(Matrix4.equals(node.computedTransform, Matrix4.IDENTITY)).toBe(true);
-    expect(Matrix4.equals(node.axisCorrectedTransform, axisCorrected)).toBe(
-      true
-    );
+    verifyTransforms(transform, transformToRoot, node);
 
     const newTransform = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
@@ -250,16 +274,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     node.transform = newTransform;
     node.updateTransforms();
 
-    const expected = Matrix4.multiply(
-      newTransform,
-      axisCorrected,
-      new Matrix4()
-    );
-
-    expect(Matrix4.equals(node.computedTransform, newTransform)).toBe(true);
-    expect(
-      Matrix4.equalsEpsilon(node.axisCorrectedTransform, expected),
-      CesiumMath.EPSILON8
-    ).toBe(true);
+    const originalTransform = transform;
+    verifyTransforms(newTransform, transformToRoot, node, originalTransform);
   });
 });

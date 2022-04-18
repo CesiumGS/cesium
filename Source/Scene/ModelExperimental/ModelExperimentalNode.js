@@ -185,7 +185,10 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * A transform from the node's local space to the model's scene graph space.
-   * This is the product of transformToRoot * transform
+   * This is the product transformToRoot * transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
    * @readonly
    */
   computedTransform: {
