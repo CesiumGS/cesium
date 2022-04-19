@@ -198,6 +198,56 @@ function Globe(ellipsoid) {
   this.showGroundAtmosphere = true;
 
   /**
+   * The intensity of the light that is used for computing the ground atmosphere color.
+   *
+   * @type {Number}
+   * @default 15.0
+   */
+  this.atmosphereLightIntensity = 10.0;
+
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(5.5e-6, 13.0e-6, 22.4e-6)
+   */
+  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 22.4e-6);
+
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(21e-6, 21e-6, 21e-6)
+   */
+  this.atmosphereMieCoefficient = new Cartesian3(21e-6, 21e-6, 21e-6);
+
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 10000.0
+   */
+  this.atmosphereRayleighScaleHeight = 10000.0;
+
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 3200.0
+   */
+  this.atmosphereMieScaleHeight = 3200.0;
+
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * <p>
+   * Valid values are between -1.0 and 1.0.
+   * </p>
+   * @type {Number}
+   * @default 0.9
+   */
+  this.atmosphereMieAnisotropy = 0.9;
+
+  /**
    * The distance where everything becomes lit. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
@@ -985,6 +1035,12 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
     tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
     tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
+    tileProvider.atmosphereLightIntensity = this.atmosphereLightIntensity;
+    tileProvider.atmosphereRayleighCoefficient = this.atmosphereRayleighCoefficient;
+    tileProvider.atmosphereMieCoefficient = this.atmosphereMieCoefficient;
+    tileProvider.atmosphereRayleighScaleHeight = this.atmosphereRayleighScaleHeight;
+    tileProvider.atmosphereMieScaleHeight = this.atmosphereMieScaleHeight;
+    tileProvider.atmosphereMieAnisotropy = this.atmosphereMieAnisotropy;
     tileProvider.shadows = this.shadows;
     tileProvider.hueShift = this.atmosphereHueShift;
     tileProvider.saturationShift = this.atmosphereSaturationShift;

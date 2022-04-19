@@ -44,13 +44,13 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
         underTranslucentGlobe = 0.0;
 
         // Check for intersection with the inner radius of the atmopshere.
-        czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, origin, atmosphereInnerRadius + ellipsoidRadiiDifference);
+        czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, vec3(0.0), atmosphereInnerRadius + radiusAdjust);
         if (primaryRayEarthIntersect.start > 0.0 && primaryRayEarthIntersect.stop > 0.0) {
             
             // Compute position on globe.
             vec3 direction = normalize(positionWC);
             czm_ray ellipsoidRay = czm_ray(positionWC, -direction);
-            czm_raySegment ellipsoidIntersection = czm_rayEllipsoidIntersectionInterval(ellipsoidRay, origin, czm_ellipsoidInverseRadii);
+            czm_raySegment ellipsoidIntersection = czm_rayEllipsoidIntersectionInterval(ellipsoidRay, vec3(0.0), czm_ellipsoidInverseRadii);
             vec3 onEarth = positionWC - (direction * ellipsoidIntersection.start);
 
             // Control the color using the camera angle.

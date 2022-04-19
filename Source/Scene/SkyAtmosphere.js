@@ -83,6 +83,56 @@ function SkyAtmosphere(ellipsoid) {
   this._flags = undefined;
 
   /**
+   * The intensity of the light that is used for computing the ground atmosphere color.
+   *
+   * @type {Number}
+   * @default 15.0
+   */
+  this.atmosphereLightIntensity = 50.0;
+
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(5.5e-6, 13.0e-6, 22.4e-6)
+   */
+  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 22.4e-6);
+
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(21e-6, 21e-6, 21e-6)
+   */
+  this.atmosphereMieCoefficient = new Cartesian3(21e-6, 21e-6, 21e-6);
+
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 10000.0
+   */
+  this.atmosphereRayleighScaleHeight = 10000.0;
+
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 3200.0
+   */
+  this.atmosphereMieScaleHeight = 3200.0;
+
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * <p>
+   * Valid values are between -1.0 and 1.0.
+   * </p>
+   * @type {Number}
+   * @default 0.9
+   */
+  this.atmosphereMieAnisotropy = 0.9;
+
+  /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A hue shift of 1.0 indicates a complete rotation of the hues available.
    * @type {Number}
@@ -130,6 +180,24 @@ function SkyAtmosphere(ellipsoid) {
       that._hueSaturationBrightness.y = that.saturationShift;
       that._hueSaturationBrightness.z = that.brightnessShift;
       return that._hueSaturationBrightness;
+    },
+    u_atmosphereLightIntensity: function () {
+      return that.atmosphereLightIntensity;
+    },
+    u_atmosphereRayleighCoefficient: function () {
+      return that.atmosphereRayleighCoefficient;
+    },
+    u_atmosphereMieCoefficient: function () {
+      return that.atmosphereMieCoefficient;
+    },
+    u_atmosphereRayleighScaleHeight: function () {
+      return that.atmosphereRayleighScaleHeight;
+    },
+    u_atmosphereMieScaleHeight: function () {
+      return that.atmosphereMieScaleHeight;
+    },
+    u_atmosphereMieAnisotropy: function () {
+      return that.atmosphereMieAnisotropy;
     },
   };
 }

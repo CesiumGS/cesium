@@ -1,15 +1,17 @@
 uniform vec3 u_radiiAndDynamicAtmosphereColor;
 
+uniform float u_atmosphereLightIntensity;
+uniform float u_atmosphereRayleighScaleHeight;
+uniform float u_atmosphereMieScaleHeight;
+uniform float u_atmosphereMieAnisotropy;
+uniform vec3 u_atmosphereRayleighCoefficient;
+uniform vec3 u_atmosphereMieCoefficient;
+
 const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
-const float G = 0.9; // The anisotropy of the medium. Only used in the phase function for Mie scattering.
-const float RAYLEIGH_HEIGHT_LIMIT = 10e3; // The height at which Rayleigh scattering stops.
-const float MIE_HEIGHT_LIMIT = 3.2e3; // The height at which Mie scattering stops.
-const vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
-const vec3 BETA_RAYLEIGH = vec3(5.5e-6, 13.0e-6, 22.4e-6);
-const vec3 BETA_MIE = vec3(21e-6);
-const vec3 LIGHT_INTENSITY = vec3(50.0);
 const int PRIMARY_STEPS = 16; // Number of times the ray from the camera to the world position (primary ray) is sampled.
 const int LIGHT_STEPS = 4; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
+
+vec2 HEIGHT_SCALE = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
 
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
@@ -101,7 +103,7 @@ void computeScattering(
         }
 
         // Compute attenuation via the primary ray and the light ray.
-        vec3 attenuation = exp(-((BETA_MIE * (opticalDepth.y + lightOpticalDepth.y)) + (BETA_RAYLEIGH * (opticalDepth.x + lightOpticalDepth.x))));
+        vec3 attenuation = exp(-((u_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (u_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
 
         // Accumulate the scattering.
         rayleighAccumulation += sampleDensity.x * attenuation;
@@ -112,11 +114,11 @@ void computeScattering(
     }
 
     // Compute the scattering amount.
-    rayleighColor = BETA_RAYLEIGH * rayleighAccumulation;
-    mieColor = BETA_MIE * mieAccumulation;
+    rayleighColor = u_atmosphereRayleighCoefficient * rayleighAccumulation;
+    mieColor = u_atmosphereMieCoefficient * mieAccumulation;
 
     // Compute the transmittance i.e. how much light is passing through the atmosphere.
-    opacity = length(exp(-((BETA_MIE * opticalDepth.y) + (BETA_RAYLEIGH * opticalDepth.x))));
+    opacity = length(exp(-((u_atmosphereMieCoefficient * opticalDepth.y) + (u_atmosphereRayleighCoefficient * opticalDepth.x))));
 }
 
 vec4 computeAtmosphereColor(
@@ -133,6 +135,8 @@ vec4 computeAtmosphereColor(
 
     float cosAngle = dot(cameraToPositionWCDirection, lightDirection);
     float cosAngleSq = cosAngle * cosAngle;
+
+    float G = u_atmosphereMieAnisotropy;
     float GSq = G * G;
 
     // The Rayleigh phase function.
@@ -144,7 +148,7 @@ vec4 computeAtmosphereColor(
     vec3 rayleigh = rayleighPhase * rayleighColor;
     vec3 mie = miePhase * mieColor;
 
-    vec3 color = (rayleigh + mie) * LIGHT_INTENSITY;
+    vec3 color = (rayleigh + mie) * u_atmosphereLightIntensity;
 
     #ifdef SKY_ATMOSPHERE
         if (translucent == 0.0) {
