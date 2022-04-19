@@ -47,24 +47,22 @@ export default function ModelExperimentalNode(options) {
 
   this._name = node.name; // Helps with debugging
 
-  const components = sceneGraph.components;
-
+  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
   const hasMatrix = defined(node.matrix);
-  this._transformComponents = hasMatrix
+  this._transformParameters = hasMatrix
     ? undefined
     : new TranslationRotationScale(node.translation, node.rotation, node.scale);
 
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+  const computedTransform = Matrix4.multiply(
+    transformToRoot,
     transform,
-    components.upAxis,
-    components.forwardAxis,
-    this._axisCorrectedTransform
+    new Matrix4()
   );
-
+  this._computedTransform = computedTransform;
   this._transformDirty = false;
 
   // Will be set by the scene graph after the skins have been created
@@ -164,19 +162,14 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-        value,
-        this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis,
-        this._axisCorrectedTransform
-      );
     },
   },
 
   /**
-   * The transforms of all the node's ancestors. Multiplying this with the node's
-   * local transform will result in a transform from the node's local space to
-   * the model's scene graph space.
+   * The transforms of all the node's ancestors, not including this node's
+   * transform.
+   *
+   * @see ModelExperimentalNode#computedTransform
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -199,21 +192,24 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   translation: {
     get: function () {
-      return this._transformComponents.translation;
+      return this._transformParameters.translation;
     },
     set: function (value) {
-      const transformComponents = this._transformComponents;
-      const currentTranslation = transformComponents.translation;
+      // TODO: should there be checks here to see if transformParameters is
+      // defined? because this is private API that only animation should be
+      // using, and it might be a performance hit to do checks every frame?
+      const transformParameters = this._transformParameters;
+      const currentTranslation = transformParameters.translation;
       if (Cartesian3.equals(currentTranslation, value)) {
         return;
       }
 
-      transformComponents.translation = Cartesian3.clone(
+      transformParameters.translation = Cartesian3.clone(
         value,
-        transformComponents.translation
+        transformParameters.translation
       );
 
-      updateTransformFromComponents(this, transformComponents);
+      updateTransformFromParameters(this, transformParameters);
     },
   },
 
@@ -228,21 +224,21 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   rotation: {
     get: function () {
-      return this._transformComponents.rotation;
+      return this._transformParameters.rotation;
     },
     set: function (value) {
-      const transformComponents = this._transformComponents;
-      const currentRotation = transformComponents.rotation;
+      const transformParameters = this._transformParameters;
+      const currentRotation = transformParameters.rotation;
       if (Quaternion.equals(currentRotation, value)) {
         return;
       }
 
-      transformComponents.rotation = Quaternion.clone(
+      transformParameters.rotation = Quaternion.clone(
         value,
-        transformComponents.rotation
+        transformParameters.rotation
       );
 
-      updateTransformFromComponents(this, transformComponents);
+      updateTransformFromParameters(this, transformParameters);
     },
   },
 
@@ -257,34 +253,34 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   scale: {
     get: function () {
-      return this._transformComponents.scale;
+      return this._transformParameters.scale;
     },
     set: function (value) {
-      const transformComponents = this._transformComponents;
-      const currentScale = transformComponents.scale;
+      const transformParameters = this._transformParameters;
+      const currentScale = transformParameters.scale;
       if (Cartesian3.equals(currentScale, value)) {
         return;
       }
 
-      transformComponents.scale = Cartesian3.clone(
+      transformParameters.scale = Cartesian3.clone(
         value,
-        transformComponents.scale
+        transformParameters.scale
       );
 
-      updateTransformFromComponents(this, transformComponents);
+      updateTransformFromParameters(this, transformParameters);
     },
   },
 
   /**
    * The node's axis corrected local space transform. Used in instancing.
    *
+   * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
-   * @private
    * @readonly
    */
-  axisCorrectedTransform: {
+  computedTransform: {
     get: function () {
-      return this._axisCorrectedTransform;
+      return this._computedTransform;
     },
   },
 
@@ -328,11 +324,11 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 });
 
-function updateTransformFromComponents(runtimeNode, transformComponents) {
+function updateTransformFromParameters(runtimeNode, transformParameters) {
   runtimeNode._transformDirty = true;
 
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
-    transformComponents,
+    transformParameters,
     runtimeNode._transform
   );
 
@@ -390,6 +386,19 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the computed transform used for rendering and instancing
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateComputedTransform = function () {
+  this._computedTransform = Matrix4.multiply(
+    this._transformToRoot,
+    this._transform,
+    this._computedTransform
+  );
 };
 
 /**

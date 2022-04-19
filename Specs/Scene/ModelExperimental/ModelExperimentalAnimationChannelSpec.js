@@ -263,8 +263,8 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     const expected = mockSampler.output[1];
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
-    /*expect(runtimeNode.transform).toEqual(
+    expect(runtimeNode.transform).toEqual(
       Matrix4.fromTranslation(expected, scratchTransform)
-    );*/
+    );
   });
 });
