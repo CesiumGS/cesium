@@ -496,14 +496,20 @@ void main()
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
         #else
-            #ifndef HDR
-                groundAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * groundAtmosphereColor.rgb);
-                groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 1.6);
-            #endif
             
-            const float groundAtmosphereModifier = 0.15;
-            float transmittance = 1.0 - groundAtmosphereColor.a;
-            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, clamp(transmittance + groundAtmosphereModifier, 0.0, 1.0));
+            // Adjust the saturation.
+            groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 0.75);
+
+            // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
+            // This value is larger near the "circumference", as it is further away from the camera. We use it to
+            // brighten up that area of the ground atmosphere.
+            float transmittance = 1.0 + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
+
+            vec3 finalAtmosphereColor = finalColor.rgb + groundAtmosphereColor.rgb * transmittance;
+            
+            #ifndef HDR
+                finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
+            #endif
 
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float fadeInDist = u_nightFadeDistance.x;
