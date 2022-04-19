@@ -38,7 +38,7 @@ import Spline from "./Spline.js";
  * @see HermiteSpline
  * @see LinearSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function SteppedSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

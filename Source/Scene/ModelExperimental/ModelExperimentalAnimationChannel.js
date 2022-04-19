@@ -1,7 +1,7 @@
 import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
 import defaultValue from "../../Core/defaultValue.js";
-import InterpolationType from "../InterpolationType.js";
+import InterpolationType from "../../Core/InterpolationType.js";
 import LinearSpline from "../../Core/LinearSpline.js";
 import ModelComponents from "../ModelComponents.js";
 import MorphWeightSpline from "../../Core/MorphWeightSpline.js";
@@ -42,7 +42,7 @@ function ModelExperimentalAnimationChannel(options) {
   this._runtimeNode = runtimeNode;
 
   this._spline = undefined;
-  this._pathString = undefined;
+  this._path = undefined;
 
   initialize(this);
 }
@@ -65,18 +65,50 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   },
 
   /**
-   * The splines used to evaluate this animation channel.
+   * The runtime animation that owns this channel.
    *
    * @memberof ModelExperimentalAnimationChannel.prototype
    *
-   * @type {Spline[]}
+   * @type {ModelExperimentalAnimation}
    * @readonly
    *
    * @private
    */
-  splines: {
+  runtimeAnimation: {
     get: function () {
-      return this._splines;
+      return this._runtimeAnimation;
+    },
+  },
+
+  /**
+   * The runtime node that this channel animates.
+   *
+   * @memberof ModelExperimentalAnimationChannel.prototype
+   *
+   * @type {ModelExperimentalNode}
+   * @readonly
+   *
+   * @private
+   */
+  runtimeNode: {
+    get: function () {
+      return this._runtimeNode;
+    },
+  },
+
+  /**
+   * The spline used to evaluate this animation channel.
+   *
+   * @memberof ModelExperimentalAnimationChannel.prototype
+   *
+   * @type {Spline}
+   * @readonly
+   *
+   * @private
+   */
+  spline: {
+    get: function () {
+      return this._spline;
     },
   },
 });
@@ -85,6 +117,8 @@ function createSpline(times, points, interpolation, path) {
   if (times.length === 1 && points.length === 1) {
     return new ConstantSpline(points[0]);
   }
+
+  console.log("HERE");
 
   if (path === AnimatedPropertyType.WEIGHTS) {
     return new MorphWeightSpline({
@@ -125,44 +159,26 @@ function initialize(runtimeChannel) {
   const times = sampler.input;
   const points = sampler.output;
 
+  const interpolation = sampler.interpolation;
   const target = channel.target;
-  const interpolation = channel.interpolation;
   const path = target.path;
   const spline = createSpline(times, points, interpolation, path);
 
   runtimeChannel._spline = spline;
-
-  let pathString;
-  switch (path) {
-    case AnimatedPropertyType.TRANSLATION:
-      pathString = "translation";
-      break;
-    case AnimatedPropertyType.ROTATION:
-      pathString = "rotation";
-      break;
-    case AnimatedPropertyType.SCALE:
-      pathString = "scale";
-      break;
-    case AnimatedPropertyType.WEIGHTS:
-      pathString = "morphWeights";
-      break;
-  }
-
-  runtimeChannel._pathString = pathString;
+  runtimeChannel._path = path;
 }
 
 /**
  * Animates the target node property based on its spline.
  *
  * @param {Number} time The local animation time.
+ *
+ * @private
  */
 ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   const spline = this._spline;
-  const pathString = this._pathString;
-  this._runtimeNode[pathString] = spline.evaluate(
-    time,
-    this._runtimeNode[pathString]
-  );
+  const path = this._path;
+  this._runtimeNode[path] = spline.evaluate(time, this._runtimeNode[path]);
 };
 
 export default ModelExperimentalAnimationChannel;

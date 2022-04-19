@@ -1,53 +1,40 @@
 import {
   Axis,
   Cartesian3,
-  InstancingPipelineStage,
+  ConstantSpline,
   InterpolationType,
+  LinearSpline,
   Matrix4,
   ModelComponents,
-  ModelExperimentalAnimation,
   ModelExperimentalAnimationChannel,
   ModelExperimentalNode,
-  ModelMatrixUpdateStage,
+  MorphWeightSpline,
+  SteppedSpline,
+  Quaternion,
+  QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
+fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+  const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
-  const mockSampler = {
-    input: [0.0, 0.25, 0.5, 1.0],
-    interpolation: InterpolationType.LINEAR,
-    output: [
-      Cartesian3.ZERO,
-      new Cartesian3(1.0, 0.0, 0.0),
-      new Cartesian3(1.0, 1.0, 0.0),
-      new Cartesian3(0.0, 1.0, 0.0),
-    ],
-  };
-
-  const mockTarget = {
-    node: undefined,
-    path: AnimatedPropertyType.TRANSLATION,
-  };
-
-  const mockChannel = {
-    sampler: mockSampler,
-    target: mockTarget,
-  };
-
-  const mockAnimation = {
-    channels: [mockChannel],
-  };
-
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
-    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
-      true
-    );
+  function createMockChannel(node, mockSampler, path) {
+    const mockTarget = {
+      node: node,
+      path: path,
+    };
+    const mockChannel = {
+      sampler: mockSampler,
+      target: mockTarget,
+    };
+    return mockChannel;
   }
 
-  const mockNode = {};
+  const mockNode = {
+    translation: Cartesian3.ZERO,
+    rotation: Quaternion.IDENTITY,
+    scale: new Cartesian3(1.0, 1.0, 1.0),
+  };
+
   const transform = Matrix4.clone(Matrix4.IDENTITY);
   const transformToRoot = Matrix4.clone(Matrix4.IDENTITY);
   const mockSceneGraph = {
@@ -59,10 +46,10 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     },
   };
 
+  const runtimeAnimation = {};
   let runtimeNode;
-  let runtimeAnimation;
 
-  beforeAll(function () {
+  beforeEach(function () {
     runtimeNode = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
@@ -70,12 +57,6 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       sceneGraph: mockSceneGraph,
       children: [],
     });
-
-    runtimeAnimation = new ModelExperimentalAnimation(
-      undefined,
-      mockAnimation,
-      {}
-    );
   });
 
   it("throws for undefined channel", function () {
@@ -91,8 +72,8 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   it("throws for undefined runtimeAnimation", function () {
     expect(function () {
       return new ModelExperimentalAnimationChannel({
-        channel: mockChannel,
-        runtimeAnimation: runtimeAnimation,
+        channel: {},
+        runtimeAnimation: undefined,
         runtimeNode: runtimeNode,
       });
     }).toThrowDeveloperError();
@@ -100,164 +81,190 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
 
   it("throws for undefined runtimeNode", function () {
     expect(function () {
-      return new ModelExperimentalNode({
-        node: mockNode,
-        transform: transform,
-        transformToRoot: undefined,
-        sceneGraph: mockSceneGraph,
-        children: [],
+      return new ModelExperimentalAnimationChannel({
+        channel: {},
+        runtimeAnimation: runtimeAnimation,
+        runtimeNode: undefined,
       });
     }).toThrowDeveloperError();
   });
 
-  it("throws for undefined scene graph", function () {
-    expect(function () {
-      return new ModelExperimentalNode({
-        node: mockNode,
-        transform: transform,
-        transformToRoot: transformToRoot,
-        sceneGraph: undefined,
-        children: [],
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws for undefined children", function () {
-    expect(function () {
-      return new ModelExperimentalNode({
-        node: mockNode,
-        transform: transform,
-        sceneGraph: mockSceneGraph,
-        trasnformToRoot: transformToRoot,
-        children: undefined,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("constructs", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [],
-    });
-
-    expect(node.node).toBe(mockNode);
-    expect(node.sceneGraph).toBe(mockSceneGraph);
-    expect(node.children.length).toEqual(0);
-
-    verifyTransforms(transform, transformToRoot, node);
-
-    expect(node.pipelineStages).toEqual([]);
-    expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
-    expect(node.runtimePrimitives).toEqual([]);
-  });
-
-  it("adds instancing pipeline stage if node is instanced", function () {
-    const instancedMockNode = {
-      instances: {
-        attributes: [],
-      },
+  it("constructs constant spline", function () {
+    const mockSampler = {
+      input: [0.0],
+      interpolation: InterpolationType.LINEAR,
+      output: [Cartesian3.ZERO],
     };
-    const node = new ModelExperimentalNode({
-      node: instancedMockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [],
-    });
 
-    expect(node.node).toBe(instancedMockNode);
-    expect(node.sceneGraph).toBe(mockSceneGraph);
-    expect(node.children.length).toEqual(0);
-
-    verifyTransforms(transform, transformToRoot, node);
-
-    expect(node.pipelineStages.length).toBe(1);
-    expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
-    expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
-    expect(node.runtimePrimitives).toEqual([]);
-  });
-
-  it("getChild throws for undefined index", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [0],
-    });
-
-    expect(function () {
-      node.getChild();
-    }).toThrowDeveloperError();
-  });
-
-  it("getChild throws for invalid index", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [0],
-    });
-
-    expect(function () {
-      node.getChild("s");
-    }).toThrowDeveloperError();
-  });
-
-  it("getChild throws for out of range index", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [0],
-    });
-
-    expect(function () {
-      node.getChild(2);
-    }).toThrowDeveloperError();
-    expect(function () {
-      node.getChild(-1);
-    }).toThrowDeveloperError();
-  });
-
-  it("getChild works", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [0],
-    });
-
-    const child = node.getChild(0);
-    expect(child).toBeDefined();
-    expect(child.transform).toBeDefined();
-  });
-
-  it("sets transform without replacing original", function () {
-    const node = new ModelExperimentalNode({
-      node: mockNode,
-      transform: transform,
-      transformToRoot: transformToRoot,
-      sceneGraph: mockSceneGraph,
-      children: [0],
-    });
-
-    const newTransform = Matrix4.multiplyByTranslation(
-      Matrix4.IDENTITY,
-      new Cartesian3(10, 0, 0),
-      new Matrix4()
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
     );
 
-    node.transform = newTransform;
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
 
-    expect(node._transformDirty).toBe(true);
-    expect(Matrix4.equals(node.transform, newTransform)).toBe(true);
-    expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.spline instanceof ConstantSpline).toBe(true);
+  });
+
+  it("constructs linear spline", function () {
+    const mockSampler = {
+      input: [0.0, 0.25, 0.5, 1.0],
+      interpolation: InterpolationType.LINEAR,
+      output: [
+        Cartesian3.ZERO,
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+        new Cartesian3(0.0, 1.0, 0.0),
+      ],
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.spline instanceof LinearSpline).toBe(true);
+  });
+
+  it("constructs quaternion spline", function () {
+    const mockSampler = {
+      input: [0.0, 0.25, 0.5, 1.0],
+      interpolation: InterpolationType.LINEAR,
+      output: [
+        Quaternion.IDENTITY,
+        new Quaternion(0.707, 0.0, 0.707, 0.0),
+        new Quaternion(0.0, 0.0, 1.0, 0.0),
+        new Quaternion(0.707, 0.0, -0.707, 0.0),
+      ],
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.ROTATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.spline instanceof QuaternionSpline).toBe(true);
+  });
+
+  it("constructs stepped spline", function () {
+    const mockSampler = {
+      input: [0.0, 0.25, 0.5, 1.0],
+      interpolation: InterpolationType.STEP,
+      output: [
+        Cartesian3.ZERO,
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+        new Cartesian3(0.0, 1.0, 0.0),
+      ],
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.SCALE
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.spline instanceof SteppedSpline).toBe(true);
+  });
+
+  it("constructs weights spline", function () {
+    // This sampler describes the keyframed data of two morph targets.
+    const mockSampler = {
+      input: [0.0, 0.25, 0.5, 1.0],
+      interpolation: InterpolationType.STEP,
+      output: [0.0, 0.0, 0.5, 0.25, 1.0, 0.5, 0.5, 0.25],
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.WEIGHTS
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.spline instanceof MorphWeightSpline).toBe(true);
+  });
+
+  const scratchTransform = new Matrix4();
+
+  it("animates node translation", function () {
+    const mockSampler = {
+      input: [0.0, 0.25, 0.5, 1.0],
+      interpolation: InterpolationType.LINEAR,
+      output: [
+        Cartesian3.ZERO,
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+        new Cartesian3(0.0, 1.0, 0.0),
+      ],
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    const time = mockSampler.input[1];
+    const expected = mockSampler.output[1];
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    /*expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );*/
   });
 });

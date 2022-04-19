@@ -814,15 +814,15 @@ function Scene() {
  * The property of the node that is targeted by an animation.
  *
  * @alias {ModelComponents.AnimatedPropertyType}
- * @enum {Number}
+ * @enum {String}
  *
  * @private
  */
 const AnimatedPropertyType = {
-  TRANSLATION: 0,
-  ROTATION: 1,
-  SCALE: 2,
-  WEIGHTS: 3,
+  TRANSLATION: "translation",
+  ROTATION: "rotation",
+  SCALE: "scale",
+  WEIGHTS: "weights",
 };
 
 /**

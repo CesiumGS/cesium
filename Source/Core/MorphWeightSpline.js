@@ -2,6 +2,7 @@ import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import InterpolationType from "./InterpolationType.js";
 import Spline from "./Spline.js";
 
 /**
@@ -17,7 +18,7 @@ import Spline from "./Spline.js";
  *                that all weights for the targets are given in chronological order and order in which they appear in
  *                the glTF from which the morph targets come. This means for 2 targets, weights = [w(0,0), w(0,1), w(1,0), w(1,1) ...]
  *                where i and j in w(i,j) are the time indices and target indices, respectively.
- * @param {ModelComponents.InterpolationType} [options.interpolation=ModelComponents.InterpolationType]
+ * @param {InterpolationType} [options.interpolation=InterpolationType.LINEAR] The method used to interpolate between the keyframed values.
  * @exception {DeveloperError} weights.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be a factor of weights.length.
  *
@@ -56,8 +57,14 @@ function MorphWeightSpline(options) {
   }
   //>>includeEnd('debug');
 
+  const interpolation = defaultValue(
+    options.interpolation,
+    InterpolationType.LINEAR
+  );
+
   this._times = times;
   this._weights = weights;
+  this._interpolation = interpolation;
   this._count = weights.length / times.length;
 
   this._lastTimeIndex = 0;

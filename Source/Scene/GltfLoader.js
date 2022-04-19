@@ -7,7 +7,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import InterpolationType from "./InterpolationType.js";
+import InterpolationType from "../Core/InterpolationType.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
