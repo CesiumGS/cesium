@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Modify atmospheric scattering parameters."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+
+      #toolbar input [type="number"] {
+        width: 64px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <th colspan="2">Fog Settings</th>
+          </tr>
+          <tr>
+            <td>Fog</td>
+            <td>
+              <input type="checkbox" data-bind="checked: showFog" />
+            </td>
+          </tr>
+          <tr>
+            <td>Fog Min Brightness</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="1.0"
+                step="0.01"
+                data-bind="value: minimumBrightness, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: minimumBrightness, enable: showFog"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Fog Density</td>
+            <td>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                data-bind="value: density, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: density, enable: showFog"
+              />
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2">Ground Atmosphere Settings</th>
+          </tr>
+          <tr>
+            <td>Terrain</td>
+            <td>
+              <input type="checkbox" data-bind="checked: enableTerrain" />
+            </td>
+          </tr>
+          <tr>
+            <td>Ground Atmosphere</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: showGroundAtmosphere"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Light Intensity</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: groundAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereLightIntensity"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Red</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: groundAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereRayleighCoefficientR"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Green</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: groundAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereRayleighCoefficientG"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Blue</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: groundAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereRayleighCoefficientB"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Coefficient</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: groundAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereMieCoefficient"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Scale Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="2e4"
+                step="1e2"
+                data-bind="value: groundAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereRayleighScaleHeight"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Scale Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1e4"
+                step="1e2"
+                data-bind="value: groundAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereMieScaleHeight"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Anisotropy</td>
+            <td>
+              <input
+                type="range"
+                min="-1.0"
+                max="1.0"
+                step="0.1"
+                data-bind="value: groundAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: groundAtmosphereMieAnisotropy"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Globe Lighting</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: enableLighting, enable: (showGroundAtmosphere || showFog)"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Dynamic Atmosphere</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: dynamicLighting, enable: (showGroundAtmosphere || showFog)"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Dynamic Atmosphere From Sun</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: dynamicLightingFromSun, enable: (showGroundAtmosphere || showFog)"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Ground Translucency</td>
+            <td>
+              <input type="checkbox" data-bind="checked: groundTranslucency" />
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2">Sky Atmosphere Settings</th>
+          </tr>
+          <tr>
+            <td>Light Intensity</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: skyAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereLightIntensity"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Red</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: skyAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereRayleighCoefficientR"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Green</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: skyAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereRayleighCoefficientG"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Coefficient: Blue</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: skyAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereRayleighCoefficientB"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Coefficient</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="100.0"
+                step="1"
+                data-bind="value: skyAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereMieCoefficient"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Rayleigh Scale Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="2e4"
+                step="1e2"
+                data-bind="value: skyAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereRayleighScaleHeight"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Scale Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1e4"
+                step="1e2"
+                data-bind="value: skyAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereMieScaleHeight"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Mie Anisotropy</td>
+            <td>
+              <input
+                type="range"
+                min="-1.0"
+                max="1.0"
+                step="0.1"
+                data-bind="value: skyAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+              />
+              <input
+                type="number"
+                size="5"
+                data-bind="value: skyAtmosphereMieAnisotropy"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Per-Fragment</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: perFragmentAtmosphere"
+              />
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2">Scene Settings</th>
+          </tr>
+          <tr>
+            <td>HDR</td>
+            <td>
+              <input type="checkbox" data-bind="checked: hdr" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          orderIndependentTranslucency: false,
+        });
+        const scene = viewer.scene;
+        const globe = scene.globe;
+        const skyAtmosphere = scene.skyAtmosphere;
+
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-03-23T11:31:42.34200000000419095Z"
+        );
+
+        const canvas = viewer.canvas;
+        canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
+        canvas.onclick = function () {
+          canvas.focus();
+        };
+
+        const viewModel = {
+          // Globe settings
+
+          enableTerrain: false,
+          enableLighting: false,
+
+          // Ground atmosphere settings
+
+          showGroundAtmosphere: true,
+          groundAtmosphereLightIntensity: 10.0,
+          groundAtmosphereRayleighCoefficientR: 5.5,
+          groundAtmosphereRayleighCoefficientG: 13.0,
+          groundAtmosphereRayleighCoefficientB: 22.4,
+          groundAtmosphereMieCoefficient: 21,
+          groundAtmosphereRayleighScaleHeight: 10000.0,
+          groundAtmosphereMieScaleHeight: 3200.0,
+          groundAtmosphereMieAnisotropy: 0.9,
+
+          // Sky atmosphere settings
+
+          skyAtmosphereLightIntensity: 15.0,
+          skyAtmosphereRayleighCoefficientR: 5.5,
+          skyAtmosphereRayleighCoefficientG: 13.0,
+          skyAtmosphereRayleighCoefficientB: 22.4,
+          skyAtmosphereMieCoefficient: 21,
+          skyAtmosphereRayleighScaleHeight: 10000.0,
+          skyAtmosphereMieScaleHeight: 3200.0,
+          skyAtmosphereMieAnisotropy: 0.9,
+          perFragmentAtmosphere: false,
+          dynamicLighting: true,
+          dynamicLightingFromSun: false,
+          groundTranslucency: false,
+
+          // Fog settings
+
+          showFog: true,
+          density: 1.0,
+          minimumBrightness: 0.03,
+
+          // Scene settings
+
+          hdr: false,
+        };
+
+        Cesium.knockout.track(viewModel);
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "enableTerrain")
+          .subscribe(function (newValue) {
+            if (newValue) {
+              globe.terrainProvider = Cesium.createWorldTerrain();
+            } else {
+              globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+            }
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "showFog")
+          .subscribe(function (newValue) {
+            scene.fog.enabled = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "enableLighting")
+          .subscribe(function (newValue) {
+            globe.enableLighting = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "showGroundAtmosphere")
+          .subscribe(function (newValue) {
+            globe.showGroundAtmosphere = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "dynamicLighting")
+          .subscribe(function (newValue) {
+            globe.dynamicAtmosphereLighting = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "dynamicLightingFromSun")
+          .subscribe(function (newValue) {
+            globe.dynamicAtmosphereLightingFromSun = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "density")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.density = 2.0e-4 * newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "density")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.density = 2.0e-4 * newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "minimumBrightness")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.minimumBrightness = newValue;
+          });
+
+        // Ground Atmosphere
+
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereLightIntensity")
+          .subscribe(function (newValue) {
+            globe.atmosphereLightIntensity = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereRayleighCoefficientR")
+          .subscribe(function (newValue) {
+            globe.atmosphereRayleighCoefficient.x = parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereRayleighCoefficientG")
+          .subscribe(function (newValue) {
+            globe.atmosphereRayleighCoefficient.y = parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereRayleighCoefficientB")
+          .subscribe(function (newValue) {
+            globe.atmosphereRayleighCoefficient.z = parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereMieCoefficient")
+          .subscribe(function (newValue) {
+            const v = parseFloat(newValue) * 1e-6;
+            globe.atmosphereMieCoefficient = new Cesium.Cartesian3(v, v, v);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereRayleighScaleHeight")
+          .subscribe(function (newValue) {
+            globe.atmosphereRayleighScaleHeight = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereMieScaleHeight")
+          .subscribe(function (newValue) {
+            globe.atmosphereMieScaleHeight = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundAtmosphereMieAnisotropy")
+          .subscribe(function (newValue) {
+            globe.atmosphereMieAnisotropy = parseFloat(newValue);
+          });
+
+        // Sky Atmosphere
+
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereLightIntensity")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereLightIntensity = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereRayleighCoefficientR")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereRayleighCoefficient.x =
+              parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereRayleighCoefficientG")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereRayleighCoefficient.y =
+              parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereRayleighCoefficientB")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereRayleighCoefficient.z =
+              parseFloat(newValue) * 1e-6;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereMieCoefficient")
+          .subscribe(function (newValue) {
+            const v = parseFloat(newValue) * 1e-6;
+            skyAtmosphere.atmosphereMieCoefficient = new Cesium.Cartesian3(
+              v,
+              v,
+              v
+            );
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereRayleighScaleHeight")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereRayleighScaleHeight = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereMieScaleHeight")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereMieScaleHeight = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "skyAtmosphereMieAnisotropy")
+          .subscribe(function (newValue) {
+            skyAtmosphere.atmosphereMieAnisotropy = parseFloat(newValue);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "perFragmentAtmosphere")
+          .subscribe(function (newValue) {
+            scene.skyAtmosphere.perFragmentAtmosphere = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "hdr")
+          .subscribe(function (newValue) {
+            scene.highDynamicRange = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "groundTranslucency")
+          .subscribe(function (newValue) {
+            globe.translucency.enabled = newValue;
+            globe.translucency.frontFaceAlpha = 0.1;
+            globe.translucency.backFaceAlpha = 0.1;
+          });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
