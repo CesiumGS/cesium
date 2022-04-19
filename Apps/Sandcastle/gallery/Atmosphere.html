@@ -38,7 +38,7 @@
         padding-bottom: 2px;
       }
 
-      #toolbar input [type="number"] {
+      .numinput {
         width: 64px;
       }
     </style>
@@ -67,7 +67,8 @@
                 data-bind="value: minimumBrightness, valueUpdate: 'input'"
               />
               <input
-                type="text"
+                class="numinput"
+                type="number"
                 size="5"
                 data-bind="value: minimumBrightness, enable: showFog"
               />
@@ -84,7 +85,8 @@
                 data-bind="value: density, valueUpdate: 'input'"
               />
               <input
-                type="text"
+                class="numinput"
+                type="number"
                 size="5"
                 data-bind="value: density, enable: showFog"
               />
@@ -119,6 +121,7 @@
                 data-bind="value: groundAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereLightIntensity"
@@ -136,6 +139,7 @@
                 data-bind="value: groundAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereRayleighCoefficientR"
@@ -153,6 +157,7 @@
                 data-bind="value: groundAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereRayleighCoefficientG"
@@ -170,6 +175,7 @@
                 data-bind="value: groundAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereRayleighCoefficientB"
@@ -187,6 +193,7 @@
                 data-bind="value: groundAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereMieCoefficient"
@@ -204,6 +211,7 @@
                 data-bind="value: groundAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereRayleighScaleHeight"
@@ -221,6 +229,7 @@
                 data-bind="value: groundAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereMieScaleHeight"
@@ -238,6 +247,7 @@
                 data-bind="value: groundAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: groundAtmosphereMieAnisotropy"
@@ -291,6 +301,7 @@
                 data-bind="value: skyAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereLightIntensity"
@@ -308,6 +319,7 @@
                 data-bind="value: skyAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereRayleighCoefficientR"
@@ -325,6 +337,7 @@
                 data-bind="value: skyAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereRayleighCoefficientG"
@@ -342,6 +355,7 @@
                 data-bind="value: skyAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereRayleighCoefficientB"
@@ -359,6 +373,7 @@
                 data-bind="value: skyAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereMieCoefficient"
@@ -376,6 +391,7 @@
                 data-bind="value: skyAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereRayleighScaleHeight"
@@ -393,6 +409,7 @@
                 data-bind="value: skyAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereMieScaleHeight"
@@ -410,6 +427,7 @@
                 data-bind="value: skyAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
               <input
+                class="numinput"
                 type="number"
                 size="5"
                 data-bind="value: skyAtmosphereMieAnisotropy"
