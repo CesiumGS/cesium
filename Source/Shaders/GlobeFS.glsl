@@ -498,7 +498,9 @@ void main()
         #else
             
             // Adjust the saturation.
-            groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 0.75);
+            #ifndef HDR
+                groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 0.75);
+            #endif
 
             // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
             // This value is larger near the "circumference", as it is further away from the camera. We use it to
@@ -509,6 +511,8 @@ void main()
             
             #ifndef HDR
                 finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
+            #else
+                finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
             #endif
 
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
