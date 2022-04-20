@@ -2491,6 +2491,25 @@ describe(
         expect(b._clampedPosition).toBeUndefined();
       });
 
+      it("disableDepthTest after another function", function () {
+        const b = billboardsWithHeight.add({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          position: Cartesian3.fromDegrees(-122, 46.0),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        });
+        scene.renderForSpecs();
+        expect(scene.globe.callback).toBeDefined();
+        expect(b._clampedPosition).toBeDefined();
+
+        //After changing disableDepthTestDistance and heightReference, the callback should be undefined
+        b.disableDepthTestDistance = undefined;
+        b.heightReference = HeightReference.NONE;
+
+        scene.renderForSpecs();
+        expect(scene.globe.callback).toBeUndefined();
+        expect(b._clampedPosition).toBeUndefined();
+      });
+
       it("changing the terrain provider", function () {
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
