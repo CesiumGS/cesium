@@ -6,7 +6,6 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 
@@ -51,11 +50,6 @@ export default function ModelExperimentalNode(options) {
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  const hasMatrix = defined(node.matrix);
-  this._transformParameters = hasMatrix
-    ? undefined
-    : new TranslationRotationScale(node.translation, node.rotation, node.scale);
-
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   const computedTransform = Matrix4.multiply(
     transformToRoot,
@@ -64,6 +58,14 @@ export default function ModelExperimentalNode(options) {
   );
   this._computedTransform = computedTransform;
   this._transformDirty = false;
+
+  // Used for animation
+  this._transformParameters = defined(node.matrix)
+    ? undefined
+    : new TranslationRotationScale(node.translation, node.rotation, node.scale);
+  this._morphWeights = defined(node.morphWeights)
+    ? node.morphWeights.slice()
+    : [];
 
   // Will be set by the scene graph after the skins have been created
   this._runtimeSkin = undefined;
@@ -182,97 +184,8 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's local space translation. This is used internally to allow
-   * animations in the model's asset to affect the node's properties.
-   *
-   * @memberof ModelExperimentalNode.prototype
-   * @type {Cartesian3}
-   *
-   * @private
-   */
-  translation: {
-    get: function () {
-      return this._transformParameters.translation;
-    },
-    set: function (value) {
-      // TODO: should there be checks here to see if transformParameters is
-      // defined? because this is private API that only animation should be
-      // using, and it might be a performance hit to do checks every frame?
-      const transformParameters = this._transformParameters;
-      const currentTranslation = transformParameters.translation;
-      if (Cartesian3.equals(currentTranslation, value)) {
-        return;
-      }
-
-      transformParameters.translation = Cartesian3.clone(
-        value,
-        transformParameters.translation
-      );
-
-      updateTransformFromParameters(this, transformParameters);
-    },
-  },
-
-  /**
-   * The node's local space rotation. This is used internally to allow
-   * animations in the model's asset to affect the node's properties.
-   *
-   * @memberof ModelExperimentalNode.prototype
-   * @type {Quaternion}
-   *
-   * @private
-   */
-  rotation: {
-    get: function () {
-      return this._transformParameters.rotation;
-    },
-    set: function (value) {
-      const transformParameters = this._transformParameters;
-      const currentRotation = transformParameters.rotation;
-      if (Quaternion.equals(currentRotation, value)) {
-        return;
-      }
-
-      transformParameters.rotation = Quaternion.clone(
-        value,
-        transformParameters.rotation
-      );
-
-      updateTransformFromParameters(this, transformParameters);
-    },
-  },
-
-  /**
-   * The node's local space scale. This is used internally to allow
-   * animations in the model's asset to affect the node's properties.
-   *
-   * @memberof ModelExperimentalNode.prototype
-   * @type {Cartesian3}
-   *
-   * @private
-   */
-  scale: {
-    get: function () {
-      return this._transformParameters.scale;
-    },
-    set: function (value) {
-      const transformParameters = this._transformParameters;
-      const currentScale = transformParameters.scale;
-      if (Cartesian3.equals(currentScale, value)) {
-        return;
-      }
-
-      transformParameters.scale = Cartesian3.clone(
-        value,
-        transformParameters.scale
-      );
-
-      updateTransformFromParameters(this, transformParameters);
-    },
-  },
-
-  /**
-   * The node's axis corrected local space transform. Used in instancing.
+   * A transform from the node's local space to the model's scene graph space.
+   * This is the product of transformToRoot * transform.
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -294,6 +207,169 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   originalTransform: {
     get: function () {
       return this._originalTransform;
+    },
+  },
+
+  /**
+   * The node's local space translation. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * If the node's transformation was originally described using a matrix
+   * in the model, then this will return undefined.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Cartesian3}
+   *
+   * @exception {DeveloperError} The translation of a node cannot be set if it was defined using a matrix in the model.
+   *
+   * @private
+   */
+  translation: {
+    get: function () {
+      return defined(this._transformParameters)
+        ? this._transformParameters.translation
+        : undefined;
+    },
+    set: function (value) {
+      const transformParameters = this._transformParameters;
+      if (!defined(transformParameters)) {
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError(
+          "The translation of a node cannot be set if it was defined using a matrix in the model."
+        );
+        //>>includeEnd('debug');
+      }
+
+      const currentTranslation = transformParameters.translation;
+      if (Cartesian3.equals(currentTranslation, value)) {
+        return;
+      }
+
+      transformParameters.translation = Cartesian3.clone(
+        value,
+        transformParameters.translation
+      );
+
+      updateTransformFromParameters(this, transformParameters);
+    },
+  },
+
+  /**
+   * The node's local space rotation. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * If the node's transformation was originally described using a matrix
+   * in the model, then this will return undefined.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Quaternion}
+   *
+   * @exception {DeveloperError} The rotation of a node cannot be set if it was defined using a matrix in the model.
+   *
+   * @private
+   */
+  rotation: {
+    get: function () {
+      return defined(this._transformParameters)
+        ? this._transformParameters.rotation
+        : undefined;
+    },
+    set: function (value) {
+      const transformParameters = this._transformParameters;
+      if (!defined(transformParameters)) {
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError(
+          "The rotation of a node cannot be set if it was defined using a matrix in the model."
+        );
+        //>>includeEnd('debug');
+      }
+
+      const currentRotation = transformParameters.rotation;
+      if (Quaternion.equals(currentRotation, value)) {
+        return;
+      }
+
+      transformParameters.rotation = Quaternion.clone(
+        value,
+        transformParameters.rotation
+      );
+
+      updateTransformFromParameters(this, transformParameters);
+    },
+  },
+
+  /**
+   * The node's local space scale. This is used internally to allow
+   * animations in the model's asset to affect the node's properties.
+   *
+   * If the node's transformation was originally described using a matrix
+   * in the model, then this will return undefined.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Cartesian3}
+   *
+   * @exception {DeveloperError} The scale of a node cannot be set if it was defined using a matrix in the model.
+   * @private
+   */
+  scale: {
+    get: function () {
+      return defined(this._transformParameters)
+        ? this._transformParameters.scale
+        : undefined;
+    },
+    set: function (value) {
+      const transformParameters = this._transformParameters;
+      if (!defined(transformParameters)) {
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError(
+          "The scale of a node cannot be set if it was defined using a matrix in the model."
+        );
+        //>>includeEnd('debug');
+      }
+      const currentScale = transformParameters.scale;
+      if (Cartesian3.equals(currentScale, value)) {
+        return;
+      }
+
+      transformParameters.scale = Cartesian3.clone(
+        value,
+        transformParameters.scale
+      );
+
+      updateTransformFromParameters(this, transformParameters);
+    },
+  },
+
+  /**
+   * The node's morph weights. This is used internally to allow animations
+   * in the model's asset to affect the node's properties.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Number[]}
+   *
+   * @private
+   */
+  weights: {
+    get: function () {
+      return this._morphWeights;
+    },
+    set: function (value) {
+      let i, j;
+      const valueLength = value.length;
+      this._morphWeights.length = valueLength;
+      for (i = 0; i < valueLength; i++) {
+        this._morphWeights[i] = value[i];
+      }
+
+      // TODO: is this the best way?
+      /*// Propogate values to all of this node's primitives
+      const primitivesLength = this.runtimePrimitives.length;
+      for (i = 0; i < primitivesLength; i++) {
+        const primitive = this.runtimePrimitives[i];
+        for (j = 0; j < valueLength; j++) {
+          primitive.morphWeights[j] = value[j];
+        }
+      }*/
     },
   },
 
@@ -330,13 +406,6 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
     transformParameters,
     runtimeNode._transform
-  );
-
-  runtimeNode._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-    runtimeNode._transform,
-    runtimeNode._sceneGraph.components.upAxis,
-    runtimeNode._sceneGraph.components.forwardAxis,
-    runtimeNode._axisCorrectedTransform
   );
 }
 
@@ -389,7 +458,7 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
 };
 
 /**
- * Updates the computed transform used for rendering and instancing
+ * Updates the computed transform used for rendering and instancing.
  *
  * @private
  */

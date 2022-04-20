@@ -1,4 +1,5 @@
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
 import Event from "../../Core/Event.js";
 import JulianDate from "../../Core/JulianDate.js";
 import ModelAnimationLoop from ".././ModelAnimationLoop.js";
@@ -23,7 +24,7 @@ import ModelExperimentalAnimationChannel from "../ModelExperimental/ModelExperim
  */
 function ModelExperimentalAnimation(model, animation, options) {
   this._animation = animation;
-  this._name = defaultValue(animation.name, animation.index);
+  this._name = animation.name;
   this._runtimeChannels = undefined;
 
   this._startTime = JulianDate.clone(options.startTime);
@@ -115,15 +116,10 @@ function ModelExperimentalAnimation(model, animation, options) {
     that.stop.raiseEvent(model, that);
   };
 
-  /**
-   * A reference to the {@link ModelExperimental} that owns this scene graph.
-   *
-   * @type {ModelExperimental}
-   * @readonly
-   *
-   * @private
-   */
   this._model = model;
+
+  this._localStartTime = undefined;
+  this._localStopTime = undefined;
 
   initialize(this);
 }
@@ -145,7 +141,7 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
     },
   },
   /**
-   * The name that identifies this animation in the model.
+   * The name that identifies this animation in the model, if it exists.
    *
    * @memberof ModelExperimentalAnimation.prototype
    *
@@ -171,6 +167,50 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
   runtimeChannels: {
     get: function () {
       return this._runtimeChannels;
+    },
+  },
+
+  /**
+   * The {@link ModelExperimental} that owns this animation.
+   *
+   * @type {ModelExperimental}
+   * @readonly
+   *
+   * @private
+   */
+  model: {
+    get: function () {
+      return this._model;
+    },
+  },
+
+  /**
+   * The starting point of the animation in local animation time. This is the minimum
+   * time value across all of the keyframes belonging to this animation.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  localStartTime: {
+    get: function () {
+      return this._localStartTime;
+    },
+  },
+
+  /**
+   * The stopping point of the animation in local animation time. This is the maximum
+   * time value across all of the keyframes belonging to this animation.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  localStopTime: {
+    get: function () {
+      return this._localStopTime;
     },
   },
 
@@ -224,6 +264,7 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
       return this._stopTime;
     },
   },
+
   /**
    * Values greater than <code>1.0</code> increase the speed that the animation is played relative
    * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
@@ -278,15 +319,26 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
 });
 
 function initialize(runtimeAnimation) {
+  let localStartTime = Number.MAX_VALUE;
+  let localStopTime = -Number.MAX_VALUE;
+
   const sceneGraph = runtimeAnimation._model.sceneGraph;
   const animation = runtimeAnimation._animation;
   const channels = animation.channels;
   const length = channels.length;
 
-  const runtimeChannels = new Array(length);
+  const runtimeChannels = [];
   for (let i = 0; i < length; i++) {
     const channel = channels[i];
-    const nodeIndex = channel.node.index;
+    const target = channel.target;
+
+    // Ignore this channel if the target is invalid, i.e. if the node
+    // it references doesn't exist.
+    if (!defined(target)) {
+      continue;
+    }
+
+    const nodeIndex = target.node.index;
     const runtimeNode = sceneGraph._runtimeNodes[nodeIndex];
 
     const runtimeChannel = new ModelExperimentalAnimationChannel({
@@ -295,10 +347,16 @@ function initialize(runtimeAnimation) {
       runtimeNode: runtimeNode,
     });
 
-    runtimeChannels[i] = runtimeChannel;
+    const times = channel.sampler.input;
+    localStartTime = Math.min(localStartTime, times[0]);
+    localStopTime = Math.max(localStopTime, times[times.length - 1]);
+
+    runtimeChannels.push(runtimeChannel);
   }
 
   runtimeAnimation._runtimeChannels = runtimeChannels;
+  runtimeAnimation._localStartTime = localStartTime;
+  runtimeAnimation._localStopTime = localStopTime;
 }
 
 ModelExperimentalAnimation.prototype.animate = function (time) {

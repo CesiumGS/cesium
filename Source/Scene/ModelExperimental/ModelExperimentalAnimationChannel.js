@@ -1,3 +1,4 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -6,6 +7,7 @@ import LinearSpline from "../../Core/LinearSpline.js";
 import ModelComponents from "../ModelComponents.js";
 import MorphWeightSpline from "../../Core/MorphWeightSpline.js";
 import SteppedSpline from "../../Core/SteppedSpline.js";
+import Quaternion from "../../Core/Quaternion.js";
 import QuaternionSpline from "../../Core/QuaternionSpline.js";
 
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
@@ -118,8 +120,6 @@ function createSpline(times, points, interpolation, path) {
     return new ConstantSpline(points[0]);
   }
 
-  console.log("HERE");
-
   if (path === AnimatedPropertyType.WEIGHTS) {
     return new MorphWeightSpline({
       times: times,
@@ -152,6 +152,8 @@ function createSpline(times, points, interpolation, path) {
   }
 }
 
+let scratchVariable;
+
 function initialize(runtimeChannel) {
   const channel = runtimeChannel._channel;
 
@@ -166,6 +168,19 @@ function initialize(runtimeChannel) {
 
   runtimeChannel._spline = spline;
   runtimeChannel._path = path;
+
+  switch (path) {
+    case AnimatedPropertyType.TRANSLATION:
+    case AnimatedPropertyType.SCALE:
+      scratchVariable = new Cartesian3();
+      break;
+    case AnimatedPropertyType.ROTATION:
+      scratchVariable = new Quaternion();
+      break;
+    case AnimatedPropertyType.WEIGHTS:
+      scratchVariable = new Array(spline._count);
+      break;
+  }
 }
 
 /**
@@ -178,7 +193,16 @@ function initialize(runtimeChannel) {
 ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   const spline = this._spline;
   const path = this._path;
-  this._runtimeNode[path] = spline.evaluate(time, this._runtimeNode[path]);
+  const model = this._runtimeAnimation.model;
+
+  const localAnimationTime = model.clampAnimations
+    ? spline.clampTime(time)
+    : spline.wrapTime(time);
+
+  this._runtimeNode[path] = spline.evaluate(
+    localAnimationTime,
+    scratchVariable
+  );
 };
 
 export default ModelExperimentalAnimationChannel;

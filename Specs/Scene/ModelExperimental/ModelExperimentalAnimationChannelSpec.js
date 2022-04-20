@@ -4,6 +4,8 @@ import {
   ConstantSpline,
   InterpolationType,
   LinearSpline,
+  Math as CesiumMath,
+  Matrix3,
   Matrix4,
   ModelComponents,
   ModelExperimentalAnimationChannel,
@@ -14,20 +16,8 @@ import {
   QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
-
-  function createMockChannel(node, mockSampler, path) {
-    const mockTarget = {
-      node: node,
-      path: path,
-    };
-    const mockChannel = {
-      sampler: mockSampler,
-      target: mockTarget,
-    };
-    return mockChannel;
-  }
 
   const mockNode = {
     translation: Cartesian3.ZERO,
@@ -46,7 +36,11 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     },
   };
 
-  const runtimeAnimation = {};
+  const runtimeAnimation = {
+    model: {
+      clampAnimations: true,
+    },
+  };
   let runtimeNode;
 
   beforeEach(function () {
@@ -89,6 +83,18 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     }).toThrowDeveloperError();
   });
 
+  function createMockChannel(node, mockSampler, path) {
+    const mockTarget = {
+      node: node,
+      path: path,
+    };
+    const mockChannel = {
+      sampler: mockSampler,
+      target: mockTarget,
+    };
+    return mockChannel;
+  }
+
   it("constructs constant spline", function () {
     const mockSampler = {
       input: [0.0],
@@ -114,16 +120,19 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeChannel.spline instanceof ConstantSpline).toBe(true);
   });
 
+  const times = [0.0, 0.25, 0.5, 1.0];
+  const translationPoints = [
+    Cartesian3.ZERO,
+    new Cartesian3(1.0, 0.0, 0.0),
+    new Cartesian3(1.0, 1.0, 0.0),
+    new Cartesian3(0.0, 1.0, 0.0),
+  ];
+
   it("constructs linear spline", function () {
     const mockSampler = {
-      input: [0.0, 0.25, 0.5, 1.0],
+      input: times,
       interpolation: InterpolationType.LINEAR,
-      output: [
-        Cartesian3.ZERO,
-        new Cartesian3(1.0, 0.0, 0.0),
-        new Cartesian3(1.0, 1.0, 0.0),
-        new Cartesian3(0.0, 1.0, 0.0),
-      ],
+      output: translationPoints,
     };
 
     const mockChannel = createMockChannel(
@@ -144,16 +153,18 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeChannel.spline instanceof LinearSpline).toBe(true);
   });
 
+  const rotationPoints = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.707, 0.0, 0.707, 0.0),
+    new Quaternion(0.0, 0.0, 1.0, 0.0),
+    new Quaternion(0.707, 0.0, -0.707, 0.0),
+  ];
+
   it("constructs quaternion spline", function () {
     const mockSampler = {
-      input: [0.0, 0.25, 0.5, 1.0],
+      input: times,
       interpolation: InterpolationType.LINEAR,
-      output: [
-        Quaternion.IDENTITY,
-        new Quaternion(0.707, 0.0, 0.707, 0.0),
-        new Quaternion(0.0, 0.0, 1.0, 0.0),
-        new Quaternion(0.707, 0.0, -0.707, 0.0),
-      ],
+      output: rotationPoints,
     };
 
     const mockChannel = createMockChannel(
@@ -174,16 +185,18 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeChannel.spline instanceof QuaternionSpline).toBe(true);
   });
 
+  const scalePoints = [
+    new Cartesian3(1.0, 1.0, 1.0),
+    new Cartesian3(1.0, 2.0, 1.0),
+    new Cartesian3(1.0, 1.0, 2.0),
+    new Cartesian3(2.0, 1.0, 1.0),
+  ];
+
   it("constructs stepped spline", function () {
     const mockSampler = {
-      input: [0.0, 0.25, 0.5, 1.0],
+      input: times,
       interpolation: InterpolationType.STEP,
-      output: [
-        Cartesian3.ZERO,
-        new Cartesian3(1.0, 0.0, 0.0),
-        new Cartesian3(1.0, 1.0, 0.0),
-        new Cartesian3(0.0, 1.0, 0.0),
-      ],
+      output: scalePoints,
     };
 
     const mockChannel = createMockChannel(
@@ -204,12 +217,14 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeChannel.spline instanceof SteppedSpline).toBe(true);
   });
 
+  // This contains the keyframed data of two morph targets.
+  const weightPoints = [0.0, 0.0, 0.5, 0.25, 1.0, 0.5, 0.5, 0.25];
+
   it("constructs weights spline", function () {
-    // This sampler describes the keyframed data of two morph targets.
     const mockSampler = {
-      input: [0.0, 0.25, 0.5, 1.0],
+      input: times,
       interpolation: InterpolationType.STEP,
-      output: [0.0, 0.0, 0.5, 0.25, 1.0, 0.5, 0.5, 0.25],
+      output: weightPoints,
     };
 
     const mockChannel = createMockChannel(
@@ -234,14 +249,9 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
 
   it("animates node translation", function () {
     const mockSampler = {
-      input: [0.0, 0.25, 0.5, 1.0],
+      input: times,
       interpolation: InterpolationType.LINEAR,
-      output: [
-        Cartesian3.ZERO,
-        new Cartesian3(1.0, 0.0, 0.0),
-        new Cartesian3(1.0, 1.0, 0.0),
-        new Cartesian3(0.0, 1.0, 0.0),
-      ],
+      output: translationPoints,
     };
 
     const mockChannel = createMockChannel(
@@ -259,12 +269,127 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
     expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
 
-    const time = mockSampler.input[1];
-    const expected = mockSampler.output[1];
+    let time = times[1];
+    let expected = Cartesian3.clone(translationPoints[1]);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );
+
+    time = (times[1] + times[2]) / 2.0;
+    expected = Cartesian3.lerp(
+      translationPoints[1],
+      translationPoints[2],
+      0.5,
+      expected
+    );
+
     runtimeChannel.animate(time);
     expect(runtimeNode.translation).toEqual(expected);
     expect(runtimeNode.transform).toEqual(
       Matrix4.fromTranslation(expected, scratchTransform)
     );
   });
+
+  it("animates node rotation", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: rotationPoints,
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.ROTATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.rotation).toEqual(Quaternion.IDENTITY);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    let time = times[1];
+    let expected = Quaternion.clone(rotationPoints[1]);
+    let expectedMatrix = Matrix3.fromQuaternion(expected);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.rotation).toEqual(expected);
+    expect(
+      runtimeNode.transform.equalsEpsilon(
+        Matrix4.fromRotation(expectedMatrix, scratchTransform),
+        CesiumMath.EPSILON6
+      )
+    ).toBe(true);
+
+    time = (times[1] + times[2]) / 2.0;
+    expected = Quaternion.slerp(
+      rotationPoints[1],
+      rotationPoints[2],
+      0.5,
+      expected
+    );
+    expectedMatrix = Matrix3.fromQuaternion(expected, expectedMatrix);
+
+    runtimeChannel.animate(time);
+    expect(
+      runtimeNode.rotation.equalsEpsilon(expected, CesiumMath.EPSILON6)
+    ).toEqual(true);
+    expect(
+      runtimeNode.transform.equalsEpsilon(
+        Matrix4.fromRotation(expectedMatrix, scratchTransform),
+        CesiumMath.EPSILON6
+      )
+    );
+  });
+
+  it("animates node scale", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: scalePoints,
+    };
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.SCALE
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    let expected = new Cartesian3(1.0, 1.0, 1.0);
+    expect(runtimeNode.scale).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    let time = times[1];
+    expected = Cartesian3.clone(scalePoints[1], expected);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.scale).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromScale(expected, scratchTransform)
+    );
+
+    time = (times[1] + times[2]) / 2.0;
+    expected = Cartesian3.lerp(scalePoints[1], scalePoints[2], 0.5, expected);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.scale).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromScale(expected, scratchTransform)
+    );
+  });
+
+  //TODO: animates node weights
 });

@@ -568,7 +568,9 @@ function Primitive() {
   this.morphTargets = [];
 
   /**
-   * An array of weights to be applied to morph targets.
+   * An array of weights to be applied to the morph targets.
+   * Will be used if the node this primitive belongs to does not
+   * define its own array of weights.
    *
    * @type {Number[]}
    * @private
@@ -790,6 +792,16 @@ function Node() {
    * @private
    */
   this.scale = undefined;
+
+  /**
+   * An array of weights to be applied to the primitives' morph targets.
+   * Will be used if the node that owns this primitive does not supply
+   * its own array of weights.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.morphWeights = [];
 }
 
 /**
@@ -835,15 +847,6 @@ const AnimatedPropertyType = {
  * @private
  */
 function AnimationSampler() {
-  /**
-   * The index of the sampler in the glTF animation. This is useful for
-   * identifying the sampler so that its data can be cached.
-   *
-   * @type {Number}
-   * @private
-   */
-  this.index = undefined;
-
   /**
    * The timesteps of the animation.
    *
@@ -937,15 +940,6 @@ function Animation() {
    * @private
    */
   this.name = undefined;
-
-  /**
-   * The index of the animation in the glTF. This is useful for distinguishing
-   * animations from each other if they are not given names in the glTF.
-   *
-   * @type {Number}
-   * @private
-   */
-  this.index = undefined;
 
   /**
    * The samplers used in this animation.

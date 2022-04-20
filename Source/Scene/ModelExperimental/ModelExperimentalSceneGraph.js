@@ -539,13 +539,13 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
  * @private
  */
 ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
-  const model = this._model;
-  const skinnedNodes = model._skinnedNodes;
+  const skinnedNodes = this._skinnedNodes;
   const length = skinnedNodes.length;
 
   for (let i = 0; i < length; i++) {
-    const node = skinnedNodes[i];
-    node.updateJointMatrices();
+    const nodeIndex = skinnedNodes[i];
+    const runtimeNode = this._runtimeNodes[nodeIndex];
+    runtimeNode.updateJointMatrices();
   }
 };
 

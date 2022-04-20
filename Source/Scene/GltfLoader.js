@@ -1435,6 +1435,13 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
         )
       );
     }
+
+    const targets = primitives[0].morphTargets;
+    const targetsLength = defined(targets) ? targets.length : 0;
+    node.morphWeights = defaultValue(
+      gltfNode.weights,
+      arrayFill(new Array(targetsLength), 0.0)
+    );
   }
 
   const nodeExtensions = defaultValue(
