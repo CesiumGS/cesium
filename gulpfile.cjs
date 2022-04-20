@@ -453,6 +453,29 @@ gulp.task(
 
     // Remove prepare step from package.json to avoid running "prepare" an extra time.
     delete packageJson.scripts.prepare;
+
+    // Remove build and transform tasks since they do not function as intended from within the release zip
+    delete packageJson.scripts.convertToModules;
+    delete packageJson.scripts.build;
+    delete packageJson.scripts["build-watch"];
+    delete packageJson.scripts["build-ts"];
+    delete packageJson.scripts.buildApps;
+    delete packageJson.scripts.combine;
+    delete packageJson.scripts.combineRelease;
+    delete packageJson.scripts.generateDocumentation;
+    delete packageJson.scripts["generateDocumentation-watch"];
+    delete packageJson.scripts.makeZipFile;
+    delete packageJson.scripts.minify;
+    delete packageJson.scripts.minifyRelease;
+    delete packageJson.scripts.release;
+    delete packageJson.scripts.combineRelease;
+    delete packageJson.scripts.prettier;
+
+    // Remove deploy tasks
+    delete packageJson.scripts["deploy-s3"];
+    delete packageJson.scripts["deploy-status"];
+    delete packageJson.scripts["deploy-set-version"];
+
     fs.writeFileSync(
       "./Build/package.noprepare.json",
       JSON.stringify(packageJson, null, 2)
@@ -485,8 +508,6 @@ gulp.task(
         "Specs/**/.eslintrc.json",
         "ThirdParty/**",
         "Tools/eslint-config-cesium/**",
-        "Tools/jsdoc/**",
-        "Tools/package.json",
         "favicon.ico",
         ".eslintignore",
         ".eslintrc.json",
