@@ -260,11 +260,17 @@ describe("Core/PolygonPipeline", function () {
 
   it("computeSubdivision throws with negative granularity", function () {
     expect(function () {
-      PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2, 3], -1.0);
+      PolygonPipeline.computeSubdivision(
+        Ellipsoid.WGS84,
+        [],
+        [1, 2, 3],
+        undefined,
+        -1.0
+      );
     }).toThrowDeveloperError();
   });
 
-  it("computeSubdivision", function () {
+  it("computeSubdivision skips subdivision correctly", function () {
     const positions = [
       new Cartesian3(0.0, 0.0, 90.0),
       new Cartesian3(0.0, 90.0, 0.0),
@@ -275,6 +281,7 @@ describe("Core/PolygonPipeline", function () {
       Ellipsoid.WGS84,
       positions,
       indices,
+      undefined,
       60.0
     );
 
@@ -293,6 +300,186 @@ describe("Core/PolygonPipeline", function () {
     expect(subdivision.indices[2]).toEqual(2);
   });
 
+  it("computeSubdivision applies subdivision correctly", function () {
+    const positions = [
+      new Cartesian3(6377802.759444977, -58441.30561735455, 29025.647900582237),
+      new Cartesian3(
+        6377802.759444977,
+        -58441.30561735455,
+        -29025.647900582237
+      ),
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, -29025.647900582237),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 29025.647900582237),
+    ];
+    const indices = [0, 1, 2, 2, 3, 4, 4, 0, 2];
+    const subdivision = PolygonPipeline.computeSubdivision(
+      Ellipsoid.WGS84,
+      positions,
+      indices
+    );
+
+    expect(subdivision.attributes.position.values[0]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[1]).toEqual(
+      -58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[2]).toEqual(
+      29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[3]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[4]).toEqual(
+      -58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[5]).toEqual(
+      -29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[6]).toEqual(6378137);
+    expect(subdivision.attributes.position.values[7]).toEqual(0);
+    expect(subdivision.attributes.position.values[8]).toEqual(0);
+    expect(subdivision.attributes.position.values[9]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[10]).toEqual(
+      58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[11]).toEqual(
+      -29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[12]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[13]).toEqual(
+      58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[14]).toEqual(
+      29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[15]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[16]).toEqual(0);
+    expect(subdivision.attributes.position.values[17]).toEqual(
+      29025.647900582237
+    );
+
+    expect(subdivision.indices[0]).toEqual(5);
+    expect(subdivision.indices[1]).toEqual(0);
+    expect(subdivision.indices[2]).toEqual(2);
+    expect(subdivision.indices[3]).toEqual(4);
+    expect(subdivision.indices[4]).toEqual(5);
+    expect(subdivision.indices[5]).toEqual(2);
+    expect(subdivision.indices[6]).toEqual(2);
+    expect(subdivision.indices[7]).toEqual(3);
+    expect(subdivision.indices[8]).toEqual(4);
+    expect(subdivision.indices[9]).toEqual(0);
+    expect(subdivision.indices[10]).toEqual(1);
+    expect(subdivision.indices[11]).toEqual(2);
+  });
+
+  it("computeSubdivision applies subdivision with texcoords correctly", function () {
+    const positions = [
+      new Cartesian3(6377802.759444977, -58441.30561735455, 29025.647900582237),
+      new Cartesian3(
+        6377802.759444977,
+        -58441.30561735455,
+        -29025.647900582237
+      ),
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, -29025.647900582237),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 29025.647900582237),
+    ];
+    const indices = [0, 1, 2, 2, 3, 4, 4, 0, 2];
+    const texcoords = [
+      new Cartesian2(0, 1),
+      new Cartesian2(0, 0),
+      new Cartesian2(0.5, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(1, 1),
+    ];
+    const subdivision = PolygonPipeline.computeSubdivision(
+      Ellipsoid.WGS84,
+      positions,
+      indices,
+      texcoords
+    );
+
+    expect(subdivision.attributes.position.values[0]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[1]).toEqual(
+      -58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[2]).toEqual(
+      29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[3]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[4]).toEqual(
+      -58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[5]).toEqual(
+      -29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[6]).toEqual(6378137);
+    expect(subdivision.attributes.position.values[7]).toEqual(0);
+    expect(subdivision.attributes.position.values[8]).toEqual(0);
+    expect(subdivision.attributes.position.values[9]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[10]).toEqual(
+      58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[11]).toEqual(
+      -29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[12]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[13]).toEqual(
+      58441.30561735455
+    );
+    expect(subdivision.attributes.position.values[14]).toEqual(
+      29025.647900582237
+    );
+    expect(subdivision.attributes.position.values[15]).toEqual(
+      6377802.759444977
+    );
+    expect(subdivision.attributes.position.values[16]).toEqual(0);
+    expect(subdivision.attributes.position.values[17]).toEqual(
+      29025.647900582237
+    );
+
+    expect(subdivision.indices[0]).toEqual(5);
+    expect(subdivision.indices[1]).toEqual(0);
+    expect(subdivision.indices[2]).toEqual(2);
+    expect(subdivision.indices[3]).toEqual(4);
+    expect(subdivision.indices[4]).toEqual(5);
+    expect(subdivision.indices[5]).toEqual(2);
+    expect(subdivision.indices[6]).toEqual(2);
+    expect(subdivision.indices[7]).toEqual(3);
+    expect(subdivision.indices[8]).toEqual(4);
+    expect(subdivision.indices[9]).toEqual(0);
+    expect(subdivision.indices[10]).toEqual(1);
+    expect(subdivision.indices[11]).toEqual(2);
+
+    expect(subdivision.attributes.st.values[0]).toEqual(0);
+    expect(subdivision.attributes.st.values[1]).toEqual(1);
+    expect(subdivision.attributes.st.values[2]).toEqual(0);
+    expect(subdivision.attributes.st.values[3]).toEqual(0);
+    expect(subdivision.attributes.st.values[4]).toEqual(0.5);
+    expect(subdivision.attributes.st.values[5]).toEqual(0);
+    expect(subdivision.attributes.st.values[6]).toEqual(1);
+    expect(subdivision.attributes.st.values[7]).toEqual(0);
+    expect(subdivision.attributes.st.values[8]).toEqual(1);
+    expect(subdivision.attributes.st.values[9]).toEqual(1);
+    expect(subdivision.attributes.st.values[10]).toEqual(0.5);
+    expect(subdivision.attributes.st.values[11]).toEqual(1);
+  });
   ///////////////////////////////////////////////////////////////////////
 
   it("computeRhumbLineSubdivision throws without ellipsoid", function () {
