@@ -500,7 +500,8 @@ void main()
             // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
             // This value is larger near the "circumference", as it is further away from the camera. We use it to
             // brighten up that area of the ground atmosphere.
-            float transmittance = 0.5 + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
+            const float transmittanceModifier = 0.5;
+            float transmittance = transmittanceModifier + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
 
             vec3 finalAtmosphereColor = finalColor.rgb + groundAtmosphereColor.rgb * transmittance;
 
