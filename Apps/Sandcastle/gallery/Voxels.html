@@ -84,8 +84,12 @@
               break;
             }
             case Cesium.VoxelShapeType.CYLINDER: {
-              this.minBounds = new Cesium.Cartesian3(0.0, -1.0, +0.2);
-              this.maxBounds = new Cesium.Cartesian3(1.0, +1.0, -0.2);
+              // this.minBounds = new Cesium.Cartesian3(
+              //   0.0,
+              //   -1.0,
+              //   -Cesium.Math.PI
+              // );
+              // this.maxBounds = new Cesium.Cartesian3(1.0, +1.0, -Cesium.Math.PI + 0.5);
               break;
             }
           }
@@ -154,6 +158,10 @@
                 dataColor[index * channelCount + 2] = color.blue;
                 dataColor[index * channelCount + 3] = 0.75;
                 // }
+                // dataColor[index * channelCount + 0] = lerperX;
+                // dataColor[index * channelCount + 1] = lerperY;
+                // dataColor[index * channelCount + 2] = lerperZ;
+                // dataColor[index * channelCount + 3] = 1.0; //0.75;
               }
             }
           }
@@ -356,12 +364,12 @@
               provider: provider,
               customShader: customShader,
               modelMatrix: Cesium.Matrix4.fromScale(
-                Cesium.Ellipsoid.WGS84.radii,
-                // Cesium.Cartesian3.fromElements(
-                //   Cesium.Ellipsoid.WGS84.radii.x,
-                //   Cesium.Ellipsoid.WGS84.radii.y,
-                //   Cesium.Ellipsoid.WGS84.radii.z * 2.0
-                // ),
+                // Cesium.Ellipsoid.WGS84.radii,
+                Cesium.Cartesian3.fromElements(
+                  Cesium.Ellipsoid.WGS84.radii.x,
+                  Cesium.Ellipsoid.WGS84.radii.x,
+                  Cesium.Ellipsoid.WGS84.radii.x
+                ),
                 new Cesium.Matrix4()
               ),
             })
@@ -399,6 +407,29 @@
 
         Sandcastle.addToolbarMenu([
           {
+            text: "Ellipsoid - Procedural Tile",
+            onselect: function () {
+              const provider = new ProceduralSingleTileVoxelProvider(
+                Cesium.VoxelShapeType.ELLIPSOID
+              );
+              const primitive = createPrimitive(provider, customShaderColor);
+              primitive.readyPromise.then(function () {
+                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
+                  duration: 0.0,
+                });
+              });
+            },
+          },
+          {
+            text: "Cylinder - Procedural Tile",
+            onselect: function () {
+              const provider = new ProceduralSingleTileVoxelProvider(
+                Cesium.VoxelShapeType.CYLINDER
+              );
+              const primitive = createPrimitive(provider, customShaderColor);
+            },
+          },
+          {
             text: "Box - Procedural Tile",
             onselect: function () {
               const provider = new ProceduralSingleTileVoxelProvider(
@@ -422,6 +453,7 @@
                   ),
                   duration: 0.0,
                 });
+                primitive.maxClippingBounds.x = 0.99999999;
               });
             },
           },
@@ -455,20 +487,6 @@
             },
           },
           {
-            text: "Ellipsoid - Procedural Tile",
-            onselect: function () {
-              const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.ELLIPSOID
-              );
-              const primitive = createPrimitive(provider, customShaderColor);
-              primitive.readyPromise.then(function () {
-                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
-                  duration: 0.0,
-                });
-              });
-            },
-          },
-          {
             text: "Ellipsoid - Procedural Tileset",
             onselect: function () {
               const provider = new ProceduralMultiTileVoxelProvider(
@@ -495,15 +513,6 @@
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
               });
               const primitive = createPrimitive(provider, customShaderAlpha);
-            },
-          },
-          {
-            text: "Cylinder - Procedural Tile",
-            onselect: function () {
-              const provider = new ProceduralSingleTileVoxelProvider(
-                Cesium.VoxelShapeType.CYLINDER
-              );
-              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
