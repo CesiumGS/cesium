@@ -201,7 +201,7 @@ function Globe(ellipsoid) {
    * The intensity of the light that is used for computing the ground atmosphere color.
    *
    * @type {Number}
-   * @default 15.0
+   * @default 10.0
    */
   this.atmosphereLightIntensity = 10.0;
 

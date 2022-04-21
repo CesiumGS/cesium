@@ -86,7 +86,7 @@ function SkyAtmosphere(ellipsoid) {
    * The intensity of the light that is used for computing the ground atmosphere color.
    *
    * @type {Number}
-   * @default 15.0
+   * @default 50.0
    */
   this.atmosphereLightIntensity = 50.0;
 
@@ -161,8 +161,9 @@ function SkyAtmosphere(ellipsoid) {
   // outer radius, inner radius, dynamic atmosphere color flag
   const radiiAndDynamicAtmosphereColor = new Cartesian3();
 
-  radiiAndDynamicAtmosphereColor.x = ellipsoid.maximumRadius;
-  radiiAndDynamicAtmosphereColor.y = ellipsoid.minimumRadius;
+  radiiAndDynamicAtmosphereColor.x =
+    ellipsoid.maximumRadius * outerEllipsoidScale;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
   radiiAndDynamicAtmosphereColor.z = 0;
