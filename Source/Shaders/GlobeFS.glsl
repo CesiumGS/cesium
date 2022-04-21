@@ -475,7 +475,7 @@ void main()
         rayleighColor = colorCorrect(rayleighColor);
         mieColor = colorCorrect(mieColor);
 
-        vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity, 0.0);
+        vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
         // Fog is applied to tiles selected for fog, close to the Eartth.
         #ifdef FOG

@@ -34,7 +34,7 @@ void main (void)
     translucent = v_translucent;
 #endif
 
-    vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity, translucent);
+    vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
 
 #ifndef HDR
     color.rgb = czm_acesTonemapping(color.rgb);
@@ -52,5 +52,13 @@ void main (void)
     color.rgb = czm_HSBToRGB(hsb);
 #endif
 
-    gl_FragColor= color;
+    // For the parts of the sky atmosphere that are not behind a translucent globe,
+    // we mix in the default opacity so that the sky atmosphere still appears at distance.
+    // This is needed because the opacity in the sky atmopshere is initially adjusted based
+    // on the camera height.
+    if (translucent == 0.0) {
+        color.a = mix(color.b, 1.0, color.a) * smoothstep(0.0, 1.0, czm_morphTime);
+    }
+
+    gl_FragColor = color;
 }

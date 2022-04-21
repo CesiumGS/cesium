@@ -307,7 +307,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
   if (flags !== this._flags) {
     this._flags = flags;
 
-    const defines = ["SKY_ATMOSPHERE"];
+    const defines = [];
 
     if (colorCorrect) {
       defines.push("COLOR_CORRECT");

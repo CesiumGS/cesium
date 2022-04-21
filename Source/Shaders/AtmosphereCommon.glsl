@@ -126,8 +126,7 @@ vec4 computeAtmosphereColor(
     vec3 lightDirection,
     vec3 rayleighColor,
     vec3 mieColor,
-    float opacity,
-    float translucent
+    float opacity
 ) {
     // Setup the primary ray: from the camera position to the vertex position.
     vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;
@@ -149,12 +148,6 @@ vec4 computeAtmosphereColor(
     vec3 mie = miePhase * mieColor;
 
     vec3 color = (rayleigh + mie) * u_atmosphereLightIntensity;
-
-    #ifdef SKY_ATMOSPHERE
-        if (translucent == 0.0) {
-            opacity = mix(color.b, 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
-        }
-    #endif
 
     return vec4(color, opacity);
 }
