@@ -43,7 +43,6 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
     // Brighten the sky atmosphere under the Earth's atmosphere when translucency is enabled.
     #if defined(GLOBE_TRANSLUCENT)
 
-
         // Check for intersection with the inner radius of the atmopshere.
         czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, vec3(0.0), atmosphereInnerRadius + radiusAdjust);
         if (primaryRayEarthIntersect.start > 0.0 && primaryRayEarthIntersect.stop > 0.0) {
@@ -66,7 +65,6 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
             
             // Set the traslucent flag to avoid alpha adjustment in computeFinalColor funciton.
             underTranslucentGlobe = 1.0;
-
             return;
         }
     #endif
@@ -80,7 +78,6 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
         mieColor,
         opacity
     );
-
 
     // Alter the opacity based on how close the viewer is to the ground.
     // (0.0 = At edge of atmosphere, 1.0 = On ground)

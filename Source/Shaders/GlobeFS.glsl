@@ -477,7 +477,7 @@ void main()
 
         vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
-        // Fog is applied to tiles selected for fog, close to the Eartth.
+        // Fog is applied to tiles selected for fog, close to the Earth.
         #ifdef FOG
             vec3 fogColor = groundAtmosphereColor.rgb;
             
@@ -521,10 +521,9 @@ void main()
             #else
                 finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
             #endif
-
-
             
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
+            
         #endif
     }
 #endif
