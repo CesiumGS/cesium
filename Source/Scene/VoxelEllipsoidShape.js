@@ -774,6 +774,8 @@ VoxelEllipsoidShape.prototype.update = function (
   }
 
   if (hasLatitudeShape) {
+    shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE"] = true;
+
     if (latitudeMinShape === latitudeMaxShape) {
       shaderDefines[
         "ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO"
@@ -792,10 +794,10 @@ VoxelEllipsoidShape.prototype.update = function (
     // offset = (-pi - minLatitude) / (maxLatitude - minLatitude)
     const scale = latitudeRangeDefault / latitudeRangeShape;
     const offset = (latitudeMinDefault - latitudeMinShape) / latitudeRangeShape;
-    shaderUniforms.ellipsoidLatitudeUvScaleAndOffset = Cartesian2.fromElements(
+    shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
       scale,
       offset,
-      shaderUniforms.ellipsoidLatitudeUvScaleAndOffset
+      shaderUniforms.ellipsoidUvToShapeUvLatitude
     );
   }
 

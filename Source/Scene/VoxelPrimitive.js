@@ -15,42 +15,30 @@ import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import RenderState from "../Renderer/RenderState.js";
-import ShaderDestination from "../Renderer/ShaderDestination.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
-import CustomShader from "./ModelExperimental/CustomShader.js";
 import Material from "./Material.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataType from "./MetadataType.js";
 import PolylineCollection from "./PolylineCollection.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
+import CustomShader from "./ModelExperimental/CustomShader.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
+import RenderState from "../Renderer/RenderState.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
+import ShaderDestination from "../Renderer/ShaderDestination.js";
 import VoxelFS from "../Shaders/VoxelFS.js";
 import VoxelVS from "../Shaders/VoxelVS.js";
-import MetadataType from "./MetadataType.js";
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
- *
- * TODO: make sure the following terms/definitions are consistent across all files
- * world space: Cartesian WGS84
- * local space: Cartesian [-0.5, 0.5] aligned with shape.
- *      For box, the origin is the center of the box, and the six sides sit on the planes x = -0.5, x = 0.5 etc.
- *      For cylinder, the origin is the center of the cylinder with the cylinder enclosed by the [-0.5, 0.5] box on xy-plane. Positive x-axis points to theta = 0. The top and bottom caps sit at planes z = -0.5, z = 0.5. Positive y points to theta = pi/2
- *      For ellipsoid, the origin is the center of the ellipsoid. The maximum height of the ellipsoid touches -0.5, 0.5 in xyz directions.
- * intersection space: local space times 2 to be [-1, 1]. Used for ray intersection calculation
- * UV space: local space plus 0.5 to be [0, 1].
- * shape space: In the coordinate system of the shape [0, 1]
- *      For box, this is the same as UV space
- *      For cylinder, the coordinate system is (radius, theta, z). theta = 0 is aligned with x axis
- *      For ellipsoid, the coordinate system is (longitude, latitude, height). where 0 is the minimum value in each dimension, and 1 is the max.
  *
  * @alias VoxelPrimitive
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {VoxelProvider} options.provider The voxel provider that supplies the primitive with tile data.
+ * @param {Object} [options] Object with the following properties:
+ * @param {VoxelProvider} [options.provider] The voxel provider that supplies the primitive with tile data.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
@@ -64,10 +52,6 @@ import MetadataType from "./MetadataType.js";
  */
 function VoxelPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.provider", options.provider);
-  //>>includeEnd('debug');
 
   /**
    * @type {Boolean}
@@ -85,7 +69,10 @@ function VoxelPrimitive(options) {
    * @type {VoxelProvider}
    * @private
    */
-  this._provider = options.provider;
+  this._provider = defaultValue(
+    options.provider,
+    VoxelPrimitive.DefaultProvider
+  );
 
   /**
    * This member is not created until the provider and shape are ready.
@@ -1972,7 +1959,7 @@ function buildDrawCommands(that, context) {
   }
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionEC");
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvShapeSpace");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionShapeUv");
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
@@ -2167,7 +2154,8 @@ function buildDrawCommands(that, context) {
       enabled: false,
     },
     depthMask: false,
-    blending: BlendingState.ALPHA_BLEND,
+    // internally the shader does premultiplied alpha, so it makes sense to blend that way too
+    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
   });
 
   // Create the draw commands
@@ -2522,5 +2510,27 @@ VoxelPrimitive.DefaultCustomShader = new CustomShader({
     material.alpha = 1.0;
 }`,
 });
+
+function DefaultVoxelProvider() {
+  this.ready = true;
+  this.readyPromise = Promise.resolve(this);
+  this.shape = VoxelShapeType.BOX;
+  this.dimensions = new Cartesian3(1, 1, 1);
+  this.names = ["data"];
+  this.types = [MetadataType.SCALAR];
+  this.componentTypes = [MetadataComponentType.FLOAT32];
+  this.maximumTileCount = 1;
+}
+
+DefaultVoxelProvider.prototype.requestData = function (options) {
+  const tileLevel = defined(options) ? defaultValue(options.tileLevel, 0) : 0;
+  if (tileLevel >= 1) {
+    return undefined;
+  }
+
+  return Promise.resolve([new Float32Array(1)]);
+};
+
+VoxelPrimitive.DefaultProvider = new DefaultVoxelProvider();
 
 export default VoxelPrimitive;

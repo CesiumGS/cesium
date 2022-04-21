@@ -59,7 +59,7 @@ struct Voxel {
     VoxelProperty_direction direction;
     vec3 positionEC;
     vec3 positionUv;
-    vec3 positionUvShapeSpace;
+    vec3 positionShapeUv;
     vec3 positionUvLocal;
     vec3 viewDirUv;
     vec3 viewDirWorld;
@@ -1629,6 +1629,8 @@ void main()
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
 
+    // gl_FragColor = vec4(convertUvToShapeUvSpace(positionUv).yyy, 1.0); return;
+
     vec4 colorAccum = vec4(0.0);
 
     #if defined(DESPECKLE)
@@ -1667,7 +1669,7 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionUvShapeSpace = positionUvShapeSpace;
+        fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
         fragmentInput.voxel.positionUvLocal = positionUvLocal;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
