@@ -466,7 +466,6 @@ gulp.task(
     delete packageJson.scripts.minify;
     delete packageJson.scripts.minifyRelease;
     delete packageJson.scripts.release;
-    delete packageJson.scripts.combineRelease;
     delete packageJson.scripts.prettier;
 
     // Remove deploy tasks
