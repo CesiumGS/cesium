@@ -496,18 +496,24 @@ void main()
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
         #else
-            
-            // Adjust the saturation.
-            #ifndef HDR
-                groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 0.75);
-            #endif
 
             // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
             // This value is larger near the "circumference", as it is further away from the camera. We use it to
             // brighten up that area of the ground atmosphere.
-            float transmittance = 1.0 + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
+            float transmittance = 0.5 + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
 
             vec3 finalAtmosphereColor = finalColor.rgb + groundAtmosphereColor.rgb * transmittance;
+
+            #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+                float fadeInDist = u_nightFadeDistance.x;
+                float fadeOutDist = u_nightFadeDistance.y;
+            
+                float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.05, 1.0);
+                float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+                vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalAtmosphereColor.rgb, darken);
+
+                finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
+            #endif
             
             #ifndef HDR
                 finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
@@ -515,16 +521,7 @@ void main()
                 finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
             #endif
 
-            #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
-                float fadeInDist = u_nightFadeDistance.x;
-                float fadeOutDist = u_nightFadeDistance.y;
-            
-                float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.1, 1.0);
-                float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.1, 1.0);
-                vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalColor.rgb, darken);
 
-                finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
-            #endif
             
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
