@@ -232,13 +232,13 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
+      //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
-        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError(
           "The translation of a node cannot be set if it was defined using a matrix in the model."
         );
-        //>>includeEnd('debug');
       }
+      //>>includeEnd('debug');
 
       const currentTranslation = transformParameters.translation;
       if (Cartesian3.equals(currentTranslation, value)) {
@@ -276,13 +276,13 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
+      //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
-        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError(
           "The rotation of a node cannot be set if it was defined using a matrix in the model."
         );
-        //>>includeEnd('debug');
       }
+      //>>includeEnd('debug');
 
       const currentRotation = transformParameters.rotation;
       if (Quaternion.equals(currentRotation, value)) {
@@ -319,13 +319,13 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
+      //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
-        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError(
           "The scale of a node cannot be set if it was defined using a matrix in the model."
         );
-        //>>includeEnd('debug');
       }
+      //>>includeEnd('debug');
       const currentScale = transformParameters.scale;
       if (Cartesian3.equals(currentScale, value)) {
         return;
@@ -349,13 +349,19 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    *
    * @private
    */
-  weights: {
+  morphWeights: {
     get: function () {
       return this._morphWeights;
     },
     set: function (value) {
       const valueLength = value.length;
-      this._morphWeights.length = valueLength;
+      //>>includeStart('debug', pragmas.debug);
+      if (this._morphWeights.length !== valueLength) {
+        throw new DeveloperError(
+          "value must have the same length as the original weights array."
+        );
+      }
+      //>>includeEnd('debug');
       for (let i = 0; i < valueLength; i++) {
         this._morphWeights[i] = value[i];
       }

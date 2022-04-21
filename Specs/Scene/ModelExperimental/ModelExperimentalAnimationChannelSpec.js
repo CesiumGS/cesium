@@ -230,7 +230,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       output: weightPoints,
     };
 
-    runtimeNode.weights = [0.0, 0.0];
+    runtimeNode._morphWeights = [0.0, 0.0];
 
     const mockChannel = createMockChannel(
       runtimeNode,
@@ -405,7 +405,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       output: weightPoints,
     };
 
-    runtimeNode.weights = [0.0, 0.0];
+    runtimeNode._morphWeights = [0.0, 0.0];
 
     const mockChannel = createMockChannel(
       runtimeNode,
@@ -420,19 +420,19 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     });
 
     let expected = [0.0, 0.0];
-    expect(runtimeNode.weights).toEqual(expected);
+    expect(runtimeNode.morphWeights).toEqual(expected);
 
     let time = times[1];
     expected = weightPoints.slice(2, 4);
 
     runtimeChannel.animate(time);
-    expect(runtimeNode.weights).toEqual(expected);
+    expect(runtimeNode.morphWeights).toEqual(expected);
 
     time = (times[1] + times[2]) / 2.0;
     expected[0] = (weightPoints[2] + weightPoints[4]) / 2.0;
     expected[1] = (weightPoints[3] + weightPoints[5]) / 2.0;
 
     runtimeChannel.animate(time);
-    expect(runtimeNode.weights).toEqual(expected);
+    expect(runtimeNode.morphWeights).toEqual(expected);
   });
 });

@@ -138,7 +138,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.rotation).toBeUndefined();
     expect(node.scale).toBeUndefined();
 
-    expect(node.weights).toEqual([]);
+    expect(node.morphWeights).toEqual([]);
   });
 
   it("constructs with default transform parameters", function () {
@@ -231,6 +231,20 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     }).toThrowDeveloperError();
   });
 
+  it("setting morphWeights throws if given different length array", function () {
+    const node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+
+    expect(function () {
+      node.morphWeights = [0.0, 1.0, 2.0];
+    }).toThrowDeveloperError();
+  });
+
   const scratchTransform = new Matrix4();
 
   it("sets translation", function () {
@@ -316,6 +330,29 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
 
     expect(node.scale).toEqual(scale);
     verifyTransforms(scaleMatrix, transformToRoot, node, transform);
+  });
+
+  it("sets morphWeights", function () {
+    const mockNodeWithWeights = {
+      morphWeights: [0.0, 0.0, 0.0],
+    };
+
+    const node = new ModelExperimentalNode({
+      node: mockNodeWithWeights,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+
+    expect(node.morphWeights).not.toBe(mockNodeWithWeights.morphWeights);
+    expect(node.morphWeights).toEqual(mockNodeWithWeights.morphWeights);
+
+    const morphWeights = [1.0, 2.0, 3.0];
+    node.morphWeights = morphWeights;
+
+    expect(node.morphWeights).not.toBe(morphWeights);
+    expect(node.morphWeights).toEqual(morphWeights);
   });
 
   it("adds instancing pipeline stage if node is instanced", function () {

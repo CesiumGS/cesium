@@ -208,7 +208,9 @@ function initialize(runtimeChannel) {
   const path = target.path;
 
   const runtimeNode = runtimeChannel._runtimeNode;
-  const count = defined(runtimeNode.weights) ? runtimeNode.weights.length : 1;
+  const count = defined(runtimeNode.morphWeights)
+    ? runtimeNode.morphWeights.length
+    : 1;
   const splines = createSplines(times, points, interpolation, path, count);
 
   runtimeChannel._splines = splines;
@@ -241,14 +243,14 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   const model = this._runtimeAnimation.model;
 
   if (path === AnimatedPropertyType.WEIGHTS) {
-    const weights = this._runtimeNode.weights;
-    const length = weights.length;
+    const morphWeights = this._runtimeNode.morphWeights;
+    const length = morphWeights.length;
     for (let i = 0; i < length; i++) {
       const spline = splines[i];
       const localAnimationTime = model.clampAnimations
         ? spline.clampTime(time)
         : spline.wrapTime(time);
-      weights[i] = spline.evaluate(localAnimationTime);
+      morphWeights[i] = spline.evaluate(localAnimationTime);
     }
   } else {
     const spline = splines[0];

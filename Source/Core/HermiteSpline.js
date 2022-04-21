@@ -467,7 +467,6 @@ HermiteSpline.createClampedCubic = function (options) {
   const firstTangent = options.firstTangent;
   const lastTangent = options.lastTangent;
 
-  const PointType = Spline.getPointType(points[0]);
   //>>includeStart('debug', pragmas.debug);
   if (
     !defined(points) ||
@@ -487,10 +486,14 @@ HermiteSpline.createClampedCubic = function (options) {
   if (times.length !== points.length) {
     throw new DeveloperError("times.length must be equal to points.length.");
   }
+  //>>includeEnd('debug');
 
+  const PointType = Spline.getPointType(points[0]);
+
+  //>>includeStart('debug', pragmas.debug);
   if (
-    this._pointType !== Spline.getPointType(firstTangent) ||
-    this._pointType !== Spline.getPointType(lastTangent)
+    PointType !== Spline.getPointType(firstTangent) ||
+    PointType !== Spline.getPointType(lastTangent)
   ) {
     throw new DeveloperError(
       "firstTangent and lastTangent must be of the same type as points."
