@@ -458,6 +458,8 @@ gulp.task(
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
     delete packageJson.scripts.buildApps;
+    delete packageJson.scripts.clean;
+    delete packageJson.scripts.cloc;
     delete packageJson.scripts.combine;
     delete packageJson.scripts.combineRelease;
     delete packageJson.scripts.generateDocumentation;
