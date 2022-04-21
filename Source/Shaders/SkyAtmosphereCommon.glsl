@@ -38,10 +38,11 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
     vec3 cameraToPositionWCDirection = normalize(cameraToPositionWC);
     czm_ray primaryRay = czm_ray(czm_viewerPositionWC, cameraToPositionWCDirection);
 
+    underTranslucentGlobe = 0.0;
+
     // Brighten the sky atmosphere under the Earth's atmosphere when translucency is enabled.
     #if defined(GLOBE_TRANSLUCENT)
 
-        underTranslucentGlobe = 0.0;
 
         // Check for intersection with the inner radius of the atmopshere.
         czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, vec3(0.0), atmosphereInnerRadius + radiusAdjust);
