@@ -5,7 +5,6 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
@@ -36,25 +35,29 @@ export default function ModelExperimentalNode(options) {
   const sceneGraph = options.sceneGraph;
   const transform = options.transform;
   const transformToRoot = options.transformToRoot;
+  const node = options.node;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
-  this._node = options.node;
+  this._node = node;
 
-  const components = sceneGraph.components;
+  this._name = node.name; // Helps with debugging
 
+  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+  const computedTransform = Matrix4.multiply(
+    transformToRoot,
     transform,
-    components.upAxis,
-    components.forwardAxis,
-    this._axisCorrectedTransform
+    new Matrix4()
   );
-
+  this._computedTransform = computedTransform;
   this._transformDirty = false;
+
+  // Will be set by the scene graph after the skins have been created
+  this._runtimeSkin = undefined;
+  this._computedJointMatrices = [];
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -149,19 +152,14 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
-        value,
-        this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis,
-        this._axisCorrectedTransform
-      );
     },
   },
 
   /**
-   * The transforms of all the node's ancestors. Multiplying this with the node's
-   * local transform will result in a transform from the node's local space to
-   * the model's scene graph space.
+   * The transforms of all the node's ancestors, not including this node's
+   * transform.
+   *
+   * @see ModelExperimentalNode#computedTransform
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -174,14 +172,16 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's axis corrected local space transform. Used in instancing.
+   * A transform from the node's local space to the model's scene graph space.
+   * This is the product of transformToRoot * transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
-   * @private
    * @readonly
    */
-  axisCorrectedTransform: {
+  computedTransform: {
     get: function () {
-      return this._axisCorrectedTransform;
+      return this._computedTransform;
     },
   },
 
@@ -195,6 +195,32 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   originalTransform: {
     get: function () {
       return this._originalTransform;
+    },
+  },
+
+  /**
+   * The skin applied to this node, if it exists.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {ModelExperimentalSkin}
+   * @readonly
+   */
+  runtimeSkin: {
+    get: function () {
+      return this._runtimeSkin;
+    },
+  },
+
+  /**
+   * The computed joint matrices of this node, derived from its skin.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4[]}
+   * @readonly
+   */
+  computedJointMatrices: {
+    get: function () {
+      return this._computedJointMatrices;
     },
   },
 });
@@ -245,4 +271,56 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the computed transform used for rendering and instancing
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateComputedTransform = function () {
+  this._computedTransform = Matrix4.multiply(
+    this._transformToRoot,
+    this._transform,
+    this._computedTransform
+  );
+};
+
+/**
+ * Updates the joint matrices for this node, where each matrix is computed as
+ * computedJointMatrix = nodeWorldTransform^(-1) * skinJointMatrix.
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateJointMatrices = function () {
+  if (!defined(this._runtimeSkin)) {
+    return;
+  }
+
+  const computedJointMatrices = this._computedJointMatrices;
+  const skinJointMatrices = this._runtimeSkin.jointMatrices;
+  const length = skinJointMatrices.length;
+
+  for (let i = 0; i < length; i++) {
+    if (!defined(computedJointMatrices[i])) {
+      computedJointMatrices[i] = new Matrix4();
+    }
+
+    const nodeWorldTransform = Matrix4.multiplyTransformation(
+      this.transformToRoot,
+      this.transform,
+      computedJointMatrices[i]
+    );
+
+    const inverseNodeWorldTransform = Matrix4.inverseTransformation(
+      nodeWorldTransform,
+      computedJointMatrices[i]
+    );
+
+    computedJointMatrices[i] = Matrix4.multiplyTransformation(
+      inverseNodeWorldTransform,
+      skinJointMatrices[i],
+      computedJointMatrices[i]
+    );
+  }
 };

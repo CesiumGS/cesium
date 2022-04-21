@@ -4,7 +4,7 @@ Our development culture is committed to testing. CesiumJS is used in diverse use
 
 As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. CesiumJS has as much test code (126K lines) as engine code (126K). We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
 
-All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request.
+All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request. It's also important that the tests run quickly so we run them often.
 
 - [Testing Guide](#testing-guide)
   - [Running the Tests](#running-the-tests)
@@ -17,6 +17,13 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
       - [Run a Single Test or Suite](#run-a-single-test-or-suite)
       - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+    - [Running the Tests in the Browser](#running-the-tests-in-the-browser)
+      - [Run All Tests](#run-all-tests)
+      - [Run with WebGL validation](#run-with-webgl-validation)
+      - [Run with WebGL stub](#run-with-webgl-stub)
+      - [Select a Test to Run](#select-a-test-to-run)
+      - [Run Only WebGL Category Tests](#run-only-webgl-category-tests)
+      - [Run Only Non-WebGL Category Tests](#run-only-non-webgl-category-tests)
     - [Run Coverage](#run-coverage)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
@@ -121,6 +128,72 @@ If it is helpful to step through a unit test in a browser debugger, run the test
 The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
 
 ![](8.jpg)
+
+### Running the Tests in the Browser
+
+When running CesiumJS locally, [start the local server](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/BuildGuide#build-the-code) and browse to [http://localhost:8080/](http://localhost:8080/). There are several test options:
+
+#### Run All Tests
+
+When all the tests pass, the page looks like this:
+
+![Browser tests when all pass](browser-all.png)
+
+When one or more tests fail, the page looks like this:
+
+![Browser tests when a spec fails](browser-failed.png)
+
+In this case, the number of failing tests is listed at the top, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack. The top several functions of the call stack are inside Jasmine and can be ignored. Above, the file and line of interest for the first failing test starts with an `@`:
+
+```
+  @at UserContext.<anonymous> (http://localhost:8080/Specs/Core/Cartesian3Spec.js:12:25)
+```
+
+Click on the failed test to rerun just that test. This is useful for saving time when fixing an issue as it avoids rerunning all the tests. Always rerun _all_ the tests before opening a pull request.
+
+#### Run with WebGL validation
+
+The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.
+
+#### Run with WebGL stub
+
+The **Run with WebGL stub** link passes a query parameter to the tests to use CesiumJS's WebGL stub. This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL. This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
+
+#### Select a Test to Run
+
+This option loads the test page without running any tests.
+
+![Browser tests without running any specs](browser-none.png)
+
+We can then use the browser's built-in search to find a test or suite and run only that. For example, below just the tests for `Cartesian3` were run.
+
+![Browser tests with only Cartesian3 specs run](browser-cartesian3.png)
+
+This uses a query parameter to select the test/suite to run so refreshing the page will run just that test/suite again.
+
+Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request.
+
+#### Run Only WebGL Category Tests
+
+Suites can have a category associated with them. This option runs all tests in the `WebGL` category, which includes all tests that use WebGL (basically anything that requires creating a `Viewer`, `CesiumWidget`, `Scene`, or `Context`).
+
+#### Run Only Non-WebGL Category Tests
+
+Likewise, this option runs all tests not in the WebGL category.
+
+Perhaps surprisingly, this is the bulk of CesiumJS tests, which include math and geometry tests, imagery provider tests, data source tests, etc.
+
+These tests run quickly (for example, 15 seconds compared to 60) and are very reliable across systems since they do not rely on the underlying WebGL implementation, which can vary based on the browser, OS, driver, and GPU.
+
+#### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
+
+Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`). This option runs the tests using this instead of individual CesiumJS source files.
+
+The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
+
+See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 ### Run Coverage
 

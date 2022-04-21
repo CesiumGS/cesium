@@ -1,5 +1,6 @@
 import {
   AlphaPipelineStage,
+  BatchTexturePipelineStage,
   CustomShader,
   CustomShaderMode,
   CustomShaderPipelineStage,
@@ -10,6 +11,7 @@ import {
   LightingPipelineStage,
   MaterialPipelineStage,
   MetadataPipelineStage,
+  ModelExperimentalPrimitive,
   ModelExperimentalType,
   MorphTargetsPipelineStage,
   PickingPipelineStage,
@@ -17,9 +19,8 @@ import {
   PointCloudShading,
   PrimitiveType,
   SelectedFeatureIdPipelineStage,
+  SkinningPipelineStage,
   VertexAttributeSemantic,
-  BatchTexturePipelineStage,
-  ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
@@ -496,6 +497,45 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MorphTargetsPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures the pipeline stages for skinning", function () {
+    const mockSkin = {
+      index: 0,
+      inverseBindMatrices: [],
+      joints: [],
+    };
+
+    const mockNode = {
+      skin: mockSkin,
+    };
+
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.GLTF,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+        pointCloudShading: undefined,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      SkinningPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,

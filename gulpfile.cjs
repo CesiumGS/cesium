@@ -276,16 +276,6 @@ gulp.task("build-specs", function buildSpecs() {
         });
       })
       .then(function () {
-        // Copy jasmine runner files
-        return globby([
-          "node_modules/jasmine-core/lib/jasmine-core",
-          "!node_modules/jasmine-core/lib/jasmine-core/example",
-        ]).then(function (files) {
-          const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
-          return streamToPromise(stream);
-        });
-      })
-      .then(function () {
         return rollup
           .rollup({
             input: "Specs/karma-main.js",
@@ -379,7 +369,7 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-gulp.task("prepare", function (done) {
+gulp.task("prepare", function () {
   // Copy Draco3D files from node_modules into Source
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
@@ -402,7 +392,15 @@ gulp.task("prepare", function (done) {
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
     "Source/ThirdParty/Workers/z-worker-pako.js"
   );
-  done();
+
+  // Copy jasmine runner files into Specs
+  return globby([
+    "node_modules/jasmine-core/lib/jasmine-core",
+    "!node_modules/jasmine-core/lib/jasmine-core/example",
+  ]).then(function (files) {
+    const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
+    return streamToPromise(stream);
+  });
 });
 
 //Builds the documentation
@@ -427,7 +425,7 @@ function generateDocumentation() {
 gulp.task("generateDocumentation", generateDocumentation);
 
 gulp.task("generateDocumentation-watch", function () {
-  return generateDocumentation().done(function () {
+  return generateDocumentation().then(function () {
     console.log("Listening for changes in documentation...");
     return gulp.watch(sourceFiles, gulp.series("generateDocumentation"));
   });
