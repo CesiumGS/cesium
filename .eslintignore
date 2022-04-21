@@ -7,6 +7,7 @@ Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/**
 !Source/Workers/transferTypedArrayTest.js
+Specs/jasmine/**
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
