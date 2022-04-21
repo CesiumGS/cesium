@@ -94,9 +94,9 @@ function SkyAtmosphere(ellipsoid) {
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
    *
    * @type {Cartesian3}
-   * @default Cartesian3(5.5e-6, 13.0e-6, 22.4e-6)
+   * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
    */
-  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 22.4e-6);
+  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6);
 
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.

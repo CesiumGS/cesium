@@ -1796,7 +1796,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       lightingFadeDistance: new Cartesian2(6500000.0, 9000000.0),
       nightFadeDistance: new Cartesian2(10000000.0, 40000000.0),
       atmosphereLightIntensity: 10.0,
-      atmosphereRayleighCoefficient: new Cartesian3(5.5e-6, 13.0e-6, 22.4e-6),
+      atmosphereRayleighCoefficient: new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6),
       atmosphereMieCoefficient: new Cartesian3(21e-6, 21e-6, 21e-6),
       atmosphereRayleighScaleHeight: 10000.0,
       atmosphereMieScaleHeight: 3200.0,
