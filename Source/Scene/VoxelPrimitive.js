@@ -420,8 +420,6 @@ function VoxelPrimitive(options) {
     cameraPositionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     stepSize: 1.0,
-    minClippingBounds: new Cartesian3(),
-    maxClippingBounds: new Cartesian3(),
     pickColor: new Color(),
   };
 
@@ -1135,6 +1133,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     const maxBounds = defaultValue(provider.maxBounds, defaultMaxBounds);
     this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
     this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
+    this._minBoundsOld = Cartesian3.clone(this._minBounds, this._minBoundsOld);
+    this._maxBoundsOld = Cartesian3.clone(this._maxBounds, this._maxBoundsOld);
     this._minClippingBounds = Cartesian3.clone(
       defaultMinBounds,
       this._minClippingBounds
@@ -1142,6 +1142,14 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._maxClippingBounds = Cartesian3.clone(
       defaultMaxBounds,
       this._maxClippingBounds
+    );
+    this._minClippingBoundsOld = Cartesian3.clone(
+      this._minClippingBounds,
+      this._minClippingBoundsOld
+    );
+    this._maxClippingBoundsOld = Cartesian3.clone(
+      this._maxClippingBounds,
+      this._maxClippingBoundsOld
     );
 
     // Create the shape object
@@ -1220,14 +1228,31 @@ VoxelPrimitive.prototype.update = function (frameState) {
   );
 
   const shape = this._shape;
-  const shapeType = provider.shape;
   const minBounds = this._minBounds;
   const maxBounds = this._maxBounds;
   const minBoundsOld = this._minBoundsOld;
   const maxBoundsOld = this._maxBoundsOld;
   const minBoundsDirty = !Cartesian3.equals(minBounds, minBoundsOld);
   const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
-  const shapeDirty = compoundTransformDirty || minBoundsDirty || maxBoundsDirty;
+  const clipMinBounds = this._minClippingBounds;
+  const clipMaxBounds = this._maxClippingBounds;
+  const clipMinBoundsOld = this._minClippingBoundsOld;
+  const clipMaxBoundsOld = this._maxClippingBoundsOld;
+  const clipMinBoundsDirty = !Cartesian3.equals(
+    clipMinBounds,
+    clipMinBoundsOld
+  );
+  const clipMaxBoundsDirty = !Cartesian3.equals(
+    clipMaxBounds,
+    clipMaxBoundsOld
+  );
+
+  const shapeDirty =
+    compoundTransformDirty ||
+    minBoundsDirty ||
+    maxBoundsDirty ||
+    clipMinBoundsDirty ||
+    clipMaxBoundsDirty;
 
   if (shapeDirty) {
     if (compoundTransformDirty) {
@@ -1242,13 +1267,31 @@ VoxelPrimitive.prototype.update = function (frameState) {
     if (maxBoundsDirty) {
       this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
     }
+    if (clipMinBoundsDirty) {
+      this._minClippingBoundsOld = Cartesian3.clone(
+        clipMinBounds,
+        this._minClippingBoundsOld
+      );
+    }
+    if (clipMaxBoundsDirty) {
+      this._maxClippingBoundsOld = Cartesian3.clone(
+        clipMaxBounds,
+        this._maxClippingBoundsOld
+      );
+    }
   }
 
   // Update the shape on the first frame or if it's dirty.
   // If the shape is visible it will need to do some extra work.
   if (
     (!this._ready || shapeDirty) &&
-    (this._shapeVisible = shape.update(compoundTransform, minBounds, maxBounds))
+    (this._shapeVisible = shape.update(
+      compoundTransform,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    ))
   ) {
     // Rebuild the shader if any of the shape defines changed.
     const shapeDefines = shape.shaderDefines;
@@ -1472,125 +1515,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
 
     if (hasLoadedData && !this._disableRender) {
-      // Process clipping bounds.
-      const minClip = this._minClippingBounds;
-      const maxClip = this._maxClippingBounds;
-
-      const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-      const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-
-      let isDefaultClippingBoundsMin =
-        minClip.x === defaultMinBounds.x &&
-        minClip.y === defaultMinBounds.y &&
-        minClip.z === defaultMinBounds.z;
-
-      let isDefaultClippingBoundsMax =
-        maxClip.x === defaultMaxBounds.x &&
-        maxClip.y === defaultMaxBounds.y &&
-        maxClip.z === defaultMaxBounds.z;
-
-      // Clamp the min bounds to the valid range.
-      if (!isDefaultClippingBoundsMin) {
-        minClip.x = CesiumMath.clamp(
-          minClip.x,
-          defaultMinBounds.x,
-          defaultMaxBounds.x
-        );
-        minClip.y = CesiumMath.clamp(
-          minClip.y,
-          defaultMinBounds.y,
-          defaultMaxBounds.y
-        );
-        if (shapeType !== VoxelShapeType.ELLIPSOID) {
-          minClip.z = CesiumMath.clamp(
-            minClip.z,
-            defaultMinBounds.z,
-            defaultMaxBounds.z
-          );
-        }
-        isDefaultClippingBoundsMin =
-          minClip.x === defaultMinBounds.x &&
-          minClip.y === defaultMinBounds.y &&
-          minClip.z === defaultMinBounds.z;
-      }
-
-      // Clamp the max bounds to the valid range.
-      if (!isDefaultClippingBoundsMax) {
-        maxClip.x = CesiumMath.clamp(
-          maxClip.x,
-          defaultMinBounds.x,
-          defaultMaxBounds.x
-        );
-        maxClip.y = CesiumMath.clamp(
-          maxClip.y,
-          defaultMinBounds.y,
-          defaultMaxBounds.y
-        );
-        if (shapeType !== VoxelShapeType.ELLIPSOID) {
-          maxClip.z = CesiumMath.clamp(
-            maxClip.z,
-            defaultMinBounds.z,
-            defaultMaxBounds.z
-          );
-        }
-        isDefaultClippingBoundsMax =
-          maxClip.x === defaultMaxBounds.x &&
-          maxClip.y === defaultMaxBounds.y &&
-          maxClip.z === defaultMaxBounds.z;
-      }
-
-      const minClipOld = this._minClippingBoundsOld;
-      const maxClipOld = this._maxClippingBoundsOld;
-      const minClipDirty = !Cartesian3.equals(minClip, minClipOld);
-      const maxClipDirty = !Cartesian3.equals(maxClip, maxClipOld);
-      const clippingBoundsDirty = minClipDirty || maxClipDirty;
-
-      if (clippingBoundsDirty) {
-        if (minClipDirty) {
-          if (
-            (minClip.x === defaultMinBounds.x) !==
-              (minClipOld.x === defaultMinBounds.x) ||
-            (minClip.y === defaultMinBounds.y) !==
-              (minClipOld.y === defaultMinBounds.y) ||
-            (minClip.z === defaultMinBounds.z) !==
-              (minClipOld.z === defaultMinBounds.z)
-          ) {
-            this._shaderDirty = true;
-          }
-          this._minClippingBoundsOld = Cartesian3.clone(
-            minClip,
-            this._minClippingBoundsOld
-          );
-        }
-        if (maxClipDirty) {
-          if (
-            (maxClip.x === defaultMaxBounds.x) !==
-              (maxClipOld.x === defaultMaxBounds.x) ||
-            (maxClip.y === defaultMaxBounds.y) !==
-              (maxClipOld.y === defaultMaxBounds.y) ||
-            (maxClip.z === defaultMaxBounds.z) !==
-              (maxClipOld.z === defaultMaxBounds.z)
-          ) {
-            this._shaderDirty = true;
-          }
-          this._maxClippingBoundsOld = Cartesian3.clone(
-            maxClip,
-            this._maxClippingBoundsOld
-          );
-        }
-        if (!isDefaultClippingBoundsMin || !isDefaultClippingBoundsMax) {
-          // Set clipping uniforms
-          uniforms.minClippingBounds = Cartesian3.clone(
-            minClip,
-            uniforms.minClippingBounds
-          );
-          uniforms.maxClippingBounds = Cartesian3.clone(
-            maxClip,
-            uniforms.maxClippingBounds
-          );
-        }
-      }
-
       // Check if log depth changed
       if (this._useLogDepth !== frameState.useLogDepth) {
         this._useLogDepth = frameState.useLogDepth;
@@ -1834,11 +1758,6 @@ function buildDrawCommands(that, context) {
     attributeLength,
     ShaderDestination.FRAGMENT
   );
-  shaderBuilder.addDefine(
-    `SHAPE_${shapeType}`,
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
 
   shaderBuilder.addDefine(
     "MEGATEXTURE_2D",
@@ -1892,6 +1811,22 @@ function buildDrawCommands(that, context) {
     );
   }
 
+  // Count how many intersections the shader will do.
+  let intersectionCount = shape.shaderMaximumIntersectionsLength;
+  if (depthTest) {
+    shaderBuilder.addDefine(
+      "DEPTH_INTERSECTION_INDEX",
+      intersectionCount,
+      ShaderDestination.FRAGMENT
+    );
+    intersectionCount += 1;
+  }
+  shaderBuilder.addDefine(
+    "INTERSECTION_COUNT",
+    intersectionCount,
+    ShaderDestination.FRAGMENT
+  );
+
   const sampleCount = keyframeCount > 1 ? 2 : 1;
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",
@@ -1900,6 +1835,12 @@ function buildDrawCommands(that, context) {
   );
 
   // Shape specific defines
+  shaderBuilder.addDefine(
+    `SHAPE_${shapeType}`,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
   for (const key in shapeDefines) {
     if (shapeDefines.hasOwnProperty(key)) {
       let value = shapeDefines[key];
@@ -1911,21 +1852,6 @@ function buildDrawCommands(that, context) {
       }
     }
   }
-
-  // const useClippingBounds =
-  //   minClippingBounds.x !== defaultMinBounds.x ||
-  //   minClippingBounds.y !== defaultMinBounds.y ||
-  //   minClippingBounds.z !== defaultMinBounds.z ||
-  //   maxClippingBounds.x !== defaultMaxBounds.x ||
-  //   maxClippingBounds.y !== defaultMaxBounds.y ||
-  //   maxClippingBounds.z !== defaultMaxBounds.z;
-  // if (useClippingBounds) {
-  //   shaderBuilder.addDefine(
-  //     "CLIPPING_BOUNDS",
-  //     undefined,
-  //     ShaderDestination.FRAGMENT
-  //   );
-  // }
 
   // Fragment shader uniforms
 

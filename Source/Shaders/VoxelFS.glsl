@@ -12,13 +12,13 @@ Below is an example of how this code might look. Properties like "temperature" a
 #define MEGATEXTURE_2D
 #define MEGATEXTURE_3D
 #define DEPTH_TEST
+#define DEPTH_INTERSECTION_INDEX ###
+#define INTERSECTION_COUNT ###
 #define JITTER
 #define NEAREST_SAMPLING
 #define DESPECKLE
 #define STATISTICS
 #define PADDING
-#define BOUNDS
-#define CLIPPING_BOUNDS
 #define PICKING
 
 // Uniforms
@@ -184,60 +184,63 @@ uniform float u_stepSize;
     uniform vec4 u_pickColor;
 #endif
 
-#if defined(CLIPPING_BOUNDS)
-    uniform vec3 u_minClippingBounds;
-    uniform vec3 u_maxClippingBounds;
-#endif
-
 #if defined(SHAPE_BOX)
     /* Box defines:
-    #define BOX_INTERSECTION_COUNT ### // always 1
     #define BOX_INTERSECTION_INDEX ### // always 0
-    #define BOX_IS_BOUNDED
-    #define BOX_IS_RECTANGLE
+    #define BOX_HAS_SHAPE_BOUND
+    #define BOX_HAS_RENDER_BOUND
+    #define BOX_IS_2D
     */
 
     // Box uniforms:
-    #if defined(BOX_IS_BOUNDED)
-        uniform vec3 u_boxScaleUvToBoundsUv;
-        uniform vec3 u_boxOffsetUvToBoundsUv;
-        #if defined(BOX_IS_RECTANGLE)
+    #if defined(BOX_HAS_SHAPE_BOUND)
+        uniform vec3 u_boxScaleUvToShapeBoundsUv;
+        uniform vec3 u_boxOffsetUvToShapeBoundsUv;
+    #endif
+    #if defined(BOX_HAS_RENDER_BOUND)
+        #if defined(BOX_IS_2D)
             // This matrix bakes in an axis conversion so that the math works for XY plane.
-            uniform mat4 u_boxTransformUvToBounds;
+            uniform mat4 u_boxTransformUvToRenderBounds;
         #else
             // Similar to u_boxTransformUvToBounds but fewer instructions needed.
-            uniform vec3 u_boxScaleUvToBounds;
-            uniform vec3 u_boxOffsetUvToBounds;
+            uniform vec3 u_boxScaleUvToRenderBounds;
+            uniform vec3 u_boxOffsetUvToRenderBounds;
         #endif
     #endif
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
     /* Ellipsoid defines:
-    #define ELLIPSOID_INTERSECTION_COUNT ### // the total number of enter and exit points for all the constituent intersections
-    #define ELLIPSOID_WEDGE
-    #define ELLIPSOID_WEDGE_INDEX ###
-    #define ELLIPSOID_WEDGE_REGULAR ### // when there's a wedge 
-    #define ELLIPSOID_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
-    #define ELLIPSOID_WEDGE_FLAT ###
-    #define ELLIPSOID_WEDGE_EMPTY
-    #define ELLIPSOID_WEDGE_ANGLE_FLIPPED //
-    #define ELLIPSOID_CONE_BOTTOM
-    #define ELLIPSOID_CONE_BOTTOM_REGULAR // when there's a bottom cone
-    #define ELLIPSOID_CONE_BOTTOM_FLIPPED // when cone shape has two intersection intervals
-    #define ELLIPSOID_CONE_BOTTOM_FLAT
-    #define ELLIPSOID_CONE_BOTTOM_INDEX ###
-    #define ELLIPSOID_CONE_TOP
-    #define ELLIPSOID_CONE_TOP_REGULAR ### // when there's a top cone
-    #define ELLIPSOID_CONE_TOP_FLIPPED ### // when cone shape has two intersection intervals
-    #define ELLIPSOID_CONE_TOP_FLAT
-    #define ELLIPSOID_CONE_TOP_INDEX ###
-    #define ELLIPSOID_OUTER ### // outer ellipsoid - always defined
-    #define ELLIPSOID_OUTER_INDEX ###
-    #define ELLIPSOID_INNER ### // when there's an inner ellipsoid
-    #define ELLIPSOID_INNER_INDEX ###
-    #define ELLIPSOID_INNER_OUTER_EQUAL
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
+    #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN
+    #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
     #define ELLIPSOID_IS_SPHERE
+    #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
+    #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX
+    #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN
+    #define ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX
+    #define ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN
     */
 
     // Ellipsoid uniforms
@@ -245,102 +248,85 @@ uniform float u_stepSize;
     #if !defined(ELLIPSOID_IS_SPHERE)
         uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
     #endif
-    #if defined(ELLIPSOID_WEDGE) || defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
-        uniform vec4 u_ellipsoidRectangle; // west [-pi,+pi], south [-halfPi,+halfPi], east [-pi,+pi], north [-halfPi,+halfPi].
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE)
+        uniform vec2 u_ellipsoidRenderLongitudeMinMax;
     #endif
-    #if defined(ELLIPSOID_WEDGE)
-        #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED) || defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY) || defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            uniform float u_ellipsoidEmptyMidpointLongitudeUv;
-        #endif
-        #if defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
-            uniform float u_ellipsoidMinLongitudeUv;
-        #endif
-        #if defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            uniform float u_ellipsoidMaxLongitudeUv;
-        #endif
-        uniform vec2 u_ellipsoidLongitudeUvScaleAndOffset;
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) || defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
+        uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
     #endif
-
-    #if defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP)
-        uniform vec2 u_ellipsoidLatitudeUvScaleAndOffset;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+        uniform vec2 u_ellipsoidUvToShapeUvLongitude; // x = scale, y = offset
     #endif
-    #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
-        uniform float u_ellipsoidMinLatitudeCosSqrHalfAngle;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+        uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
     #endif
-    #if defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
-        uniform float u_ellipsoidMaxLatitudeCosSqrHalfAngle;
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
+        uniform vec2 u_ellipsoidRenderLatitudeCosSqrHalfMinMax;
     #endif
-    #if defined(ELLIPSOID_INNER) && !defined(ELLIPSOID_INNER_OUTER_EQUAL)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN) && !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO)
         uniform float u_ellipsoidInverseHeightDifferenceUv;
-        uniform float u_ellipsoidInverseInnerScaleUv;
         uniform vec2 u_ellipseInnerRadiiUv; // [0,1]
+    #endif
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
+        uniform float u_ellipsoidInverseInnerScaleUv;
     #endif
 #endif
 
 #if defined(SHAPE_CYLINDER)
     /* Cylinder defines:
-    #define CYLINDER_INTERSECTION_COUNT ### // the total number of enter and exit points for all the constituent intersections
-    #define CYLINDER_OUTER_INDEX ### // outer cylinder
-    #define CYLINDER_OUTER_NON_DEFAULT ### //
-    #define CYLINDER_INNER
-    #define CYLINDER_INNER_OUTER_EQUAL ### // when inner and outer cylinder have the same radius
-    #define CYLINDER_INNER_INDEX ### // when there's an inner cylinder
-    #define CYLINDER_HEIGHT_NON_DEFAULT ### //
-    #define CYLINDER_HEIGHT_ZERO // when the height is 0
-    #define CYLINDER_WEDGE //
-    #define CYLINDER_WEDGE_INDEX // 
-    #define CYLINDER_WEDGE_REGULAR ### // when there's a wedge
-    #define CYLINDER_WEDGE_FLIPPED ### // when the wedge has two intersection intervals
-    #define CYLINDER_WEDGE_FLAT
-    #define CYLINDER_WEDGE_EMPTY
-    #define CYLINDER_WEDGE_ANGLE_FLIPPED //
-    #define CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY
-    #define CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY
+    #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN
+    #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX
+    #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT
+    #define CYLINDER_HAS_RENDER_BOUNDS_HEIGHT
+    #define CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT
+    #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE
+    #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
+    #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
+    #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF
+    #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO
+
+    #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
+    #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
+    #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
+    #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
+    #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
+    #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_ZERO
+    #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
+    #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
+    #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED
+
+    #define CYLINDER_INTERSECTION_INDEX_RADIUS_MAX
+    #define CYLINDER_INTERSECTION_INDEX_RADIUS_MIN
+    #define CYLINDER_INTERSECTION_INDEX_ANGLE 
+
     */
 
     // Cylinder uniforms
-    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER) || defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        uniform vec3 u_cylinderScaleUvToBounds;
-        uniform vec3 u_cylinderTranslateUvToBounds;
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT)
+        uniform vec3 u_cylinderUvToRenderBoundsScale;
+        uniform vec3 u_cylinderUvToRenderBoundsTranslate;
     #endif
-    #if defined(CYLINDER_INNER) && !defined(CYLINDER_INNER_OUTER_EQUAL)
-        uniform float u_cylinderInverseInnerRadiusUv;
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN) && !defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
+        uniform float u_cylinderUvToRenderRadiusMin;
     #endif
-    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-        uniform vec2 u_cylinderRadiusUvScaleAndOffset;
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE)
+        uniform vec2 u_cylinderRenderAngleMinMax;
     #endif
-    #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        uniform vec2 u_cylinderHeightUvScaleAndOffset;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        uniform vec2 u_cylinderUvToShapeUvRadius; // x = scale, y = offset
     #endif
-    #if defined(CYLINDER_WEDGE)
-        uniform vec2 u_cylinderAngleMinMax;
-        uniform vec2 u_cylinderAngleUvScaleAndOffset;
-        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED) || defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY) || defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            uniform float u_cylinderEmptyMidpointAngleUv;
-        #endif
-        #if defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
-            uniform float u_cylinderMinAngleUv;
-        #endif
-        #if defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            uniform float u_cylinderMaxAngleUv;
-        #endif
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        uniform vec2 u_cylinderUvToShapeUvHeight; // x = scale, y = offset
     #endif
-#endif
-
-// Keep track of how many intersections there are going to be
-#if defined(SHAPE_BOX)
-    #define SHAPE_INTERSECTION_COUNT BOX_INTERSECTION_COUNT 
-#elif defined(SHAPE_ELLIPSOID)
-    #define SHAPE_INTERSECTION_COUNT ELLIPSOID_INTERSECTION_COUNT
-#elif defined(SHAPE_CYLINDER)
-    #define SHAPE_INTERSECTION_COUNT CYLINDER_INTERSECTION_COUNT
-#endif
-
-#if defined(DEPTH_TEST)
-    #define DEPTH_INTERSECTION_INDEX SHAPE_INTERSECTION_COUNT
-    #define SCENE_INTERSECTION_COUNT (SHAPE_INTERSECTION_COUNT + 1)
-#else
-    #define SCENE_INTERSECTION_COUNT SHAPE_INTERSECTION_COUNT
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        uniform vec2 u_cylinderUvToShapeUvAngle; // x = scale, y = offset
+    #endif
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY) || defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY)
+        uniform vec2 u_cylinderShapeUvAngleMinMax;
+    #endif
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY) || defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY) || defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+        uniform float u_cylinderShapeUvAngleEmptyMid;
+    #endif
 #endif
 
 // --------------------------------------------------------
@@ -406,7 +392,7 @@ vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
-    #if (SCENE_INTERSECTION_COUNT > 1)
+    #if (INTERSECTION_COUNT > 1)
         // Store an array of intersections. Each intersection is composed of:
         //  x for the T value
         //  y for the shape type - which encodes positive vs negative and entering vs exiting
@@ -415,7 +401,7 @@ struct Intersections {
         //  y = 1: positive shape exit
         //  y = 2: negative shape entry
         //  y = 3: negative shape exit
-        vec2 intersections[SCENE_INTERSECTION_COUNT * 2];
+        vec2 intersections[INTERSECTION_COUNT * 2];
 
         // Maintain state for future nextIntersection calls
         int index;
@@ -428,7 +414,7 @@ struct Intersections {
 };
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (SCENE_INTERSECTION_COUNT > 1)
+#if (INTERSECTION_COUNT > 1)
     #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].x
 #else
     #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)]
@@ -438,25 +424,25 @@ struct Intersections {
 #define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (SCENE_INTERSECTION_COUNT > 1)
+#if (INTERSECTION_COUNT > 1)
     #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
 #else
     #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = (t)
 #endif
 
 // Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (SCENE_INTERSECTION_COUNT > 1)
+#if (INTERSECTION_COUNT > 1)
     #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec2((entryExit).x, float((index) > 0) * 2.0 + 0.0); (ix).intersections[(index) * 2 + 1] = vec2((entryExit).y, float((index) > 0) * 2.0 + 1.0)
 #else
     #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = (entryExit).x; (ix).intersections[(index) * 2 + 1] = (entryExit).y
 #endif
 
-#if (SCENE_INTERSECTION_COUNT > 1)
+#if (INTERSECTION_COUNT > 1)
 vec2 nextIntersection(inout Intersections ix) {
     vec2 entryExitT = vec2(NO_HIT);
 
-    const int passCount = SCENE_INTERSECTION_COUNT * 2;
-    for (int i = 0; i < passCount; i++) {
+    const int passCount = INTERSECTION_COUNT * 2;
+    for (int i = 0; i < passCount; ++i) {
         // The loop should be: for (i = ix.index; i < passCount; ++i) {...} but WebGL1 cannot
         // loop with non-constant condition, so it has to continue instead.
         if (i < ix.index) {
@@ -486,7 +472,7 @@ vec2 nextIntersection(inout Intersections ix) {
             // entry and exit have been found, so the loop can stop
             if (exitPositive) {
                 // After exiting positive shape there is nothing left to intersect, so jump to the end index.
-                ix.index = SCENE_INTERSECTION_COUNT * 2;
+                ix.index = passCount;
             } else {
                 // There could be more intersections against the positive shape in the future.
                 ix.index = i + 1;
@@ -499,12 +485,12 @@ vec2 nextIntersection(inout Intersections ix) {
 }
 #endif
 
-#if (SCENE_INTERSECTION_COUNT > 1)
+#if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
     // Sort the intersections from min T to max T with bubble sort.
     // Note: If this sorting function changes, some of the intersection test may
     // need to be updated. Search for "bubble sort" to find those areas.
-    const int sortPasses = SCENE_INTERSECTION_COUNT * 2 - 1;
+    const int sortPasses = INTERSECTION_COUNT * 2 - 1;
     for (int n = sortPasses; n > 0; --n) {
         for (int i = 0; i < sortPasses; ++i) {
             // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
@@ -575,7 +561,7 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_FLAT) || defined(ELLIPSOID_CONE_TOP_FLAT))
+#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF))
 vec2 intersectZPlane(Ray ray)
 {
     float o = ray.pos.z;
@@ -588,7 +574,7 @@ vec2 intersectZPlane(Ray ray)
 }
 #endif
 
-#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_EMPTY)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_EMPTY))
+#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO))
 vec4 intersectHalfPlane(Ray ray, float angle) {
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
@@ -607,7 +593,7 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
 }
 #endif
 
-#if (defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_WEDGE_FLIPPED) || defined(ELLIPSOID_WEDGE_FLAT))) || (defined(SHAPE_CYLINDER) && (defined(CYLINDER_WEDGE_FLIPPED) || defined(CYLINDER_WEDGE_FLAT)))
+#if (defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF))) || (defined(SHAPE_CYLINDER) && (defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF) || defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF)))
 vec2 intersectHalfSpace(Ray ray, float angle)
 {    
     vec2 o = ray.pos.xy;
@@ -624,7 +610,7 @@ vec2 intersectHalfSpace(Ray ray, float angle)
 }
 #endif
 
-#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_REGULAR)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_REGULAR))
+#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF))
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 {    
     vec2 o = ray.pos.xy;
@@ -659,7 +645,7 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 }
 #endif
 
-#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_WEDGE_FLIPPED)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_WEDGE_FLIPPED))
+#if (defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF)) || (defined(SHAPE_CYLINDER) && defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF))
 vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
 {    
     vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
@@ -717,7 +703,7 @@ vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_BOTTOM_FLIPPED) || defined(ELLIPSOID_CONE_TOP_REGULAR) || defined(ELLIPSOID_CONE_TOP_FLIPPED))
+#if defined(SHAPE_ELLIPSOID) && defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE)
 vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
 {
     vec3 o = ray.pos;
@@ -740,7 +726,7 @@ vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_FLIPPED) || defined(ELLIPSOID_CONE_TOP_FLIPPED))
+#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF))
 vec4 intersectFlippedCone(Ray ray, float cosSqrHalfAngle) {
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
@@ -764,7 +750,7 @@ vec4 intersectFlippedCone(Ray ray, float cosSqrHalfAngle) {
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_TOP_REGULAR))
+#if defined(SHAPE_ELLIPSOID) && (defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF))
 vec2 intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
@@ -843,7 +829,7 @@ vec2 intersectUnitCircle(Ray ray) {
 }
 #endif
 
-#if defined(SHAPE_CYLINDER) && defined(CYLINDER_INNER)
+#if defined(SHAPE_CYLINDER) && defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN)
 vec2 intersectInfiniteUnitCylinder(Ray ray)
 {
     vec3 o = ray.pos;
@@ -883,7 +869,7 @@ float ellipseDistanceIterative (vec2 pos, vec2 radii) {
     vec2 v = radii * t;
 
     const int iterations = 3;
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < iterations; ++i) {
         vec2 e = a * pow(t, vec2(3.0));
         vec2 q = normalize(p - e) * length(v - e);
         t = normalize((q + e) * invRadii);
@@ -945,19 +931,21 @@ float ellipseDistanceAnalytical(vec2 pos, vec2 radii) {
 #endif
 
 #if defined(SHAPE_BOX)
-void intersectBoxShape(Ray ray, out Intersections ix)
+void intersectShape(Ray ray, inout Intersections ix)
 {
-    #if defined(BOX_IS_RECTANGLE)
-        // Transform the ray into unit square space on Z plane
-        // This matrix bakes in an axis conversion so that the math works for XY plane.
-        ray.pos = vec3(u_boxTransformUvToBounds * vec4(ray.pos, 1.0));
-        ray.dir = vec3(u_boxTransformUvToBounds * vec4(ray.dir, 0.0));
-        vec2 entryExit = intersectUnitSquare(ray);
-    #elif defined(BOX_IS_BOUNDED)
-        // Transform the ray into unit cube space
-        ray.pos = ray.pos * u_boxScaleUvToBounds + u_boxOffsetUvToBounds;
-        ray.dir *= u_boxScaleUvToBounds;
-        vec2 entryExit = intersectUnitCube(ray);
+    #if defined(BOX_HAS_RENDER_BOUND)
+        #if defined(BOX_IS_2D)
+            // Transform the ray into unit square space on Z plane
+            // This matrix bakes in an axis conversion so that the math works for XY plane.
+            ray.pos = vec3(u_boxTransformUvToRenderBounds * vec4(ray.pos, 1.0));
+            ray.dir = vec3(u_boxTransformUvToRenderBounds * vec4(ray.dir, 0.0));
+            vec2 entryExit = intersectUnitSquare(ray);
+        #else
+            // Transform the ray into unit cube space
+            ray.pos = ray.pos * u_boxScaleUvToRenderBounds + u_boxOffsetUvToRenderBounds;
+            ray.dir *= u_boxScaleUvToRenderBounds;
+            vec2 entryExit = intersectUnitCube(ray);
+        #endif
     #else
         // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
         // Direction is scaled as well to be in sync with position. 
@@ -971,9 +959,9 @@ void intersectBoxShape(Ray ray, out Intersections ix)
 #endif
 
 #if defined(SHAPE_BOX)
-vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
-    #if defined(BOX_IS_BOUNDED)
-        return positionUv * u_boxScaleUvToBoundsUv + u_boxOffsetUvToBoundsUv;
+vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
+    #if defined(BOX_HAS_SHAPE_BOUND)
+        return positionUv * u_boxScaleUvToShapeBoundsUv + u_boxOffsetUvToShapeBoundsUv;
     #else
         return positionUv;
     #endif
@@ -981,7 +969,7 @@ vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
-void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
+void intersectShape(in Ray ray, inout Intersections ix) {
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
     // Direction is scaled as well to be in sync with position. 
     ray.pos = ray.pos * 2.0 - 1.0;
@@ -989,7 +977,7 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
     
     // Outer ellipsoid
     vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
-    setIntersectionPair(ix, ELLIPSOID_OUTER_INDEX, outerIntersect);
+    setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
     if (outerIntersect.x == NO_HIT) {
@@ -997,7 +985,7 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_INNER_OUTER_EQUAL) 
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO) 
         // When the ellipsoid is perfectly thin it's necessary to sandwich the
         // inner ellipsoid intersection inside the outer ellipsoid intersection.
         
@@ -1018,74 +1006,66 @@ void intersectEllipsoidShape(in Ray ray, inout Intersections ix) {
         setIntersection(ix, 1, outerIntersect.x, false, true);  // negative, enter
         setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
         setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
-    #elif defined(ELLIPSOID_INNER)
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
         vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        setIntersectionPair(ix, ELLIPSOID_INNER_INDEX, innerIntersect);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
     #endif
         
     // Flip the ray because the intersection function expects a cone growing towards +Z.
-    #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR) || defined(ELLIPSOID_CONE_BOTTOM_FLAT) || defined(ELLIPSOID_CONE_TOP_FLIPPED)
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         Ray flippedRay = ray;
         flippedRay.dir.z *= -1.0;
         flippedRay.pos.z *= -1.0;
     #endif
 
     // Bottom cone
-    #if defined(ELLIPSOID_CONE_BOTTOM)
-        #if defined(ELLIPSOID_CONE_BOTTOM_REGULAR)
-            vec2 bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidMinLatitudeCosSqrHalfAngle);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX, bottomConeIntersection);
-        #elif defined(ELLIPSOID_CONE_BOTTOM_FLIPPED)
-            vec4 bottomConeIntersection = intersectFlippedCone(ray, u_ellipsoidMinLatitudeCosSqrHalfAngle);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX + 0, bottomConeIntersection.xy);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX + 1, bottomConeIntersection.zw);
-        #elif defined(ELLIPSOID_CONE_BOTTOM_FLAT)
-            vec2 bottomConeIntersection = intersectZPlane(flippedRay);
-            setIntersectionPair(ix, ELLIPSOID_CONE_BOTTOM_INDEX, bottomConeIntersection);
-        #endif
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
+        vec2 bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
+        vec2 bottomConeIntersection = intersectZPlane(flippedRay);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF)
+        vec4 bottomConeIntersection = intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 0, bottomConeIntersection.xy);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersection.zw);
     #endif
 
     // Top cone        
-    #if defined(ELLIPSOID_CONE_TOP)
-        #if defined(ELLIPSOID_CONE_TOP_REGULAR)
-            vec2 topConeIntersection = intersectRegularCone(ray, u_ellipsoidMaxLatitudeCosSqrHalfAngle);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX, topConeIntersection);
-        #elif defined(ELLIPSOID_CONE_TOP_FLIPPED)
-            vec4 topConeIntersection = intersectFlippedCone(flippedRay, u_ellipsoidMaxLatitudeCosSqrHalfAngle);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX + 0, topConeIntersection.xy);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX + 1, topConeIntersection.zw);
-        #elif defined(ELLIPSOID_CONE_TOP_FLAT)
-            vec2 topConeIntersection = intersectZPlane(ray);
-            setIntersectionPair(ix, ELLIPSOID_CONE_TOP_INDEX, topConeIntersection);
-        #endif
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
+        vec4 topConeIntersection = intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersection.xy);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersection.zw);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF)
+        vec2 topConeIntersection = intersectZPlane(ray);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
+        vec2 topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #endif
 
     // Wedge
-    #if defined(ELLIPSOID_WEDGE)
-        float west = u_ellipsoidRectangle.x; // [-pi,+pi]
-        float east = u_ellipsoidRectangle.z; // [-pi,+pi]
-        #if defined(ELLIPSOID_WEDGE_REGULAR)
-            vec2 wedgeIntersect = intersectRegularWedge(ray, west, east);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX, wedgeIntersect);
-        #elif defined(ELLIPSOID_WEDGE_FLIPPED)
-            vec4 wedgeIntersect = intersectFlippedWedge(ray, west, east);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 0, wedgeIntersect.xy);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 1, wedgeIntersect.zw);
-        #elif defined(ELLIPSOID_WEDGE_FLAT)
-            vec2 wedgeIntersect = intersectHalfSpace(ray, west);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX, wedgeIntersect);
-        #elif defined(ELLIPSOID_WEDGE_EMPTY)
-            vec4 wedgeIntersect = intersectHalfPlane(ray, west);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 0, wedgeIntersect.xy);
-            setIntersectionPair(ix, ELLIPSOID_WEDGE_INDEX + 1, wedgeIntersect.zw);
-        #endif
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)
+        vec4 wedgeIntersect = intersectHalfPlane(ray, u_ellipsoidRenderLongitudeMinMax.x);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersect.xy);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF)
+        vec2 wedgeIntersect = intersectRegularWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF)
+        vec2 wedgeIntersect = intersectHalfSpace(ray, u_ellipsoidRenderLongitudeMinMax.x);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
+    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF)
+        vec4 wedgeIntersect = intersectFlippedWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersect.xy);
+        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
     #endif
 }
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
-vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
+vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     // Compute position and normal.
     // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
     // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
@@ -1099,44 +1079,55 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     #endif
     
     // Compute longitude
-    float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
-    #if defined(ELLIPSOID_WEDGE)
-        #if defined(ELLIPSOID_WEDGE_ANGLE_FLIPPED)
-            // Comparing against u_ellipsoidMinAngleUv has precision problems. u_ellipsoidEmptyMidpointAngleUv is more conservative.
-            longitude += float(longitude < u_ellipsoidEmptyMidpointLongitudeUv);
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)
+        float longitude = 1.0;
+    #else
+        float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
+        
+        // Correct the angle when max < min
+        // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
+        #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
+            longitude += float(longitude < u_ellipsoidShapeUvLongitudeMinMaxMid.z);
         #endif
 
-        // When the min or max angle is near the -pi/+pi discontinuity there may be flickering as both sides of the voxel data are read.
-        #if defined(ELLIPSOID_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
-            longitude = longitude > u_ellipsoidEmptyMidpointLongitudeUv ? u_ellipsoidMinLongitudeUv : longitude;
-        #elif defined(ELLIPSOID_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            longitude = longitude < u_ellipsoidEmptyMidpointLongitudeUv ? u_ellipsoidMaxLongitudeUv : longitude;
+        // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+        #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY)
+            longitude = longitude > u_ellipsoidShapeUvLongitudeMinMaxMid.z ? u_ellipsoidShapeUvLongitudeMinMaxMid.x : longitude;
+        #endif
+        #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY)
+            longitude = longitude < u_ellipsoidShapeUvLongitudeMinMaxMid.z ? u_ellipsoidShapeUvLongitudeMinMaxMid.y : longitude;
         #endif
 
-        longitude = longitude * u_ellipsoidLongitudeUvScaleAndOffset.x + u_ellipsoidLongitudeUvScaleAndOffset.y;
+        #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+            longitude = longitude * u_ellipsoidUvToShapeUvLongitude.x + u_ellipsoidUvToShapeUvLongitude.y;
+        #endif
     #endif
 
     // Compute latitude
-    float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
-    #if (defined(ELLIPSOID_CONE_BOTTOM) || defined(ELLIPSOID_CONE_TOP))
-        latitude = latitude * u_ellipsoidLatitudeUvScaleAndOffset.x + u_ellipsoidLatitudeUvScaleAndOffset.y;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO)
+        float latitude = 1.0;
+    #else
+        float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
+        #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+            latitude = latitude * u_ellipsoidUvToShapeUvLatitude.x + u_ellipsoidUvToShapeUvLatitude.y;
+        #endif
     #endif
 
     // Compute height
-    #if defined(ELLIPSOID_INNER_OUTER_EQUAL)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO)
         // TODO: This breaks down when minBounds == maxBounds. To fix it, this
         // function would have to know if ray is intersecting the front or back of the shape
         // and set the shape space position to 1 (front) or 0 (back) accordingly.
         float height = 1.0;
     #else
         #if defined(ELLIPSOID_IS_SPHERE)
-            #if defined(ELLIPSOID_INNER)
+            #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN)
                 float height = (length(posEllipsoid) - u_ellipseInnerRadiiUv.x) * u_ellipsoidInverseHeightDifferenceUv;
             #else
                 float height = length(posEllipsoid);
             #endif
         #else
-            #if defined(ELLIPSOID_INNER)
+            #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN)
                 // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84).
                 // This is an optimization so that math can be done with ellipses instead of ellipsoids.
                 vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
@@ -1153,11 +1144,11 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
 #endif
 
 #if defined(SHAPE_CYLINDER)
-void intersectCylinderShape(Ray ray, inout Intersections ix)
+void intersectShape(Ray ray, inout Intersections ix)
 {
-    #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER) || defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        ray.pos = ray.pos * u_cylinderScaleUvToBounds + u_cylinderTranslateUvToBounds;
-        ray.dir *= u_cylinderScaleUvToBounds;
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT)
+        ray.pos = ray.pos * u_cylinderUvToRenderBoundsScale + u_cylinderUvToRenderBoundsTranslate;
+        ray.dir *= u_cylinderUvToRenderBoundsScale;
     #else
         // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
         // Direction is scaled as well to be in sync with position.
@@ -1165,19 +1156,19 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         ray.dir *= 2.0;
     #endif
 
-    #if defined(CYLINDER_HEIGHT_ZERO)
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
         vec2 outerIntersect = intersectUnitCircle(ray);
     #else
         vec2 outerIntersect = intersectUnitCylinder(ray);
     #endif
 
-    setIntersectionPair(ix, CYLINDER_OUTER_INDEX, outerIntersect);
+    setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);
 
     if (outerIntersect.x == NO_HIT) {
         return;
     }
 
-    #if defined(CYLINDER_INNER_OUTER_EQUAL)
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
         // When the cylinder is perfectly thin it's necessary to sandwich the
         // inner cylinder intersection inside the outer cylinder intersection.
         
@@ -1199,107 +1190,93 @@ void intersectCylinderShape(Ray ray, inout Intersections ix)
         setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
         setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
         setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
-    #elif defined(CYLINDER_INNER)
-        Ray innerRay = Ray(ray.pos * u_cylinderInverseInnerRadiusUv, ray.dir * u_cylinderInverseInnerRadiusUv);
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN)
+        Ray innerRay = Ray(ray.pos * u_cylinderUvToRenderRadiusMin, ray.dir * u_cylinderUvToRenderRadiusMin);
         vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
-        setIntersectionPair(ix, CYLINDER_INNER_INDEX, innerIntersect);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MIN, innerIntersect);
     #endif
 
-    #if defined(CYLINDER_WEDGE_REGULAR)
-        vec2 wedgeIntersect = intersectRegularWedge(ray, u_cylinderAngleMinMax.x, u_cylinderAngleMinMax.y);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
-    #elif defined(CYLINDER_WEDGE_FLIPPED)
-        vec4 wedgeIntersect = intersectFlippedWedge(ray, u_cylinderAngleMinMax.x, u_cylinderAngleMinMax.y);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, wedgeIntersect.zw);
-    #elif defined(CYLINDER_WEDGE_FLAT)
-        vec2 wedgeIntersect = intersectHalfSpace(ray, u_cylinderAngleMinMax.x);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX, wedgeIntersect);
-    #elif defined(CYLINDER_WEDGE_EMPTY)
-        vec4 wedgeIntersect = intersectHalfPlane(ray, u_cylinderAngleMinMax.x);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, CYLINDER_WEDGE_INDEX + 1, wedgeIntersect.zw);
+    #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF)
+        vec2 wedgeIntersect = intersectRegularWedge(ray, u_cylinderRenderAngleMinMax.x, u_cylinderRenderAngleMinMax.y);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF)
+        vec4 wedgeIntersect = intersectFlippedWedge(ray, u_cylinderRenderAngleMinMax.x, u_cylinderRenderAngleMinMax.y);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF)
+        vec2 wedgeIntersect = intersectHalfSpace(ray, u_cylinderRenderAngleMinMax.x);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO)
+        vec4 wedgeIntersect = intersectHalfPlane(ray, u_cylinderRenderAngleMinMax.x);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
+        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
     #endif
 }
 #endif
 
 #if defined(SHAPE_CYLINDER)
-vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
+vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1,+1]
     
     // Compute radius
-    #if defined(CYLINDER_INNER_OUTER_EQUAL)
-        // TODO: This breaks down when minBounds == maxBounds. To fix it, this
-        // function would have to know if ray is intersecting the front or back of the shape
-        // and set the shape space position to 1 (front) or 0 (back) accordingly.
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT) || defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
         float radius = 1.0;
     #else
         float radius = length(positionLocal.xy); // [0,1]
-        #if defined(CYLINDER_OUTER_NON_DEFAULT) || defined(CYLINDER_INNER)
-            radius = radius * u_cylinderRadiusUvScaleAndOffset.x + u_cylinderRadiusUvScaleAndOffset.y;
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+            radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y; // x = scale, y = offset
         #endif
     #endif
     
     // Compute height
-    float height = positionUv.z; // [0,1]
-    #if defined(CYLINDER_HEIGHT_NON_DEFAULT)
-        height = height * u_cylinderHeightUvScaleAndOffset.x + u_cylinderHeightUvScaleAndOffset.y;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
+        float height = 1.0;
+    #else
+        float height = positionUv.z; // [0,1]
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+            height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y; // x = scale, y = offset
+        #endif
     #endif
 
     // Compute angle
-    float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
-    #if defined(CYLINDER_WEDGE)
-        #if defined(CYLINDER_WEDGE_ANGLE_FLIPPED)
-            // Comparing against u_cylinderMinAngleUv has precision problems. u_cylinderEmptyMidpointAngleUv is more conservative.
-            angle += float(angle < u_cylinderEmptyMidpointAngleUv);
-        #endif
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_ZERO) || defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO)
+        float angle = 1.0;
+    #else
+        float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+            #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+                // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleEmptyMid is more conservative.
+                angle += float(angle < u_cylinderShapeUvAngleEmptyMid);
+            #endif
 
-        // When the min or max angle is near the -pi/+pi discontinuity there may be flickering as both sides of the voxel data are read.
-        #if defined(CYLINDER_WEDGE_MIN_ANGLE_ON_DISCONTINUITY)
-            angle = angle > u_cylinderEmptyMidpointAngleUv ? u_cylinderMinAngleUv : angle;
-        #elif defined(CYLINDER_WEDGE_MAX_ANGLE_ON_DISCONTINUITY)
-            angle = angle < u_cylinderEmptyMidpointAngleUv ? u_cylinderMaxAngleUv : angle;
-        #endif
+            // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+            #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY)
+                angle = angle > u_cylinderShapeUvAngleEmptyMid ? u_cylinderShapeUvAngleMinMax.x : angle;
+            #elif defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY)
+                angle = angle < u_cylinderShapeUvAngleEmptyMid ? u_cylinderShapeUvAngleMinMax.y : angle;
+            #endif
 
-        angle = angle * u_cylinderAngleUvScaleAndOffset.x + u_cylinderAngleUvScaleAndOffset.y;
+            angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y; // x = scale, y = offset
+        #endif
     #endif
 
     return vec3(radius, height, angle);
 }
 #endif
 
-vec3 transformFromUvToShapeSpace(in vec3 positionUv) {
-    #if defined(SHAPE_BOX)
-        return transformFromUvToBoxSpace(positionUv);
-    #elif defined(SHAPE_ELLIPSOID)
-        return transformFromUvToEllipsoidSpace(positionUv);
-    #elif defined(SHAPE_CYLINDER)
-        return transformFromUvToCylinderSpace(positionUv);
-    #endif
-}
-
-void intersectShape(Ray ray, out Intersections ix) {
-    #if defined(SHAPE_BOX)
-        intersectBoxShape(ray, ix);
-    #elif defined(SHAPE_ELLIPSOID)
-        intersectEllipsoidShape(ray, ix);
-    #elif defined(SHAPE_CYLINDER)
-        intersectCylinderShape(ray, ix);
-    #endif
-}
-
 #if defined(DEPTH_TEST)
-float intersectDepth(vec2 screenCoord, Ray ray) {
+void intersectDepth(vec2 screenCoord, Ray ray, inout Intersections ix) {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenCoord));
     if (logDepthOrDepth != 0.0) {
         // Calculate how far the ray must travel before it hits the depth buffer.
         vec4 eyeCoordinateDepth = czm_screenToEyeCoordinates(screenCoord, logDepthOrDepth);
         eyeCoordinateDepth /= eyeCoordinateDepth.w;
         vec3 depthPositionUv = vec3(u_transformPositionViewToUv * eyeCoordinateDepth);
-        return dot(depthPositionUv - ray.pos, ray.dir);
+        float t = dot(depthPositionUv - ray.pos, ray.dir);
+        setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(t, +INF_HIT));
     } else {
-        // There's no depth at this position so set it to some really far value.
-        return +INF_HIT;
+        // There's no depth at this location.
+        setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(NO_HIT));
     }
 }
 #endif
@@ -1312,20 +1289,20 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
 
     // Exit early if the positive shape was completely missed or behind the ray.
     vec2 entryExitT = getIntersectionPair(ix, 0);
-    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
+    if (entryExitT.x == NO_HIT) {
+        // Positive shape was completely missed - so exit early.
         return vec2(NO_HIT);
     }
 
-    // Add depth to the list of intersections
+    // Depth
     #if defined(DEPTH_TEST)
-        float depthT = intersectDepth(screenCoord, ray);
-        setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(depthT, +INF_HIT));
+        intersectDepth(screenCoord, ray, ix);
     #endif
 
     // Find the first intersection that's in front of the ray
-    #if (SCENE_INTERSECTION_COUNT > 1)
+    #if (INTERSECTION_COUNT > 1)
         initializeIntersections(ix);
-        for (int i = 0; i < SCENE_INTERSECTION_COUNT; i++) {
+        for (int i = 0; i < INTERSECTION_COUNT; ++i) {
             entryExitT = nextIntersection(ix);
             if (entryExitT.y > 0.0) {
                 // Set start to 0.0 when ray is inside the shape.
@@ -1358,7 +1335,7 @@ Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxel
     // Final location in the megatexture
     vec3 uv = tileUvOffset + voxelUvOffset;
 
-    for (int i = 0; i < PROPERTY_COUNT; i++) {
+    for (int i = 0; i < PROPERTY_COUNT; ++i) {
         vec4 sample = texture3D(u_megatextureTextures[i], uv);
         samples[i] = decodeTextureSample(sample);
     }
@@ -1474,7 +1451,7 @@ Properties getPropertiesFromMegatextureAtLocalPosition(vec3 positionUvLocal, ive
     #else
         // When more than one sample is taken the accumulator needs to start at 0
         Properties properties = clearProperties();
-        for (int i = 0; i < SAMPLE_COUNT; i++) {
+        for (int i = 0; i < SAMPLE_COUNT; ++i) {
             vec3 actualUv = computeAncestorUv(positionUvLocal, sampleDatas[i].levelsAbove, octreeCoords);
             Properties tempProperties = getPropertiesFromMegatextureAtTileUv(actualUvLocal, sampleDatas[i].megatextureIndex);        
             properties = sumProperties(properties, tempProperties)
@@ -1550,7 +1527,7 @@ void traverseOctreeDownwards(in vec3 positionUv, inout ivec4 octreeCoords, inout
     vec3 start = vec3(octreeCoords.xyz) * sizeAtLevel;
     vec3 end = start + vec3(sizeAtLevel);
 
-    for (int i = 0; i < OCTREE_MAX_LEVELS; i++) {
+    for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
         // Find out which octree child contains the position
         // 0 if before center, 1 if after
         vec3 center = 0.5 * (start + end);
@@ -1580,7 +1557,7 @@ void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 
     parentOctreeIndex = 0;
 
     // TODO: is it possible for this to be out of bounds, and does it matter?
-    positionUvShapeSpace = transformFromUvToShapeSpace(positionUv);
+    positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
     positionUvLocal = positionUvShapeSpace;
 
     OctreeNodeData rootData = getOctreeRootData();
@@ -1599,7 +1576,7 @@ void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 
 
 void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, inout float levelStepMult, inout ivec4 octreeCoords, inout int parentOctreeIndex, inout SampleData sampleDatas[SAMPLE_COUNT]) {
     float dimAtLevel = pow(2.0, float(octreeCoords.w));
-    positionUvShapeSpace = transformFromUvToShapeSpace(positionUv);
+    positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);    
     positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
     
     // Note: This code assumes the position is always inside the root tile.
@@ -1608,7 +1585,7 @@ void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpac
     if (!insideTile)
     {
         // Go up tree
-        for (int i = 0; i < OCTREE_MAX_LEVELS; i++)
+        for (int i = 0; i < OCTREE_MAX_LEVELS; ++i)
         {
             octreeCoords.xyz /= ivec3(2);
             octreeCoords.w -= 1;
@@ -1641,13 +1618,12 @@ void main()
     vec3 viewPosUv = u_cameraPositionUv;
 
     Intersections ix;
-    vec2 entryExitT = intersectScene(screenCoord, viewPosUv, viewDirUv, ix);    
+    vec2 entryExitT = intersectScene(screenCoord, viewPosUv, viewDirUv, ix);
 
     // Exit early if the scene was completely missed.
     if (entryExitT.x == NO_HIT) {
         discard;
     }
-
 
     float currT = entryExitT.x;
     float endT = entryExitT.y;
@@ -1684,7 +1660,7 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
-    for (int stepCount = 0; stepCount < STEP_COUNT_MAX; stepCount++) {
+    for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
         Properties properties = getPropertiesFromMegatextureAtLocalPosition(positionUvLocal, octreeCoords, sampleDatas);
         
@@ -1748,7 +1724,7 @@ void main()
 
         // Check if there's more intersections.
         if (currT > endT) {
-            #if (SCENE_INTERSECTION_COUNT == 1)
+            #if (INTERSECTION_COUNT == 1)
                 break;
             #else
                 vec2 entryExitT = nextIntersection(ix);

@@ -678,7 +678,8 @@ function VoxelInspectorViewModel(scene) {
       );
     },
     getPrimitiveFunction: function () {
-      that.clippingBoxMinY = that._voxelPrimitive.minClippingBounds.y;
+      that.clippingEllipsoidMinLatitude =
+        that._voxelPrimitive.minClippingBounds.y;
     },
   });
   addProperty({

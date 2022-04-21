@@ -75,11 +75,11 @@ function VoxelBoxShape() {
    * @readonly
    */
   this.shaderUniforms = {
-    boxScaleUvToBounds: new Cartesian3(),
-    boxOffsetUvToBounds: new Cartesian3(),
-    boxTransformUvToBounds: new Matrix4(),
-    boxScaleUvToBoundsUv: new Cartesian3(),
-    boxOffsetUvToBoundsUv: new Cartesian3(),
+    boxTransformUvToRenderBounds: new Matrix4(),
+    boxScaleUvToRenderBounds: new Cartesian3(),
+    boxOffsetUvToRenderBounds: new Cartesian3(),
+    boxScaleUvToShapeBoundsUv: new Cartesian3(),
+    boxOffsetUvToShapeBoundsUv: new Cartesian3(),
   };
 
   /**
@@ -87,11 +87,18 @@ function VoxelBoxShape() {
    * @readonly
    */
   this.shaderDefines = {
-    BOX_INTERSECTION_COUNT: undefined,
     BOX_INTERSECTION_INDEX: undefined,
-    BOX_IS_BOUNDED: undefined,
-    BOX_IS_RECTANGLE: undefined,
+    BOX_HAS_RENDER_BOUND: undefined,
+    BOX_HAS_SHAPE_BOUND: undefined,
+    BOX_IS_2D: undefined,
   };
+
+  /**
+   * The maximum number of intersections against the shape for any ray direction.
+   * @type {Number}
+   * @readonly
+   */
+  this.shaderMaximumIntersectionsLength = undefined;
 }
 
 const scratchTranslation = new Cartesian3();
@@ -100,6 +107,10 @@ const scratchRotation = new Matrix3();
 const scratchTransformLocalToBounds = new Matrix4();
 const scratchBoundsTranslation = new Cartesian3();
 const scratchBoundsScale = new Cartesian3();
+const scratchClipMinBounds = new Cartesian3();
+const scratchClipMaxBounds = new Cartesian3();
+const scratchRenderMinBounds = new Cartesian3();
+const scratchRenderMaxBounds = new Cartesian3();
 
 const transformUvToLocal = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(2.0, new Matrix3()),
@@ -129,13 +140,23 @@ const transformXYZToXZY = Matrix4.fromRotation(
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
+ * @param {Cartesian3} clipMinBounds The minimum clip bounds.
+ * @param {Cartesian3} clipMaxBounds The maximum clip bounds.
  * @returns {Boolean} Whether the shape is visible.
  */
-VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
+VoxelBoxShape.prototype.update = function (
+  modelMatrix,
+  minBounds,
+  maxBounds,
+  clipMinBounds,
+  clipMaxBounds
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
   Check.typeOf.object("maxBounds", maxBounds);
+  Check.typeOf.object("clipMinBounds", clipMinBounds);
+  Check.typeOf.object("clipMaxBounds", clipMaxBounds);
   //>>includeEnd('debug');
 
   const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
@@ -155,19 +176,55 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
     this._maxBounds
   );
 
+  clipMinBounds = Cartesian3.clamp(
+    clipMinBounds,
+    defaultMinBounds,
+    defaultMaxBounds,
+    scratchClipMinBounds
+  );
+
+  clipMaxBounds = Cartesian3.clamp(
+    clipMaxBounds,
+    defaultMinBounds,
+    defaultMaxBounds,
+    scratchClipMaxBounds
+  );
+
+  const renderMinBounds = Cartesian3.clamp(
+    minBounds,
+    clipMinBounds,
+    clipMaxBounds,
+    scratchRenderMinBounds
+  );
+
+  const renderMaxBounds = Cartesian3.clamp(
+    maxBounds,
+    clipMinBounds,
+    clipMaxBounds,
+    scratchRenderMaxBounds
+  );
+
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
   // Box is not visible if:
   // - any of the min bounds exceed the max bounds
   // - two or more of the min bounds equal the max bounds (line / point)
+  // - same as above, but for clip bounds
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   if (
-    minBounds.x > maxBounds.x ||
-    minBounds.y > maxBounds.y ||
-    minBounds.z > maxBounds.z ||
-    (minBounds.x === maxBounds.x) +
-      (minBounds.y === maxBounds.y) +
-      (minBounds.z === maxBounds.z) >=
+    renderMinBounds.x > renderMaxBounds.x ||
+    renderMinBounds.y > renderMaxBounds.y ||
+    renderMinBounds.z > renderMaxBounds.z ||
+    (renderMinBounds.x === renderMaxBounds.x) +
+      (renderMinBounds.y === renderMaxBounds.y) +
+      (renderMinBounds.z === renderMaxBounds.z) >=
+      2 ||
+    clipMinBounds.x > clipMaxBounds.x ||
+    clipMinBounds.y > clipMaxBounds.y ||
+    clipMinBounds.z > clipMaxBounds.z ||
+    (clipMinBounds.x === clipMaxBounds.x) +
+      (clipMinBounds.y === clipMaxBounds.y) +
+      (clipMinBounds.z === clipMaxBounds.z) >=
       2 ||
     scale.x === 0.0 ||
     scale.y === 0.0 ||
@@ -179,8 +236,8 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
 
   this.orientedBoundingBox = getBoxChunkObb(
-    this._minBounds,
-    this._maxBounds,
+    renderMinBounds,
+    renderMaxBounds,
     this.shapeTransform,
     this.orientedBoundingBox
   );
@@ -208,60 +265,69 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
     }
   }
 
-  // Never changes
-  shaderDefines["BOX_INTERSECTION_COUNT"] = 1;
-  shaderDefines["BOX_INTERSECTION_INDEX"] = 0;
+  const hasRenderBound =
+    renderMinBounds.x !== defaultMinBounds.x ||
+    renderMaxBounds.x !== defaultMaxBounds.x ||
+    renderMinBounds.y !== defaultMinBounds.y ||
+    renderMaxBounds.y !== defaultMaxBounds.y ||
+    renderMinBounds.z !== defaultMinBounds.z ||
+    renderMaxBounds.z !== defaultMaxBounds.z;
 
-  if (
+  const hasShapeBound =
     minBounds.x !== defaultMinBounds.x ||
-    minBounds.y !== defaultMinBounds.y ||
-    minBounds.z !== defaultMinBounds.z ||
     maxBounds.x !== defaultMaxBounds.x ||
+    minBounds.y !== defaultMinBounds.y ||
     maxBounds.y !== defaultMaxBounds.y ||
-    maxBounds.z !== defaultMaxBounds.z
-  ) {
-    shaderDefines["BOX_IS_BOUNDED"] = true;
+    minBounds.z !== defaultMinBounds.z ||
+    maxBounds.z !== defaultMaxBounds.z;
+
+  let intersectionCount = 0;
+
+  shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
+  intersectionCount += 1;
+
+  if (hasRenderBound) {
+    shaderDefines["BOX_HAS_RENDER_BOUND"] = true;
+
+    const min = renderMinBounds;
+    const max = renderMaxBounds;
 
     // inverse(scale)
     // inverse(maxBoundsUv - minBoundsUv)
     // inverse((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
     // inverse(0.5 * (maxBounds - minBounds))
     // 2.0 / (maxBounds - minBounds) // with divide by zero protection
-    const boundsScaleLocalToBounds = Cartesian3.fromElements(
-      2.0 / (minBounds.x === maxBounds.x ? 1.0 : maxBounds.x - minBounds.x),
-      2.0 / (minBounds.y === maxBounds.y ? 1.0 : maxBounds.y - minBounds.y),
-      2.0 / (minBounds.z === maxBounds.z ? 1.0 : maxBounds.z - minBounds.z),
+    const scaleLocalToBounds = Cartesian3.fromElements(
+      2.0 / (min.x === max.x ? 1.0 : max.x - min.x),
+      2.0 / (min.y === max.y ? 1.0 : max.y - min.y),
+      2.0 / (min.z === max.z ? 1.0 : max.z - min.z),
       scratchBoundsScale
     );
 
     // -inverse(scale) * translation // affine inverse
     // -inverse(scale) * 0.5 * (minBounds + maxBounds)
-    const boundsTranslateLocalToBounds = Cartesian3.fromElements(
-      -boundsScaleLocalToBounds.x * 0.5 * (minBounds.x + maxBounds.x),
-      -boundsScaleLocalToBounds.y * 0.5 * (minBounds.y + maxBounds.y),
-      -boundsScaleLocalToBounds.z * 0.5 * (minBounds.z + maxBounds.z),
+    const translateLocalToBounds = Cartesian3.fromElements(
+      -scaleLocalToBounds.x * 0.5 * (min.x + max.x),
+      -scaleLocalToBounds.y * 0.5 * (min.y + max.y),
+      -scaleLocalToBounds.z * 0.5 * (min.z + max.z),
       scratchBoundsTranslation
     );
 
     let transformLocalToBounds = Matrix4.fromRotationTranslation(
-      Matrix3.fromScale(boundsScaleLocalToBounds),
-      boundsTranslateLocalToBounds,
+      Matrix3.fromScale(scaleLocalToBounds),
+      translateLocalToBounds,
       scratchTransformLocalToBounds
     );
 
-    if (
-      minBounds.x === maxBounds.x ||
-      minBounds.y === maxBounds.y ||
-      minBounds.z === maxBounds.z
-    ) {
-      shaderDefines["BOX_IS_RECTANGLE"] = true;
+    if (min.x === max.x || min.y === max.y || min.z === max.z) {
+      shaderDefines["BOX_IS_2D"] = true;
 
       let transformAxisConversion;
-      if (minBounds.x === maxBounds.x) {
+      if (min.x === max.x) {
         transformAxisConversion = transformXYZToZYX;
-      } else if (minBounds.y === maxBounds.y) {
+      } else if (min.y === max.y) {
         transformAxisConversion = transformXYZToXZY;
-      } else if (minBounds.z === maxBounds.z) {
+      } else if (min.z === max.z) {
         transformAxisConversion = Matrix4.IDENTITY;
       }
       transformLocalToBounds = Matrix4.multiply(
@@ -271,19 +337,26 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
       );
     }
 
-    shaderUniforms.boxTransformUvToBounds = Matrix4.multiplyTransformation(
+    shaderUniforms.boxTransformUvToRenderBounds = Matrix4.multiplyTransformation(
       transformLocalToBounds,
       transformUvToLocal,
-      shaderUniforms.boxTransformUvToBounds
+      shaderUniforms.boxTransformUvToRenderBounds
     );
-    shaderUniforms.boxScaleUvToBounds = Matrix4.getScale(
-      shaderUniforms.boxTransformUvToBounds,
-      shaderUniforms.boxScaleUvToBounds
+    shaderUniforms.boxScaleUvToRenderBounds = Matrix4.getScale(
+      shaderUniforms.boxTransformUvToRenderBounds,
+      shaderUniforms.boxScaleUvToRenderBounds
     );
-    shaderUniforms.boxOffsetUvToBounds = Matrix4.getTranslation(
-      shaderUniforms.boxTransformUvToBounds,
-      shaderUniforms.boxOffsetUvToBounds
+    shaderUniforms.boxOffsetUvToRenderBounds = Matrix4.getTranslation(
+      shaderUniforms.boxTransformUvToRenderBounds,
+      shaderUniforms.boxOffsetUvToRenderBounds
     );
+  }
+
+  if (hasShapeBound) {
+    shaderDefines["BOX_HAS_SHAPE_BOUND"] = true;
+
+    const min = minBounds;
+    const max = maxBounds;
 
     // Go from UV space to bounded UV space:
     // delerp(posUv, minBoundsUv, maxBoundsUv)
@@ -295,17 +368,22 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
     // offset = -minBoundsUv / ((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
     // offset = -2.0 * (minBounds * 0.5 + 0.5) / (maxBounds - minBounds)
     // offset = -scale * (minBounds * 0.5 + 0.5)
-    shaderUniforms.boxScaleUvToBoundsUv = Cartesian3.clone(
-      boundsScaleLocalToBounds,
-      shaderUniforms.boxScaleUvToBoundsUv
+    shaderUniforms.boxScaleUvToShapeBoundsUv = Cartesian3.fromElements(
+      2.0 / (min.x === max.x ? 1.0 : max.x - min.x),
+      2.0 / (min.y === max.y ? 1.0 : max.y - min.y),
+      2.0 / (min.z === max.z ? 1.0 : max.z - min.z),
+      shaderUniforms.boxScaleUvToShapeBoundsUv
     );
-    shaderUniforms.boxOffsetUvToBoundsUv = Cartesian3.fromElements(
-      -boundsScaleLocalToBounds.x * (minBounds.x * 0.5 + 0.5),
-      -boundsScaleLocalToBounds.y * (minBounds.y * 0.5 + 0.5),
-      -boundsScaleLocalToBounds.z * (minBounds.z * 0.5 + 0.5),
-      shaderUniforms.boxOffsetUvToBoundsUv
+
+    shaderUniforms.boxOffsetUvToShapeBoundsUv = Cartesian3.fromElements(
+      -shaderUniforms.boxScaleUvToShapeBoundsUv.x * (min.x * 0.5 + 0.5),
+      -shaderUniforms.boxScaleUvToShapeBoundsUv.y * (min.y * 0.5 + 0.5),
+      -shaderUniforms.boxScaleUvToShapeBoundsUv.z * (min.z * 0.5 + 0.5),
+      shaderUniforms.boxOffsetUvToShapeBoundsUv
     );
   }
+
+  this.shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
 };

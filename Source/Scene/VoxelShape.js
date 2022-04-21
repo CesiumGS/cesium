@@ -82,6 +82,15 @@ Object.defineProperties(VoxelShape.prototype, {
   shaderDefines: {
     get: DeveloperError.throwInstantiationError,
   },
+
+  /**
+   * The maximum number of intersections against the shape for any ray direction.
+   * @type {Number}
+   * @readonly
+   */
+  shaderMaximumIntersectionsLength: {
+    get: DeveloperError.throwInstantiationError,
+  },
 });
 
 /**
