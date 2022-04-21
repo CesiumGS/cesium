@@ -2,10 +2,11 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import HermiteSpline from "../../Core/HermiteSpline.js";
 import InterpolationType from "../../Core/InterpolationType.js";
 import LinearSpline from "../../Core/LinearSpline.js";
 import ModelComponents from "../ModelComponents.js";
-import MorphWeightSpline from "../../Core/MorphWeightSpline.js";
 import SteppedSpline from "../../Core/SteppedSpline.js";
 import Quaternion from "../../Core/Quaternion.js";
 import QuaternionSpline from "../../Core/QuaternionSpline.js";
@@ -43,7 +44,9 @@ function ModelExperimentalAnimationChannel(options) {
   this._runtimeAnimation = runtimeAnimation;
   this._runtimeNode = runtimeNode;
 
-  this._spline = undefined;
+  // An animation channel can have multiple splines if it animates
+  // a node's morph weights, which will involve multiple morph targets.
+  this._splines = [];
   this._path = undefined;
 
   initialize(this);
@@ -99,18 +102,18 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   },
 
   /**
-   * The spline used to evaluate this animation channel.
+   * The splines used to evaluate this animation channel.
    *
    * @memberof ModelExperimentalAnimationChannel.prototype
    *
-   * @type {Spline}
+   * @type {Spline[]}
    * @readonly
    *
    * @private
    */
-  spline: {
+  splines: {
     get: function () {
-      return this._spline;
+      return this._splines;
     },
   },
 });
@@ -120,14 +123,11 @@ function createSpline(times, points, interpolation, path) {
     return new ConstantSpline(points[0]);
   }
 
-  if (path === AnimatedPropertyType.WEIGHTS) {
-    return new MorphWeightSpline({
-      times: times,
-      weights: points,
-      interpolation: interpolation,
-    });
-  }
+  const cubicPoints = [];
+  const inTangents = [];
+  const outTangents = [];
 
+  let length;
   switch (interpolation) {
     case InterpolationType.STEP:
       return new SteppedSpline({
@@ -135,10 +135,21 @@ function createSpline(times, points, interpolation, path) {
         points: points,
       });
     case InterpolationType.CUBICSPLINE:
-      // TODO
-      return;
+      break;
+    // TODO: check if hermite spline math is correct
+    /*length = points.length;
+      for (let i = 0; i < length; i += 3) {
+        inTangents.push(points[i]);
+        cubicPoints.push(points[i + 1]);
+        outTangents.push(points[i + 2]);
+      }
+      return new HermiteSpline({
+        times: times,
+        points: cubicPoints,
+        inTangents: inTangents,
+        outTangents: outTangents,
+      });*/
     case InterpolationType.LINEAR:
-    default:
       if (path === AnimatedPropertyType.ROTATION) {
         return new QuaternionSpline({
           times: times,
@@ -150,6 +161,37 @@ function createSpline(times, points, interpolation, path) {
         points: points,
       });
   }
+}
+
+function createSplines(times, points, interpolation, path, count) {
+  const splines = [];
+  if (path === AnimatedPropertyType.WEIGHTS) {
+    const pointsLength = points.length;
+    // Get the number of keyframes in each weight's output
+    const outputLength = pointsLength / count;
+
+    // Iterate over the array based on the number of morph targets in the model
+    let targetIndex, i;
+    for (targetIndex = 0; targetIndex < count; targetIndex++) {
+      const output = new Array(outputLength);
+
+      // Weights are ordered such that all weights for the targets are keyframed
+      // in the order in which they appear the glTF. For example, the weights of
+      // three targets may appear as [w(0,0), w(0,1), w(0,2), w(1,0), w(1,1), w(1,2) ...],
+      // where i and j in w(i,j) are the time indices and target indices, respectively.
+      let pointsIndex = targetIndex;
+      for (i = 0; i < outputLength; i++) {
+        output[i] = points[pointsIndex];
+        pointsIndex += count;
+      }
+
+      splines.push(createSpline(times, output, interpolation, path));
+    }
+  } else {
+    splines.push(createSpline(times, points, interpolation, path));
+  }
+
+  return splines;
 }
 
 let scratchVariable;
@@ -164,9 +206,12 @@ function initialize(runtimeChannel) {
   const interpolation = sampler.interpolation;
   const target = channel.target;
   const path = target.path;
-  const spline = createSpline(times, points, interpolation, path);
 
-  runtimeChannel._spline = spline;
+  const runtimeNode = runtimeChannel._runtimeNode;
+  const count = defined(runtimeNode.weights) ? runtimeNode.weights.length : 1;
+  const splines = createSplines(times, points, interpolation, path, count);
+
+  runtimeChannel._splines = splines;
   runtimeChannel._path = path;
 
   switch (path) {
@@ -178,7 +223,7 @@ function initialize(runtimeChannel) {
       scratchVariable = new Quaternion();
       break;
     case AnimatedPropertyType.WEIGHTS:
-      scratchVariable = new Array(spline._count);
+      // This isn't used when setting a node's morph weights.
       break;
   }
 }
@@ -191,18 +236,31 @@ function initialize(runtimeChannel) {
  * @private
  */
 ModelExperimentalAnimationChannel.prototype.animate = function (time) {
-  const spline = this._spline;
+  const splines = this._splines;
   const path = this._path;
   const model = this._runtimeAnimation.model;
 
-  const localAnimationTime = model.clampAnimations
-    ? spline.clampTime(time)
-    : spline.wrapTime(time);
+  if (path === AnimatedPropertyType.WEIGHTS) {
+    const weights = this._runtimeNode.weights;
+    const length = weights.length;
+    for (let i = 0; i < length; i++) {
+      const spline = splines[i];
+      const localAnimationTime = model.clampAnimations
+        ? spline.clampTime(time)
+        : spline.wrapTime(time);
+      weights[i] = spline.evaluate(localAnimationTime);
+    }
+  } else {
+    const spline = splines[0];
+    const localAnimationTime = model.clampAnimations
+      ? spline.clampTime(time)
+      : spline.wrapTime(time);
 
-  this._runtimeNode[path] = spline.evaluate(
-    localAnimationTime,
-    scratchVariable
-  );
+    this._runtimeNode[path] = spline.evaluate(
+      localAnimationTime,
+      scratchVariable
+    );
+  }
 };
 
 export default ModelExperimentalAnimationChannel;

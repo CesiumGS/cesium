@@ -568,16 +568,6 @@ function Primitive() {
   this.morphTargets = [];
 
   /**
-   * An array of weights to be applied to the morph targets.
-   * Will be used if the node this primitive belongs to does not
-   * define its own array of weights.
-   *
-   * @type {Number[]}
-   * @private
-   */
-  this.morphWeights = [];
-
-  /**
    * The indices.
    *
    * @type {ModelComponents.Indices}
@@ -795,8 +785,7 @@ function Node() {
 
   /**
    * An array of weights to be applied to the primitives' morph targets.
-   * Will be used if the node that owns this primitive does not supply
-   * its own array of weights.
+   * These are supplied by either the node or its mesh.
    *
    * @type {Number[]}
    * @private

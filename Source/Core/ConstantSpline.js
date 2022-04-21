@@ -4,7 +4,7 @@ import Spline from "./Spline.js";
 
 /**
  * A spline that evaluates to a constant value. Although this follows the {@link Spline} interface,
- * it does not maintain an internal array of times, since its value never changes.
+ * it does not maintain an internal array of times since its value never changes.
  *
  * @alias ConstantSpline
  * @constructor
@@ -34,7 +34,7 @@ Object.defineProperties(ConstantSpline.prototype, {
    *
    * @memberof ConstantSpline.prototype
    *
-   * @type {Cartesian3|Quaternion|Number}
+   * @type {Number|Cartesian3|Quaternion}
    * @readonly
    */
   value: {
@@ -98,7 +98,7 @@ ConstantSpline.prototype.clampTime = function (time) {
  * @function
  *
  * @param {Number} time The time at which to evaluate the curve.
- * @param {Number|Cartesian3|Quaternion} [result] The object onto which to store the result.
+ * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
  * @returns {Number|Cartesian3|Quaternion} The modified result parameter or the value that the constant spline represents.
  */
 ConstantSpline.prototype.evaluate = function (time, result) {

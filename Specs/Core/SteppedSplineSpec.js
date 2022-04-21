@@ -72,6 +72,19 @@ describe("Core/SteppedSpline", function () {
     }).toThrowDeveloperError();
   });
 
+  it("evaluate returns number value", function () {
+    const spline = new SteppedSpline({
+      points: numberPoints,
+      times: times,
+    });
+
+    expect(spline.evaluate(times[0])).toEqual(numberPoints[0]);
+    expect(spline.evaluate(times[1])).toEqual(numberPoints[1]);
+
+    const time = (times[0] + times[1]) / 2.0;
+    expect(spline.evaluate(time)).toEqual(numberPoints[0]);
+  });
+
   it("evaluate returns cartesian3 value without result parameter", function () {
     const spline = new SteppedSpline({
       points: cartesianPoints,

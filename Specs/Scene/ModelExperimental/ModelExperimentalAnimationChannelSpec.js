@@ -10,7 +10,6 @@ import {
   ModelComponents,
   ModelExperimentalAnimationChannel,
   ModelExperimentalNode,
-  MorphWeightSpline,
   SteppedSpline,
   Quaternion,
   QuaternionSpline,
@@ -117,7 +116,8 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.channel).toBe(mockChannel);
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.spline instanceof ConstantSpline).toBe(true);
+    expect(runtimeChannel.splines.length).toBe(1);
+    expect(runtimeChannel.splines[0] instanceof ConstantSpline).toBe(true);
   });
 
   const times = [0.0, 0.25, 0.5, 1.0];
@@ -127,6 +127,21 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     new Cartesian3(1.0, 1.0, 0.0),
     new Cartesian3(0.0, 1.0, 0.0),
   ];
+  const rotationPoints = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.707, 0.0, 0.707, 0.0),
+    new Quaternion(0.0, 0.0, 1.0, 0.0),
+    new Quaternion(0.707, 0.0, -0.707, 0.0),
+  ];
+  const scalePoints = [
+    new Cartesian3(1.0, 1.0, 1.0),
+    new Cartesian3(1.0, 2.0, 1.0),
+    new Cartesian3(1.0, 1.0, 2.0),
+    new Cartesian3(2.0, 1.0, 1.0),
+  ];
+
+  // This contains the keyframed data of two morph targets.
+  const weightPoints = [0.0, 0.0, 0.5, 0.25, 1.0, 0.5, 0.5, 0.25];
 
   it("constructs linear spline", function () {
     const mockSampler = {
@@ -150,15 +165,9 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.channel).toBe(mockChannel);
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.spline instanceof LinearSpline).toBe(true);
+    expect(runtimeChannel.splines.length).toBe(1);
+    expect(runtimeChannel.splines[0] instanceof LinearSpline).toBe(true);
   });
-
-  const rotationPoints = [
-    Quaternion.IDENTITY,
-    new Quaternion(0.707, 0.0, 0.707, 0.0),
-    new Quaternion(0.0, 0.0, 1.0, 0.0),
-    new Quaternion(0.707, 0.0, -0.707, 0.0),
-  ];
 
   it("constructs quaternion spline", function () {
     const mockSampler = {
@@ -182,15 +191,9 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.channel).toBe(mockChannel);
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.spline instanceof QuaternionSpline).toBe(true);
+    expect(runtimeChannel.splines.length).toBe(1);
+    expect(runtimeChannel.splines[0] instanceof QuaternionSpline).toBe(true);
   });
-
-  const scalePoints = [
-    new Cartesian3(1.0, 1.0, 1.0),
-    new Cartesian3(1.0, 2.0, 1.0),
-    new Cartesian3(1.0, 1.0, 2.0),
-    new Cartesian3(2.0, 1.0, 1.0),
-  ];
 
   it("constructs stepped spline", function () {
     const mockSampler = {
@@ -214,18 +217,20 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.channel).toBe(mockChannel);
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.spline instanceof SteppedSpline).toBe(true);
+    expect(runtimeChannel.splines.length).toBe(1);
+    expect(runtimeChannel.splines[0] instanceof SteppedSpline).toBe(true);
   });
 
-  // This contains the keyframed data of two morph targets.
-  const weightPoints = [0.0, 0.0, 0.5, 0.25, 1.0, 0.5, 0.5, 0.25];
+  // TODO: constructs cubic spline
 
-  it("constructs weights spline", function () {
+  it("constructs weight splines", function () {
     const mockSampler = {
       input: times,
-      interpolation: InterpolationType.STEP,
+      interpolation: InterpolationType.LINEAR,
       output: weightPoints,
     };
+
+    runtimeNode.weights = [0.0, 0.0];
 
     const mockChannel = createMockChannel(
       runtimeNode,
@@ -242,7 +247,9 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.channel).toBe(mockChannel);
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.spline instanceof MorphWeightSpline).toBe(true);
+    expect(runtimeChannel.splines.length).toBe(2);
+    expect(runtimeChannel.splines[0] instanceof LinearSpline).toBe(true);
+    expect(runtimeChannel.splines[1] instanceof LinearSpline).toBe(true);
   });
 
   const scratchTransform = new Matrix4();
@@ -391,5 +398,41 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     );
   });
 
-  //TODO: animates node weights
+  it("animates node weights", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: weightPoints,
+    };
+
+    runtimeNode.weights = [0.0, 0.0];
+
+    const mockChannel = createMockChannel(
+      runtimeNode,
+      mockSampler,
+      AnimatedPropertyType.WEIGHTS
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    let expected = [0.0, 0.0];
+    expect(runtimeNode.weights).toEqual(expected);
+
+    let time = times[1];
+    expected = weightPoints.slice(2, 4);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.weights).toEqual(expected);
+
+    time = (times[1] + times[2]) / 2.0;
+    expected[0] = (weightPoints[2] + weightPoints[4]) / 2.0;
+    expected[1] = (weightPoints[3] + weightPoints[5]) / 2.0;
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.weights).toEqual(expected);
+  });
 });

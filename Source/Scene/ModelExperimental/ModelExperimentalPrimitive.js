@@ -108,19 +108,6 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.updateStages = [];
 
-  /**
-   * The morph weights for this primitive. If the morph weights are
-   * defined for the node this primitive belongs to, then this directly
-   * references the morph weights of that node.
-   *
-   * @type {Number[]}
-   *
-   * @private
-   */
-
-  //TODO make it check runtimeNode weights
-  //this.morphWeights = primitive.morphWeights.slice();
-
   this.configurePipeline();
 }
 

@@ -354,22 +354,11 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       return this._morphWeights;
     },
     set: function (value) {
-      let i, j;
       const valueLength = value.length;
       this._morphWeights.length = valueLength;
-      for (i = 0; i < valueLength; i++) {
+      for (let i = 0; i < valueLength; i++) {
         this._morphWeights[i] = value[i];
       }
-
-      // TODO: is this the best way?
-      /*// Propogate values to all of this node's primitives
-      const primitivesLength = this.runtimePrimitives.length;
-      for (i = 0; i < primitivesLength; i++) {
-        const primitive = this.runtimePrimitives[i];
-        for (j = 0; j < valueLength; j++) {
-          primitive.morphWeights[j] = value[j];
-        }
-      }*/
     },
   },
 

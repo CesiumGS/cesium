@@ -1035,13 +1035,7 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
-function loadPrimitive(
-  loader,
-  gltf,
-  gltfPrimitive,
-  morphWeights,
-  supportedImageFormats
-) {
+function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
   const primitive = new Primitive();
 
   const materialId = gltfPrimitive.material;
@@ -1078,9 +1072,6 @@ function loadPrimitive(
     for (let i = 0; i < targetsLength; ++i) {
       primitive.morphTargets.push(loadMorphTarget(loader, gltf, targets[i]));
     }
-    primitive.morphWeights = defined(morphWeights)
-      ? morphWeights.slice()
-      : arrayFill(new Array(targetsLength), 0.0);
   }
 
   const indices = gltfPrimitive.indices;
@@ -1421,27 +1412,25 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = gltf.meshes[meshId];
-    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
     const primitives = mesh.primitives;
     const primitivesLength = primitives.length;
     for (let i = 0; i < primitivesLength; ++i) {
       node.primitives.push(
-        loadPrimitive(
-          loader,
-          gltf,
-          primitives[i],
-          morphWeights,
-          supportedImageFormats
-        )
+        loadPrimitive(loader, gltf, primitives[i], supportedImageFormats)
       );
     }
 
-    const targets = primitives[0].morphTargets;
-    const targetsLength = defined(targets) ? targets.length : 0;
-    node.morphWeights = defaultValue(
-      gltfNode.weights,
-      arrayFill(new Array(targetsLength), 0.0)
-    );
+    // If the node has no weights array, it will look for the weights array provided
+    // by the mesh. If both are undefined, it will default to an array of zero weights.
+    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
+    const targets = node.primitives[0].morphTargets;
+    const targetsLength = targets.length;
+
+    // Since meshes are not stored as separate components, the mesh weights will still
+    // be stored at the node level.
+    node.morphWeights = defined(morphWeights)
+      ? morphWeights.slice()
+      : arrayFill(new Array(targetsLength), 0.0);
   }
 
   const nodeExtensions = defaultValue(

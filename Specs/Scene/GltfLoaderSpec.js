@@ -632,7 +632,7 @@ describe(
         expect(positionAttribute.buffer).toBe(morphPositions1.buffer);
         expect(positionAttribute.buffer.sizeInBytes).toBe(108);
 
-        expect(primitive.morphWeights).toEqual([0.5, 0.5]);
+        expect(rootNode.morphWeights).toEqual([0.5, 0.5]);
       });
     });
 
@@ -648,8 +648,7 @@ describe(
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          expect(primitive.morphWeights).toEqual([0.0, 0.0]);
+          expect(rootNode.morphWeights).toEqual([0.0, 0.0]);
         }
       );
     });
