@@ -190,8 +190,6 @@ function Globe(ellipsoid) {
   /**
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
-   *
    * @type {Boolean}
    * @default true
    */
