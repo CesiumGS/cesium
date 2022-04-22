@@ -548,6 +548,7 @@ const createGeometryFromPositionsExtrudedPositions = [];
 function createGeometryFromPositionsExtruded(
   ellipsoid,
   polygon,
+  textureCoordinates,
   granularity,
   hierarchy,
   perPositionHeight,
@@ -565,7 +566,7 @@ function createGeometryFromPositionsExtruded(
     const topGeo = PolygonGeometryLibrary.createGeometryFromPositions(
       ellipsoid,
       polygon,
-      undefined,
+      textureCoordinates,
       granularity,
       perPositionHeight,
       vertexFormat,
@@ -609,6 +610,13 @@ function createGeometryFromPositionsExtruded(
         );
         topGeo.attributes.normal.values.set(normals);
       }
+
+      if (vertexFormat.st) {
+        const texcoords = topGeo.attributes.st.values;
+        topGeo.attributes.st.values = new Float32Array(numPositions * 2);
+        topGeo.attributes.st.values = texcoords.concat(texcoords);
+      }
+
       topGeo.indices = newIndices;
     } else if (closeBottom) {
       numPositions = edgePoints.length / 3;
@@ -1214,6 +1222,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
       const splitGeometry = createGeometryFromPositionsExtruded(
         ellipsoid,
         polygons[i],
+        defined(textureCoordinates) ? textureCoordinatePolygons[i] : undefined,
         granularity,
         hierarchy[i],
         perPositionHeight,
