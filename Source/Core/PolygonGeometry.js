@@ -65,6 +65,10 @@ function computeAttributes(options) {
   const geometry = options.geometry;
   const shadowVolume = options.shadowVolume;
   const flatPositions = geometry.attributes.position.values;
+  const flatTexcoords = defined(geometry.attributes.st)
+    ? geometry.attributes.st.values
+    : undefined;
+
   let length = flatPositions.length;
   const wall = options.wall;
   const top = options.top || wall;
@@ -160,15 +164,7 @@ function computeAttributes(options) {
       );
 
       if (vertexFormat.st) {
-        if (
-          options.textureCoordinates &&
-          options.textureCoordinates.positions.length === length / 3
-        ) {
-          textureCoordinates[(i * 2) / 3 + 0] =
-            options.textureCoordinates.positions[i / 3].x;
-          textureCoordinates[(i * 2) / 3 + 1] =
-            options.textureCoordinates.positions[i / 3].y;
-        } else {
+        if (!defined(flatTexcoords)) {
           let p = Matrix3.multiplyByVector(
             textureMatrix,
             position,
@@ -363,7 +359,7 @@ function computeAttributes(options) {
       }
     }
 
-    if (vertexFormat.st) {
+    if (vertexFormat.st && !defined(flatTexcoords)) {
       geometry.attributes.st = new GeometryAttribute({
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 2,
@@ -1282,6 +1278,9 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         geometry: PolygonGeometryLibrary.createGeometryFromPositions(
           ellipsoid,
           polygons[i],
+          defined(textureCoordinates)
+            ? textureCoordinatePolygons[i]
+            : undefined,
           granularity,
           perPositionHeight,
           vertexFormat,
@@ -1295,9 +1294,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         !perPositionHeight
       );
       options.geometry = geometryInstance.geometry;
-      options.textureCoordinates = textureCoordinates
-        ? textureCoordinatePolygons[i]
-        : undefined;
+
       geometryInstance.geometry = computeAttributes(options);
 
       if (defined(polygonGeometry._offsetAttribute)) {

@@ -535,6 +535,7 @@ PolygonGeometryLibrary.computeBoundingRectangle = function (
 PolygonGeometryLibrary.createGeometryFromPositions = function (
   ellipsoid,
   polygon,
+  textureCoordinates,
   granularity,
   perPositionHeight,
   vertexFormat,
@@ -548,6 +549,9 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
   }
 
   const positions = polygon.positions;
+  const texcoords = defined(textureCoordinates)
+    ? textureCoordinates.positions
+    : undefined;
 
   if (perPositionHeight) {
     const length = positions.length;
@@ -583,6 +587,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       ellipsoid,
       positions,
       indices,
+      texcoords,
       granularity
     );
   } else if (arcType === ArcType.RHUMB) {
