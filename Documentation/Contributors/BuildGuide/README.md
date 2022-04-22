@@ -1,10 +1,14 @@
 # Build Guide
 
-- [Quickstart](#quickstart)
-- [Get the Code](#get-the-code)
-- [Build the Code](#build-the-code)
-- [Build Scripts](#build-scripts)
-- [Travis and Continuous Integration](#travis-and-continuous-integration)
+- [Build Guide](#build-guide)
+  - [Quickstart](#quickstart)
+  - [Get the Code](#get-the-code)
+  - [Build the Code](#build-the-code)
+  - [Build Scripts](#build-scripts)
+  - [Travis and Continuous Integration](#travis-and-continuous-integration)
+    - [Configure a Different S3 Bucket](#configure-a-different-s3-bucket)
+    - [Configure S3 Credentials](#configure-s3-credentials)
+    - [Configure Statuses](#configure-statuses)
 
 ## Quickstart
 
@@ -123,7 +127,7 @@ Here's the full set of scripts and what they do.
   - `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
   - `minifyRelease` - Runs `minify`, and removes debugging code.
   - `requirejs` - Used internally by the build system and can not be called directly.
-  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
+  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory. This script requires a release build of Cesium, run the `release` script to build one if needed.
   - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/main/Documentation/Contributors/DocumentationGuide).
   - `release` - A full release build that creates a shippable product, including building apps and generating documentation.
   - `makeZipFile` - Builds a zip file containing all release files. This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
