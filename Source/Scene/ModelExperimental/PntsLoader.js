@@ -526,6 +526,7 @@ function makeComponents(loader, context) {
   }
 
   const node = new Node();
+  node.index = 0;
   node.primitives = [primitive];
 
   const scene = new Scene();

@@ -688,7 +688,7 @@ function Skin() {
    * @type {ModelComponents.Node[]}
    * @private
    */
-  this.joints = undefined;
+  this.joints = [];
 
   /**
    * The inverse bind matrices of the joints.
@@ -696,7 +696,7 @@ function Skin() {
    * @type {Matrix4[]}
    * @private
    */
-  this.inverseBindMatrices = undefined;
+  this.inverseBindMatrices = [];
 }
 
 /**
@@ -855,7 +855,7 @@ function AnimationSampler() {
    * @type {Number[]}
    * @private
    */
-  this.input = undefined;
+  this.input = [];
 
   /**
    * The method used to interpolate between the animation's keyframe data.
@@ -871,7 +871,7 @@ function AnimationSampler() {
    * @type {Number[]|Cartesian3[]|Quaternion[]}
    * @private
    */
-  this.output = undefined;
+  this.output = [];
 }
 
 /**
@@ -1008,21 +1008,21 @@ function Components() {
    *
    * @type {ModelComponents.Node[]}
    */
-  this.nodes = undefined;
+  this.nodes = [];
 
   /**
    * All skins in the model.
    *
    * @type {ModelComponents.Skin[]}
    */
-  this.skins = undefined;
+  this.skins = [];
 
   /**
    * All animations in the model.
    *
    * @type {ModelComponents.Animation[]}
    */
-  this.animations = undefined;
+  this.animations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property

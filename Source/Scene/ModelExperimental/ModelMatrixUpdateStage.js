@@ -1,5 +1,4 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
 /**
@@ -68,20 +67,17 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     }
   }
 
-  if (defined(runtimeNode.children)) {
-    for (i = 0; i < runtimeNode.children.length; i++) {
-      const childRuntimeNode =
-        sceneGraph._runtimeNodes[runtimeNode.children[i]];
+  for (i = 0; i < runtimeNode.children.length; i++) {
+    const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
-      childRuntimeNode._transformToRoot = Matrix4.clone(
-        transformToRoot,
-        childRuntimeNode._transformToRoot
-      );
+    // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+    childRuntimeNode._transformToRoot = Matrix4.clone(
+      transformToRoot,
+      childRuntimeNode._transformToRoot
+    );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
-      childRuntimeNode._transformDirty = false;
-    }
+    updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
+    childRuntimeNode._transformDirty = false;
   }
 }
 
