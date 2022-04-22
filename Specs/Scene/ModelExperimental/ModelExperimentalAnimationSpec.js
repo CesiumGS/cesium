@@ -1,4 +1,3 @@
-import HermiteSpline from "cesium/Source/Core/HermiteSpline";
 import {
   Axis,
   Cartesian3,
@@ -9,6 +8,7 @@ import {
   Matrix3,
   Matrix4,
   ModelComponents,
+  ModelExperimentalAnimation,
   ModelExperimentalAnimationChannel,
   ModelExperimentalNode,
   SteppedSpline,
@@ -16,7 +16,7 @@ import {
   QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const mockNode = {
@@ -29,17 +29,18 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   const transformToRoot = Matrix4.clone(Matrix4.IDENTITY);
   const mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
+    runtimeNodes: [],
     components: {
       upAxis: Axis.Y,
       forwardAxis: Axis.Z,
     },
   };
 
-  const runtimeAnimation = {
-    model: {
-      clampAnimations: true,
-    },
+  const mockModel = {
+    clampAnimations: true,
+    sceneGraph: mockSceneGraph,
   };
+
   let runtimeNode;
 
   beforeEach(function () {
@@ -52,35 +53,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     });
   });
 
-  it("throws for undefined channel", function () {
-    expect(function () {
-      return new ModelExperimentalAnimationChannel({
-        channel: undefined,
-        runtimeAnimation: runtimeAnimation,
-        runtimeNode: runtimeNode,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws for undefined runtimeAnimation", function () {
-    expect(function () {
-      return new ModelExperimentalAnimationChannel({
-        channel: {},
-        runtimeAnimation: undefined,
-        runtimeNode: runtimeNode,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws for undefined runtimeNode", function () {
-    expect(function () {
-      return new ModelExperimentalAnimationChannel({
-        channel: {},
-        runtimeAnimation: runtimeAnimation,
-        runtimeNode: undefined,
-      });
-    }).toThrowDeveloperError();
-  });
+  it("initializes", function () {});
 
   function createMockChannel(node, mockSampler, path) {
     const mockTarget = {
@@ -221,55 +194,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeChannel.splines[0] instanceof SteppedSpline).toBe(true);
   });
 
-  it("constructs cubic spline", function () {
-    // These points don't represent meaningful tangents.
-    // They are dummy values to test the construction of the spline.
-    const cubicPoints = [
-      Cartesian3.ZERO,
-      new Cartesian3(1, 1, 1),
-      new Cartesian3(2, 2, 2),
-      new Cartesian3(3, 3, 3),
-      new Cartesian3(4, 4, 4),
-      new Cartesian3(5, 5, 5),
-      new Cartesian3(6, 6, 6),
-      new Cartesian3(7, 7, 7),
-      new Cartesian3(8, 8, 8),
-    ];
-
-    const mockSampler = {
-      input: times,
-      interpolation: InterpolationType.CUBICSPLINE,
-      output: cubicPoints,
-    };
-
-    const mockChannel = createMockChannel(
-      runtimeNode,
-      mockSampler,
-      AnimatedPropertyType.TRANSLATION
-    );
-
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
-      channel: mockChannel,
-      runtimeAnimation: runtimeAnimation,
-      runtimeNode: runtimeNode,
-    });
-
-    expect(runtimeChannel.channel).toBe(mockChannel);
-    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
-    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
-    expect(runtimeChannel.splines.length).toBe(1);
-    expect(runtimeChannel.splines[0] instanceof HermiteSpline).toBe(true);
-
-    const spline = runtimeChannel.splines[0];
-
-    const expectedInTangents = [cubicPoints[3], cubicPoints[6]];
-    const expectedOutTangents = [cubicPoints[2], cubicPoints[5]];
-    const expectedPoints = [cubicPoints[1], cubicPoints[4], cubicPoints[7]];
-
-    expect(spline.inTangents).toEqual(expectedInTangents);
-    expect(spline.outTangents.toEqual(expectedOutTangents));
-    expect(spline.points).toEqual(expectedPoints);
-  });
+  // TODO: constructs cubic spline
 
   it("constructs weight splines", function () {
     const mockSampler = {

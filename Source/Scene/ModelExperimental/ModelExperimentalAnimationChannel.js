@@ -135,20 +135,24 @@ function createSpline(times, points, interpolation, path) {
         points: points,
       });
     case InterpolationType.CUBICSPLINE:
-      break;
-    // TODO: check if hermite spline math is correct
-    /*length = points.length;
+      length = points.length;
       for (let i = 0; i < length; i += 3) {
         inTangents.push(points[i]);
         cubicPoints.push(points[i + 1]);
         outTangents.push(points[i + 2]);
       }
+
+      // Remove the first in-tangent and last out-tangent, since they
+      // are not used in the spline calculations
+      inTangents.splice(0, 1);
+      outTangents.length = outTangents.length - 1;
+
       return new HermiteSpline({
         times: times,
         points: cubicPoints,
         inTangents: inTangents,
         outTangents: outTangents,
-      });*/
+      });
     case InterpolationType.LINEAR:
       if (path === AnimatedPropertyType.ROTATION) {
         return new QuaternionSpline({
@@ -225,7 +229,7 @@ function initialize(runtimeChannel) {
       scratchVariable = new Quaternion();
       break;
     case AnimatedPropertyType.WEIGHTS:
-      // This isn't used when setting a node's morph weights.
+      // This is unused when setting a node's morph weights.
       break;
   }
 }
@@ -242,6 +246,8 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   const path = this._path;
   const model = this._runtimeAnimation.model;
 
+  // Weights are handled differently than the other properties because
+  // they need to be updated in place.
   if (path === AnimatedPropertyType.WEIGHTS) {
     const morphWeights = this._runtimeNode.morphWeights;
     const length = morphWeights.length;
@@ -258,6 +264,7 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
       ? spline.clampTime(time)
       : spline.wrapTime(time);
 
+    // This sets the translate, rotate, and scale properties.
     this._runtimeNode[path] = spline.evaluate(
       localAnimationTime,
       scratchVariable

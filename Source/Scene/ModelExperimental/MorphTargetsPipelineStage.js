@@ -83,10 +83,10 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
   addGetMorphedAttributeFunctionReturns(shaderBuilder);
 
   const weights = renderResources.runtimeNode.morphWeights;
-  const numWeights = weights.length;
+  const weightsLength = weights.length;
   shaderBuilder.addUniform(
     "float",
-    `u_morphWeights[${numWeights}]`,
+    `u_morphWeights[${weightsLength}]`,
     ShaderDestination.VERTEX
   );
 

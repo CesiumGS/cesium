@@ -10,13 +10,11 @@ import Spline from "./Spline.js";
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
- *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+ * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point. The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {Number[]|Cartesian3[]|Quaternion[]} options.points The array of control points.
  *
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
- *
  *
  * @example
  * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
@@ -85,7 +83,7 @@ Object.defineProperties(SteppedSpline.prototype, {
   /**
    * An array of control points.
    *
-   * @memberof LinearSpline.prototype
+   * @memberof SteppedSpline.prototype
    *
    * @type {Number[]|Cartesian3[]|Quaternion[]}
    * @readonly
@@ -103,6 +101,7 @@ Object.defineProperties(SteppedSpline.prototype, {
  * @function
  *
  * @param {Number} time The time.
+ * @param {Number} startIndex The index from which to start the search.
  * @returns {Number} The index for the element at the start of the interval.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
@@ -143,10 +142,8 @@ SteppedSpline.prototype.clampTime = Spline.prototype.clampTime;
 SteppedSpline.prototype.evaluate = function (time, result) {
   const points = this.points;
 
-  const i = (this._lastTimeIndex = this.findTimeInterval(
-    time,
-    this._lastTimeIndex
-  ));
+  this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
+  const i = this._lastTimeIndex;
 
   const PointType = this._pointType;
   if (PointType === Number) {

@@ -1,6 +1,7 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { HermiteSpline } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/HermiteSpline", function () {
   let points;
@@ -46,6 +47,17 @@ describe("Core/HermiteSpline", function () {
         times: times,
         inTangents: [Cartesian3.ZERO],
         outTangents: [Cartesian3.UNIT_X],
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws when inTangents and outTangents are not the same type as points.", function () {
+    expect(function () {
+      return new HermiteSpline({
+        points: points,
+        times: times,
+        inTangents: [0, 0, 0],
+        outTangents: [0, 0, 0],
       });
     }).toThrowDeveloperError();
   });
@@ -371,7 +383,27 @@ describe("Core/HermiteSpline", function () {
     }).toThrowDeveloperError();
   });
 
-  it("evaluate with result parameter", function () {
+  fit("evaluate returns number value", function () {
+    const numberTimes = [0, 1, 3];
+    const numberPoints = [0, 3, 6];
+    const numberInTangents = [-0.25, 0.125];
+    const numberOutTangents = [3.25, 1];
+    const hs = new HermiteSpline({
+      times: numberTimes,
+      points: numberPoints,
+      inTangents: numberInTangents,
+      outTangents: numberOutTangents,
+    });
+
+    let point = hs.evaluate(numberTimes[1]);
+    expect(point).toEqual(numberPoints[1]);
+
+    const time = (numberTimes[1] + numberTimes[2]) / 2.0;
+    point = hs.evaluate(time);
+    expect(point).toEqual(4.875);
+  });
+
+  it("evaluate returns cartesian3 value with result parameter", function () {
     const hs = HermiteSpline.createNaturalCubic({
       points: points,
       times: times,
@@ -380,6 +412,61 @@ describe("Core/HermiteSpline", function () {
     const point = hs.evaluate(times[0], result);
     expect(point).toBe(result);
     expect(result).toEqual(points[0]);
+  });
+
+  const quaternionTimes = [0.0, 0.41667, 0.875];
+  const quaternionPoints = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.0, 0.0, -0.3827, 0.9239),
+    new Quaternion(0.0, 0.0, -0.7071, 0.7071),
+  ];
+  const quaternionInTangents = [
+    new Quaternion(0.0, 0.0, -0.04789, 0.9988),
+    new Quaternion(-0.0, 0.0, -0.03546, 0.99937),
+  ];
+  const quaternionOutTangents = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.0, 0.0, -0.04789, 0.9988),
+  ];
+
+  it("evaluate returns quaternion value without result parameter", function () {
+    const hs = new HermiteSpline({
+      times: quaternionTimes,
+      points: quaternionPoints,
+      inTangents: quaternionInTangents,
+      outTangents: quaternionOutTangents,
+    });
+
+    let point = hs.evaluate(quaternionTimes[1]);
+    expect(point).toEqual(quaternionPoints[1]);
+
+    const td = quaternionTimes[1] * quaternionTimes[2];
+    const t = td / 2.0;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const coefficients = [
+      2 * t3 - 3 * t2 + 1,
+      -2 * t3 + 3 * t2,
+      t3 - 2 * t2 + t,
+    ];
+    let expected = new Quaternion();
+
+    point = hs.evaluate(t);
+    expect(point.toEqual(expected));
+  });
+
+  it("evaluate returns quaternion value with result parameter", function () {
+    const hs = new HermiteSpline({
+      times: quaternionTimes,
+      points: quaternionPoints,
+      inTangents: quaternionInTangents,
+      outTangents: quaternionOutTangents,
+    });
+
+    const result = new Quaternion();
+    const point = hs.evaluate(quaternionTimes[1], result);
+    expect(point).toBe(result);
+    expect(result).toEqual(quaternionPoints[1]);
   });
 
   it("createNaturalCubic with 2 control points defaults to lerp", function () {

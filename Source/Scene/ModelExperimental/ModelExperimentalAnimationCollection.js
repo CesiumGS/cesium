@@ -82,7 +82,7 @@ function addAnimation(collection, animation, options) {
 /**
  * Creates and adds an animation with the specified initial properties to the collection.
  * <p>
- * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
+ * This raises the {@link ModelExperimentalAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -109,6 +109,7 @@ function addAnimation(collection, animation, options) {
  *   name : 'animation name'
  * });
  *
+ * @example
  * // Example 2. Add an animation by index
  * model.activeAnimations.add({
  *   index : 0
@@ -121,11 +122,11 @@ function addAnimation(collection, animation, options) {
  * const animation = model.activeAnimations.add({
  *   name : 'another animation name',
  *   startTime : startTime,
- *   delay : 0.0,                          // Play at startTime (default)
+ *   delay : 0.0,                                 // Play at startTime (default)
  *   stopTime : Cesium.JulianDate.addSeconds(startTime, 4.0, new Cesium.JulianDate()),
- *   removeOnStop : false,                 // Do not remove when animation stops (default)
- *   multiplier : 2.0,                        // Play at double speed
- *   reverse : true,                       // Play in reverse
+ *   removeOnStop : false,                        // Do not remove when animation stops (default)
+ *   multiplier : 2.0,                            // Play at double speed
+ *   reverse : true,                              // Play in reverse
  *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animation
  * });
  *
@@ -248,14 +249,14 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
 /**
  * Removes an animation from the collection.
  * <p>
- * This raises the {@link ModelAnimationCollection#animationRemoved} event so, for example, a UI can stay in sync.
+ * This raises the {@link ModelExperimentalAnimationCollection#animationRemoved} event so, for example, a UI can stay in sync.
  * </p>
  * <p>
- * An animation can also be implicitly removed from the collection by setting {@link ModelAnimation#removeOnStop} to
- * <code>true</code>.  The {@link ModelAnimationCollection#animationRemoved} event is still fired when the animation is removed.
+ * An animation can also be implicitly removed from the collection by setting {@link ModelExperimentalAnimationCollection#removeOnStop} to
+ * <code>true</code>.  The {@link ModelExperimentalAnimationCollection#animationRemoved} event is still fired when the animation is removed.
  * </p>
  *
- * @param {ModelAnimation} animation The animation to remove.
+ * @param {ModelExperimentalAnimation} runtimeAnimation The runtime animation to remove.
  * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
  *
  * @example
@@ -264,13 +265,15 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
  * });
  * model.activeAnimations.remove(a); // Returns true
  */
-ModelExperimentalAnimationCollection.prototype.remove = function (animation) {
-  if (defined(animation)) {
+ModelExperimentalAnimationCollection.prototype.remove = function (
+  runtimeAnimation
+) {
+  if (defined(runtimeAnimation)) {
     const animations = this._runtimeAnimations;
-    const i = animations.indexOf(animation);
+    const i = animations.indexOf(runtimeAnimation);
     if (i !== -1) {
       animations.splice(i, 1);
-      this.animationRemoved.raiseEvent(this._model, animation);
+      this.animationRemoved.raiseEvent(this._model, runtimeAnimation);
       return true;
     }
   }
@@ -281,7 +284,7 @@ ModelExperimentalAnimationCollection.prototype.remove = function (animation) {
 /**
  * Removes all animations from the collection.
  * <p>
- * This raises the {@link ModelAnimationCollection#animationRemoved} event for each
+ * This raises the {@link ModelExperimentalAnimationCollection#animationRemoved} event for each
  * animation so, for example, a UI can stay in sync.
  * </p>
  */
@@ -300,12 +303,14 @@ ModelExperimentalAnimationCollection.prototype.removeAll = function () {
 /**
  * Determines whether this collection contains a given animation.
  *
- * @param {ModelAnimation} animation The animation to check for.
+ * @param {ModelExperimentalAnimation} runtimeAnimation The runtime animation to check for.
  * @returns {Boolean} <code>true</code> if this collection contains the animation, <code>false</code> otherwise.
  */
-ModelExperimentalAnimationCollection.prototype.contains = function (animation) {
-  if (defined(animation)) {
-    return this._runtimeAnimations.indexOf(animation) !== -1;
+ModelExperimentalAnimationCollection.prototype.contains = function (
+  runtimeAnimation
+) {
+  if (defined(runtimeAnimation)) {
+    return this._runtimeAnimations.indexOf(runtimeAnimation) !== -1;
   }
 
   return false;
@@ -318,7 +323,7 @@ ModelExperimentalAnimationCollection.prototype.contains = function (animation) {
  * all the animations in the collection.
  *
  * @param {Number} index The zero-based index of the animation.
- * @returns {ModelAnimation} The animation at the specified index.
+ * @returns {ModelExperimentalAnimation} The runtime animation at the specified index.
  *
  * @example
  * // Output the names of all the animations in the collection.
@@ -424,14 +429,17 @@ ModelExperimentalAnimationCollection.prototype.update = function (frameState) {
       runtimeAnimation.loop === ModelAnimationLoop.REPEAT ||
       runtimeAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT;
 
+    const reachedStopTime =
+      defined(stopTime) && JulianDate.greaterThan(sceneTime, stopTime);
+
     const play =
       (pastStartTime || (repeat && !defined(runtimeAnimation.startTime))) &&
       (delta <= 1.0 || repeat) &&
-      (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
+      !reachedStopTime;
 
     // If it IS, or WAS, animating...
     if (play || runtimeAnimation._state === ModelAnimationState.ANIMATING) {
-      // STOPPED -> ANIMATING state transition
+      // ...transition from STOPPED to ANIMATING
       if (play && runtimeAnimation._state === ModelAnimationState.STOPPED) {
         runtimeAnimation._state = ModelAnimationState.ANIMATING;
         if (runtimeAnimation.start.numberOfListeners > 0) {
@@ -470,7 +478,7 @@ ModelExperimentalAnimationCollection.prototype.update = function (frameState) {
       animationOccurred = true;
 
       if (!play) {
-        // ANIMATING -> STOPPED state transition
+        // transition from ANIMATING to STOPPED
         runtimeAnimation._state = ModelAnimationState.STOPPED;
         if (runtimeAnimation.stop.numberOfListeners > 0) {
           frameState.afterRender.push(runtimeAnimation._raiseStopEvent);

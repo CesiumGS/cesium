@@ -408,7 +408,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @type {ModelExperimentalAnimationCollection}
    * @readonly
    */
-
   activeAnimations: {
     get: function () {
       return this._activeAnimations;

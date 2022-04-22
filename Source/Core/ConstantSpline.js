@@ -113,8 +113,7 @@ ConstantSpline.prototype.evaluate = function (time, result) {
     return value;
   }
 
-  result = ValueType.clone(value, result);
-  return result;
+  return ValueType.clone(value, result);
 };
 
 export default ConstantSpline;

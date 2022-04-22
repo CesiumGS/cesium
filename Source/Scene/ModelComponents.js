@@ -812,7 +812,8 @@ function Scene() {
 }
 
 /**
- * The property of the node that is targeted by an animation.
+ * The property of the node that is targeted by an animation. The values of
+ * this enum are used to look up the appropriate property on the runtime node.
  *
  * @alias {ModelComponents.AnimatedPropertyType}
  * @enum {String}
