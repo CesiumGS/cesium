@@ -13,7 +13,8 @@
     },
     {
         "name": "dompurify",
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
     },
     {
         "name": "draco3d"
@@ -58,7 +59,8 @@
         "name": "nosleep.js"
     },
     {
-        "name": "pako"
+        "name": "pako",
+        "notes":"pako is MIT, and its dependency zlib is attributed separately"
     },
     {
         "name": "protobufjs"

@@ -1689,8 +1689,8 @@ function createSpecList() {
 
 /**
  * Reads `ThirdParty.extra.json` file
- * @param path {string}
- * @param discoveredDependencies {Array<string>}
+ * @param path {string} Path to `ThirdParty.extra.json`
+ * @param discoveredDependencies {Array<string>} List of previously discovered modules
  * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
  */
 function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
@@ -1710,7 +1710,11 @@ function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
           return Promise.resolve(module);
         }
 
-        return getLicenseDataFromPackage(module.name, discoveredDependencies);
+        return getLicenseDataFromPackage(
+          module.name,
+          discoveredDependencies,
+          module.notes
+        );
       }
     });
   });
@@ -1725,10 +1729,10 @@ const licenseOverrides = {
  * Extracts name, license, and url from `package.json` file
  *
  * @param packageName {string} Name of package
- * @param discoveredDependencies {Array<string>}
+ * @param discoveredDependencies {Array<string>} List of previously discovered modules
  * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
  */
-function getLicenseDataFromPackage(packageName, discoveredDependencies) {
+function getLicenseDataFromPackage(packageName, discoveredDependencies, notes) {
   if (discoveredDependencies.includes(packageName)) {
     return Promise.resolve([]);
   }
@@ -1777,6 +1781,7 @@ function getLicenseDataFromPackage(packageName, discoveredDependencies) {
       license: licenseField,
       version: version,
       url: `https://www.npmjs.com/package/${packageName}`,
+      notes: notes,
     };
   });
 }
