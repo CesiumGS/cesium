@@ -451,7 +451,6 @@ void main()
         vec3 positionWC;
         vec3 lightDirection;
 
-
         // When the camera is far away (camera distance > nightFadeOutDistance), the scattering is computed in the fragment shader.
         // Otherwise, the scattering is computed in the vertex shader.
         #ifdef PER_FRAGMENT_GROUND_ATMOSPHERE
@@ -496,7 +495,6 @@ void main()
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
         #else
-
             // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
             // This value is larger near the "circumference", as it is further away from the camera. We use it to
             // brighten up that area of the ground atmosphere.
@@ -523,7 +521,6 @@ void main()
             #endif
             
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
-            
         #endif
     }
 #endif

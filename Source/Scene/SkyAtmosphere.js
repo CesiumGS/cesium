@@ -83,7 +83,7 @@ function SkyAtmosphere(ellipsoid) {
   this._flags = undefined;
 
   /**
-   * The intensity of the light that is used for computing the ground atmosphere color.
+   * The intensity of the light that is used for computing the sky atmosphere color.
    *
    * @type {Number}
    * @default 50.0
@@ -91,7 +91,7 @@ function SkyAtmosphere(ellipsoid) {
   this.atmosphereLightIntensity = 50.0;
 
   /**
-   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
    *
    * @type {Cartesian3}
    * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
@@ -99,7 +99,7 @@ function SkyAtmosphere(ellipsoid) {
   this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6);
 
   /**
-   * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
    *
    * @type {Cartesian3}
    * @default Cartesian3(21e-6, 21e-6, 21e-6)
@@ -107,7 +107,7 @@ function SkyAtmosphere(ellipsoid) {
   this.atmosphereMieCoefficient = new Cartesian3(21e-6, 21e-6, 21e-6);
 
   /**
-   * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    *
    * @type {Number}
    * @default 10000.0
@@ -115,7 +115,7 @@ function SkyAtmosphere(ellipsoid) {
   this.atmosphereRayleighScaleHeight = 10000.0;
 
   /**
-   * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    *
    * @type {Number}
    * @default 3200.0
