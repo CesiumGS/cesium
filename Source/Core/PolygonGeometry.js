@@ -565,6 +565,7 @@ function createGeometryFromPositionsExtruded(
     const topGeo = PolygonGeometryLibrary.createGeometryFromPositions(
       ellipsoid,
       polygon,
+      undefined,
       granularity,
       perPositionHeight,
       vertexFormat,

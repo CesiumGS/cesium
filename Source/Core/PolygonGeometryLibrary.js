@@ -549,9 +549,9 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
   }
 
   const positions = polygon.positions;
-  const texcoords = defined(textureCoordinates)
-    ? textureCoordinates.positions
-    : undefined;
+
+  const hasTexcoords = defined(textureCoordinates);
+  const texcoords = hasTexcoords ? textureCoordinates.positions : undefined;
 
   if (perPositionHeight) {
     const length = positions.length;
@@ -563,7 +563,8 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       flattenedPositions[index++] = p.y;
       flattenedPositions[index++] = p.z;
     }
-    const geometry = new Geometry({
+
+    const geometryOptions = {
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.DOUBLE,
@@ -573,7 +574,17 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       },
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
-    });
+    };
+
+    if (hasTexcoords) {
+      geometryOptions.attributes.st = new GeometryAttribute({
+        componentDatatype: ComponentDatatype.FLOAT,
+        componentsPerAttribute: 2,
+        values: texcoords,
+      });
+    }
+
+    const geometry = new Geometry(geometryOptions);
 
     if (vertexFormat.normal) {
       return GeometryPipeline.computeNormal(geometry);
@@ -595,6 +606,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       ellipsoid,
       positions,
       indices,
+      texcoords,
       granularity
     );
   }
