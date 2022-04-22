@@ -29,7 +29,7 @@ function ModelExperimentalAnimation(model, animation, options) {
 
   this._startTime = JulianDate.clone(options.startTime);
   this._delay = defaultValue(options.delay, 0.0); // in seconds
-  this._stopTime = options.stopTime;
+  this._stopTime = JulianDate.clone(options.stopTime);
 
   /**
    * When <code>true</code>, the animation is removed after it stops playing.
@@ -140,6 +140,7 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
       return this._animation;
     },
   },
+
   /**
    * The name that identifies this animation in the model, if it exists.
    *
@@ -173,6 +174,8 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
   /**
    * The {@link ModelExperimental} that owns this animation.
    *
+   * @memberof ModelExperimentalAnimation.prototype
+   *
    * @type {ModelExperimental}
    * @readonly
    *
@@ -188,6 +191,8 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
    * The starting point of the animation in local animation time. This is the minimum
    * time value across all of the keyframes belonging to this animation.
    *
+   * @memberof ModelExperimentalAnimation.prototype
+   *
    * @type {Number}
    * @readonly
    *
@@ -202,6 +207,8 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
   /**
    * The stopping point of the animation in local animation time. This is the maximum
    * time value across all of the keyframes belonging to this animation.
+   *
+   * @memberof ModelExperimentalAnimation.prototype
    *
    * @type {Number}
    * @readonly
@@ -359,6 +366,13 @@ function initialize(runtimeAnimation) {
   runtimeAnimation._localStopTime = localStopTime;
 }
 
+/**
+ * Evaluate all animation channels to advance this animation.
+ *
+ * @param {Number} time The local animation time.
+ *
+ * @private
+ */
 ModelExperimentalAnimation.prototype.animate = function (time) {
   const runtimeChannels = this._runtimeChannels;
   const length = runtimeChannels.length;

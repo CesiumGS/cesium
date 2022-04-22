@@ -383,11 +383,11 @@ describe("Core/HermiteSpline", function () {
     }).toThrowDeveloperError();
   });
 
-  fit("evaluate returns number value", function () {
-    const numberTimes = [0, 1, 3];
-    const numberPoints = [0, 3, 6];
-    const numberInTangents = [-0.25, 0.125];
-    const numberOutTangents = [3.25, 1];
+  it("evaluate returns number value", function () {
+    const numberTimes = [0.0, 0.5, 1.0];
+    const numberPoints = [0.0, 1.0, 0.0];
+    const numberInTangents = [0, 1];
+    const numberOutTangents = [0, -3];
     const hs = new HermiteSpline({
       times: numberTimes,
       points: numberPoints,
@@ -398,9 +398,37 @@ describe("Core/HermiteSpline", function () {
     let point = hs.evaluate(numberTimes[1]);
     expect(point).toEqual(numberPoints[1]);
 
-    const time = (numberTimes[1] + numberTimes[2]) / 2.0;
-    point = hs.evaluate(time);
-    expect(point).toEqual(4.875);
+    const expected = 0.25;
+    point = hs.evaluate(0.75);
+    expect(point).toEqual(expected);
+  });
+
+  it("evaluate returns cartesian3 value", function () {
+    const cartesianTimes = [0.0, 0.5, 1.0];
+    const cartesianPoints = [
+      new Cartesian3(-1.0, 0.0, 0.0),
+      new Cartesian3(1.0, 2.0, 0.0),
+      new Cartesian3(-1.0, 0.0, 0.0),
+    ];
+    const cartesianInTangents = [Cartesian3.ZERO, Cartesian3.ZERO];
+    const cartesianOutTangents = [
+      Cartesian3.ZERO,
+      new Cartesian3(0.0, -3.0, 0.0),
+    ];
+
+    const hs = new HermiteSpline({
+      times: cartesianTimes,
+      points: cartesianPoints,
+      inTangents: cartesianInTangents,
+      outTangents: cartesianOutTangents,
+    });
+
+    let point = hs.evaluate(cartesianTimes[1]);
+    expect(point).toEqual(cartesianPoints[1]);
+
+    const expected = new Cartesian3(0.0, 0.8125, 0.0);
+    point = hs.evaluate(0.75);
+    expect(point).toEqual(expected);
   });
 
   it("evaluate returns cartesian3 value with result parameter", function () {
@@ -414,7 +442,7 @@ describe("Core/HermiteSpline", function () {
     expect(result).toEqual(points[0]);
   });
 
-  const quaternionTimes = [0.0, 0.41667, 0.875];
+  const quaternionTimes = [0.0, 0.5, 1.0];
   const quaternionPoints = [
     Quaternion.IDENTITY,
     new Quaternion(0.0, 0.0, -0.3827, 0.9239),
@@ -429,7 +457,7 @@ describe("Core/HermiteSpline", function () {
     new Quaternion(0.0, 0.0, -0.04789, 0.9988),
   ];
 
-  it("evaluate returns quaternion value without result parameter", function () {
+  it("evaluate returns quaternion value", function () {
     const hs = new HermiteSpline({
       times: quaternionTimes,
       points: quaternionPoints,
@@ -440,19 +468,11 @@ describe("Core/HermiteSpline", function () {
     let point = hs.evaluate(quaternionTimes[1]);
     expect(point).toEqual(quaternionPoints[1]);
 
-    const td = quaternionTimes[1] * quaternionTimes[2];
-    const t = td / 2.0;
-    const t2 = t * t;
-    const t3 = t2 * t;
-    const coefficients = [
-      2 * t3 - 3 * t2 + 1,
-      -2 * t3 + 3 * t2,
-      t3 - 2 * t2 + t,
-    ];
-    let expected = new Quaternion();
-
-    point = hs.evaluate(t);
-    expect(point.toEqual(expected));
+    const expected = new Quaternion(0.0, 0.0, -0.54567, 0.81546);
+    point = hs.evaluate(0.75);
+    expect(Quaternion.equalsEpsilon(point, expected, CesiumMath.EPSILON4)).toBe(
+      true
+    );
   });
 
   it("evaluate returns quaternion value with result parameter", function () {

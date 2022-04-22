@@ -85,7 +85,7 @@ describe("Core/SteppedSpline", function () {
     expect(spline.evaluate(time)).toEqual(numberPoints[0]);
   });
 
-  it("evaluate returns cartesian3 value without result parameter", function () {
+  it("evaluate returns cartesian3 value", function () {
     const spline = new SteppedSpline({
       points: cartesianPoints,
       times: times,
@@ -116,7 +116,7 @@ describe("Core/SteppedSpline", function () {
     expect(returnedValue).toEqual(cartesianPoints[1]);
   });
 
-  it("evaluate returns quaternion value without result parameter", function () {
+  it("evaluate returns quaternion value", function () {
     const spline = new SteppedSpline({
       points: quaternionPoints,
       times: times,

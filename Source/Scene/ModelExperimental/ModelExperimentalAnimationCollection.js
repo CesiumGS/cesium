@@ -216,7 +216,7 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
  *
  * @example
  * model.activeAnimations.addAll({
- *   multiplier : 0.5,                        // Play at half-speed
+ *   multiplier : 0.5,                            // Play at half-speed
  *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animations
  * });
  */

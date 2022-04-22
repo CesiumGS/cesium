@@ -579,10 +579,8 @@ HermiteSpline.prototype.evaluate = function (time, result) {
   const inTangents = this.inTangents;
   const outTangents = this.outTangents;
 
-  const i = (this._lastTimeIndex = this.findTimeInterval(
-    time,
-    this._lastTimeIndex
-  ));
+  this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
+  const i = this._lastTimeIndex;
 
   const timesDelta = times[i + 1] - times[i];
   const u = (time - times[i]) / timesDelta;
@@ -593,13 +591,15 @@ HermiteSpline.prototype.evaluate = function (time, result) {
   timeVec.x = timeVec.y * u;
   timeVec.w = 1.0;
 
+  // Coefficients are returned in the following order:
+  // start, end, out-tangent, in-tangent
   const coefs = Matrix4.multiplyByVector(
     HermiteSpline.hermiteCoefficientMatrix,
     timeVec,
     timeVec
   );
 
-  // Multiply the in-tangent and out-tangent values by the time delta.
+  // Multiply the out-tangent and in-tangent values by the time delta.
   coefs.z *= timesDelta;
   coefs.w *= timesDelta;
 

@@ -75,7 +75,7 @@ describe("Core/ConstantSpline", function () {
     expect(spline.evaluate(0.0)).toEqual(value);
   });
 
-  it("evaluate returns cartesian3 value without result parameter", function () {
+  it("evaluate returns cartesian3 value", function () {
     const value = new Cartesian3(1.0, 2.0, 3.0);
     const spline = new ConstantSpline(value);
 
@@ -93,7 +93,7 @@ describe("Core/ConstantSpline", function () {
     expect(value).toEqual(returnedValue);
   });
 
-  it("evaluate returns quaternion value without result parameter", function () {
+  it("evaluate returns quaternion value", function () {
     const value = new Quaternion(0.707, 0.0, 0.707, 1.0);
     const spline = new ConstantSpline(value);
 

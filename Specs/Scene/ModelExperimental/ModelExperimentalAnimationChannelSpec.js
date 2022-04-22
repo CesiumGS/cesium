@@ -1,7 +1,7 @@
-import HermiteSpline from "cesium/Source/Core/HermiteSpline";
 import {
   Axis,
   Cartesian3,
+  HermiteSpline,
   ConstantSpline,
   InterpolationType,
   LinearSpline,
@@ -16,7 +16,7 @@ import {
   QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const mockNode = {
@@ -82,9 +82,9 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     }).toThrowDeveloperError();
   });
 
-  function createMockChannel(node, mockSampler, path) {
+  function createMockChannel(mockNode, mockSampler, path) {
     const mockTarget = {
-      node: node,
+      node: mockNode,
       path: path,
     };
     const mockChannel = {
@@ -102,7 +102,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.TRANSLATION
     );
@@ -151,7 +151,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.TRANSLATION
     );
@@ -177,7 +177,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.ROTATION
     );
@@ -203,7 +203,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.SCALE
     );
@@ -222,6 +222,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   });
 
   it("constructs cubic spline", function () {
+    const cubicTimes = [0.0, 0.5, 1.0];
     // These points don't represent meaningful tangents.
     // They are dummy values to test the construction of the spline.
     const cubicPoints = [
@@ -237,13 +238,13 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     ];
 
     const mockSampler = {
-      input: times,
+      input: cubicTimes,
       interpolation: InterpolationType.CUBICSPLINE,
       output: cubicPoints,
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.TRANSLATION
     );
@@ -267,7 +268,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     const expectedPoints = [cubicPoints[1], cubicPoints[4], cubicPoints[7]];
 
     expect(spline.inTangents).toEqual(expectedInTangents);
-    expect(spline.outTangents.toEqual(expectedOutTangents));
+    expect(spline.outTangents).toEqual(expectedOutTangents);
     expect(spline.points).toEqual(expectedPoints);
   });
 
@@ -281,7 +282,36 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     runtimeNode._morphWeights = [0.0, 0.0];
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
+      mockSampler,
+      AnimatedPropertyType.WEIGHTS
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeChannel.channel).toBe(mockChannel);
+    expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
+    expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
+    expect(runtimeChannel.splines.length).toBe(2);
+    expect(runtimeChannel.splines[0] instanceof LinearSpline).toBe(true);
+    expect(runtimeChannel.splines[1] instanceof LinearSpline).toBe(true);
+  });
+
+  it("constructs cubic weight splines", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: weightPoints,
+    };
+
+    runtimeNode._morphWeights = [0.0, 0.0];
+
+    const mockChannel = createMockChannel(
+      mockNode,
       mockSampler,
       AnimatedPropertyType.WEIGHTS
     );
@@ -310,7 +340,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.TRANSLATION
     );
@@ -356,7 +386,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.ROTATION
     );
@@ -412,7 +442,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     };
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.SCALE
     );
@@ -456,7 +486,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     runtimeNode._morphWeights = [0.0, 0.0];
 
     const mockChannel = createMockChannel(
-      runtimeNode,
+      mockNode,
       mockSampler,
       AnimatedPropertyType.WEIGHTS
     );
