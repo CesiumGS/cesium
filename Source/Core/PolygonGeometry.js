@@ -611,7 +611,7 @@ function createGeometryFromPositionsExtruded(
         topGeo.attributes.normal.values.set(normals);
       }
 
-      if (vertexFormat.st) {
+      if (vertexFormat.st && defined(textureCoordinates)) {
         const texcoords = topGeo.attributes.st.values;
         topGeo.attributes.st.values = new Float32Array(numPositions * 2);
         topGeo.attributes.st.values = texcoords.concat(texcoords);
