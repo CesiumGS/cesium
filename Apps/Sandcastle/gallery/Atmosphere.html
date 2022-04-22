@@ -291,6 +291,12 @@
             <th colspan="2">Sky Atmosphere Settings</th>
           </tr>
           <tr>
+            <td>Sky Atmosphere</td>
+            <td>
+              <input type="checkbox" data-bind="checked: showSkyAtmosphere" />
+            </td>
+          </tr>
+          <tr>
             <td>Light Intensity</td>
             <td>
               <input
@@ -298,7 +304,7 @@
                 min="0.0"
                 max="100.0"
                 step="1"
-                data-bind="value: skyAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereLightIntensity, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -316,7 +322,7 @@
                 min="0.0"
                 max="100.0"
                 step="1"
-                data-bind="value: skyAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -334,7 +340,7 @@
                 min="0.0"
                 max="100.0"
                 step="1"
-                data-bind="value: skyAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -352,7 +358,7 @@
                 min="0.0"
                 max="100.0"
                 step="1"
-                data-bind="value: skyAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -370,7 +376,7 @@
                 min="0.0"
                 max="100.0"
                 step="1"
-                data-bind="value: skyAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -388,7 +394,7 @@
                 min="0"
                 max="2e4"
                 step="1e2"
-                data-bind="value: skyAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -406,7 +412,7 @@
                 min="0"
                 max="1e4"
                 step="1e2"
-                data-bind="value: skyAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -424,7 +430,7 @@
                 min="-1.0"
                 max="1.0"
                 step="0.1"
-                data-bind="value: skyAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+                data-bind="value: skyAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
               <input
                 class="numinput"
@@ -439,7 +445,7 @@
             <td>
               <input
                 type="checkbox"
-                data-bind="checked: perFragmentAtmosphere"
+                data-bind="checked: perFragmentAtmosphere, enable: (showSkyAtmosphere)"
               />
             </td>
           </tr>
@@ -496,6 +502,7 @@
 
           // Sky atmosphere settings
 
+          showSkyAtmosphere: true,
           skyAtmosphereLightIntensity: 15.0,
           skyAtmosphereRayleighCoefficientR: 5.5,
           skyAtmosphereRayleighCoefficientG: 13.0,
@@ -620,6 +627,11 @@
 
         // Sky Atmosphere
 
+        Cesium.knockout
+          .getObservable(viewModel, "showSkyAtmosphere")
+          .subscribe(function (newValue) {
+            skyAtmosphere.show = newValue;
+          });
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereLightIntensity")
           .subscribe(function (newValue) {
