@@ -580,7 +580,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       geometryOptions.attributes.st = new GeometryAttribute({
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 2,
-        values: texcoords,
+        values: Cartesian2.packArray(texcoords),
       });
     }
 
