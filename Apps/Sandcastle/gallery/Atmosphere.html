@@ -38,6 +38,27 @@
         padding-bottom: 2px;
       }
 
+      .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+        display: grid;
+        grid-auto-flow: column;
+      }
+
+      .tab button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 4px 4px;
+      }
+
+      .tab button.active {
+        background-color: #ccc;
+      }
+
       .numinput {
         width: 64px;
       }
@@ -45,7 +66,18 @@
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
-      <table id="ground-table" style="display: none">
+      <div class="tab">
+        <button
+          class="tablinks active"
+          onclick="setActiveTab(event, 'ground-table')"
+        >
+          Ground Atmosphere
+        </button>
+        <button class="tablinks" onclick="setActiveTab(event, 'sky-table')">
+          Sky Atmosphere
+        </button>
+      </div>
+      <table id="ground-table" class="tabcontent">
         <tbody>
           <tr>
             <th colspan="2">Fog Settings</th>
@@ -411,7 +443,7 @@
           </tr>
         </tbody>
       </table>
-      <table id="sky-table" style="display: none">
+      <table id="sky-table" class="tabcontent" style="display: none">
         <tbody>
           <tr>
             <th colspan="2">Sky Atmosphere Settings</th>
@@ -652,13 +684,6 @@
         canvas.onclick = function () {
           canvas.focus();
         };
-
-        // UI
-
-        const groundTable = document.getElementById("ground-table");
-        const skyTable = document.getElementById("sky-table");
-
-        let activeTable = groundTable;
 
         const defaultGroundAtmosphereLightIntensity =
           globe.atmosphereLightIntensity;
@@ -984,28 +1009,22 @@
             globe.translucency.backFaceAlpha = 0.1;
           });
 
-        function setActiveTable(table) {
-          activeTable.style.display = "none";
-          activeTable = table;
-          activeTable.style.display = "block";
-        }
-
-        const options = [
-          {
-            text: "Show Ground Atmosphere Settings",
-            onselect: function () {
-              setActiveTable(groundTable);
-            },
-          },
-          {
-            text: "Show Sky Atmosphere Settings",
-            onselect: function () {
-              setActiveTable(skyTable);
-            },
-          },
-        ];
-
-        Sandcastle.addToolbarMenu(options);
+        window.setActiveTab = function (event, tableId) {
+          let i;
+          const tabcontent = document.getElementsByClassName("tabcontent");
+          for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+          }
+          const tablinks = document.getElementsByClassName("tablinks");
+          for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(
+              " active",
+              ""
+            );
+          }
+          document.getElementById(tableId).style.display = "block";
+          event.currentTarget.className += " active";
+        };
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
