@@ -582,12 +582,12 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
       metadata.populateSubtree(x, y, level, metadataRequest);
       return undefined; // No metadata so return undefined so we can be loaded later
     }
-    return invalidImage; // Image doesn't exist
+    return Promise.resolve(invalidImage); // Image doesn't exist
   }
 
   if (!info.hasImagery()) {
     // Already have info and there isn't any imagery here
-    return invalidImage;
+    return Promise.resolve(invalidImage);
   }
   const promise = buildImageResource(
     this,

@@ -315,3 +315,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Justin Peter](https://github.com/themagicnacho)
 - [Gu Miao](https://github.com/Gu-Miao)
 - [Shen WeiQun](https://github.com/ShenWeiQun)
+- [四季留歌](https://github.com/onsummer)
+- [Yuri Chen](https://github.com/yurichen17)

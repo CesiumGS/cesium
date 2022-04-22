@@ -62,7 +62,7 @@ describe("Scene/IonImageryProvider", function () {
     }).toThrowDeveloperError(ImageryProvider);
   });
 
-  it("readyPromise rejects with non-imagery asset", function (done) {
+  it("readyPromise rejects with non-imagery asset", function () {
     const provider = createTestProvider({
       type: "3DTILES",
       url: "http://test.invalid/layer",
@@ -80,7 +80,7 @@ describe("Scene/IonImageryProvider", function () {
       });
   });
 
-  it("readyPromise rejects with unknown external asset type", function (done) {
+  it("readyPromise rejects with unknown external asset type", function () {
     const provider = createTestProvider({
       type: "IMAGERY",
       externalType: "TUBELCANE",

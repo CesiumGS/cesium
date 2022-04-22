@@ -1,9 +1,9 @@
 import ShaderSource from "../Renderer/ShaderSource.js";
 
 /**
- * @private
- *
  * Support for rendering things on only one side of the screen.
+ *
+ * @private
  */
 const Splitter = {
   /**

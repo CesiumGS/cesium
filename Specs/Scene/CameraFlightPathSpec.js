@@ -1,8 +1,8 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../../Source/Cesium.js";
-import { Globe } from "../../../Source/Cesium.js";
+import { GeographicProjection } from "../../Source/Cesium.js";
+import { Globe } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
 import { CameraFlightPath } from "../../Source/Cesium.js";

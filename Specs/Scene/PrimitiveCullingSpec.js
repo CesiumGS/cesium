@@ -159,7 +159,6 @@ describe(
           0
         );
         return (
-          labels._backgroundImageReady &&
           (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
           labels._labelsToUpdate.length === 0
         );
