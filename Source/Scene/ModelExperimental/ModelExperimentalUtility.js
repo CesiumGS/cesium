@@ -241,37 +241,28 @@ ModelExperimentalUtility.createBoundingSphere = function (
 
 /**
  * Model matrices in a model file (e.g. glTF) are typically in a different
- * coordinate system, such as with y-up instead of z-up. This method adjusts
- * the matrix so z is up, x is forward.
+ * coordinate system, such as with y-up instead of z-up in 3D Tiles.
+ * This function returns a matrix that will correct this such that z is up,
+ * and x is forward.
  *
- * @param {Matrix4} modelMatrix The original model matrix.
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
  * @param {Matrix4} result The matrix in which to store the result.
- * @return {Matrix4} The corrected model matrix.
+ * @return {Matrix4} The axis correction matrix
  *
  * @private
  */
-ModelExperimentalUtility.correctModelMatrix = function (
-  modelMatrix,
+ModelExperimentalUtility.getAxisCorrectionMatrix = function (
   upAxis,
   forwardAxis,
   result
 ) {
-  result = Matrix4.clone(modelMatrix, result);
+  result = Matrix4.clone(Matrix4.IDENTITY, result);
 
   if (upAxis === Axis.Y) {
-    result = Matrix4.multiplyTransformation(
-      modelMatrix,
-      Axis.Y_UP_TO_Z_UP,
-      result
-    );
+    result = Matrix4.clone(Axis.Y_UP_TO_Z_UP, result);
   } else if (upAxis === Axis.X) {
-    result = Matrix4.multiplyTransformation(
-      modelMatrix,
-      Axis.X_UP_TO_Z_UP,
-      result
-    );
+    result = Matrix4.clone(Axis.X_UP_TO_Z_UP, result);
   }
 
   if (forwardAxis === Axis.Z) {

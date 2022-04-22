@@ -18,6 +18,7 @@ import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
+import SkinningPipelineStage from "./SkinningPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -123,6 +124,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
+  const hasSkinning = defined(node.skin);
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -145,6 +147,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 
   if (hasMorphTargets) {
     pipelineStages.push(MorphTargetsPipelineStage);
+  }
+
+  if (hasSkinning) {
+    pipelineStages.push(SkinningPipelineStage);
   }
 
   if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
