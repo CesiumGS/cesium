@@ -8,6 +8,7 @@
 - Added `GeoJsonSource.process` to support adding features without removing existing entities, similar to `CzmlDataSource.process`. [#9275](https://github.com/CesiumGS/cesium/issues/9275)
 - Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
 - Added support for skins in `ModelExperimental`. [#10282](https://github.com/CesiumGS/cesium/pull/10282)
+- Added support for animations in `ModelExperimental`. [#10314](https://github.com/CesiumGS/cesium/pull/10314)
 
 ##### Fixes :wrench:
 
