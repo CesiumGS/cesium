@@ -5,7 +5,6 @@ import Resource from "./Resource.js";
 
 /*global CESIUM_BASE_URL,define,require*/
 
-// TODO: all these should have JSDoc tags, or mark as private
 const cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js(?:\?|\#|$)/;
 function getBaseUrlFromCesiumScript() {
   const scripts = document.getElementsByTagName("script");

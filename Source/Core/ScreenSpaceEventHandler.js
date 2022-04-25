@@ -962,7 +962,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  */
 
 /**
- * @callback ScreenSpaceEventHandler.ValueCallback
+ * @callback ScreenSpaceEventHandler.WheelEventCallback
  *
  * The callback invoked when a mouse-wheel event triggers an event listener.
  *
