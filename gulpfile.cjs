@@ -108,6 +108,7 @@ const filesToClean = [
   "!Source/Workers/transferTypedArrayTest.js",
   "Source/ThirdParty/Shaders/*.js",
   "Specs/SpecList.js",
+  "Specs/jasmine/**",
   "Apps/Sandcastle/jsHintOptions.js",
   "Apps/Sandcastle/gallery/gallery-index.js",
   "Apps/Sandcastle/templates/bucket.css",
@@ -126,6 +127,7 @@ const filesToConvertES6 = [
   "!Source/Workers/transferTypedArrayTest.js",
   "!Specs/karma-main.js",
   "!Specs/karma.conf.cjs",
+  "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
 ];
@@ -367,7 +369,7 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-gulp.task("prepare", function (done) {
+gulp.task("prepare", function () {
   // Copy Draco3D files from node_modules into Source
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
@@ -390,7 +392,15 @@ gulp.task("prepare", function (done) {
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
     "Source/ThirdParty/Workers/z-worker-pako.js"
   );
-  done();
+
+  // Copy jasmine runner files into Specs
+  return globby([
+    "node_modules/jasmine-core/lib/jasmine-core",
+    "!node_modules/jasmine-core/lib/jasmine-core/example",
+  ]).then(function (files) {
+    const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
+    return streamToPromise(stream);
+  });
 });
 
 //Builds the documentation
@@ -441,6 +451,30 @@ gulp.task(
 
     // Remove prepare step from package.json to avoid running "prepare" an extra time.
     delete packageJson.scripts.prepare;
+
+    // Remove build and transform tasks since they do not function as intended from within the release zip
+    delete packageJson.scripts.convertToModules;
+    delete packageJson.scripts.build;
+    delete packageJson.scripts["build-watch"];
+    delete packageJson.scripts["build-ts"];
+    delete packageJson.scripts.buildApps;
+    delete packageJson.scripts.clean;
+    delete packageJson.scripts.cloc;
+    delete packageJson.scripts.combine;
+    delete packageJson.scripts.combineRelease;
+    delete packageJson.scripts.generateDocumentation;
+    delete packageJson.scripts["generateDocumentation-watch"];
+    delete packageJson.scripts.makeZipFile;
+    delete packageJson.scripts.minify;
+    delete packageJson.scripts.minifyRelease;
+    delete packageJson.scripts.release;
+    delete packageJson.scripts.prettier;
+
+    // Remove deploy tasks
+    delete packageJson.scripts["deploy-s3"];
+    delete packageJson.scripts["deploy-status"];
+    delete packageJson.scripts["deploy-set-version"];
+
     fs.writeFileSync(
       "./Build/package.noprepare.json",
       JSON.stringify(packageJson, null, 2)
@@ -465,10 +499,20 @@ gulp.task(
     const staticSrc = gulp.src(
       [
         "Apps/**",
+        "Apps/**/.eslintrc.json",
         "!Apps/Sandcastle/gallery/development/**",
         "Source/**",
+        "Source/**/.eslintrc.json",
+        "Specs/**",
+        "Specs/**/.eslintrc.json",
         "ThirdParty/**",
+        "Tools/eslint-config-cesium/**",
         "favicon.ico",
+        ".eslintignore",
+        ".eslintrc.json",
+        ".gulp.json",
+        ".prettierignore",
+        "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
         "LICENSE.md",
@@ -993,7 +1037,6 @@ gulp.task("test", function (done) {
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
   const debug = argv.debug ? false : true;
   const includeName = argv.includeName ? argv.includeName : "";
-  const excludeName = argv.excludeName ? argv.excludeName : "";
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1047,8 +1090,8 @@ gulp.task("test", function (done) {
         args: [
           includeCategory,
           excludeCategory,
+          "--grep",
           includeName,
-          excludeName,
           webglValidation,
           webglStub,
           release,
