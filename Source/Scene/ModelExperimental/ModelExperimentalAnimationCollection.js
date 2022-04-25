@@ -65,6 +65,20 @@ Object.defineProperties(ModelExperimentalAnimationCollection.prototype, {
       return this._runtimeAnimations.length;
     },
   },
+
+  /**
+   * The model that owns this animation collection.
+   *
+   * @memberof ModelExperimentalAnimationCollection.prototype
+   *
+   * @type {ModelExperimental}
+   * @readonly
+   */
+  model: {
+    get: function () {
+      return this._model;
+    },
+  },
 });
 
 function addAnimation(collection, animation, options) {
@@ -144,15 +158,18 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const model = this._model;
-  const animations = model.sceneGraph.components.animations;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(animations)) {
+  if (!model.ready) {
     throw new DeveloperError(
       "Animations are not loaded.  Wait for ModelExperimental.readyPromise to resolve."
     );
   }
+  //>>includeEnd('debug');
 
+  const animations = model.sceneGraph.components.animations;
+
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(options.name) && !defined(options.index)) {
     throw new DeveloperError(
       "Either options.name or options.index must be defined."
@@ -224,10 +241,9 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const model = this._model;
-  const animations = model.sceneGraph.components.animations;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(animations)) {
+  if (!model.ready) {
     throw new DeveloperError(
       "Animations are not loaded.  Wait for Model.readyPromise to resolve."
     );
@@ -237,6 +253,8 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
     throw new DeveloperError("options.multiplier must be greater than zero.");
   }
   //>>includeEnd('debug');
+
+  const animations = model.sceneGraph.components.animations;
 
   const runtimeAnimations = [];
   const length = animations.length;
@@ -337,6 +355,12 @@ ModelExperimentalAnimationCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(index)) {
     throw new DeveloperError("index is required.");
+  }
+
+  if (index >= this._runtimeAnimations.length || index < 0) {
+    throw new DeveloperError(
+      "index must be valid within the range of the collection"
+    );
   }
   //>>includeEnd('debug');
 

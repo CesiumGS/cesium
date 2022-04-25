@@ -47,6 +47,8 @@ describe(
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
     const morphPrimitivesTestUrl =
       "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
+    const animatedTriangleUrl =
+      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
 
     let scene;
 
@@ -95,9 +97,14 @@ describe(
       scene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
+      const time = defaultValue(
+        options.time,
+        JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"))
+      );
+
       expect({
         scene: scene,
-        time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+        time: time,
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
           expect(rgba).not.toEqual(backgroundColorBytes);
@@ -253,6 +260,53 @@ describe(
           // The model is a plane made three-dimensional by morph targets.
           // If morph targets aren't supported, the model won't appear in the camera.
           verifyRender(model, true, renderOptions);
+        });
+      });
+    });
+
+    it("renders model without animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene
+      ).then(function (model) {
+        const animationCollection = model.activeAnimations;
+        expect(animationCollection).toBeDefined();
+        expect(animationCollection.length).toBe(0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+      });
+    });
+
+    it("renders model with animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene
+      ).then(function (model) {
+        // The model rotates such that it leaves the view of the camera
+        // halfway into its animation.
+        const startTime = JulianDate.fromDate(
+          new Date("January 1, 2014 12:00:00 UTC")
+        );
+        const animationCollection = model.activeAnimations;
+        animationCollection.add({
+          index: 0,
+          startTime: startTime,
+        });
+        expect(animationCollection.length).toBe(1);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          time: startTime,
+        });
+
+        const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
+        verifyRender(model, false, {
+          zoomToModel: false,
+          time: time,
         });
       });
     });

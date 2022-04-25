@@ -10,7 +10,7 @@ import {
   Quaternion,
 } from "../../../Source/Cesium.js";
 
-fdescribe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
+describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const mockNode = {
@@ -208,5 +208,44 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
 
     expect(runtimeAnimation.localStartTime).toBe(0.0);
     expect(runtimeAnimation.localStopTime).toBe(1.0);
+  });
+
+  it("animates", function () {
+    const mockAnimation = {
+      channels: [
+        createMockChannel(
+          mockNode,
+          mockTranslationSampler,
+          AnimatedPropertyType.TRANSLATION
+        ),
+        createMockChannel(
+          mockNode,
+          mockRotationSampler,
+          AnimatedPropertyType.ROTATION
+        ),
+      ],
+      name: "Sample Animation",
+    };
+
+    const runtimeAnimation = new ModelExperimentalAnimation(
+      mockModel,
+      mockAnimation,
+      emptyOptions
+    );
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.rotation).toEqual(Quaternion.IDENTITY);
+
+    runtimeAnimation.animate(0.5);
+
+    expect(runtimeNode.translation).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+    expect(runtimeNode.rotation).toEqual(Quaternion.IDENTITY);
+
+    runtimeAnimation.animate(1.0);
+
+    expect(runtimeNode.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+    expect(runtimeNode.rotation).toEqual(
+      new Quaternion(0.0, 0.0, 0.707, -0.707)
+    );
   });
 });

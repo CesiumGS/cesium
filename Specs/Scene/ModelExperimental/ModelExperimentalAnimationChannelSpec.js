@@ -16,7 +16,7 @@ import {
   QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const mockNode = {
@@ -532,5 +532,93 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
 
     runtimeChannel.animate(time);
     expect(runtimeNode.morphWeights).toEqual(expected);
+  });
+
+  it("clamps animations", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: translationPoints,
+    };
+
+    const mockChannel = createMockChannel(
+      mockNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    let time = 10.0;
+    let expected = Cartesian3.clone(translationPoints[3]);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );
+
+    time = -10.0;
+    expected = Cartesian3.clone(translationPoints[0]);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );
+  });
+
+  it("wraps animations", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: translationPoints,
+    };
+
+    const mockChannel = createMockChannel(
+      mockNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const wrappedRuntimeAnimation = {
+      model: {
+        clampedAnimations: false,
+      },
+    };
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: wrappedRuntimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    let time = 1.25;
+    let expected = Cartesian3.clone(translationPoints[1]);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );
+
+    time = -0.5;
+    expected = Cartesian3.clone(translationPoints[2]);
+
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(expected);
+    expect(runtimeNode.transform).toEqual(
+      Matrix4.fromTranslation(expected, scratchTransform)
+    );
   });
 });
