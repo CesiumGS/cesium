@@ -498,7 +498,7 @@ Object.defineProperties(Globe.prototype, {
    * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
    * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
    * @memberof Globe.prototype
-   * @type {Material}
+   * @type {Material | undefined}
    */
   material: {
     get: function () {
