@@ -13,7 +13,7 @@ import LabelCollection from "../Scene/LabelCollection.js";
 import PointPrimitive from "../Scene/PointPrimitive.js";
 import PointPrimitiveCollection from "../Scene/PointPrimitiveCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
-import kdbush from "../ThirdParty/kdbush.js";
+import KDBush from "../ThirdParty/kdbush.js";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.
@@ -91,7 +91,7 @@ function expandBoundingBox(bbox, pixelRange) {
   bbox.height += pixelRange * 2.0;
 }
 
-var labelBoundingBoxScratch = new BoundingRectangle();
+const labelBoundingBoxScratch = new BoundingRectangle();
 
 function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
   if (defined(item._labelCollection) && entityCluster._clusterLabels) {
@@ -117,10 +117,10 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
     hasLabelIndex(entityCluster, item.id.id) &&
     defined(item.id._label)
   ) {
-    var labelIndex =
+    const labelIndex =
       entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
-    var label = entityCluster._labelCollection.get(labelIndex);
-    var labelBBox = Label.getScreenSpaceBoundingBox(
+    const label = entityCluster._labelCollection.get(labelIndex);
+    const labelBBox = Label.getScreenSpaceBoundingBox(
       label,
       coord,
       labelBoundingBoxScratch
@@ -141,15 +141,15 @@ function addNonClusteredItem(item, entityCluster) {
     hasLabelIndex(entityCluster, item.id.id) &&
     defined(item.id._label)
   ) {
-    var labelIndex =
+    const labelIndex =
       entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
-    var label = entityCluster._labelCollection.get(labelIndex);
+    const label = entityCluster._labelCollection.get(labelIndex);
     label.clusterShow = true;
   }
 }
 
 function addCluster(position, numPoints, ids, entityCluster) {
-  var cluster = {
+  const cluster = {
     billboard: entityCluster._clusterBillboardCollection.add(),
     label: entityCluster._clusterLabelCollection.add(),
     point: entityCluster._clusterPointCollection.add(),
@@ -184,9 +184,9 @@ function getScreenSpacePositions(
     return;
   }
 
-  var length = collection.length;
-  for (var i = 0; i < length; ++i) {
-    var item = collection.get(i);
+  const length = collection.length;
+  for (let i = 0; i < length; ++i) {
+    const item = collection.get(i);
     item.clusterShow = false;
 
     if (
@@ -197,17 +197,17 @@ function getScreenSpacePositions(
       continue;
     }
 
-    var canClusterLabels =
+    const canClusterLabels =
       entityCluster._clusterLabels && defined(item._labelCollection);
-    var canClusterBillboards =
+    const canClusterBillboards =
       entityCluster._clusterBillboards && defined(item.id._billboard);
-    var canClusterPoints =
+    const canClusterPoints =
       entityCluster._clusterPoints && defined(item.id._point);
     if (canClusterLabels && (canClusterPoints || canClusterBillboards)) {
       continue;
     }
 
-    var coord = item.computeScreenSpacePosition(scene);
+    const coord = item.computeScreenSpacePosition(scene);
     if (!defined(coord)) {
       continue;
     }
@@ -221,9 +221,9 @@ function getScreenSpacePositions(
   }
 }
 
-var pointBoundinRectangleScratch = new BoundingRectangle();
-var totalBoundingRectangleScratch = new BoundingRectangle();
-var neighborBoundingRectangleScratch = new BoundingRectangle();
+const pointBoundinRectangleScratch = new BoundingRectangle();
+const totalBoundingRectangleScratch = new BoundingRectangle();
+const neighborBoundingRectangleScratch = new BoundingRectangle();
 
 function createDeclutterCallback(entityCluster) {
   return function (amount) {
@@ -231,11 +231,11 @@ function createDeclutterCallback(entityCluster) {
       return;
     }
 
-    var scene = entityCluster._scene;
+    const scene = entityCluster._scene;
 
-    var labelCollection = entityCluster._labelCollection;
-    var billboardCollection = entityCluster._billboardCollection;
-    var pointCollection = entityCluster._pointCollection;
+    const labelCollection = entityCluster._labelCollection;
+    const billboardCollection = entityCluster._billboardCollection;
+    const pointCollection = entityCluster._pointCollection;
 
     if (
       (!defined(labelCollection) &&
@@ -248,10 +248,10 @@ function createDeclutterCallback(entityCluster) {
       return;
     }
 
-    var clusteredLabelCollection = entityCluster._clusterLabelCollection;
-    var clusteredBillboardCollection =
+    let clusteredLabelCollection = entityCluster._clusterLabelCollection;
+    let clusteredBillboardCollection =
       entityCluster._clusterBillboardCollection;
-    var clusteredPointCollection = entityCluster._clusterPointCollection;
+    let clusteredPointCollection = entityCluster._clusterPointCollection;
 
     if (defined(clusteredLabelCollection)) {
       clusteredLabelCollection.removeAll();
@@ -279,20 +279,20 @@ function createDeclutterCallback(entityCluster) {
       clusteredPointCollection = entityCluster._clusterPointCollection = new PointPrimitiveCollection();
     }
 
-    var pixelRange = entityCluster._pixelRange;
-    var minimumClusterSize = entityCluster._minimumClusterSize;
+    const pixelRange = entityCluster._pixelRange;
+    const minimumClusterSize = entityCluster._minimumClusterSize;
 
-    var clusters = entityCluster._previousClusters;
-    var newClusters = [];
+    const clusters = entityCluster._previousClusters;
+    const newClusters = [];
 
-    var previousHeight = entityCluster._previousHeight;
-    var currentHeight = scene.camera.positionCartographic.height;
+    const previousHeight = entityCluster._previousHeight;
+    const currentHeight = scene.camera.positionCartographic.height;
 
-    var ellipsoid = scene.mapProjection.ellipsoid;
-    var cameraPosition = scene.camera.positionWC;
-    var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
+    const ellipsoid = scene.mapProjection.ellipsoid;
+    const cameraPosition = scene.camera.positionWC;
+    const occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
 
-    var points = [];
+    const points = [];
     if (entityCluster._clusterLabels) {
       getScreenSpacePositions(
         labelCollection,
@@ -321,32 +321,32 @@ function createDeclutterCallback(entityCluster) {
       );
     }
 
-    var i;
-    var j;
-    var length;
-    var bbox;
-    var neighbors;
-    var neighborLength;
-    var neighborIndex;
-    var neighborPoint;
-    var ids;
-    var numPoints;
+    let i;
+    let j;
+    let length;
+    let bbox;
+    let neighbors;
+    let neighborLength;
+    let neighborIndex;
+    let neighborPoint;
+    let ids;
+    let numPoints;
 
-    var collection;
-    var collectionIndex;
+    let collection;
+    let collectionIndex;
 
-    var index = kdbush(points, getX, getY, 64, Int32Array);
+    const index = new KDBush(points, getX, getY, 64, Int32Array);
 
     if (currentHeight < previousHeight) {
       length = clusters.length;
       for (i = 0; i < length; ++i) {
-        var cluster = clusters[i];
+        const cluster = clusters[i];
 
         if (!occluder.isPointVisible(cluster.position)) {
           continue;
         }
 
-        var coord = Billboard._computeScreenSpacePosition(
+        const coord = Billboard._computeScreenSpacePosition(
           Matrix4.IDENTITY,
           cluster.position,
           Cartesian3.ZERO,
@@ -357,17 +357,17 @@ function createDeclutterCallback(entityCluster) {
           continue;
         }
 
-        var factor = 1.0 - currentHeight / previousHeight;
-        var width = (cluster.width = cluster.width * factor);
-        var height = (cluster.height = cluster.height * factor);
+        const factor = 1.0 - currentHeight / previousHeight;
+        let width = (cluster.width = cluster.width * factor);
+        let height = (cluster.height = cluster.height * factor);
 
         width = Math.max(width, cluster.minimumWidth);
         height = Math.max(height, cluster.minimumHeight);
 
-        var minX = coord.x - width * 0.5;
-        var minY = coord.y - height * 0.5;
-        var maxX = coord.x + width;
-        var maxY = coord.y + height;
+        const minX = coord.x - width * 0.5;
+        const minY = coord.y - height * 0.5;
+        const maxX = coord.x + width;
+        const maxY = coord.y + height;
 
         neighbors = index.range(minX, minY, maxX, maxY);
         neighborLength = neighbors.length;
@@ -399,7 +399,7 @@ function createDeclutterCallback(entityCluster) {
 
     length = points.length;
     for (i = 0; i < length; ++i) {
-      var point = points[i];
+      const point = points[i];
       if (point.clustered) {
         continue;
       }
@@ -409,7 +409,7 @@ function createDeclutterCallback(entityCluster) {
       collection = point.collection;
       collectionIndex = point.index;
 
-      var item = collection.get(collectionIndex);
+      const item = collection.get(collectionIndex);
       bbox = getBoundingBox(
         item,
         point.coord,
@@ -417,7 +417,7 @@ function createDeclutterCallback(entityCluster) {
         entityCluster,
         pointBoundinRectangleScratch
       );
-      var totalBBox = BoundingRectangle.clone(
+      const totalBBox = BoundingRectangle.clone(
         bbox,
         totalBoundingRectangleScratch
       );
@@ -430,7 +430,7 @@ function createDeclutterCallback(entityCluster) {
       );
       neighborLength = neighbors.length;
 
-      var clusterPosition = Cartesian3.clone(item.position);
+      const clusterPosition = Cartesian3.clone(item.position);
       numPoints = 1;
       ids = [item.id];
 
@@ -438,8 +438,10 @@ function createDeclutterCallback(entityCluster) {
         neighborIndex = neighbors[j];
         neighborPoint = points[neighborIndex];
         if (!neighborPoint.clustered) {
-          var neighborItem = neighborPoint.collection.get(neighborPoint.index);
-          var neighborBBox = getBoundingBox(
+          const neighborItem = neighborPoint.collection.get(
+            neighborPoint.index
+          );
+          const neighborBBox = getBoundingBox(
             neighborItem,
             neighborPoint.coord,
             pixelRange,
@@ -461,7 +463,7 @@ function createDeclutterCallback(entityCluster) {
       }
 
       if (numPoints >= minimumClusterSize) {
-        var position = Cartesian3.multiplyByScalar(
+        const position = Cartesian3.multiplyByScalar(
           clusterPosition,
           1.0 / numPoints,
           clusterPosition
@@ -506,7 +508,7 @@ function createDeclutterCallback(entityCluster) {
 EntityCluster.prototype._initialize = function (scene) {
   this._scene = scene;
 
-  var cluster = createDeclutterCallback(this);
+  const cluster = createDeclutterCallback(this);
   this._cluster = cluster;
   this._removeEventListener = scene.camera.changed.addEventListener(cluster);
 };
@@ -617,13 +619,13 @@ function createGetEntity(
   entityIndexProperty
 ) {
   return function (entity) {
-    var collection = this[collectionProperty];
+    let collection = this[collectionProperty];
 
     if (!defined(this._collectionIndicesByEntity)) {
       this._collectionIndicesByEntity = {};
     }
 
-    var entityIndices = this._collectionIndicesByEntity[entity.id];
+    let entityIndices = this._collectionIndicesByEntity[entity.id];
 
     if (!defined(entityIndices)) {
       entityIndices = this._collectionIndicesByEntity[entity.id] = {
@@ -643,10 +645,10 @@ function createGetEntity(
       });
     }
 
-    var index;
-    var entityItem;
+    let index;
+    let entityItem;
 
-    var unusedIndices = this[unusedIndicesProperty];
+    const unusedIndices = this[unusedIndicesProperty];
     if (unusedIndices.length > 0) {
       index = unusedIndices.pop();
       entityItem = collection.get(index);
@@ -657,14 +659,17 @@ function createGetEntity(
 
     entityIndices[entityIndexProperty] = index;
 
-    this._clusterDirty = true;
+    const that = this;
+    Promise.resolve().then(function () {
+      that._clusterDirty = true;
+    });
 
     return entityItem;
   };
 }
 
 function removeEntityIndicesIfUnused(entityCluster, entityId) {
-  var indices = entityCluster._collectionIndicesByEntity[entityId];
+  const indices = entityCluster._collectionIndicesByEntity[entityId];
 
   if (
     !defined(indices.billboardIndex) &&
@@ -696,7 +701,7 @@ EntityCluster.prototype.getLabel = createGetEntity(
  * @private
  */
 EntityCluster.prototype.removeLabel = function (entity) {
-  var entityIndices =
+  const entityIndices =
     this._collectionIndicesByEntity &&
     this._collectionIndicesByEntity[entity.id];
   if (
@@ -707,11 +712,11 @@ EntityCluster.prototype.removeLabel = function (entity) {
     return;
   }
 
-  var index = entityIndices.labelIndex;
+  const index = entityIndices.labelIndex;
   entityIndices.labelIndex = undefined;
   removeEntityIndicesIfUnused(this, entity.id);
 
-  var label = this._labelCollection.get(index);
+  const label = this._labelCollection.get(index);
   label.show = false;
   label.text = "";
   label.id = undefined;
@@ -742,7 +747,7 @@ EntityCluster.prototype.getBillboard = createGetEntity(
  * @private
  */
 EntityCluster.prototype.removeBillboard = function (entity) {
-  var entityIndices =
+  const entityIndices =
     this._collectionIndicesByEntity &&
     this._collectionIndicesByEntity[entity.id];
   if (
@@ -753,11 +758,11 @@ EntityCluster.prototype.removeBillboard = function (entity) {
     return;
   }
 
-  var index = entityIndices.billboardIndex;
+  const index = entityIndices.billboardIndex;
   entityIndices.billboardIndex = undefined;
   removeEntityIndicesIfUnused(this, entity.id);
 
-  var billboard = this._billboardCollection.get(index);
+  const billboard = this._billboardCollection.get(index);
   billboard.id = undefined;
   billboard.show = false;
   billboard.image = undefined;
@@ -788,7 +793,7 @@ EntityCluster.prototype.getPoint = createGetEntity(
  * @private
  */
 EntityCluster.prototype.removePoint = function (entity) {
-  var entityIndices =
+  const entityIndices =
     this._collectionIndicesByEntity &&
     this._collectionIndicesByEntity[entity.id];
   if (
@@ -799,11 +804,11 @@ EntityCluster.prototype.removePoint = function (entity) {
     return;
   }
 
-  var index = entityIndices.pointIndex;
+  const index = entityIndices.pointIndex;
   entityIndices.pointIndex = undefined;
   removeEntityIndicesIfUnused(this, entity.id);
 
-  var point = this._pointCollection.get(index);
+  const point = this._pointCollection.get(index);
   point.show = false;
   point.id = undefined;
 
@@ -817,8 +822,8 @@ function disableCollectionClustering(collection) {
     return;
   }
 
-  var length = collection.length;
-  for (var i = 0; i < length; ++i) {
+  const length = collection.length;
+  for (let i = 0; i < length; ++i) {
     collection.get(i).clusterShow = true;
   }
 }
@@ -860,7 +865,7 @@ EntityCluster.prototype.update = function (frameState) {
   // If clustering is enabled before the label collection is updated,
   // the glyphs haven't been created so the screen space bounding boxes
   // are incorrect.
-  var commandList;
+  let commandList;
   if (
     defined(this._labelCollection) &&
     this._labelCollection.length > 0 &&

@@ -11,7 +11,7 @@ describe("Core/S2Cell", function () {
   }
 
   it("constructor", function () {
-    var cell = new S2Cell(BigInt("3458764513820540928"));
+    const cell = new S2Cell(BigInt("3458764513820540928"));
     expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
   });
 
@@ -30,7 +30,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("creates cell from valid token", function () {
-    var cell = S2Cell.fromToken("3");
+    const cell = S2Cell.fromToken("3");
     expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
   });
 
@@ -40,8 +40,51 @@ describe("Core/S2Cell", function () {
     }).toThrowDeveloperError();
   });
 
+  it("creates cell from valid face, position, level", function () {
+    let cell = S2Cell.fromFacePositionLevel(0, BigInt(0), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("04");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(1), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("0c");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(2), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("14");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(3), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("1c");
+    cell = S2Cell.fromFacePositionLevel(2, BigInt("0"), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("44");
+    cell = S2Cell.fromFacePositionLevel(4, BigInt("0"), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("84");
+    cell = S2Cell.fromFacePositionLevel(1, BigInt("538969508876688737"), 30);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("2ef59bd352b93ac3");
+  });
+
+  it("throws for creating cell from invalid face, position, level", function () {
+    expect(function () {
+      S2Cell.fromFacePositionLevel(-1, BigInt(0), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(6, BigInt(0), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(-1), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(4), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(0), -1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(0), 31);
+    }).toThrowDeveloperError();
+  });
+
   it("accepts valid token", function () {
-    var tokenValidity = S2Cell.isValidToken("1");
+    let tokenValidity = S2Cell.isValidToken("1");
     expect(tokenValidity).toBe(true);
 
     tokenValidity = S2Cell.isValidToken("2ef59bd34");
@@ -52,7 +95,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("rejects token of invalid value", function () {
-    var tokenValidity = S2Cell.isValidToken("LOL");
+    let tokenValidity = S2Cell.isValidToken("LOL");
     expect(tokenValidity).toBe(false);
 
     tokenValidity = S2Cell.isValidToken("----");
@@ -78,7 +121,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("accepts valid cell ID", function () {
-    var cellIdValidity = S2Cell.isValidId(BigInt("3383782026967071428"));
+    let cellIdValidity = S2Cell.isValidId(BigInt("3383782026967071428"));
     expect(cellIdValidity).toBe(true);
 
     cellIdValidity = S2Cell.isValidId(BigInt("3458764513820540928"));
@@ -86,7 +129,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("rejects cell ID of invalid value", function () {
-    var cellIdValidity = S2Cell.isValidId(BigInt("0"));
+    let cellIdValidity = S2Cell.isValidId(BigInt("0"));
     expect(cellIdValidity).toBe(false);
 
     cellIdValidity = S2Cell.isValidId(BigInt("-1"));
@@ -153,14 +196,14 @@ describe("Core/S2Cell", function () {
   });
 
   it("gets correct parent of cell", function () {
-    var cell = new S2Cell(BigInt("3383782026967515136"));
-    var parent = cell.getParent();
+    const cell = new S2Cell(BigInt("3383782026967515136"));
+    const parent = cell.getParent();
     expect(parent._cellId).toEqual(BigInt("3383782026971709440"));
   });
 
   it("gets correct parent of cell at given level", function () {
-    var cell = new S2Cell(BigInt("3383782026967056384"));
-    var parent = cell.getParentAtLevel(21);
+    const cell = new S2Cell(BigInt("3383782026967056384"));
+    let parent = cell.getParentAtLevel(21);
     expect(parent._cellId).toEqual(BigInt("3383782026967252992"));
     parent = cell.getParentAtLevel(7);
     expect(parent._cellId).toEqual(BigInt("3383821801271328768"));
@@ -169,7 +212,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws on getting parent of cell at invalid level", function () {
-    var cell = new S2Cell(BigInt("3458764513820540928"));
+    let cell = new S2Cell(BigInt("3458764513820540928"));
     expect(function () {
       cell.getParentAtLevel(0);
     }).toThrowDeveloperError();
@@ -185,28 +228,28 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws on getting parent of level 0 cells", function () {
-    var cell = S2Cell.fromToken("3");
+    const cell = S2Cell.fromToken("3");
     expect(function () {
       cell.getParent();
     }).toThrowDeveloperError();
   });
 
   it("gets correct children of cell", function () {
-    var cell = new S2Cell(BigInt("3383782026971709440"));
-    var expectedChildCellIds = [
+    const cell = new S2Cell(BigInt("3383782026971709440"));
+    const expectedChildCellIds = [
       BigInt(3383782026959126528),
       BigInt(3383782026967515136),
       BigInt(3383782026975903744),
       BigInt(3383782026984292352),
     ];
-    var i;
+    let i;
     for (i = 0; i < 4; i++) {
       expect(cell.getChild(i)._cellId).toEqual(expectedChildCellIds[i]);
     }
   });
 
   it("throws on invalid child index in getting children of cell", function () {
-    var cell = new S2Cell(BigInt("3383782026971709440"));
+    const cell = new S2Cell(BigInt("3383782026971709440"));
     expect(function () {
       cell.getChild(4);
     }).toThrowDeveloperError();
@@ -216,7 +259,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws on getting children of level 30 cell", function () {
-    var cell = new S2Cell(BigInt("3383782026967071427"));
+    const cell = new S2Cell(BigInt("3383782026967071427"));
     expect(cell._level).toEqual(30);
     expect(function () {
       cell.getChild(0);
@@ -259,7 +302,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws on invalid vertex index", function () {
-    var cell = new S2Cell(BigInt("3383782026971709440"));
+    const cell = new S2Cell(BigInt("3383782026971709440"));
     expect(function () {
       cell.getVertex(-1);
     }).toThrowDeveloperError();
@@ -270,7 +313,7 @@ describe("Core/S2Cell", function () {
   });
 
   it("gets correct vertices of cell", function () {
-    var cell = S2Cell.fromToken("2ef59bd352b93ac3");
+    const cell = S2Cell.fromToken("2ef59bd352b93ac3");
     expect(cell.getVertex(0)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977),
       CesiumMath.EPSILON15

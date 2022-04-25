@@ -20,7 +20,6 @@ import Texture from "../Renderer/Texture.js";
 import GlobeFS from "../Shaders/GlobeFS.js";
 import GlobeVS from "../Shaders/GlobeVS.js";
 import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
-import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
 import GlobeTranslucency from "./GlobeTranslucency.js";
@@ -41,10 +40,10 @@ import ShadowMode from "./ShadowMode.js";
  */
 function Globe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-  var terrainProvider = new EllipsoidTerrainProvider({
+  const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
   });
-  var imageryLayerCollection = new ImageryLayerCollection();
+  const imageryLayerCollection = new ImageryLayerCollection();
 
   this._ellipsoid = ellipsoid;
   this._imageryLayerCollection = imageryLayerCollection;
@@ -157,6 +156,16 @@ function Globe(ellipsoid) {
    * @default false
    */
   this.enableLighting = false;
+
+  /**
+   * A multiplier to adjust terrain lambert lighting.
+   * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
+   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 0.9
+   */
+  this.lambertDiffuseMultiplier = 0.9;
 
   /**
    * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
@@ -281,6 +290,26 @@ function Globe(ellipsoid) {
    * @default 0.0
    */
   this.atmosphereBrightnessShift = 0.0;
+
+  /**
+   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
+   * A value of <code>2.0</code> scales the terrain by 2x.
+   * A value of <code>0.0</code> makes the terrain completely flat.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * @type {Number}
+   * @default 1.0
+   */
+  this.terrainExaggeration = 1.0;
+
+  /**
+   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
+   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
+   * @type {Number}
+   * @default 0.0
+   */
+  this.terrainExaggerationRelativeHeight = 0.0;
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
@@ -554,14 +583,14 @@ Object.defineProperties(Globe.prototype, {
 });
 
 function makeShadersDirty(globe) {
-  var defines = [];
+  const defines = [];
 
-  var requireNormals =
+  const requireNormals =
     defined(globe._material) &&
     (globe._material.shaderSource.match(/slope/) ||
       globe._material.shaderSource.match("normalEC"));
 
-  var fragmentSources = [GroundAtmosphere];
+  const fragmentSources = [GroundAtmosphere];
   if (
     defined(globe._material) &&
     (!requireNormals || globe._terrainProvider.requestVertexNormals)
@@ -588,11 +617,11 @@ function makeShadersDirty(globe) {
 
 function createComparePickTileFunction(rayOrigin) {
   return function (a, b) {
-    var aDist = BoundingSphere.distanceSquaredTo(
+    const aDist = BoundingSphere.distanceSquaredTo(
       a.pickBoundingSphere,
       rayOrigin
     );
-    var bDist = BoundingSphere.distanceSquaredTo(
+    const bDist = BoundingSphere.distanceSquaredTo(
       b.pickBoundingSphere,
       rayOrigin
     );
@@ -601,8 +630,8 @@ function createComparePickTileFunction(rayOrigin) {
   };
 }
 
-var scratchArray = [];
-var scratchSphereIntersectionResult = {
+const scratchArray = [];
+const scratchSphereIntersectionResult = {
   start: 0.0,
   stop: 0.0,
 };
@@ -635,27 +664,27 @@ Globe.prototype.pickWorldCoordinates = function (
 
   cullBackFaces = defaultValue(cullBackFaces, true);
 
-  var mode = scene.mode;
-  var projection = scene.mapProjection;
+  const mode = scene.mode;
+  const projection = scene.mapProjection;
 
-  var sphereIntersections = scratchArray;
+  const sphereIntersections = scratchArray;
   sphereIntersections.length = 0;
 
-  var tilesToRender = this._surface._tilesToRender;
-  var length = tilesToRender.length;
+  const tilesToRender = this._surface._tilesToRender;
+  let length = tilesToRender.length;
 
-  var tile;
-  var i;
+  let tile;
+  let i;
 
   for (i = 0; i < length; ++i) {
     tile = tilesToRender[i];
-    var surfaceTile = tile.data;
+    const surfaceTile = tile.data;
 
     if (!defined(surfaceTile)) {
       continue;
     }
 
-    var boundingVolume = surfaceTile.pickBoundingSphere;
+    let boundingVolume = surfaceTile.pickBoundingSphere;
     if (mode !== SceneMode.SCENE3D) {
       surfaceTile.pickBoundingSphere = boundingVolume = BoundingSphere.fromRectangleWithHeights2D(
         tile.rectangle,
@@ -672,7 +701,7 @@ Globe.prototype.pickWorldCoordinates = function (
       );
     } else if (defined(surfaceTile.renderedMesh)) {
       BoundingSphere.clone(
-        surfaceTile.renderedMesh.boundingSphere3D,
+        surfaceTile.tileBoundingRegion.boundingSphere,
         boundingVolume
       );
     } else {
@@ -680,7 +709,7 @@ Globe.prototype.pickWorldCoordinates = function (
       continue;
     }
 
-    var boundingSphereIntersection = IntersectionTests.raySphere(
+    const boundingSphereIntersection = IntersectionTests.raySphere(
       ray,
       boundingVolume,
       scratchSphereIntersectionResult
@@ -692,7 +721,7 @@ Globe.prototype.pickWorldCoordinates = function (
 
   sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
-  var intersection;
+  let intersection;
   length = sphereIntersections.length;
   for (i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
@@ -710,7 +739,7 @@ Globe.prototype.pickWorldCoordinates = function (
   return intersection;
 };
 
-var cartoScratch = new Cartographic();
+const cartoScratch = new Cartographic();
 /**
  * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
  *
@@ -721,24 +750,24 @@ var cartoScratch = new Cartographic();
  *
  * @example
  * // find intersection of ray through a pixel and the globe
- * var ray = viewer.camera.getPickRay(windowCoordinates);
- * var intersection = globe.pick(ray, scene);
+ * const ray = viewer.camera.getPickRay(windowCoordinates);
+ * const intersection = globe.pick(ray, scene);
  */
 Globe.prototype.pick = function (ray, scene, result) {
   result = this.pickWorldCoordinates(ray, scene, true, result);
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
-    var carto = scene.mapProjection.unproject(result, cartoScratch);
+    const carto = scene.mapProjection.unproject(result, cartoScratch);
     result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
   }
 
   return result;
 };
 
-var scratchGetHeightCartesian = new Cartesian3();
-var scratchGetHeightIntersection = new Cartesian3();
-var scratchGetHeightCartographic = new Cartographic();
-var scratchGetHeightRay = new Ray();
+const scratchGetHeightCartesian = new Cartesian3();
+const scratchGetHeightIntersection = new Cartesian3();
+const scratchGetHeightCartographic = new Cartographic();
+const scratchGetHeightRay = new Ray();
 
 function tileIfContainsCartographic(tile, cartographic) {
   return defined(tile) && Rectangle.contains(tile.rectangle, cartographic)
@@ -759,15 +788,15 @@ Globe.prototype.getHeight = function (cartographic) {
   }
   //>>includeEnd('debug');
 
-  var levelZeroTiles = this._surface._levelZeroTiles;
+  const levelZeroTiles = this._surface._levelZeroTiles;
   if (!defined(levelZeroTiles)) {
     return;
   }
 
-  var tile;
-  var i;
+  let tile;
+  let i;
 
-  var length = levelZeroTiles.length;
+  const length = levelZeroTiles.length;
   for (i = 0; i < length; ++i) {
     tile = levelZeroTiles[i];
     if (Rectangle.contains(tile.rectangle, cartographic)) {
@@ -779,7 +808,7 @@ Globe.prototype.getHeight = function (cartographic) {
     return undefined;
   }
 
-  var tileWithMesh = tile;
+  let tileWithMesh = tile;
 
   while (defined(tile)) {
     tile =
@@ -813,10 +842,11 @@ Globe.prototype.getHeight = function (cartographic) {
     return undefined;
   }
 
-  var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
+  const projection = this._surface._tileProvider.tilingScheme.projection;
+  const ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
 
   //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
-  var cartesian = Cartesian3.fromRadians(
+  const cartesian = Cartesian3.fromRadians(
     cartographic.longitude,
     cartographic.latitude,
     0.0,
@@ -824,12 +854,15 @@ Globe.prototype.getHeight = function (cartographic) {
     scratchGetHeightCartesian
   );
 
-  var ray = scratchGetHeightRay;
-  var surfaceNormal = ellipsoid.geodeticSurfaceNormal(cartesian, ray.direction);
+  const ray = scratchGetHeightRay;
+  const surfaceNormal = ellipsoid.geodeticSurfaceNormal(
+    cartesian,
+    ray.direction
+  );
 
   // Try to find the intersection point between the surface normal and z-axis.
   // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-  var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
+  const rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
     cartesian,
     11500.0,
     ray.origin
@@ -839,14 +872,14 @@ Globe.prototype.getHeight = function (cartographic) {
   if (!defined(rayOrigin)) {
     // intersection point is outside the ellipsoid, try other value
     // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-    var minimumHeight;
+    let minimumHeight;
     if (defined(tile.data.tileBoundingRegion)) {
       minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
     }
-    var magnitude = Math.min(defaultValue(minimumHeight, 0.0), -11500.0);
+    const magnitude = Math.min(defaultValue(minimumHeight, 0.0), -11500.0);
 
     // multiply by the *positive* value of the magnitude
-    var vectorToMinimumPoint = Cartesian3.multiplyByScalar(
+    const vectorToMinimumPoint = Cartesian3.multiplyByScalar(
       surfaceNormal,
       Math.abs(magnitude) + 1,
       scratchGetHeightIntersection
@@ -854,10 +887,10 @@ Globe.prototype.getHeight = function (cartographic) {
     Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
   }
 
-  var intersection = tile.data.pick(
+  const intersection = tile.data.pick(
     ray,
     undefined,
-    undefined,
+    projection,
     false,
     scratchGetHeightIntersection
   );
@@ -888,10 +921,10 @@ Globe.prototype.update = function (frameState) {
  * @private
  */
 Globe.prototype.beginFrame = function (frameState) {
-  var surface = this._surface;
-  var tileProvider = surface.tileProvider;
-  var terrainProvider = this.terrainProvider;
-  var hasWaterMask =
+  const surface = this._surface;
+  const tileProvider = surface.tileProvider;
+  const terrainProvider = this.terrainProvider;
+  const hasWaterMask =
     this.showWaterEffect &&
     terrainProvider.ready &&
     terrainProvider.hasWaterMask;
@@ -899,11 +932,11 @@ Globe.prototype.beginFrame = function (frameState) {
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {
     // url changed, load new normal map asynchronously
     this._oceanNormalMapResourceDirty = false;
-    var oceanNormalMapResource = this._oceanNormalMapResource;
-    var oceanNormalMapUrl = oceanNormalMapResource.url;
+    const oceanNormalMapResource = this._oceanNormalMapResource;
+    const oceanNormalMapUrl = oceanNormalMapResource.url;
     if (defined(oceanNormalMapUrl)) {
-      var that = this;
-      when(oceanNormalMapResource.fetchImage(), function (image) {
+      const that = this;
+      oceanNormalMapResource.fetchImage().then(function (image) {
         if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
           // url changed while we were loading
           return;
@@ -922,8 +955,8 @@ Globe.prototype.beginFrame = function (frameState) {
     }
   }
 
-  var pass = frameState.passes;
-  var mode = frameState.mode;
+  const pass = frameState.passes;
+  const mode = frameState.mode;
 
   if (pass.render) {
     if (this.showGroundAtmosphere) {
@@ -960,6 +993,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
+    tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
     surface.beginFrame(frameState);
   }
 };

@@ -13,24 +13,23 @@ import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Renderer/CubeMap",
   function () {
-    var context;
-    var cubeMap;
+    let context;
+    let cubeMap;
 
     function expectCubeMapFaces(options) {
-      var cubeMap = options.cubeMap;
-      var expectedColors = options.expectedColors;
+      const cubeMap = options.cubeMap;
+      const expectedColors = options.expectedColors;
 
-      var fs =
+      const fs =
         "uniform samplerCube u_texture;" +
         "uniform mediump vec3 u_direction;" +
         "void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }";
 
-      var faceDirections = options.faceDirections;
+      let faceDirections = options.faceDirections;
       if (!defined(faceDirections)) {
         faceDirections = [
           new Cartesian3(1.0, 0.0, 0.0), // +X
@@ -42,7 +41,7 @@ describe(
         ];
       }
 
-      var uniformMap = {
+      const uniformMap = {
         direction: undefined,
 
         u_texture: function () {
@@ -53,7 +52,7 @@ describe(
         },
       };
 
-      for (var i = 0; i < 6; ++i) {
+      for (let i = 0; i < 6; ++i) {
         uniformMap.direction = faceDirections[i];
         expect({
           context: context,
@@ -64,16 +63,21 @@ describe(
       }
     }
 
-    var greenImage;
-    var blueImage;
-    var blueAlphaImage;
-    var blueOverRedImage;
-    var red16x16Image;
+    let greenImage;
+    let blueImage;
+    let blueAlphaImage;
+    let blueOverRedImage;
+    let red16x16Image;
+    let gammaImage;
+    let customColorProfileImage;
+
+    let supportsImageBitmapOptions;
 
     beforeAll(function () {
       context = createContext();
+      supportsImageBitmapOptions = Resource.supportsImageBitmapOptions();
 
-      var promises = [];
+      const promises = [];
       promises.push(
         Resource.fetchImage("./Data/Images/Green.png").then(function (result) {
           greenImage = result;
@@ -105,8 +109,20 @@ describe(
           red16x16Image = result;
         })
       );
+      promises.push(
+        Resource.fetchImage("./Data/Images/Gamma.png").then(function (result) {
+          gammaImage = result;
+        })
+      );
+      promises.push(
+        Resource.fetchImage("./Data/Images/CustomColorProfile.png").then(
+          function (result) {
+            customColorProfileImage = result;
+          }
+        )
+      );
 
-      return when.all(promises);
+      return Promise.all(promises);
     });
 
     afterAll(function () {
@@ -168,7 +184,7 @@ describe(
         height: 16,
       });
 
-      var sampler = new Sampler({
+      const sampler = new Sampler({
         wrapS: TextureWrap.REPEAT,
         wrapT: TextureWrap.MIRRORED_REPEAT,
         minificationFilter: TextureMinificationFilter.NEAREST,
@@ -176,7 +192,7 @@ describe(
       });
       cubeMap.sampler = sampler;
 
-      var s = cubeMap.sampler;
+      const s = cubeMap.sampler;
       expect(s.wrapS).toEqual(sampler.wrapS);
       expect(s.wrapT).toEqual(sampler.wrapT);
       expect(s.minificationFilter).toEqual(sampler.minificationFilter);
@@ -270,6 +286,70 @@ describe(
       });
     });
 
+    it("draws with a cube map while ignoring color profiles", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      cubeMap = new CubeMap({
+        context: context,
+        source: {
+          positiveX: gammaImage,
+          negativeX: customColorProfileImage,
+          positiveY: gammaImage,
+          negativeY: customColorProfileImage,
+          positiveZ: gammaImage,
+          negativeZ: customColorProfileImage,
+        },
+        skipColorSpaceConversion: true,
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        epsilon: 1,
+        expectedColors: [
+          [0, 136, 0, 255], // +X
+          [0, 136, 0, 255], // -X
+          [0, 136, 0, 255], // +Y
+          [0, 136, 0, 255], // -Y
+          [0, 136, 0, 255], // +Z
+          [0, 136, 0, 255], // -Z
+        ],
+      });
+    });
+
+    it("draws with a cube map while allowing color profiles", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      cubeMap = new CubeMap({
+        context: context,
+        source: {
+          positiveX: gammaImage,
+          negativeX: customColorProfileImage,
+          positiveY: gammaImage,
+          negativeY: customColorProfileImage,
+          positiveZ: gammaImage,
+          negativeZ: customColorProfileImage,
+        },
+        skipColorSpaceConversion: false,
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        epsilon: 1,
+        expectedColors: [
+          [0, 59, 0, 255], // +X
+          [193, 0, 0, 255], // -X
+          [0, 59, 0, 255], // +Y
+          [193, 0, 0, 255], // -Y
+          [0, 59, 0, 255], // +Z
+          [193, 0, 0, 255], // -Z
+        ],
+      });
+    });
+
     it("draws the context default cube map", function () {
       expectCubeMapFaces({
         cubeMap: context.defaultCubeMap,
@@ -339,12 +419,12 @@ describe(
         return;
       }
 
-      var positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
-      var negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
-      var positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
-      var negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
-      var positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
-      var negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
+      const positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
+      const negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
+      const positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
+      const negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
+      const positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
+      const negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
 
       cubeMap = new CubeMap({
         context: context,
@@ -431,12 +511,12 @@ describe(
         return;
       }
 
-      var positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
-      var negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
-      var positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
-      var negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
-      var positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
-      var negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
+      const positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
+      const negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
+      const positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
+      const negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
+      const positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
+      const negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
 
       cubeMap = new CubeMap({
         context: context,
@@ -511,11 +591,11 @@ describe(
         }),
       });
 
-      var fs =
+      const fs =
         "uniform samplerCube u_texture;" +
         "void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
 
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return cubeMap;
         },
@@ -531,7 +611,7 @@ describe(
       } else {
         Color.multiplyByScalar(positiveXColor, 1.0 - 0.5, positiveXColor);
         Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
-        var color = Color.add(positiveXColor, positiveYColor, positiveXColor);
+        const color = Color.add(positiveXColor, positiveYColor, positiveXColor);
         expect({
           context: context,
           fragmentShader: fs,
@@ -546,19 +626,19 @@ describe(
         return;
       }
 
-      var positiveXFloats = [12902, 13926, 14541, 15360];
-      var negativeXFloats = [13926, 12902, 14541, 15360];
-      var positiveYFloats = [14541, 13926, 12902, 15360];
-      var negativeYFloats = [12902, 14541, 13926, 15360];
-      var positiveZFloats = [13926, 14541, 12902, 15360];
-      var negativeZFloats = [14541, 12902, 13926, 15360];
+      const positiveXFloats = [12902, 13926, 14541, 15360];
+      const negativeXFloats = [13926, 12902, 14541, 15360];
+      const positiveYFloats = [14541, 13926, 12902, 15360];
+      const negativeYFloats = [12902, 14541, 13926, 15360];
+      const positiveZFloats = [13926, 14541, 12902, 15360];
+      const negativeZFloats = [14541, 12902, 13926, 15360];
 
-      var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
-      var negativeXColor = new Color(0.4, 0.2, 0.6, 1.0);
-      var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
-      var negativeYColor = new Color(0.2, 0.6, 0.4, 1.0);
-      var positiveZColor = new Color(0.4, 0.6, 0.2, 1.0);
-      var negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
+      const positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
+      const negativeXColor = new Color(0.4, 0.2, 0.6, 1.0);
+      const positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
+      const negativeYColor = new Color(0.2, 0.6, 0.4, 1.0);
+      const positiveZColor = new Color(0.4, 0.6, 0.2, 1.0);
+      const negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
 
       cubeMap = new CubeMap({
         context: context,
@@ -615,15 +695,15 @@ describe(
         return;
       }
 
-      var positiveXFloats = [12902, 13926, 14541, 15360];
-      var negativeXFloats = [13926, 12902, 14541, 15360];
-      var positiveYFloats = [14541, 13926, 12902, 15360];
-      var negativeYFloats = [12902, 14541, 13926, 15360];
-      var positiveZFloats = [13926, 14541, 12902, 15360];
-      var negativeZFloats = [14541, 12902, 13926, 15360];
+      const positiveXFloats = [12902, 13926, 14541, 15360];
+      const negativeXFloats = [13926, 12902, 14541, 15360];
+      const positiveYFloats = [14541, 13926, 12902, 15360];
+      const negativeYFloats = [12902, 14541, 13926, 15360];
+      const positiveZFloats = [13926, 14541, 12902, 15360];
+      const negativeZFloats = [14541, 12902, 13926, 15360];
 
-      var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
-      var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
+      const positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
+      const positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
 
       cubeMap = new CubeMap({
         context: context,
@@ -668,11 +748,11 @@ describe(
         }),
       });
 
-      var fs =
+      const fs =
         "uniform samplerCube u_texture;" +
         "void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
 
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return cubeMap;
         },
@@ -688,7 +768,7 @@ describe(
       } else {
         Color.multiplyByScalar(positiveXColor, 1.0 - 0.5, positiveXColor);
         Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
-        var color = Color.add(positiveXColor, positiveYColor, positiveXColor);
+        const color = Color.add(positiveXColor, positiveYColor, positiveXColor);
         expect({
           context: context,
           fragmentShader: fs,
@@ -746,12 +826,12 @@ describe(
         width: 1,
         height: 1,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
-      cubeMap.negativeX.copyFrom(greenImage);
-      cubeMap.positiveY.copyFrom(blueImage);
-      cubeMap.negativeY.copyFrom(greenImage);
-      cubeMap.positiveZ.copyFrom(blueImage);
-      cubeMap.negativeZ.copyFrom(greenImage);
+      cubeMap.positiveX.copyFrom({ source: blueImage });
+      cubeMap.negativeX.copyFrom({ source: greenImage });
+      cubeMap.positiveY.copyFrom({ source: blueImage });
+      cubeMap.negativeY.copyFrom({ source: greenImage });
+      cubeMap.positiveZ.copyFrom({ source: blueImage });
+      cubeMap.negativeZ.copyFrom({ source: greenImage });
 
       expectCubeMapFaces({
         cubeMap: cubeMap,
@@ -773,34 +853,46 @@ describe(
         height: 1,
       });
       cubeMap.positiveX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        },
       });
       cubeMap.negativeX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        },
       });
       cubeMap.positiveY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        },
       });
       cubeMap.negativeY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        },
       });
       cubeMap.positiveZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        },
       });
       cubeMap.negativeZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 255, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 255, 0, 255]),
+        },
       });
 
       expectCubeMapFaces({
@@ -823,41 +915,51 @@ describe(
         height: 2,
       });
       cubeMap.positiveX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        },
       });
       cubeMap.negativeX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        },
       });
       cubeMap.positiveY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 0, 255]),
-      });
-      cubeMap.negativeY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 0, 255]),
-      });
-      cubeMap.positiveZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 255, 255]),
-      });
-      cubeMap.negativeZ.copyFrom(
-        {
+        source: {
           width: 1,
           height: 1,
           arrayBufferView: new Uint8Array([0, 255, 0, 255]),
         },
-        1,
-        0
-      );
+      });
+      cubeMap.negativeY.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        },
+      });
+      cubeMap.positiveZ.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        },
+      });
+      cubeMap.negativeZ.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        },
+        xOffset: 1,
+        yOffset: 0,
+      });
 
-      var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
+      const negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
       Cartesian3.normalize(negativeZDirection, negativeZDirection);
 
       expectCubeMapFaces({
@@ -887,14 +989,28 @@ describe(
         width: 2,
         height: 2,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
-      cubeMap.negativeX.copyFrom(greenImage);
-      cubeMap.positiveY.copyFrom(blueImage);
-      cubeMap.negativeY.copyFrom(greenImage);
-      cubeMap.positiveZ.copyFrom(blueImage);
-      cubeMap.negativeZ.copyFrom(greenImage, 1, 0);
+      cubeMap.positiveX.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeX.copyFrom({
+        source: greenImage,
+      });
+      cubeMap.positiveY.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeY.copyFrom({
+        source: greenImage,
+      });
+      cubeMap.positiveZ.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeZ.copyFrom({
+        source: greenImage,
+        xOffset: 1,
+        yOffset: 0,
+      });
 
-      var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
+      const negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
       Cartesian3.normalize(negativeZDirection, negativeZDirection);
 
       expectCubeMapFaces({
@@ -919,7 +1035,7 @@ describe(
     });
 
     it("copies from the framebuffer", function () {
-      var cxt = createContext({
+      const cxt = createContext({
         webgl: {
           alpha: true, // Seems to be required for copyFromFramebuffer()
         },
@@ -930,13 +1046,13 @@ describe(
         width: 1,
         height: 1,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
+      cubeMap.positiveX.copyFrom({ source: blueImage });
 
-      var fs =
+      const fs =
         "uniform samplerCube u_cubeMap;" +
         "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
 
-      var uniformMap = {
+      const uniformMap = {
         u_cubeMap: function () {
           return cubeMap;
         },
@@ -950,7 +1066,7 @@ describe(
       }).contextToRender([0, 0, 255, 255]);
 
       // Clear framebuffer to red and copy to +X face
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(1.0, 0.0, 0.0, 1.0),
       });
 
@@ -984,17 +1100,17 @@ describe(
         },
       });
 
-      var texture = new Texture({
+      let texture = new Texture({
         context: context,
         source: blueImage,
       });
 
-      var fs =
+      const fs =
         "uniform samplerCube u_cubeMap;" +
         "uniform sampler2D u_texture;" +
         "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture2D(u_texture, vec2(0.0)); }";
 
-      var uniformMap = {
+      const uniformMap = {
         u_cubeMap: function () {
           return cubeMap;
         },
@@ -1030,11 +1146,11 @@ describe(
         minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
       });
 
-      var fs =
+      const fs =
         "uniform samplerCube u_cubeMap;" +
         "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
 
-      var uniformMap = {
+      const uniformMap = {
         u_cubeMap: function () {
           return cubeMap;
         },
@@ -1069,7 +1185,7 @@ describe(
     });
 
     it("destroys", function () {
-      var c = new CubeMap({
+      const c = new CubeMap({
         context: context,
         width: 16,
         height: 16,
@@ -1218,7 +1334,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("fails to copy from an image (source)", function () {
+    it("fails to copy from no options", function () {
       cubeMap = new CubeMap({
         context: context,
         width: 16,
@@ -1230,16 +1346,34 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("fails to copy from no image (source)", function () {
+      cubeMap = new CubeMap({
+        context: context,
+        width: 16,
+        height: 16,
+      });
+
+      expect(function () {
+        cubeMap.positiveX.copyFrom({
+          xOffset: 0,
+          yOffset: 0,
+        });
+      }).toThrowDeveloperError();
+    });
+
     it("fails to copy from an image (xOffset)", function () {
       cubeMap = new CubeMap({
         context: context,
         width: 16,
         height: 16,
       });
-      var image = new Image();
+      const image = new Image();
 
       expect(function () {
-        cubeMap.positiveY.copyFrom(image, -1);
+        cubeMap.positiveY.copyFrom({
+          source: image,
+          xOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1249,10 +1383,14 @@ describe(
         width: 16,
         height: 16,
       });
-      var image = new Image();
+      const image = new Image();
 
       expect(function () {
-        cubeMap.positiveZ.copyFrom(image, 0, -1);
+        cubeMap.positiveZ.copyFrom({
+          source: image,
+          xOffset: 0,
+          yOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1262,11 +1400,13 @@ describe(
         width: 16,
         height: 16,
       });
-      var image = new Image();
+      const image = new Image();
       image.width = 16 + 1;
 
       expect(function () {
-        cubeMap.negativeX.copyFrom(image);
+        cubeMap.negativeX.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1276,11 +1416,13 @@ describe(
         width: 16,
         height: 16,
       });
-      var image = new Image();
+      const image = new Image();
       image.height = 16 + 1;
 
       expect(function () {
-        cubeMap.negativeY.copyFrom(image);
+        cubeMap.negativeY.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1437,7 +1579,7 @@ describe(
     });
 
     it("fails to destroy", function () {
-      var c = new CubeMap({
+      const c = new CubeMap({
         context: context,
         width: 16,
         height: 16,

@@ -13,7 +13,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
@@ -104,7 +104,7 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
  * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
  */
 ShowGeometryInstanceAttribute.toValue = function (show, result) {

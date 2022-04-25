@@ -45,10 +45,10 @@ Spherical.fromCartesian3 = function (cartesian3, result) {
   Check.typeOf.object("cartesian3", cartesian3);
   //>>includeEnd('debug');
 
-  var x = cartesian3.x;
-  var y = cartesian3.y;
-  var z = cartesian3.z;
-  var radialSquared = x * x + y * y;
+  const x = cartesian3.x;
+  const y = cartesian3.y;
+  const z = cartesian3.z;
+  const radialSquared = x * x + y * y;
 
   if (!defined(result)) {
     result = new Spherical();
@@ -179,6 +179,6 @@ Spherical.prototype.equalsEpsilon = function (other, epsilon) {
  * @returns {String} A string representing this instance.
  */
 Spherical.prototype.toString = function () {
-  return "(" + this.clock + ", " + this.cone + ", " + this.magnitude + ")";
+  return `(${this.clock}, ${this.cone}, ${this.magnitude})`;
 };
 export default Spherical;

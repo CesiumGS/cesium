@@ -33,7 +33,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var gltf = {
+        const gltf = {
           accessors: [
             {
               name: "cube_1_0_positions",
@@ -131,11 +131,11 @@
           scenes: [{ nodes: [0] }],
         };
 
-        var encoded = btoa(JSON.stringify(gltf));
+        const encoded = btoa(JSON.stringify(gltf));
 
-        var dataUrl = "data:application/json;charset=utf-8;base64," + encoded;
+        const dataUrl = `data:application/json;charset=utf-8;base64,${encoded}`;
 
-        var czml = [
+        const czml = [
           {
             id: "document",
             name: "CZML Model",
@@ -155,11 +155,11 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dataSourcePromise = viewer.dataSources.add(
+        const dataSourcePromise = viewer.dataSources.add(
           Cesium.CzmlDataSource.load(czml)
         );
 
@@ -167,7 +167,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("cube");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           });
 

@@ -16,18 +16,18 @@ import PolylinePipeline from "./PolylinePipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 
 function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
-  var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
-  var i;
+  const numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
+  let i;
 
-  var r0 = color0.red;
-  var g0 = color0.green;
-  var b0 = color0.blue;
-  var a0 = color0.alpha;
+  const r0 = color0.red;
+  const g0 = color0.green;
+  const b0 = color0.blue;
+  const a0 = color0.alpha;
 
-  var r1 = color1.red;
-  var g1 = color1.green;
-  var b1 = color1.blue;
-  var a1 = color1.alpha;
+  const r1 = color1.red;
+  const g1 = color1.green;
+  const b1 = color1.blue;
+  const a1 = color1.alpha;
 
   if (Color.equals(color0, color1)) {
     for (i = 0; i < numPoints; i++) {
@@ -39,12 +39,12 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
     return offset;
   }
 
-  var redPerVertex = (r1 - r0) / numPoints;
-  var greenPerVertex = (g1 - g0) / numPoints;
-  var bluePerVertex = (b1 - b0) / numPoints;
-  var alphaPerVertex = (a1 - a0) / numPoints;
+  const redPerVertex = (r1 - r0) / numPoints;
+  const greenPerVertex = (g1 - g0) / numPoints;
+  const bluePerVertex = (b1 - b0) / numPoints;
+  const alphaPerVertex = (a1 - a0) / numPoints;
 
-  var index = offset;
+  let index = offset;
   for (i = 0; i < numPoints; i++) {
     array[index++] = Color.floatToByte(r0 + i * redPerVertex);
     array[index++] = Color.floatToByte(g0 + i * greenPerVertex);
@@ -77,20 +77,20 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  *
  * @example
  * // A polyline with two connected line segments
- * var polyline = new Cesium.SimplePolylineGeometry({
+ * const polyline = new Cesium.SimplePolylineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     0.0, 0.0,
  *     5.0, 0.0,
  *     5.0, 5.0
  *   ])
  * });
- * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
+ * const geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
  */
 function SimplePolylineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var positions = options.positions;
-  var colors = options.colors;
-  var colorsPerVertex = defaultValue(options.colorsPerVertex, false);
+  const positions = options.positions;
+  const colors = options.colors;
+  const colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(positions) || positions.length < 2) {
@@ -117,7 +117,7 @@ function SimplePolylineGeometry(options) {
   this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
   this._workerName = "createSimplePolylineGeometry";
 
-  var numComponents = 1 + positions.length * Cartesian3.packedLength;
+  let numComponents = 1 + positions.length * Cartesian3.packedLength;
   numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
 
   /**
@@ -148,17 +148,17 @@ SimplePolylineGeometry.pack = function (value, array, startingIndex) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var i;
+  let i;
 
-  var positions = value._positions;
-  var length = positions.length;
+  const positions = value._positions;
+  let length = positions.length;
   array[startingIndex++] = length;
 
   for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     Cartesian3.pack(positions[i], array, startingIndex);
   }
 
-  var colors = value._colors;
+  const colors = value._colors;
   length = defined(colors) ? colors.length : 0.0;
   array[startingIndex++] = length;
 
@@ -193,28 +193,28 @@ SimplePolylineGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var i;
+  let i;
 
-  var length = array[startingIndex++];
-  var positions = new Array(length);
+  let length = array[startingIndex++];
+  const positions = new Array(length);
 
   for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     positions[i] = Cartesian3.unpack(array, startingIndex);
   }
 
   length = array[startingIndex++];
-  var colors = length > 0 ? new Array(length) : undefined;
+  const colors = length > 0 ? new Array(length) : undefined;
 
   for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
     colors[i] = Color.unpack(array, startingIndex);
   }
 
-  var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+  const ellipsoid = Ellipsoid.unpack(array, startingIndex);
   startingIndex += Ellipsoid.packedLength;
 
-  var colorsPerVertex = array[startingIndex++] === 1.0;
-  var arcType = array[startingIndex++];
-  var granularity = array[startingIndex];
+  const colorsPerVertex = array[startingIndex++] === 1.0;
+  const arcType = array[startingIndex++];
+  const granularity = array[startingIndex];
 
   if (!defined(result)) {
     return new SimplePolylineGeometry({
@@ -237,9 +237,9 @@ SimplePolylineGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-var scratchArray1 = new Array(2);
-var scratchArray2 = new Array(2);
-var generateArcOptionsScratch = {
+const scratchArray1 = new Array(2);
+const scratchArray2 = new Array(2);
+const generateArcOptionsScratch = {
   positions: scratchArray1,
   height: scratchArray2,
   ellipsoid: undefined,
@@ -254,32 +254,32 @@ var generateArcOptionsScratch = {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
-  var positions = simplePolylineGeometry._positions;
-  var colors = simplePolylineGeometry._colors;
-  var colorsPerVertex = simplePolylineGeometry._colorsPerVertex;
-  var arcType = simplePolylineGeometry._arcType;
-  var granularity = simplePolylineGeometry._granularity;
-  var ellipsoid = simplePolylineGeometry._ellipsoid;
+  const positions = simplePolylineGeometry._positions;
+  const colors = simplePolylineGeometry._colors;
+  const colorsPerVertex = simplePolylineGeometry._colorsPerVertex;
+  const arcType = simplePolylineGeometry._arcType;
+  const granularity = simplePolylineGeometry._granularity;
+  const ellipsoid = simplePolylineGeometry._ellipsoid;
 
-  var minDistance = CesiumMath.chordLength(
+  const minDistance = CesiumMath.chordLength(
     granularity,
     ellipsoid.maximumRadius
   );
-  var perSegmentColors = defined(colors) && !colorsPerVertex;
+  const perSegmentColors = defined(colors) && !colorsPerVertex;
 
-  var i;
-  var length = positions.length;
+  let i;
+  const length = positions.length;
 
-  var positionValues;
-  var numberOfPositions;
-  var colorValues;
-  var color;
-  var offset = 0;
+  let positionValues;
+  let numberOfPositions;
+  let colorValues;
+  let color;
+  let offset = 0;
 
   if (arcType === ArcType.GEODESIC || arcType === ArcType.RHUMB) {
-    var subdivisionSize;
-    var numberOfPointsFunction;
-    var generateArcFunction;
+    let subdivisionSize;
+    let numberOfPointsFunction;
+    let generateArcFunction;
     if (arcType === ArcType.GEODESIC) {
       subdivisionSize = CesiumMath.chordLength(
         granularity,
@@ -293,9 +293,9 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
       generateArcFunction = PolylinePipeline.generateRhumbArc;
     }
 
-    var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+    const heights = PolylinePipeline.extractHeights(positions, ellipsoid);
 
-    var generateArcOptions = generateArcOptionsScratch;
+    const generateArcOptions = generateArcOptionsScratch;
     if (arcType === ArcType.GEODESIC) {
       generateArcOptions.minDistance = minDistance;
     } else {
@@ -304,7 +304,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
     generateArcOptions.ellipsoid = ellipsoid;
 
     if (perSegmentColors) {
-      var positionCount = 0;
+      let positionCount = 0;
       for (i = 0; i < length - 1; i++) {
         positionCount +=
           numberOfPointsFunction(
@@ -320,7 +320,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
       generateArcOptions.positions = scratchArray1;
       generateArcOptions.height = scratchArray2;
 
-      var ci = 0;
+      let ci = 0;
       for (i = 0; i < length - 1; ++i) {
         scratchArray1[0] = positions[i];
         scratchArray1[1] = positions[i + 1];
@@ -328,12 +328,12 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
         scratchArray2[0] = heights[i];
         scratchArray2[1] = heights[i + 1];
 
-        var pos = generateArcFunction(generateArcOptions);
+        const pos = generateArcFunction(generateArcOptions);
 
         if (defined(colors)) {
-          var segLen = pos.length / 3;
+          const segLen = pos.length / 3;
           color = colors[i];
-          for (var k = 0; k < segLen; ++k) {
+          for (let k = 0; k < segLen; ++k) {
             colorValues[ci++] = Color.floatToByte(color.red);
             colorValues[ci++] = Color.floatToByte(color.green);
             colorValues[ci++] = Color.floatToByte(color.blue);
@@ -355,10 +355,10 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
         colorValues = new Uint8Array((positionValues.length / 3) * 4);
 
         for (i = 0; i < length - 1; ++i) {
-          var p0 = positions[i];
-          var p1 = positions[i + 1];
-          var c0 = colors[i];
-          var c1 = colors[i + 1];
+          const p0 = positions[i];
+          const p1 = positions[i + 1];
+          const c0 = colors[i];
+          const c1 = colors[i + 1];
           offset = interpolateColors(
             p0,
             p1,
@@ -370,7 +370,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
           );
         }
 
-        var lastColor = colors[length - 1];
+        const lastColor = colors[length - 1];
         colorValues[offset++] = Color.floatToByte(lastColor.red);
         colorValues[offset++] = Color.floatToByte(lastColor.green);
         colorValues[offset++] = Color.floatToByte(lastColor.blue);
@@ -384,11 +384,11 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
       ? new Uint8Array(numberOfPositions * 4)
       : undefined;
 
-    var positionIndex = 0;
-    var colorIndex = 0;
+    let positionIndex = 0;
+    let colorIndex = 0;
 
     for (i = 0; i < length; ++i) {
-      var p = positions[i];
+      const p = positions[i];
 
       if (perSegmentColors && i > 0) {
         Cartesian3.pack(p, positionValues, positionIndex);
@@ -418,7 +418,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
     }
   }
 
-  var attributes = new GeometryAttributes();
+  const attributes = new GeometryAttributes();
   attributes.position = new GeometryAttribute({
     componentDatatype: ComponentDatatype.DOUBLE,
     componentsPerAttribute: 3,
@@ -435,13 +435,13 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
   }
 
   numberOfPositions = positionValues.length / 3;
-  var numberOfIndices = (numberOfPositions - 1) * 2;
-  var indices = IndexDatatype.createTypedArray(
+  const numberOfIndices = (numberOfPositions - 1) * 2;
+  const indices = IndexDatatype.createTypedArray(
     numberOfPositions,
     numberOfIndices
   );
 
-  var index = 0;
+  let index = 0;
   for (i = 0; i < numberOfPositions - 1; ++i) {
     indices[index++] = i;
     indices[index++] = i + 1;

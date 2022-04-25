@@ -1,7 +1,7 @@
 {{#if askAboutContributors}}
 Thank you so much for the pull request @{{ userName }}! I noticed this is your first pull request and I wanted to say welcome to the Cesium community!
 
-The [Pull Request Guidelines](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines) is a handy reference for making sure your PR gets accepted quickly, so make sure to skim that.
+The [Pull Request Guidelines](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#pull-request-guidelines) is a handy reference for making sure your PR gets accepted quickly, so make sure to skim that.
 
 * :x: Missing `CONTRIBUTORS.md` entry.
     * Please add yourself to the [contributors]({{ contributorsUrl }}) file!
@@ -10,17 +10,17 @@ Thanks for the pull request @{{ userName }}!
 {{/if}}
 {{#if claEnabled}}
 {{#if errorCla}}
-* :grey_exclamation: There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).
+* :grey_exclamation: There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#contributor-license-agreement-cla).
     * Maintainers, this was the error I ran into while attempting to process the CLA check. Please resolve it to continue CLA checking.
-    * You'll need to [manually check for a submitted CLA](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CLAs/README.md)
+    * You'll need to [manually check for a submitted CLA](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CLAs/README.md)
     ```
     {{ errorCla }}
     ```
 {{else}}
 {{#if askForCla}}
 * :x: Missing CLA.
-    * Please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) and comment back here to let us know to check this!
-    * Maintainers, [here's how to check](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CLAs/README.md) for a submitted CLA.
+    * Please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) and comment back here to let us know to check this!
+    * Maintainers, [here's how to check](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CLAs/README.md) for a submitted CLA.
 {{else}}
 * :heavy_check_mark: Signed CLA found.
 {{/if}}
@@ -32,15 +32,14 @@ Thanks for the pull request @{{ userName }}!
 {{/if}}
 {{#if askAboutThirdParty}}
 * :grey_question: Changes to third party files were made.
-    * Looks like a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version.
+    * Looks like a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/main/LICENSE.md) and that its license information is up to date with this new version.
 {{/if}}
 {{#if askAboutTests}}
 * :grey_question: Unit tests were not updated.
-    * Make sure you've [updated tests](https://github.com/CesiumGS/cesium/tree/master/Documentation/Contributors/TestingGuide) to reflect your changes, added tests for any new code, and ran the code coverage tool.
+    * Make sure you've [updated tests](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/TestingGuide) to reflect your changes, added tests for any new code, and ran the code coverage tool.
 {{/if}}
 
 Reviewers, don't forget to make sure that:
 
 - [ ] Cesium Viewer works.
 - [ ] Works in 2D/CV.
-- [ ] Works (or fails gracefully) in IE11.

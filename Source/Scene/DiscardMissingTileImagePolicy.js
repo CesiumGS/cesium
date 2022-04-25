@@ -37,30 +37,30 @@ function DiscardMissingTileImagePolicy(options) {
   this._missingImageByteLength = undefined;
   this._isReady = false;
 
-  var resource = Resource.createIfNeeded(options.missingImageUrl);
+  const resource = Resource.createIfNeeded(options.missingImageUrl);
 
-  var that = this;
+  const that = this;
 
   function success(image) {
     if (defined(image.blob)) {
       that._missingImageByteLength = image.blob.size;
     }
 
-    var pixels = getImagePixels(image);
+    let pixels = getImagePixels(image);
 
     if (options.disableCheckIfAllPixelsAreTransparent) {
-      var allAreTransparent = true;
-      var width = image.width;
+      let allAreTransparent = true;
+      const width = image.width;
 
-      var pixelsToCheck = options.pixelsToCheck;
+      const pixelsToCheck = options.pixelsToCheck;
       for (
-        var i = 0, len = pixelsToCheck.length;
+        let i = 0, len = pixelsToCheck.length;
         allAreTransparent && i < len;
         ++i
       ) {
-        var pos = pixelsToCheck[i];
-        var index = pos.x * 4 + pos.y * width;
-        var alpha = pixels[index + 3];
+        const pos = pixelsToCheck[i];
+        const index = pos.x * 4 + pos.y * width;
+        const alpha = pixels[index + 3];
 
         if (alpha > 0) {
           allAreTransparent = false;
@@ -90,7 +90,7 @@ function DiscardMissingTileImagePolicy(options) {
       flipY: true,
     })
     .then(success)
-    .otherwise(failure);
+    .catch(failure);
 }
 
 /**
@@ -118,8 +118,8 @@ DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
   }
   //>>includeEnd('debug');
 
-  var pixelsToCheck = this._pixelsToCheck;
-  var missingImagePixels = this._missingImagePixels;
+  const pixelsToCheck = this._pixelsToCheck;
+  const missingImagePixels = this._missingImagePixels;
 
   // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
   if (!defined(missingImagePixels)) {
@@ -130,14 +130,14 @@ DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
     return false;
   }
 
-  var pixels = getImagePixels(image);
-  var width = image.width;
+  const pixels = getImagePixels(image);
+  const width = image.width;
 
-  for (var i = 0, len = pixelsToCheck.length; i < len; ++i) {
-    var pos = pixelsToCheck[i];
-    var index = pos.x * 4 + pos.y * width;
-    for (var offset = 0; offset < 4; ++offset) {
-      var pixel = index + offset;
+  for (let i = 0, len = pixelsToCheck.length; i < len; ++i) {
+    const pos = pixelsToCheck[i];
+    const index = pos.x * 4 + pos.y * width;
+    for (let offset = 0; offset < 4; ++offset) {
+      const pixel = index + offset;
       if (pixels[pixel] !== missingImagePixels[pixel]) {
         return false;
       }

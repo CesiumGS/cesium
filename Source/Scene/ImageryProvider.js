@@ -1,8 +1,7 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import loadCRN from "../Core/loadCRN.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 
 /**
@@ -337,8 +336,7 @@ ImageryProvider.prototype.pickFeatures = function (
   DeveloperError.throwInstantiationError();
 };
 
-var ktxRegex = /\.ktx$/i;
-var crnRegex = /\.crn$/i;
+const ktx2Regex = /\.ktx2$/i;
 
 /**
  * Loads an image from a given URL.  If the server referenced by the URL already has
@@ -357,12 +355,10 @@ ImageryProvider.loadImage = function (imageryProvider, url) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  var resource = Resource.createIfNeeded(url);
+  const resource = Resource.createIfNeeded(url);
 
-  if (ktxRegex.test(resource.url)) {
-    return loadKTX(resource);
-  } else if (crnRegex.test(resource.url)) {
-    return loadCRN(resource);
+  if (ktx2Regex.test(resource.url)) {
+    return loadKTX2(resource);
   } else if (
     defined(imageryProvider) &&
     defined(imageryProvider.tileDiscardPolicy)

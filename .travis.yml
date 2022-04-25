@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "12"
+  - "16"
 addons:
   chrome: stable
   firefox: latest
@@ -19,11 +19,11 @@ script:
   - npm pack &> /dev/null
 
   - npm --silent run buildApps
+  - npm --silent run build-specs
 
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed
 
-  - npm --silent run build-specs
   - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
   # Various Node.js smoke-screen tests

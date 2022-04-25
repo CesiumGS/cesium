@@ -35,9 +35,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var rectangle;
-        var worldRectangle;
-        var polyline;
+        let rectangle;
+        let worldRectangle;
+        let polyline;
 
         function applyAlphaMapMaterial(primitive, scene) {
           Sandcastle.declare(applyAlphaMapMaterial); // For highlighting in Sandcastle.
@@ -116,21 +116,22 @@
                   },
                 },
               },
-              source:
-                "czm_material czm_getMaterial(czm_materialInput materialInput) { \n" +
-                "    czm_material material = czm_getDefaultMaterial(materialInput); \n" +
-                "    vec4 color; \n" +
-                "    float heightValue = texture2D(heightField, materialInput.st).r; \n" +
-                "    color.rgb = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue); \n" +
-                "    color.a = (1.0 - texture2D(image, materialInput.st).r) * 0.7; \n" +
-                "    color = czm_gammaCorrect(color); \n" +
-                "    material.diffuse = color.rgb; \n" +
-                "    material.alpha = color.a; \n" +
-                "    material.normal = bumpMap.normal; \n" +
-                "    material.specular = step(0.1, heightValue); \n" + // Specular mountain tops
-                "    material.shininess = 8.0; \n" + // Sharpen highlight
-                "    return material; \n" +
-                "} \n",
+              source: `
+                czm_material czm_getMaterial(czm_materialInput materialInput) { 
+                    czm_material material = czm_getDefaultMaterial(materialInput); 
+                    vec4 color; 
+                    float heightValue = texture2D(heightField, materialInput.st).r; 
+                    color.rgb = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue); 
+                    color.a = (1.0 - texture2D(image, materialInput.st).r) * 0.7; 
+                    color = czm_gammaCorrect(color); 
+                    material.diffuse = color.rgb; 
+                    material.alpha = color.a; 
+                    material.normal = bumpMap.normal; 
+                    material.specular = step(0.1, heightValue);  // Specular mountain tops
+                    material.shininess = 8.0;  // Sharpen highlight
+                    return material; 
+                }
+                `,
             },
           });
         }
@@ -218,17 +219,25 @@
           });
         }
 
-        function applyCompressedTextureMaterial(primitive, scene) {
-          Sandcastle.declare(applyCompressedTextureMaterial); // For highlighting in Sandcastle.
+        function applyETC1SCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyETC1SCompressedTextureMaterial); // For highlighting in Sandcastle.
 
-          var compressedImageUrl;
-          if (scene.getCompressedTextureFormatSupported("s3tc")) {
-            compressedImageUrl = "../images/LogoDXT1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("etc1")) {
-            compressedImageUrl = "../images/LogoETC1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("pvrtc")) {
-            compressedImageUrl = "../images/LogoPVR.ktx";
-          }
+          const compressedImageUrl = "../images/Cesium_Logo_ETC1S.ktx2";
+
+          primitive.appearance.material = new Cesium.Material({
+            fabric: {
+              type: "Image",
+              uniforms: {
+                image: compressedImageUrl,
+              },
+            },
+          });
+        }
+
+        function applyUASTCCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyUASTCCompressedTextureMaterial); // For highlighting in Sandcastle.
+
+          const compressedImageUrl = "../images/Cesium_Logo_UASTC.ktx2";
 
           primitive.appearance.material = new Cesium.Material({
             fabric: {
@@ -295,13 +304,13 @@
 
         function applyPolylineArrowMaterial(primitive, scene) {
           Sandcastle.declare(applyPolylineArrowMaterial); // For highlighting in Sandcastle.
-          var material = Cesium.Material.fromType("PolylineArrow");
+          const material = Cesium.Material.fromType("PolylineArrow");
           primitive.material = material;
         }
 
         function applyPolylineGlowMaterial(primitive, scene) {
           Sandcastle.declare(applyPolylineGlowMaterial); // For highlighting in Sandcastle.
-          var material = Cesium.Material.fromType("PolylineGlow", {
+          const material = Cesium.Material.fromType("PolylineGlow", {
             color: Cesium.Color.CRIMSON,
             glowPower: 0.2,
             taperPower: 0.4,
@@ -311,7 +320,7 @@
 
         function applyPolylineOutlineMaterial(primitive, scene) {
           Sandcastle.declare(applyPolylineOutlineMaterial); // For highlighting in Sandcastle.
-          var material = Cesium.Material.fromType("PolylineOutline", {
+          const material = Cesium.Material.fromType("PolylineOutline", {
             outlineWidth: primitive.width / 2.0,
           });
           primitive.material = material;
@@ -357,11 +366,29 @@
               },
             },
             {
-              text: "Compressed Image",
+              text: "ETC1S Compressed Image",
               onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
                 toggleRectangleVisibility();
-                applyCompressedTextureMaterial(rectangle, scene);
-                Sandcastle.highlight(applyCompressedTextureMaterial);
+                applyETC1SCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyETC1SCompressedTextureMaterial);
+              },
+            },
+            {
+              text: "UASTC Compressed Image",
+              onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
+                toggleRectangleVisibility();
+                applyUASTCCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyUASTCCompressedTextureMaterial);
               },
             },
           ]);
@@ -567,7 +594,9 @@
             })
           );
 
-          var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+          const polylines = scene.primitives.add(
+            new Cesium.PolylineCollection()
+          );
           polyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
@@ -586,8 +615,8 @@
           });
         }
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         createPrimitives(scene);
         createButtons(scene);

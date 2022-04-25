@@ -56,22 +56,22 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shadows: true,
         });
 
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
-        var viewModel = {
+        const viewModel = {
           height: 0,
         };
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
         });
 
@@ -87,7 +87,7 @@
               )
             );
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             console.log(error);
           });
 
@@ -99,20 +99,20 @@
               return;
             }
 
-            var cartographic = Cesium.Cartographic.fromCartesian(
+            const cartographic = Cesium.Cartographic.fromCartesian(
               tileset.boundingSphere.center
             );
-            var surface = Cesium.Cartesian3.fromRadians(
+            const surface = Cesium.Cartesian3.fromRadians(
               cartographic.longitude,
               cartographic.latitude,
               0.0
             );
-            var offset = Cesium.Cartesian3.fromRadians(
+            const offset = Cesium.Cartesian3.fromRadians(
               cartographic.longitude,
               cartographic.latitude,
               height
             );
-            var translation = Cesium.Cartesian3.subtract(
+            const translation = Cesium.Cartesian3.subtract(
               offset,
               surface,
               new Cesium.Cartesian3()

@@ -1,21 +1,21 @@
-import { cancelAnimationFrame } from "../../Source/Cesium.js";
-import { requestAnimationFrame } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
+import {
+  cancelAnimationFrame,
+  defer,
+  requestAnimationFrame,
+} from "../../Source/Cesium.js";
 
 describe("Core/requestAnimationFrame", function () {
   it("calls the callback", function () {
-    var deferred = when.defer();
-    var requestID = requestAnimationFrame(function () {
-      deferred.resolve();
+    const promise = new Promise(requestAnimationFrame);
+    return promise.then(function (requestId) {
+      expect(requestId).toBeDefined();
     });
-    expect(requestID).toBeDefined();
-    return deferred.promise;
   });
 
   it("provides a timestamp that increases each frame", function () {
-    var deferred = when.defer();
+    const deferred = defer();
 
-    var callbackTimestamps = [];
+    const callbackTimestamps = [];
 
     function callback(timestamp) {
       callbackTimestamps.push(timestamp);
@@ -23,10 +23,10 @@ describe("Core/requestAnimationFrame", function () {
       if (callbackTimestamps.length < 3) {
         requestAnimationFrame(callback);
       } else {
-        expect(callbackTimestamps[0]).toBeLessThanOrEqualTo(
+        expect(callbackTimestamps[0]).toBeLessThanOrEqual(
           callbackTimestamps[1]
         );
-        expect(callbackTimestamps[1]).toBeLessThanOrEqualTo(
+        expect(callbackTimestamps[1]).toBeLessThanOrEqual(
           callbackTimestamps[2]
         );
         deferred.resolve();
@@ -39,11 +39,11 @@ describe("Core/requestAnimationFrame", function () {
   });
 
   it("can cancel a callback", function () {
-    var deferred = when.defer();
+    const deferred = defer();
 
-    var shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
+    const shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
 
-    var requestID = requestAnimationFrame(shouldNotBeCalled);
+    const requestID = requestAnimationFrame(shouldNotBeCalled);
     cancelAnimationFrame(requestID);
 
     // schedule and wait for another callback

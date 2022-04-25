@@ -2,18 +2,18 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   "use strict";
   /* global Cesium */
 
-  var defined = Cesium.defined;
-  var Clock = Cesium.Clock;
-  var ClockRange = Cesium.ClockRange;
-  var Timeline = Cesium.Timeline;
-  var TimeInterval = Cesium.TimeInterval;
-  var JulianDate = Cesium.JulianDate;
-  var Color = Cesium.Color;
-  var ClockViewModel = Cesium.ClockViewModel;
-  var AnimationViewModel = Cesium.AnimationViewModel;
+  const defined = Cesium.defined;
+  const Clock = Cesium.Clock;
+  const ClockRange = Cesium.ClockRange;
+  const Timeline = Cesium.Timeline;
+  const TimeInterval = Cesium.TimeInterval;
+  const JulianDate = Cesium.JulianDate;
+  const Color = Cesium.Color;
+  const ClockViewModel = Cesium.ClockViewModel;
+  const AnimationViewModel = Cesium.AnimationViewModel;
 
-  var startDatePart, endDatePart, startTimePart, endTimePart;
-  var timeline,
+  let startDatePart, endDatePart, startTimePart, endTimePart;
+  let timeline,
     clock,
     endBeforeStart,
     containerElement,
@@ -21,13 +21,14 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
     animation;
 
   function updateScrubTime(julianDate) {
-    document.getElementById("mousePos").innerHTML =
-      timeline.makeLabel(julianDate) + " UTC";
+    document.getElementById("mousePos").innerHTML = `${timeline.makeLabel(
+      julianDate
+    )} UTC`;
   }
 
   function handleSetTime(e) {
     if (defined(timeline)) {
-      var scrubJulian = e.timeJulian;
+      const scrubJulian = e.timeJulian;
       clock.shouldAnimate = false;
       clock.currentTime = scrubJulian;
       updateScrubTime(scrubJulian);
@@ -35,7 +36,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   }
 
   function spanToString(span) {
-    var spanUnits = "sec";
+    let spanUnits = "sec";
     if (span > 31536000) {
       span /= 31536000;
       spanUnits = "years";
@@ -55,22 +56,17 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       span /= 60;
       spanUnits = "minutes";
     }
-    return span.toString() + " " + spanUnits;
+    return `${span.toString()} ${spanUnits}`;
   }
 
   function handleSetZoom(e) {
     dojo.byId("formatted").innerHTML =
       //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
-      "<br/>Start: " +
-      timeline.makeLabel(e.startJulian) +
-      " UTC" +
-      "<br/>&nbsp;Stop: " +
-      timeline.makeLabel(e.endJulian) +
-      " UTC" +
-      "<br/>&nbsp;Span: " +
-      spanToString(e.totalSpan) +
-      "<br/>&nbsp;&nbsp;Tic: " +
-      spanToString(e.mainTicSpan);
+      `<br/>Start: ${timeline.makeLabel(e.startJulian)} UTC` +
+      `<br/>&nbsp;Stop: ${timeline.makeLabel(e.endJulian)} UTC` +
+      `<br/>&nbsp;Span: ${spanToString(
+        e.totalSpan
+      )}<br/>&nbsp;&nbsp;Tic: ${spanToString(e.mainTicSpan)}`;
     updateScrubTime(clock.currentTime);
   }
 
@@ -107,7 +103,7 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       Color.LIME
     );
 
-    var middle = JulianDate.secondsDifference(endJulian, startJulian) / 4;
+    const middle = JulianDate.secondsDifference(endJulian, startJulian) / 4;
     timeline.addTrack(
       new TimeInterval({
         start: JulianDate.addSeconds(startJulian, middle, new JulianDate()),
@@ -118,12 +114,12 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       new Color(0.55, 0.55, 0.55, 0.25)
     );
 
-    var clockViewModel = new ClockViewModel(clock);
+    const clockViewModel = new ClockViewModel(clock);
     animationViewModel = new AnimationViewModel(clockViewModel);
     animation = new Animation(dojo.byId("animationWidget"), animationViewModel);
 
     function tick() {
-      var time = clock.tick();
+      const time = clock.tick();
       updateScrubTime(time);
       requestAnimationFrame(tick);
     }
@@ -133,13 +129,13 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   // Adjust start/end dates in reaction to any calendar/time clicks
   //
   function newDatesSelected() {
-    var startJulian, endJulian;
+    let startJulian, endJulian;
 
     if (startDatePart && startTimePart) {
-      startJulian = JulianDate.fromIso8601(startDatePart + startTimePart + "Z"); // + 'Z' for UTC
+      startJulian = JulianDate.fromIso8601(`${startDatePart + startTimePart}Z`); // + 'Z' for UTC
     }
     if (endDatePart && endTimePart) {
-      endJulian = JulianDate.fromIso8601(endDatePart + endTimePart + "Z");
+      endJulian = JulianDate.fromIso8601(`${endDatePart + endTimePart}Z`);
     }
 
     if (startJulian && endJulian) {
@@ -177,13 +173,13 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   // React to time-of-day selectors
   //
   function getTimePart(newTime) {
-    var h = newTime.getHours().toString();
-    h = h.length < 2 ? "0" + h : h;
-    var m = newTime.getMinutes().toString();
-    m = m.length < 2 ? "0" + m : m;
-    var s = newTime.getSeconds().toString();
-    s = s.length < 2 ? "0" + s : s;
-    return "T" + h + ":" + m + ":" + s;
+    let h = newTime.getHours().toString();
+    h = h.length < 2 ? `0${h}` : h;
+    let m = newTime.getMinutes().toString();
+    m = m.length < 2 ? `0${m}` : m;
+    let s = newTime.getSeconds().toString();
+    s = s.length < 2 ? `0${s}` : s;
+    return `T${h}:${m}:${s}`;
   }
   function newStartTimeSelected(newTime) {
     startTimePart = getTimePart(newTime);
@@ -238,8 +234,8 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
     dijit.byId("startTimeSel").set("value", "T00:00:00");
     dijit.byId("endTimeSel").set("value", "T24:00:00");
 
-    var today = JulianDate.now();
-    var tomorrow = JulianDate.addDays(today, 1, new JulianDate());
+    const today = JulianDate.now();
+    const tomorrow = JulianDate.addDays(today, 1, new JulianDate());
     dijit.byId("startCal").set("value", JulianDate.toDate(today));
     dijit.byId("endCal").set("value", JulianDate.toDate(tomorrow));
   });

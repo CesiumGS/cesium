@@ -1,7 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import MetadataSchema from "./MetadataSchema.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -28,9 +28,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var schema = options.schema;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const schema = options.schema;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -44,7 +44,7 @@ export default function MetadataSchemaLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -111,7 +111,7 @@ MetadataSchemaLoader.prototype.load = function () {
 };
 
 function loadExternalSchema(schemaLoader) {
-  var resource = schemaLoader._resource;
+  const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
   resource
     .fetchJson()
@@ -123,12 +123,12 @@ function loadExternalSchema(schemaLoader) {
       schemaLoader._state = ResourceLoaderState.READY;
       schemaLoader._promise.resolve(schemaLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (schemaLoader.isDestroyed()) {
         return;
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load schema: " + resource.url;
+      const errorMessage = `Failed to load schema: ${resource.url}`;
       schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }

@@ -32,28 +32,28 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
-        var scene = viewer.scene;
-        var context = scene.context;
-        var camera = viewer.camera;
+        const scene = viewer.scene;
+        const context = scene.context;
+        const camera = viewer.camera;
         scene.debugShowFramesPerSecond = true;
 
-        var instancedArraysExtension = context._instancedArrays;
-        var count = 1024;
-        var spacing = 0.0002;
-        var url = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
-        var useCollection = true;
+        const instancedArraysExtension = context._instancedArrays;
+        let count = 1024;
+        let spacing = 0.0002;
+        let url = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
+        let useCollection = true;
 
-        var centerLongitude = -75.61209431;
-        var centerLatitude = 40.042530612;
-        var height = 50.0;
+        const centerLongitude = -75.61209431;
+        const centerLatitude = 40.042530612;
+        const height = 50.0;
 
         function orientCamera(center, radius) {
-          var range = Math.max(radius, camera.frustum.near) * 2.0;
-          var heading = Cesium.Math.toRadians(230.0);
-          var pitch = Cesium.Math.toRadians(-20.0);
+          const range = Math.max(radius, camera.frustum.near) * 2.0;
+          const heading = Cesium.Math.toRadians(230.0);
+          const pitch = Cesium.Math.toRadians(-20.0);
           camera.lookAt(
             center,
             new Cesium.HeadingPitchRange(heading, pitch, range)
@@ -62,7 +62,7 @@
         }
 
         function createCollection(instances) {
-          var collection = scene.primitives.add(
+          const collection = scene.primitives.add(
             new Cesium.ModelInstanceCollection({
               url: url,
               instances: instances,
@@ -81,20 +81,20 @@
                 collection._boundingSphere.radius
               );
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               window.alert(error);
             });
         }
 
         function createModels(instances) {
-          var points = [];
-          var model;
+          const points = [];
+          let model;
 
-          var length = instances.length;
-          for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var modelMatrix = instance.modelMatrix;
-            var translation = new Cesium.Cartesian3();
+          const length = instances.length;
+          for (let i = 0; i < length; ++i) {
+            const instance = instances[i];
+            const modelMatrix = instance.modelMatrix;
+            const translation = new Cesium.Cartesian3();
             Cesium.Matrix4.getTranslation(modelMatrix, translation);
             points.push(translation);
 
@@ -113,13 +113,13 @@
                   loop: Cesium.ModelAnimationLoop.REPEAT,
                 });
               })
-              .otherwise(function (error) {
+              .catch(function (error) {
                 window.alert(error);
               });
           }
 
           model.readyPromise.then(function (model) {
-            var boundingSphere = new Cesium.BoundingSphere();
+            const boundingSphere = new Cesium.BoundingSphere();
             Cesium.BoundingSphere.fromPoints(points, boundingSphere);
             orientCamera(
               boundingSphere.center,
@@ -130,25 +130,25 @@
 
         function reset() {
           scene.primitives.removeAll();
-          var instances = [];
-          var gridSize = Math.sqrt(count);
+          const instances = [];
+          const gridSize = Math.sqrt(count);
 
-          for (var y = 0; y < gridSize; ++y) {
-            for (var x = 0; x < gridSize; ++x) {
-              var longitude = centerLongitude + spacing * (x - gridSize / 2);
-              var latitude = centerLatitude + spacing * (y - gridSize / 2);
-              var position = Cesium.Cartesian3.fromDegrees(
+          for (let y = 0; y < gridSize; ++y) {
+            for (let x = 0; x < gridSize; ++x) {
+              const longitude = centerLongitude + spacing * (x - gridSize / 2);
+              const latitude = centerLatitude + spacing * (y - gridSize / 2);
+              const position = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
                 height
               );
 
-              var heading = Math.random();
-              var pitch = Math.random();
-              var roll = Math.random();
-              var scale = (Math.random() + 1.0) / 2.0;
+              const heading = Math.random();
+              const pitch = Math.random();
+              const roll = Math.random();
+              const scale = (Math.random() + 1.0) / 2.0;
 
-              var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+              const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
                 position,
                 new Cesium.HeadingPitchRoll(heading, pitch, roll)
               );
@@ -172,16 +172,16 @@
         }
 
         // Scale picked instances
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
         handler.setInputAction(function (movement) {
-          var pickedInstance = scene.pick(movement.position);
+          const pickedInstance = scene.pick(movement.position);
           if (Cesium.defined(pickedInstance)) {
             console.log(pickedInstance);
-            var instance = useCollection
+            const instance = useCollection
               ? pickedInstance
               : pickedInstance.primitive;
-            var scaleMatrix = Cesium.Matrix4.fromUniformScale(1.1);
-            var modelMatrix = Cesium.Matrix4.multiply(
+            const scaleMatrix = Cesium.Matrix4.fromUniformScale(1.1);
+            const modelMatrix = Cesium.Matrix4.multiply(
               instance.modelMatrix,
               scaleMatrix,
               new Cesium.Matrix4()

@@ -1,7 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -26,9 +26,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var typedArray = options.typedArray;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const typedArray = options.typedArray;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(typedArray) === defined(resource)) {
@@ -42,7 +42,7 @@ export default function BufferLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -106,10 +106,9 @@ BufferLoader.prototype.load = function () {
 };
 
 function loadExternalBuffer(bufferLoader) {
-  var resource = bufferLoader._resource;
+  const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  resource
-    .fetchArrayBuffer()
+  BufferLoader._fetchArrayBuffer(resource)
     .then(function (arrayBuffer) {
       if (bufferLoader.isDestroyed()) {
         return;
@@ -118,15 +117,23 @@ function loadExternalBuffer(bufferLoader) {
       bufferLoader._state = ResourceLoaderState.READY;
       bufferLoader._promise.resolve(bufferLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (bufferLoader.isDestroyed()) {
         return;
       }
       bufferLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load external buffer: " + resource.url;
+      const errorMessage = `Failed to load external buffer: ${resource.url}`;
       bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }
+
+/**
+ * Exposed for testing
+ * @private
+ */
+BufferLoader._fetchArrayBuffer = function (resource) {
+  return resource.fetchArrayBuffer();
+};
 
 /**
  * Unloads the resource.

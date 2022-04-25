@@ -1,0 +1,48 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schema": {
+    "classes": {
+      "tile": {
+        "properties": {
+          "minimumHeight": {
+            "type": "SCALAR",
+            "componentType": "FLOAT64",
+            "semantic": "CONTENT_MINIMUM_HEIGHT"
+          },
+          "maximumHeight": {
+            "type": "SCALAR",
+            "componentType": "FLOAT64",
+            "semantic": "CONTENT_MAXIMUM_HEIGHT"
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 4096.0,
+  "root": {
+    "geometricError": 2048.0,
+    "boundingVolume": {
+      "region": [
+        0,
+        0,
+        0.00314,
+        0.00314,
+        0,
+        10000
+      ]
+    },
+    "content": {
+      "uri": "empty.gltf"
+    },
+    "implicitTiling": {
+      "subdivisionScheme": "QUADTREE",
+      "subtreeLevels": 3,
+      "availableLevels": 3,
+      "subtrees": {
+        "uri": "subtrees/1.1/{level}.{x}.{y}.json"
+      }
+    }
+  }
+}

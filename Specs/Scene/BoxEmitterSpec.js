@@ -1,9 +1,9 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
 import { BoxEmitter } from "../../Source/Cesium.js";
+import { Cartesian3 } from "../../Source/Cesium.js";
 import { Particle } from "../../Source/Cesium.js";
 
 describe("Scene/BoxEmitter", function () {
-  var emitter;
+  let emitter;
 
   it("default constructor", function () {
     emitter = new BoxEmitter();
@@ -11,7 +11,7 @@ describe("Scene/BoxEmitter", function () {
   });
 
   it("constructor", function () {
-    var dimensions = new Cartesian3(2.0, 3.0, 4.0);
+    const dimensions = new Cartesian3(2.0, 3.0, 4.0);
     emitter = new BoxEmitter(dimensions);
     expect(emitter.dimensions).toEqual(dimensions);
   });
@@ -30,7 +30,7 @@ describe("Scene/BoxEmitter", function () {
 
   it("dimensions setter", function () {
     emitter = new BoxEmitter();
-    var dimensions = new Cartesian3(2.0, 3.0, 4.0);
+    const dimensions = new Cartesian3(2.0, 3.0, 4.0);
     emitter.dimensions = dimensions;
     expect(emitter.dimensions).toEqual(dimensions);
   });
@@ -53,13 +53,13 @@ describe("Scene/BoxEmitter", function () {
 
   it("emits", function () {
     emitter = new BoxEmitter(new Cartesian3(2.0, 3.0, 4.0));
-    var particle = new Particle();
+    const particle = new Particle();
 
-    for (var i = 0; i < 1000; ++i) {
+    for (let i = 0; i < 1000; ++i) {
       emitter.emit(particle);
-      expect(particle.position.x).toBeLessThanOrEqualTo(emitter.dimensions.x);
-      expect(particle.position.y).toBeLessThanOrEqualTo(emitter.dimensions.y);
-      expect(particle.position.z).toBeLessThanOrEqualTo(emitter.dimensions.z);
+      expect(particle.position.x).toBeLessThanOrEqual(emitter.dimensions.x);
+      expect(particle.position.y).toBeLessThanOrEqual(emitter.dimensions.y);
+      expect(particle.position.z).toBeLessThanOrEqual(emitter.dimensions.z);
       expect(particle.velocity).toEqual(
         Cartesian3.normalize(particle.position, new Cartesian3())
       );

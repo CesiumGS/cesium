@@ -3,12 +3,16 @@ import {
   Cartesian3,
   Cartesian4,
   parseBatchTable,
+  MetadataClass,
+  MetadataComponentType,
   MetadataType,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
-  var batchTableJson = {};
-  var count = 3;
+  const batchTableJson = {};
+  const count = 3;
+  const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
   it("throws without count", function () {
     expect(function () {
@@ -29,7 +33,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with no properties", function () {
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: count,
       batchTable: {},
     });
@@ -38,7 +42,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with binary properties", function () {
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       height: {
         byteOffset: 0,
         componentType: "FLOAT",
@@ -46,25 +50,27 @@ describe("Scene/parseBatchTable", function () {
       },
     };
 
-    var heightValues = new Float32Array([10.0, 15.0, 25.0]);
-    var binaryBody = new Uint8Array(heightValues.buffer);
+    const heightValues = new Float32Array([10.0, 15.0, 25.0]);
+    const binaryBody = new Uint8Array(heightValues.buffer);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 3,
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.id).toBe(0);
+    expect(propertyTable.name).toBe("Batch Table");
 
-    expect(featureTable.getProperty(0, "height")).toBe(10.0);
-    expect(featureTable.getProperty(1, "height")).toBe(15.0);
-    expect(featureTable.getProperty(2, "height")).toBe(25.0);
+    expect(propertyTable.getProperty(0, "height")).toBe(10.0);
+    expect(propertyTable.getProperty(1, "height")).toBe(15.0);
+    expect(propertyTable.getProperty(2, "height")).toBe(25.0);
   });
 
   it("transcodes scalars to correct types", function () {
     // making use of the fact that 0 is represented as NUL bytes
     // in all of the above types
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       uint8Property: {
         byteOffset: 0,
         componentType: "UNSIGNED_BYTE",
@@ -108,37 +114,53 @@ describe("Scene/parseBatchTable", function () {
     };
 
     // largest type is a double
-    var binaryBody = new Uint8Array(8);
+    const binaryBody = new Uint8Array(8);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes._batchTable.properties;
+    const properties = metadata.schema.classes[className].properties;
 
-    expect(properties.uint8Property.type).toBe(MetadataType.UINT8);
-    expect(properties.uint16Property.type).toBe(MetadataType.UINT16);
-    expect(properties.uint32Property.type).toBe(MetadataType.UINT32);
-    expect(properties.int8Property.type).toBe(MetadataType.INT8);
-    expect(properties.int16Property.type).toBe(MetadataType.INT16);
-    expect(properties.int32Property.type).toBe(MetadataType.INT32);
-    expect(properties.floatProperty.type).toBe(MetadataType.FLOAT32);
-    expect(properties.doubleProperty.type).toBe(MetadataType.FLOAT64);
+    expect(properties.uint8Property.componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(properties.uint16Property.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(properties.uint32Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.int8Property.componentType).toBe(
+      MetadataComponentType.INT8
+    );
+    expect(properties.int16Property.componentType).toBe(
+      MetadataComponentType.INT16
+    );
+    expect(properties.int32Property.componentType).toBe(
+      MetadataComponentType.INT32
+    );
+    expect(properties.floatProperty.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.doubleProperty.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "uint8Property")).toBe(0);
-    expect(featureTable.getProperty(0, "uint16Property")).toBe(0);
-    expect(featureTable.getProperty(0, "uint32Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int8Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int16Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int32Property")).toBe(0);
-    expect(featureTable.getProperty(0, "floatProperty")).toBe(0.0);
-    expect(featureTable.getProperty(0, "doubleProperty")).toBe(0.0);
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "uint8Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "uint16Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "uint32Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int8Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int16Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int32Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "floatProperty")).toBe(0.0);
+    expect(propertyTable.getProperty(0, "doubleProperty")).toBe(0.0);
   });
 
-  it("transcodes binary vectors to array types", function () {
-    var vectorBatchTable = {
+  it("transcodes binary vectors to vector types", function () {
+    const vectorBatchTable = {
       vec2Property: {
         byteOffset: 0,
         componentType: "FLOAT",
@@ -156,39 +178,42 @@ describe("Scene/parseBatchTable", function () {
       },
     };
     // largest type is a vec4 of doubles
-    var binaryBody = new Uint8Array(8 * 4);
+    const binaryBody = new Uint8Array(8 * 4);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: vectorBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes._batchTable.properties;
+    const properties = metadata.schema.classes[className].properties;
 
-    expect(properties.vec2Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.uvec3Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.dvec4Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.vec2Property.componentType).toBe(MetadataType.FLOAT32);
-    expect(properties.uvec3Property.componentType).toBe(MetadataType.UINT32);
-    expect(properties.dvec4Property.componentType).toBe(MetadataType.FLOAT64);
-    expect(properties.vec2Property.componentCount).toBe(2);
-    expect(properties.uvec3Property.componentCount).toBe(3);
-    expect(properties.dvec4Property.componentCount).toBe(4);
+    expect(properties.vec2Property.type).toBe(MetadataType.VEC2);
+    expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
+    expect(properties.dvec4Property.type).toBe(MetadataType.VEC4);
+    expect(properties.vec2Property.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.uvec3Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.dvec4Property.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "vec2Property")).toEqual(
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "vec2Property")).toEqual(
       new Cartesian2(0.0, 0.0)
     );
-    expect(featureTable.getProperty(0, "uvec3Property")).toEqual(
+    expect(propertyTable.getProperty(0, "uvec3Property")).toEqual(
       new Cartesian3(0, 0, 0)
     );
-    expect(featureTable.getProperty(0, "dvec4Property")).toEqual(
+    expect(propertyTable.getProperty(0, "dvec4Property")).toEqual(
       new Cartesian4(0.0, 0.0, 0.0, 0.0)
     );
   });
 
   it("parses batch table with JSON properties", function () {
-    var jsonBatchTable = {
+    const jsonBatchTable = {
       location: [
         [0, 0],
         [1, 0],
@@ -207,30 +232,30 @@ describe("Scene/parseBatchTable", function () {
       ],
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 2,
       batchTable: jsonBatchTable,
     });
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "location")).toEqual(
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "location")).toEqual(
       jsonBatchTable.location[0]
     );
-    expect(featureTable.getProperty(1, "location")).toEqual(
+    expect(propertyTable.getProperty(1, "location")).toEqual(
       jsonBatchTable.location[1]
     );
-    expect(featureTable.getProperty(0, "payload")).toEqual(
+    expect(propertyTable.getProperty(0, "payload")).toEqual(
       jsonBatchTable.payload[0]
     );
-    expect(featureTable.getProperty(1, "payload")).toEqual(
+    expect(propertyTable.getProperty(1, "payload")).toEqual(
       jsonBatchTable.payload[1]
     );
   });
 
-  var hierarchy = {
+  const hierarchy = {
     classes: [
       {
         name: "Wheels",
@@ -265,82 +290,82 @@ describe("Scene/parseBatchTable", function () {
   };
 
   it("warns for deprecated HIERARCHY extension", function () {
-    var warn = spyOn(parseBatchTable, "_deprecationWarning");
-    var oldHierarchyBatchTable = {
+    const warn = spyOn(parseBatchTable, "_deprecationWarning");
+    const oldHierarchyBatchTable = {
       HIERARCHY: hierarchy,
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
     });
 
     expect(warn).toHaveBeenCalled();
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
-    expect(featureTable.getProperty(0, "color")).toBe("blue");
-    expect(featureTable.getProperty(0, "type")).toBe("sedan");
-    expect(featureTable.getProperty(0, "year")).toBe("2020");
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
+    expect(propertyTable.getProperty(0, "color")).toBe("blue");
+    expect(propertyTable.getProperty(0, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(0, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(4, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(4, "color")).toBe("blue");
-    expect(featureTable.getProperty(4, "type")).toBe("sedan");
-    expect(featureTable.getProperty(4, "year")).toBe("2020");
+    expect(propertyTable.getProperty(4, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(4, "color")).toBe("blue");
+    expect(propertyTable.getProperty(4, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(4, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(6, "tire_location")).toBe("front_right");
-    expect(featureTable.getProperty(6, "color")).toBe("red");
-    expect(featureTable.getProperty(6, "type")).toBe("truck");
-    expect(featureTable.getProperty(6, "year")).toBe("2018");
+    expect(propertyTable.getProperty(6, "tire_location")).toBe("front_right");
+    expect(propertyTable.getProperty(6, "color")).toBe("red");
+    expect(propertyTable.getProperty(6, "type")).toBe("truck");
+    expect(propertyTable.getProperty(6, "year")).toBe("2018");
 
-    expect(featureTable.getProperty(9, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(9, "color")).toBe("red");
-    expect(featureTable.getProperty(9, "type")).toBe("truck");
-    expect(featureTable.getProperty(9, "year")).toBe("2018");
+    expect(propertyTable.getProperty(9, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(9, "color")).toBe("red");
+    expect(propertyTable.getProperty(9, "type")).toBe("truck");
+    expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
   it("parses batch table with hierarchy", function () {
-    var oldHierarchyBatchTable = {
+    const oldHierarchyBatchTable = {
       extensions: {
         "3DTILES_batch_table_hierarchy": hierarchy,
       },
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
     });
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
-    expect(featureTable.getProperty(0, "color")).toBe("blue");
-    expect(featureTable.getProperty(0, "type")).toBe("sedan");
-    expect(featureTable.getProperty(0, "year")).toBe("2020");
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
+    expect(propertyTable.getProperty(0, "color")).toBe("blue");
+    expect(propertyTable.getProperty(0, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(0, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(4, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(4, "color")).toBe("blue");
-    expect(featureTable.getProperty(4, "type")).toBe("sedan");
-    expect(featureTable.getProperty(4, "year")).toBe("2020");
+    expect(propertyTable.getProperty(4, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(4, "color")).toBe("blue");
+    expect(propertyTable.getProperty(4, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(4, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(6, "tire_location")).toBe("front_right");
-    expect(featureTable.getProperty(6, "color")).toBe("red");
-    expect(featureTable.getProperty(6, "type")).toBe("truck");
-    expect(featureTable.getProperty(6, "year")).toBe("2018");
+    expect(propertyTable.getProperty(6, "tire_location")).toBe("front_right");
+    expect(propertyTable.getProperty(6, "color")).toBe("red");
+    expect(propertyTable.getProperty(6, "type")).toBe("truck");
+    expect(propertyTable.getProperty(6, "year")).toBe("2018");
 
-    expect(featureTable.getProperty(9, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(9, "color")).toBe("red");
-    expect(featureTable.getProperty(9, "type")).toBe("truck");
-    expect(featureTable.getProperty(9, "year")).toBe("2018");
+    expect(propertyTable.getProperty(9, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(9, "color")).toBe("red");
+    expect(propertyTable.getProperty(9, "type")).toBe("truck");
+    expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
-  it("stores extras and extensions in the transcoded FeatureMetadata", function () {
-    var batchTable = {
+  it("stores extras and extensions in the transcoded StructuralMetadata", function () {
+    const batchTable = {
       extras: {
         author: "Cesium",
         date: "2021-04-15",
@@ -350,7 +375,7 @@ describe("Scene/parseBatchTable", function () {
       },
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: batchTable,
     });
@@ -360,7 +385,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("throws if binaryBody is needed and not provided", function () {
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       height: {
         byteOffset: 0,
         componentType: "FLOAT",
@@ -374,6 +399,6 @@ describe("Scene/parseBatchTable", function () {
         batchTable: binaryBatchTable,
         binaryBody: undefined,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

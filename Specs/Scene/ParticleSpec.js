@@ -5,7 +5,7 @@ import { Particle } from "../../Source/Cesium.js";
 
 describe("Scene/Particle", function () {
   it("default constructor", function () {
-    var p = new Particle();
+    const p = new Particle();
     expect(p.mass).toEqual(1.0);
     expect(p.position).toEqual(Cartesian3.ZERO);
     expect(p.velocity).toEqual(Cartesian3.ZERO);
@@ -19,7 +19,7 @@ describe("Scene/Particle", function () {
   });
 
   it("constructor", function () {
-    var options = {
+    const options = {
       mass: 10.0,
       position: new Cartesian3(1.0, 2.0, 3.0),
       velocity: new Cartesian3(4.0, 5.0, 6.0),
@@ -31,7 +31,7 @@ describe("Scene/Particle", function () {
       endScale: 20.0,
       imageSize: new Cartesian2(7.0, 8.0),
     };
-    var p = new Particle(options);
+    const p = new Particle(options);
     expect(p.mass).toEqual(options.mass);
     expect(p.position).toEqual(options.position);
     expect(p.velocity).toEqual(options.velocity);
@@ -45,19 +45,19 @@ describe("Scene/Particle", function () {
   });
 
   it("update without update function", function () {
-    var position = new Cartesian3(1.0, 2.0, 3.0);
-    var velocity = Cartesian3.normalize(
+    const position = new Cartesian3(1.0, 2.0, 3.0);
+    const velocity = Cartesian3.normalize(
       new Cartesian3(-1.0, 1.0, 1.0),
       new Cartesian3()
     );
-    var p = new Particle({
+    const p = new Particle({
       life: 15.0,
       position: position,
       velocity: velocity,
     });
 
-    var dt = 10.0;
-    var expectedPosition = Cartesian3.add(
+    const dt = 10.0;
+    const expectedPosition = Cartesian3.add(
       p.position,
       Cartesian3.multiplyByScalar(p.velocity, dt, new Cartesian3()),
       new Cartesian3()
@@ -72,25 +72,25 @@ describe("Scene/Particle", function () {
   });
 
   it("update with updateFunction", function () {
-    var increaseMass = function (particle, dt) {
+    const increaseMass = function (particle, dt) {
       particle.mass++;
     };
-    var forces = increaseMass;
+    const forces = increaseMass;
 
-    var position = new Cartesian3(1.0, 2.0, 3.0);
-    var velocity = Cartesian3.normalize(
+    const position = new Cartesian3(1.0, 2.0, 3.0);
+    const velocity = Cartesian3.normalize(
       new Cartesian3(-1.0, 1.0, 1.0),
       new Cartesian3()
     );
-    var p = new Particle({
+    const p = new Particle({
       life: 15.0,
       position: position,
       velocity: velocity,
     });
 
-    var dt = 10.0;
-    var expectedMass = p.mass + 1;
-    var expectedPosition = Cartesian3.add(
+    const dt = 10.0;
+    const expectedMass = p.mass + 1;
+    const expectedPosition = Cartesian3.add(
       p.position,
       Cartesian3.multiplyByScalar(p.velocity, dt, new Cartesian3()),
       new Cartesian3()

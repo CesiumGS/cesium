@@ -1,12 +1,10 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -26,20 +24,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @private
  */
 export default function GltfImageLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resourceCache = options.resourceCache;
-  var gltf = options.gltf;
-  var imageId = options.imageId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
-  var cacheKey = options.cacheKey;
+  const resourceCache = options.resourceCache;
+  const gltf = options.gltf;
+  const imageId = options.imageId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -47,17 +43,11 @@ export default function GltfImageLoader(options) {
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
   //>>includeEnd('debug');
 
-  var results = GltfLoaderUtil.getImageUriOrBufferView({
-    gltf: gltf,
-    imageId: imageId,
-    supportedImageFormats: supportedImageFormats,
-  });
-
-  var bufferViewId = results.bufferViewId;
-  var uri = results.uri;
+  const image = gltf.images[imageId];
+  const bufferViewId = image.bufferView;
+  const uri = image.uri;
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -68,8 +58,9 @@ export default function GltfImageLoader(options) {
   this._cacheKey = cacheKey;
   this._bufferViewLoader = undefined;
   this._image = undefined;
+  this._mipLevels = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -120,6 +111,20 @@ Object.defineProperties(GltfImageLoader.prototype, {
       return this._image;
     },
   },
+  /**
+   * The mip levels. Only defined for KTX2 files containing mip levels.
+   *
+   * @memberof GltfImageLoader.prototype
+   *
+   * @type {Uint8Array[]}
+   * @readonly
+   * @private
+   */
+  mipLevels: {
+    get: function () {
+      return this._mipLevels;
+    },
+  },
 });
 
 /**
@@ -134,9 +139,26 @@ GltfImageLoader.prototype.load = function () {
   }
 };
 
+function getImageAndMipLevels(image) {
+  // Images transcoded from KTX2 can contain multiple mip levels:
+  // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+  let mipLevels;
+  if (Array.isArray(image)) {
+    // highest detail mip should be level 0
+    mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+      return mipLevel.bufferView;
+    });
+    image = image[0];
+  }
+  return {
+    image: image,
+    mipLevels: mipLevels,
+  };
+}
+
 function loadFromBufferView(imageLoader) {
-  var resourceCache = imageLoader._resourceCache;
-  var bufferViewLoader = resourceCache.loadBufferView({
+  const resourceCache = imageLoader._resourceCache;
+  const bufferViewLoader = resourceCache.loadBufferView({
     gltf: imageLoader._gltf,
     bufferViewId: imageLoader._bufferViewId,
     gltfResource: imageLoader._gltfResource,
@@ -152,21 +174,24 @@ function loadFromBufferView(imageLoader) {
         return;
       }
 
-      var typedArray = bufferViewLoader.typedArray;
+      const typedArray = bufferViewLoader.typedArray;
       return loadImageFromBufferTypedArray(typedArray).then(function (image) {
         if (imageLoader.isDestroyed()) {
           return;
         }
 
+        const imageAndMipLevels = getImageAndMipLevels(image);
+
         // Unload everything except the image
         imageLoader.unload();
 
-        imageLoader._image = image;
+        imageLoader._image = imageAndMipLevels.image;
+        imageLoader._mipLevels = imageAndMipLevels.mipLevels;
         imageLoader._state = ResourceLoaderState.READY;
         imageLoader._promise.resolve(imageLoader);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
@@ -175,9 +200,9 @@ function loadFromBufferView(imageLoader) {
 }
 
 function loadFromUri(imageLoader) {
-  var baseResource = imageLoader._baseResource;
-  var uri = imageLoader._uri;
-  var resource = baseResource.getDerivedResource({
+  const baseResource = imageLoader._baseResource;
+  const uri = imageLoader._uri;
+  const resource = baseResource.getDerivedResource({
     url: uri,
   });
   imageLoader._state = ResourceLoaderState.LOADING;
@@ -187,18 +212,21 @@ function loadFromUri(imageLoader) {
         return;
       }
 
+      const imageAndMipLevels = getImageAndMipLevels(image);
+
       // Unload everything except the image
       imageLoader.unload();
 
-      imageLoader._image = image;
+      imageLoader._image = imageAndMipLevels.image;
+      imageLoader._mipLevels = imageAndMipLevels.mipLevels;
       imageLoader._state = ResourceLoaderState.READY;
       imageLoader._promise.resolve(imageLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load image: " + uri);
+      handleError(imageLoader, error, `Failed to load image: ${uri}`);
     });
 }
 
@@ -209,9 +237,9 @@ function handleError(imageLoader, error, errorMessage) {
 }
 
 function getMimeTypeFromTypedArray(typedArray) {
-  var header = typedArray.subarray(0, 2);
-  var webpHeaderRIFFChars = typedArray.subarray(0, 4);
-  var webpHeaderWEBPChars = typedArray.subarray(8, 12);
+  const header = typedArray.subarray(0, 2);
+  const webpHeaderRIFFChars = typedArray.subarray(0, 4);
+  const webpHeaderWEBPChars = typedArray.subarray(8, 12);
 
   if (header[0] === 0xff && header[1] === 0xd8) {
     // See https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
@@ -221,13 +249,7 @@ function getMimeTypeFromTypedArray(typedArray) {
     return "image/png";
   } else if (header[0] === 0xab && header[1] === 0x4b) {
     // See http://github.khronos.org/KTX-Specification/#_identifier
-    return "image/ktx";
-  } else if (header[0] === 0x48 && header[1] === 0x78) {
-    // See https://github.com/BinomialLLC/crunch/blob/671a0648c8a440b4397f1d96ea5cf5700f830417/inc/crn_decomp.h#L268
-    return "image/crn";
-  } else if (header[0] === 0x73 && header[1] === 0x42) {
-    // See https://github.com/BinomialLLC/basis_universal/blob/ed135f03a05de315dd7ec7c1b8ef0589099b3e52/spec/basis_spec.txt#L125
-    return "image/basis";
+    return "image/ktx2";
   } else if (
     // See https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
     webpHeaderRIFFChars[0] === 0x52 &&
@@ -246,36 +268,39 @@ function getMimeTypeFromTypedArray(typedArray) {
 }
 
 function loadImageFromBufferTypedArray(typedArray) {
-  var mimeType = getMimeTypeFromTypedArray(typedArray);
-  if (mimeType === "image/ktx") {
+  const mimeType = getMimeTypeFromTypedArray(typedArray);
+  if (mimeType === "image/ktx2") {
+    // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
+    // ArrayBuffer may be accessed on both the worker and the main thread and
+    // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
+    // Look into SharedArrayBuffer at some point to get around this.
+    const ktxBuffer = new Uint8Array(typedArray);
+
     // Resolves to a CompressedTextureBuffer
-    return loadKTX(typedArray);
-  } else if (mimeType === "image/crn") {
-    // Resolves to a CompressedTextureBuffer
-    return loadCRN(typedArray);
+    return loadKTX2(ktxBuffer);
   }
   // Resolves to an Image or ImageBitmap
   return GltfImageLoader._loadImageFromTypedArray({
     uint8Array: typedArray,
     format: mimeType,
     flipY: false,
+    skipColorSpaceConversion: true,
   });
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
+const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function loadImageFromUri(resource) {
-  var uri = resource.url;
-  if (ktxRegex.test(uri)) {
+  const uri = resource.url;
+  if (ktx2Regex.test(uri)) {
     // Resolves to a CompressedTextureBuffer
-    return loadKTX(resource);
-  } else if (crnRegex.test(uri)) {
-    // Resolves to a CompressedTextureBuffer
-    return loadCRN(resource);
+    return loadKTX2(resource);
   }
   // Resolves to an ImageBitmap or Image
-  return resource.fetchImage();
+  return resource.fetchImage({
+    skipColorSpaceConversion: true,
+    preferImageBitmap: true,
+  });
 }
 
 /**
@@ -290,8 +315,9 @@ GltfImageLoader.prototype.unload = function () {
   this._bufferViewLoader = undefined;
   this._uri = undefined; // Free in case the uri is a data uri
   this._image = undefined;
+  this._mipLevels = undefined;
   this._gltf = undefined;
 };
 
-//Exposed for testing
+// Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;

@@ -2,6 +2,7 @@ import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EventHelper } from "../../Source/Cesium.js";
@@ -19,20 +20,19 @@ import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {
-    var scene;
-    var camera;
-    var frameState;
-    var quadtree;
-    var mockTerrain;
-    var tileProvider;
-    var imageryLayerCollection;
-    var surfaceShaderSet;
-    var processor;
-    var rootTiles;
+    let scene;
+    let camera;
+    let frameState;
+    let quadtree;
+    let mockTerrain;
+    let tileProvider;
+    let imageryLayerCollection;
+    let surfaceShaderSet;
+    let processor;
+    let rootTiles;
 
     beforeEach(function () {
       scene = {
@@ -63,6 +63,10 @@ describe("Scene/QuadtreePrimitive", function () {
         ]),
         afterRender: [],
         pixelRatio: 1.0,
+
+        terrainExaggeration: 1.0,
+        terrainExaggerationRelativeHeight: 0.0,
+
         globeTranslucencyState: new GlobeTranslucencyState(),
       };
 
@@ -97,7 +101,7 @@ describe("Scene/QuadtreePrimitive", function () {
     });
 
     function process(quadtreePrimitive, callback) {
-      var deferred = when.defer();
+      const deferred = defer();
 
       function next() {
         ++frameState.frameNumber;
@@ -232,7 +236,7 @@ describe("Scene/QuadtreePrimitive", function () {
       quadtree.preloadAncestors = false;
 
       // Look down at the center of a level 2 tile from a distance that will refine to it.
-      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      const lookAtTile = rootTiles[0].southwestChild.northeastChild;
       setCameraPosition(
         quadtree,
         frameState,
@@ -246,9 +250,9 @@ describe("Scene/QuadtreePrimitive", function () {
         // Process until the lookAtTile is rendered. That tile's parent (level 1)
         // should not be rendered along the way.
         expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-        var lookAtTileRendered =
+        const lookAtTileRendered =
           quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-        var continueProcessing = !lookAtTileRendered;
+        const continueProcessing = !lookAtTileRendered;
         return continueProcessing;
       }).then(function () {
         // The lookAtTile should be a real tile, not a fill.
@@ -257,7 +261,7 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(lookAtTile.data.vertexArray).toBeDefined();
 
         // The parent of the lookAtTile should not have been requested.
-        var parent = lookAtTile.parent;
+        const parent = lookAtTile.parent;
         mockTerrain.requestTileGeometry.calls
           .allArgs()
           .forEach(function (call) {
@@ -298,7 +302,7 @@ describe("Scene/QuadtreePrimitive", function () {
       quadtree.preloadAncestors = false;
 
       // Look down at the center of a level 2 tile from a distance that will refine to it.
-      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      const lookAtTile = rootTiles[0].southwestChild.northeastChild;
       setCameraPosition(
         quadtree,
         frameState,
@@ -312,9 +316,9 @@ describe("Scene/QuadtreePrimitive", function () {
         // Process until the lookAtTile is rendered. That tile's parent (level 1)
         // should not be rendered along the way, but it will be loaded.
         expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-        var lookAtTileRendered =
+        const lookAtTileRendered =
           quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-        var continueProcessing = !lookAtTileRendered;
+        const continueProcessing = !lookAtTileRendered;
         return continueProcessing;
       }).then(function () {
         // The lookAtTile should be a real tile, not a fill.
@@ -323,9 +327,9 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(lookAtTile.data.vertexArray).toBeDefined();
 
         // The parent of the lookAtTile should have been requested before the lookAtTile itself.
-        var parent = lookAtTile.parent;
-        var allArgs = mockTerrain.requestTileGeometry.calls.allArgs();
-        var parentArgsIndex = allArgs.indexOf(
+        const parent = lookAtTile.parent;
+        const allArgs = mockTerrain.requestTileGeometry.calls.allArgs();
+        const parentArgsIndex = allArgs.indexOf(
           allArgs.filter(function (call) {
             return (
               call[0] === parent.x &&
@@ -334,7 +338,7 @@ describe("Scene/QuadtreePrimitive", function () {
             );
           })[0]
         );
-        var lookAtArgsIndex = allArgs.indexOf(
+        const lookAtArgsIndex = allArgs.indexOf(
           allArgs.filter(function (call) {
             return (
               call[0] === lookAtTile.x &&
@@ -377,7 +381,7 @@ describe("Scene/QuadtreePrimitive", function () {
       quadtree.loadingDescendantLimit = 1;
 
       // Look down at the center of a level 2 tile from a distance that will refine to it.
-      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      const lookAtTile = rootTiles[0].southwestChild.northeastChild;
       setCameraPosition(
         quadtree,
         frameState,
@@ -389,9 +393,9 @@ describe("Scene/QuadtreePrimitive", function () {
 
       return process(quadtree, function () {
         // First the lookAtTile's parent should be rendered.
-        var lookAtTileParentRendered =
+        const lookAtTileParentRendered =
           quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
-        var continueProcessing = !lookAtTileParentRendered;
+        const continueProcessing = !lookAtTileParentRendered;
         return continueProcessing;
       })
         .then(function () {
@@ -402,9 +406,9 @@ describe("Scene/QuadtreePrimitive", function () {
 
           return process(quadtree, function () {
             // Then the lookAtTile should be rendered.
-            var lookAtTileRendered =
+            const lookAtTileRendered =
               quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-            var continueProcessing = !lookAtTileRendered;
+            const continueProcessing = !lookAtTileRendered;
             return continueProcessing;
           });
         })
@@ -445,7 +449,7 @@ describe("Scene/QuadtreePrimitive", function () {
       quadtree.preloadAncestors = false;
 
       // Look down at the center of a level 2 tile from a distance that will refine to it.
-      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      const lookAtTile = rootTiles[0].southwestChild.northeastChild;
       setCameraPosition(
         quadtree,
         frameState,
@@ -459,9 +463,9 @@ describe("Scene/QuadtreePrimitive", function () {
         // Process until the lookAtTile is rendered. That tile's parent (level 1)
         // should not be rendered along the way.
         expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-        var lookAtTileRendered =
+        const lookAtTileRendered =
           quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-        var continueProcessing = !lookAtTileRendered;
+        const continueProcessing = !lookAtTileRendered;
         return continueProcessing;
       })
         .then(function () {
@@ -484,9 +488,9 @@ describe("Scene/QuadtreePrimitive", function () {
 
           return process(quadtree, function () {
             // Eventually the parent should be rendered instead.
-            var parentRendered =
+            const parentRendered =
               quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
-            var continueProcessing = !parentRendered;
+            const continueProcessing = !parentRendered;
             return continueProcessing;
           });
         })
@@ -524,8 +528,8 @@ describe("Scene/QuadtreePrimitive", function () {
 
       quadtree.preloadAncestors = false;
 
-      var visibleTile = rootTiles[0].southwestChild.northeastChild;
-      var notVisibleTile = rootTiles[0].southwestChild.northwestChild;
+      const visibleTile = rootTiles[0].southwestChild.northeastChild;
+      const notVisibleTile = rootTiles[0].southwestChild.northwestChild;
 
       frameState.cullingVolume.computeVisibility.and.callFake(function (
         boundingVolume
@@ -534,9 +538,14 @@ describe("Scene/QuadtreePrimitive", function () {
           return Intersect.INTERSECTING;
         }
 
-        if (boundingVolume === visibleTile.data.orientedBoundingBox) {
+        if (
+          boundingVolume === visibleTile.data.tileBoundingRegion.boundingVolume
+        ) {
           return Intersect.INTERSECTING;
-        } else if (boundingVolume === notVisibleTile.data.orientedBoundingBox) {
+        } else if (
+          boundingVolume ===
+          notVisibleTile.data.tileBoundingRegion.boundingVolume
+        ) {
           return Intersect.OUTSIDE;
         }
         return Intersect.INTERSECTING;
@@ -554,9 +563,9 @@ describe("Scene/QuadtreePrimitive", function () {
 
       return process(quadtree, function () {
         // Process until the visibleTile is rendered.
-        var visibleTileRendered =
+        const visibleTileRendered =
           quadtree._tilesToRender.indexOf(visibleTile) >= 0;
-        var continueProcessing = !visibleTileRendered;
+        const continueProcessing = !visibleTileRendered;
         return continueProcessing;
       }).then(function () {
         expect(quadtree._tilesToRender).not.toContain(notVisibleTile);
@@ -583,7 +592,7 @@ describe("Scene/QuadtreePrimitive", function () {
   describe(
     "with mock tile provider",
     function () {
-      var scene;
+      let scene;
 
       beforeAll(function () {
         scene = createScene();
@@ -595,7 +604,7 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       function createSpyTileProvider() {
-        var result = jasmine.createSpyObj("tileProvider", [
+        const result = jasmine.createSpyObj("tileProvider", [
           "getQuadtree",
           "setQuadtree",
           "getReady",
@@ -631,7 +640,7 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         });
 
-        var tilingScheme = new GeographicTilingScheme();
+        const tilingScheme = new GeographicTilingScheme();
         result.getTilingScheme.and.returnValue(tilingScheme);
 
         result.canRefine.and.callFake(function (tile) {
@@ -642,10 +651,10 @@ describe("Scene/QuadtreePrimitive", function () {
       }
 
       it("calls initialize, beginUpdate, loadTile, and endUpdate", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -668,14 +677,14 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("shows the root tiles when they are ready and visible", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
           tile.renderable = true;
         });
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -695,17 +704,17 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("stops loading a tile that moves to the DONE state", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-        var calls = 0;
+        let calls = 0;
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
           ++calls;
           tile.state = QuadtreeTileLoadState.DONE;
         });
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -732,17 +741,17 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("tileLoadProgressEvent is raised when tile loaded and when new children discovered", function () {
-        var eventHelper = new EventHelper();
+        const eventHelper = new EventHelper();
 
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
-        var progressEventSpy = jasmine.createSpy("progressEventSpy");
+        const progressEventSpy = jasmine.createSpy("progressEventSpy");
         eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
 
         // Initial update to get the zero-level tiles set up.
@@ -796,7 +805,7 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("forEachLoadedTile does not enumerate tiles in the START state", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
         tileProvider.computeDistanceToTile.and.returnValue(1e-15);
@@ -807,7 +816,7 @@ describe("Scene/QuadtreePrimitive", function () {
           tile.renderable = true;
         });
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -839,7 +848,7 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("add and remove callbacks to tiles", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
         tileProvider.computeDistanceToTile.and.returnValue(1e-15);
@@ -855,11 +864,11 @@ describe("Scene/QuadtreePrimitive", function () {
           };
         });
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
-        var removeFunc = quadtree.updateHeight(
+        const removeFunc = quadtree.updateHeight(
           Cartographic.fromDegrees(-72.0, 40.0),
           function (position) {}
         );
@@ -878,7 +887,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        var addedCallback = false;
+        let addedCallback = false;
         quadtree.forEachLoadedTile(function (tile) {
           addedCallback = addedCallback || tile.customData.length > 0;
         });
@@ -894,7 +903,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        var removedCallback = true;
+        let removedCallback = true;
         quadtree.forEachLoadedTile(function (tile) {
           removedCallback = removedCallback && tile.customData.length === 0;
         });
@@ -903,7 +912,7 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("updates heights", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
         tileProvider.computeDistanceToTile.and.returnValue(1e-15);
@@ -914,9 +923,9 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         };
 
-        var position = Cartesian3.clone(Cartesian3.ZERO);
-        var updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
-        var currentPosition = position;
+        const position = Cartesian3.clone(Cartesian3.ZERO);
+        const updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+        let currentPosition = position;
 
         // Load the root tiles.
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
@@ -930,7 +939,7 @@ describe("Scene/QuadtreePrimitive", function () {
           };
         });
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -965,11 +974,11 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("gives correct priority to tile loads", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -1089,11 +1098,11 @@ describe("Scene/QuadtreePrimitive", function () {
       });
 
       it("renders tiles in approximate near-to-far order", function () {
-        var tileProvider = createSpyTileProvider();
+        const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-        var quadtree = new QuadtreePrimitive({
+        const quadtree = new QuadtreePrimitive({
           tileProvider: tileProvider,
         });
 
@@ -1134,10 +1143,10 @@ describe("Scene/QuadtreePrimitive", function () {
           // +----+----+----+----+
           // camera is located in e.nw (east.northwestChild)
 
-          var west = quadtree._levelZeroTiles.filter(function (tile) {
+          const west = quadtree._levelZeroTiles.filter(function (tile) {
             return tile.x === 0;
           })[0];
-          var east = quadtree._levelZeroTiles.filter(function (tile) {
+          const east = quadtree._levelZeroTiles.filter(function (tile) {
             return tile.x === 1;
           })[0];
           expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
@@ -1170,16 +1179,16 @@ describe("Scene/QuadtreePrimitive", function () {
   // that will produce a screen-space error at that position that will refine to
   // a given tile level and no further.
   function setCameraPosition(quadtree, frameState, position, level) {
-    var camera = frameState.camera;
-    var geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(
+    const camera = frameState.camera;
+    const geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(
       level
     );
-    var sse = quadtree.maximumScreenSpaceError * 0.8;
-    var sseDenominator = camera.frustum.sseDenominator;
-    var height = frameState.context.drawingBufferHeight;
+    const sse = quadtree.maximumScreenSpaceError * 0.8;
+    const sseDenominator = camera.frustum.sseDenominator;
+    const height = frameState.context.drawingBufferHeight;
 
-    var distance = (geometricError * height) / (sse * sseDenominator);
-    var cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
+    const distance = (geometricError * height) / (sse * sseDenominator);
+    const cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
     camera.lookAt(cartesian, new Cartesian3(0.0, 0.0, distance));
   }
 });

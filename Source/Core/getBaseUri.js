@@ -12,10 +12,10 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @example
  * // basePath will be "/Gallery/";
- * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
+ * const basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
  *
  * // basePath will be "/Gallery/?value=true&example=false";
- * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
+ * const basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
  */
 function getBaseUri(uri, includeQuery) {
   //>>includeStart('debug', pragmas.debug);
@@ -24,8 +24,8 @@ function getBaseUri(uri, includeQuery) {
   }
   //>>includeEnd('debug');
 
-  var basePath = "";
-  var i = uri.lastIndexOf("/");
+  let basePath = "";
+  const i = uri.lastIndexOf("/");
   if (i !== -1) {
     basePath = uri.substring(0, i + 1);
   }
@@ -35,11 +35,11 @@ function getBaseUri(uri, includeQuery) {
   }
 
   uri = new Uri(uri);
-  if (defined(uri.query)) {
-    basePath += "?" + uri.query;
+  if (uri.query().length !== 0) {
+    basePath += `?${uri.query()}`;
   }
-  if (defined(uri.fragment)) {
-    basePath += "#" + uri.fragment;
+  if (uri.fragment().length !== 0) {
+    basePath += `#${uri.fragment()}`;
   }
 
   return basePath;

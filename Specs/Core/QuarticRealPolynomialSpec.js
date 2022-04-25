@@ -33,24 +33,24 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("discriminant", function () {
-    var a = 1;
-    var b = 2;
-    var c = 3;
-    var d = 4;
-    var e = 5;
+    const a = 1;
+    const b = 2;
+    const c = 3;
+    const d = 4;
+    const e = 5;
 
-    var a2 = a * a;
-    var a3 = a2 * a;
-    var b2 = b * b;
-    var b3 = b2 * b;
-    var c2 = c * c;
-    var c3 = c2 * c;
-    var d2 = d * d;
-    var d3 = d2 * d;
-    var e2 = e * e;
-    var e3 = e2 * e;
+    const a2 = a * a;
+    const a3 = a2 * a;
+    const b2 = b * b;
+    const b3 = b2 * b;
+    const c2 = c * c;
+    const c3 = c2 * c;
+    const d2 = d * d;
+    const d3 = d2 * d;
+    const e2 = e * e;
+    const e3 = e2 * e;
 
-    var expected =
+    const expected =
       b2 * c2 * d2 -
       4.0 * b3 * d3 -
       4.0 * a * c3 * d2 +
@@ -69,7 +69,7 @@ describe("Core/QuarticRealPolynomial", function () {
           27.0 * b2 * b2 -
           128.0 * a2 * c2 -
           192.0 * a2 * b * d);
-    var actual = QuarticRealPolynomial.computeDiscriminant(a, b, c, d, e);
+    const actual = QuarticRealPolynomial.computeDiscriminant(a, b, c, d, e);
     expect(actual).toEqual(expected);
   });
 
@@ -104,7 +104,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("four repeated roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       2.0,
       -16.0,
       48.0,
@@ -119,7 +119,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("two pairs of repeated roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       2.0,
       0.0,
       -4.0,
@@ -134,7 +134,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("one pair of repeated roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       2.0,
       -8.0,
       16.0,
@@ -147,7 +147,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("two unique and one pair of repeated roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       2.0,
       8.0,
       -6.0,
@@ -162,7 +162,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("four unique roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       2.0,
       4.0,
       -26.0,
@@ -177,7 +177,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("complex roots", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       3.0,
       -8.0,
       14.0,
@@ -188,7 +188,7 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("cubic case", function () {
-    var roots = QuarticRealPolynomial.computeRealRoots(
+    const roots = QuarticRealPolynomial.computeRealRoots(
       0.0,
       2.0,
       6.0,
@@ -202,42 +202,42 @@ describe("Core/QuarticRealPolynomial", function () {
   });
 
   it("stability 1", function () {
-    var a = 1.0;
-    var b = -27121.309311434146;
-    var c = 0.0;
-    var d = -26760.571078686513;
-    var e = -1.0;
+    const a = 1.0;
+    const b = -27121.309311434146;
+    const c = 0.0;
+    const d = -26760.571078686513;
+    const e = -1.0;
 
-    var expected = [-0.000037368410630733706, 27121.3093478151];
-    var actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
+    const expected = [-0.000037368410630733706, 27121.3093478151];
+    const actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
     expect(actual.length).toEqual(expected.length);
     expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON12);
     expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON12);
   });
 
   it("stability 2", function () {
-    var a = -1.0;
-    var b = -26959.661445199898;
-    var c = 0.0;
-    var d = -26675.609408851604;
-    var e = 1.0;
+    const a = -1.0;
+    const b = -26959.661445199898;
+    const c = 0.0;
+    const d = -26675.609408851604;
+    const e = 1.0;
 
-    var expected = [-26959.661481901538, 0.000037487427107407711];
-    var actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
+    const expected = [-26959.661481901538, 0.000037487427107407711];
+    const actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
     expect(actual.length).toEqual(expected.length);
     expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON11);
     expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON11);
   });
 
   it("stability 3", function () {
-    var a = -1.0;
-    var b = 20607.270539372261;
-    var c = 0.0;
-    var d = 20333.159863900513;
-    var e = 1.0;
+    const a = -1.0;
+    const b = 20607.270539372261;
+    const c = 0.0;
+    const d = 20333.159863900513;
+    const e = 1.0;
 
-    var expected = [-0.000049180747737409547, 20607.270587253341];
-    var actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
+    const expected = [-0.000049180747737409547, 20607.270587253341];
+    const actual = QuarticRealPolynomial.computeRealRoots(a, b, c, d, e);
     expect(actual.length).toEqual(expected.length);
     expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON11);
     expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON11);

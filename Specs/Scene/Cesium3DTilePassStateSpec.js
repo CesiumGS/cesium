@@ -3,7 +3,7 @@ import { Cesium3DTilePassState } from "../../Source/Cesium.js";
 
 describe("Scene/Cesium3DTilePassState", function () {
   it("sets default values", function () {
-    var passState = new Cesium3DTilePassState({
+    const passState = new Cesium3DTilePassState({
       pass: Cesium3DTilePass.RENDER,
     });
     expect(passState.pass).toBe(Cesium3DTilePass.RENDER);
@@ -14,10 +14,10 @@ describe("Scene/Cesium3DTilePassState", function () {
   });
 
   it("constructed with options", function () {
-    var mockCommandList = [];
-    var mockCamera = {};
-    var mockCullingVolume = {};
-    var passState = new Cesium3DTilePassState({
+    const mockCommandList = [];
+    const mockCamera = {};
+    const mockCullingVolume = {};
+    const passState = new Cesium3DTilePassState({
       pass: Cesium3DTilePass.RENDER,
       commandList: mockCommandList,
       camera: mockCamera,

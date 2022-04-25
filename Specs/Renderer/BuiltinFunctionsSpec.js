@@ -9,7 +9,7 @@ import createFrameState from "../createFrameState.js";
 describe(
   "Renderer/BuiltinFunctions",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -20,7 +20,7 @@ describe(
     });
 
     it("has czm_transpose (2x2)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); " +
         "  mat2 mt = mat2(1.0, 3.0, 2.0, 4.0); " +
@@ -34,7 +34,7 @@ describe(
     });
 
     it("has czm_transpose (3x3)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  mat3 m = mat3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0); " +
         "  mat3 mt = mat3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0); " +
@@ -48,7 +48,7 @@ describe(
     });
 
     it("has czm_transpose (4x4)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  mat4 m = mat4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);" +
         "  mat4 mt = mat4(1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0);" +
@@ -62,17 +62,17 @@ describe(
     });
 
     it("has czm_eyeToWindowCoordinates", function () {
-      var camera = createCamera();
+      const camera = createCamera();
       camera.frustum.near = 1.0;
 
-      var canvas = context.canvas;
-      var width = canvas.clientWidth;
-      var height = canvas.clientHeight;
-      var vp = new BoundingRectangle(0.0, 0.0, width, height);
+      const canvas = context.canvas;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const vp = new BoundingRectangle(0.0, 0.0, width, height);
       context.uniformState.viewport = vp;
       context.uniformState.update(createFrameState(context, camera));
 
-      var fs =
+      const fs =
         "void main() { " +
         "  float z = czm_projection[3][2] / czm_projection[2][2];" +
         "  float x = z / czm_projection[0][0];" +
@@ -91,17 +91,17 @@ describe(
     });
 
     it("has czm_windowToEyeCoordinates", function () {
-      var camera = createCamera();
+      const camera = createCamera();
       camera.frustum.near = 1.0;
 
-      var canvas = context.canvas;
-      var width = canvas.clientWidth;
-      var height = canvas.clientHeight;
-      var vp = new BoundingRectangle(0.0, 0.0, width, height);
+      const canvas = context.canvas;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const vp = new BoundingRectangle(0.0, 0.0, width, height);
       context.uniformState.viewport = vp;
       context.uniformState.update(createFrameState(context, camera));
 
-      var fs =
+      let fs =
         "void main() { " +
         "  float z = czm_projection[3][2] / czm_projection[2][2];" +
         "  float x = z / czm_projection[0][0];" +
@@ -136,7 +136,7 @@ describe(
     });
 
     it("has czm_planeDistance", function () {
-      var fs =
+      let fs =
         "void main() { " +
         "  vec4 plane = vec4(1.0, 0.0, 0.0, 0.0); " +
         "  vec3 point = vec3(1.0, 0.0, 0.0); " +
@@ -164,7 +164,7 @@ describe(
     });
 
     it("has czm_lineDistance", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  vec2 point1 = vec2(0.0, 0.0); " +
         "  vec2 point2 = vec2(1.0, 0.0); " +
@@ -180,7 +180,7 @@ describe(
     });
 
     it("has czm_tangentToEyeSpaceMatrix", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  vec3 tangent = vec3(1.0, 0.0, 0.0); " +
         "  vec3 bitangent = vec3(0.0, 1.0, 0.0); " +
@@ -196,15 +196,15 @@ describe(
     });
 
     it("has czm_translateRelativeToEye", function () {
-      var camera = createCamera({
+      const camera = createCamera({
         offset: new Cartesian3(1.0, 2.0, 3.0),
       });
       context.uniformState.update(createFrameState(context, camera));
 
-      var p = new Cartesian3(6.0, 5.0, 4.0);
-      var encoded = EncodedCartesian3.fromCartesian(p);
+      const p = new Cartesian3(6.0, 5.0, 4.0);
+      const encoded = EncodedCartesian3.fromCartesian(p);
 
-      var uniformMap = {
+      const uniformMap = {
         u_high: function () {
           return encoded.high;
         },
@@ -213,7 +213,7 @@ describe(
         },
       };
 
-      var fs =
+      const fs =
         "uniform vec3 u_high;" +
         "uniform vec3 u_low;" +
         "void main() { " +
@@ -229,7 +229,7 @@ describe(
     });
 
     it("has czm_antialias", function () {
-      var fs =
+      const fs =
         "void main() {" +
         "  vec4 color0 = vec4(1.0, 0.0, 0.0, 1.0);" +
         "  vec4 color1 = vec4(0.0, 1.0, 0.0, 1.0);" +
@@ -243,7 +243,7 @@ describe(
     });
 
     it("czm_pointAlongRay: point at ray origin", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 0.0) == vec3(0.0)); " +
         "}";
@@ -254,7 +254,7 @@ describe(
     });
 
     it("czm_pointAlongRay: point in front of ray origin", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 2.0) == vec3(2.0, 0.0, 0.0)); " +
         "}";
@@ -265,7 +265,7 @@ describe(
     });
 
     it("czm_pointAlongRay: point behind ray origin", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(0.0, 1.0, 0.0)), -2.0) == vec3(0.0, -2.0, 0.0)); " +
         "}";
@@ -276,7 +276,7 @@ describe(
     });
 
     it("has czm_octDecode(vec2)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); " +
         "}";
@@ -287,7 +287,7 @@ describe(
     });
 
     it("has czm_octDecode(float)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); " +
         "}";
@@ -298,7 +298,7 @@ describe(
     });
 
     it("has czm_octDecode(vec2, vec3, vec3, vec3)", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  vec3 a, b, c;" +
         "  czm_octDecode(vec2(8454016.0, 8421631.0), a, b, c);" +
@@ -314,9 +314,11 @@ describe(
     });
 
     it("has czm_decompressTextureCoordinates", function () {
-      var fs =
+      const fs =
         "void main() { " +
-        "  gl_FragColor = vec4(czm_decompressTextureCoordinates(8386559.0) == vec2(0.4998779, 0.4998779)); " +
+        "  vec2 coords = czm_decompressTextureCoordinates(8386559.0); " +
+        "  vec2 expected = vec2(0.4998779, 0.4998779);" +
+        "  gl_FragColor = vec4(all(lessThanEqual(abs(coords - expected), vec2(0.00000005)))); " +
         "}";
       expect({
         context: context,
@@ -325,7 +327,7 @@ describe(
     });
 
     it("has signNotZero : float", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_signNotZero(0.0) == 1.0, " +
         "                      czm_signNotZero(5.0) == 1.0, " +
@@ -338,7 +340,7 @@ describe(
     });
 
     it("has signNotZero : vec2", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_signNotZero(vec2(0.0, 0.0)) == vec2(1.0, 1.0), " +
         "                      czm_signNotZero(vec2(1.0, 1.0)) == vec2(1.0, 1.0), " +
@@ -352,7 +354,7 @@ describe(
     });
 
     it("has signNotZero : vec3", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_signNotZero(vec3(0.0, 0.0, 0.0)) == vec3(1.0, 1.0, 1.0), " +
         "                      czm_signNotZero(vec3(1.0, 1.0, 1.0)) == vec3(1.0, 1.0, 1.0), " +
@@ -366,7 +368,7 @@ describe(
     });
 
     it("has signNotZero : vec4", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_signNotZero(vec4(0.0, 0.0, 0.0, 0.0)) == vec4(1.0), " +
         "                      czm_signNotZero(vec4(1.0, 1.0, 1.0, 1.0)) == vec4(1.0), " +
@@ -380,7 +382,7 @@ describe(
     });
 
     it("has czm_cosineAndSine in all 4 quadrants", function () {
-      var fs =
+      const fs =
         "bool isBounded(float value, float min, float max) { " +
         "  return ((value < max) && (value > min)); " +
         "}" +
@@ -397,7 +399,7 @@ describe(
     });
 
     it("can calculate nearFarScalar", function () {
-      var fs =
+      const fs =
         "vec4 testNearFarScalar = vec4(10.0, 1.0, 20.0, 0.0);" +
         "void main() { " +
         "  gl_FragColor = vec4(czm_nearFarScalar(testNearFarScalar, 5.0 * 5.0) == 1.0, " +
@@ -412,7 +414,7 @@ describe(
     });
 
     it("has czm_cascadeColor", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));" +
         "}";
@@ -423,7 +425,7 @@ describe(
     });
 
     it("has czm_approximateSphericalCoordinates", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  gl_FragColor = vec4(all(equal(czm_approximateSphericalCoordinates(vec3(1.0, 0.0, 0.0)), vec2(0.0, 0.0))));" +
         "}";
@@ -434,7 +436,7 @@ describe(
     });
 
     it("has czm_transformPlane", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  mat4 uniformScale2 = mat4(0.5, 0.0, 0.0, 0.0," +
         "                            0.0, 0.5, 0.0, 0.0," +
@@ -449,24 +451,13 @@ describe(
     });
 
     it("has czm_unpackFloat", function () {
-      var packed = Cartesian4.packFloat(1);
+      let packed = Cartesian4.packFloat(1);
       packed = Cartesian4.divideByScalar(packed, 255, packed);
-      var vec4 =
-        "vec4(" +
-        packed.x +
-        ", " +
-        packed.y +
-        ", " +
-        packed.z +
-        ", " +
-        packed.w +
-        ")";
-      var fs =
-        "void main() { " +
-        "  gl_FragColor = vec4(czm_unpackFloat(" +
-        vec4 +
-        "));" +
-        "}";
+      const vec4 = `vec4(${packed.x}, ${packed.y}, ${packed.z}, ${packed.w})`;
+      const fs =
+        `${
+          "void main() { " + "  gl_FragColor = vec4(czm_unpackFloat("
+        }${vec4}));` + `}`;
       expect({
         context: context,
         fragmentShader: fs,
@@ -474,7 +465,7 @@ describe(
     });
 
     it("has czm_branchFreeTernary", function () {
-      var fs =
+      let fs =
         "void main() { " +
         "  gl_FragColor = vec4(czm_branchFreeTernary(true, 1.0, 0.0));" +
         "}";
@@ -512,7 +503,7 @@ describe(
     });
 
     it("has czm_fastApproximateAtan", function () {
-      var fsAtan =
+      const fsAtan =
         "void main() { " +
         "  gl_FragColor = vec4(czm_fastApproximateAtan(0.0) == 0.0);" +
         "}";
@@ -521,7 +512,7 @@ describe(
         fragmentShader: fsAtan,
       }).contextToRender();
 
-      var fsAtan2 =
+      const fsAtan2 =
         "void main() { " +
         "  gl_FragColor = vec4(czm_fastApproximateAtan(1.0, 0.0) == 0.0);" +
         "}";

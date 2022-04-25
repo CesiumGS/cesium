@@ -6,46 +6,42 @@ import {
 
 describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
-    expect(tilesetMetadata.class).toBeUndefined();
-    expect(tilesetMetadata.name).toBeUndefined();
-    expect(tilesetMetadata.description).toBeUndefined();
     expect(tilesetMetadata.extras).toBeUndefined();
   });
 
   it("creates tileset metadata", function () {
-    var cityClass = new MetadataClass({
+    const cityClass = new MetadataClass({
       id: "city",
       class: {
         properties: {
           neighborhoods: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
     });
 
-    var extras = {
+    const extras = {
       other: 0,
     };
 
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var properties = {
+    const properties = {
       neighborhoods: ["A", "B", "C"],
     };
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: cityClass,
       tileset: {
-        name: "City",
-        description: "City Metadata",
         extras: extras,
         extensions: extensions,
         properties: properties,
@@ -53,8 +49,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBe(cityClass);
-    expect(tilesetMetadata.name).toBe("City");
-    expect(tilesetMetadata.description).toBe("City Metadata");
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(
@@ -64,30 +58,42 @@ describe("Scene/TilesetMetadata", function () {
 
   it("constructor throws without tileset", function () {
     expect(function () {
-      return new TilesetMetadata();
+      return new TilesetMetadata({
+        class: {},
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without class", function () {
+    expect(function () {
+      return new TilesetMetadata({
+        tileset: {},
+      });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.hasProperty("height")).toBe(false);
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -99,18 +105,19 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -122,19 +129,20 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
-            optional: true,
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            required: false,
             default: 10.0,
           },
         },
       },
     });
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {},
     });
@@ -143,8 +151,9 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty throws without propertyId", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -152,21 +161,114 @@ describe("Scene/TilesetMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getPropertyIds returns empty array when there are no properties", function () {
-    var tilesetMetadata = new TilesetMetadata({
+  it("hasPropertyBySemantic returns false when there's no properties", function () {
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
+    });
+    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
+    const buildingClass = new MetadataClass({
+      id: "building",
+      class: {
+        properties: {
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+          },
+        },
+      },
+    });
+
+    const tilesetMetadata = new TilesetMetadata({
+      class: buildingClass,
+      tileset: {
+        properties: {
+          height: 10.0,
+        },
+      },
+    });
+    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
+    const buildingClass = new MetadataClass({
+      id: "building",
+      class: {
+        properties: {
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            semantic: "HEIGHT",
+          },
+        },
+      },
+    });
+
+    const tilesetMetadata = new TilesetMetadata({
+      class: buildingClass,
+      tileset: {
+        properties: {
+          height: 10.0,
+        },
+      },
+    });
+    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
+    const buildingClass = new MetadataClass({
+      id: "building",
+      class: {
+        properties: {
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            semantic: "HEIGHT",
+            required: false,
+            default: 10.0,
+          },
+        },
+      },
+    });
+    const tilesetMetadata = new TilesetMetadata({
+      class: buildingClass,
+      tileset: {},
+    });
+
+    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic throws without semantic", function () {
+    const tilesetMetadata = new TilesetMetadata({
+      tileset: {},
+      class: {},
+    });
+
+    expect(function () {
+      tilesetMetadata.hasPropertyBySemantic(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("getPropertyIds returns empty array when there are no properties", function () {
+    const tilesetMetadata = new TilesetMetadata({
+      tileset: {},
+      class: {},
     });
 
     expect(tilesetMetadata.getPropertyIds().length).toBe(0);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
           color: {
             type: "STRING",
@@ -175,7 +277,7 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -192,13 +294,14 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
-            optional: true,
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            required: false,
             default: 10.0,
           },
           color: {
@@ -207,7 +310,7 @@ describe("Scene/TilesetMetadata", function () {
         },
       },
     });
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -223,12 +326,13 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
           color: {
             type: "STRING",
@@ -237,7 +341,7 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -247,33 +351,27 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var results = [];
-    var returnedResults = tilesetMetadata.getPropertyIds(results);
+    const results = [];
+    const returnedResults = tilesetMetadata.getPropertyIds(results);
 
     expect(results).toBe(returnedResults);
     expect(results.sort()).toEqual(["color", "height"]);
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    var tilesetMetadata = new TilesetMetadata({
-      tileset: {},
-    });
-    expect(tilesetMetadata.getProperty("height")).toBeUndefined();
-  });
-
   it("getProperty returns undefined when there's no property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -281,26 +379,27 @@ describe("Scene/TilesetMetadata", function () {
         },
       },
     });
-    expect(tilesetMetadata.getProperty("color")).toBeUndefined();
+    expect(function () {
+      return tilesetMetadata.getProperty("color");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
     });
 
-    var position = [0.0, 0.0, 0.0];
+    const position = [0.0, 0.0, 0.0];
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -309,39 +408,39 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var value = tilesetMetadata.getProperty("position");
+    const value = tilesetMetadata.getProperty("position");
     expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
-    var position = [0.0, 0.0, 0.0];
-    var buildingClass = new MetadataClass({
+    const position = [0.0, 0.0, 0.0];
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
-            optional: true,
+            required: false,
             default: position,
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {},
     });
 
-    var value = tilesetMetadata.getProperty("position");
+    const value = tilesetMetadata.getProperty("position");
     expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty throws without propertyId", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -350,29 +449,29 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setProperty returns false if property doesn't exist", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
-    var position = [0.0, 0.0, 0.0];
+    const position = [0.0, 0.0, 0.0];
     expect(tilesetMetadata.setProperty("position", position)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -381,15 +480,16 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var position = new Cartesian3(1.0, 1.0, 1.0);
+    const position = new Cartesian3(1.0, 1.0, 1.0);
     expect(tilesetMetadata.setProperty("position", position)).toBe(true);
     expect(tilesetMetadata.getProperty("position")).toEqual(position);
     expect(tilesetMetadata.getProperty("position")).not.toBe(position); // The value is cloned
   });
 
   it("setProperty throws without propertyId", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -398,8 +498,9 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setProperty throws without value", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -408,25 +509,27 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no class", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.getPropertyBySemantic("_HEIGHT")).toBeUndefined();
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -439,19 +542,20 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -464,8 +568,9 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyBySemantic throws without semantic", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -474,19 +579,20 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -500,18 +606,19 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic returns false if semantic does not exist", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -524,8 +631,9 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -534,19 +642,20 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            type: "SCALAR",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
       },
     });
 
-    var tilesetMetadata = new TilesetMetadata({
+    const tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {

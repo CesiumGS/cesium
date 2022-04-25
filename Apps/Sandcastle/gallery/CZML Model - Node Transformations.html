@@ -33,7 +33,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
+        const czml = [
           {
             id: "document",
             name: "CZML Model",
@@ -93,11 +93,11 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dataSourcePromise = viewer.dataSources.add(
+        const dataSourcePromise = viewer.dataSources.add(
           Cesium.CzmlDataSource.load(czml)
         );
 
@@ -105,7 +105,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("model");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           }); //Sandcastle_End
         Sandcastle.finishedLoading();

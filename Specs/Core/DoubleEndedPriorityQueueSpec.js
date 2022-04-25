@@ -29,15 +29,15 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("gets comparator", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
-    var returnedComparator = queue.comparator;
+    const returnedComparator = queue.comparator;
     expect(returnedComparator).toEqual(comparator);
   });
 
   it("uses different comparator", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: function (a, b) {
         return b - a;
       },
@@ -52,7 +52,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("checks state of default empty queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -64,7 +64,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("inserts one element into queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -77,7 +77,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("inserts two elements into queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -91,7 +91,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("inserts three elements into queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -106,7 +106,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("inserts four elements into queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -122,13 +122,13 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("insert removes and returns minimum element when the queue is full", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: 1,
     });
 
-    var nothing = queue.insert(1);
-    var removed = queue.insert(2);
+    const nothing = queue.insert(1);
+    const removed = queue.insert(2);
 
     expect(queue.length).toEqual(1);
     expect(queue.maximumLength).toEqual(1);
@@ -140,21 +140,21 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("insert returns undefined when new element is less than or equal priority to the minimum element and the queue is full", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: function (a, b) {
         return a.value - b.value;
       },
       maximumLength: 2,
     });
 
-    var obj1 = { value: 1, id: 0 };
-    var obj2 = { value: 2, id: 0 };
-    var obj3 = { value: 1, id: 1 };
-    var obj4 = { value: 0, id: 1 };
-    var result1 = queue.insert(obj1);
-    var result2 = queue.insert(obj2);
-    var result3 = queue.insert(obj3); // ignored because equal priority to minimum
-    var result4 = queue.insert(obj4); // ignored because lower priority than minimum
+    const obj1 = { value: 1, id: 0 };
+    const obj2 = { value: 2, id: 0 };
+    const obj3 = { value: 1, id: 1 };
+    const obj4 = { value: 0, id: 1 };
+    const result1 = queue.insert(obj1);
+    const result2 = queue.insert(obj2);
+    const result3 = queue.insert(obj3); // ignored because equal priority to minimum
+    const result4 = queue.insert(obj4); // ignored because lower priority than minimum
 
     expect(queue.length).toEqual(2);
     expect(queue.maximumLength).toEqual(2);
@@ -167,7 +167,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("remove and return minimum element", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -175,7 +175,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     queue.insert(2);
     queue.insert(3);
 
-    var minimumValue = queue.removeMinimum();
+    const minimumValue = queue.removeMinimum();
 
     expect(queue.length).toEqual(2);
     expect(minimumValue).toEqual(1);
@@ -185,16 +185,16 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("removeMinimum returns undefined when queue is empty", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
-    var minimumValue = queue.removeMinimum();
+    const minimumValue = queue.removeMinimum();
     expect(minimumValue).toBeUndefined();
   });
 
   it("remove and return maximum element", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -202,7 +202,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     queue.insert(2);
     queue.insert(3);
 
-    var maximumValue = queue.removeMaximum();
+    const maximumValue = queue.removeMaximum();
 
     expect(queue.length).toEqual(2);
     expect(maximumValue).toEqual(3);
@@ -212,16 +212,16 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("removeMaximum returns undefined when queue is empty", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
-    var maximumValue = queue.removeMaximum();
+    const maximumValue = queue.removeMaximum();
     expect(maximumValue).toBeUndefined();
   });
 
   it("clones queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: 4,
     });
@@ -229,7 +229,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     queue.insert(1);
     queue.insert(2);
 
-    var clone = queue.clone();
+    const clone = queue.clone();
     expect(clone.length).toEqual(queue.length);
     expect(clone.maximumLength).toEqual(queue.maximumLength);
     expect(clone.comparator).toEqual(queue.comparator);
@@ -238,7 +238,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("resets queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
     queue.insert(1);
@@ -253,7 +253,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("resets queue with maximum length", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: 1,
     });
@@ -269,7 +269,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("creates queue with maximum length of zero", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: 0,
     });
@@ -284,7 +284,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("creates queue with maximum length of one", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: 1,
     });
@@ -300,7 +300,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("throws when maximum length is set to less than zero", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -310,7 +310,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("sets maximum length to undefined", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
@@ -328,13 +328,13 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("sets maximum length to less than current length", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
-    var maximumLength = 5;
-    for (var i = 0; i < maximumLength * 2; i++) {
-      var value = i;
+    const maximumLength = 5;
+    for (let i = 0; i < maximumLength * 2; i++) {
+      const value = i;
       queue.insert(value);
     }
     queue.maximumLength = maximumLength;
@@ -350,11 +350,11 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     // 1) Remove successive minimum elements from the queue and check if they are sorted correctly
     // 2) Remove successive maximum elements from the queue and check if they are sorted correctly
 
-    var minArray = [];
-    var maxArray = [];
+    const minArray = [];
+    const maxArray = [];
 
-    var minQueue = queue.clone();
-    var maxQueue = queue.clone();
+    const minQueue = queue.clone();
+    const maxQueue = queue.clone();
 
     while (minQueue.length > 0) {
       minArray.push(minQueue.removeMinimum());
@@ -367,7 +367,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
       return false;
     }
 
-    var i;
+    let i;
     for (i = 0; i < minArray.length - 1; i++) {
       if (minArray[i] > minArray[i + 1]) {
         return false;
@@ -382,17 +382,17 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   }
 
   it("maintains priority with ascending insertions", function () {
-    var length = 200;
-    var maximumLength = 100;
+    const length = 200;
+    const maximumLength = 100;
 
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: maximumLength,
     });
 
-    var pass = true;
-    for (var i = 0; i < length; ++i) {
-      var value = i;
+    let pass = true;
+    for (let i = 0; i < length; ++i) {
+      const value = i;
       queue.insert(value);
       pass = pass && isValidQueue(queue);
     }
@@ -401,17 +401,17 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("maintains priority with descending insertions", function () {
-    var length = 200;
-    var maximumLength = 100;
+    const length = 200;
+    const maximumLength = 100;
 
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: maximumLength,
     });
 
-    var pass = true;
-    for (var i = 0; i < length; ++i) {
-      var value = length - 1 - i;
+    let pass = true;
+    for (let i = 0; i < length; ++i) {
+      const value = length - 1 - i;
       queue.insert(value);
       pass = pass && isValidQueue(queue);
     }
@@ -420,17 +420,17 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("maintains priority with random insertions", function () {
-    var length = 200;
-    var maximumLength = 100;
+    const length = 200;
+    const maximumLength = 100;
 
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
       maximumLength: maximumLength,
     });
 
-    var pass = true;
-    for (var i = 0; i < length; ++i) {
-      var value = Math.random();
+    let pass = true;
+    for (let i = 0; i < length; ++i) {
+      const value = Math.random();
       queue.insert(value);
       pass = pass && isValidQueue(queue);
     }
@@ -439,26 +439,26 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("resorts queue", function () {
-    var queue = new DoubleEndedPriorityQueue({
+    const queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
     });
 
-    var i;
-    var length = 200;
+    let i;
+    const length = 200;
 
     for (i = 0; i < length; ++i) {
       queue.insert(0);
     }
 
     // Change all of the queue values to random values to make it unsorted
-    var array = queue.internalArray;
+    const array = queue.internalArray;
     for (i = 0; i < length; i++) {
       array[i] = Math.random();
     }
 
     queue.resort();
 
-    var pass = isValidQueue(queue);
+    const pass = isValidQueue(queue);
     expect(pass).toBe(true);
   });
 });

@@ -15,12 +15,6 @@
  */
 vec3 czm_sphericalHarmonics(vec3 normal, vec3 coefficients[9])
 {
-    const float c1 = 0.429043;
-    const float c2 = 0.511664;
-    const float c3 = 0.743125;
-    const float c4 = 0.886227;
-    const float c5 = 0.247708;
-
     vec3 L00 = coefficients[0];
     vec3 L1_1 = coefficients[1];
     vec3 L10 = coefficients[2];
@@ -35,7 +29,14 @@ vec3 czm_sphericalHarmonics(vec3 normal, vec3 coefficients[9])
     float y = normal.y;
     float z = normal.z;
 
-    return c1 * L22 * (x * x - y * y) + c3 * L20 * z * z + c4 * L00 - c5 * L20 +
-           2.0 * c1 * (L2_2 * x * y + L21 * x * z + L2_1 * y * z) +
-           2.0 * c2 * (L11 * x + L1_1 * y + L10 * z);
+    return
+          L00
+        + L1_1 * y
+        + L10 * z
+        + L11 * x
+        + L2_2 * (y * x)
+        + L2_1 * (y * z)
+        + L20 * (3.0 * z * z - 1.0)
+        + L21 * (z * x)
+        + L22 * (x * x - y * y);
 }

@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import CesiumMath from "../Core/Math.js";
 
-var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
+const defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
 
 /**
  * A ParticleEmitter that emits particles within a box.
@@ -50,7 +50,7 @@ Object.defineProperties(BoxEmitter.prototype, {
   },
 });
 
-var scratchHalfDim = new Cartesian3();
+const scratchHalfDim = new Cartesian3();
 
 /**
  * Initializes the given {Particle} by setting it's position and velocity.
@@ -59,12 +59,12 @@ var scratchHalfDim = new Cartesian3();
  * @param {Particle} particle The particle to initialize.
  */
 BoxEmitter.prototype.emit = function (particle) {
-  var dim = this._dimensions;
-  var halfDim = Cartesian3.multiplyByScalar(dim, 0.5, scratchHalfDim);
+  const dim = this._dimensions;
+  const halfDim = Cartesian3.multiplyByScalar(dim, 0.5, scratchHalfDim);
 
-  var x = CesiumMath.randomBetween(-halfDim.x, halfDim.x);
-  var y = CesiumMath.randomBetween(-halfDim.y, halfDim.y);
-  var z = CesiumMath.randomBetween(-halfDim.z, halfDim.z);
+  const x = CesiumMath.randomBetween(-halfDim.x, halfDim.x);
+  const y = CesiumMath.randomBetween(-halfDim.y, halfDim.y);
+  const z = CesiumMath.randomBetween(-halfDim.z, halfDim.z);
 
   particle.position = Cartesian3.fromElements(x, y, z, particle.position);
   particle.velocity = Cartesian3.normalize(

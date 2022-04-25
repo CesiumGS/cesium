@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
-import when from "../ThirdParty/when.js";
 import ImageryLayer from "./ImageryLayer.js";
 
 /**
@@ -79,7 +78,7 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
  */
 ImageryLayerCollection.prototype.add = function (layer, index) {
-  var hasIndex = defined(index);
+  const hasIndex = defined(index);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(layer)) {
@@ -125,7 +124,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
   }
   //>>includeEnd('debug');
 
-  var layer = new ImageryLayer(imageryProvider);
+  const layer = new ImageryLayer(imageryProvider);
   this.add(layer, index);
   return layer;
 };
@@ -141,7 +140,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
 ImageryLayerCollection.prototype.remove = function (layer, destroy) {
   destroy = defaultValue(destroy, true);
 
-  var index = this._layers.indexOf(layer);
+  const index = this._layers.indexOf(layer);
   if (index !== -1) {
     this._layers.splice(index, 1);
 
@@ -167,9 +166,9 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, true);
 
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; i++) {
-    var layer = layers[i];
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; i++) {
+    const layer = layers[i];
     this.layerRemoved.raiseEvent(layer, i);
 
     if (destroy) {
@@ -226,7 +225,7 @@ function getLayerIndex(layers, layer) {
   }
   //>>includeEnd('debug');
 
-  var index = layers.indexOf(layer);
+  const index = layers.indexOf(layer);
 
   //>>includeStart('debug', pragmas.debug);
   if (index === -1) {
@@ -238,7 +237,7 @@ function getLayerIndex(layers, layer) {
 }
 
 function swapLayers(collection, i, j) {
-  var arr = collection._layers;
+  const arr = collection._layers;
   i = CesiumMath.clamp(i, 0, arr.length - 1);
   j = CesiumMath.clamp(j, 0, arr.length - 1);
 
@@ -246,7 +245,7 @@ function swapLayers(collection, i, j) {
     return;
   }
 
-  var temp = arr[i];
+  const temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 
@@ -264,7 +263,7 @@ function swapLayers(collection, i, j) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raise = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   swapLayers(this, index, index + 1);
 };
 
@@ -277,7 +276,7 @@ ImageryLayerCollection.prototype.raise = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lower = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   swapLayers(this, index, index - 1);
 };
 
@@ -290,7 +289,7 @@ ImageryLayerCollection.prototype.lower = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raiseToTop = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   if (index === this._layers.length - 1) {
     return;
   }
@@ -311,7 +310,7 @@ ImageryLayerCollection.prototype.raiseToTop = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   if (index === 0) {
     return;
   }
@@ -323,82 +322,39 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
   this.layerMoved.raiseEvent(layer, 0, index);
 };
 
-var applicableRectangleScratch = new Rectangle();
+const applicableRectangleScratch = new Rectangle();
 
-/**
- * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
- * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
- * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
- *
- * @param {Ray} ray The ray to test for intersection.
- * @param {Scene} scene The scene.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
- *                                             If it can be quickly determined that no features are intersected (for example,
- *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
- *                                             or because the pick ray does not intersect the surface), this function will
- *                                             return undefined.
- *
- * @example
- * var pickRay = viewer.camera.getPickRay(windowPosition);
- * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
- * if (!Cesium.defined(featuresPromise)) {
- *     console.log('No features picked.');
- * } else {
- *     Cesium.when(featuresPromise, function(features) {
- *         // This function is called asynchronously when the list if picked features is available.
- *         console.log('Number of features: ' + features.length);
- *         if (features.length > 0) {
- *             console.log('First feature name: ' + features[0].name);
- *         }
- *     });
- * }
- */
-ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
-  ray,
-  scene
-) {
-  // Find the picked location on the globe.
-  var pickedPosition = scene.globe.pick(ray, scene);
-  if (!defined(pickedPosition)) {
-    return undefined;
-  }
-
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
-
+function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   // Find the terrain tile containing the picked location.
-  var tilesToRender = scene.globe._surface._tilesToRender;
-  var pickedTile;
+  const tilesToRender = scene.globe._surface._tilesToRender;
+  let pickedTile;
 
   for (
-    var textureIndex = 0;
+    let textureIndex = 0;
     !defined(pickedTile) && textureIndex < tilesToRender.length;
     ++textureIndex
   ) {
-    var tile = tilesToRender[textureIndex];
+    const tile = tilesToRender[textureIndex];
     if (Rectangle.contains(tile.rectangle, pickedLocation)) {
       pickedTile = tile;
     }
   }
 
   if (!defined(pickedTile)) {
-    return undefined;
+    return;
   }
 
   // Pick against all attached imagery tiles containing the pickedLocation.
-  var imageryTiles = pickedTile.data.imagery;
+  const imageryTiles = pickedTile.data.imagery;
 
-  var promises = [];
-  var imageryLayers = [];
-  for (var i = imageryTiles.length - 1; i >= 0; --i) {
-    var terrainImagery = imageryTiles[i];
-    var imagery = terrainImagery.readyImagery;
+  for (let i = imageryTiles.length - 1; i >= 0; --i) {
+    const terrainImagery = imageryTiles[i];
+    const imagery = terrainImagery.readyImagery;
     if (!defined(imagery)) {
       continue;
     }
-    var provider = imagery.imageryLayer.imageryProvider;
-    if (!defined(provider.pickFeatures)) {
+    const provider = imagery.imageryLayer.imageryProvider;
+    if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
     }
 
@@ -408,9 +364,9 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 
     // If this imagery came from a parent, it may not be applicable to its entire rectangle.
     // Check the textureCoordinateRectangle.
-    var applicableRectangle = applicableRectangleScratch;
+    const applicableRectangle = applicableRectangleScratch;
 
-    var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+    const epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
     applicableRectangle.west = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
@@ -435,51 +391,129 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       continue;
     }
 
-    var promise = provider.pickFeatures(
+    callback(imagery);
+  }
+}
+
+/**
+ * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+ * location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {ImageryLayer[]|undefined} An array that includes all of
+ *                                 the layers that are intersected by a given pick ray. Undefined if
+ *                                 no layers are selected.
+ *
+ */
+ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
+  // Find the picked location on the globe.
+  const pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
+  }
+
+  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  const imageryLayers = [];
+
+  pickImageryHelper(scene, pickedLocation, false, function (imagery) {
+    imageryLayers.push(imagery.imageryLayer);
+  });
+
+  if (imageryLayers.length === 0) {
+    return undefined;
+  }
+
+  return imageryLayers;
+};
+
+/**
+ * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
+ * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
+ * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
+ *                                             If it can be quickly determined that no features are intersected (for example,
+ *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
+ *                                             or because the pick ray does not intersect the surface), this function will
+ *                                             return undefined.
+ *
+ * @example
+ * const pickRay = viewer.camera.getPickRay(windowPosition);
+ * const featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+ * if (!Cesium.defined(featuresPromise)) {
+ *     console.log('No features picked.');
+ * } else {
+ *     Promise.resolve(featuresPromise).then(function(features) {
+ *         // This function is called asynchronously when the list if picked features is available.
+ *         console.log('Number of features: ' + features.length);
+ *         if (features.length > 0) {
+ *             console.log('First feature name: ' + features[0].name);
+ *         }
+ *     });
+ * }
+ */
+ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
+  ray,
+  scene
+) {
+  // Find the picked location on the globe.
+  const pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
+  }
+
+  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  const promises = [];
+  const imageryLayers = [];
+
+  pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+    const provider = imagery.imageryLayer.imageryProvider;
+    const promise = provider.pickFeatures(
       imagery.x,
       imagery.y,
       imagery.level,
       pickedLocation.longitude,
       pickedLocation.latitude
     );
-    if (!defined(promise)) {
-      continue;
+    if (defined(promise)) {
+      promises.push(promise);
+      imageryLayers.push(imagery.imageryLayer);
     }
-
-    promises.push(promise);
-    imageryLayers.push(imagery.imageryLayer);
-  }
+  });
 
   if (promises.length === 0) {
     return undefined;
   }
-
-  return when.all(promises, function (results) {
-    var features = [];
-
-    for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
-      var result = results[resultIndex];
-      var image = imageryLayers[resultIndex];
-
+  return Promise.all(promises).then(function (results) {
+    const features = [];
+    for (let resultIndex = 0; resultIndex < results.length; ++resultIndex) {
+      const result = results[resultIndex];
+      const image = imageryLayers[resultIndex];
       if (defined(result) && result.length > 0) {
         for (
-          var featureIndex = 0;
+          let featureIndex = 0;
           featureIndex < result.length;
           ++featureIndex
         ) {
-          var feature = result[featureIndex];
+          const feature = result[featureIndex];
           feature.imageryLayer = image;
-
           // For features without a position, use the picked location.
           if (!defined(feature.position)) {
             feature.position = pickedLocation;
           }
-
           features.push(feature);
         }
       }
     }
-
     return features;
   });
 };
@@ -494,8 +528,8 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 ImageryLayerCollection.prototype.queueReprojectionCommands = function (
   frameState
 ) {
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; ++i) {
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; ++i) {
     layers[i].queueReprojectionCommands(frameState);
   }
 };
@@ -506,8 +540,8 @@ ImageryLayerCollection.prototype.queueReprojectionCommands = function (
  * @private
  */
 ImageryLayerCollection.prototype.cancelReprojections = function () {
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; ++i) {
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; ++i) {
     layers[i].cancelReprojections();
   }
 };
@@ -549,11 +583,11 @@ ImageryLayerCollection.prototype.destroy = function () {
 };
 
 ImageryLayerCollection.prototype._update = function () {
-  var isBaseLayer = true;
-  var layers = this._layers;
-  var layersShownOrHidden;
-  var layer;
-  var i, len;
+  let isBaseLayer = true;
+  const layers = this._layers;
+  let layersShownOrHidden;
+  let layer;
+  let i, len;
   for (i = 0, len = layers.length; i < len; ++i) {
     layer = layers[i];
 

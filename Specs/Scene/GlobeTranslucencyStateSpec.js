@@ -13,11 +13,11 @@ import { ShaderProgram } from "../../Source/Cesium.js";
 import { ShaderSource } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
-var scene;
-var globe;
-var frameState;
-var state;
-var framebuffer;
+let scene;
+let globe;
+let frameState;
+let state;
+let framebuffer;
 
 function reset() {
   scene._globe = globe;
@@ -40,14 +40,14 @@ function reset() {
 }
 
 function createShaderProgram(colorString) {
-  var vs = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }";
-  var fs = "void main() { gl_FragColor = vec4(" + colorString + "); }";
+  const vs = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }";
+  const fs = `void main() { gl_FragColor = vec4(${colorString}); }`;
 
-  var vertexShaderSource = new ShaderSource({
+  const vertexShaderSource = new ShaderSource({
     sources: [vs],
   });
 
-  var fragmentShaderSource = new ShaderSource({
+  const fragmentShaderSource = new ShaderSource({
     sources: [fs],
   });
 
@@ -59,17 +59,17 @@ function createShaderProgram(colorString) {
 }
 
 function createDrawCommand() {
-  var uniformMap = {};
-  var shaderProgram = createShaderProgram("0.0");
+  const uniformMap = {};
+  const shaderProgram = createShaderProgram("0.0");
 
-  var renderState = RenderState.fromCache({
+  const renderState = RenderState.fromCache({
     depthMask: true,
     cull: {
       enabled: true,
     },
   });
 
-  var drawCommand = new DrawCommand({
+  const drawCommand = new DrawCommand({
     shaderProgram: shaderProgram,
     uniformMap: uniformMap,
     renderState: renderState,
@@ -100,8 +100,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     // Opaque
     reset();
     state.update(scene);
-    var frontFaceAlphaByDistance = state.frontFaceAlphaByDistance;
-    var backFaceAlphaByDistance = state.backFaceAlphaByDistance;
+    const frontFaceAlphaByDistance = state.frontFaceAlphaByDistance;
+    const backFaceAlphaByDistance = state.backFaceAlphaByDistance;
     expect(frontFaceAlphaByDistance.nearValue).toBe(1.0);
     expect(frontFaceAlphaByDistance.farValue).toBe(1.0);
     expect(backFaceAlphaByDistance.nearValue).toBe(1.0);
@@ -294,20 +294,20 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   function checkTypes(state, typeArrays) {
-    var derivedCommandTypes = state._derivedCommandTypes;
-    var derivedBlendCommandTypes = state._derivedBlendCommandTypes;
-    var derivedPickCommandTypes = state._derivedPickCommandTypes;
-    var derivedCommandTypesToUpdate = state._derivedCommandTypesToUpdate;
+    const derivedCommandTypes = state._derivedCommandTypes;
+    const derivedBlendCommandTypes = state._derivedBlendCommandTypes;
+    const derivedPickCommandTypes = state._derivedPickCommandTypes;
+    const derivedCommandTypesToUpdate = state._derivedCommandTypesToUpdate;
 
-    var length = state._derivedCommandsLength;
-    var blendLength = state._derivedBlendCommandsLength;
-    var pickLength = state._derivedPickCommandsLength;
-    var updateLength = state._derivedCommandsToUpdateLength;
+    const length = state._derivedCommandsLength;
+    const blendLength = state._derivedBlendCommandsLength;
+    const pickLength = state._derivedPickCommandsLength;
+    const updateLength = state._derivedCommandsToUpdateLength;
 
-    var types = derivedCommandTypes.slice(0, length);
-    var blendTypes = derivedBlendCommandTypes.slice(0, blendLength);
-    var pickTypes = derivedPickCommandTypes.slice(0, pickLength);
-    var updateTypes = derivedCommandTypesToUpdate.slice(0, updateLength);
+    const types = derivedCommandTypes.slice(0, length);
+    const blendTypes = derivedBlendCommandTypes.slice(0, blendLength);
+    const pickTypes = derivedPickCommandTypes.slice(0, pickLength);
+    const updateTypes = derivedCommandTypesToUpdate.slice(0, updateLength);
 
     expect(types).toEqual(typeArrays[0]);
     expect(blendTypes).toEqual(typeArrays[1]);
@@ -442,20 +442,20 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("does not update derived commands when globe is opaque", function () {
-    var command = createDrawCommand();
+    const command = createDrawCommand();
 
     reset();
     state.update(scene);
     state.updateDerivedCommands(command, frameState);
-    var derivedCommands = command.derivedCommands.globeTranslucency;
+    const derivedCommands = command.derivedCommands.globeTranslucency;
     expect(derivedCommands).toBeUndefined();
   });
 
   it("updates derived commands", function () {
-    var command = createDrawCommand();
-    var uniformMap = command.uniformMap;
-    var shaderProgram = command.shaderProgram;
-    var renderState = command.renderState;
+    const command = createDrawCommand();
+    const uniformMap = command.uniformMap;
+    const shaderProgram = command.shaderProgram;
+    const renderState = command.renderState;
 
     reset();
     globe.translucency.enabled = true;
@@ -463,7 +463,7 @@ describe("Scene/GlobeTranslucencyState", function () {
     globe.depthTestAgainstTerrain = true;
     state.update(scene);
     state.updateDerivedCommands(command, frameState);
-    var derivedCommands = command.derivedCommands.globeTranslucency;
+    let derivedCommands = command.derivedCommands.globeTranslucency;
     expect(derivedCommands).toBeDefined();
     expect(derivedCommands.opaqueBackFaceCommand).toBeDefined();
     expect(derivedCommands.depthOnlyFrontFaceCommand).toBeDefined();
@@ -471,10 +471,10 @@ describe("Scene/GlobeTranslucencyState", function () {
     expect(derivedCommands.pickFrontFaceCommand).toBeDefined();
     expect(derivedCommands.pickBackFaceCommand).toBeUndefined();
 
-    var derivedCommand = derivedCommands.translucentFrontFaceCommand;
-    var derivedUniformMap = derivedCommand.uniformMap;
-    var derivedShaderProgram = derivedCommand.shaderProgram;
-    var derivedRenderState = derivedCommand.renderState;
+    let derivedCommand = derivedCommands.translucentFrontFaceCommand;
+    const derivedUniformMap = derivedCommand.uniformMap;
+    const derivedShaderProgram = derivedCommand.shaderProgram;
+    const derivedRenderState = derivedCommand.renderState;
 
     expect(derivedUniformMap).not.toBe(uniformMap);
     expect(derivedShaderProgram).not.toBe(shaderProgram);
@@ -525,7 +525,7 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("does not push derived commands when blend command is in the pick pass", function () {
-    var command = createDrawCommand();
+    const command = createDrawCommand();
 
     reset();
     globe.translucency.enabled = true;
@@ -539,7 +539,7 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("pushes globe command when globe is opaque", function () {
-    var command = createDrawCommand();
+    const command = createDrawCommand();
 
     reset();
     state.update(scene);
@@ -551,7 +551,7 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("pushes derived commands when globe is translucent", function () {
-    var command = createDrawCommand();
+    const command = createDrawCommand();
 
     // isBlendCommand = false
     reset();
@@ -562,7 +562,7 @@ describe("Scene/GlobeTranslucencyState", function () {
     state.updateDerivedCommands(command, frameState);
     state.pushDerivedCommands(command, false, frameState);
 
-    var derivedCommands = command.derivedCommands.globeTranslucency;
+    const derivedCommands = command.derivedCommands.globeTranslucency;
     expect(frameState.commandList).toEqual([
       derivedCommands.depthOnlyFrontFaceCommand,
       derivedCommands.opaqueBackFaceCommand,
@@ -601,11 +601,11 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("executes globe commands", function () {
-    var context = frameState.context;
-    var passState = new PassState(context);
-    var command = createDrawCommand();
+    const context = frameState.context;
+    const passState = new PassState(context);
+    const command = createDrawCommand();
 
-    var executeCommand = jasmine.createSpy("executeCommand");
+    const executeCommand = jasmine.createSpy("executeCommand");
     spyOn(GlobeTranslucencyFramebuffer.prototype, "clearClassification");
 
     reset();
@@ -616,9 +616,9 @@ describe("Scene/GlobeTranslucencyState", function () {
     state.updateDerivedCommands(command, frameState);
     state.pushDerivedCommands(command, false, frameState);
 
-    var globeCommands = frameState.commandList;
+    const globeCommands = frameState.commandList;
 
-    var frustumCommands = new FrustumCommands();
+    const frustumCommands = new FrustumCommands();
     frustumCommands.commands[Pass.GLOBE] = globeCommands;
     frustumCommands.indices[Pass.GLOBE] = globeCommands.length;
 
@@ -642,13 +642,13 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("does not execute globe commands if there are no commands", function () {
-    var frameState = scene.frameState;
-    var context = frameState.context;
-    var passState = new PassState(context);
+    const frameState = scene.frameState;
+    const context = frameState.context;
+    const passState = new PassState(context);
 
-    var frustumCommands = new FrustumCommands();
+    const frustumCommands = new FrustumCommands();
 
-    var executeCommand = jasmine.createSpy("executeCommand");
+    const executeCommand = jasmine.createSpy("executeCommand");
     state.executeGlobeCommands(
       frustumCommands,
       executeCommand,
@@ -661,11 +661,11 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("executes classification commands", function () {
-    var context = frameState.context;
-    var passState = new PassState(context);
-    var command = createDrawCommand();
+    const context = frameState.context;
+    const passState = new PassState(context);
+    const command = createDrawCommand();
 
-    var executeCommand = jasmine.createSpy("executeCommand");
+    const executeCommand = jasmine.createSpy("executeCommand");
     spyOn(GlobeTranslucencyFramebuffer.prototype, "packDepth");
     spyOn(GlobeTranslucencyFramebuffer.prototype, "clearClassification");
 
@@ -677,10 +677,10 @@ describe("Scene/GlobeTranslucencyState", function () {
     state.updateDerivedCommands(command, frameState);
     state.pushDerivedCommands(command, false, frameState);
 
-    var classificationCommand = createDrawCommand();
-    var globeCommands = frameState.commandList;
-    var classificationCommands = [classificationCommand];
-    var frustumCommands = new FrustumCommands();
+    const classificationCommand = createDrawCommand();
+    const globeCommands = frameState.commandList;
+    const classificationCommands = [classificationCommand];
+    const frustumCommands = new FrustumCommands();
     frustumCommands.commands[Pass.GLOBE] = globeCommands;
     frustumCommands.indices[Pass.GLOBE] = globeCommands.length;
     frustumCommands.commands[

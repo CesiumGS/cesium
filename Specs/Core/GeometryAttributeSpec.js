@@ -3,7 +3,7 @@ import { GeometryAttribute } from "../../Source/Cesium.js";
 
 describe("Core/GeometryAttribute", function () {
   it("constructor", function () {
-    var color = new GeometryAttribute({
+    const color = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 4,
       normalize: true,

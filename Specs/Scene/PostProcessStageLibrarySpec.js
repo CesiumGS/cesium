@@ -9,12 +9,11 @@ import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import ViewportPrimitive from "../ViewportPrimitive.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/PostProcessStageLibrary",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene({
@@ -36,7 +35,7 @@ describe(
       scene.renderForSpecs();
     });
 
-    var model;
+    let model;
 
     function loadModel(url) {
       model = scene.primitives.add(
@@ -48,13 +47,13 @@ describe(
         })
       );
       model.zoomTo = function () {
-        var camera = scene.camera;
-        var center = Matrix4.multiplyByPoint(
+        const camera = scene.camera;
+        const center = Matrix4.multiplyByPoint(
           model.modelMatrix,
           model.boundingSphere.center,
           new Cartesian3()
         );
-        var r =
+        const r =
           4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
       };
@@ -70,22 +69,22 @@ describe(
         .then(function () {
           return model;
         })
-        .otherwise(function () {
-          return when.reject(model);
+        .catch(function () {
+          return Promise.reject(model);
         });
     }
 
     it("black and white", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(255);
             expect(rgba[k + 1]).toEqual(0);
             expect(rgba[k + 2]).toEqual(0);
@@ -104,9 +103,9 @@ describe(
         expect(rgba[2]).toEqual(rgba[0]);
         expect(rgba[3]).toEqual(255);
 
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(rgba[0]);
             expect(rgba[k + 1]).toEqual(rgba[1]);
             expect(rgba[k + 2]).toEqual(rgba[2]);
@@ -121,7 +120,7 @@ describe(
         function () {
           model.zoomTo();
 
-          var stage = scene.postProcessStages.add(
+          const stage = scene.postProcessStages.add(
             PostProcessStageLibrary.createBlackAndWhiteStage()
           );
           stage.selected = [];
@@ -130,7 +129,7 @@ describe(
             scene.renderForSpecs();
             return stage.ready;
           }).then(function () {
-            var color;
+            let color;
             expect(scene).toRenderAndCall(function (rgba) {
               color = rgba;
               expect(rgba[1]).toEqual(rgba[0]);
@@ -148,19 +147,19 @@ describe(
     });
 
     it("brightness", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(vec3(0.25), 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
-      var red;
-      var green;
-      var blue;
+      let red;
+      let green;
+      let blue;
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqualEpsilon(Math.floor(255 * 0.25), 1.0);
             expect(rgba[k + 1]).toEqual(rgba[k]);
             expect(rgba[k + 2]).toEqual(rgba[k]);
@@ -183,9 +182,9 @@ describe(
         expect(rgba[2]).not.toEqual(blue);
         expect(rgba[3]).toEqual(255);
 
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(rgba[0]);
             expect(rgba[k + 1]).toEqual(rgba[1]);
             expect(rgba[k + 2]).toEqual(rgba[2]);
@@ -196,16 +195,16 @@ describe(
     });
 
     it("night vision", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(255);
             expect(rgba[k + 1]).toEqual(0);
             expect(rgba[k + 2]).toEqual(0);
@@ -219,9 +218,9 @@ describe(
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(0);
             expect(rgba[k + 1]).toBeGreaterThan(0);
             expect(rgba[k + 2]).toEqual(0);
@@ -236,16 +235,16 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(255);
             expect(rgba[k + 1]).toEqual(0);
             expect(rgba[k + 2]).toEqual(0);
@@ -259,9 +258,9 @@ describe(
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
-            var k = i * 4 * 3 + 4 * j;
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(255);
             expect(rgba[k + 1]).toEqual(255);
             expect(rgba[k + 2]).toEqual(255);
@@ -272,19 +271,19 @@ describe(
     });
 
     it("blur", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = all(equal(floor(gl_FragCoord.xy), vec2(1.0, 1.0))) ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < 3; ++i) {
-          for (var j = 0; j < 3; ++j) {
+        for (let i = 0; i < 3; ++i) {
+          for (let j = 0; j < 3; ++j) {
             if (i === 1 && j === 1) {
               continue;
             }
-            var k = i * 4 * 3 + 4 * j;
+            const k = i * 4 * 3 + 4 * j;
             expect(rgba[k]).toEqual(0);
             expect(rgba[k + 1]).toEqual(0);
             expect(rgba[k + 2]).toEqual(255);
@@ -309,7 +308,7 @@ describe(
     });
 
     it("blur uniforms", function () {
-      var blur = PostProcessStageLibrary.createBlurStage();
+      const blur = PostProcessStageLibrary.createBlurStage();
       expect(blur.uniforms.delta).toEqual(1.0);
       expect(blur.uniforms.sigma).toEqual(2.0);
       expect(blur.uniforms.stepSize).toEqual(1.0);
@@ -328,13 +327,13 @@ describe(
         return;
       }
 
-      var origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-      var modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
         origin,
         new HeadingPitchRoll()
       );
 
-      var model = scene.primitives.add(
+      const model = scene.primitives.add(
         Model.fromGltf({
           url: "./Data/Models/Box/CesiumBoxTest.gltf",
           modelMatrix: modelMatrix,
@@ -342,12 +341,12 @@ describe(
         })
       );
 
-      var ready = false;
+      let ready = false;
       model.readyPromise.then(function () {
         ready = true;
       });
 
-      var offset = new Cartesian3(
+      const offset = new Cartesian3(
         -37.048378684557974,
         -24.852967044804245,
         4.352023653686047
@@ -359,7 +358,7 @@ describe(
         return ready;
       }).then(function () {
         expect(scene).toRenderAndCall(function (rgba) {
-          for (var i = 0; i < rgba.length; i += 4) {
+          for (let i = 0; i < rgba.length; i += 4) {
             expect(rgba[i]).toBeGreaterThan(0);
             expect(rgba[i + 1]).toEqual(0);
             expect(rgba[i + 2]).toEqual(0);
@@ -371,7 +370,7 @@ describe(
           );
           scene.renderForSpecs();
           expect(scene).toRenderAndCall(function (rgba2) {
-            for (var i = 0; i < rgba.length; i += 4) {
+            for (let i = 0; i < rgba.length; i += 4) {
               expect(rgba2[i]).toBeGreaterThan(0);
               expect(rgba2[i + 1]).toEqual(0);
               expect(rgba2[i + 2]).toEqual(0);
@@ -385,7 +384,7 @@ describe(
     });
 
     it("depth of field uniforms", function () {
-      var dof = PostProcessStageLibrary.createDepthOfFieldStage();
+      const dof = PostProcessStageLibrary.createDepthOfFieldStage();
       expect(dof.uniforms.focalDistance).toEqual(5.0);
       expect(dof.uniforms.delta).toEqual(1.0);
       expect(dof.uniforms.sigma).toEqual(2.0);
@@ -411,7 +410,7 @@ describe(
       scene.postProcessStages.ambientOcclusion.uniforms.ambientOcclusionOnly = true;
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        for (var i = 0; i < rgba.length; i += 4) {
+        for (let i = 0; i < rgba.length; i += 4) {
           expect(rgba[i]).toEqual(255);
           expect(rgba[i + 1]).toEqual(255);
           expect(rgba[i + 2]).toEqual(255);
@@ -422,7 +421,7 @@ describe(
     });
 
     it("ambient occlusion uniforms", function () {
-      var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
+      const ao = PostProcessStageLibrary.createAmbientOcclusionStage();
       expect(ao.uniforms.ambientOcclusionOnly).toEqual(false);
       expect(ao.uniforms.intensity).toEqual(3.0);
       expect(ao.uniforms.bias).toEqual(0.1);
@@ -456,13 +455,13 @@ describe(
     });
 
     it("bloom", function () {
-      var origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-      var modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
         origin,
         new HeadingPitchRoll()
       );
 
-      var model = scene.primitives.add(
+      const model = scene.primitives.add(
         Model.fromGltf({
           url: "./Data/Models/Box/CesiumBoxTest.gltf",
           modelMatrix: modelMatrix,
@@ -470,12 +469,12 @@ describe(
         })
       );
 
-      var ready = false;
+      let ready = false;
       model.readyPromise.then(function () {
         ready = true;
       });
 
-      var offset = new Cartesian3(
+      const offset = new Cartesian3(
         -37.048378684557974,
         -24.852967044804245,
         4.352023653686047
@@ -487,7 +486,7 @@ describe(
         return ready;
       }).then(function () {
         expect(scene).toRenderAndCall(function (rgba) {
-          for (var i = 0; i < rgba.length; i += 4) {
+          for (let i = 0; i < rgba.length; i += 4) {
             expect(rgba[i]).toBeGreaterThan(0);
             expect(rgba[i + 1]).toEqual(0);
             expect(rgba[i + 2]).toEqual(0);
@@ -497,7 +496,7 @@ describe(
           scene.postProcessStages.bloom.enabled = true;
           scene.renderForSpecs();
           expect(scene).toRenderAndCall(function (rgba2) {
-            for (var i = 0; i < rgba.length; i += 4) {
+            for (let i = 0; i < rgba.length; i += 4) {
               expect(rgba2[i]).toBeGreaterThan(0);
               expect(rgba2[i + 1]).toEqual(0);
               expect(rgba2[i + 2]).toEqual(0);
@@ -512,7 +511,7 @@ describe(
     });
 
     it("bloom uniforms", function () {
-      var bloom = PostProcessStageLibrary.createBloomStage();
+      const bloom = PostProcessStageLibrary.createBloomStage();
       expect(bloom.uniforms.glowOnly).toEqual(false);
       expect(bloom.uniforms.contrast).toEqual(128.0);
       expect(bloom.uniforms.brightness).toEqual(-0.3);

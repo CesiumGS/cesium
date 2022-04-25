@@ -2,8 +2,8 @@ define([], function () {
   "use strict";
 
   return function returnWasmConfig(event) {
-    var data = event.data;
-    var wasmConfig = data.webAssemblyConfig;
+    const data = event.data;
+    const wasmConfig = data.webAssemblyConfig;
     self.postMessage(wasmConfig);
   };
 });

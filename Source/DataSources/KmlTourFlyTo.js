@@ -3,12 +3,18 @@ import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import EasingFunction from "../Core/EasingFunction.js";
 /**
+ * Transitions the KmlTour to the next destination. This transition is facilitated
+ * using a specified flyToMode over a given number of seconds.
+ *
  * @alias KmlTourFlyTo
  * @constructor
  *
  * @param {Number} duration entry duration
  * @param {String} flyToMode KML fly to mode: bounce, smooth, etc
  * @param {KmlCamera|KmlLookAt} view KmlCamera or KmlLookAt
+ *
+ * @see KmlTour
+ * @see KmlTourWait
  */
 function KmlTourFlyTo(duration, flyToMode, view) {
   this.type = "KmlTourFlyTo";
@@ -31,7 +37,7 @@ function KmlTourFlyTo(duration, flyToMode, view) {
 KmlTourFlyTo.prototype.play = function (done, camera, cameraOptions) {
   this.activeCamera = camera;
   if (defined(done) && done !== null) {
-    var self = this;
+    const self = this;
     this.activeCallback = function (terminated) {
       delete self.activeCallback;
       delete self.activeCamera;
@@ -39,11 +45,11 @@ KmlTourFlyTo.prototype.play = function (done, camera, cameraOptions) {
     };
   }
 
-  var options = this.getCameraOptions(cameraOptions);
+  const options = this.getCameraOptions(cameraOptions);
   if (this.view.headingPitchRoll) {
     camera.flyTo(options);
   } else if (this.view.headingPitchRange) {
-    var target = new BoundingSphere(this.view.position);
+    const target = new BoundingSphere(this.view.position);
     camera.flyToBoundingSphere(target, options);
   }
 };
@@ -68,7 +74,7 @@ KmlTourFlyTo.prototype.stop = function () {
  * @returns {Object} {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere} options
  */
 KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
-  var options = {
+  let options = {
     duration: this.duration,
   };
 

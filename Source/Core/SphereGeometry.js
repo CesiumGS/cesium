@@ -23,16 +23,16 @@ import VertexFormat from "./VertexFormat.js";
  * @see SphereGeometry#createGeometry
  *
  * @example
- * var sphere = new Cesium.SphereGeometry({
+ * const sphere = new Cesium.SphereGeometry({
  *   radius : 100.0,
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
- * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
+ * const geometry = Cesium.SphereGeometry.createGeometry(sphere);
  */
 function SphereGeometry(options) {
-  var radius = defaultValue(options.radius, 1.0);
-  var radii = new Cartesian3(radius, radius, radius);
-  var ellipsoidOptions = {
+  const radius = defaultValue(options.radius, 1.0);
+  const radii = new Cartesian3(radius, radius, radius);
+  const ellipsoidOptions = {
     radii: radii,
     stackPartitions: options.stackPartitions,
     slicePartitions: options.slicePartitions,
@@ -66,8 +66,8 @@ SphereGeometry.pack = function (value, array, startingIndex) {
   return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
 };
 
-var scratchEllipsoidGeometry = new EllipsoidGeometry();
-var scratchOptions = {
+const scratchEllipsoidGeometry = new EllipsoidGeometry();
+const scratchOptions = {
   radius: undefined,
   radii: new Cartesian3(),
   vertexFormat: new VertexFormat(),
@@ -84,7 +84,7 @@ var scratchOptions = {
  * @returns {SphereGeometry} The modified result parameter or a new SphereGeometry instance if one was not provided.
  */
 SphereGeometry.unpack = function (array, startingIndex, result) {
-  var ellipsoidGeometry = EllipsoidGeometry.unpack(
+  const ellipsoidGeometry = EllipsoidGeometry.unpack(
     array,
     startingIndex,
     scratchEllipsoidGeometry

@@ -1,14 +1,14 @@
 import {
   BufferLoader,
+  defer,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 
 describe("Scene/BufferLoader", function () {
-  var typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
-  var arrayBuffer = typedArray.buffer;
-  var resource = new Resource({ url: "https://example.com/external.bin" });
+  const typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
+  const arrayBuffer = typedArray.buffer;
+  const resource = new Resource({ url: "https://example.com/external.bin" });
 
   afterEach(function () {
     ResourceCache.clearForSpecs();
@@ -33,12 +33,12 @@ describe("Scene/BufferLoader", function () {
   });
 
   it("rejects promise if buffer cannot be fetched", function () {
-    var error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.reject(error)
-    );
+    const error = new Error("404 Not Found");
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return Promise.reject(error);
+    });
 
-    var bufferLoader = new BufferLoader({
+    const bufferLoader = new BufferLoader({
       resource: resource,
     });
 
@@ -48,7 +48,7 @@ describe("Scene/BufferLoader", function () {
       .then(function (bufferLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
@@ -56,7 +56,7 @@ describe("Scene/BufferLoader", function () {
   });
 
   it("loads buffer from typed array", function () {
-    var bufferLoader = new BufferLoader({
+    const bufferLoader = new BufferLoader({
       typedArray: typedArray,
     });
     bufferLoader.load();
@@ -67,12 +67,12 @@ describe("Scene/BufferLoader", function () {
   });
 
   it("loads external buffer", function () {
-    var fetchBuffer = spyOn(
+    const fetchBuffer = spyOn(
       Resource.prototype,
       "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(arrayBuffer));
+    ).and.returnValue(Promise.resolve(arrayBuffer));
 
-    var bufferLoader = new BufferLoader({
+    const bufferLoader = new BufferLoader({
       resource: resource,
     });
 
@@ -86,10 +86,10 @@ describe("Scene/BufferLoader", function () {
 
   it("destroys buffer", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(arrayBuffer)
+      Promise.resolve(arrayBuffer)
     );
 
-    var bufferLoader = new BufferLoader({
+    const bufferLoader = new BufferLoader({
       resource: resource,
     });
 
@@ -108,12 +108,12 @@ describe("Scene/BufferLoader", function () {
   });
 
   function resolveAfterDestroy(reject) {
-    var deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
 
-    var bufferLoader = new BufferLoader({
+    const bufferLoader = new BufferLoader({
       resource: resource,
     });
 

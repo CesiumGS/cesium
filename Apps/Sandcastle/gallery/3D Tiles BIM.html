@@ -36,10 +36,10 @@
         "use strict";
         //Sandcastle_Begin
         // Power Plant design model provided by Bentley Systems
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
-        var tileset = scene.primitives.add(
+        const tileset = scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(8564),
           })
@@ -56,14 +56,14 @@
               )
             );
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             console.log(error);
           });
 
         tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
 
-        var selectedFeature;
-        var picking = false;
+        let selectedFeature;
+        let picking = false;
 
         Sandcastle.addToggleButton("Per-feature selection", false, function (
           checked
@@ -75,7 +75,7 @@
         });
 
         function selectFeature(feature) {
-          var element = feature.getProperty("element");
+          const element = feature.getProperty("element");
           setElementColor(element, Cesium.Color.YELLOW);
           selectedFeature = feature;
         }
@@ -84,20 +84,20 @@
           if (!Cesium.defined(feature)) {
             return;
           }
-          var element = feature.getProperty("element");
+          const element = feature.getProperty("element");
           setElementColor(element, Cesium.Color.WHITE);
           if (feature === selectedFeature) {
             selectedFeature = undefined;
           }
         }
 
-        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
           if (!picking) {
             return;
           }
 
-          var feature = scene.pick(movement.endPosition);
+          const feature = scene.pick(movement.endPosition);
 
           unselectFeature(selectedFeature);
 
@@ -109,8 +109,8 @@
         // In this tileset every feature has an "element" property which is a global ID.
         // This property is used to associate features across different tiles and LODs.
         // Workaround until 3D Tiles has the concept of global batch ids: https://github.com/CesiumGS/3d-tiles/issues/265
-        var elementMap = {}; // Build a map of elements to features.
-        var hiddenElements = [
+        const elementMap = {}; // Build a map of elements to features.
+        const hiddenElements = [
           112001,
           113180,
           131136,
@@ -152,27 +152,27 @@
         }
 
         function setElementColor(element, color) {
-          var featuresToColor = elementMap[element];
-          var length = featuresToColor.length;
-          for (var i = 0; i < length; ++i) {
-            var feature = featuresToColor[i];
+          const featuresToColor = elementMap[element];
+          const length = featuresToColor.length;
+          for (let i = 0; i < length; ++i) {
+            const feature = featuresToColor[i];
             feature.color = Cesium.Color.clone(color, feature.color);
           }
         }
 
         function unloadFeature(feature) {
           unselectFeature(feature);
-          var element = getElement(feature);
-          var features = elementMap[element];
-          var index = features.indexOf(feature);
+          const element = getElement(feature);
+          const features = elementMap[element];
+          const index = features.indexOf(feature);
           if (index > -1) {
             features.splice(index, 1);
           }
         }
 
         function loadFeature(feature) {
-          var element = getElement(feature);
-          var features = elementMap[element];
+          const element = getElement(feature);
+          let features = elementMap[element];
           if (!Cesium.defined(features)) {
             features = [];
             elementMap[element] = features;
@@ -185,19 +185,19 @@
         }
 
         function processContentFeatures(content, callback) {
-          var featuresLength = content.featuresLength;
-          for (var i = 0; i < featuresLength; ++i) {
-            var feature = content.getFeature(i);
+          const featuresLength = content.featuresLength;
+          for (let i = 0; i < featuresLength; ++i) {
+            const feature = content.getFeature(i);
             callback(feature);
           }
         }
 
         function processTileFeatures(tile, callback) {
-          var content = tile.content;
-          var innerContents = content.innerContents;
+          const content = tile.content;
+          const innerContents = content.innerContents;
           if (Cesium.defined(innerContents)) {
-            var length = innerContents.length;
-            for (var i = 0; i < length; ++i) {
+            const length = innerContents.length;
+            for (let i = 0; i < length; ++i) {
               processContentFeatures(innerContents[i], callback);
             }
           } else {

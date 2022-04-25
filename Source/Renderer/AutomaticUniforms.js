@@ -2,7 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
-var viewerPositionWCScratch = new Cartesian3();
+const viewerPositionWCScratch = new Cartesian3();
 
 function AutomaticUniform(options) {
   this._size = options.size;
@@ -10,7 +10,7 @@ function AutomaticUniform(options) {
   this.getValue = options.getValue;
 }
 
-var datatypeToGlsl = {};
+const datatypeToGlsl = {};
 datatypeToGlsl[WebGLConstants.FLOAT] = "float";
 datatypeToGlsl[WebGLConstants.FLOAT_VEC2] = "vec2";
 datatypeToGlsl[WebGLConstants.FLOAT_VEC3] = "vec3";
@@ -30,13 +30,13 @@ datatypeToGlsl[WebGLConstants.SAMPLER_2D] = "sampler2D";
 datatypeToGlsl[WebGLConstants.SAMPLER_CUBE] = "samplerCube";
 
 AutomaticUniform.prototype.getDeclaration = function (name) {
-  var declaration = "uniform " + datatypeToGlsl[this._datatype] + " " + name;
+  let declaration = `uniform ${datatypeToGlsl[this._datatype]} ${name}`;
 
-  var size = this._size;
+  const size = this._size;
   if (size === 1) {
     declaration += ";";
   } else {
-    declaration += "[" + size.toString() + "];";
+    declaration += `[${size.toString()}];`;
   }
 
   return declaration;
@@ -45,7 +45,7 @@ AutomaticUniform.prototype.getDeclaration = function (name) {
 /**
  * @private
  */
-var AutomaticUniforms = {
+const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
    * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
@@ -1539,8 +1539,26 @@ var AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
+   * This will be in pixel coordinates relative to the canvas.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform float czm_splitPosition;
+   */
+  czm_splitPosition: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.splitPosition;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
    * This will be in pixel coordinates relative to the canvas.
+   *
+   * @deprecated Use czm_splitPosition instead.
    *
    * @example
    * // GLSL declaration

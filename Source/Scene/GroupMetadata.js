@@ -6,13 +6,13 @@ import MetadataEntity from "./MetadataEntity.js";
 /**
  * Metadata about a group of {@link Cesium3DTileContent}
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.
  * @param {Object} options.group The group JSON object.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ * @param {MetadataClass} options.class The class that group metadata conforms to.
  *
  * @alias GroupMetadata
  * @constructor
@@ -21,21 +21,20 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var group = options.group;
+  const id = options.id;
+  const group = options.group;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.group", group);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
-  var properties = defined(group.properties) ? group.properties : {};
+  const properties = defined(group.properties) ? group.properties : {};
 
-  this._class = options.class;
+  this._class = metadataClass;
   this._properties = properties;
   this._id = id;
-  this._name = group.name;
-  this._description = group.description;
   this._extras = group.extras;
   this._extensions = group.extensions;
 }
@@ -70,34 +69,6 @@ Object.defineProperties(GroupMetadata.prototype, {
   },
 
   /**
-   * The name of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  description: {
-    get: function () {
-      return this._description;
-    },
-  },
-
-  /**
    * Extras in the JSON object.
    *
    * @memberof GroupMetadata.prototype
@@ -127,14 +98,29 @@ Object.defineProperties(GroupMetadata.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether the group has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the group has this property.
  * @private
  */
 GroupMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
+};
+
+/**
+ * Returns whether the group has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the group has a property with the given semantic.
+ * @private
+ */
+GroupMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -155,7 +141,7 @@ GroupMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the group does not have this property.
  * @private
  */
 GroupMetadata.prototype.getProperty = function (propertyId) {
@@ -186,7 +172,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the group does not have this semantic.
  * @private
  */
 GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {

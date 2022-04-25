@@ -17,14 +17,14 @@ import SceneMode from "./SceneMode.js";
  *
  * @namespace SceneTransforms
  */
-var SceneTransforms = {};
+const SceneTransforms = {};
 
-var actualPositionScratch = new Cartesian4(0, 0, 0, 1);
-var positionCC = new Cartesian4();
-var scratchViewport = new BoundingRectangle();
+const actualPositionScratch = new Cartesian4(0, 0, 0, 1);
+let positionCC = new Cartesian4();
+const scratchViewport = new BoundingRectangle();
 
-var scratchWindowCoord0 = new Cartesian2();
-var scratchWindowCoord1 = new Cartesian2();
+const scratchWindowCoord0 = new Cartesian2();
+const scratchWindowCoord1 = new Cartesian2();
 
 /**
  * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -37,10 +37,10 @@ var scratchWindowCoord1 = new Cartesian2();
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * var scene = widget.scene;
- * var ellipsoid = scene.globe.ellipsoid;
- * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+ * const scene = widget.scene;
+ * const ellipsoid = scene.globe.ellipsoid;
+ * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
  *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -54,13 +54,13 @@ SceneTransforms.wgs84ToWindowCoordinates = function (scene, position, result) {
   );
 };
 
-var scratchCartesian4 = new Cartesian4();
-var scratchEyeOffset = new Cartesian3();
+const scratchCartesian4 = new Cartesian4();
+const scratchEyeOffset = new Cartesian3();
 
 function worldToClip(position, eyeOffset, camera, result) {
-  var viewMatrix = camera.viewMatrix;
+  const viewMatrix = camera.viewMatrix;
 
-  var positionEC = Matrix4.multiplyByVector(
+  const positionEC = Matrix4.multiplyByVector(
     viewMatrix,
     Cartesian4.fromElements(
       position.x,
@@ -72,7 +72,7 @@ function worldToClip(position, eyeOffset, camera, result) {
     scratchCartesian4
   );
 
-  var zEyeOffset = Cartesian3.multiplyComponents(
+  const zEyeOffset = Cartesian3.multiplyComponents(
     eyeOffset,
     Cartesian3.normalize(positionEC, scratchEyeOffset),
     scratchEyeOffset
@@ -88,9 +88,12 @@ function worldToClip(position, eyeOffset, camera, result) {
   );
 }
 
-var scratchMaxCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
-var scratchProjectedCartesian = new Cartesian3();
-var scratchCameraPosition = new Cartesian3();
+const scratchMaxCartographic = new Cartographic(
+  Math.PI,
+  CesiumMath.PI_OVER_TWO
+);
+const scratchProjectedCartesian = new Cartesian3();
+const scratchCameraPosition = new Cartesian3();
 
 /**
  * @private
@@ -111,8 +114,8 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
   //>>includeEnd('debug');
 
   // Transform for 3D, 2D, or Columbus view
-  var frameState = scene.frameState;
-  var actualPosition = SceneTransforms.computeActualWgs84Position(
+  const frameState = scene.frameState;
+  const actualPosition = SceneTransforms.computeActualWgs84Position(
     frameState,
     position,
     actualPositionScratch
@@ -123,45 +126,45 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
   }
 
   // Assuming viewport takes up the entire canvas...
-  var canvas = scene.canvas;
-  var viewport = scratchViewport;
+  const canvas = scene.canvas;
+  const viewport = scratchViewport;
   viewport.x = 0;
   viewport.y = 0;
   viewport.width = canvas.clientWidth;
   viewport.height = canvas.clientHeight;
 
-  var camera = scene.camera;
-  var cameraCentered = false;
+  const camera = scene.camera;
+  let cameraCentered = false;
 
   if (frameState.mode === SceneMode.SCENE2D) {
-    var projection = scene.mapProjection;
-    var maxCartographic = scratchMaxCartographic;
-    var maxCoord = projection.project(
+    const projection = scene.mapProjection;
+    const maxCartographic = scratchMaxCartographic;
+    const maxCoord = projection.project(
       maxCartographic,
       scratchProjectedCartesian
     );
 
-    var cameraPosition = Cartesian3.clone(
+    const cameraPosition = Cartesian3.clone(
       camera.position,
       scratchCameraPosition
     );
-    var frustum = camera.frustum.clone();
+    const frustum = camera.frustum.clone();
 
-    var viewportTransformation = Matrix4.computeViewportTransformation(
+    const viewportTransformation = Matrix4.computeViewportTransformation(
       viewport,
       0.0,
       1.0,
       new Matrix4()
     );
-    var projectionMatrix = camera.frustum.projectionMatrix;
+    const projectionMatrix = camera.frustum.projectionMatrix;
 
-    var x = camera.positionWC.y;
-    var eyePoint = Cartesian3.fromElements(
+    const x = camera.positionWC.y;
+    const eyePoint = Cartesian3.fromElements(
       CesiumMath.sign(x) * maxCoord.x - x,
       0.0,
       -camera.positionWC.x
     );
-    var windowCoordinates = Transforms.pointToGLWindowCoordinates(
+    const windowCoordinates = Transforms.pointToGLWindowCoordinates(
       projectionMatrix,
       viewportTransformation,
       eyePoint
@@ -190,7 +193,7 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 
         camera.position.x = -camera.position.x;
 
-        var right = camera.frustum.right;
+        const right = camera.frustum.right;
         camera.frustum.right = -camera.frustum.left;
         camera.frustum.left = -right;
 
@@ -217,7 +220,7 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 
         camera.position.x = -camera.position.x;
 
-        var left = camera.frustum.left;
+        const left = camera.frustum.left;
         camera.frustum.left = -camera.frustum.right;
         camera.frustum.right = -left;
 
@@ -272,10 +275,10 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * var scene = widget.scene;
- * var ellipsoid = scene.globe.ellipsoid;
- * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+ * const scene = widget.scene;
+ * const ellipsoid = scene.globe.ellipsoid;
+ * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
  *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -293,8 +296,8 @@ SceneTransforms.wgs84ToDrawingBufferCoordinates = function (
   return SceneTransforms.transformWindowToDrawingBuffer(scene, result, result);
 };
 
-var projectedPosition = new Cartesian3();
-var positionInCartographic = new Cartographic();
+const projectedPosition = new Cartesian3();
+const positionInCartographic = new Cartographic();
 
 /**
  * @private
@@ -304,14 +307,14 @@ SceneTransforms.computeActualWgs84Position = function (
   position,
   result
 ) {
-  var mode = frameState.mode;
+  const mode = frameState.mode;
 
   if (mode === SceneMode.SCENE3D) {
     return Cartesian3.clone(position, result);
   }
 
-  var projection = frameState.mapProjection;
-  var cartographic = projection.ellipsoid.cartesianToCartographic(
+  const projection = frameState.mapProjection;
+  const cartographic = projection.ellipsoid.cartesianToCartographic(
     position,
     positionInCartographic
   );
@@ -340,7 +343,7 @@ SceneTransforms.computeActualWgs84Position = function (
   }
 
   // mode === SceneMode.MORPHING
-  var morphTime = frameState.morphTime;
+  const morphTime = frameState.morphTime;
   return Cartesian3.fromElements(
     CesiumMath.lerp(projectedPosition.z, position.x, morphTime),
     CesiumMath.lerp(projectedPosition.x, position.y, morphTime),
@@ -349,9 +352,9 @@ SceneTransforms.computeActualWgs84Position = function (
   );
 };
 
-var positionNDC = new Cartesian3();
-var positionWC = new Cartesian3();
-var viewportTransform = new Matrix4();
+const positionNDC = new Cartesian3();
+const positionWC = new Cartesian3();
+const viewportTransform = new Matrix4();
 
 /**
  * @private
@@ -379,9 +382,9 @@ SceneTransforms.transformWindowToDrawingBuffer = function (
   windowPosition,
   result
 ) {
-  var canvas = scene.canvas;
-  var xScale = scene.drawingBufferWidth / canvas.clientWidth;
-  var yScale = scene.drawingBufferHeight / canvas.clientHeight;
+  const canvas = scene.canvas;
+  const xScale = scene.drawingBufferWidth / canvas.clientWidth;
+  const yScale = scene.drawingBufferHeight / canvas.clientHeight;
   return Cartesian2.fromElements(
     windowPosition.x * xScale,
     windowPosition.y * yScale,
@@ -389,8 +392,8 @@ SceneTransforms.transformWindowToDrawingBuffer = function (
   );
 };
 
-var scratchNDC = new Cartesian4();
-var scratchWorldCoords = new Cartesian4();
+const scratchNDC = new Cartesian4();
+const scratchWorldCoords = new Cartesian4();
 
 /**
  * @private
@@ -401,33 +404,33 @@ SceneTransforms.drawingBufferToWgs84Coordinates = function (
   depth,
   result
 ) {
-  var context = scene.context;
-  var uniformState = context.uniformState;
+  const context = scene.context;
+  const uniformState = context.uniformState;
 
-  var currentFrustum = uniformState.currentFrustum;
-  var near = currentFrustum.x;
-  var far = currentFrustum.y;
+  const currentFrustum = uniformState.currentFrustum;
+  const near = currentFrustum.x;
+  const far = currentFrustum.y;
 
   if (scene.frameState.useLogDepth) {
     // transforming logarithmic depth of form
     // log2(z + 1) / log2( far + 1);
     // to perspective form
     // (far - far * near / z) / (far - near)
-    var log2Depth = depth * uniformState.log2FarDepthFromNearPlusOne;
-    var depthFromNear = Math.pow(2.0, log2Depth) - 1.0;
+    const log2Depth = depth * uniformState.log2FarDepthFromNearPlusOne;
+    const depthFromNear = Math.pow(2.0, log2Depth) - 1.0;
     depth = (far * (1.0 - near / (depthFromNear + near))) / (far - near);
   }
 
-  var viewport = scene.view.passState.viewport;
-  var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
+  const viewport = scene.view.passState.viewport;
+  const ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
   ndc.x = ((drawingBufferPosition.x - viewport.x) / viewport.width) * 2.0 - 1.0;
   ndc.y =
     ((drawingBufferPosition.y - viewport.y) / viewport.height) * 2.0 - 1.0;
   ndc.z = depth * 2.0 - 1.0;
   ndc.w = 1.0;
 
-  var worldCoords;
-  var frustum = scene.camera.frustum;
+  let worldCoords;
+  let frustum = scene.camera.frustum;
   if (!defined(frustum.fovy)) {
     if (defined(frustum._offCenterFrustum)) {
       frustum = frustum._offCenterFrustum;
@@ -455,7 +458,7 @@ SceneTransforms.drawingBufferToWgs84Coordinates = function (
     );
 
     // Reverse perspective divide
-    var w = 1.0 / worldCoords.w;
+    const w = 1.0 / worldCoords.w;
     Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
   }
   return Cartesian3.fromCartesian4(worldCoords, result);

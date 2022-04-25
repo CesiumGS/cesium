@@ -2,6 +2,7 @@ import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
@@ -10,7 +11,6 @@ import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import PointCloud from "./PointCloud.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
@@ -37,7 +37,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from light sources.
  * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
  * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
- * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
+ * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
 function TimeDynamicPointCloud(options) {
@@ -104,7 +104,7 @@ function TimeDynamicPointCloud(options) {
 
   /**
    * The style, defined using the
-   * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+   * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language},
    * applied to each point in the point cloud.
    * <p>
    * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -125,7 +125,7 @@ function TimeDynamicPointCloud(options) {
    *    show : '${Classification} !== 2'
    * });
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
    */
   this.style = options.style;
 
@@ -183,7 +183,7 @@ function TimeDynamicPointCloud(options) {
   this._nextInterval = undefined;
   this._lastRenderedFrame = undefined;
   this._clockMultiplier = 0.0;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   // For calculating average load time of the last N frames
   this._runningSum = 0.0;
@@ -259,7 +259,7 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
 });
 
 function getFragmentShaderLoaded(fs) {
-  return "uniform vec4 czm_pickColor;\n" + fs;
+  return `uniform vec4 czm_pickColor;\n${fs}`;
 }
 
 function getUniformMapLoaded(stream) {
@@ -297,12 +297,12 @@ TimeDynamicPointCloud.prototype._getAverageLoadTime = function () {
   return this._runningAverage;
 };
 
-var scratchDate = new JulianDate();
+const scratchDate = new JulianDate();
 
 function getClockMultiplier(that) {
-  var clock = that._clock;
-  var isAnimating = clock.canAnimate && clock.shouldAnimate;
-  var multiplier = clock.multiplier;
+  const clock = that._clock;
+  const isAnimating = clock.canAnimate && clock.shouldAnimate;
+  const multiplier = clock.multiplier;
   return isAnimating ? multiplier : 0.0;
 }
 
@@ -311,23 +311,23 @@ function getIntervalIndex(that, interval) {
 }
 
 function getNextInterval(that, currentInterval) {
-  var intervals = that._intervals;
-  var clock = that._clock;
-  var multiplier = getClockMultiplier(that);
+  const intervals = that._intervals;
+  const clock = that._clock;
+  const multiplier = getClockMultiplier(that);
 
   if (multiplier === 0.0) {
     return undefined;
   }
 
-  var averageLoadTime = that._getAverageLoadTime();
-  var time = JulianDate.addSeconds(
+  const averageLoadTime = that._getAverageLoadTime();
+  const time = JulianDate.addSeconds(
     clock.currentTime,
     averageLoadTime * multiplier,
     scratchDate
   );
-  var index = intervals.indexOf(time);
+  let index = intervals.indexOf(time);
 
-  var currentIndex = getIntervalIndex(that, currentInterval);
+  const currentIndex = getIntervalIndex(that, currentInterval);
   if (index === currentIndex) {
     if (multiplier >= 0) {
       ++index;
@@ -341,19 +341,19 @@ function getNextInterval(that, currentInterval) {
 }
 
 function getCurrentInterval(that) {
-  var intervals = that._intervals;
-  var clock = that._clock;
-  var time = clock.currentTime;
-  var index = intervals.indexOf(time);
+  const intervals = that._intervals;
+  const clock = that._clock;
+  const time = clock.currentTime;
+  const index = intervals.indexOf(time);
 
   // Returns undefined if not in range
   return intervals.get(index);
 }
 
 function reachedInterval(that, currentInterval, nextInterval) {
-  var multiplier = getClockMultiplier(that);
-  var currentIndex = getIntervalIndex(that, currentInterval);
-  var nextIndex = getIntervalIndex(that, nextInterval);
+  const multiplier = getClockMultiplier(that);
+  const currentIndex = getIntervalIndex(that, currentInterval);
+  const nextIndex = getIntervalIndex(that, nextInterval);
 
   if (multiplier >= 0) {
     return currentIndex >= nextIndex;
@@ -363,29 +363,29 @@ function reachedInterval(that, currentInterval, nextInterval) {
 
 function handleFrameFailure(that, uri) {
   return function (error) {
-    var message = defined(error.message) ? error.message : error.toString();
+    const message = defined(error.message) ? error.message : error.toString();
     if (that.frameFailed.numberOfListeners > 0) {
       that.frameFailed.raiseEvent({
         uri: uri,
         message: message,
       });
     } else {
-      console.log("A frame failed to load: " + uri);
-      console.log("Error: " + message);
+      console.log(`A frame failed to load: ${uri}`);
+      console.log(`Error: ${message}`);
     }
   };
 }
 
 function requestFrame(that, interval, frameState) {
-  var index = getIntervalIndex(that, interval);
-  var frames = that._frames;
-  var frame = frames[index];
+  const index = getIntervalIndex(that, interval);
+  const frames = that._frames;
+  let frame = frames[index];
   if (!defined(frame)) {
-    var transformArray = interval.data.transform;
-    var transform = defined(transformArray)
+    const transformArray = interval.data.transform;
+    const transform = defined(transformArray)
       ? Matrix4.fromArray(transformArray)
       : undefined;
-    var uri = interval.data.uri;
+    const uri = interval.data.uri;
     frame = {
       pointCloud: undefined,
       transform: transform,
@@ -410,7 +410,7 @@ function requestFrame(that, interval, frameState) {
         });
         return frame.pointCloud.readyPromise;
       })
-      .otherwise(handleFrameFailure(that, uri));
+      .catch(handleFrameFailure(that, uri));
   }
   return frame;
 }
@@ -434,12 +434,12 @@ function prepareFrame(that, frame, updateState, frameState) {
     frame.sequential = false;
   }
 
-  var pointCloud = frame.pointCloud;
+  const pointCloud = frame.pointCloud;
 
   if (defined(pointCloud) && !frame.ready) {
     // Call update to prepare renderer resources. Don't render anything yet.
-    var commandList = frameState.commandList;
-    var lengthBeforeUpdate = commandList.length;
+    const commandList = frameState.commandList;
+    const lengthBeforeUpdate = commandList.length;
     renderFrame(that, frame, updateState, frameState);
 
     if (pointCloud.ready) {
@@ -449,7 +449,7 @@ function prepareFrame(that, frame, updateState, frameState) {
       commandList.length = lengthBeforeUpdate; // Don't allow preparing frame to insert commands.
       if (frame.sequential) {
         // Update the values used to calculate average load time
-        var loadTime = (getTimestamp() - frame.timestamp) / 1000.0;
+        const loadTime = (getTimestamp() - frame.timestamp) / 1000.0;
         updateAverageLoadTime(that, loadTime);
       }
     }
@@ -458,10 +458,10 @@ function prepareFrame(that, frame, updateState, frameState) {
   frame.touchedFrameNumber = frameState.frameNumber;
 }
 
-var scratchModelMatrix = new Matrix4();
+const scratchModelMatrix = new Matrix4();
 
 function getGeometricError(that, pointCloud) {
-  var shading = that.shading;
+  const shading = that.shading;
   if (defined(shading) && defined(shading.baseResolution)) {
     return shading.baseResolution;
   } else if (defined(pointCloud.boundingSphere)) {
@@ -473,7 +473,7 @@ function getGeometricError(that, pointCloud) {
 }
 
 function getMaximumAttenuation(that) {
-  var shading = that.shading;
+  const shading = that.shading;
   if (defined(shading) && defined(shading.maximumAttenuation)) {
     return shading.maximumAttenuation;
   }
@@ -482,12 +482,12 @@ function getMaximumAttenuation(that) {
   return 10.0;
 }
 
-var defaultShading = new PointCloudShading();
+const defaultShading = new PointCloudShading();
 
 function renderFrame(that, frame, updateState, frameState) {
-  var shading = defaultValue(that.shading, defaultShading);
-  var pointCloud = frame.pointCloud;
-  var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
+  const shading = defaultValue(that.shading, defaultShading);
+  const pointCloud = frame.pointCloud;
+  const transform = defaultValue(frame.transform, Matrix4.IDENTITY);
   pointCloud.modelMatrix = Matrix4.multiplyTransformation(
     that.modelMatrix,
     transform,
@@ -510,7 +510,7 @@ function renderFrame(that, frame, updateState, frameState) {
 }
 
 function loadFrame(that, interval, updateState, frameState) {
-  var frame = requestFrame(that, interval, frameState);
+  const frame = requestFrame(that, interval, frameState);
   prepareFrame(that, frame, updateState, frameState);
 }
 
@@ -522,13 +522,13 @@ function getUnloadCondition(frameState) {
 }
 
 function unloadFrames(that, unloadCondition) {
-  var frames = that._frames;
-  var length = frames.length;
-  for (var i = 0; i < length; ++i) {
-    var frame = frames[i];
+  const frames = that._frames;
+  const length = frames.length;
+  for (let i = 0; i < length; ++i) {
+    const frame = frames[i];
     if (defined(frame)) {
       if (!defined(unloadCondition) || unloadCondition(frame)) {
-        var pointCloud = frame.pointCloud;
+        const pointCloud = frame.pointCloud;
         if (frame.ready) {
           that._totalMemoryUsageInBytes -= pointCloud.geometryByteLength;
         }
@@ -545,8 +545,8 @@ function unloadFrames(that, unloadCondition) {
 }
 
 function getFrame(that, interval) {
-  var index = getIntervalIndex(that, interval);
-  var frame = that._frames[index];
+  const index = getIntervalIndex(that, interval);
+  const frame = that._frames[index];
   if (defined(frame) && frame.ready) {
     return frame;
   }
@@ -570,13 +570,13 @@ function getNearestReadyInterval(
   updateState,
   frameState
 ) {
-  var i;
-  var interval;
-  var frame;
-  var intervals = that._intervals;
-  var frames = that._frames;
-  var currentIndex = getIntervalIndex(that, currentInterval);
-  var previousIndex = getIntervalIndex(that, previousInterval);
+  let i;
+  let interval;
+  let frame;
+  const intervals = that._intervals;
+  const frames = that._frames;
+  const currentIndex = getIntervalIndex(that, currentInterval);
+  const previousIndex = getIntervalIndex(that, previousInterval);
 
   if (currentIndex >= previousIndex) {
     // look backwards
@@ -603,10 +603,10 @@ function getNearestReadyInterval(
 }
 
 function setFramesDirty(that, clippingPlanesDirty, styleDirty) {
-  var frames = that._frames;
-  var framesLength = frames.length;
-  for (var i = 0; i < framesLength; ++i) {
-    var frame = frames[i];
+  const frames = that._frames;
+  const framesLength = frames.length;
+  for (let i = 0; i < framesLength; ++i) {
+    const frame = frames[i];
     if (defined(frame) && defined(frame.pointCloud)) {
       frame.pointCloud.clippingPlanesDirty = clippingPlanesDirty;
       frame.pointCloud.styleDirty = styleDirty;
@@ -614,7 +614,7 @@ function setFramesDirty(that, clippingPlanesDirty, styleDirty) {
   }
 }
 
-var updateState = {
+const updateState = {
   timeSinceLoad: 0,
   isClipped: false,
   clippingPlanesDirty: false,
@@ -643,16 +643,16 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   }
 
   // For styling
-  var timeSinceLoad = Math.max(
+  const timeSinceLoad = Math.max(
     JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000,
     0.0
   );
 
   // Update clipping planes
-  var clippingPlanes = this._clippingPlanes;
-  var clippingPlanesState = 0;
-  var clippingPlanesDirty = false;
-  var isClipped = defined(clippingPlanes) && clippingPlanes.enabled;
+  const clippingPlanes = this._clippingPlanes;
+  let clippingPlanesState = 0;
+  let clippingPlanesDirty = false;
+  const isClipped = defined(clippingPlanes) && clippingPlanes.enabled;
 
   if (isClipped) {
     clippingPlanes.update(frameState);
@@ -664,7 +664,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     clippingPlanesDirty = true;
   }
 
-  var styleDirty = this._styleDirty;
+  const styleDirty = this._styleDirty;
   this._styleDirty = false;
 
   if (clippingPlanesDirty || styleDirty) {
@@ -674,23 +674,23 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   updateState.timeSinceLoad = timeSinceLoad;
   updateState.isClipped = isClipped;
 
-  var shading = this.shading;
-  var eyeDomeLighting = this._pointCloudEyeDomeLighting;
+  const shading = this.shading;
+  const eyeDomeLighting = this._pointCloudEyeDomeLighting;
 
-  var commandList = frameState.commandList;
-  var lengthBeforeUpdate = commandList.length;
+  const commandList = frameState.commandList;
+  const lengthBeforeUpdate = commandList.length;
 
-  var previousInterval = this._previousInterval;
-  var nextInterval = this._nextInterval;
-  var currentInterval = getCurrentInterval(this);
+  let previousInterval = this._previousInterval;
+  let nextInterval = this._nextInterval;
+  const currentInterval = getCurrentInterval(this);
 
   if (!defined(currentInterval)) {
     return;
   }
 
-  var clockMultiplierChanged = false;
-  var clockMultiplier = getClockMultiplier(this);
-  var clockPaused = clockMultiplier === 0;
+  let clockMultiplierChanged = false;
+  const clockMultiplier = getClockMultiplier(this);
+  const clockPaused = clockMultiplier === 0;
   if (clockMultiplier !== this._clockMultiplier) {
     clockMultiplierChanged = true;
     this._clockMultiplier = clockMultiplier;
@@ -715,7 +715,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     updateState,
     frameState
   );
-  var frame = getFrame(this, previousInterval);
+  let frame = getFrame(this, previousInterval);
 
   if (!defined(frame)) {
     // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
@@ -733,7 +733,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     loadFrame(this, nextInterval, updateState, frameState);
   }
 
-  var that = this;
+  const that = this;
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
       that._readyPromise.resolve(that);
@@ -752,15 +752,15 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   this._nextInterval = nextInterval;
   this._lastRenderedFrame = frame;
 
-  var totalMemoryUsageInBytes = this._totalMemoryUsageInBytes;
-  var maximumMemoryUsageInBytes = this.maximumMemoryUsage * 1024 * 1024;
+  const totalMemoryUsageInBytes = this._totalMemoryUsageInBytes;
+  const maximumMemoryUsageInBytes = this.maximumMemoryUsage * 1024 * 1024;
 
   if (totalMemoryUsageInBytes > maximumMemoryUsageInBytes) {
     unloadFrames(this, getUnloadCondition(frameState));
   }
 
-  var lengthAfterUpdate = commandList.length;
-  var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+  const lengthAfterUpdate = commandList.length;
+  const addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
   if (
     defined(shading) &&

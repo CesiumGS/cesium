@@ -9,7 +9,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Context",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -20,7 +20,7 @@ describe(
     });
 
     it("has a unique ID", function () {
-      var c = createContext();
+      const c = createContext();
       expect(c.id).toBeDefined();
       expect(c.id).not.toEqual(context.id);
       c.destroyForSpecs();
@@ -31,73 +31,71 @@ describe(
     });
 
     it("get stencilBits", function () {
-      expect(context.stencilBits).toBeGreaterThanOrEqualTo(0);
+      expect(context.stencilBits).toBeGreaterThanOrEqual(0);
     });
 
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits
-      ).toBeGreaterThanOrEqualTo(8);
+      ).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumCubeMapSize", function () {
-      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumFragmentUniformVectors", function () {
       expect(
         ContextLimits.maximumFragmentUniformVectors
-      ).toBeGreaterThanOrEqualTo(16);
+      ).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumTextureImageUnits", function () {
-      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqualTo(
-        8
-      );
+      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumRenderbufferSize", function () {
-      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(1);
     });
 
     it("get maximumTextureSize", function () {
-      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqualTo(64);
+      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(64);
     });
 
     it("get maximumVaryingVectors", function () {
-      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqualTo(8);
+      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumVertexAttributes", function () {
-      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqualTo(8);
+      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumVertexTextureImageUnits", function () {
       expect(
         ContextLimits.maximumVertexTextureImageUnits
-      ).toBeGreaterThanOrEqualTo(0);
+      ).toBeGreaterThanOrEqual(0);
     });
 
     it("get maximumVertexUniformVectors", function () {
-      expect(
-        ContextLimits.maximumVertexUniformVectors
-      ).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumVertexUniformVectors).toBeGreaterThanOrEqual(
+        1
+      );
     });
 
     it("get minimumAliasedLineWidth", function () {
-      expect(ContextLimits.minimumAliasedLineWidth).toBeLessThanOrEqualTo(1);
+      expect(ContextLimits.minimumAliasedLineWidth).toBeLessThanOrEqual(1);
     });
 
     it("get maximumAliasedLineWidth", function () {
-      expect(ContextLimits.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumAliasedLineWidth).toBeGreaterThanOrEqual(1);
     });
 
     it("get minimumAliasedPointSize", function () {
-      expect(ContextLimits.minimumAliasedPointSize).toBeLessThanOrEqualTo(1);
+      expect(ContextLimits.minimumAliasedPointSize).toBeLessThanOrEqual(1);
     });
 
     it("get maximumAliasedPointSize", function () {
-      expect(ContextLimits.maximumAliasedPointSize).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumAliasedPointSize).toBeGreaterThanOrEqual(1);
     });
 
     it("get maximumViewportWidth", function () {
@@ -109,7 +107,7 @@ describe(
     });
 
     it("gets antialias", function () {
-      var c = createContext({
+      const c = createContext({
         webgl: {
           antialias: false,
         },
@@ -119,7 +117,7 @@ describe(
     });
 
     it("gets the standard derivatives extension", function () {
-      var fs = "";
+      let fs = "";
 
       if (context.standardDerivatives && !context.webgl2) {
         fs += "#extension GL_OES_standard_derivatives : enable\n";
@@ -135,7 +133,7 @@ describe(
 
       fs += "}";
 
-      var expected = context.standardDerivatives
+      const expected = context.standardDerivatives
         ? [0, 0, 255, 255]
         : [255, 255, 255, 255];
       expect({
@@ -146,7 +144,7 @@ describe(
 
     it("gets the element index uint extension", function () {
       if (context.elementIndexUint) {
-        var buffer = Buffer.createIndexBuffer({
+        const buffer = Buffer.createIndexBuffer({
           context: context,
           sizeInBytes: 6,
           usage: BufferUsage.STREAM_DRAW,
@@ -186,7 +184,7 @@ describe(
       if (context.textureFilterAnisotropic) {
         expect(
           ContextLimits.maximumTextureFilterAnisotropy
-        ).toBeGreaterThanOrEqualTo(2);
+        ).toBeGreaterThanOrEqual(2);
       } else {
         expect(ContextLimits.maximumTextureFilterAnisotropy).toEqual(1);
       }
@@ -201,7 +199,7 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main()\n" +
         "{\n" +
         "  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
@@ -213,7 +211,7 @@ describe(
         depth: 0.5,
       }).contextToRender([255, 0, 0, 255]);
 
-      var fsFragDepth = "#extension GL_EXT_frag_depth : enable\n";
+      let fsFragDepth = "#extension GL_EXT_frag_depth : enable\n";
 
       fsFragDepth +=
         "void main()\n" +
@@ -230,7 +228,7 @@ describe(
 
       fsFragDepth += "}\n";
 
-      var expected = [0, 255, 0, 255];
+      const expected = [0, 255, 0, 255];
       expect({
         context: context,
         fragmentShader: fsFragDepth,
@@ -245,7 +243,7 @@ describe(
 
     it("get the maximum number of draw buffers", function () {
       if (context.drawBuffers) {
-        expect(ContextLimits.maximumDrawBuffers).toBeGreaterThanOrEqualTo(1);
+        expect(ContextLimits.maximumDrawBuffers).toBeGreaterThanOrEqual(1);
       } else {
         expect(ContextLimits.maximumDrawBuffers).toEqual(1);
       }
@@ -253,17 +251,15 @@ describe(
 
     it("get the maximum number of color attachments", function () {
       if (context.drawBuffers) {
-        expect(ContextLimits.maximumColorAttachments).toBeGreaterThanOrEqualTo(
-          4
-        );
+        expect(ContextLimits.maximumColorAttachments).toBeGreaterThanOrEqual(4);
       } else {
         expect(ContextLimits.maximumColorAttachments).toEqual(1);
       }
     });
 
     it("can create a pick ID and retrieve an object by pick color", function () {
-      var o = {};
-      var pickId = context.createPickId(o);
+      const o = {};
+      const pickId = context.createPickId(o);
 
       expect(pickId).toBeDefined();
       expect(context.getObjectByPickColor(pickId.color)).toBe(o);
@@ -292,15 +288,15 @@ describe(
     });
 
     it("isDestroyed", function () {
-      var c = createContext();
+      const c = createContext();
       expect(c.isDestroyed()).toEqual(false);
       c.destroyForSpecs();
       expect(c.isDestroyed()).toEqual(true);
     });
 
     it("destroying Context destroys objects in cache", function () {
-      var c = createContext();
-      var destroyableObject = jasmine.createSpyObj("destroyableObject", [
+      const c = createContext();
+      const destroyableObject = jasmine.createSpyObj("destroyableObject", [
         "destroy",
       ]);
       c.cache.foo = destroyableObject;
@@ -309,20 +305,20 @@ describe(
     });
 
     it("non-destroyable objects are allowed in the cache", function () {
-      var c = createContext();
-      var nonDestroyableObject = {};
+      const c = createContext();
+      const nonDestroyableObject = {};
       c.cache.foo = nonDestroyableObject;
       c.destroyForSpecs();
     });
 
     it("returns the underling drawingBufferWidth", function () {
-      var c = createContext(undefined, 1024, 768);
+      const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferWidth).toBe(1024);
       c.destroyForSpecs();
     });
 
     it("returns the underling drawingBufferHeight", function () {
-      var c = createContext(undefined, 1024, 768);
+      const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferHeight).toBe(768);
       c.destroyForSpecs();
     });

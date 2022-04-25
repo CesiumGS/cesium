@@ -12,12 +12,11 @@ import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
-var templateRegex = /{[^}]+}/g;
+const templateRegex = /{[^}]+}/g;
 
-var tags = {
+const tags = {
   x: xTag,
   y: yTag,
   z: zTag,
@@ -37,7 +36,7 @@ var tags = {
   height: heightTag,
 };
 
-var pickFeaturesTags = combine(tags, {
+const pickFeaturesTags = combine(tags, {
   i: iTag,
   j: jTag,
   reverseI: reverseITag,
@@ -148,19 +147,19 @@ var pickFeaturesTags = combine(tags, {
  *
  * @example
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
- * var tms = new Cesium.UrlTemplateImageryProvider({
+ * const tms = new Cesium.UrlTemplateImageryProvider({
  *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
  *     credit : '© Analytical Graphics, Inc.',
  *     tilingScheme : new Cesium.GeographicTilingScheme(),
  *     maximumLevel : 5
  * });
  * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
- * var positron = new Cesium.UrlTemplateImageryProvider({
+ * const positron = new Cesium.UrlTemplateImageryProvider({
  *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
  *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
  * });
  * // Access a Web Map Service (WMS) server.
- * var wms = new Cesium.UrlTemplateImageryProvider({
+ * const wms = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
  *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
  *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
@@ -170,7 +169,7 @@ var pickFeaturesTags = combine(tags, {
  *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
  * });
  * // Using custom tags in your template url.
- * var custom = new Cesium.UrlTemplateImageryProvider({
+ * const custom = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
  *    customTags : {
  *        Time: function(imageryProvider, x, y, level) {
@@ -193,7 +192,7 @@ function UrlTemplateImageryProvider(options) {
   if (!defined(options)) {
     throw new DeveloperError("options is required.");
   }
-  if (!when.isPromise(options) && !defined(options.url)) {
+  if (!defined(options.then) && !defined(options.url)) {
     throw new DeveloperError("options is required.");
   }
   //>>includeEnd('debug');
@@ -652,8 +651,8 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
  * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
  */
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
-  var that = this;
-  that._readyPromise = when(options).then(function (properties) {
+  const that = this;
+  that._readyPromise = Promise.resolve(options).then(function (properties) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(properties)) {
       throw new DeveloperError("options is required.");
@@ -663,11 +662,11 @@ UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
     }
     //>>includeEnd('debug');
 
-    var customTags = properties.customTags;
-    var allTags = combine(tags, customTags);
-    var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
-    var resource = Resource.createIfNeeded(properties.url);
-    var pickFeaturesResource = Resource.createIfNeeded(
+    const customTags = properties.customTags;
+    const allTags = combine(tags, customTags);
+    const allPickFeaturesTags = combine(pickFeaturesTags, customTags);
+    const resource = Resource.createIfNeeded(properties.url);
+    const pickFeaturesResource = Resource.createIfNeeded(
       properties.pickFeaturesUrl
     );
 
@@ -709,7 +708,7 @@ UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
     );
     that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
 
-    var credit = properties.credit;
+    let credit = properties.credit;
     if (typeof credit === "string") {
       credit = new Credit(credit);
     }
@@ -814,9 +813,9 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
     return undefined;
   }
 
-  var formatIndex = 0;
+  let formatIndex = 0;
 
-  var that = this;
+  const that = this;
 
   function handleResponse(format, data) {
     return format.callback(data);
@@ -825,11 +824,11 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
   function doRequest() {
     if (formatIndex >= that._getFeatureInfoFormats.length) {
       // No valid formats, so no features picked.
-      return when([]);
+      return Promise.resolve([]);
     }
 
-    var format = that._getFeatureInfoFormats[formatIndex];
-    var resource = buildPickFeaturesResource(
+    const format = that._getFeatureInfoFormats[formatIndex];
+    const resource = buildPickFeaturesResource(
       that,
       x,
       y,
@@ -842,41 +841,41 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
     ++formatIndex;
 
     if (format.type === "json") {
-      return resource.fetchJson().then(format.callback).otherwise(doRequest);
+      return resource.fetchJson().then(format.callback).catch(doRequest);
     } else if (format.type === "xml") {
-      return resource.fetchXML().then(format.callback).otherwise(doRequest);
+      return resource.fetchXML().then(format.callback).catch(doRequest);
     } else if (format.type === "text" || format.type === "html") {
-      return resource.fetchText().then(format.callback).otherwise(doRequest);
+      return resource.fetchText().then(format.callback).catch(doRequest);
     }
     return resource
       .fetch({
         responseType: format.format,
       })
       .then(handleResponse.bind(undefined, format))
-      .otherwise(doRequest);
+      .catch(doRequest);
   }
 
   return doRequest();
 };
 
-var degreesScratchComputed = false;
-var degreesScratch = new Rectangle();
-var projectedScratchComputed = false;
-var projectedScratch = new Rectangle();
+let degreesScratchComputed = false;
+const degreesScratch = new Rectangle();
+let projectedScratchComputed = false;
+const projectedScratch = new Rectangle();
 
 function buildImageResource(imageryProvider, x, y, level, request) {
   degreesScratchComputed = false;
   projectedScratchComputed = false;
 
-  var resource = imageryProvider._resource;
-  var url = resource.getUrlComponent(true);
-  var allTags = imageryProvider._tags;
-  var templateValues = {};
+  const resource = imageryProvider._resource;
+  const url = resource.getUrlComponent(true);
+  const allTags = imageryProvider._tags;
+  const templateValues = {};
 
-  var match = url.match(templateRegex);
+  const match = url.match(templateRegex);
   if (defined(match)) {
     match.forEach(function (tag) {
-      var key = tag.substring(1, tag.length - 1); //strip {}
+      const key = tag.substring(1, tag.length - 1); //strip {}
       if (defined(allTags[key])) {
         templateValues[key] = allTags[key](imageryProvider, x, y, level);
       }
@@ -889,9 +888,9 @@ function buildImageResource(imageryProvider, x, y, level, request) {
   });
 }
 
-var ijScratchComputed = false;
-var ijScratch = new Cartesian2();
-var longitudeLatitudeProjectedScratchComputed = false;
+let ijScratchComputed = false;
+const ijScratch = new Cartesian2();
+let longitudeLatitudeProjectedScratchComputed = false;
 
 function buildPickFeaturesResource(
   imageryProvider,
@@ -907,14 +906,14 @@ function buildPickFeaturesResource(
   ijScratchComputed = false;
   longitudeLatitudeProjectedScratchComputed = false;
 
-  var resource = imageryProvider._pickFeaturesResource;
-  var url = resource.getUrlComponent(true);
-  var allTags = imageryProvider._pickFeaturesTags;
-  var templateValues = {};
-  var match = url.match(templateRegex);
+  const resource = imageryProvider._pickFeaturesResource;
+  const url = resource.getUrlComponent(true);
+  const allTags = imageryProvider._pickFeaturesTags;
+  const templateValues = {};
+  const match = url.match(templateRegex);
   if (defined(match)) {
     match.forEach(function (tag) {
-      var key = tag.substring(1, tag.length - 1); //strip {}
+      const key = tag.substring(1, tag.length - 1); //strip {}
       if (defined(allTags[key])) {
         templateValues[key] = allTags[key](
           imageryProvider,
@@ -940,9 +939,9 @@ function padWithZerosIfNecessary(imageryProvider, key, value) {
     imageryProvider.urlSchemeZeroPadding &&
     imageryProvider.urlSchemeZeroPadding.hasOwnProperty(key)
   ) {
-    var paddingTemplate = imageryProvider.urlSchemeZeroPadding[key];
+    const paddingTemplate = imageryProvider.urlSchemeZeroPadding[key];
     if (typeof paddingTemplate === "string") {
-      var paddingTemplateWidth = paddingTemplate.length;
+      const paddingTemplateWidth = paddingTemplate.length;
       if (paddingTemplateWidth > 1) {
         value =
           value.length >= paddingTemplateWidth
@@ -961,7 +960,7 @@ function xTag(imageryProvider, x, y, level) {
 }
 
 function reverseXTag(imageryProvider, x, y, level) {
-  var reverseX =
+  const reverseX =
     imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
   return padWithZerosIfNecessary(imageryProvider, "{reverseX}", reverseX);
 }
@@ -971,14 +970,14 @@ function yTag(imageryProvider, x, y, level) {
 }
 
 function reverseYTag(imageryProvider, x, y, level) {
-  var reverseY =
+  const reverseY =
     imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
   return padWithZerosIfNecessary(imageryProvider, "{reverseY}", reverseY);
 }
 
 function reverseZTag(imageryProvider, x, y, level) {
-  var maximumLevel = imageryProvider.maximumLevel;
-  var reverseZ =
+  const maximumLevel = imageryProvider.maximumLevel;
+  const reverseZ =
     defined(maximumLevel) && level < maximumLevel
       ? maximumLevel - level - 1
       : level;
@@ -990,7 +989,7 @@ function zTag(imageryProvider, x, y, level) {
 }
 
 function sTag(imageryProvider, x, y, level) {
-  var index = (x + y + level) % imageryProvider._subdomains.length;
+  const index = (x + y + level) % imageryProvider._subdomains.length;
   return imageryProvider._subdomains[index];
 }
 
@@ -1107,8 +1106,8 @@ function reverseJTag(
   return imageryProvider.tileHeight - ijScratch.y - 1;
 }
 
-var rectangleScratch = new Rectangle();
-var longitudeLatitudeProjectedScratch = new Cartesian3();
+const rectangleScratch = new Rectangle();
+const longitudeLatitudeProjectedScratch = new Cartesian3();
 
 function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
   if (ijScratchComputed) {
@@ -1123,9 +1122,9 @@ function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
     longitude,
     latitude
   );
-  var projected = longitudeLatitudeProjectedScratch;
+  const projected = longitudeLatitudeProjectedScratch;
 
-  var rectangle = imageryProvider.tilingScheme.tileXYToNativeRectangle(
+  const rectangle = imageryProvider.tilingScheme.tileXYToNativeRectangle(
     x,
     y,
     level,
@@ -1206,7 +1205,7 @@ function latitudeProjectedTag(
   return longitudeLatitudeProjectedScratch.y;
 }
 
-var cartographicScratch = new Cartographic();
+const cartographicScratch = new Cartographic();
 
 function computeLongitudeLatitudeProjected(
   imageryProvider,
@@ -1225,7 +1224,7 @@ function computeLongitudeLatitudeProjected(
     longitudeLatitudeProjectedScratch.x = CesiumMath.toDegrees(longitude);
     longitudeLatitudeProjectedScratch.y = CesiumMath.toDegrees(latitude);
   } else {
-    var cartographic = cartographicScratch;
+    const cartographic = cartographicScratch;
     cartographic.longitude = longitude;
     cartographic.latitude = latitude;
     imageryProvider.tilingScheme.projection.project(

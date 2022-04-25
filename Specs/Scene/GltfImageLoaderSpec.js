@@ -1,42 +1,47 @@
 import {
+  BufferLoader,
   clone,
+  CompressedTextureBuffer,
+  defer,
   GltfBufferViewLoader,
   GltfImageLoader,
   FeatureDetection,
   Resource,
   ResourceCache,
-  SupportedImageFormats,
-  when,
 } from "../../Source/Cesium.js";
+import createContext from "../createContext.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/GltfImageLoader", function () {
-  var image = new Image();
+  const image = new Image();
   image.src =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-  var pngBuffer = dataUriToBuffer(
+  const pngBuffer = dataUriToBuffer(
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="
   );
-  var jpgBuffer = dataUriToBuffer(
+  const jpgBuffer = dataUriToBuffer(
     "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAJgABAAAAAAAAAAAAAAAAAAAAAxABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAAPwBH/9k"
   );
 
-  var webpBuffer = dataUriToBuffer(
+  const webpBuffer = dataUriToBuffer(
     "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA"
   );
 
-  var gifBuffer = dataUriToBuffer(
+  const gifBuffer = dataUriToBuffer(
     "data:image/gif;base64,R0lGODdhBAAEAIAAAP///////ywAAAAABAAEAAACBISPCQUAOw=="
   );
 
-  var gltfUri = "https://example.com/model.glb";
-  var gltfResource = new Resource({
+  let ktx2BasisBuffer;
+  let ktx2BasisMipmapBuffer;
+
+  const gltfUri = "https://example.com/model.glb";
+  const gltfResource = new Resource({
     url: gltfUri,
   });
 
-  var gltf = {
+  const gltf = {
     buffers: [
       {
         uri: "external.bin",
@@ -58,15 +63,44 @@ describe("Scene/GltfImageLoader", function () {
       {
         uri: "image.png",
       },
+      {
+        mimeType: "image/ktx2",
+        bufferView: 0,
+      },
+      {
+        uri: "image.ktx2",
+      },
     ],
   };
 
+  let context;
+
   function getGltf(imageBuffer) {
-    var clonedGltf = clone(gltf, true);
+    const clonedGltf = clone(gltf, true);
     clonedGltf.buffers[0].byteLength = imageBuffer.byteLength;
     clonedGltf.bufferViews[0].byteLength = imageBuffer.byteLength;
     return clonedGltf;
   }
+
+  beforeAll(function () {
+    context = createContext();
+    const ktx2BasisBufferPromise = Resource.fetchArrayBuffer({
+      url: "./Data/Images/Green4x4_ETC1S.ktx2",
+    }).then(function (arrayBuffer) {
+      ktx2BasisBuffer = new Uint8Array(arrayBuffer);
+    });
+    const ktx2BasisMipmapBufferPromise = Resource.fetchArrayBuffer({
+      url: "./Data/Images/Green4x4Mipmap_ETC1S.ktx2",
+    }).then(function (arrayBuffer) {
+      ktx2BasisMipmapBuffer = new Uint8Array(arrayBuffer);
+    });
+
+    return Promise.all([ktx2BasisBufferPromise, ktx2BasisMipmapBufferPromise]);
+  });
+
+  afterAll(function () {
+    context.destroyForSpecs();
+  });
 
   afterEach(function () {
     ResourceCache.clearForSpecs();
@@ -80,7 +114,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -93,7 +126,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -106,7 +138,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: undefined,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -119,7 +150,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: undefined,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -132,37 +162,22 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: undefined,
-        supportedImageFormats: new SupportedImageFormats(),
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws if supportedImageFormats is undefined", function () {
-    expect(function () {
-      return new GltfImageLoader({
-        resourceCache: ResourceCache,
-        gltf: gltf,
-        imageId: 0,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        supportedImageFormats: undefined,
       });
     }).toThrowDeveloperError();
   });
 
   it("rejects promise if buffer view fails to load", function () {
-    var error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.reject(error)
-    );
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      const error = new Error("404 Not Found");
+      return Promise.reject(error);
+    });
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -171,7 +186,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load embedded image\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
@@ -180,16 +195,15 @@ describe("Scene/GltfImageLoader", function () {
 
   it("rejects promise if image format is not recognized", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(gifBuffer)
+      Promise.resolve(gifBuffer)
     );
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(gifBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -198,7 +212,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load embedded image\nImage format is not recognized"
         );
@@ -206,16 +220,17 @@ describe("Scene/GltfImageLoader", function () {
   });
 
   it("rejects promise if uri fails to load", function () {
-    var error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(when.reject(error));
+    spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+      const error = new Error("404 Not Found");
+      return Promise.reject(error);
+    });
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -224,7 +239,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load image: image.png\n404 Not Found"
         );
@@ -233,16 +248,15 @@ describe("Scene/GltfImageLoader", function () {
 
   function loadsFromBufferView(imageBuffer) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(imageBuffer)
+      Promise.resolve(imageBuffer)
     );
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(imageBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -273,18 +287,71 @@ describe("Scene/GltfImageLoader", function () {
     });
   });
 
-  it("loads from uri", function () {
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(
-      when.resolve(image)
+  it("loads KTX2/Basis from buffer view", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
+      Promise.resolve(ktx2BasisBuffer)
     );
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
-      gltf: getGltf(pngBuffer),
+      gltf: getGltf(ktx2BasisBuffer),
+      imageId: 2,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels).toBeUndefined();
+    });
+  });
+
+  it("loads KTX2/Basis with mipmap from buffer view", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
+      Promise.resolve(ktx2BasisMipmapBuffer)
+    );
+
+    const imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: getGltf(ktx2BasisMipmapBuffer),
+      imageId: 2,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels.length).toBe(2);
+    });
+  });
+
+  it("loads from uri", function () {
+    spyOn(Resource.prototype, "fetchImage").and.returnValue(
+      Promise.resolve(image)
+    );
+
+    const imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: clone(gltf, true),
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -295,23 +362,52 @@ describe("Scene/GltfImageLoader", function () {
     });
   });
 
+  it("loads KTX2/Basis from uri ", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    const baseResource = new Resource({
+      url: "./Data/Images/",
+    });
+
+    const clonedGltf = clone(gltf, true);
+    clonedGltf.images[3].uri = "Green4x4_ETC1S.ktx2";
+
+    const imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: clonedGltf,
+      imageId: 3,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels).toBeUndefined();
+    });
+  });
+
   it("destroys image loader", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(pngBuffer)
+      Promise.resolve(pngBuffer)
     );
 
-    var unloadBufferView = spyOn(
+    const unloadBufferView = spyOn(
       GltfBufferViewLoader.prototype,
       "unload"
     ).and.callThrough();
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
     expect(imageLoader.image).not.toBeDefined();
 
@@ -330,27 +426,26 @@ describe("Scene/GltfImageLoader", function () {
   });
 
   function resolveBufferViewAfterDestroy(reject) {
-    var deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
 
     // Load a copy of the buffer view into the cache so that the buffer view
     // promise resolves even if the image loader is destroyed
-    var bufferViewLoaderCopy = ResourceCache.loadBufferView({
+    const bufferViewLoaderCopy = ResourceCache.loadBufferView({
       gltf: getGltf(pngBuffer),
       bufferViewId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
     });
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();
@@ -378,94 +473,102 @@ describe("Scene/GltfImageLoader", function () {
     resolveBufferViewAfterDestroy(true);
   });
 
-  function resolveImageFromTypedArrayAfterDestroy(reject) {
+  function resolveImageFromTypedArrayAfterDestroy(rejectPromise) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(pngBuffer)
+      Promise.resolve(pngBuffer)
     );
 
-    var deferredPromise = when.defer();
-    spyOn(GltfImageLoader, "_loadImageFromTypedArray").and.returnValue(
-      deferredPromise.promise
-    );
+    let promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(image);
+      }
+    });
+    if (rejectPromise) {
+      promise = promise.catch(function (e) {
+        // swallow that error we just threw
+      });
+    }
+    spyOn(GltfImageLoader, "_loadImageFromTypedArray").and.returnValue(promise);
 
     // Load a copy of the buffer view into the cache so that the buffer view
     // promise resolves even if the image loader is destroyed
-    var bufferViewLoaderCopy = ResourceCache.loadBufferView({
+    const bufferViewLoaderCopy = ResourceCache.loadBufferView({
       gltf: getGltf(pngBuffer),
       bufferViewId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
     });
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
-    imageLoader.destroy();
+    return promise.then(function () {
+      imageLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(image);
-    }
+      expect(imageLoader.image).not.toBeDefined();
+      expect(imageLoader.isDestroyed()).toBe(true);
 
-    expect(imageLoader.image).not.toBeDefined();
-    expect(imageLoader.isDestroyed()).toBe(true);
-
-    ResourceCache.unload(bufferViewLoaderCopy);
+      ResourceCache.unload(bufferViewLoaderCopy);
+    });
   }
 
   it("handles resolving image from typed array after destroy", function () {
-    resolveImageFromTypedArrayAfterDestroy(false);
+    return resolveImageFromTypedArrayAfterDestroy(false);
   });
 
   it("handles rejecting image from typed array after destroy", function () {
-    resolveImageFromTypedArrayAfterDestroy(true);
+    return resolveImageFromTypedArrayAfterDestroy(true);
   });
 
-  function resolveUriAfterDestroy(reject) {
-    var deferredPromise = when.defer();
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveUriAfterDestroy(rejectPromise) {
+    let promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(image);
+      }
+    });
+    if (rejectPromise) {
+      promise = promise.catch(function (e) {
+        // swallow that error we just threw
+      });
+    }
+    spyOn(Resource.prototype, "fetchImage").and.returnValue(promise);
 
-    var imageLoader = new GltfImageLoader({
+    const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
       gltf: getGltf(pngBuffer),
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
-    imageLoader.destroy();
+    return promise.then(function () {
+      imageLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(image);
-    }
-
-    expect(imageLoader.image).not.toBeDefined();
-    expect(imageLoader.isDestroyed()).toBe(true);
+      expect(imageLoader.image).not.toBeDefined();
+      expect(imageLoader.isDestroyed()).toBe(true);
+    });
   }
 
   it("handles resolving uri after destroy", function () {
-    resolveUriAfterDestroy(false);
+    return resolveUriAfterDestroy(false);
   });
 
   it("handles rejecting uri after destroy", function () {
-    resolveUriAfterDestroy(true);
+    return resolveUriAfterDestroy(true);
   });
 });

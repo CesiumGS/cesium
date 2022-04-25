@@ -1,6 +1,7 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
-import { loadKTX } from "../../Source/Cesium.js";
+import { loadKTX2 } from "../../Source/Cesium.js";
+import { KTX2Transcoder } from "../../Source/Cesium.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { ClearCommand } from "../../Source/Cesium.js";
@@ -12,31 +13,29 @@ import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Renderer/Texture",
   function () {
-    var context;
-    var greenImage;
-    var blueImage;
-    var blueAlphaImage;
-    var blueOverRedImage;
-    var blueOverRedFlippedImage;
-    var red16x16Image;
+    let context;
+    let greenImage;
+    let blueImage;
+    let blueAlphaImage;
+    let blueOverRedImage;
+    let blueOverRedFlippedImage;
+    let red16x16Image;
 
-    var greenDXTImage;
-    var greenPVRImage;
-    var greenETC1Image;
+    let greenKTX2Image;
+    let greenBasisKTX2Image;
 
-    var fs =
+    const fs =
       "uniform sampler2D u_texture;" +
       "void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
-    var fsLuminanceAlpha =
+    const fsLuminanceAlpha =
       "uniform sampler2D u_texture;" +
       "void main() { gl_FragColor = vec4(texture2D(u_texture, vec2(0.0)).ra, 0.0, 1.0); }";
-    var texture;
-    var uniformMap = {
+    let texture;
+    const uniformMap = {
       u_texture: function () {
         return texture;
       },
@@ -44,7 +43,7 @@ describe(
 
     beforeAll(function () {
       context = createContext();
-      var promises = [];
+      const promises = [];
       promises.push(
         Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
           greenImage = image;
@@ -85,23 +84,27 @@ describe(
           red16x16Image = image;
         })
       );
+
+      const resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
+      const loadPromise = resource.fetchArrayBuffer();
       promises.push(
-        loadKTX("./Data/Images/Green4x4DXT1.ktx").then(function (image) {
-          greenDXTImage = image;
-        })
-      );
-      promises.push(
-        loadKTX("./Data/Images/Green4x4PVR.ktx").then(function (image) {
-          greenPVRImage = image;
-        })
-      );
-      promises.push(
-        loadKTX("./Data/Images/Green4x4ETC1.ktx").then(function (image) {
-          greenETC1Image = image;
+        loadPromise.then(function (buffer) {
+          const promise = KTX2Transcoder.transcode(buffer, {});
+          return promise.then(function (result) {
+            greenKTX2Image = result;
+          });
         })
       );
 
-      return when.all(promises);
+      if (context.supportsBasis) {
+        promises.push(
+          loadKTX2("./Data/Images/Green4x4_ETC1S.ktx2").then(function (image) {
+            greenBasisKTX2Image = image;
+          })
+        );
+      }
+
+      return Promise.all(promises);
     });
 
     afterAll(function () {
@@ -124,7 +127,7 @@ describe(
     });
 
     it("can create a texture from the framebuffer", function () {
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: Color.RED,
       });
       command.execute(context);
@@ -133,8 +136,8 @@ describe(
         context: context,
       });
 
-      var expectedWidth = context.canvas.clientWidth;
-      var expectedHeight = context.canvas.clientHeight;
+      const expectedWidth = context.canvas.clientWidth;
+      const expectedHeight = context.canvas.clientHeight;
       expect(texture.width).toEqual(expectedWidth);
       expect(texture.height).toEqual(expectedHeight);
       expect(texture.sizeInBytes).toEqual(
@@ -169,7 +172,7 @@ describe(
       }).contextToRender([0, 0, 255, 255]);
 
       // Clear to red
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: Color.RED,
       });
       command.execute(context);
@@ -177,8 +180,8 @@ describe(
 
       texture.copyFromFramebuffer();
 
-      var expectedWidth = context.canvas.clientWidth;
-      var expectedHeight = context.canvas.clientHeight;
+      const expectedWidth = context.canvas.clientWidth;
+      const expectedHeight = context.canvas.clientHeight;
       expect(texture.width).toEqual(expectedWidth);
       expect(texture.height).toEqual(expectedHeight);
       expect(texture.sizeInBytes).toEqual(
@@ -215,8 +218,8 @@ describe(
     });
 
     it("cannot flip texture when using ImageBitmap", function () {
-      var topColor = new Color(0.0, 0.0, 1.0, 1.0);
-      var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
+      const topColor = new Color(0.0, 0.0, 1.0, 1.0);
+      let bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
 
       return Resource.supportsImageBitmapOptions().then(function (
         supportsImageBitmapOptions
@@ -260,8 +263,8 @@ describe(
         return;
       }
 
-      var color = new Color(0.2, 0.4, 0.6, 1.0);
-      var floats = new Float32Array([
+      const color = new Color(0.2, 0.4, 0.6, 1.0);
+      const floats = new Float32Array([
         color.red,
         color.green,
         color.blue,
@@ -293,9 +296,9 @@ describe(
         return;
       }
 
-      var color0 = new Color(0.2, 0.4, 0.6, 1.0);
-      var color1 = new Color(0.1, 0.3, 0.5, 1.0);
-      var floats = new Float32Array([
+      const color0 = new Color(0.2, 0.4, 0.6, 1.0);
+      const color1 = new Color(0.1, 0.3, 0.5, 1.0);
+      const floats = new Float32Array([
         color0.red,
         color0.green,
         color0.blue,
@@ -325,7 +328,7 @@ describe(
 
       expect(texture.sizeInBytes).toEqual(32);
 
-      var fs =
+      const fs =
         "uniform sampler2D u_texture;" +
         "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
 
@@ -353,8 +356,8 @@ describe(
         return;
       }
 
-      var color = new Color(0.2, 0.4, 0.6, 1.0);
-      var floats = new Uint16Array([12902, 13926, 14541, 15360]);
+      const color = new Color(0.2, 0.4, 0.6, 1.0);
+      const floats = new Uint16Array([12902, 13926, 14541, 15360]);
 
       texture = new Texture({
         context: context,
@@ -382,9 +385,9 @@ describe(
         return;
       }
 
-      var color0 = new Color(0.2, 0.4, 0.6, 1.0);
-      var color1 = new Color(0.1, 0.3, 0.5, 1.0);
-      var floats = new Uint16Array([
+      const color0 = new Color(0.2, 0.4, 0.6, 1.0);
+      const color1 = new Color(0.1, 0.3, 0.5, 1.0);
+      const floats = new Uint16Array([
         12902,
         13926,
         14541,
@@ -409,7 +412,7 @@ describe(
 
       expect(texture.sizeInBytes).toEqual(16);
 
-      var fs =
+      const fs =
         "uniform sampler2D u_texture;" +
         "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
 
@@ -432,18 +435,18 @@ describe(
       }
     });
 
-    it("draws the expected DXT compressed texture color", function () {
-      if (!context.s3tc) {
+    it("draws the expected Basis compressed texture color", function () {
+      if (!context.supportsBasis) {
         return;
       }
 
       texture = new Texture({
         context: context,
-        pixelFormat: greenDXTImage.internalFormat,
+        pixelFormat: greenBasisKTX2Image.internalFormat,
         source: {
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          arrayBufferView: greenDXTImage.bufferView,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          arrayBufferView: greenBasisKTX2Image.bufferView,
         },
       });
 
@@ -453,70 +456,46 @@ describe(
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([0, 255, 0, 255]);
+      }).contextToRenderAndCall(function (color) {
+        return expect(color).toEqualEpsilon([2, 255, 2, 255], 2);
+      });
     });
 
-    it("draws the expected PVR compressed texture color", function () {
-      if (!context.pvrtc) {
-        return;
-      }
-
+    it("draws the expected KTX2 uncompressed texture color", function () {
       texture = new Texture({
         context: context,
-        pixelFormat: greenPVRImage.internalFormat,
+        pixelFormat: greenKTX2Image.internalFormat,
         source: {
-          width: greenPVRImage.width,
-          height: greenPVRImage.height,
-          arrayBufferView: greenPVRImage.bufferView,
+          width: greenKTX2Image.width,
+          height: greenKTX2Image.height,
+          arrayBufferView: greenKTX2Image.bufferView,
         },
       });
 
-      expect(texture.sizeInBytes).toBe(32);
+      expect(texture.sizeInBytes).toBe(48);
 
       expect({
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([0, 255, 0, 255]);
-    });
-
-    it("draws the expected ETC1 compressed texture color", function () {
-      if (!context.etc1) {
-        return;
-      }
-
-      texture = new Texture({
-        context: context,
-        pixelFormat: greenETC1Image.internalFormat,
-        source: {
-          width: greenETC1Image.width,
-          height: greenETC1Image.height,
-          arrayBufferView: greenETC1Image.bufferView,
-        },
+      }).contextToRenderAndCall(function (color) {
+        return expect(color).toEqualEpsilon([0, 255, 24, 255], 2);
       });
-
-      expect(texture.sizeInBytes).toBe(8);
-
-      expect({
-        context: context,
-        fragmentShader: fs,
-        uniformMap: uniformMap,
-      }).contextToRender([0, 253, 0, 255]);
     });
 
     it("renders with premultiplied alpha", function () {
-      var cxt = createContext({
+      const cxt = createContext({
         webgl: {
           alpha: true,
         },
       });
-      var texture = new Texture({
+      const texture = new Texture({
         context: cxt,
         source: blueAlphaImage,
         pixelFormat: PixelFormat.RGBA,
         preMultiplyAlpha: true,
       });
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return texture;
         },
@@ -541,14 +520,14 @@ describe(
         pixelFormat: PixelFormat.RGBA,
       });
 
-      var fragmentShaderSource = "";
+      let fragmentShaderSource = "";
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
         "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
 
-      var txCoords;
-      var um = {
+      let txCoords;
+      const um = {
         u_texture: function () {
           return texture;
         },
@@ -575,8 +554,8 @@ describe(
     });
 
     it("draws the expected luminance texture color", function () {
-      var color = new Color(0.6, 0.6, 0.6, 1.0);
-      var arrayBufferView = new Uint8Array([153]);
+      const color = new Color(0.6, 0.6, 0.6, 1.0);
+      const arrayBufferView = new Uint8Array([153]);
 
       texture = new Texture({
         context: context,
@@ -598,8 +577,8 @@ describe(
     });
 
     it("draws the expected luminance alpha texture color", function () {
-      var color = new Color(0.6, 0.8, 0.0, 1.0);
-      var arrayBufferView = new Uint8Array([153, 204]);
+      const color = new Color(0.6, 0.8, 0.0, 1.0);
+      const arrayBufferView = new Uint8Array([153, 204]);
 
       texture = new Texture({
         context: context,
@@ -621,7 +600,7 @@ describe(
     });
 
     it("can be created from a typed array", function () {
-      var bytes = new Uint8Array([0, 255, 0, 255]);
+      const bytes = new Uint8Array([0, 255, 0, 255]);
 
       texture = new Texture({
         context: context,
@@ -654,11 +633,13 @@ describe(
         height: 1,
       });
 
-      var bytes = new Uint8Array(Color.NAVY.toBytes());
+      const bytes = new Uint8Array(Color.NAVY.toBytes());
       texture.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: bytes,
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: bytes,
+        },
       });
 
       expect(texture.width).toEqual(1);
@@ -681,7 +662,9 @@ describe(
         height: blueImage.height,
       });
 
-      texture.copyFrom(blueImage);
+      texture.copyFrom({
+        source: blueImage,
+      });
 
       expect({
         context: context,
@@ -698,14 +681,14 @@ describe(
         pixelFormat: PixelFormat.RGBA,
       });
 
-      var fragmentShaderSource = "";
+      let fragmentShaderSource = "";
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
         "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
 
-      var txCoords;
-      var um = {
+      let txCoords;
+      const um = {
         u_texture: function () {
           return texture;
         },
@@ -731,7 +714,11 @@ describe(
       }).contextToRender([255, 0, 0, 255]);
 
       // After copy...
-      texture.copyFrom(greenImage, 0, 1);
+      texture.copyFrom({
+        source: greenImage,
+        xOffset: 0,
+        yOffset: 1,
+      });
 
       // Now green on top
       txCoords = new Cartesian2(0.5, 0.75);
@@ -779,7 +766,7 @@ describe(
         pixelFormat: PixelFormat.RGBA,
       });
 
-      var sampler = new Sampler({
+      const sampler = new Sampler({
         wrapS: TextureWrap.REPEAT,
         wrapT: TextureWrap.MIRRORED_REPEAT,
         minificationFilter: TextureMinificationFilter.NEAREST,
@@ -788,7 +775,7 @@ describe(
       });
       texture.sampler = sampler;
 
-      var s = texture.sampler;
+      const s = texture.sampler;
       expect(s.wrapS).toEqual(sampler.wrapS);
       expect(s.wrapT).toEqual(sampler.wrapT);
       expect(s.minificationFilter).toEqual(sampler.minificationFilter);
@@ -810,7 +797,7 @@ describe(
         }),
       });
 
-      var s = texture.sampler;
+      const s = texture.sampler;
       expect(s.wrapS).toEqual(TextureWrap.REPEAT);
       expect(s.wrapT).toEqual(TextureWrap.MIRRORED_REPEAT);
       expect(s.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
@@ -933,7 +920,7 @@ describe(
     });
 
     it("can be destroyed", function () {
-      var t = new Texture({
+      const t = new Texture({
         context: context,
         source: blueImage,
         pixelFormat: PixelFormat.RGBA,
@@ -1121,70 +1108,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when creating compressed texture when s3tc is unsupported", function () {
-      if (!context.s3tc) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenDXTImage.width,
-            height: greenDXTImage.height,
-            pixelFormat: greenDXTImage.internalFormat,
-            source: {
-              arrayBufferView: greenDXTImage.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when creating compressed texture when pvrtc is unsupported", function () {
-      if (!context.pvrtc) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenPVRImage.width,
-            height: greenPVRImage.height,
-            pixelFormat: greenPVRImage.internalFormat,
-            source: {
-              arrayBufferView: greenPVRImage.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when creating compressed texture when etc1 is unsupported", function () {
-      if (!context.etc1) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenETC1Image.width,
-            height: greenETC1Image.height,
-            pixelFormat: greenETC1Image.internalFormat,
-            source: {
-              arrayBufferView: greenETC1Image.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when creating compressed texture and the array buffer is not the right length", function () {
-      if (context.s3tc) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenDXTImage.width + 1,
-            height: greenDXTImage.height,
-            pixelFormat: greenDXTImage.internalFormat,
-            source: {
-              arrayBufferView: greenDXTImage.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
     it("throws when creating from the framebuffer with an invalid pixel format", function () {
       expect(function () {
         texture = Texture.fromFramebuffer({
@@ -1266,14 +1189,14 @@ describe(
     });
 
     it("throws when copying to a texture from the framebuffer with a compressed pixel format", function () {
-      if (context.s3tc) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: greenDXTImage.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 
@@ -1393,15 +1316,17 @@ describe(
 
         expect(function () {
           texture.copyFrom({
-            arrayBufferView: new Uint16Array([0]),
-            width: 1,
-            height: 1,
+            source: {
+              arrayBufferView: new Uint16Array([0]),
+              width: 1,
+              height: 1,
+            },
           });
         }).toThrowDeveloperError();
       }
     });
 
-    it("throws when copyFrom is not given a source", function () {
+    it("throws when copyFrom is not given any options", function () {
       texture = new Texture({
         context: context,
         source: blueImage,
@@ -1412,6 +1337,20 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("throws when copyFrom is not given a source", function () {
+      texture = new Texture({
+        context: context,
+        source: blueImage,
+      });
+
+      expect(function () {
+        texture.copyFrom({
+          xOffset: 0,
+          yOffset: 2,
+        });
+      }).toThrowDeveloperError();
+    });
+
     it("throws when copyFrom is given a negative xOffset", function () {
       texture = new Texture({
         context: context,
@@ -1419,7 +1358,10 @@ describe(
       });
 
       expect(function () {
-        texture.copyFrom(blueImage, -1);
+        texture.copyFrom({
+          source: blueImage,
+          xOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1430,7 +1372,11 @@ describe(
       });
 
       expect(function () {
-        texture.copyFrom(blueImage, 0, -1);
+        texture.copyFrom({
+          source: blueImage,
+          xOffset: 0,
+          yOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1439,11 +1385,13 @@ describe(
         context: context,
         source: blueImage,
       });
-      var image = new Image();
+      const image = new Image();
       image.width = blueImage.width + 1;
 
       expect(function () {
-        texture.copyFrom(image);
+        texture.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1452,29 +1400,33 @@ describe(
         context: context,
         source: blueImage,
       });
-      var image = new Image();
+      const image = new Image();
       image.height = blueImage.height + 1;
 
       expect(function () {
-        texture.copyFrom(image);
+        texture.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
     it("throws when copyFrom is given a source with a compressed pixel format", function () {
-      if (context.s3tc) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: greenDXTImage.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 
-        var image = new Image();
+        const image = new Image();
         expect(function () {
-          texture.copyFrom(image);
+          texture.copyFrom({
+            source: image,
+          });
         }).toThrowDeveloperError();
       }
     });
@@ -1496,14 +1448,14 @@ describe(
     });
 
     it("throws when generating mipmaps with a compressed pixel format", function () {
-      if (context.s3tc) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: greenDXTImage.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 
@@ -1549,7 +1501,7 @@ describe(
     });
 
     it("throws when destroy is called after destroying", function () {
-      var t = new Texture({
+      const t = new Texture({
         context: context,
         source: blueImage,
         pixelFormat: PixelFormat.RGBA,

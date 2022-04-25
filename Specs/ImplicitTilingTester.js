@@ -19,29 +19,33 @@ export default function ImplicitTilingTester() {}
  */
 
 /**
- * A description of 3DTILES_metadata properties stored in the subtree.
+ * A description of metadata properties stored in the subtree.
  * @typedef {Object} MetadataDescription
  * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
- * @property {Object} featureTables Options to pass into {@link MetadataTester.createFeatureTables} to create the feature table buffer views.
+ * @property {Array} propertyTables Array of property table objects to pass into {@link MetadataTester.createPropertyTables} in order to create the property table buffer views.
  * @private
  */
 
 /**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
+ * @property {Boolean} [useLegacySchema=false] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata, use 3DTILES_multiple_contents extension rather than contents). Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
- * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
+ * @property {MetadataDescription} [metadata] For testing metadata, additional options can be passed in here.
+ * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */
 
 /**
  * Results of procedurally generating a subtree.
  * @typedef {Object} GeneratedSubtree
- * @property {Uint8Array} subtreeBuffer A typed array storing the contents of the subtree file (including the internal buffer)
+ * @property {Uint8Array} [subtreeJson] The JSON portion of the subtree file. Mutually exclusive with subtreeBuffer.
+ * @property {Uint8Array} [subtreeBuffer] A typed array storing the contents of the subtree file (including the internal buffer). Mutually exclusive with subtreeJson.
  * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
+
  */
 
 /**
@@ -51,7 +55,7 @@ export default function ImplicitTilingTester() {}
  * @return {GeneratedSubtree} The procedurally generated subtree and an external buffer.
  *
  * @example
- *  var subtreeDescription = {
+ *  const subtreeDescription = {
  *    tileAvailability: {
  *      descriptor: 1,
  *      lengthBits: 5,
@@ -73,7 +77,7 @@ export default function ImplicitTilingTester() {}
  *      isInternal: false,
  *    },
  *  };
- *  var results = ImplicitTilingTester.generateSubtreeBuffers(
+ *  const results = ImplicitTilingTester.generateSubtreeBuffers(
  *    subtreeDescription
  *  );
  *
@@ -86,7 +90,7 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
   constantOnly = defaultValue(constantOnly, false);
 
   // This will be populated by makeBufferViews() and makeBuffers()
-  var subtreeJson = {};
+  let subtreeJson = {};
   if (!constantOnly) {
     subtreeJson = {
       buffers: [],
@@ -94,12 +98,20 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
     };
   }
 
-  var bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
-  var buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
-  var jsonChunk = makeJsonChunk(subtreeJson);
-  var binaryChunk = buffersU8.internal;
-  var header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
-  var subtreeBuffer = concatTypedArrays([header, jsonChunk, binaryChunk]);
+  const bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
+  const buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
+
+  if (subtreeDescription.json) {
+    return {
+      subtreeJson: subtreeJson,
+      externalBuffer: buffersU8.external,
+    };
+  }
+
+  const jsonChunk = makeJsonChunk(subtreeJson);
+  const binaryChunk = buffersU8.internal;
+  const header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
+  const subtreeBuffer = concatTypedArrays([header, jsonChunk, binaryChunk]);
 
   return {
     subtreeBuffer: subtreeBuffer,
@@ -109,10 +121,10 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
   // Content availability is optional.
-  var hasContent = defined(subtreeDescription.contentAvailability);
+  const hasContent = defined(subtreeDescription.contentAvailability);
 
   // pass 1: parse availability -------------------------------------------
-  var parsedAvailability = {
+  const parsedAvailability = {
     tileAvailability: parseAvailability(subtreeDescription.tileAvailability),
     childSubtreeAvailability: parseAvailability(
       subtreeDescription.childSubtreeAvailability
@@ -131,18 +143,24 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   }
 
   // pass 2: create buffer view JSON and gather typed arrays ------------------
-  var bufferViewsU8 = {
+  const bufferViewsU8 = {
     internal: [],
     external: [],
     count: 0,
   };
 
-  var bufferViewJsonArray = [];
+  const useLegacySchema = defaultValue(
+    subtreeDescription.useLegacySchema,
+    false
+  );
+  const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
-    parsedAvailability.tileAvailability
+    parsedAvailability.tileAvailability,
+    useLegacySchema
   );
+
   if (hasContent) {
     parsedAvailability.contentAvailability.forEach(function (
       contentAvailability
@@ -150,14 +168,16 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
       gatherBufferViews(
         bufferViewsU8,
         bufferViewJsonArray,
-        contentAvailability
+        contentAvailability,
+        useLegacySchema
       );
     });
   }
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
-    parsedAvailability.childSubtreeAvailability
+    parsedAvailability.childSubtreeAvailability,
+    useLegacySchema
   );
 
   // to simulate additional buffer views for metadata or other purposes.
@@ -165,7 +185,8 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     gatherBufferViews(
       bufferViewsU8,
       bufferViewJsonArray,
-      parsedAvailability.other
+      parsedAvailability.other,
+      useLegacySchema
     );
   }
   if (bufferViewJsonArray.length > 0) {
@@ -179,8 +200,8 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     parsedAvailability.childSubtreeAvailability.availabilityJson;
 
   if (hasContent) {
-    var contentAvailabilityArray = parsedAvailability.contentAvailability;
-    if (contentAvailabilityArray.length > 1) {
+    const contentAvailabilityArray = parsedAvailability.contentAvailability;
+    if (useLegacySchema) {
       subtreeJson.extensions = {
         "3DTILES_multiple_contents": {
           contentAvailability: contentAvailabilityArray.map(function (x) {
@@ -188,6 +209,12 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
           }),
         },
       };
+    } else if (contentAvailabilityArray.length > 1) {
+      subtreeJson.contentAvailability = contentAvailabilityArray.map(function (
+        x
+      ) {
+        return x.availabilityJson;
+      });
     } else {
       subtreeJson.contentAvailability =
         contentAvailabilityArray[0].availabilityJson;
@@ -195,8 +222,9 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   }
 
   // pass 4: add metadata buffer views --------------------------------------
-  if (defined(subtreeDescription.metadata)) {
-    addMetadata(bufferViewsU8, subtreeJson, subtreeDescription.metadata);
+  const metadata = subtreeDescription.metadata;
+  if (defined(metadata)) {
+    addMetadata(bufferViewsU8, subtreeJson, metadata, useLegacySchema);
   }
 
   // wrap up ----------------------------------------------------------------
@@ -207,7 +235,8 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
 function gatherBufferViews(
   bufferViewsU8,
   bufferViewJsonArray,
-  parsedBitstream
+  parsedBitstream,
+  useLegacySchema
 ) {
   if (defined(parsedBitstream.constant)) {
     parsedBitstream.availabilityJson = {
@@ -218,27 +247,41 @@ function gatherBufferViews(
     // simplifying assumptions:
     // 1. shareBuffer is only used for content availability
     // 2. tileAvailability is stored in the first bufferView so it has index 0
-    parsedBitstream.availabilityJson = {
-      bufferView: 0,
-      availableCount: parsedBitstream.availableCount,
-    };
+    if (useLegacySchema) {
+      parsedBitstream.availabilityJson = {
+        bufferView: 0,
+        availableCount: parsedBitstream.availableCount,
+      };
+    } else {
+      parsedBitstream.availabilityJson = {
+        bitstream: 0,
+        availableCount: parsedBitstream.availableCount,
+      };
+    }
   } else {
-    var bufferViewId = bufferViewsU8.count;
+    const bufferViewId = bufferViewsU8.count;
     bufferViewsU8.count++;
 
-    var bufferViewJson = {
+    const bufferViewJson = {
       buffer: undefined,
       byteOffset: undefined,
       byteLength: parsedBitstream.byteLength,
     };
     bufferViewJsonArray.push(bufferViewJson);
 
-    parsedBitstream.availabilityJson = {
-      bufferView: bufferViewId,
-      availableCount: parsedBitstream.availableCount,
-    };
+    if (useLegacySchema) {
+      parsedBitstream.availabilityJson = {
+        bufferView: bufferViewId,
+        availableCount: parsedBitstream.availableCount,
+      };
+    } else {
+      parsedBitstream.availabilityJson = {
+        bitstream: bufferViewId,
+        availableCount: parsedBitstream.availableCount,
+      };
+    }
 
-    var bufferView = {
+    const bufferView = {
       bufferView: parsedBitstream.bitstream,
       // save a reference to the object so we can update the offsets and
       // lengths later.
@@ -254,12 +297,12 @@ function gatherBufferViews(
 }
 
 function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
-  var buffer = new ArrayBuffer(24);
-  var dataView = new DataView(buffer);
+  const buffer = new ArrayBuffer(24);
+  const dataView = new DataView(buffer);
   // ASCII 'subt' as a little-endian uint32_t
-  var MAGIC = 0x74627573;
-  var littleEndian = true;
-  var VERSION = 1;
+  const MAGIC = 0x74627573;
+  const littleEndian = true;
+  const VERSION = 1;
   dataView.setUint32(0, MAGIC, littleEndian);
   dataView.setUint32(4, VERSION, littleEndian);
 
@@ -271,17 +314,17 @@ function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
 }
 
 function makeJsonChunk(json) {
-  var jsonString = JSON.stringify(json);
+  const jsonString = JSON.stringify(json);
   // To keep unit tests simple, this assumes ASCII characters. However, UTF-8
   // characters are allowed in general.
-  var jsonByteLength = jsonString.length;
-  var paddedLength = jsonByteLength;
+  const jsonByteLength = jsonString.length;
+  let paddedLength = jsonByteLength;
   if (paddedLength % 8 !== 0) {
     paddedLength += 8 - (paddedLength % 8);
   }
 
-  var i;
-  var buffer = new Uint8Array(paddedLength);
+  let i;
+  const buffer = new Uint8Array(paddedLength);
   for (i = 0; i < jsonByteLength; i++) {
     buffer[i] = jsonString.charCodeAt(i);
   }
@@ -294,11 +337,15 @@ function makeJsonChunk(json) {
 }
 
 function parseAvailability(availability) {
-  var parsed = parseAvailabilityDescriptor(availability.descriptor);
+  const includeAvailableCount = availability.includeAvailableCount;
+  const parsed = parseAvailabilityDescriptor(
+    availability.descriptor,
+    includeAvailableCount
+  );
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
 
-  if (defined(parsed.constant) && availability.includeAvailableCount) {
+  if (defined(parsed.constant) && includeAvailableCount) {
     // Only set available count to the number of bits if the constant is 1
     parsed.availableCount = parsed.constant * availability.lengthBits;
   }
@@ -316,24 +363,24 @@ function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
     };
   }
 
-  var bits = descriptor.split("").map(function (x) {
+  const bits = descriptor.split("").map(function (x) {
     return Number(x);
   });
-  var byteLength = Math.ceil(bits.length / 8);
-  var byteLengthWithPadding = byteLength;
+  const byteLength = Math.ceil(bits.length / 8);
+  let byteLengthWithPadding = byteLength;
 
   // Add padding if needed
   if (byteLengthWithPadding % 8 !== 0) {
     byteLengthWithPadding += 8 - (byteLengthWithPadding % 8);
   }
 
-  var availableCount = 0;
-  var bitstream = new Uint8Array(byteLength);
-  for (var i = 0; i < bits.length; i++) {
-    var bit = bits[i];
+  let availableCount = 0;
+  const bitstream = new Uint8Array(byteLengthWithPadding);
+  for (let i = 0; i < bits.length; i++) {
+    const bit = bits[i];
     availableCount += bit;
-    var byte = i >> 3;
-    var bitIndex = i % 8;
+    const byte = i >> 3;
+    const bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
   }
 
@@ -343,41 +390,45 @@ function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
 
   return {
     byteLength: byteLength,
-    byteLengthWithPadding: byteLengthWithPadding,
     bitstream: bitstream,
     availableCount: availableCount,
   };
 }
 
-function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
-  var featureTableResults = MetadataTester.createFeatureTables(
-    metadataOptions.featureTables
+function addMetadata(
+  bufferViewsU8,
+  subtreeJson,
+  metadataOptions,
+  useLegacySchema
+) {
+  const propertyTableResults = MetadataTester.createPropertyTables(
+    metadataOptions.propertyTables
   );
 
   // Add bufferViews to the list -----------------------------------
   if (!defined(subtreeJson.bufferViews)) {
     subtreeJson.bufferViews = [];
   }
-  var bufferViewJsonArray = subtreeJson.bufferViews;
+  const bufferViewJsonArray = subtreeJson.bufferViews;
 
-  var bufferViewArray = metadataOptions.isInternal
+  const bufferViewArray = metadataOptions.isInternal
     ? bufferViewsU8.internal
     : bufferViewsU8.external;
 
-  var metadataBufferViewsU8 = featureTableResults.bufferViews;
-  var metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
-  for (var i = 0; i < metadataBufferViewCount; i++) {
-    var bufferViewU8 = metadataBufferViewsU8[i];
+  const metadataBufferViewsU8 = propertyTableResults.bufferViews;
+  const metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
+  for (let i = 0; i < metadataBufferViewCount; i++) {
+    const bufferViewU8 = metadataBufferViewsU8[i];
 
-    var bufferViewJson = {
+    const bufferViewJson = {
       buffer: undefined,
       byteOffset: undefined,
       byteLength: bufferViewU8.byteLength,
     };
     bufferViewJsonArray.push(bufferViewJson);
 
-    var paddedBufferView = padUint8Array(bufferViewU8);
-    var bufferView = {
+    const paddedBufferView = padUint8Array(bufferViewU8);
+    const bufferView = {
       bufferView: paddedBufferView,
       // save a reference to the object so we can update the offsets and
       // lengths later.
@@ -387,44 +438,105 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
   }
 
   // Renumber buffer views ----------------------------------------------
-  // This tester assumes a feature table called "tiles"
-  var tileTable = featureTableResults.featureTables.tiles;
-  var tileTableProperties = tileTable.properties;
+  // This tester assumes the first property table is for the tile metadata
 
-  var firstMetadataIndex = bufferViewsU8.count;
+  const firstMetadataIndex = bufferViewsU8.count;
+  const tileTable = propertyTableResults.propertyTables[0];
+  const tileProperties = getPropertiesObjectFromPropertyTable(
+    tileTable,
+    firstMetadataIndex,
+    useLegacySchema
+  );
 
-  var properties = {};
-  for (var key in tileTableProperties) {
-    if (tileTableProperties.hasOwnProperty(key)) {
-      var property = tileTableProperties[key];
+  const propertyTables = [];
 
-      var propertyJson = {
-        bufferView: property.bufferView + firstMetadataIndex,
+  // Store results in subtree JSON -----------------------------------------
+  if (useLegacySchema) {
+    if (!defined(subtreeJson.extensions)) {
+      subtreeJson.extensions = {};
+    }
+
+    subtreeJson.extensions["3DTILES_metadata"] = {
+      class: tileTable.class,
+      properties: tileProperties,
+    };
+  } else {
+    const tilePropertyTable = {
+      class: tileTable.class,
+      properties: tileProperties,
+      count: tileTable.count,
+    };
+    propertyTables.push(tilePropertyTable);
+    subtreeJson.tileMetadata = 0;
+  }
+
+  // If they exist, handle the remaining property tables as content metadata
+  const length = propertyTableResults.propertyTables.length;
+  if (length > 1) {
+    const contentMetadataIndices = [];
+    for (let i = 1; i < length; i++) {
+      const contentTable = propertyTableResults.propertyTables[i];
+      const contentProperties = getPropertiesObjectFromPropertyTable(
+        contentTable,
+        firstMetadataIndex,
+        useLegacySchema
+      );
+      const contentMetadata = {
+        class: contentTable.class,
+        properties: contentProperties,
+        count: contentTable.count,
       };
 
-      if (defined(property.stringOffsetBufferView)) {
-        propertyJson.stringOffsetBufferView =
-          property.stringOffsetBufferView + firstMetadataIndex;
+      propertyTables.push(contentMetadata);
+      const contentMetadataIndex = useLegacySchema ? i - 1 : i;
+      contentMetadataIndices.push(contentMetadataIndex);
+    }
+
+    subtreeJson.contentMetadata = contentMetadataIndices;
+  }
+
+  subtreeJson.propertyTables = propertyTables;
+}
+
+function getPropertiesObjectFromPropertyTable(
+  propertyTable,
+  firstMetadataIndex,
+  useLegacySchema
+) {
+  const tableProperties = propertyTable.properties;
+  const properties = {};
+
+  const valuesKey = useLegacySchema ? "bufferView" : "values";
+  const stringOffsetsKey = useLegacySchema
+    ? "stringOffsetBufferView"
+    : "stringOffsets";
+  const arrayOffsetsKey = useLegacySchema
+    ? "arrayOffsetBufferView"
+    : "arrayOffsets";
+
+  for (const key in tableProperties) {
+    if (tableProperties.hasOwnProperty(key)) {
+      const property = tableProperties[key];
+      const values = property.values;
+      const stringOffsets = property.stringOffsets;
+      const arrayOffsets = property.arrayOffsets;
+
+      const propertyJson = {};
+      propertyJson[valuesKey] = firstMetadataIndex + values;
+
+      if (defined(stringOffsets)) {
+        propertyJson[stringOffsetsKey] = firstMetadataIndex + stringOffsets;
       }
 
-      if (defined(property.arrayOffsetBufferView)) {
-        propertyJson.arrayOffsetBufferView =
-          property.arrayOffsetBufferView + firstMetadataIndex;
+      if (defined(arrayOffsets)) {
+        propertyJson[arrayOffsetsKey] = firstMetadataIndex + arrayOffsets;
       }
 
       properties[key] = propertyJson;
     }
   }
 
-  // Store results in subtree JSON -----------------------------------------
-  if (!defined(subtreeJson.extensions)) {
-    subtreeJson.extensions = {};
-  }
-
-  subtreeJson.extensions["3DTILES_metadata"] = {
-    class: tileTable.class,
-    properties: properties,
-  };
+  return properties;
 }
 
 function padUint8Array(array) {
@@ -433,17 +545,17 @@ function padUint8Array(array) {
     return array;
   }
 
-  var paddingLength = 8 - (array.length % 8);
-  var padding = new Uint8Array(paddingLength);
+  const paddingLength = 8 - (array.length % 8);
+  const padding = new Uint8Array(paddingLength);
   return concatTypedArrays([array, padding]);
 }
 
 function makeBuffers(bufferViewsU8, subtreeJson) {
-  var bufferCount = 0;
-  var byteLength = 0;
-  var typedArrays = [];
-  var i;
-  var bufferView;
+  let bufferCount = 0;
+  let byteLength = 0;
+  let typedArrays = [];
+  let i;
+  let bufferView;
   for (i = 0; i < bufferViewsU8.internal.length; i++) {
     bufferView = bufferViewsU8.internal[i];
     typedArrays.push(bufferView.bufferView);
@@ -455,7 +567,7 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
 
   // An internal buffer typed array will always be returned, even if length
   // 0. However, don't add json for an unused buffer.
-  var internalBufferU8 = concatTypedArrays(typedArrays);
+  const internalBufferU8 = concatTypedArrays(typedArrays);
   if (typedArrays.length > 0) {
     subtreeJson.buffers.push({
       byteLength: byteLength,
@@ -476,7 +588,7 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
     byteLength += bufferView.bufferView.length;
   }
 
-  var externalBufferU8 = concatTypedArrays(typedArrays);
+  const externalBufferU8 = concatTypedArrays(typedArrays);
   if (typedArrays.length > 0) {
     subtreeJson.buffers.push({
       // dummy URI, unit tests should mock any requests.

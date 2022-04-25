@@ -5,8 +5,8 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
-var trailingSlashRegex = /\/$/;
-var defaultCredit = new Credit(
+const trailingSlashRegex = /\/$/;
+const defaultCredit = new Credit(
   '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>'
 );
 
@@ -38,7 +38,7 @@ var defaultCredit = new Credit(
  *
  * @example
  * // Mapbox tile provider
- * var mapbox = new Cesium.MapboxImageryProvider({
+ * const mapbox = new Cesium.MapboxImageryProvider({
  *     mapId: 'mapbox.streets',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -48,14 +48,14 @@ var defaultCredit = new Credit(
  */
 function MapboxImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var mapId = options.mapId;
+  const mapId = options.mapId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(mapId)) {
     throw new DeveloperError("options.mapId is required.");
   }
   //>>includeEnd('debug');
 
-  var accessToken = options.accessToken;
+  const accessToken = options.accessToken;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(accessToken)) {
     throw new DeveloperError("options.accessToken is required.");
@@ -148,31 +148,31 @@ function MapboxImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(
+  const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
   );
 
   this._mapId = mapId;
   this._accessToken = accessToken;
 
-  var format = defaultValue(options.format, "png");
+  let format = defaultValue(options.format, "png");
   if (!/\./.test(format)) {
-    format = "." + format;
+    format = `.${format}`;
   }
   this._format = format;
 
-  var templateUrl = resource.getUrlComponent();
+  let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl += mapId + "/{z}/{x}/{y}" + this._format;
+  templateUrl += `${mapId}/{z}/{x}/{y}${this._format}`;
   resource.url = templateUrl;
 
   resource.setQueryParameters({
     access_token: accessToken,
   });
 
-  var credit;
+  let credit;
   if (defined(options.credit)) {
     credit = options.credit;
     if (typeof credit === "string") {

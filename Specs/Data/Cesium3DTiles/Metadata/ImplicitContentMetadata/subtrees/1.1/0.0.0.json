@@ -1,0 +1,76 @@
+{
+  "buffers": [
+    {
+      "byteLength": 32,
+      "uri": "../buffers/shared.bin"
+    },
+    {
+      "byteLength": 24,
+      "uri": "../buffers/contentMetadata.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 8,
+      "byteLength": 5
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 16,
+      "byteLength": 12
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 8
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 8,
+      "byteLength": 12
+    }
+  ],
+  "tileAvailability": {
+    "bitstream": 0,
+    "availableCount": 4
+  },
+  "contentAvailability": {
+    "bitstream": 0,
+    "availableCount": 4
+  },
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "propertyTables": [
+    {
+      "class": "building",
+      "properties": {
+        "height": {
+          "values": 3
+        },
+        "color": {
+          "values": 4
+        }
+      }
+    },
+    {
+      "class": "tile",
+      "properties": {
+        "quadrant": {
+          "values": 1
+        },
+        "color": {
+          "values": 2
+        }
+      }
+    }
+  ],
+  "contentMetadata": [0],
+  "tileMetadata": 1
+}
