@@ -302,10 +302,20 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
   });
 
   it("constructs cubic weight splines", function () {
+    const cubicWeightTimes = [0.0, 0.5];
+    // prettier-ignore
+    const cubicWeightPoints = [
+        0.0, 0.0,  // in-tangents of both morph targets, first keyframe
+        0.0, 0.0,  // values of both morph targets, first keyframe
+        0.2, -0.5, // out-tangents of both morph targets, first keyframe
+        0.3, 0.0,  // in-tangents, second keyframe
+        1.0, 0.5,  // values, second keyframe
+        0.0, 0.0]; // out-tangents, second keyframe
+
     const mockSampler = {
-      input: times,
-      interpolation: InterpolationType.LINEAR,
-      output: weightPoints,
+      input: cubicWeightTimes,
+      interpolation: InterpolationType.CUBICSPLINE,
+      output: cubicWeightPoints,
     };
 
     runtimeNode._morphWeights = [0.0, 0.0];
@@ -326,8 +336,18 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function 
     expect(runtimeChannel.runtimeAnimation).toBe(runtimeAnimation);
     expect(runtimeChannel.runtimeNode).toBe(runtimeNode);
     expect(runtimeChannel.splines.length).toBe(2);
-    expect(runtimeChannel.splines[0] instanceof LinearSpline).toBe(true);
-    expect(runtimeChannel.splines[1] instanceof LinearSpline).toBe(true);
+
+    const firstSpline = runtimeChannel.splines[0];
+    expect(firstSpline instanceof HermiteSpline).toBe(true);
+    expect(firstSpline.inTangents).toEqual([0.3]);
+    expect(firstSpline.points).toEqual([0.0, 1.0]);
+    expect(firstSpline.outTangents).toEqual([0.2]);
+
+    const secondSpline = runtimeChannel.splines[1];
+    expect(secondSpline instanceof HermiteSpline).toBe(true);
+    expect(secondSpline.inTangents).toEqual([0.0]);
+    expect(secondSpline.points).toEqual([0.0, 0.5]);
+    expect(secondSpline.outTangents).toEqual([-0.5]);
   });
 
   const scratchTransform = new Matrix4();

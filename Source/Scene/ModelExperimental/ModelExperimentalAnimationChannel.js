@@ -118,16 +118,36 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   },
 });
 
+function createCubicSpline(times, points) {
+  const cubicPoints = [];
+  const inTangents = [];
+  const outTangents = [];
+
+  const length = points.length;
+  for (let i = 0; i < length; i += 3) {
+    inTangents.push(points[i]);
+    cubicPoints.push(points[i + 1]);
+    outTangents.push(points[i + 2]);
+  }
+
+  // Remove the first in-tangent and last out-tangent, since they
+  // are not used in the spline calculations
+  inTangents.splice(0, 1);
+  outTangents.length = outTangents.length - 1;
+
+  return new HermiteSpline({
+    times: times,
+    points: cubicPoints,
+    inTangents: inTangents,
+    outTangents: outTangents,
+  });
+}
+
 function createSpline(times, points, interpolation, path) {
   if (times.length === 1 && points.length === 1) {
     return new ConstantSpline(points[0]);
   }
 
-  const cubicPoints = [];
-  const inTangents = [];
-  const outTangents = [];
-
-  let length;
   switch (interpolation) {
     case InterpolationType.STEP:
       return new SteppedSpline({
@@ -135,24 +155,7 @@ function createSpline(times, points, interpolation, path) {
         points: points,
       });
     case InterpolationType.CUBICSPLINE:
-      length = points.length;
-      for (let i = 0; i < length; i += 3) {
-        inTangents.push(points[i]);
-        cubicPoints.push(points[i + 1]);
-        outTangents.push(points[i + 2]);
-      }
-
-      // Remove the first in-tangent and last out-tangent, since they
-      // are not used in the spline calculations
-      inTangents.splice(0, 1);
-      outTangents.length = outTangents.length - 1;
-
-      return new HermiteSpline({
-        times: times,
-        points: cubicPoints,
-        inTangents: inTangents,
-        outTangents: outTangents,
-      });
+      return createCubicSpline(times, points);
     case InterpolationType.LINEAR:
       if (path === AnimatedPropertyType.ROTATION) {
         return new QuaternionSpline({
@@ -171,22 +174,36 @@ function createSplines(times, points, interpolation, path, count) {
   const splines = [];
   if (path === AnimatedPropertyType.WEIGHTS) {
     const pointsLength = points.length;
-    // Get the number of keyframes in each weight's output
+    // Get the number of keyframes in each weight's output.
     const outputLength = pointsLength / count;
 
-    // Iterate over the array based on the number of morph targets in the model
+    // Iterate over the array using the number of morph targets in the model.
     let targetIndex, i;
     for (targetIndex = 0; targetIndex < count; targetIndex++) {
       const output = new Array(outputLength);
 
-      // Weights are ordered such that all weights for the targets are keyframed
-      // in the order in which they appear the glTF. For example, the weights of
-      // three targets may appear as [w(0,0), w(0,1), w(0,2), w(1,0), w(1,1), w(1,2) ...],
+      // Weights are ordered such that they are keyframed in the order in which
+      // their targets appear the glTF. For example, the weights of three targets
+      // may appear as [w(0,0), w(0,1), w(0,2), w(1,0), w(1,1), w(1,2) ...],
       // where i and j in w(i,j) are the time indices and target indices, respectively.
+
+      // However, for morph targets with cubic interpolation, the data is stored per
+      // keyframe in the order [a1, a2, ..., an, v1, v2, ... vn, b1, b2, ..., bn],
+      // where ai, vi, and bi are the in-tangent, property, and out-tangents of
+      // the ith morph target respectively.
       let pointsIndex = targetIndex;
-      for (i = 0; i < outputLength; i++) {
-        output[i] = points[pointsIndex];
-        pointsIndex += count;
+      if (interpolation === InterpolationType.CUBICSPLINE) {
+        for (i = 0; i < outputLength; i += 3) {
+          output[i] = points[pointsIndex];
+          output[i + 1] = points[pointsIndex + count];
+          output[i + 2] = points[pointsIndex + 2 * count];
+          pointsIndex += count * 3;
+        }
+      } else {
+        for (i = 0; i < outputLength; i++) {
+          output[i] = points[pointsIndex];
+          pointsIndex += count;
+        }
       }
 
       splines.push(createSpline(times, output, interpolation, path));
