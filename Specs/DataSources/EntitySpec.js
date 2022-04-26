@@ -88,6 +88,8 @@ describe("DataSources/Entity", function () {
     expect(entity.show).toBe(options.show);
     expect(entity.availability).toBe(options.availability);
     expect(entity.parent).toBe(options.parent);
+    expect(entity.children).toBeInstanceOf(Array);
+    expect(entity.children.length).toBe(0);
     expect(entity.customProperty).toBe(options.customProperty);
 
     expect(entity.billboard).toBeInstanceOf(BillboardGraphics);
