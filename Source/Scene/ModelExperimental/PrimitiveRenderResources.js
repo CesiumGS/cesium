@@ -133,7 +133,7 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * A reference to the runtime node
+   * A reference to the runtime primitive
    *
    * @type {ModelExperimentalPrimitive}
    * @readonly

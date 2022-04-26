@@ -15,6 +15,7 @@ import {
   GltfVertexBufferLoader,
   IndexDatatype,
   InstanceAttributeSemantic,
+  InterpolationType,
   JobScheduler,
   PrimitiveType,
   Matrix2,
@@ -631,7 +632,7 @@ describe(
         expect(positionAttribute.buffer).toBe(morphPositions1.buffer);
         expect(positionAttribute.buffer.sizeInBytes).toBe(108);
 
-        expect(primitive.morphWeights).toEqual([0.5, 0.5]);
+        expect(rootNode.morphWeights).toEqual([0.5, 0.5]);
       });
     });
 
@@ -647,8 +648,7 @@ describe(
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          expect(primitive.morphWeights).toEqual([0.0, 0.0]);
+          expect(rootNode.morphWeights).toEqual([0.0, 0.0]);
         }
       );
     });
@@ -792,9 +792,7 @@ describe(
           new Quaternion(0.0, 0.0, 0.0, 1.0),
         ];
         expect(sampler.input).toEqual(expectedInput);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
 
         const length = expectedOutput.length;
         for (let i = 0; i < length; i++) {
@@ -839,9 +837,7 @@ describe(
 
         const sampler = animation.samplers[0];
         expect(sampler.input.length).toEqual(127);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
         expect(sampler.output.length).toEqual(254);
 
         expect(animation.channels.length).toEqual(1);
@@ -865,9 +861,7 @@ describe(
 
         let sampler = stepScaleAnimation.samplers[0];
         expect(sampler.input.length).toEqual(sampler.output.length);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.STEP
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.STEP);
         expect(sampler.output[0] instanceof Cartesian3).toBe(true);
 
         expect(stepScaleAnimation.channels.length).toEqual(1);
@@ -885,9 +879,7 @@ describe(
         sampler = cubicSplineRotation.samplers[0];
         // For cubic spline interpolation, each keyframe requires 3 output entries
         expect(sampler.output.length).toEqual(sampler.input.length * 3);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.CUBICSPLINE
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.CUBICSPLINE);
         expect(sampler.output[0] instanceof Quaternion).toBe(true);
 
         expect(cubicSplineRotation.channels.length).toEqual(1);
@@ -903,9 +895,7 @@ describe(
 
         sampler = linearTranslation.samplers[0];
         expect(sampler.input.length).toEqual(sampler.output.length);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
         expect(sampler.output[0] instanceof Cartesian3).toBe(true);
 
         expect(linearTranslation.channels.length).toEqual(1);

@@ -7,6 +7,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
+import InterpolationType from "../Core/InterpolationType.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
@@ -35,7 +36,6 @@ const Primitive = ModelComponents.Primitive;
 const Instances = ModelComponents.Instances;
 const Skin = ModelComponents.Skin;
 const Node = ModelComponents.Node;
-const InterpolationType = ModelComponents.InterpolationType;
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 const AnimationSampler = ModelComponents.AnimationSampler;
 const AnimationTarget = ModelComponents.AnimationTarget;
@@ -1035,13 +1035,7 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
-function loadPrimitive(
-  loader,
-  gltf,
-  gltfPrimitive,
-  morphWeights,
-  supportedImageFormats
-) {
+function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
   const primitive = new Primitive();
 
   const materialId = gltfPrimitive.material;
@@ -1078,9 +1072,6 @@ function loadPrimitive(
     for (let i = 0; i < targetsLength; ++i) {
       primitive.morphTargets.push(loadMorphTarget(loader, gltf, targets[i]));
     }
-    primitive.morphWeights = defined(morphWeights)
-      ? morphWeights.slice()
-      : arrayFill(new Array(targetsLength), 0.0);
   }
 
   const indices = gltfPrimitive.indices;
@@ -1421,20 +1412,25 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = gltf.meshes[meshId];
-    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
     const primitives = mesh.primitives;
     const primitivesLength = primitives.length;
     for (let i = 0; i < primitivesLength; ++i) {
       node.primitives.push(
-        loadPrimitive(
-          loader,
-          gltf,
-          primitives[i],
-          morphWeights,
-          supportedImageFormats
-        )
+        loadPrimitive(loader, gltf, primitives[i], supportedImageFormats)
       );
     }
+
+    // If the node has no weights array, it will look for the weights array provided
+    // by the mesh. If both are undefined, it will default to an array of zero weights.
+    const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
+    const targets = node.primitives[0].morphTargets;
+    const targetsLength = targets.length;
+
+    // Since meshes are not stored as separate components, the mesh weights will still
+    // be stored at the node level.
+    node.morphWeights = defined(morphWeights)
+      ? morphWeights.slice()
+      : arrayFill(new Array(targetsLength), 0.0);
   }
 
   const nodeExtensions = defaultValue(
@@ -1616,7 +1612,9 @@ function loadAnimation(loader, gltf, gltfAnimation, nodes) {
 
   const samplers = new Array(samplersLength);
   for (i = 0; i < samplersLength; i++) {
-    samplers[i] = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+    const sampler = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+    sampler.index = i;
+    samplers[i] = sampler;
   }
 
   const gltfChannels = gltfAnimation.channels;
@@ -1644,7 +1642,9 @@ function loadAnimations(loader, gltf, nodes) {
   const animationsLength = gltf.animations.length;
   const animations = new Array(animationsLength);
   for (i = 0; i < animationsLength; ++i) {
-    animations[i] = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+    const animation = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+    animation.index = i;
+    animations[i] = animation;
   }
 
   return animations;
