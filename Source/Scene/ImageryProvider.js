@@ -347,10 +347,6 @@ ImageryProvider.prototype.pickFeatures = function (
 
 const ktx2Regex = /\.ktx2$/i;
 
-// TODO: This can definitely return a (Promise for) ImageBitmap, and also
-// whatever loadKTX / loadCRN actually return.  Can it ever return a Canvas?
-// Tons of providers pass through calls to this method, so their return types
-// are also wrong.
 /**
  * Loads an image from a given URL.  If the server referenced by the URL already has
  * too many requests pending, this function will instead return undefined, indicating
@@ -358,7 +354,7 @@ const ktx2Regex = /\.ktx2$/i;
  *
  * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
  * @param {Resource|String} url The URL of the image.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<ImageryTypes|CompressedTextureBuffer>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 ImageryProvider.loadImage = function (imageryProvider, url) {
