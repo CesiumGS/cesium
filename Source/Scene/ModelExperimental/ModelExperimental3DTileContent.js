@@ -201,6 +201,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
   model.splitDirection = tileset.splitDirection;
+  model.debugWireframe = tileset.debugWireframe;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;
@@ -357,6 +358,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,
     splitDirection: tileset.splitDirection,
+    debugWireframe: tileset.debugWireframe,
   };
 
   return combine(additionalOptions, mainOptions);

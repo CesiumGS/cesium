@@ -36,18 +36,10 @@ export default function buildDrawCommands(
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  let indexBuffer = defined(primitiveRenderResources.indices)
-    ? primitiveRenderResources.indices.buffer
-    : undefined;
+  const indexBuffer = getIndexBuffer(primitiveRenderResources, frameState);
 
   const model = primitiveRenderResources.model;
   const debugWireframe = model.debugWireframe;
-  if (debugWireframe) {
-    indexBuffer = createWireframeIndexBuffer(
-      primitiveRenderResources,
-      frameState
-    );
-  }
 
   const vertexArray = new VertexArray({
     context: frameState.context,
@@ -172,6 +164,36 @@ function deriveTranslucentCommand(command) {
   rs.blending = BlendingState.ALPHA_BLEND;
   derivedCommand.renderState = RenderState.fromCache(rs);
   return derivedCommand;
+}
+
+function getIndexBuffer(primitiveRenderResources, frameState) {
+  const model = primitiveRenderResources.model;
+  const debugWireframe = model.debugWireframe;
+
+  if (debugWireframe) {
+    return createWireframeIndexBuffer(primitiveRenderResources, frameState);
+  }
+
+  const indices = primitiveRenderResources.indices;
+  if (!defined(indices)) {
+    return undefined;
+  }
+
+  if (defined(indices.buffer)) {
+    return indices.buffer;
+  }
+
+  const typedArray = indices.typedArray;
+  const indexDatatype = IndexDatatype.fromSizeInBytes(
+    typedArray.BYTES_PER_ELEMENT
+  );
+
+  return Buffer.createIndexBuffer({
+    context: frameState.context,
+    typedArray: typedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
 }
 
 /**
