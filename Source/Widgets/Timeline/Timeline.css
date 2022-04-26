@@ -4,6 +4,7 @@
   bottom: 0;
   overflow: hidden;
   border: solid 1px #888;
+  user-select: none;
 }
 
 .cesium-timeline-trackContainer {
