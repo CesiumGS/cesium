@@ -122,9 +122,9 @@ function generateNatural(points) {
  * @param {Object} options Object with the following properties:
  * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
- * @param {Number[]|Cartesian3[]|Quaternion[]} options.points The array of control points.
- * @param {Number[]|Cartesian3[]|Quaternion[]} options.inTangents The array of incoming tangents at each control point.
- * @param {Number[]|Cartesian3[]|Quaternion[]} options.outTangents The array of outgoing tangents at each control point.
+ * @param {Cartesian3[]} options.points The array of control points.
+ * @param {Cartesian3[]} options.inTangents The array of incoming tangents at each control point.
+ * @param {Cartesian3[]} options.outTangents The array of outgoing tangents at each control point.
  *
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
@@ -243,7 +243,7 @@ Object.defineProperties(HermiteSpline.prototype, {
    *
    * @memberof HermiteSpline.prototype
    *
-   * @type {Number[]|Cartesian3[]|Quaternion[]}
+   * @type {Cartesian3[]}
    * @readonly
    */
   points: {
@@ -257,7 +257,7 @@ Object.defineProperties(HermiteSpline.prototype, {
    *
    * @memberof HermiteSpline.prototype
    *
-   * @type {Number[]|Cartesian3[]|Quaternion[]}
+   * @type {Cartesian3[]}
    * @readonly
    */
   inTangents: {
@@ -271,7 +271,7 @@ Object.defineProperties(HermiteSpline.prototype, {
    *
    * @memberof HermiteSpline.prototype
    *
-   * @type {Number[]|Cartesian3[]|Quaternion[]}
+   * @type {Cartesian3[]}
    * @readonly
    */
   outTangents: {
@@ -557,8 +557,8 @@ HermiteSpline.prototype.clampTime = Spline.prototype.clampTime;
  * Evaluates the curve at a given time.
  *
  * @param {Number} time The time at which to evaluate the curve.
- * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
- * @returns {Number|Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
+ * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element

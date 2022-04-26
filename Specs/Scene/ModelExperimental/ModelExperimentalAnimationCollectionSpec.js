@@ -15,6 +15,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   const interpolationTestUrl =
     "./Data/Models/InterpolationTest/InterpolationTest.glb";
 
+  const scratchJulianDate = new JulianDate();
   let scene;
 
   beforeAll(function () {
@@ -465,8 +466,6 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       expect(animationCollection.update()).toBe(false);
     });
   });
-
-  const scratchJulianDate = new JulianDate();
 
   it("raises animation start, update, and stop events when removeOnStop is true", function () {
     return loadAndZoomToModelExperimental(
