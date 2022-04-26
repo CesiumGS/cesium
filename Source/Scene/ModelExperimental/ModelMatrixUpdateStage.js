@@ -1,5 +1,4 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
 /**
@@ -50,9 +49,11 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
 
   runtimeNode.updateComputedTransform();
 
-  for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
+  const primitivesLength = runtimeNode.runtimePrimitives.length;
+  for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
+    const drawCommandsLength = runtimePrimitive.drawCommands.length;
+    for (j = 0; j < drawCommandsLength; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
       drawCommand.modelMatrix = Matrix4.multiplyTransformation(
@@ -68,20 +69,18 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     }
   }
 
-  if (defined(runtimeNode.children)) {
-    for (i = 0; i < runtimeNode.children.length; i++) {
-      const childRuntimeNode =
-        sceneGraph._runtimeNodes[runtimeNode.children[i]];
+  const childrenLength = runtimeNode.children.length;
+  for (i = 0; i < childrenLength; i++) {
+    const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
-      childRuntimeNode._transformToRoot = Matrix4.clone(
-        transformToRoot,
-        childRuntimeNode._transformToRoot
-      );
+    // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+    childRuntimeNode._transformToRoot = Matrix4.clone(
+      transformToRoot,
+      childRuntimeNode._transformToRoot
+    );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
-      childRuntimeNode._transformDirty = false;
-    }
+    updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
+    childRuntimeNode._transformDirty = false;
   }
 }
 

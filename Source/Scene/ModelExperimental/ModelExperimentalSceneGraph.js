@@ -317,24 +317,21 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
-  let i;
-  if (defined(node.children)) {
-    const childrenLength = node.children.length;
-    for (i = 0; i < childrenLength; i++) {
-      const childNode = node.children[i];
-      const childNodeTransformToRoot = Matrix4.multiplyTransformation(
-        transformToRoot,
-        transform,
-        new Matrix4()
-      );
+  const childrenLength = node.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    const childNode = node.children[i];
+    const childNodeTransformToRoot = Matrix4.multiplyTransformation(
+      transformToRoot,
+      transform,
+      new Matrix4()
+    );
 
-      const childIndex = traverseSceneGraph(
-        sceneGraph,
-        childNode,
-        childNodeTransformToRoot
-      );
-      childrenIndices.push(childIndex);
-    }
+    const childIndex = traverseSceneGraph(
+      sceneGraph,
+      childNode,
+      childNodeTransformToRoot
+    );
+    childrenIndices.push(childIndex);
   }
 
   // Process node and mesh primitives.
@@ -346,17 +343,15 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
     sceneGraph: sceneGraph,
   });
 
-  if (defined(node.primitives)) {
-    const primitivesLength = node.primitives.length;
-    for (i = 0; i < primitivesLength; i++) {
-      runtimeNode.runtimePrimitives.push(
-        new ModelExperimentalPrimitive({
-          primitive: node.primitives[i],
-          node: node,
-          model: sceneGraph._model,
-        })
-      );
-    }
+  const primitivesLength = node.primitives.length;
+  for (let i = 0; i < primitivesLength; i++) {
+    runtimeNode.runtimePrimitives.push(
+      new ModelExperimentalPrimitive({
+        primitive: node.primitives[i],
+        node: node,
+        model: sceneGraph._model,
+      })
+    );
   }
 
   const index = node.index;

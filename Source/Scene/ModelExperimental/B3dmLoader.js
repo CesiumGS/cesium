@@ -296,7 +296,8 @@ function createStructuralMetadata(loader, components) {
 
   // Add the feature ID attribute to the primitives.
   const nodes = components.scene.nodes;
-  for (let i = 0; i < nodes.length; i++) {
+  const length = nodes.length;
+  for (let i = 0; i < length; i++) {
     processNode(nodes[i]);
   }
   components.structuralMetadata = structuralMetadata;
@@ -304,32 +305,25 @@ function createStructuralMetadata(loader, components) {
 
 // Recursive function to add the feature ID attribute to all primitives that have a feature ID vertex attribute.
 function processNode(node) {
-  if (!defined(node.children) && !defined(node.primitives)) {
-    return;
+  const childrenLength = node.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    processNode(node.children[i]);
   }
 
-  let i;
-  if (defined(node.children)) {
-    for (i = 0; i < node.children.length; i++) {
-      processNode(node.children[i]);
-    }
-  }
-
-  if (defined(node.primitives)) {
-    for (i = 0; i < node.primitives.length; i++) {
-      const primitive = node.primitives[i];
-      const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.FEATURE_ID
-      );
-      if (defined(featureIdVertexAttribute)) {
-        featureIdVertexAttribute.setIndex = 0;
-        const featureIdAttribute = new FeatureIdAttribute();
-        featureIdAttribute.propertyTableId = 0;
-        featureIdAttribute.setIndex = 0;
-        featureIdAttribute.positionalLabel = "featureId_0";
-        primitive.featureIds.push(featureIdAttribute);
-      }
+  const primitivesLength = node.primitives.length;
+  for (let i = 0; i < primitivesLength; i++) {
+    const primitive = node.primitives[i];
+    const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.FEATURE_ID
+    );
+    if (defined(featureIdVertexAttribute)) {
+      featureIdVertexAttribute.setIndex = 0;
+      const featureIdAttribute = new FeatureIdAttribute();
+      featureIdAttribute.propertyTableId = 0;
+      featureIdAttribute.setIndex = 0;
+      featureIdAttribute.positionalLabel = "featureId_0";
+      primitive.featureIds.push(featureIdAttribute);
     }
   }
 }
