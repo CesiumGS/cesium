@@ -256,12 +256,13 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
 
   const animations = model.sceneGraph.components.animations;
 
-  const runtimeAnimations = [];
+  const addedAnimations = [];
   const length = animations.length;
   for (let i = 0; i < length; ++i) {
-    runtimeAnimations.push(addAnimation(this, animations[i], options));
+    const animation = addAnimation(this, animations[i], options);
+    addedAnimations.push(animation);
   }
-  return runtimeAnimations;
+  return addedAnimations;
 };
 
 /**
@@ -286,14 +287,16 @@ ModelExperimentalAnimationCollection.prototype.addAll = function (options) {
 ModelExperimentalAnimationCollection.prototype.remove = function (
   runtimeAnimation
 ) {
-  if (defined(runtimeAnimation)) {
-    const animations = this._runtimeAnimations;
-    const i = animations.indexOf(runtimeAnimation);
-    if (i !== -1) {
-      animations.splice(i, 1);
-      this.animationRemoved.raiseEvent(this._model, runtimeAnimation);
-      return true;
-    }
+  if (!defined(runtimeAnimation)) {
+    return false;
+  }
+
+  const animations = this._runtimeAnimations;
+  const i = animations.indexOf(runtimeAnimation);
+  if (i !== -1) {
+    animations.splice(i, 1);
+    this.animationRemoved.raiseEvent(this._model, runtimeAnimation);
+    return true;
   }
 
   return false;
@@ -311,7 +314,7 @@ ModelExperimentalAnimationCollection.prototype.removeAll = function () {
   const animations = this._runtimeAnimations;
   const length = animations.length;
 
-  this._runtimeAnimations = [];
+  this._runtimeAnimations.length = 0;
 
   for (let i = 0; i < length; ++i) {
     this.animationRemoved.raiseEvent(model, animations[i]);

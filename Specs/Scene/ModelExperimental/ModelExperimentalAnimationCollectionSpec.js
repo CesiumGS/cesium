@@ -45,7 +45,6 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is called on non-ready model", function () {
-    console.log("AH");
     const model = ModelExperimental.fromGltf({
       gltf: animatedTriangleUrl,
     });
@@ -542,7 +541,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       const spyStart = jasmine.createSpy("listener");
       animation.start.addEventListener(spyStart);
 
-      scene.renderForSpecs(time); // Does not fire start
+      scene.renderForSpecs(time); // Does not fire start event
       scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, scratchJulianDate));
 
       expect(spyStart.calls.count()).toEqual(1);

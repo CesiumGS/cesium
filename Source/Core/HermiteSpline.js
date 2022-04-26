@@ -6,8 +6,6 @@ import DeveloperError from "./DeveloperError.js";
 import LinearSpline from "./LinearSpline.js";
 import Matrix4 from "./Matrix4.js";
 import Spline from "./Spline.js";
-import Quaternion from "./Quaternion.js";
-import QuaternionSpline from "./QuaternionSpline.js";
 import TridiagonalSystemSolver from "./TridiagonalSystemSolver.js";
 
 const scratchLower = [];
@@ -402,13 +400,6 @@ HermiteSpline.createNaturalCubic = function (options) {
   //>>includeEnd('debug');
 
   if (points.length < 3) {
-    const PointType = Spline.getPointType(points[0]);
-    if (PointType === Quaternion) {
-      return new QuaternionSpline({
-        points: points,
-        times: times,
-      });
-    }
     return new LinearSpline({
       points: points,
       times: times,
