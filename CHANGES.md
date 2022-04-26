@@ -9,6 +9,7 @@
 - Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
 - Added support for skins in `ModelExperimental`. [#10282](https://github.com/CesiumGS/cesium/pull/10282)
 - Improved rendering of ground and sky atmosphere. [#10063](https://github.com/CesiumGS/cesium/pull/10063)
+- Prevent text selection in the Timeline [#10325](https://github.com/CesiumGS/cesium/pull/10325)
 
 ##### Fixes :wrench:
 
