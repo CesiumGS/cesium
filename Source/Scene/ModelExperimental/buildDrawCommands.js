@@ -1,10 +1,14 @@
 import BlendingState from "../BlendingState.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import StencilConstants from "../StencilConstants.js";
@@ -32,9 +36,18 @@ export default function buildDrawCommands(
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  const indexBuffer = defined(primitiveRenderResources.indices)
+  let indexBuffer = defined(primitiveRenderResources.indices)
     ? primitiveRenderResources.indices.buffer
     : undefined;
+
+  const model = primitiveRenderResources.model;
+  const debugWireframe = model.debugWireframe;
+  if (debugWireframe) {
+    indexBuffer = createWireframeIndexBuffer(
+      primitiveRenderResources,
+      frameState
+    );
+  }
 
   const vertexArray = new VertexArray({
     context: frameState.context,
@@ -42,7 +55,6 @@ export default function buildDrawCommands(
     attributes: primitiveRenderResources.attributes,
   });
 
-  const model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
 
   let renderState = primitiveRenderResources.renderStateOptions;
@@ -75,6 +87,13 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
+  let primitiveType = primitiveRenderResources.primitiveType;
+  let count = primitiveRenderResources.count;
+  if (debugWireframe) {
+    primitiveType = PrimitiveType.LINES;
+    count *= 2;
+  }
+
   const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
     modelMatrix: modelMatrix,
@@ -84,10 +103,10 @@ export default function buildDrawCommands(
     shaderProgram: shaderProgram,
     cull: model.cull,
     pass: pass,
-    count: primitiveRenderResources.count,
+    count: count,
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
-    primitiveType: primitiveRenderResources.primitiveType,
+    primitiveType: primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: ShadowMode.castShadows(model.shadows),
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
@@ -153,4 +172,77 @@ function deriveTranslucentCommand(command) {
   rs.blending = BlendingState.ALPHA_BLEND;
   derivedCommand.renderState = RenderState.fromCache(rs);
   return derivedCommand;
+}
+
+/**
+ * @private
+ */
+function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
+  const positionAttribute = primitiveRenderResources.attributes[0];
+  const vertexCount = positionAttribute.count;
+  const indices = primitiveRenderResources.indices;
+
+  const context = frameState.context;
+
+  let wireframeIndices;
+  if (defined(indices)) {
+    const indicesCount = indices.count;
+    const useWebgl2 = context.webgl2;
+    let originalIndices;
+    if (useWebgl2) {
+      const indicesBuffer = indices.buffer;
+      originalIndices = IndexDatatype.createTypedArray(
+        vertexCount,
+        indicesCount
+      );
+      indicesBuffer.getBufferData(originalIndices);
+    } else {
+      originalIndices = indices.typedArray;
+    }
+
+    wireframeIndices = IndexDatatype.createTypedArray(
+      vertexCount,
+      indicesCount * 2
+    );
+
+    let index = 0;
+    for (let i = 0; i < indicesCount; i += 3) {
+      const point0 = originalIndices[i];
+      const point1 = originalIndices[i + 1];
+      const point2 = originalIndices[i + 2];
+
+      wireframeIndices[index++] = point0;
+      wireframeIndices[index++] = point1;
+      wireframeIndices[index++] = point1;
+      wireframeIndices[index++] = point2;
+      wireframeIndices[index++] = point2;
+      wireframeIndices[index++] = point0;
+    }
+  } else {
+    wireframeIndices = IndexDatatype.createTypedArray(
+      vertexCount,
+      vertexCount * 2
+    );
+
+    let index = 0;
+    for (let i = 0; i < vertexCount; i += 3) {
+      wireframeIndices[index++] = i;
+      wireframeIndices[index++] = i + 1;
+      wireframeIndices[index++] = i + 1;
+      wireframeIndices[index++] = i + 2;
+      wireframeIndices[index++] = i + 2;
+      wireframeIndices[index++] = i;
+    }
+  }
+
+  const indexDatatype = IndexDatatype.fromSizeInBytes(
+    wireframeIndices.BYTES_PER_ELEMENT
+  );
+
+  return Buffer.createIndexBuffer({
+    context: context,
+    typedArray: wireframeIndices,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
 }

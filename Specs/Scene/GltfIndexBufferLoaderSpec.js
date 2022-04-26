@@ -16,7 +16,7 @@ import createScene from "../createScene.js";
 import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
-describe(
+fdescribe(
   "Scene/GltfIndexBufferLoader",
   function () {
     const dracoBufferTypedArray = new Uint8Array([
@@ -259,7 +259,12 @@ describe(
     let scene;
 
     beforeAll(function () {
-      scene = createScene();
+      const contextOptions = {
+        requestWebgl2: true,
+      };
+      scene = createScene({
+        contextOptions: contextOptions,
+      });
     });
 
     afterAll(function () {
@@ -390,6 +395,10 @@ describe(
     });
 
     it("loads from accessor", function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -431,6 +440,10 @@ describe(
     });
 
     it("creates index buffer synchronously", function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -481,6 +494,38 @@ describe(
         );
         expect(indexBufferLoader.buffer).toBeUndefined();
         expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
+      });
+    });
+
+    it("loads as typed array if using WebGL1", function () {
+      scene.context._webgl2 = false;
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createIndexBuffer").and.callThrough();
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: false,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray.byteLength).toBe(
+          indicesUint16.byteLength
+        );
+        expect(indexBufferLoader.buffer).toBeUndefined();
+        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
+
+        scene.context._webgl2 = true;
       });
     });
 
