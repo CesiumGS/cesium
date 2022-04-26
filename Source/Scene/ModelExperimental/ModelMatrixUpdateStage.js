@@ -49,9 +49,11 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
 
   runtimeNode.updateComputedTransform();
 
-  for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
+  const primitivesLength = runtimeNode.runtimePrimitives.length;
+  for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
+    const drawCommandsLength = runtimePrimitive.drawCommands.length;
+    for (j = 0; j < drawCommandsLength; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
       drawCommand.modelMatrix = Matrix4.multiplyTransformation(
@@ -67,7 +69,8 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     }
   }
 
-  for (i = 0; i < runtimeNode.children.length; i++) {
+  const childrenLength = runtimeNode.children.length;
+  for (i = 0; i < childrenLength; i++) {
     const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
     // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
