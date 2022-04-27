@@ -127,12 +127,12 @@ describe(
       options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
+
       const commandList = scene.frameState;
       const commandCounts = [];
+      let i, command;
 
       targetScene.renderForSpecs();
-
-      let i, command;
       for (i = 0; i < commandList.length; i++) {
         command = commandList[i];
         expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
