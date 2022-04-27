@@ -218,12 +218,12 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
 
   let wireframeIndices;
   if (defined(indices)) {
+    const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
     const useWebgl2 = context.webgl2;
 
     let originalIndices;
-    if (useWebgl2) {
-      const indicesBuffer = indices.buffer;
+    if (useWebgl2 && defined(indicesBuffer)) {
       originalIndices = IndexDatatype.createTypedArray(
         vertexCount,
         indicesCount
