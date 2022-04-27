@@ -256,7 +256,7 @@ describe(
       ],
     };
 
-    // Index buffers will only load as typed arrays in WebGL1.
+    // Index buffers will load as typed arrays only in WebGL1.
     // In order to load them as buffers, the scene must have WebGL2 enabled.
     let scene;
     let sceneWithWebgl2;

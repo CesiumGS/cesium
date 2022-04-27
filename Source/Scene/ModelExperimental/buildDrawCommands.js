@@ -202,16 +202,25 @@ function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
  * @private
  */
 function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
-  const positionAttribute = primitiveRenderResources.attributes[0];
+  let positionAttribute;
+  const attributes = primitiveRenderResources.attributes;
+  const length = attributes.length;
+  for (let i = 0; i < length; i++) {
+    if (attributes[i].index === 0) {
+      positionAttribute = attributes[i];
+      break;
+    }
+  }
+
   const vertexCount = positionAttribute.count;
   const indices = primitiveRenderResources.indices;
-
   const context = frameState.context;
 
   let wireframeIndices;
   if (defined(indices)) {
     const indicesCount = indices.count;
     const useWebgl2 = context.webgl2;
+
     let originalIndices;
     if (useWebgl2) {
       const indicesBuffer = indices.buffer;
