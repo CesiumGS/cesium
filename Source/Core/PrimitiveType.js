@@ -81,6 +81,17 @@ PrimitiveType.isLines = function (primitiveType) {
 /**
  * @private
  */
+PrimitiveType.isTriangles = function (primitiveType) {
+  return (
+    primitiveType === PrimitiveType.TRIANGLES ||
+    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLE_FAN
+  );
+};
+
+/**
+ * @private
+ */
 PrimitiveType.validate = function (primitiveType) {
   return (
     primitiveType === PrimitiveType.POINTS ||
