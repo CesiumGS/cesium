@@ -70,6 +70,17 @@ const PrimitiveType = {
 /**
  * @private
  */
+PrimitiveType.isLines = function (primitiveType) {
+  return (
+    primitiveType === PrimitiveType.LINES ||
+    primitiveType === PrimitiveType.LINE_LOOP ||
+    primitiveType === PrimitiveType.LINE_STRIP
+  );
+};
+
+/**
+ * @private
+ */
 PrimitiveType.validate = function (primitiveType) {
   return (
     primitiveType === PrimitiveType.POINTS ||

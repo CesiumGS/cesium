@@ -36,10 +36,16 @@ export default function buildDrawCommands(
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  const indexBuffer = getIndexBuffer(primitiveRenderResources, frameState);
-
   const model = primitiveRenderResources.model;
-  const debugWireframe = model.debugWireframe;
+  let primitiveType = primitiveRenderResources.primitiveType;
+  const debugWireframe =
+    model.debugWireframe && !PrimitiveType.isLines(primitiveType);
+
+  const indexBuffer = getIndexBuffer(
+    primitiveRenderResources,
+    debugWireframe,
+    frameState
+  );
 
   const vertexArray = new VertexArray({
     context: frameState.context,
@@ -79,7 +85,6 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
-  let primitiveType = primitiveRenderResources.primitiveType;
   let count = primitiveRenderResources.count;
   if (debugWireframe) {
     primitiveType = PrimitiveType.LINES;
@@ -166,10 +171,7 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
-function getIndexBuffer(primitiveRenderResources, frameState) {
-  const model = primitiveRenderResources.model;
-  const debugWireframe = model.debugWireframe;
-
+function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
   if (debugWireframe) {
     return createWireframeIndexBuffer(primitiveRenderResources, frameState);
   }

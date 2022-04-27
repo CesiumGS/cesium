@@ -21,6 +21,7 @@ import {
   Color,
   StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
+  PrimitiveType,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -30,6 +31,8 @@ describe(
   function () {
     const webglStub = !!window.webglStub;
 
+    const triangleWithoutIndicesUrl =
+      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
     const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const buildingsMetadata =
@@ -51,9 +54,13 @@ describe(
       "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
 
     let scene;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene({
+        requestWebgl2: true,
+      });
     });
 
     afterAll(function () {
@@ -114,6 +121,50 @@ describe(
       });
 
       scene.backgroundColor = Color.BLACK;
+    }
+
+    function verifyDebugWireframe(model, options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      const modelHasIndices = defaultValue(options.hasIndices, true);
+      const targetScene = defaultValue(options.scene, scene);
+      const commandList = scene.frameState;
+      const commandCounts = [];
+
+      targetScene.renderForSpecs();
+
+      let i, command;
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+        if (!modelHasIndices) {
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+        commandCounts.push(command.count);
+      }
+
+      model.debugWireframe = true;
+      expect(model._drawCommandsBuilt).toBe(false);
+
+      targetScene.renderForSpecs();
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(PrimitiveType.LINES);
+        expect(command.vertexArray.indexBuffer).toBeDefined();
+        expect(command.count).toEqual(commandCounts[i] * 2);
+      }
+
+      model.debugWireframe = false;
+      expect(model._drawCommandsBuilt).toBe(false);
+
+      targetScene.renderForSpecs();
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+        if (!modelHasIndices) {
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+        expect(command.count).toEqual(commandCounts[i]);
+      }
     }
 
     it("initializes and renders from Uint8Array", function () {
@@ -436,6 +487,48 @@ describe(
           model.show = true;
           expect(model.show).toEqual(true);
           verifyRender(model, true);
+        });
+      });
+    });
+
+    it("debugWireframe works", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          verifyDebugWireframe(model);
+        });
+      });
+    });
+
+    it("debugWireframe works for model without indices", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleWithoutIndicesUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, {
+          hasIndices: false,
+        });
+      });
+    });
+
+    it("debugWireframe works for WebGL2", function () {
+      if (!sceneWithWebgl2.context.webgl2) {
+        return;
+      }
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          verifyDebugWireframe(model, {
+            scene: sceneWithWebgl2,
+          });
         });
       });
     });
