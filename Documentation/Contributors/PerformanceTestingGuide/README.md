@@ -1,12 +1,22 @@
-# 3D Tiles Performance Testing Guide
+# Performance Testing Guide
 
-**Note**: This is the beginning of a guide for various tests of 3D Tiles
-performance.
+## 3D Tiles Load Time Testing
 
-## Testing Load Time
+When updating CesiumJS' 3D Tiles implementation, often it's helpful to ask
+"did this change help or hurt performance?". Here are some example scenarios
+where measuring the load time might be a helpful first step:
+
+- Changing the tileset traversal algorithm may affect how efficiently tiles are
+  loaded
+- When [3D Tiles Next was implemented](https://github.com/CesiumGS/cesium/issues/9520),
+  we significantly refactored the glTF loading code. We started [measuring performance](https://github.com/CesiumGS/cesium/issues/10331) to help identify potential problem spots.
+- When evaluating compression algorithms, it's helpful to compare the load time
+  of an uncompressed tileset with a compressed one.
 
 This section is for measuring how long it takes a tileset and the initial view
-of tiles takes to load.
+of tiles takes to load. This is a coarse measurement of performance; It is
+useful for quick comparisons, but not a replacement for using browser tools for
+performancing monitoring (such as Chrome's Performance tab).
 
 The subsections below will explain the process for setting up a Sandcastle for
 performance testing, as in this [Helsinki Example](http://localhost:8080/Build/Apps/Sandcastle/index.html#c=jVdrb9s2FP0rd16BOoBDyc8or2JtmqHZ0jZovA0FDKy0RMdcJNITKSdpkf++Q1K25Thb90WWSN73uefSUUTjqlSkZzOyc0E3uZ4K4iojc/tAU31PVlMpsioVNFGpVsbSUoo7UdIpKXFHZ8LIqmC/+7X2pJX67zOtLJdKlJNWh75NFAXFRzTjuREdtwD9b/R9vTJRj3vHEzVRUUTXwhKnmbwXGaW8ECX3Fslo76EVcEEaOLUoNfyS0xziwSdmUqEEC1LMCOvcanv7GcSk4lZqRUdNz894CZWSq367lyTdg4MB6/XjfjIadLsd6vYHvVEvZqM4HiXDUW+YdGg47MZJf8h6vTjpDg7iZM8HpEspEPWuhXeCZ1LdXEmbzj/pPG8PGYQOu3F3NDxM4lEfdvZjqDvsw8RhrzcaHB52hx3qseRg2D0YxN0kGSU4LfYPgi2hsnHJlZnpsoCx2tB7bkt5P2AXb88/jC/Gn5tZfSfyBYqW5twYghgVgpuqhF8kcr4wSLaVhWAosj8yxkcZSuerXlap1WU751OR74V1Qj2kYX4JaPC/x40NY5FapweblcrEDIDImgdcFM9tP7qHx4jT0N4219SKiFwGuEoFU/quvfdUXC+eSG9Mfkd2gdQ0TAfkZ3I2E6WAyJ9GpFDS3lK6/8TDPYqoG8cxi483WnQuWK5v2l9efNuk7/GIXnzb1v5IeHxZe/Xo6jirVOrx5Up1qXkW6tGhqlwVBaX2vsxKXYR+kblAJ2yq6OQrhWW0EM8ernBQGoEPuLYUhq20wLkaJMLQXN9RrgEWacnyW6yAF2YCiPZkgVZE45umQfaX0WoNn9VqgFWgDv/u8hBSgGSGM3t11Duh7PpbhWxoupsL5c9IJa3kebBHvBRwm2ci+59Ruc5YBeE8t2hpH2utV34VbDuo70fUiEcvQUx5vtVyIT4PGp9UWDLzhpFa5j/t1GdWljwdNcRY3Uh+s1mJrY2tQm3Te/jpvx2HzXbdFYCdh+fGKmI8L0ufRCR4rvOM0UUYLSYtBYpkFhyzRPhDN9rVaApXfed0qNAoWCYwO/J1yZ5WsgbouqBOYMar3E+F7qhDznunDufdnEJOnSBmSs7LGyyoqpjiR8+CatZICiv4vSyq4tr7eu1cDeGc0qAZY4CRzkB8eOG00GALkKuusg5ZDFTHq0AmtwBQFWZCEdoG/vrThoBCiQlZR6nht2i64k+dOZXXcz9AWFPbKaGZhfdpa/aBtwog1TUyz7J1S207X7eSa1vfS1JlMuXWu8ftThfTnJsal2Ld63Co1ucIYC3iCwU+rS0grGmzBVdqm63MIKza4NrTV2uu3saoo/Hjzc4udB/3dqqTAvxTnt66As1kKYKPePMYL0QI1TWjW19K4y4S/wY2urBbSRJuAnsE1TeSLRDVXOGb5TKoQS3Ol+CSS2lQQzTvTrjPxPqkhRs74Qm/3kqzyPlDTY8GXWDgqP9cDZtnMloPt52Ubq9vmW9u+Ww/1heLqw30XUJwzwA0bmWHfpYqr2fDUiIHNH2g1zwHIn5TwGdppH2gO2nnZKrFQoP9PBGeueWGIvJW5tYuzFEUfRVKZ5rp8iYqRarLLBoOD5LuYfIj+/yXHv/x5sOvshp4Ef+4eH/18dP49YfxUWAKbjmBlqo8c7ica1QjC05wR8FWpmjDculoA/A48jq6jM4VnzpgpDydu06sefGX65cgn+VKJHN0prT1x8QPXrjH6HUOIjJ09vHTNc2Be4QOjUADbK5mviWfAfRaroFc51hgls0B3C9vpGJeq+NehVllK1xpRf4Q+A5zTcEBYe90eQs4/F0BmQ4PSzfZSdxb3KXhWXoLqp1WsGBfmo0+vtQyc3ESEp8KD6JGdI4E6vjhlXEHXXusryKT1gKs5i78k5YrF6q1juUoieN+NK9Lun7ZdxLR1oWhFW6srU7rxNiHXLwKWCT6SRY+RZg5bcYiKwoAH60XTav0FtKpMSvgnkRN0ZNMLklmp8/8NwnXYezMqjy/xmyftF6dRDi/I+rYAIF/RCLQbu7YvPvqMiwyxk4ifD4vabUGD5VPNP8D).
@@ -158,34 +168,45 @@ tileset.initialTilesLoaded.addEventListener(() => {
 });
 ```
 
-### Configure a static server
+### Caching vs throttling
 
-Since CesiumJS' development server (`npm run start`) does not enable caching,
-you will need a static server to load your tiles. The server must:
+Depending on the scenario you are trying to test for, you may want to enable
+caching of network requests or throttling network speed.
 
-1. Enable caching. Using the browser cache will eliminate noise from network
-   latency.
-2. Enable CORS. Ideally we would want to avoid a CORS check by hosting the data
-   on the same domain as the CesiumJS server, but again
+- If you want to simulate slow network connections, consider throttling the
+  connection. For example, in Chrome, see [these instructions](https://developer.chrome.com/docs/devtools/network/#throttle)
+- If you want to eliminate network latency and focus on measuring how long the
+  initialization code takes to run, enable caching. In Chrome, this option
+  can be done by _unchecking_ the `Disable Cache` option in the Network tab.
+  You will also need to enable caching on the server.
+
+![Uncheck disable cache](no-disable-cache.png)
+
+To check if caching is correctly enabled, load the tileset and check the
+Network tab. In Chrome, cached files will show up as `(disk cache)` in the
+`Size` column:
+
+![Disk Cache](disk-cache.png)
+
+### Loading tilesets with a static server
+
+If using tilesets locally from disk, you will need a static server to load
+tilesets. Most any static server could work, though be sure to consider the
+following:
+
+1. If caching is used, this must be enabled on the server. Note that the
+   CesiumJS development server (`npm run start`) does not support caching.
+2. If the static server is listening on a different domain or port, make sure
+   to enable Cross-Origin Resource Sharing (CORS)
 
 A example using the `npm` module `http-server` might look like this:
 
 ```bash
 # Host the current directory at http://localhost:8003
-# http-server defaults to caching with max-age of 1 hour
+# http-server defaults to caching with max-age of 1 hour.
+# to disable caching, add the -c-1 flag
 http-server -p 8003 --cors
 ```
-
-To ensure that your server is configured correctly, check your browser cache
-settings. For Chrome, in the Network tab, make sure `Disable cache` is NOT
-checked.
-
-![Uncheck disable cache](no-disable-cache.png)
-
-Furthermore, if you load the tileset, all the tiles should show up as
-`(disk cache)` for the `Size` column:
-
-![Disk Cache](disk-cache.png)
 
 ### Running the Test
 
@@ -203,10 +224,11 @@ npm run release
 npm run buildApps
 ```
 
-2. Close DevTools, so your browser isn't spending time checking breakpoints,
-   tracking network usage, etc.
-3. Warm up the cache. Run the Sandcastle once or twice and make sure all the
-   tiles are loaded
+2. (optional) Unless the Network tab is needed (e.g. for throttling), consider
+   closing DevTools so the browser isn't spending time checking breakpoints or
+   other performance monitoring tasks.
+3. (If caching is used) warm up the cache. Run the Sandcastle once or twice and
+   make sure all the tiles are loaded.
 4. Do not adjust the camera or window size, so each run is consistent. Due to
    screen space error calculations, changing the window dimensions may cause
    different levels of detail to load.
