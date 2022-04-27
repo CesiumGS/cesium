@@ -46,12 +46,6 @@ varying vec3 v_atmosphereMieColor;
 varying float v_atmosphereOpacity;
 #endif
 
-#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
-    vec3 atmosphereLightDirection = czm_sunDirectionWC;
-#else
-    vec3 atmosphereLightDirection = czm_lightDirectionWC;
-#endif
-
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position, float height, vec2 textureCoordinates);
 float get2DYPositionFraction(vec2 textureCoordinates);
@@ -220,6 +214,12 @@ void main()
     #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
         dynamicLighting = true;
     #endif
+
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
+#endif
 
     vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(position3DWC));
 
