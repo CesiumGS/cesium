@@ -318,3 +318,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [四季留歌](https://github.com/onsummer)
 - [Yuri Chen](https://github.com/yurichen17)
 - [David Ferguson](https://github.com/jdfwarrior)
+- [William Liu](https://github.com/WilliamLiu-1997)
