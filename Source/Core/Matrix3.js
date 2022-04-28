@@ -227,6 +227,7 @@ Matrix3.clone = function (matrix, result) {
 /**
  * Creates a Matrix3 from 9 consecutive elements in an array.
  *
+ * @function
  * @param {Number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
  * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
  * @param {Matrix3} [result] The object onto which to store the result.

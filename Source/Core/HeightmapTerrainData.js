@@ -501,8 +501,7 @@ HeightmapTerrainData.prototype.interpolateHeight = function (
  * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
  * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
  * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
- *          or undefined if too many asynchronous upsample operations are in progress and the request has been
- *          deferred.
+ *          or undefined if the mesh is unavailable.
  */
 HeightmapTerrainData.prototype.upsample = function (
   tilingScheme,
@@ -627,14 +626,16 @@ HeightmapTerrainData.prototype.upsample = function (
     }
   }
 
-  return new HeightmapTerrainData({
-    buffer: heights,
-    width: width,
-    height: height,
-    childTileMask: 0,
-    structure: this._structure,
-    createdByUpsampling: true,
-  });
+  return Promise.resolve(
+    new HeightmapTerrainData({
+      buffer: heights,
+      width: width,
+      height: height,
+      childTileMask: 0,
+      structure: this._structure,
+      createdByUpsampling: true,
+    })
+  );
 };
 
 /**

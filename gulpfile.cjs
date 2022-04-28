@@ -1618,7 +1618,7 @@ function createTypeScriptDefinitions() {
   const publicModules = new Set();
   //eslint-disable-next-line no-cond-assign
   while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^\s|\(]+)/);
+    const moduleName = matches[2].match(/([^<\s|\(]+)/);
     publicModules.add(moduleName[1]);
   }
 
@@ -1653,14 +1653,6 @@ function createTypeScriptDefinitions() {
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
   source = `declare module "cesium" {
-
-/**
- * Private interfaces to support PropertyBag being a dictionary-like object.
- */
-interface DictionaryLike {
-    [index: string]: any;
-}
-
 ${source}
 }
 
