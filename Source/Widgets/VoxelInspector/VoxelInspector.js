@@ -274,33 +274,36 @@ function VoxelInspector(container, scene) {
     clippingPanelContents
   );
 
-  // Style
-  const stylePanelContents = createSection(
+  // Shader
+  const shaderPanelContents = createSection(
     panel,
-    "Style",
-    "styleVisible",
-    "styleVisibleToggle"
+    "Shader",
+    "shaderVisible",
+    "shaderVisibleToggle"
   );
-  const stylePanelEditor = document.createElement("div");
-  stylePanelContents.appendChild(stylePanelEditor);
+  const shaderPanelEditor = document.createElement("div");
+  shaderPanelContents.appendChild(shaderPanelEditor);
 
-  const styleEditor = document.createElement("textarea");
-  styleEditor.setAttribute(
+  const shaderEditor = document.createElement("textarea");
+  shaderEditor.setAttribute(
     "data-bind",
-    "textInput: styleString, event: { keydown: styleEditorKeyPress }"
+    "textInput: shaderString, event: { keydown: shaderEditorKeyPress }"
   );
-  stylePanelEditor.className = "cesium-cesiumInspector-styleEditor";
-  stylePanelEditor.appendChild(styleEditor);
-  const compileStyleButton = makeButton("compileStyle", "Compile (Ctrl+Enter)");
-  stylePanelEditor.appendChild(compileStyleButton);
+  shaderPanelEditor.className = "cesium-cesiumInspector-styleEditor";
+  shaderPanelEditor.appendChild(shaderEditor);
+  const compileShaderButton = makeButton(
+    "compileShader",
+    "Compile (Ctrl+Enter)"
+  );
+  shaderPanelEditor.appendChild(compileShaderButton);
 
   const compilationText = document.createElement("label");
   compilationText.style.display = "block";
   compilationText.setAttribute(
     "data-bind",
-    "text: styleCompilationMessage, style: {color: styleCompilationSuccess ? 'green' : 'red'}"
+    "text: shaderCompilationMessage, style: {color: shaderCompilationSuccess ? 'green' : 'red'}"
   );
-  stylePanelEditor.appendChild(compilationText);
+  shaderPanelEditor.appendChild(compilationText);
 
   knockout.applyBindings(viewModel, element);
 

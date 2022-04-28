@@ -5,6 +5,7 @@ import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
@@ -398,8 +399,6 @@ function VoxelPrimitive(options) {
     dimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
-    minimumValues: [],
-    maximumValues: [],
     transformPositionViewToUv: new Matrix4(),
     transformPositionUvToView: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
@@ -439,7 +438,7 @@ function VoxelPrimitive(options) {
   const provider = this._provider;
   const primitive = this;
   provider.readyPromise.catch(function (error) {
-    primitive._readyPromise.reject(`provider failed with error:\n${error}`);
+    primitive._readyPromise.reject(error);
   });
 }
 
@@ -1011,6 +1010,20 @@ Object.defineProperties(VoxelPrimitive.prototype, {
     },
     set: function (customShader) {
       if (this._customShader !== customShader) {
+        // Delete old custom shader entries from the uniform map
+        const uniformMap = this._uniformMap;
+        const oldCustomShader = this._customShader;
+        const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
+        for (const uniformName in oldCustomShaderUniformMap) {
+          if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
+            // If the custom shader was set but the voxel shader was never
+            // built, the custom shader uniforms wouldn't have been added to
+            // the uniform map. But it doesn't matter because the delete
+            // operator ignores if the key doesn't exist.
+            delete uniformMap[uniformName];
+          }
+        }
+
         if (!defined(customShader)) {
           this._customShader = VoxelPrimitive.DefaultCustomShader;
         } else {
@@ -1071,11 +1084,15 @@ VoxelPrimitive.prototype.update = function (frameState) {
   const context = frameState.context;
   const provider = this._provider;
   const uniforms = this._uniforms;
+  const customShader = this._customShader;
 
   // Update the provider, if applicable.
   if (defined(provider.update)) {
     provider.update(frameState);
   }
+
+  // Update the custom shader in case it has texture uniforms.
+  customShader.update(frameState);
 
   // Exit early if it's not ready yet.
   if (!this._ready && !provider.ready) {
@@ -1186,13 +1203,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
       this._paddingAfter,
       uniforms.paddingAfter
     );
-
-    const minimumValues = provider.minimumValues;
-    const maximumValues = provider.maximumValues;
-    if (defined(minimumValues) && defined(maximumValues)) {
-      uniforms.minimumValues = minimumValues.slice();
-      uniforms.maximumValues = maximumValues.slice();
-    }
   }
 
   // Check if the shape is dirty before updating it. This needs to happen every
@@ -1721,6 +1731,7 @@ function buildDrawCommands(that, context) {
   const customShader = that._customShader;
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
+  let uniformMap = that._uniformMap;
 
   // Build shader
 
@@ -1841,6 +1852,20 @@ function buildDrawCommands(that, context) {
   }
 
   // Fragment shader uniforms
+
+  // Custom shader uniforms
+  const customShaderUniforms = customShader.uniforms;
+  uniformMap = that._uniformMap = combine(uniformMap, customShader.uniformMap);
+  for (const uniformName in customShaderUniforms) {
+    if (customShaderUniforms.hasOwnProperty(uniformName)) {
+      const uniform = customShaderUniforms[uniformName];
+      shaderBuilder.addUniform(
+        uniform.type,
+        uniformName,
+        ShaderDestination.FRAGMENT
+      );
+    }
+  }
 
   // The reason this uniform is added by shader builder is because some of the
   // dynamically generated shader code reads from it.
@@ -2159,7 +2184,6 @@ function buildDrawCommands(that, context) {
   });
 
   // Create the draw commands
-  const uniformMap = that._uniformMap;
   const viewportQuadVertexArray = context.getViewportQuadVertexArray();
   const drawCommand = new DrawCommand({
     vertexArray: viewportQuadVertexArray,

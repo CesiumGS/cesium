@@ -281,8 +281,8 @@ function Cesium3DTilesVoxelProvider(options) {
       const names = new Array(attributesLength);
       const types = new Array(attributesLength);
       const componentTypes = new Array(attributesLength);
-      const minimumValues = new Array(attributesLength);
-      const maximumValues = new Array(attributesLength);
+      let minimumValues = new Array(attributesLength);
+      let maximumValues = new Array(attributesLength);
 
       const schema = metadata.schema;
       const statistics = metadata.statistics;
@@ -298,30 +298,47 @@ function Cesium3DTilesVoxelProvider(options) {
         for (let i = 0; i < propertyNamesLength; i++) {
           const propertyName = propertyNames[i];
           const property = properties[propertyName];
-          const propertyStatistics = classStatistics.properties[propertyName];
-          const propertyMin = Array.isArray(propertyStatistics.min)
-            ? propertyStatistics.min
-            : [propertyStatistics.min];
-          const propertyMax = Array.isArray(propertyStatistics.max)
-            ? propertyStatistics.max
-            : [propertyStatistics.max];
+
           const metadataType = property.type;
           const metadataComponentType = property.componentType;
           const metadataComponentCount = MetadataType.getComponentCount(
             metadataType
           );
 
+          if (defined(classStatistics)) {
+            const propertyStatistics = classStatistics.properties[propertyName];
+            const propertyMin = Array.isArray(propertyStatistics.min)
+              ? propertyStatistics.min
+              : [propertyStatistics.min];
+            const propertyMax = Array.isArray(propertyStatistics.max)
+              ? propertyStatistics.max
+              : [propertyStatistics.max];
+
+            minimumValues[i] = new Array(metadataComponentCount);
+            maximumValues[i] = new Array(metadataComponentCount);
+
+            for (let j = 0; j < metadataComponentCount; j++) {
+              minimumValues[i][j] = propertyMin[j];
+              maximumValues[i][j] = propertyMax[j];
+            }
+          }
+
           names[i] = propertyName;
           types[i] = metadataType;
           componentTypes[i] = metadataComponentType;
-          minimumValues[i] = new Array(metadataComponentCount);
-          maximumValues[i] = new Array(metadataComponentCount);
-
-          for (let j = 0; j < metadataComponentCount; j++) {
-            minimumValues[i][j] = propertyMin[j];
-            maximumValues[i][j] = propertyMax[j];
-          }
         }
+      }
+
+      let hasMinimumMaximumValues = false;
+      for (let i = 0; i < attributesLength; i++) {
+        if (defined(minimumValues[i]) && defined(maximumValues[i])) {
+          hasMinimumMaximumValues = true;
+          break;
+        }
+      }
+      if (!hasMinimumMaximumValues) {
+        minimumValues = undefined;
+        maximumValues = undefined;
       }
 
       that.shape = VoxelShapeType.fromPrimitiveType(primitiveType);

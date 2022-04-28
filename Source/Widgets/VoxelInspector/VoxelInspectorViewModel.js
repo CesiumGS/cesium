@@ -130,24 +130,24 @@ function VoxelInspectorViewModel(scene) {
     toggle: true,
   });
   addProperty({
-    name: "styleVisible",
+    name: "shaderVisible",
     initialValue: false,
     toggle: true,
   });
   addProperty({
-    name: "styleString",
+    name: "shaderString",
     initialValue: "",
     getPrimitiveFunction: function () {
       const shaderString = that._voxelPrimitive.customShader.fragmentShaderText;
-      that.styleString = formatShaderString(shaderString);
+      that.shaderString = formatShaderString(shaderString);
     },
   });
   addProperty({
-    name: "styleCompilationMessage",
+    name: "shaderCompilationMessage",
     initialValue: "",
   });
   addProperty({
-    name: "styleCompilationSuccess",
+    name: "shaderCompilationSuccess",
     initialValue: true,
   });
   addProperty({
@@ -1027,14 +1027,14 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
             function (error) {
               const shaderString =
                 that._voxelPrimitive.customShader.fragmentShaderText;
-              that.styleString = formatShaderString(shaderString);
+              that.shaderString = formatShaderString(shaderString);
 
               if (!defined(error)) {
-                that.styleCompilationMessage = "Shader compiled successfully!";
-                that.styleCompilationSuccess = true;
+                that.shaderCompilationMessage = "Shader compiled successfully!";
+                that.shaderCompilationSuccess = true;
               } else {
-                that.styleCompilationMessage = error.message;
-                that.styleCompilationSuccess = false;
+                that.shaderCompilationMessage = error.message;
+                that.shaderCompilationSuccess = false;
               }
             }
           );
@@ -1048,22 +1048,24 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
 });
 
 /**
- * Compiles the style in the style editor.
+ * Compiles the shader in the shader editor.
  * @private
  */
-VoxelInspectorViewModel.prototype.compileStyle = function () {
+VoxelInspectorViewModel.prototype.compileShader = function () {
   if (defined(this._voxelPrimitive)) {
+    // It's assumed that the same uniforms are going to be used regardless of edits.
     this._voxelPrimitive.customShader = new CustomShader({
-      fragmentShaderText: this.styleString,
+      fragmentShaderText: this.shaderString,
+      uniforms: this._voxelPrimitive.customShader.uniforms,
     });
   }
 };
 
 /**
- * Handles key press events on the style editor.
+ * Handles key press events on the shader editor.
  * @private
  */
-VoxelInspectorViewModel.prototype.styleEditorKeyPress = function (
+VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,
   event
 ) {
@@ -1103,7 +1105,7 @@ VoxelInspectorViewModel.prototype.styleEditorKeyPress = function (
     textArea.selectionEnd = newEnd;
   } else if (event.ctrlKey && (event.keyCode === 10 || event.keyCode === 13)) {
     //ctrl + enter
-    this.compileStyle();
+    this.compileShader();
   }
   return true;
 };
