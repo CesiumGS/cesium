@@ -14,6 +14,7 @@ import RuntimeError from "../../Core/RuntimeError.js";
 import StencilConstants from "../StencilConstants.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
+import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
@@ -39,7 +40,7 @@ export default function buildDrawCommands(
   const model = primitiveRenderResources.model;
   let primitiveType = primitiveRenderResources.primitiveType;
   const debugWireframe =
-    model.debugWireframe && !PrimitiveType.isLines(primitiveType);
+    model.debugWireframe && !PrimitiveType.isTriangles(primitiveType);
 
   const indexBuffer = getIndexBuffer(
     primitiveRenderResources,
@@ -87,8 +88,8 @@ export default function buildDrawCommands(
 
   let count = primitiveRenderResources.count;
   if (debugWireframe) {
+    count = WireframeIndexGenerator.getWireframeIndicesCount(primitiveType);
     primitiveType = PrimitiveType.LINES;
-    count *= 2;
   }
 
   const command = new DrawCommand({
@@ -216,13 +217,12 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
   const indices = primitiveRenderResources.indices;
   const context = frameState.context;
 
-  let wireframeIndices;
+  let originalIndices;
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
     const useWebgl2 = context.webgl2;
 
-    let originalIndices;
     if (useWebgl2 && defined(indicesBuffer)) {
       originalIndices = IndexDatatype.createTypedArray(
         vertexCount,
@@ -232,41 +232,14 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
     } else {
       originalIndices = indices.typedArray;
     }
-
-    wireframeIndices = IndexDatatype.createTypedArray(
-      vertexCount,
-      indicesCount * 2
-    );
-
-    let index = 0;
-    for (let i = 0; i < indicesCount; i += 3) {
-      const point0 = originalIndices[i];
-      const point1 = originalIndices[i + 1];
-      const point2 = originalIndices[i + 2];
-
-      wireframeIndices[index++] = point0;
-      wireframeIndices[index++] = point1;
-      wireframeIndices[index++] = point1;
-      wireframeIndices[index++] = point2;
-      wireframeIndices[index++] = point2;
-      wireframeIndices[index++] = point0;
-    }
-  } else {
-    wireframeIndices = IndexDatatype.createTypedArray(
-      vertexCount,
-      vertexCount * 2
-    );
-
-    let index = 0;
-    for (let i = 0; i < vertexCount; i += 3) {
-      wireframeIndices[index++] = i;
-      wireframeIndices[index++] = i + 1;
-      wireframeIndices[index++] = i + 1;
-      wireframeIndices[index++] = i + 2;
-      wireframeIndices[index++] = i + 2;
-      wireframeIndices[index++] = i;
-    }
   }
+
+  const primitiveType = primitiveRenderResources.primitiveType;
+  const wireframeIndices = WireframeIndexGenerator.createWireframeIndices(
+    primitiveType,
+    vertexCount,
+    originalIndices
+  );
 
   const indexDatatype = IndexDatatype.fromSizeInBytes(
     wireframeIndices.BYTES_PER_ELEMENT
