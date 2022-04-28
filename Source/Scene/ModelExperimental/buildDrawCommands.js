@@ -40,7 +40,7 @@ export default function buildDrawCommands(
   const model = primitiveRenderResources.model;
   let primitiveType = primitiveRenderResources.primitiveType;
   const debugWireframe =
-    model.debugWireframe && !PrimitiveType.isTriangles(primitiveType);
+    model.debugWireframe && PrimitiveType.isTriangles(primitiveType);
 
   const indexBuffer = getIndexBuffer(
     primitiveRenderResources,
@@ -88,7 +88,10 @@ export default function buildDrawCommands(
 
   let count = primitiveRenderResources.count;
   if (debugWireframe) {
-    count = WireframeIndexGenerator.getWireframeIndicesCount(primitiveType);
+    count = WireframeIndexGenerator.getWireframeIndicesCount(
+      primitiveType,
+      count
+    );
     primitiveType = PrimitiveType.LINES;
   }
 

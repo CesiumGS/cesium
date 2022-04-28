@@ -22,6 +22,7 @@ import {
   StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
   PrimitiveType,
+  WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -33,6 +34,11 @@ describe(
 
     const triangleWithoutIndicesUrl =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+    const triangleStripUrl =
+      "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+    const triangleFanUrl =
+      "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
+
     const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const buildingsMetadata =
@@ -52,6 +58,9 @@ describe(
       "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
     const animatedTriangleUrl =
       "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+
+    const pointCloudUrl =
+      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
 
     let scene;
     let sceneWithWebgl2;
@@ -123,7 +132,7 @@ describe(
       scene.backgroundColor = Color.BLACK;
     }
 
-    function verifyDebugWireframe(model, options) {
+    function verifyDebugWireframe(model, primitiveType, options) {
       options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
@@ -135,7 +144,7 @@ describe(
       targetScene.renderForSpecs();
       for (i = 0; i < commandList.length; i++) {
         command = commandList[i];
-        expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+        expect(command.primitiveType).toBe(primitiveType);
         if (!modelHasIndices) {
           expect(command.vertexArray.indexBuffer).toBeUndefined();
         }
@@ -150,7 +159,12 @@ describe(
         command = commandList[i];
         expect(command.primitiveType).toBe(PrimitiveType.LINES);
         expect(command.vertexArray.indexBuffer).toBeDefined();
-        expect(command.count).toEqual(commandCounts[i] * 2);
+
+        const expectedCount = WireframeIndexGenerator.getWireframeIndicesCount(
+          primitiveType,
+          commandCounts[i]
+        );
+        expect(command.count).toEqual(expectedCount);
       }
 
       model.debugWireframe = false;
@@ -159,7 +173,7 @@ describe(
       targetScene.renderForSpecs();
       for (i = 0; i < commandList.length; i++) {
         command = commandList[i];
-        expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+        expect(command.primitiveType).toBe(primitiveType);
         if (!modelHasIndices) {
           expect(command.vertexArray.indexBuffer).toBeUndefined();
         }
@@ -499,18 +513,7 @@ describe(
           { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
-          verifyDebugWireframe(model);
-        });
-      });
-    });
-
-    it("debugWireframe works for model without indices", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: triangleWithoutIndicesUrl },
-        scene
-      ).then(function (model) {
-        verifyDebugWireframe(model, {
-          hasIndices: false,
+          verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
         });
       });
     });
@@ -526,10 +529,59 @@ describe(
           { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
-          verifyDebugWireframe(model, {
+          verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
             scene: sceneWithWebgl2,
           });
         });
+      });
+    });
+
+    it("debugWireframe works for model without indices", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleWithoutIndicesUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
+          hasIndices: false,
+        });
+      });
+    });
+
+    it("debugWireframe works for model with triangle strip", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleStripUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLE_STRIP);
+      });
+    });
+
+    it("debugWireframe works for model with triangle fan", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleFanUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLE_FAN);
+      });
+    });
+
+    it("debugWireframe ignores points", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: pointCloudUrl },
+        scene
+      ).then(function (model) {
+        const commandList = scene.frameState;
+        let i, command;
+        for (i = 0; i < commandList.length; i++) {
+          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+
+        model.debugWireframe = true;
+        for (i = 0; i < commandList.length; i++) {
+          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
       });
     });
 
