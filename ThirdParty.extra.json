@@ -4,7 +4,7 @@
     },
     {
         "name": "basis_universal",
-        "license": "Apache-2.0",
+        "license": ["Apache-2.0"],
         "version": "1.15",
         "url": "https://github.com/BinomialLLC/basis_universal"
     },
@@ -13,7 +13,7 @@
     },
     {
         "name": "dompurify",
-        "license": "Apache-2.0",
+        "license": ["Apache-2.0"],
         "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
     },
     {
@@ -33,18 +33,18 @@
     },
     {
         "name": "Knockout",
-        "license": "MIT",
+        "license": ["MIT"],
         "version": "3.5.1",
         "url": "https://knockoutjs.com/"
     },
     {
         "name": "Knockout ES5 plugin",
-        "license": "MIT",
+        "license": ["MIT"],
         "version": "0.4.6",
         "url": "https://github.com/SteveSanderson/knockout-es5"
     },
     {
-        "name": "ktc-parse"
+        "name": "ktx-parse"
     },
     {
         "name": "lerc"
@@ -60,6 +60,7 @@
     },
     {
         "name": "pako",
+        "license": ["MIT"],
         "notes":"pako is MIT, and its dependency zlib is attributed separately"
     },
     {
@@ -70,7 +71,7 @@
     },
     {
         "name": "requirejs",
-        "license": "MIT",
+        "license": ["MIT"],
         "version": "2.1.20",
         "url": "https://www.npmjs.com/package/requirejs"
     },

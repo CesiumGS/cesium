@@ -1754,17 +1754,13 @@ function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
         return getLicenseDataFromPackage(
           module.name,
           discoveredDependencies,
+          module.license,
           module.notes
         );
       }
     });
   });
 }
-
-const licenseOverrides = {
-  dompurify: "Apache-2.0", // dompurify is available as both MPL-2.0 OR Apache-2.0
-  pako: "MIT", // pako is MIT, and zlib is attributed separately
-};
 
 /**
  * Extracts name, license, and url from `package.json` file
@@ -1773,7 +1769,12 @@ const licenseOverrides = {
  * @param discoveredDependencies {Array<string>} List of previously discovered modules
  * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
  */
-function getLicenseDataFromPackage(packageName, discoveredDependencies, notes) {
+function getLicenseDataFromPackage(
+  packageName,
+  discoveredDependencies,
+  licenseOverride,
+  notes
+) {
   if (discoveredDependencies.includes(packageName)) {
     return Promise.resolve([]);
   }
@@ -1796,19 +1797,19 @@ function getLicenseDataFromPackage(packageName, discoveredDependencies, notes) {
     const packageJson = JSON.parse(contents);
 
     // Check for license
-    let licenseField = licenseOverrides[packageName];
+    let licenseField = licenseOverride;
 
     if (!licenseField) {
-      licenseField = packageJson.license;
+      licenseField = [packageJson.license];
     }
 
     if (!licenseField && packageJson.licenses) {
-      licenseField = packageJson.licenses[0].type;
+      licenseField = packageJson.licenses;
     }
 
     if (!licenseField) {
       console.log(`No license found for ${packageName}`);
-      licenseField = "NONE";
+      licenseField = ["NONE"];
     }
 
     let version = packageJson.version;
