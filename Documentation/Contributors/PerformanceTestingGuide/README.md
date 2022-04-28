@@ -216,7 +216,8 @@ When running the test, there are a few additional considerations:
    be running Cesium.
 
 ```
-# first time only: make a release build of CesiumJS
+# Make a release build of CesiumJS. This step is necessary after switching
+# branches or otherwise modifying the code.
 npm run release
 
 # build Sandcastle and other apps

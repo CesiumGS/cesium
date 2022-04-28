@@ -129,7 +129,7 @@ Here's the full set of scripts and what they do.
   - `requirejs` - Used internally by the build system and can not be called directly.
   - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory. This script requires a release build of Cesium, run the `release` script to build one if needed.
   - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/main/Documentation/Contributors/DocumentationGuide).
-  - `release` - A full release build that creates a shippable product, including building apps and generating documentation.
+  - `release` - A full release build that creates a shippable product, including generating documentation.
   - `makeZipFile` - Builds a zip file containing all release files. This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
 - **Utility scripts** -- code coverage, static code analysis, and other utilities
   - `coverage` - Runs coverage and opens the default browser with the results.
