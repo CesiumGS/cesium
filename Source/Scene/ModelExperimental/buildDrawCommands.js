@@ -219,13 +219,11 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
   const vertexCount = positionAttribute.count;
   const indices = primitiveRenderResources.indices;
   const context = frameState.context;
-
   let originalIndices;
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
     const useWebgl2 = context.webgl2;
-
     if (useWebgl2 && defined(indicesBuffer)) {
       originalIndices = IndexDatatype.createTypedArray(
         vertexCount,
@@ -243,7 +241,6 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
     vertexCount,
     originalIndices
   );
-
   const indexDatatype = IndexDatatype.fromSizeInBytes(
     wireframeIndices.BYTES_PER_ELEMENT
   );
