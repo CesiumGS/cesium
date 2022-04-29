@@ -549,7 +549,10 @@ HeightmapTessellator.computeVertices = function (options) {
       ellipsoid
     );
 
-    transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
+    transform = OrientedBoundingBox.computeTransformation(
+      orientedBoundingBox,
+      null
+    );
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
     console.timeEnd("creating oriented bounding box");
 

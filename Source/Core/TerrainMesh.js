@@ -229,7 +229,8 @@ TerrainMesh.prototype.pickRay = function (
   // whoops
   if (
     !window.disableDefaultPickStrategy &&
-    this._octreeTrianglePicking &&
+    hasOctree &&
+    canUseOctree &&
     !isCartesianAlmostEqual(newPickValue, oldPickValue)
   ) {
     console.error("pick values are different", newPickValue, oldPickValue);

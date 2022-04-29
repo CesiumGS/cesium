@@ -238,29 +238,6 @@ OrientedBoundingBox.fromPoints = function (positions, result) {
   return result;
 };
 
-const scratchRotationScale = new Matrix3();
-
-OrientedBoundingBox.toTransformation = function (box, result) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(box)) {
-    throw new DeveloperError("box is required.");
-  }
-  //>>includeEnd('debug');
-
-  if (!defined(result)) {
-    result = new Matrix4();
-  }
-
-  const translation = box.center;
-  let rotationScale = Matrix3.clone(box.halfAxes, scratchRotationScale);
-  rotationScale = Matrix3.multiplyByUniformScale(
-    rotationScale,
-    2.0,
-    rotationScale
-  );
-  return Matrix4.fromRotationTranslation(rotationScale, translation, result);
-};
-
 const scratchOffset = new Cartesian3();
 const scratchScale = new Cartesian3();
 function fromPlaneExtents(

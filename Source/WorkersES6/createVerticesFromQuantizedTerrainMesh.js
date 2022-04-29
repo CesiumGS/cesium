@@ -220,7 +220,10 @@ function createVerticesFromQuantizedTerrainMesh(
     ellipsoid
   );
 
-  const transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
+  const transform = OrientedBoundingBox.computeTransformation(
+    orientedBoundingBox,
+    null
+  );
   const inverseTransform = Matrix4.inverse(transform, new Matrix4());
   console.timeEnd("setup stuff");
   console.time("making packed triangles");

@@ -37,6 +37,36 @@
       <div id="showTestedTriangles"></div>
       <div id="disableDefaultPickStrategy"></div>
       <div id="showOBB"></div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Exaggeration</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                step="0.01"
+                data-bind="value: exaggeration, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: exaggeration" />
+            </td>
+          </tr>
+          <tr>
+            <td>Relative Height</td>
+            <td>
+              <input
+                type="range"
+                min="-1000"
+                max="9000"
+                step="1"
+                data-bind="value: relativeHeight, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: relativeHeight" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <script id="cesium_sandcastle_script">
         function startup(Cesium) {
           "use strict";
@@ -106,6 +136,36 @@
           viewer.scene.fog.enabled = false;
 
           window.viewer = viewer;
+
+          const globe = viewer.scene.globe;
+
+          const viewModel = {
+            exaggeration: globe.terrainExaggeration,
+            relativeHeight: globe.terrainExaggerationRelativeHeight,
+          };
+
+          function updateExaggeration() {
+            globe.terrainExaggeration = Number(viewModel.exaggeration);
+            globe.terrainExaggerationRelativeHeight = Number(
+              viewModel.relativeHeight
+            );
+          }
+
+          Cesium.knockout.track(viewModel);
+          const toolbar = document.getElementById("toolbar");
+          Cesium.knockout.applyBindings(viewModel, toolbar);
+          for (const name in viewModel) {
+            if (viewModel.hasOwnProperty(name)) {
+              Cesium.knockout
+                .getObservable(viewModel, name)
+                .subscribe(updateExaggeration);
+            }
+          }
+
+          Sandcastle.addToolbarButton("Remove Exaggeration", function () {
+            viewModel.exaggeration = 1.0;
+            viewModel.relativeHeight = 0.0;
+          });
 
           let selectedOctreeLevel = null;
           let showTestedTriangles = false;
