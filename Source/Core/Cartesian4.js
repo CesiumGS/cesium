@@ -173,13 +173,12 @@ Cartesian4.unpack = function (array, startingIndex, result) {
 };
 
 /**
-     * Flattens an array of Cartesian4s into and array of components.
-     *
-     * @param {Cartesian4[]} array The array of cartesians to pack.
-     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
-
-     * @returns {Number[]} The packed array.
-     */
+ * Flattens an array of Cartesian4s into an array of components.
+ *
+ * @param {Cartesian4[]} array The array of cartesians to pack.
+ * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+ * @returns {Number[]} The packed array.
+ */
 Cartesian4.packArray = function (array, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("array", array);
@@ -190,9 +189,11 @@ Cartesian4.packArray = function (array, result) {
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
       "If result is a typed array, it must have exactly array.length * 4 elements"
     );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
@@ -204,7 +205,7 @@ Cartesian4.packArray = function (array, result) {
 };
 
 /**
- * Unpacks an array of cartesian components into and array of Cartesian4s.
+ * Unpacks an array of cartesian components into an array of Cartesian4s.
  *
  * @param {Number[]} array The array of components to unpack.
  * @param {Cartesian4[]} [result] The array onto which to store the result.
@@ -323,6 +324,36 @@ Cartesian4.maximumByComponent = function (first, second, result) {
   result.y = Math.max(first.y, second.y);
   result.z = Math.max(first.z, second.z);
   result.w = Math.max(first.w, second.w);
+
+  return result;
+};
+
+/**
+ * Constrain a value to lie between two values.
+ *
+ * @param {Cartesian4} value The value to clamp.
+ * @param {Cartesian4} min The minimum bound.
+ * @param {Cartesian4} max The maximum bound.
+ * @param {Cartesian4} result The object into which to store the result.
+ * @returns {Cartesian4} The clamped value such that min <= result <= max.
+ */
+Cartesian4.clamp = function (value, min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const x = CesiumMath.clamp(value.x, min.x, max.x);
+  const y = CesiumMath.clamp(value.y, min.y, max.y);
+  const z = CesiumMath.clamp(value.z, min.z, max.z);
+  const w = CesiumMath.clamp(value.w, min.w, max.w);
+
+  result.x = x;
+  result.y = y;
+  result.z = z;
+  result.w = w;
 
   return result;
 };

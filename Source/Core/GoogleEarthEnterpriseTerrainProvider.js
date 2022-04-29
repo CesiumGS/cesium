@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
@@ -154,14 +153,14 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
           undefined,
           e
         );
-        return when.reject(e);
+        return Promise.reject(e);
       }
 
       TileProviderError.handleSuccess(metadataError);
       that._ready = result;
       return result;
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -172,7 +171,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
         undefined,
         e
       );
-      return when.reject(e);
+      return Promise.reject(e);
     });
 }
 
@@ -375,7 +374,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
 
   // Check if this tile is even possibly available
   if (!defined(info)) {
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
   let terrainState = info.terrainState;
@@ -388,7 +387,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   const buffer = terrainCache.get(quadKey);
   if (defined(buffer)) {
     const credit = metadata.providers[info.terrainProvider];
-    return when.resolve(
+    return Promise.resolve(
       new GoogleEarthEnterpriseTerrainData({
         buffer: buffer,
         childTileMask: computeChildMask(quadKey, info, metadata),
@@ -405,7 +404,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
   if (!info.ancestorHasTerrain) {
     // We haven't reached a level with terrain, so return the ellipsoid
-    return when.resolve(
+    return Promise.resolve(
       new HeightmapTerrainData({
         buffer: new Uint8Array(16 * 16),
         width: 16,
@@ -414,7 +413,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
     );
   } else if (terrainState === TerrainState.NONE) {
     // Already have info and there isn't any terrain here
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
   // Figure out where we are getting the terrain and what version
@@ -445,7 +444,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
 
   // We can't figure out where to get the terrain
   if (terrainVersion < 0) {
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
   // Load that terrain
@@ -505,14 +504,14 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
           });
       }
 
-      return when.reject(new RuntimeError("Failed to load terrain."));
+      return Promise.reject(new RuntimeError("Failed to load terrain."));
     });
 
     terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
     terrainRequests[q] = sharedRequest;
 
     // Set promise so we remove from terrainPromises just one time
-    sharedPromise = sharedPromise.always(function () {
+    sharedPromise = sharedPromise.finally(function () {
       delete terrainPromises[q];
       delete terrainRequests[q];
     });
@@ -532,15 +531,15 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
         });
       }
 
-      return when.reject(new RuntimeError("Failed to load terrain."));
+      return Promise.reject(new RuntimeError("Failed to load terrain."));
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (sharedRequest.state === RequestState.CANCELLED) {
         request.state = sharedRequest.state;
-        return when.reject(error);
+        return Promise.reject(error);
       }
       info.terrainState = TerrainState.NONE;
-      return when.reject(error);
+      return Promise.reject(error);
     });
 };
 
@@ -619,7 +618,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined}
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

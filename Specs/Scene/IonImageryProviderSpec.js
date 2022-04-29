@@ -14,7 +14,6 @@ import { SingleTileImageryProvider } from "../../Source/Cesium.js";
 import { UrlTemplateImageryProvider } from "../../Source/Cesium.js";
 import { WebMapServiceImageryProvider } from "../../Source/Cesium.js";
 import { WebMapTileServiceImageryProvider } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/IonImageryProvider", function () {
   function createTestProvider(endpointData) {
@@ -36,7 +35,7 @@ describe("Scene/IonImageryProvider", function () {
     );
 
     spyOn(endpointResource, "fetchJson").and.returnValue(
-      when.resolve(endpointData)
+      Promise.resolve(endpointData)
     );
 
     const provider = new IonImageryProvider(options);
@@ -63,7 +62,7 @@ describe("Scene/IonImageryProvider", function () {
     }).toThrowDeveloperError(ImageryProvider);
   });
 
-  it("readyPromise rejects with non-imagery asset", function (done) {
+  it("readyPromise rejects with non-imagery asset", function () {
     const provider = createTestProvider({
       type: "3DTILES",
       url: "http://test.invalid/layer",
@@ -75,13 +74,13 @@ describe("Scene/IonImageryProvider", function () {
       .then(function () {
         fail("should not be called");
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(error).toBeInstanceOf(RuntimeError);
         expect(provider.ready).toBe(false);
       });
   });
 
-  it("readyPromise rejects with unknown external asset type", function (done) {
+  it("readyPromise rejects with unknown external asset type", function () {
     const provider = createTestProvider({
       type: "IMAGERY",
       externalType: "TUBELCANE",
@@ -93,7 +92,7 @@ describe("Scene/IonImageryProvider", function () {
       .then(function () {
         fail("should not be called");
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(error).toBeInstanceOf(RuntimeError);
         expect(provider.ready).toBe(false);
       });
@@ -132,7 +131,7 @@ describe("Scene/IonImageryProvider", function () {
       endpointResource
     );
     spyOn(endpointResource, "fetchJson").and.returnValue(
-      when.resolve(endpointData)
+      Promise.resolve(endpointData)
     );
 
     expect(endpointResource.fetchJson.calls.count()).toBe(0);
@@ -181,7 +180,7 @@ describe("Scene/IonImageryProvider", function () {
         const image = new Image();
         const request = {};
         spyOn(internalProvider, "requestImage").and.returnValue(
-          when.resolve(image)
+          Promise.resolve(image)
         );
         return provider.requestImage(1, 2, 3, request).then(function (result) {
           expect(internalProvider.requestImage).toHaveBeenCalledWith(
@@ -196,7 +195,7 @@ describe("Scene/IonImageryProvider", function () {
       .then(function () {
         const info = {};
         spyOn(internalProvider, "pickFeatures").and.returnValue(
-          when.resolve(info)
+          Promise.resolve(info)
         );
         return provider.pickFeatures(1, 2, 3, 4, 5).then(function (result) {
           expect(internalProvider.pickFeatures).toHaveBeenCalledWith(
@@ -290,7 +289,9 @@ describe("Scene/IonImageryProvider", function () {
       options: options,
       attributions: [],
     });
-    expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
+    return provider.readyPromise.then(function () {
+      expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
+    });
   }
 
   it("createImageryProvider works with ARCGIS_MAPSERVER", function () {

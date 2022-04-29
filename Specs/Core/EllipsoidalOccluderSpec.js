@@ -494,7 +494,7 @@ describe("Core/EllipsoidalOccluder", function () {
         if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {
           foundOneNearZero = true;
         } else {
-          expect(nearestCartographic.height).toBeLessThanOrEqualTo(0.0);
+          expect(nearestCartographic.height).toBeLessThanOrEqual(0.0);
         }
       }
 

@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   Cartesian3,
   Math as CesiumMath,
   InstanceAttributeSemantic,
@@ -251,6 +252,47 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     );
   });
 
+  it("getAxisCorrectionMatrix works", function () {
+    const expectedYToZMatrix = Axis.Y_UP_TO_Z_UP;
+    const expectedXToZMatrix = Axis.X_UP_TO_Z_UP;
+    const expectedCombinedMatrix = Matrix4.multiplyTransformation(
+      expectedYToZMatrix,
+      Axis.Z_UP_TO_X_UP,
+      new Matrix4()
+    );
+
+    // If already in ECEF, this should return identity
+    let resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Z,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, Matrix4.IDENTITY)).toBe(true);
+
+    // This is the most common case, glTF uses y-up, z-forward
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Y,
+      Axis.Z,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
+
+    // Other cases
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Y,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
+
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.X,
+      Axis.Y,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedXToZMatrix)).toBe(true);
+  });
+
   it("getAttributeBySemantic works", function () {
     const nodeIntanceAttributes = {
       attributes: [
@@ -340,5 +382,38 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
         "UNKNOWN"
       )
     ).toBeUndefined();
+  });
+
+  it("getFeatureIdsByLabel gets feature ID sets by label", function () {
+    const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "perVertex")
+    ).toBe(featureIds[0]);
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "perFace")
+    ).toBe(featureIds[1]);
+  });
+
+  it("getFeatureIdsByLabel gets feature ID sets by positional label", function () {
+    const featureIds = [
+      { positionalLabel: "featureId_0" },
+      { positionalLabel: "featureId_1" },
+    ];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "featureId_0")
+    ).toBe(featureIds[0]);
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "featureId_1")
+    ).toBe(featureIds[1]);
+  });
+
+  it("getFeatureIdsByLabel returns undefined for unknown label", function () {
+    const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "other")
+    ).not.toBeDefined();
   });
 });

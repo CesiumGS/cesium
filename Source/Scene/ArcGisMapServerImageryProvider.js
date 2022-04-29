@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -15,7 +16,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -228,7 +228,7 @@ function ArcGisMapServerImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   // Grab the details of this MapServer.
   const that = this;
@@ -265,6 +265,9 @@ function ArcGisMapServerImageryProvider(options) {
           undefined,
           requestMetadata
         );
+        if (!metadataError.retry) {
+          that._readyPromise.reject(new RuntimeError(message));
+        }
         return;
       }
       that._maximumLevel = data.tileInfo.lods.length - 1;
@@ -331,6 +334,9 @@ function ArcGisMapServerImageryProvider(options) {
               undefined,
               requestMetadata
             );
+            if (!metadataError.retry) {
+              that._readyPromise.reject(new RuntimeError(extentMessage));
+            }
             return;
           }
         }
@@ -387,8 +393,14 @@ function ArcGisMapServerImageryProvider(options) {
         f: "json",
       },
     });
-    const metadata = resource.fetchJsonp();
-    when(metadata, metadataSuccess, metadataFailure);
+    resource
+      .fetchJsonp()
+      .then(function (result) {
+        metadataSuccess(result);
+      })
+      .catch(function (e) {
+        metadataFailure(e);
+      });
   }
 
   if (this._useTiles) {
@@ -756,10 +768,8 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */

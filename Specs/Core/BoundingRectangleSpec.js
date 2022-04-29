@@ -281,7 +281,7 @@ describe("Core/BoundingRectangle", function () {
     }).toThrowDeveloperError();
   });
 
-  it("intersect  throws with no right parameter", function () {
+  it("intersect throws with no right parameter", function () {
     const left = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
     expect(function () {
       BoundingRectangle.intersect(left, undefined);

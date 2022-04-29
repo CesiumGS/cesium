@@ -296,6 +296,9 @@ QuadtreePrimitive.prototype.updateHeight = function (cartographic, callback) {
       }
     }
     primitive._removeHeightCallbacks.push(object);
+    if (object.callback) {
+      object.callback = undefined;
+    }
   };
 
   primitive._addHeightCallbacks.push(object);
@@ -1503,7 +1506,9 @@ function updateHeights(primitive, frameState) {
           scratchPosition
         );
         if (defined(position)) {
-          data.callback(position);
+          if (defined(data.callback)) {
+            data.callback(position);
+          }
           data.level = tile.level;
         }
       }

@@ -36,7 +36,9 @@
         "use strict";
         //Sandcastle_Begin
 
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2021-11-09T20:27:37.016064475348684937Z"
@@ -133,6 +135,8 @@
                 Cesium.Ellipsoid.WGS84,
                 fixedFrameTransform
               ),
+              minimumPixelSize: 128,
+              maximumScale: 20000,
             })
           );
 
@@ -145,6 +149,10 @@
                 model.boundingSphere.radius * 5
               )
             );
+
+            model.activeAnimations.addAll({
+              loop: Cesium.ModelAnimationLoop.REPEAT,
+            });
           });
         }
 

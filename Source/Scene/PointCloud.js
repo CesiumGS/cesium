@@ -7,6 +7,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -24,7 +25,6 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import MersenneTwister from "../ThirdParty/mersenne-twister.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
@@ -33,6 +33,8 @@ import getClippingFunction from "./getClippingFunction.js";
 import PntsParser from "./PntsParser.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
+import Splitter from "./Splitter.js";
 import StencilConstants from "./StencilConstants.js";
 
 const DecodingState = {
@@ -106,7 +108,7 @@ function PointCloud(options) {
   this._mode = undefined;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
   this._pointsLength = 0;
   this._geometryByteLength = 0;
 
@@ -144,6 +146,18 @@ function PointCloud(options) {
   this.geometricError = 0.0;
   this.geometricErrorScale = 1.0;
   this.maximumAttenuation = this._pointSize;
+
+  /**
+   * The {@link SplitDirection} to apply to this point cloud.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
+  this._splittingEnabled = false;
 
   initialize(this, options);
 }
@@ -251,7 +265,7 @@ function initialize(pointCloud, options) {
     pointCloud._isRGB565 = colors.isRGB565;
   }
 
-  // PntsParser parses BATCH_ID as FEATURE_ID for EXT_mesh_features.
+  // PntsParser parses BATCH_ID as _FEATURE_ID_0 for EXT_mesh_features.
   // These properties aren't used but rename them to BATCH_ID to avoid
   // confusion when debugging.
   const batchIds = parsedContent.batchIds;
@@ -690,6 +704,8 @@ function createUniformMap(pointCloud, frameState) {
     },
   };
 
+  Splitter.addUniforms(pointCloud, uniformMap);
+
   if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
     uniformMap = combine(uniformMap, {
       u_quantizedVolumeScaleAndOctEncodedRange: function () {
@@ -1119,6 +1135,10 @@ function createShaders(pointCloud, frameState, style) {
 
   fs += "} \n";
 
+  if (pointCloud.splitDirection !== SplitDirection.NONE) {
+    fs = Splitter.modifyFragmentShader(fs);
+  }
+
   if (defined(pointCloud._vertexShaderLoaded)) {
     vs = pointCloud._vertexShaderLoaded(vs);
   }
@@ -1245,7 +1265,7 @@ function decodeDraco(pointCloud, context) {
 
           parsedContent.styleableProperties = styleableProperties;
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           pointCloud._decodingState = DecodingState.FAILED;
           pointCloud._readyPromise.reject(error);
         });
@@ -1343,6 +1363,12 @@ PointCloud.prototype.update = function (frameState) {
   if (this._style !== this.style || this.styleDirty) {
     this._style = this.style;
     this.styleDirty = false;
+    shadersDirty = true;
+  }
+
+  const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
+  if (this._splittingEnabled !== splittingEnabled) {
+    this._splittingEnabled = splittingEnabled;
     shadersDirty = true;
   }
 

@@ -19,8 +19,8 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import GlobeFS from "../Shaders/GlobeFS.js";
 import GlobeVS from "../Shaders/GlobeVS.js";
+import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
-import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
 import GlobeTranslucency from "./GlobeTranslucency.js";
@@ -190,12 +190,60 @@ function Globe(ellipsoid) {
   /**
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
-   *
    * @type {Boolean}
    * @default true
    */
   this.showGroundAtmosphere = true;
+
+  /**
+   * The intensity of the light that is used for computing the ground atmosphere color.
+   *
+   * @type {Number}
+   * @default 10.0
+   */
+  this.atmosphereLightIntensity = 10.0;
+
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
+   */
+  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6);
+
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(21e-6, 21e-6, 21e-6)
+   */
+  this.atmosphereMieCoefficient = new Cartesian3(21e-6, 21e-6, 21e-6);
+
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 10000.0
+   */
+  this.atmosphereRayleighScaleHeight = 10000.0;
+
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 3200.0
+   */
+  this.atmosphereMieScaleHeight = 3200.0;
+
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * <p>
+   * Valid values are between -1.0 and 1.0.
+   * </p>
+   * @type {Number}
+   * @default 0.9
+   */
+  this.atmosphereMieAnisotropy = 0.9;
 
   /**
    * The distance where everything becomes lit. This only takes effect
@@ -499,7 +547,7 @@ Object.defineProperties(Globe.prototype, {
    * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
    * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
    * @memberof Globe.prototype
-   * @type {Material}
+   * @type {Material | undefined}
    */
   material: {
     get: function () {
@@ -591,7 +639,7 @@ function makeShadersDirty(globe) {
     (globe._material.shaderSource.match(/slope/) ||
       globe._material.shaderSource.match("normalEC"));
 
-  const fragmentSources = [GroundAtmosphere];
+  const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
     defined(globe._material) &&
     (!requireNormals || globe._terrainProvider.requestVertexNormals)
@@ -605,7 +653,7 @@ function makeShadersDirty(globe) {
   fragmentSources.push(GlobeFS);
 
   globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-    sources: [GroundAtmosphere, GlobeVS],
+    sources: [AtmosphereCommon, GroundAtmosphere, GlobeVS],
     defines: defines,
   });
 
@@ -938,7 +986,7 @@ Globe.prototype.beginFrame = function (frameState) {
     const oceanNormalMapUrl = oceanNormalMapResource.url;
     if (defined(oceanNormalMapUrl)) {
       const that = this;
-      when(oceanNormalMapResource.fetchImage(), function (image) {
+      oceanNormalMapResource.fetchImage().then(function (image) {
         if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
           // url changed while we were loading
           return;
@@ -986,6 +1034,12 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
     tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
     tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
+    tileProvider.atmosphereLightIntensity = this.atmosphereLightIntensity;
+    tileProvider.atmosphereRayleighCoefficient = this.atmosphereRayleighCoefficient;
+    tileProvider.atmosphereMieCoefficient = this.atmosphereMieCoefficient;
+    tileProvider.atmosphereRayleighScaleHeight = this.atmosphereRayleighScaleHeight;
+    tileProvider.atmosphereMieScaleHeight = this.atmosphereMieScaleHeight;
+    tileProvider.atmosphereMieAnisotropy = this.atmosphereMieAnisotropy;
     tileProvider.shadows = this.shadows;
     tileProvider.hueShift = this.atmosphereHueShift;
     tileProvider.saturationShift = this.atmosphereSaturationShift;

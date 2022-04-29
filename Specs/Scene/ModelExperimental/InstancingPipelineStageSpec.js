@@ -1,4 +1,5 @@
 import {
+  Axis,
   Cartesian3,
   combine,
   GltfLoader,
@@ -9,6 +10,7 @@ import {
   ShaderBuilder,
   Matrix4,
   Math as CesiumMath,
+  ModelExperimentalUtility,
   _shadersInstancingStageCommon,
   _shadersLegacyInstancingStageVS,
 } from "../../../Source/Cesium.js";
@@ -387,15 +389,20 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        modelMatrix: Matrix4.fromUniformScale(2.0),
         sceneGraph: {
-          components: {
-            transform: Matrix4.ZERO,
-          },
+          axisCorrectionMatrix: ModelExperimentalUtility.getAxisCorrectionMatrix(
+            Axis.Y,
+            Axis.Z,
+            new Matrix4()
+          ),
         },
       },
       uniformMap: {},
       runtimeNode: {
-        axisCorrectedTransform: Matrix4.IDENTITY,
+        computedTransform: Matrix4.fromTranslation(
+          new Cartesian3(0.0, 2.0, 0.0)
+        ),
       },
     };
 
@@ -407,6 +414,10 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const shaderBuilder = renderResources.shaderBuilder;
       const uniformMap = renderResources.uniformMap;
       const runtimeNode = renderResources.runtimeNode;
+
+      // Add the loaded components to the mocked render resources, as the
+      // uniform callbacks need to access this.
+      renderResources.model.sceneGraph.components = components;
 
       scene.renderForSpecs();
       InstancingPipelineStage.process(renderResources, node, scene.frameState);
@@ -427,10 +438,44 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         _shadersLegacyInstancingStageVS,
       ]);
 
-      expect(uniformMap.u_instance_modifiedModelView()).toEqual(Matrix4.ZERO);
+      const model = renderResources.model;
+      const sceneGraph = model.sceneGraph;
 
-      expect(uniformMap.u_instance_nodeTransform()).toEqual(
-        runtimeNode.axisCorrectedTransform
+      // For i3dm, the model view matrix chain has to be broken up so the shader
+      // can insert the instancing transform attribute.
+      //
+      // modifiedModelView = view * modelMatrix * rtcTransform
+      const view = scene.frameState.context.uniformState.view;
+      const modelMatrix = model.modelMatrix;
+      const rtcTransform = components.transform;
+      let expectedModelView = Matrix4.multiplyTransformation(
+        view,
+        modelMatrix,
+        new Matrix4()
+      );
+      expectedModelView = Matrix4.multiplyTransformation(
+        expectedModelView,
+        rtcTransform,
+        expectedModelView
+      );
+      expect(uniformMap.u_instance_modifiedModelView()).toEqualEpsilon(
+        expectedModelView,
+        CesiumMath.EPSILON8
+      );
+
+      // The second part of the matrix
+      //
+      // nodeTransform = axisCorrection * computedTransform
+      const axisCorrection = sceneGraph.axisCorrectionMatrix;
+      const computedTransform = runtimeNode.computedTransform;
+      const expectedNodeTransform = Matrix4.multiplyTransformation(
+        axisCorrection,
+        computedTransform,
+        new Matrix4()
+      );
+      expect(uniformMap.u_instance_nodeTransform()).toEqualEpsilon(
+        expectedNodeTransform,
+        CesiumMath.EPSILON8
       );
     });
   });

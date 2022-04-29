@@ -189,9 +189,11 @@ Cartesian3.packArray = function (array, result) {
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
       "If result is a typed array, it must have exactly array.length * 3 elements"
     );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
@@ -320,6 +322,34 @@ Cartesian3.maximumByComponent = function (first, second, result) {
   result.x = Math.max(first.x, second.x);
   result.y = Math.max(first.y, second.y);
   result.z = Math.max(first.z, second.z);
+  return result;
+};
+
+/**
+ * Constrain a value to lie between two values.
+ *
+ * @param {Cartesian3} cartesian The value to clamp.
+ * @param {Cartesian3} min The minimum bound.
+ * @param {Cartesian3} max The maximum bound.
+ * @param {Cartesian3} result The object into which to store the result.
+ * @returns {Cartesian3} The clamped value such that min <= value <= max.
+ */
+Cartesian3.clamp = function (value, min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const x = CesiumMath.clamp(value.x, min.x, max.x);
+  const y = CesiumMath.clamp(value.y, min.y, max.y);
+  const z = CesiumMath.clamp(value.z, min.z, max.z);
+
+  result.x = x;
+  result.y = y;
+  result.z = z;
+
   return result;
 };
 

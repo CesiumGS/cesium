@@ -31,10 +31,9 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import ReprojectWebMercatorFS from "../Shaders/ReprojectWebMercatorFS.js";
 import ReprojectWebMercatorVS from "../Shaders/ReprojectWebMercatorVS.js";
-import when from "../ThirdParty/when.js";
 import Imagery from "./Imagery.js";
-import ImagerySplitDirection from "./ImagerySplitDirection.js";
 import ImageryState from "./ImageryState.js";
+import SplitDirection from "./SplitDirection.js";
 import TileImagery from "./TileImagery.js";
 
 /**
@@ -104,7 +103,7 @@ import TileImagery from "./TileImagery.js";
  *                          imagery tile for which the gamma is required, and it is expected to return
  *                          the gamma value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {ImagerySplitDirection|Function} [options.splitDirection=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
+ * @param {SplitDirection|Function} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this layer.
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The
  *                                    texture minification filter to apply to this layer. Possible values
  *                                    are <code>TextureMinificationFilter.LINEAR</code> and
@@ -232,9 +231,9 @@ function ImageryLayer(imageryProvider, options) {
   );
 
   /**
-   * The {@link ImagerySplitDirection} to apply to this layer.
+   * The {@link SplitDirection} to apply to this layer.
    *
-   * @type {ImagerySplitDirection}
+   * @type {SplitDirection}
    * @default {@link ImageryLayer.DEFAULT_SPLIT}
    */
   this.splitDirection = defaultValue(
@@ -402,10 +401,10 @@ ImageryLayer.DEFAULT_GAMMA = 1.0;
 /**
  * This value is used as the default split for the imagery layer if one is not provided during construction
  * or by the imagery provider.
- * @type {ImagerySplitDirection}
- * @default ImagerySplitDirection.NONE
+ * @type {SplitDirection}
+ * @default SplitDirection.NONE
  */
-ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
+ImageryLayer.DEFAULT_SPLIT = SplitDirection.NONE;
 
 /**
  * This value is used as the default texture minification filter for the imagery layer if one is not provided
@@ -1009,7 +1008,13 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       );
     }
 
-    when(imagePromise, success, failure);
+    imagePromise
+      .then(function (image) {
+        success(image);
+      })
+      .catch(function (e) {
+        failure(e);
+      });
   }
 
   doRequest();

@@ -10,6 +10,7 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
@@ -135,6 +136,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
+ * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -260,6 +262,8 @@ function Scene(options) {
 
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
+
+  this._msaaSamples = defaultValue(options.msaaSamples, 1);
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -1470,17 +1474,41 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+   * Gets or sets the position of the splitter within the viewport.  Valid values are between 0.0 and 1.0.
    * @memberof Scene.prototype
    *
    * @type {Number}
    */
-  imagerySplitPosition: {
+  splitPosition: {
     get: function () {
-      return this._frameState.imagerySplitPosition;
+      return this._frameState.splitPosition;
     },
     set: function (value) {
-      this._frameState.imagerySplitPosition = value;
+      this._frameState.splitPosition = value;
+    },
+  },
+
+  /**
+   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+   * @memberof Scene.prototype
+   *
+   * @deprecated Use splitPosition instead.
+   * @type {Number}
+   */
+  imagerySplitPosition: {
+    get: function () {
+      deprecationWarning(
+        "Scene.imagerySplitPosition",
+        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+      );
+      return this._frameState.splitPosition;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "Scene.imagerySplitPosition",
+        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+      );
+      this._frameState.splitPosition = value;
     },
   },
 
@@ -1591,6 +1619,34 @@ Object.defineProperties(Scene.prototype, {
   cameraUnderground: {
     get: function () {
       return this._cameraUnderground;
+    },
+  },
+
+  /**
+   * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
+   * @memberof Scene.prototype
+   * @type {Number}
+   * @default 1
+   */
+  msaaSamples: {
+    get: function () {
+      return this._msaaSamples;
+    },
+    set: function (value) {
+      value = Math.min(value, ContextLimits.maximumSamples);
+      this._msaaSamples = value;
+    },
+  },
+
+  /**
+   * Returns <code>true</code> if the Scene's context supports MSAA.
+   * @memberof Scene.prototype
+   * @type {Boolean}
+   * @readonly
+   */
+  msaaSupported: {
+    get: function () {
+      return this._context.msaa;
     },
   },
 
@@ -2321,6 +2377,7 @@ function executeCommands(scene, passState) {
         commands,
         invertClassification
       ) {
+        view.globeDepth.prepareColorTextures(context);
         view.oit.executeCommands(
           scene,
           executeFunction,
@@ -2451,7 +2508,15 @@ function executeCommands(scene, passState) {
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-          globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+          // When clearGlobeDepth is true, executeUpdateDepth needs
+          // a globe depth texture with resolved stencil bits.
+          globeDepth.prepareColorTextures(context, clearGlobeDepth);
+          globeDepth.executeUpdateDepth(
+            context,
+            passState,
+            clearGlobeDepth,
+            globeDepth.depthStencilTexture
+          );
         }
 
         // Draw classifications. Modifies 3D Tiles color.
@@ -2512,7 +2577,13 @@ function executeCommands(scene, passState) {
       }
 
       if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-        globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+        scene._invertClassification.prepareTextures(context);
+        globeDepth.executeUpdateDepth(
+          context,
+          passState,
+          clearGlobeDepth,
+          scene._invertClassification._fbo.getDepthStencilTexture()
+        );
       }
 
       // Set stencil
@@ -2601,7 +2672,7 @@ function executeCommands(scene, passState) {
         executeCommand,
         passState,
         commands,
-        globeDepth.framebuffer
+        globeDepth.depthStencilTexture
       );
       view.translucentTileClassification.executeClassificationCommands(
         scene,
@@ -2618,9 +2689,7 @@ function executeCommands(scene, passState) {
         renderTranslucentDepthForPick)
     ) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-      const depthStencilTexture = renderTranslucentDepthForPick
-        ? passState.framebuffer.depthStencilTexture
-        : globeDepth.framebuffer.depthStencilTexture;
+      const depthStencilTexture = globeDepth.depthStencilTexture;
       const pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
@@ -3333,6 +3402,9 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
   const passes = scene._frameState.passes;
   const picking = passes.pick;
+  if (defined(view.globeDepth)) {
+    view.globeDepth.picking = picking;
+  }
   const useWebVR = environmentState.useWebVR;
 
   // Preserve the reference to the original framebuffer.
@@ -3367,6 +3439,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       context,
       passState,
       view.viewport,
+      scene.msaaSamples,
       scene._hdr,
       environmentState.clearGlobeDepth
     );
@@ -3378,7 +3451,13 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const useOIT = (environmentState.useOIT =
     !picking && defined(oit) && oit.isSupported());
   if (useOIT) {
-    oit.update(context, passState, view.globeDepth.framebuffer, scene._hdr);
+    oit.update(
+      context,
+      passState,
+      view.globeDepth.colorFramebufferManager,
+      scene._hdr,
+      scene.msaaSamples
+    );
     oit.clear(context, passState, clearColor);
     environmentState.useOIT = oit.isSupported();
   }
@@ -3393,7 +3472,12 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       postProcess.bloom.enabled));
   environmentState.usePostProcessSelected = false;
   if (usePostProcess) {
-    view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
+    view.sceneFramebuffer.update(
+      context,
+      view.viewport,
+      scene._hdr,
+      scene.msaaSamples
+    );
     view.sceneFramebuffer.clear(context, passState, clearColor);
 
     postProcess.update(context, frameState.useLogDepth, scene._hdr);
@@ -3429,7 +3513,11 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
     if (defined(depthFramebuffer) || context.depthTexture) {
       scene._invertClassification.previousFramebuffer = depthFramebuffer;
-      scene._invertClassification.update(context);
+      scene._invertClassification.update(
+        context,
+        scene.msaaSamples,
+        view.globeDepth.colorFramebufferManager
+      );
       scene._invertClassification.clear(context, passState);
 
       if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
@@ -3464,6 +3552,9 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   const environmentState = this._environmentState;
   const view = this._view;
   const globeDepth = view.globeDepth;
+  if (defined(globeDepth)) {
+    globeDepth.prepareColorTextures(context);
+  }
 
   const useOIT = environmentState.useOIT;
   const useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
@@ -3471,14 +3562,14 @@ Scene.prototype.resolveFramebuffers = function (passState) {
 
   const defaultFramebuffer = environmentState.originalFramebuffer;
   const globeFramebuffer = useGlobeDepthFramebuffer
-    ? globeDepth.framebuffer
+    ? globeDepth.colorFramebufferManager
     : undefined;
-  const sceneFramebuffer = view.sceneFramebuffer.framebuffer;
+  const sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
   const idFramebuffer = view.sceneFramebuffer.idFramebuffer;
 
   if (useOIT) {
     passState.framebuffer = usePostProcess
-      ? sceneFramebuffer
+      ? sceneFramebuffer.framebuffer
       : defaultFramebuffer;
     view.oit.execute(context, passState);
   }
@@ -3492,6 +3583,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
+    view.sceneFramebuffer.prepareColorTextures(context);
     let inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;
@@ -3500,8 +3592,10 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     const postProcess = this.postProcessStages;
     const colorTexture = inputFramebuffer.getColorTexture(0);
     const idTexture = idFramebuffer.getColorTexture(0);
-    const depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer)
-      .depthStencilTexture;
+    const depthTexture = defaultValue(
+      globeFramebuffer,
+      sceneFramebuffer
+    ).getDepthStencilTexture();
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
     postProcess.copy(context, defaultFramebuffer);
   }

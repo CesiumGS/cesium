@@ -6,6 +6,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import CesiumMath from "../Core/Math.js";
@@ -160,7 +161,7 @@ function UniformState() {
 
   this._invertClassificationColor = undefined;
 
-  this._imagerySplitPosition = 0.0;
+  this._splitPosition = 0.0;
   this._pixelSizePerMeter = undefined;
   this._geometricToleranceOverMeter = undefined;
 
@@ -964,12 +965,29 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
+   * @deprecated Use splitPosition instead.
    * @memberof UniformState.prototype
    * @type {Number}
    */
   imagerySplitPosition: {
     get: function () {
-      return this._imagerySplitPosition;
+      deprecationWarning(
+        "UniformState.imagerySplitPosition",
+        "czm_imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use czm_splitPosition instead."
+      );
+      return this._splitPosition;
+    },
+  },
+
+  /**
+   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
+   * @memberof UniformState.prototype
+   * @type {Number}
+   */
+  splitPosition: {
+    get: function () {
+      return this._splitPosition;
     },
   },
 
@@ -1300,9 +1318,9 @@ UniformState.prototype.update = function (frameState) {
     this._temeToPseudoFixed
   );
 
-  // Convert the relative imagerySplitPosition to absolute pixel coordinates
-  this._imagerySplitPosition =
-    frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
+  // Convert the relative splitPosition to absolute pixel coordinates
+  this._splitPosition =
+    frameState.splitPosition * frameState.context.drawingBufferWidth;
   const fov = camera.frustum.fov;
   const viewport = this._viewport;
   let pixelSizePerMeter;

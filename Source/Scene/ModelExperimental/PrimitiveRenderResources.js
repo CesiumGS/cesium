@@ -112,16 +112,6 @@ export default function PrimitiveRenderResources(
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
-   * The model space transform for this primitive. This is cloned from the
-   * node render resources as the primitive may further modify it
-   *
-   * @type {Matrix4}
-   *
-   * @private
-   */
-  this.transform = nodeRenderResources.runtimeNode.transform.clone();
-
-  /**
    * An object used to build a shader incrementally. This is cloned from the
    * node render resources because each primitive can compute a different shader.
    *
@@ -143,7 +133,7 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * A reference to the runtime node
+   * A reference to the runtime primitive
    *
    * @type {ModelExperimentalPrimitive}
    * @readonly

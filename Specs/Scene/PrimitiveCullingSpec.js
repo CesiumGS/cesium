@@ -2,6 +2,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { GeometryInstance } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { PerspectiveFrustum } from "../../Source/Cesium.js";
@@ -20,6 +21,7 @@ import { Primitive } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { VerticalOrigin } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe(
   "Scene/PrimitiveCulling",
@@ -149,6 +151,20 @@ describe(
       testOcclusionCull(primitive);
     });
 
+    function allLabelsReady(labels) {
+      // render until all labels have been updated
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        const backgroundBillboard = labels._backgroundBillboardCollection.get(
+          0
+        );
+        return (
+          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
+          labels._labelsToUpdate.length === 0
+        );
+      });
+    }
+
     function createLabels(height) {
       height = defaultValue(height, 0);
       const labels = new LabelCollection();
@@ -163,24 +179,55 @@ describe(
       return labels;
     }
 
+    function testLabelsCull(labels, occulude) {
+      scene.camera.setView({
+        destination: rectangle,
+      });
+
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.primitives.add(labels);
+
+      return allLabelsReady(labels).then(function () {
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        if (occulude) {
+          // create the globe; it should occlude the primitive
+          scene.globe = new Globe();
+          expect(scene).toRender([0, 0, 0, 255]);
+          scene.globe = undefined;
+          return;
+        }
+
+        if (scene.mode !== SceneMode.SCENE2D) {
+          // move the camera through the rectangle so that is behind the view frustum
+          scene.camera.moveForward(100000000.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+        }
+      });
+    }
+
     it("frustum culls labels in 3D", function () {
       primitive = createLabels();
-      testCullIn3D(primitive);
+      scene.mode = SceneMode.SCENE3D;
+      return testLabelsCull(primitive);
     });
 
     it("frustum culls labels in Columbus view", function () {
       primitive = createLabels();
-      testCullInColumbusView(primitive);
+      scene.mode = SceneMode.COLUMBUS_VIEW;
+      return testLabelsCull(primitive);
     });
 
     it("frustum culls labels in 2D", function () {
       primitive = createLabels();
-      testCullIn2D(primitive);
+      scene.mode = SceneMode.SCENE2D;
+      return testLabelsCull(primitive);
     });
 
     it("label occlusion", function () {
       primitive = createLabels(-1000000.0);
-      testOcclusionCull(primitive);
+      scene.mode = SceneMode.SCENE3D;
+      return testLabelsCull(primitive, true);
     });
 
     function createBillboard(height) {
@@ -193,24 +240,58 @@ describe(
       return billboards;
     }
 
+    function testBillboardsCull(billboards, occulude) {
+      scene.camera.setView({
+        destination: rectangle,
+      });
+
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.primitives.add(billboards);
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return billboards.get(0).ready;
+      }).then(function () {
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        if (occulude) {
+          // create the globe; it should occlude the primitive
+          scene.globe = new Globe();
+          expect(scene).toRender([0, 0, 0, 255]);
+          scene.globe = undefined;
+          return;
+        }
+
+        if (scene.mode !== SceneMode.SCENE2D) {
+          // move the camera through the rectangle so that is behind the view frustum
+          scene.camera.moveForward(100000000.0);
+          expect(scene).toRender([0, 0, 0, 255]);
+        }
+      });
+    }
+
     it("frustum culls billboards in 3D", function () {
       primitive = createBillboard();
-      testCullIn3D(primitive);
+      scene.mode = SceneMode.SCENE3D;
+      return testBillboardsCull(primitive);
     });
 
     it("frustum culls billboards in Columbus view", function () {
       primitive = createBillboard();
-      testCullInColumbusView(primitive);
+      scene.mode = SceneMode.COLUMBUS_VIEW;
+      return testBillboardsCull(primitive);
     });
 
     it("frustum culls billboards in 2D", function () {
       primitive = createBillboard();
-      testCullIn2D(primitive);
+      scene.mode = SceneMode.SCENE2D;
+      return testBillboardsCull(primitive);
     });
 
     it("billboard occlusion", function () {
       primitive = createBillboard(-1000000.0);
-      testOcclusionCull(primitive);
+      scene.mode = SceneMode.SCENE3D;
+      return testBillboardsCull(primitive, true);
     });
 
     function createPolylines(height) {

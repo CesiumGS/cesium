@@ -1142,7 +1142,37 @@ Billboard.prototype._loadImage = function () {
   const imageSubRegion = this._imageSubRegion;
   let imageIndexPromise;
 
+  const that = this;
+  function completeImageLoad(index) {
+    if (
+      that._imageId !== imageId ||
+      that._image !== image ||
+      !BoundingRectangle.equals(that._imageSubRegion, imageSubRegion)
+    ) {
+      // another load occurred before this one finished, ignore the index
+      return;
+    }
+
+    // fill in imageWidth and imageHeight
+    const textureCoordinates = atlas.textureCoordinates[index];
+    that._imageWidth = atlas.texture.width * textureCoordinates.width;
+    that._imageHeight = atlas.texture.height * textureCoordinates.height;
+
+    that._imageIndex = index;
+    that._ready = true;
+    that._image = undefined;
+    that._imageIndexPromise = undefined;
+    makeDirty(that, IMAGE_INDEX_INDEX);
+  }
+
   if (defined(image)) {
+    // No need to wait on imageIndexPromise since these have already been added to the atlas
+    const index = atlas.getImageIndex(imageId);
+    if (defined(index)) {
+      completeImageLoad(index);
+      return;
+    }
+
     imageIndexPromise = atlas.addImage(imageId, image);
   }
   if (defined(imageSubRegion)) {
@@ -1155,33 +1185,10 @@ Billboard.prototype._loadImage = function () {
     return;
   }
 
-  const that = this;
-  imageIndexPromise
-    .then(function (index) {
-      if (
-        that._imageId !== imageId ||
-        that._image !== image ||
-        !BoundingRectangle.equals(that._imageSubRegion, imageSubRegion)
-      ) {
-        // another load occurred before this one finished, ignore the index
-        return;
-      }
-
-      // fill in imageWidth and imageHeight
-      const textureCoordinates = atlas.textureCoordinates[index];
-      that._imageWidth = atlas.texture.width * textureCoordinates.width;
-      that._imageHeight = atlas.texture.height * textureCoordinates.height;
-
-      that._imageIndex = index;
-      that._ready = true;
-      that._image = undefined;
-      that._imageIndexPromise = undefined;
-      makeDirty(that, IMAGE_INDEX_INDEX);
-    })
-    .otherwise(function (error) {
-      console.error(`Error loading image for billboard: ${error}`);
-      that._imageIndexPromise = undefined;
-    });
+  imageIndexPromise.then(completeImageLoad).catch(function (error) {
+    console.error(`Error loading image for billboard: ${error}`);
+    that._imageIndexPromise = undefined;
+  });
 };
 
 /**

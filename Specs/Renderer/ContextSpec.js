@@ -31,73 +31,71 @@ describe(
     });
 
     it("get stencilBits", function () {
-      expect(context.stencilBits).toBeGreaterThanOrEqualTo(0);
+      expect(context.stencilBits).toBeGreaterThanOrEqual(0);
     });
 
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits
-      ).toBeGreaterThanOrEqualTo(8);
+      ).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumCubeMapSize", function () {
-      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumFragmentUniformVectors", function () {
       expect(
         ContextLimits.maximumFragmentUniformVectors
-      ).toBeGreaterThanOrEqualTo(16);
+      ).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumTextureImageUnits", function () {
-      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqualTo(
-        8
-      );
+      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumRenderbufferSize", function () {
-      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(1);
     });
 
     it("get maximumTextureSize", function () {
-      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqualTo(64);
+      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(64);
     });
 
     it("get maximumVaryingVectors", function () {
-      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqualTo(8);
+      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumVertexAttributes", function () {
-      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqualTo(8);
+      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(8);
     });
 
     it("get maximumVertexTextureImageUnits", function () {
       expect(
         ContextLimits.maximumVertexTextureImageUnits
-      ).toBeGreaterThanOrEqualTo(0);
+      ).toBeGreaterThanOrEqual(0);
     });
 
     it("get maximumVertexUniformVectors", function () {
-      expect(
-        ContextLimits.maximumVertexUniformVectors
-      ).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumVertexUniformVectors).toBeGreaterThanOrEqual(
+        1
+      );
     });
 
     it("get minimumAliasedLineWidth", function () {
-      expect(ContextLimits.minimumAliasedLineWidth).toBeLessThanOrEqualTo(1);
+      expect(ContextLimits.minimumAliasedLineWidth).toBeLessThanOrEqual(1);
     });
 
     it("get maximumAliasedLineWidth", function () {
-      expect(ContextLimits.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumAliasedLineWidth).toBeGreaterThanOrEqual(1);
     });
 
     it("get minimumAliasedPointSize", function () {
-      expect(ContextLimits.minimumAliasedPointSize).toBeLessThanOrEqualTo(1);
+      expect(ContextLimits.minimumAliasedPointSize).toBeLessThanOrEqual(1);
     });
 
     it("get maximumAliasedPointSize", function () {
-      expect(ContextLimits.maximumAliasedPointSize).toBeGreaterThanOrEqualTo(1);
+      expect(ContextLimits.maximumAliasedPointSize).toBeGreaterThanOrEqual(1);
     });
 
     it("get maximumViewportWidth", function () {
@@ -186,7 +184,7 @@ describe(
       if (context.textureFilterAnisotropic) {
         expect(
           ContextLimits.maximumTextureFilterAnisotropy
-        ).toBeGreaterThanOrEqualTo(2);
+        ).toBeGreaterThanOrEqual(2);
       } else {
         expect(ContextLimits.maximumTextureFilterAnisotropy).toEqual(1);
       }
@@ -245,7 +243,7 @@ describe(
 
     it("get the maximum number of draw buffers", function () {
       if (context.drawBuffers) {
-        expect(ContextLimits.maximumDrawBuffers).toBeGreaterThanOrEqualTo(1);
+        expect(ContextLimits.maximumDrawBuffers).toBeGreaterThanOrEqual(1);
       } else {
         expect(ContextLimits.maximumDrawBuffers).toEqual(1);
       }
@@ -253,9 +251,7 @@ describe(
 
     it("get the maximum number of color attachments", function () {
       if (context.drawBuffers) {
-        expect(ContextLimits.maximumColorAttachments).toBeGreaterThanOrEqualTo(
-          4
-        );
+        expect(ContextLimits.maximumColorAttachments).toBeGreaterThanOrEqual(4);
       } else {
         expect(ContextLimits.maximumColorAttachments).toEqual(1);
       }

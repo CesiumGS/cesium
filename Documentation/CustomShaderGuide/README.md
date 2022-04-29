@@ -68,7 +68,10 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
-  customShader: customShader
+  customShader: customShader,
+  // This is only needed for b3dm and i3dm tilesets. for glTF,
+  // ModelExperimental is always used.
+  enableModelExperimental: true,
 }));
 
 // Applying to a model directly
@@ -77,10 +80,6 @@ const model = Cesium.ModelExperimental.fromGltf({,
   customShader: customShader
 });
 ```
-
-**Note**: As of this writing, only tilesets that use the `3DTILES_content_gltf`
-extension will support `CustomShaders`. Future releases will add support for
-other formats such as b3dm.
 
 ## Uniforms
 
@@ -202,7 +201,8 @@ struct VertexInput {
     Attributes attributes;
     // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
     FeatureIds featureIds;
-    // In the future, metadata will be added here.
+    // Metadata properties. See the Metadata Struct section below.
+    Metadata metadata;
 };
 ```
 
@@ -217,7 +217,8 @@ struct FragmentInput {
     Attributes attributes;
     // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
     FeatureIds featureIds;
-    // In the future, metadata will be added here.
+    // Metadata properties. See the Metadata Struct section below.
+    Metadata metadata;
 };
 ```
 
@@ -265,6 +266,13 @@ This struct is dynamically generated to gather all the various feature IDs into
 a single collection, regardless of whether the value came from an attribute,
 texture or varying.
 
+Feature IDs are represented as a GLSL `int`, though in WebGL 1 this has a couple
+limitations:
+
+- Above `2^24`, values may have a loss of precision since WebGL 1 implements
+  `highp int` as a floating point value.
+- Ideally the type would be `uint` but this is not available until WebGL 2
+
 ### 3D Tiles 1.0 Batch IDs
 
 In 3D Tiles 1.0, the same concept of identifying features within a primitive
@@ -274,24 +282,28 @@ to a single feature ID, always with index 0:
 - `vsInput.featureIds.featureId_0` (Vertex shader)
 - `fsInput.featureIds.featureId_0` (Fragment shader)
 
-### `EXT_mesh_features` Feature IDs
+### `EXT_mesh_features`/`EXT_instance_features` Feature IDs
 
-When the glTF extension `EXT_mesh_features` is used, feature IDs appear in
-two places:
+When the glTF extensions `EXT_mesh_features` or `EXT_instance_features` are used,
+feature IDs appear in two places:
 
 1. Any glTF primitive can have a `featureIds` array. The `featureIds` array may
    contain feature ID attributes, implicit feature ID attributes, and/or feature
    ID textures. Regardless of the type of feature IDs, they all appear in the
    custom shader as `(vsInput|fsInput).featureIds.featureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
-2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_mesh_features` may
+2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_instance_features` may
    define feature IDs. These may be feature ID attributes or implicit feature ID
    attributes, but not feature ID textures. These will appear in the custom
    shader as `(vsInput|fsInput).featureIds.instanceFeatureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
 
-Furthermore, note that feature ID textures are only supported in the fragment
-shader.
+Furthermore, feature ID textures are only supported in the fragment shader.
+
+If a set of feature IDs includes a `label` property (new in `EXT_mesh_features`),
+that label will be available as an alias. For example, if `label: "alias"`, then
+`(vsInput|fsInput).featureIds.alias` would be available in the shader along
+with `featureId_N`.
 
 For example, suppose we had a glTF primitive with the following feature IDs:
 
@@ -303,30 +315,36 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       "EXT_mesh_gpu_instancing": {
         "attributes": {
           "TRANSLATION": 3,
-          "FEATURE_ID_0": 4
+          "_FEATURE_ID_0": 4
         }
       },
-      "EXT_mesh_features": {
-        "propertyTables": [0, 1],
+      "EXT_instance_features": {
         "featureIds": [
           {
-            // Feature ID attribute from implicit range
+            // Default feature IDs (instance ID)
             //
-            // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
-            // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
-            "offset": 0,
-            "repeat": 1
+            // Vertex Shader:
+            //   vsInput.featureIds.instanceFeatureId_0 OR
+            //   vsInput.featureIds.perInstance
+            // Fragment Shader:
+            //   fsInput.featureIds.instanceFeatureId_0 OR
+            //   fsInput.featureIds.perInstance
+            "label": "perInstance",
+            "propertyTable": 0
           },
           {
-            // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+            // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
             // instancing extension above. Note that this is
             // labeled as instanceFeatureId_1 since it is the second feature ID
             // set in the featureIds array
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            //
+            // Since there is no label field, instanceFeatureId_1 must be used.
+            "propertyTable": 1,
             "attribute": 0
-          }
+          },
         ]
       }
     }
@@ -338,46 +356,57 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       {
         "attributes": {
           "POSITION": 0,
-          "FEATURE_ID_0": 1,
-          "FEATURE_ID_1": 2
+          "_FEATURE_ID_0": 1,
+          "_FEATURE_ID_1": 2
         },
         "extensions": {
           "EXT_mesh_features": {
-            "propertyTables": [2, 3, 4, 5],
             "featureIds": [
               {
                 // Feature ID Texture
                 //
                 // Vertex Shader: (Not supported)
-                // Fragment Shader: fsInput.featureIds.featureId_0
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_0 OR
+                //   fsInput.featureIds.texture
+                "label": "texture",
+                "propertyTable": 2,
                 "index": 0,
                 "texCoord": 0,
                 "channel": 0
               },
               {
-                // Implicit Feature ID attribute
+                // Default Feature IDs (vertex ID)
                 //
-                // Vertex Shader: vsInput.featureIds.featureId_1
-                // Fragment Shader: fsInput.featureIds.featureId_1
-                "offset": 0,
-                "repeat": 3
+                // Vertex Shader:
+                //   vsInput.featureIds.featureId_1 OR
+                //   vsInput.featureIds.perVertex
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_1 OR
+                //   fsInput.featureIds.perVertex
+                "label": "perVertex",
+                "propertyTable": 3,
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_2
                 // Fragment Shader: fsInput.featureIds.featureId_2
+                //
+                // Since there is no label, featureId_2 must be used.
+                "propertyTable": 4,
                 "attribute": 0
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_3 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_3
                 // Fragment Shader: fsInput.featureIds.featureId_3
+                "propertyTable": 5,
                 "attribute": 1
               }
             ]
@@ -434,7 +463,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+                // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
                 // instancing extension above. Note that this is
                 // labeled as instanceFeatureId_1 since it is the second feature ID
                 // set in the featureIds array
@@ -477,7 +506,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_1 for its index in the featureIds
                 // array
                 //
@@ -489,7 +518,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
@@ -526,6 +555,124 @@ to the `EXT_feature_metadata` extension:
   }
 ]
 ```
+
+## `Metadata` struct
+
+This struct contains the relevant metadata properties accessible to the
+model from the
+[`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata)
+glTF extension (or the older
+[`EXT_feature_metadata`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata) extension).
+
+The following types of metadata are currently supported:
+
+- property attributes from the `EXT_structural_metadata` glTF extension.
+- property textures from the `EXT_structural_metadata` glTF extension. Only
+  types with `componentType: UINT8` are currently supported.
+
+Regardless of the source of metadata, the properties are collected into a single
+struct by property ID. For example, if the metadata class looked like this:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        "temperature": {
+          "name": "Surface Temperature",
+          "type": "SCALAR",
+          "componentType": "FLOAT32"
+        }
+      }
+    }
+  }
+}
+```
+
+This will show up in the shader as the struct field as follows:
+
+```
+struct Metadata {
+  float temperature;
+}
+```
+
+Now the temperature can be accessed as `vsInput.metadata.temperature` or
+`fsInput.metadata.temperature`.
+
+### Normalized values
+
+If the class property specifies `normalized: true`, the property will appear
+in the shader as the appropriate floating point type (e.g. `float` or `vec3`).
+All components will be between the range of `[0, 1]` (unsigned) or `[-1, 1]`
+(signed).
+
+For example,
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        // damage normalized between 0.0 and 1.0 though stored as a UINT8 in
+        // the glTF
+        "damageAmount": {
+          "name": "Wall damage (normalized)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true
+        }
+      }
+    }
+  }
+}
+```
+
+This will appear as a `float` value from 0.0 to 1.0, accessible via
+`(vsInput|fsInput).metadata.damageAmount`
+
+### Offset and scale
+
+If the property provides an `offset` or `scale`, this is automatically applied
+after normalization (when applicable). This is useful to pre-scale values into
+a convenient range.
+
+For example, consider taking a normalized temperature value and automatically
+converting this to Celsius or Fahrenheit:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        // scaled to the range [0, 100] in °C
+        "temperatureCelsius": {
+          "name": "Temperature (°C)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true,
+          // offset defaults to 0, scale defaults to 1
+          "scale": 100
+        },
+        // scaled/shifted to the range [32, 212] in °F
+        "temperatureFahrenheit": {
+          "name": "Temperature (°C)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true,
+          "offset": 32,
+          "scale": 180
+        }
+      }
+    }
+  }
+}
+```
+
+In the shader, `(vsInput|fsInput).metadata.temperatureCelsius` will be a `float`
+with a value between 0.0 and 100.0, while
+`(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
+range of `[32.0, 212.0]`.
 
 ## `czm_modelVertexOutput` struct
 

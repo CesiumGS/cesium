@@ -57,19 +57,21 @@
         }));
 
         // Shade selected model with highlight.
-        const fragmentShaderSource =
-          "uniform sampler2D colorTexture;\n" +
-          "varying vec2 v_textureCoordinates;\n" +
-          "uniform vec4 highlight;\n" +
-          "void main() {\n" +
-          "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
-          "    if (czm_selected()) {\n" +
-          "        vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;\n" +
-          "        gl_FragColor = vec4(highlighted, 1.0);\n" +
-          "    } else { \n" +
-          "        gl_FragColor = color;\n" +
-          "    }\n" +
-          "}\n";
+        const fragmentShaderSource = `
+          uniform sampler2D colorTexture;
+          varying vec2 v_textureCoordinates;
+          uniform vec4 highlight;
+          void main() {
+              vec4 color = texture2D(colorTexture, v_textureCoordinates);
+              if (czm_selected()) {
+                  vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
+                  gl_FragColor = vec4(highlighted, 1.0);
+              } else { 
+                  gl_FragColor = color;
+              }
+          }
+          `;
+
         const stage = scene.postProcessStages.add(
           new Cesium.PostProcessStage({
             fragmentShader: fragmentShaderSource,

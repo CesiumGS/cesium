@@ -7,7 +7,6 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { TerrainData } from "../../Source/Cesium.js";
 import { TerrainMesh } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   const sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
@@ -146,7 +145,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
         tilingScheme.tileXYToRectangle(1, 1, 1),
       ];
 
-      return when(
+      return Promise.resolve(
         data.createMesh({
           tilingScheme: tilingScheme,
           x: 0,
@@ -159,7 +158,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
           const sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
           const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
           const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-          return when.join(swPromise, sePromise, nwPromise, nePromise);
+          return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
         })
         .then(function (upsampleResults) {
           expect(upsampleResults.length).toBe(4);

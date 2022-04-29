@@ -24,7 +24,7 @@ describe("Core/loadKTX2", function () {
       .then(function (value) {
         fail();
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(error).toBeDefined();
       });
   });
@@ -237,7 +237,7 @@ describe("Core/loadKTX2", function () {
       .then(function (value) {
         fail();
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         rejectedError = error;
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toBeInstanceOf(RuntimeError);
@@ -259,7 +259,7 @@ describe("Core/loadKTX2", function () {
         .then(function (value) {
           fail();
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           rejectedError = error;
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
@@ -284,7 +284,7 @@ describe("Core/loadKTX2", function () {
         .then(function (value) {
           fail();
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           rejectedError = error;
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);

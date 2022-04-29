@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import binarySearch from "./binarySearch.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
@@ -86,7 +85,7 @@ function EarthOrientationParameters(options) {
       .then(function (eopData) {
         onDataReady(that, eopData);
       })
-      .otherwise(function () {
+      .catch(function () {
         that._dataError = `An error occurred while retrieving the EOP data from the URL ${resource.url}.`;
       });
   } else {
@@ -113,7 +112,7 @@ function EarthOrientationParameters(options) {
  */
 EarthOrientationParameters.NONE = Object.freeze({
   getPromiseToLoad: function () {
-    return when.resolve();
+    return Promise.resolve();
   },
   compute: function (date, result) {
     if (!defined(result)) {
@@ -136,7 +135,7 @@ EarthOrientationParameters.NONE = Object.freeze({
  * @returns {Promise<void>} The promise.
  */
 EarthOrientationParameters.prototype.getPromiseToLoad = function () {
-  return when(this._downloadPromise);
+  return Promise.resolve(this._downloadPromise);
 };
 
 /**

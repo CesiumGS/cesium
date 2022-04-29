@@ -1,3 +1,4 @@
+import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -94,32 +95,6 @@ const MetadataComponentType = {
    * @private
    */
   FLOAT64: "FLOAT64",
-  /**
-   * A boolean (true/false) value
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  BOOLEAN: "BOOLEAN",
-  /**
-   * A UTF-8 encoded string value
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  STRING: "STRING",
-  /**
-   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
-   *
-   * @see MetadataEnum
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  ENUM: "ENUM",
 };
 
 /**
@@ -366,16 +341,9 @@ MetadataComponentType.normalize = function (value, type) {
   }
   //>>includeEnd('debug');
 
-  if (value >= 0) {
-    return Math.min(
-      Number(value) / Number(MetadataComponentType.getMaximum(type)),
-      1.0
-    );
-  }
-
-  return -Math.min(
-    Number(value) / Number(MetadataComponentType.getMinimum(type)),
-    1.0
+  return Math.max(
+    Number(value) / Number(MetadataComponentType.getMaximum(type)),
+    -1.0
   );
 };
 
@@ -403,14 +371,10 @@ MetadataComponentType.unnormalize = function (value, type) {
   }
   //>>includeEnd('debug');
 
-  const min = MetadataComponentType.getMinimum(type);
   const max = MetadataComponentType.getMaximum(type);
+  const min = MetadataComponentType.isUnsignedIntegerType(type) ? 0 : -max;
 
-  if (value >= 0.0) {
-    value = value * Number(max);
-  } else {
-    value = -value * Number(min);
-  }
+  value = CesiumMath.sign(value) * Math.round(Math.abs(value) * Number(max));
 
   if (
     (type === MetadataComponentType.INT64 ||
@@ -429,6 +393,20 @@ MetadataComponentType.unnormalize = function (value, type) {
   }
 
   return value;
+};
+
+MetadataComponentType.applyValueTransform = function (value, offset, scale) {
+  return scale * value + offset;
+};
+
+MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
+  // if the scale is 0, avoid a divide by zero error. The result can be any
+  // finite number, so 0.0 will do nicely.
+  if (scale === 0) {
+    return 0.0;
+  }
+
+  return (value - offset) / scale;
 };
 
 /**

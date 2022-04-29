@@ -632,6 +632,32 @@ OrientedBoundingBox.fromRectangle = function (
 };
 
 /**
+ * Computes an OrientedBoundingBox that bounds an affine transformation.
+ *
+ * @param {Matrix4} transformation The affine transformation.
+ * @param {OrientedBoundingBox} [result] The object onto which to store the result.
+ * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
+ */
+OrientedBoundingBox.fromTransformation = function (transformation, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("transformation", transformation);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+
+  result.center = Matrix4.getTranslation(transformation, result.center);
+  result.halfAxes = Matrix4.getMatrix3(transformation, result.halfAxes);
+  result.halfAxes = Matrix3.multiplyByScalar(
+    result.halfAxes,
+    0.5,
+    result.halfAxes
+  );
+  return result;
+};
+
+/**
  * Duplicates a OrientedBoundingBox instance.
  *
  * @param {OrientedBoundingBox} box The bounding box to duplicate.
@@ -1011,6 +1037,111 @@ OrientedBoundingBox.computePlaneDistances = function (
   return result;
 };
 
+const scratchXAxis = new Cartesian3();
+const scratchYAxis = new Cartesian3();
+const scratchZAxis = new Cartesian3();
+
+/**
+ * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
+ *
+ * @param {OrientedBoundingBox} box The oriented bounding box.
+ * @param {Cartesian3[]} [result] An array of eight {@link Cartesian3} instances onto which to store the corners.
+ * @returns {Cartesian3[]} The modified result parameter or a new array if none was provided.
+ */
+OrientedBoundingBox.computeCorners = function (box, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("box", box);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = [
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+    ];
+  }
+
+  const center = box.center;
+  const halfAxes = box.halfAxes;
+  const xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
+  const yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
+  const zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
+
+  Cartesian3.clone(center, result[0]);
+  Cartesian3.subtract(result[0], xAxis, result[0]);
+  Cartesian3.subtract(result[0], yAxis, result[0]);
+  Cartesian3.subtract(result[0], zAxis, result[0]);
+
+  Cartesian3.clone(center, result[1]);
+  Cartesian3.subtract(result[1], xAxis, result[1]);
+  Cartesian3.subtract(result[1], yAxis, result[1]);
+  Cartesian3.add(result[1], zAxis, result[1]);
+
+  Cartesian3.clone(center, result[2]);
+  Cartesian3.subtract(result[2], xAxis, result[2]);
+  Cartesian3.add(result[2], yAxis, result[2]);
+  Cartesian3.subtract(result[2], zAxis, result[2]);
+
+  Cartesian3.clone(center, result[3]);
+  Cartesian3.subtract(result[3], xAxis, result[3]);
+  Cartesian3.add(result[3], yAxis, result[3]);
+  Cartesian3.add(result[3], zAxis, result[3]);
+
+  Cartesian3.clone(center, result[4]);
+  Cartesian3.add(result[4], xAxis, result[4]);
+  Cartesian3.subtract(result[4], yAxis, result[4]);
+  Cartesian3.subtract(result[4], zAxis, result[4]);
+
+  Cartesian3.clone(center, result[5]);
+  Cartesian3.add(result[5], xAxis, result[5]);
+  Cartesian3.subtract(result[5], yAxis, result[5]);
+  Cartesian3.add(result[5], zAxis, result[5]);
+
+  Cartesian3.clone(center, result[6]);
+  Cartesian3.add(result[6], xAxis, result[6]);
+  Cartesian3.add(result[6], yAxis, result[6]);
+  Cartesian3.subtract(result[6], zAxis, result[6]);
+
+  Cartesian3.clone(center, result[7]);
+  Cartesian3.add(result[7], xAxis, result[7]);
+  Cartesian3.add(result[7], yAxis, result[7]);
+  Cartesian3.add(result[7], zAxis, result[7]);
+
+  return result;
+};
+
+const scratchRotationScale = new Matrix3();
+
+/**
+ * Computes a transformation matrix from an oriented bounding box.
+ *
+ * @param {OrientedBoundingBox} box The oriented bounding box.
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter or a new {@link Matrix4} instance if none was provided.
+ */
+OrientedBoundingBox.computeTransformation = function (box, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("box", box);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Matrix4();
+  }
+
+  const translation = box.center;
+  const rotationScale = Matrix3.multiplyByUniformScale(
+    box.halfAxes,
+    2.0,
+    scratchRotationScale
+  );
+  return Matrix4.fromRotationTranslation(rotationScale, translation, result);
+};
+
 const scratchBoundingSphere = new BoundingSphere();
 
 /**
@@ -1089,6 +1220,26 @@ OrientedBoundingBox.prototype.computePlaneDistances = function (
     direction,
     result
   );
+};
+
+/**
+ * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
+ *
+ * @param {Cartesian3[]} [result] An array of eight {@link Cartesian3} instances onto which to store the corners.
+ * @returns {Cartesian3[]} The modified result parameter or a new array if none was provided.
+ */
+OrientedBoundingBox.prototype.computeCorners = function (result) {
+  return OrientedBoundingBox.computeCorners(this, result);
+};
+
+/**
+ * Computes a transformation matrix from an oriented bounding box.
+ *
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter or a new {@link Matrix4} instance if none was provided.
+ */
+OrientedBoundingBox.prototype.computeTransformation = function (result) {
+  return OrientedBoundingBox.computeTransformation(this, result);
 };
 
 /**

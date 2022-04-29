@@ -1,6 +1,5 @@
 import { OpenCageGeocoderService } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/OpenCageGeocoderService", function () {
   const endpoint = "https://api.opencagedata.com/geocode/v1/";
@@ -43,7 +42,9 @@ describe("Core/OpenCageGeocoderService", function () {
         },
       ],
     };
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(data)
+    );
 
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
@@ -57,7 +58,9 @@ describe("Core/OpenCageGeocoderService", function () {
 
     const query = "";
     const data = { results: [] };
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(data)
+    );
 
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(0);

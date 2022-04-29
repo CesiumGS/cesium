@@ -1,10 +1,10 @@
-import when from "../ThirdParty/when.js";
+import defer from "./defer.js";
 
 /**
  * @private
  */
 function loadAndExecuteScript(url) {
-  const deferred = when.defer();
+  const deferred = defer();
   const script = document.createElement("script");
   script.async = true;
   script.src = url;

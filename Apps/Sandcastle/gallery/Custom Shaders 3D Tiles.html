@@ -50,14 +50,14 @@
           url: Cesium.IonResource.fromAssetId(75343),
           customShader: new Cesium.CustomShader({
             lightingModel: Cesium.LightingModel.UNLIT,
-            fragmentShaderText: [
+            fragmentShaderText: `
               // Color tiles by distance to the camera
-              "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-              "{",
-              "    material.diffuse = vec3(0.0, 0.0, 1.0);",
-              "    material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;",
-              "}",
-            ].join("\n"),
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+              {
+                  material.diffuse = vec3(0.0, 0.0, 1.0);
+                  material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
+              }
+              `,
           }),
         });
         viewer.scene.primitives.add(tileset);
