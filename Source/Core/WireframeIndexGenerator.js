@@ -3,12 +3,13 @@ import IndexDatatype from "./IndexDatatype.js";
 import PrimitiveType from "./PrimitiveType.js";
 
 /**
- * Utility functions for generating indices for model wireframes. The indices are
+ * Functions for generating indices for model wireframes. The indices are
  * outputted as typed arrays, which can then be put into buffers for rendering.
  *
+ * @namespace WireframeIndexGenerator
  * @private
  */
-export default function WireframeIndexGenerator() {}
+const WireframeIndexGenerator = {};
 
 function createWireframeFromTriangles(vertexCount) {
   const wireframeIndices = IndexDatatype.createTypedArray(
@@ -159,7 +160,8 @@ function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
 }
 
 /**
- * Generates a wireframe index buffer for a primitive.
+ * Generates a wireframe index buffer for a primitive, either by reindexing the existing indices
+ * or creating them from scratch if the model had none.
  *
  * @param {PrimitiveType} primitiveType The primitive type.
  * @param {Number} vertexCount The number of vertices in the primitive.
@@ -232,3 +234,5 @@ WireframeIndexGenerator.getWireframeIndicesCount = function (
 
   return originalCount;
 };
+
+export default WireframeIndexGenerator;
