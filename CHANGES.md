@@ -2,6 +2,10 @@
 
 ### 1.93 - 2022-05-02
 
+##### Breaking Changes :mega:
+
+- Temporarily disable `Scene.orderIndependentTranslucency` by default on iPad and iOS due to a WebGL regression, see [#9827](https://github.com/CesiumGS/cesium/issues/9827). The old default will be restored once the issue has been resolved.
+
 ##### Additions :tada:
 
 - `KmlDataSource` now exposes the `camera` and `canvas` properties, which are used to provide information about the state of the Viewer when making network requests for a [Link](https://developers.google.com/kml/documentation/kmlreference#link). Passing these values in the constructor is now optional.

@@ -5,6 +5,7 @@ import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { GeographicProjection } from "../../Source/Cesium.js";
 import { GeometryInstance } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
@@ -124,6 +125,12 @@ describe(
       expect(contextAttributes.premultipliedAlpha).toEqual(true);
       expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
       expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
+    });
+
+    it("constructor default OIT to disabled if running on iPad or iOS", function () {
+      spyOn(FeatureDetection, "isIPadOrIOS").and.returnValue(true);
+      const scene = createScene();
+      expect(scene.orderIndependentTranslucency).toBe(false);
     });
 
     it("constructor sets options", function () {
