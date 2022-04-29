@@ -19,7 +19,7 @@
     },
     {
       "bufferView": 1,
-      "componentType": 5125,
+      "componentType": 5123,
       "count": 4,
       "type": "SCALAR",
       "name": "Indices Accessor"
@@ -44,7 +44,7 @@
     {
       "buffer": 0,
       "byteOffset": 48,
-      "byteLength": 16,
+      "byteLength": 8,
       "name": "Indices"
     }
   ],
