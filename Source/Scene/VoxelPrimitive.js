@@ -1498,12 +1498,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
 
     // Update the voxel traversal
-    const hasLoadedData = traversal.update(
+    traversal.update(
       frameState,
       keyframeLocation,
       shapeDirty, // recomputeBoundingVolumes
       this._disableUpdate // pauseUpdate
     );
+    const hasLoadedData = traversal.isRenderable(traversal.rootNode);
 
     if (hasLoadedData && this._debugDraw) {
       // Debug draw bounding boxes and other things. Must go after traversal update
@@ -2440,7 +2441,6 @@ const polylineZAxis = new Cartesian3(0.0, 0.0, polylineAxisDistance);
  * @private
  */
 function debugDraw(that, frameState) {
-  const frameNumber = frameState.frameNumber;
   const traversal = that._traversal;
   const polylines = that._debugPolylines;
   polylines.removeAll();
@@ -2474,7 +2474,7 @@ function debugDraw(that, frameState) {
   }
 
   function drawTile(tile) {
-    if (!tile.isRenderable(frameNumber)) {
+    if (!traversal.isRenderable(tile)) {
       return;
     }
 

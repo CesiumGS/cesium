@@ -93,6 +93,12 @@ function VoxelTraversal(
    */
   this._debugPrint = false;
 
+  /**
+   * @type {Number}
+   * @private
+   */
+  this._frameNumber = 0;
+
   const shape = primitive._shape;
   const rootLevel = 0;
   const rootX = 0;
@@ -276,7 +282,6 @@ VoxelTraversal.simultaneousRequestCountMaximum = 50;
  * @param {Number} keyframeLocation
  * @param {Boolean} recomputeBoundingVolumes
  * @param {Boolean} pauseUpdate
- * @returns {Boolean} True if the voxel grid has any loaded data.
  */
 VoxelTraversal.prototype.update = function (
   frameState,
@@ -296,10 +301,11 @@ VoxelTraversal.prototype.update = function (
   }
 
   if (!pauseUpdate) {
+    this._frameNumber = frameState.frameNumber;
     const timestamp0 = getTimestamp();
     loadAndUnload(this, frameState);
     const timestamp1 = getTimestamp();
-    generateOctree(this, frameState);
+    generateOctree(this);
     const timestamp2 = getTimestamp();
 
     const debugStatistics = this._debugPrint;
@@ -315,10 +321,15 @@ VoxelTraversal.prototype.update = function (
       );
     }
   }
+};
 
-  const rootNode = this.rootNode;
-  const frameNumber = frameState.frameNumber;
-  return rootNode.isRenderable(frameNumber);
+/**
+ * Check if a node is renderable.
+ * @param {SpatialNode} tile
+ * @returns {Boolean}
+ */
+VoxelTraversal.prototype.isRenderable = function (tile) {
+  return tile.isRenderable(this._frameNumber);
 };
 
 /**
@@ -508,7 +519,7 @@ function mapInfiniteRangeToZeroOne(x) {
  * @private
  */
 function loadAndUnload(that, frameState) {
-  const frameNumber = frameState.frameNumber;
+  const frameNumber = that._frameNumber;
   const primitive = that._primitive;
   const shape = primitive._shape;
   const voxelDimensions = primitive._provider.dimensions;
@@ -1402,10 +1413,10 @@ const GpuOctreeFlag = {
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
  */
-function generateOctree(that, frameState) {
+function generateOctree(that) {
   const keyframeLocation = that._keyframeLocation;
   const useLeafNodes = that._useLeafNodeTexture;
-  const frameNumber = frameState.frameNumber;
+  const frameNumber = that._frameNumber;
 
   let internalNodeCount = 0;
   let leafNodeCount = 0;
