@@ -11,6 +11,7 @@
 - Added support for animations in `ModelExperimental`. [#10314](https://github.com/CesiumGS/cesium/pull/10314)
 - Improved rendering of ground and sky atmosphere. [#10063](https://github.com/CesiumGS/cesium/pull/10063)
 - Prevent text selection in the Timeline [#10325](https://github.com/CesiumGS/cesium/pull/10325)
+- Added `debugWireframe` to `ModelExperimental`. [#10332](https://github.com/CesiumGS/cesium/pull/10332)
 
 ##### Fixes :wrench:
 
