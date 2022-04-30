@@ -150,7 +150,7 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",
-    "run_terrain_trace": "node Apps/Sandcastle/puppeteer.js",
-    "parse_traces": "node Apps/Sandcastle/parse_traces.js"
+    "fast-picking-run-puppeteer": "node Apps/Sandcastle/fast-picking-run-puppeteer.js",
+    "fast-picking-analyze-results": "node Apps/Sandcastle/fast-picking-analyze-results.js"
   }
 }

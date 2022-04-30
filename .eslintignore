@@ -11,6 +11,8 @@ Specs/jasmine/**
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
+Apps/Sandcastle/fast-picking-analyze-results.js
+Apps/Sandcastle/fast-picking-run-puppeteer.js
 Apps/Sandcastle/gallery/gallery-index.js
 index.html
 index.release.html
