@@ -142,7 +142,7 @@ function rayIntersectOctree(
   // find all the nodes which intersect the ray
   const hits = [];
 
-  const queue = [node];
+  let queue = [node];
   const intersections = [];
   while (queue.length) {
     const n = queue.pop();
@@ -169,7 +169,7 @@ function rayIntersectOctree(
           tMax: intersection.tMax,
         });
       } else {
-        queue.push(...n.children);
+        queue = queue.concat(n.children);
       }
     }
   }

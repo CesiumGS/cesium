@@ -293,7 +293,8 @@
             const trianglePolygons = [];
             const trianglePolygonOutlines = [];
             triangles = triangles || [];
-            for (const triangleIdx of triangles) {
+            for (let i = 0; i < triangles.length; i++) {
+              const triangleIdx = triangles[i];
               const v0 = new Cesium.Cartesian3();
               const v1 = new Cesium.Cartesian3();
               const v2 = new Cesium.Cartesian3();
@@ -351,7 +352,7 @@
 
           function drawOctreeLayer(prims, level) {
             prims.removeAll();
-            if (level == null) {
+            if (level === null || level === undefined) {
               return;
             }
             const root =
@@ -374,9 +375,12 @@
               return n.level === level;
             });
 
-            let i = 0;
-            for (const n of nodesToDraw) {
-              const color = Cesium.Color.fromCssColorString(colors[i % 8]);
+            let colorCycleIndex = 0;
+            for (let j = 0; j < nodesToDraw.length; j++) {
+              const n = nodesToDraw[j];
+              const color = Cesium.Color.fromCssColorString(
+                colors[colorCycleIndex % 8]
+              );
 
               const isSpecial = nodeHits.some(function (h) {
                 return (
@@ -396,7 +400,7 @@
                 root._triangleVerticesCallback,
                 isSpecial
               );
-              i++;
+              colorCycleIndex++;
             }
           }
 
