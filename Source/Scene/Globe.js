@@ -828,7 +828,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * Get the height of the surface at a given cartographic.
  *
  * @param {Cartographic} cartographic The cartographic for which to find the height.
- * @param {FrameState} frameState the current frame state
+ * @param frameState the current frame state; this is a private class though, available via scene.frameState if you want
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
 Globe.prototype.getHeight = function (cartographic, frameState) {
