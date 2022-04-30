@@ -16,6 +16,7 @@ const invalidIntersection = Number.MAX_VALUE;
  * @param {Cartesian3} v2
  * @param {Boolean} cullBackFaces
  * @returns {Number} t
+ * @private
  */
 function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
   const t = IntersectionTests.rayTriangleParametric(
