@@ -370,7 +370,7 @@ describe("Scene/GlobeSurfaceTile", function () {
               0.5517155343926082
             )
           );
-          const pickResult = tile.data.pick(ray, undefined, undefined, true);
+          const pickResult = tile.data.pick(ray, frameState, undefined, true);
           const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
             pickResult
           );
@@ -401,7 +401,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           const cullBackFaces = false;
           const pickResult = tile.data.pick(
             ray,
-            undefined,
+            frameState,
             undefined,
             cullBackFaces
           );
@@ -430,7 +430,7 @@ describe("Scene/GlobeSurfaceTile", function () {
           const cullBackFaces = false;
           const pickResult = tile.data.pick(
             ray,
-            undefined,
+            frameState,
             undefined,
             cullBackFaces
           );
