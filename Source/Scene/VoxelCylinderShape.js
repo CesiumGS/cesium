@@ -382,7 +382,7 @@ VoxelCylinderShape.prototype.update = function (
     shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MIN"] = intersectionCount;
     intersectionCount += 1;
 
-    shaderUniforms.cylinderInverseMinRadiusUv =
+    shaderUniforms.cylinderUvToRenderRadiusMin =
       renderMaxRadius / renderMinRadius;
   }
   if (!isDefaultMaxRadiusRender) {
