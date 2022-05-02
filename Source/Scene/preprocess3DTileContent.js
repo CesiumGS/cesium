@@ -68,6 +68,13 @@ export default function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
+  if (defined(json.type) && json.type === "Polygon") {
+    return {
+      contentType: Cesium3DTileContentType.GEOJSON,
+      jsonPayload: json,
+    };
+  }
+
   throw new RuntimeError("Invalid tile content.");
 }
 

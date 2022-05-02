@@ -7,6 +7,7 @@ import defined from "../../Core/defined.js";
 import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import GeoJsonLoader from "../GeoJsonLoader.js";
 import GltfLoader from "../GltfLoader.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
@@ -1609,6 +1610,43 @@ ModelExperimental.fromI3dm = function (options) {
     ModelExperimentalType.TILE_I3DM,
     options
   );
+  const model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/**
+ * <p>
+ * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
+ * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+ * </p>
+ * <p>
+ * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a GeoJSON file.
+ * @returns {ModelExperimental} The newly created model.
+ */
+ModelExperimental.fromGeoJson = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.json", options.json);
+  //>>includeEnd('debug');
+
+  const jsonResource = Resource.createIfNeeded(options.json);
+
+  const loaderOptions = {
+    json: jsonResource,
+  };
+  const loader = new GeoJsonLoader(loaderOptions);
+  options.resource = jsonResource; // HACK
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.GEOJSON,
+    options
+  );
+  // const modelOptions = {
+  //   resource: Resource.createIfNeeded(options.json)
+  // }
   const model = new ModelExperimental(modelOptions);
   return model;
 };

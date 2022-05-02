@@ -55,6 +55,14 @@ const ModelExperimentalType = {
    * @constant
    */
   TILE_PNTS: "PNTS",
+
+  /**
+   * A GeoJson
+   *
+   * @type {String}
+   * @constant
+   */
+  GEOJSON: "GEOJSON",
 };
 
 /**
