@@ -1551,8 +1551,7 @@ void traverseOctreeDownwards(in vec3 positionUv, inout ivec4 octreeCoords, inout
     }
 }
 
-void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, out float levelStepMult, out ivec4 octreeCoords, out int parentOctreeIndex, out SampleData sampleDatas[SAMPLE_COUNT]) {
-    levelStepMult = 1.0;
+void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, out float stepT, out ivec4 octreeCoords, out int parentOctreeIndex, out SampleData sampleDatas[SAMPLE_COUNT]) {
     octreeCoords = ivec4(0);
     parentOctreeIndex = 0;
 
@@ -1564,17 +1563,18 @@ void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 
     if (rootData.flag == OCTREE_FLAG_LEAF) {
         // No child data, only the root tile has data
         getOctreeLeafData(rootData, sampleDatas);
+        stepT = u_stepSize;
     }
     else
     {
         traverseOctreeDownwards(positionUvShapeSpace, octreeCoords, parentOctreeIndex, sampleDatas);
-        levelStepMult = 1.0 / pow(2.0, float(octreeCoords.w));
-        vec3 boxStart = vec3(octreeCoords.xyz) * levelStepMult;
-        positionUvLocal = (positionUvShapeSpace - boxStart) / levelStepMult;
+        float dimAtLevel = pow(2.0, float(octreeCoords.w));
+        positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords);
+        stepT = u_stepSize / dimAtLevel;
     }
 }
 
-void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, inout float levelStepMult, inout ivec4 octreeCoords, inout int parentOctreeIndex, inout SampleData sampleDatas[SAMPLE_COUNT]) {
+void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, inout float stepT, inout ivec4 octreeCoords, inout int parentOctreeIndex, inout SampleData sampleDatas[SAMPLE_COUNT]) {
     float dimAtLevel = pow(2.0, float(octreeCoords.w));
     positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);    
     positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
@@ -1603,8 +1603,9 @@ void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpac
 
         // Go down tree
         traverseOctreeDownwards(positionUvShapeSpace, octreeCoords, parentOctreeIndex, sampleDatas);
-        levelStepMult = 1.0 / pow(2.0, float(octreeCoords.w));
-        positionUvLocal = positionUvShapeSpace / levelStepMult - vec3(octreeCoords.xyz);
+        float dimAtLevel = pow(2.0, float(octreeCoords.w));
+        positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
+        stepT = u_stepSize / dimAtLevel;
     }
 }
 
@@ -1642,14 +1643,11 @@ void main()
     // Traverse the tree from the start position
     vec3 positionUvShapeSpace;
     vec3 positionUvLocal;
-    float levelStepMult;
+    float stepT;
     ivec4 octreeCoords;
     int parentOctreeIndex;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctree(positionUv, positionUvShapeSpace, positionUvLocal, levelStepMult, octreeCoords, parentOctreeIndex, sampleDatas);
-    
-    // Adjust the step size based on the level in the tree
-    float stepT = u_stepSize * levelStepMult;
+    traverseOctree(positionUv, positionUvShapeSpace, positionUvLocal, stepT, octreeCoords, parentOctreeIndex, sampleDatas);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
@@ -1744,10 +1742,7 @@ void main()
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctree but is optimized for the common
         // case where the ray is in the same tile as the previous step.
-        traverseOctreeFromExisting(positionUv, positionUvShapeSpace, positionUvLocal, levelStepMult, octreeCoords, parentOctreeIndex, sampleDatas);
-
-        // Adjust the step size based on the level in the tree
-        stepT = u_stepSize * levelStepMult;
+        traverseOctreeFromExisting(positionUv, positionUvShapeSpace, positionUvLocal, stepT, octreeCoords, parentOctreeIndex, sampleDatas);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
