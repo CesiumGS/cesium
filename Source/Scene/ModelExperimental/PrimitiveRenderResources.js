@@ -237,7 +237,6 @@ export default function PrimitiveRenderResources(
     new BoundingSphere()
   );
 
-  //this.boundingSphere.radius = 100000000;
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.
