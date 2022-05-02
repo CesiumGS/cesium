@@ -1219,7 +1219,7 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  // This is done without a dirty flag so that the model matrix can be update in-place
+  // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;

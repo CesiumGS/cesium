@@ -487,7 +487,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   this._boundingSphere = BoundingSphere.transformWithoutScale(
     this._boundingSphere,
     this._axisCorrectionMatrix,
-    model._boundingSphere
+    this._boundingSphere
   );
 
   model._boundingSphere = BoundingSphere.transform(

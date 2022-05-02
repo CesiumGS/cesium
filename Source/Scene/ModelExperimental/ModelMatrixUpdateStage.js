@@ -56,14 +56,11 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     for (j = 0; j < drawCommandsLength; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
-      drawCommand.modelMatrix = Matrix4.clone(
-        sceneGraph._computedModelMatrix,
-        drawCommand.modelMatrix
-      ); /*Matrix4.multiplyTransformation(
+      drawCommand.modelMatrix = Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
         transformToRoot,
         drawCommand.modelMatrix
-      );*/
+      );
       drawCommand.boundingVolume = BoundingSphere.transform(
         runtimePrimitive.boundingSphere,
         drawCommand.modelMatrix,
