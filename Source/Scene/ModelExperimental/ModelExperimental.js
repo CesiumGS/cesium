@@ -674,7 +674,10 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere.
+   * Gets the model's bounding sphere in its local coordinate system. This does not
+   * take into account glTF animations, skins, or morph targets. It also does not
+   * account for {@link ModelExperimental#minimumPixelSize}.
+   *
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1243,7 +1246,7 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  // This is done without a dirty flag so that the model matrix can be update in-place
+  // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;

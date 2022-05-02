@@ -58,7 +58,11 @@ describe(
       "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
     const animatedTriangleUrl =
       "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
-
+    const animatedTriangleOffset = new HeadingPitchRange(
+      CesiumMath.PI / 2.0,
+      0,
+      2.0
+    );
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
 
@@ -333,12 +337,16 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
         },
         scene
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         expect(animationCollection).toBeDefined();
         expect(animationCollection.length).toBe(0);
+
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
         verifyRender(model, true, {
           zoomToModel: false,
         });
@@ -349,9 +357,13 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
         },
         scene
       ).then(function (model) {
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
+
         // The model rotates such that it leaves the view of the camera
         // halfway into its animation.
         const startTime = JulianDate.fromDate(
@@ -628,15 +640,16 @@ describe(
       });
     });
 
-    // see https://github.com/CesiumGS/cesium/pull/10115
-    xit("renders model with style", function () {
+    it("renders model with style", function () {
       let model;
       let style;
       return loadAndZoomToModelExperimental({ gltf: buildingsMetadata }, scene)
         .then(function (result) {
           model = result;
           // Renders without style.
-          verifyRender(model, true);
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
 
           // Renders with opaque style.
           style = new Cesium3DTileStyle({
@@ -648,7 +661,9 @@ describe(
         })
         .then(function () {
           model.style = style;
-          verifyRender(model, true);
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
 
           // Renders with translucent style.
           style = new Cesium3DTileStyle({
@@ -660,7 +675,9 @@ describe(
         })
         .then(function () {
           model.style = style;
-          verifyRender(model, true);
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
 
           // Does not render when style disables show.
           style = new Cesium3DTileStyle({
@@ -672,11 +689,15 @@ describe(
         })
         .then(function () {
           model.style = style;
-          verifyRender(model, false);
+          verifyRender(model, false, {
+            zoomToModel: false,
+          });
 
           // Render when style is removed.
           model.style = undefined;
-          verifyRender(model, true);
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
         });
     });
 
