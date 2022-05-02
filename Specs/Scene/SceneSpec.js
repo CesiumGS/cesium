@@ -127,12 +127,6 @@ describe(
       expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
     });
 
-    it("constructor default OIT to disabled if running on iPad or iOS", function () {
-      spyOn(FeatureDetection, "isIPadOrIOS").and.returnValue(true);
-      const scene = createScene();
-      expect(scene.orderIndependentTranslucency).toBe(false);
-    });
-
     it("constructor sets options", function () {
       const webglOptions = {
         alpha: true,
