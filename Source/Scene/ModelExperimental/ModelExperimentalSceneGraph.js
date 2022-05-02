@@ -364,6 +364,8 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
+const scratchMin = new Cartesian3();
+const scratchMax = new Cartesian3();
 /**
  * Generates the draw commands for each primitive in the model.
  *
@@ -418,6 +420,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
     }
 
+    const nodeTransform = runtimeNode.computedTransform;
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
@@ -444,14 +447,25 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         new BoundingSphere()
       );
 
+      const primitivePositionMin = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMin,
+        scratchMin
+      );
+      const primitivePositionMax = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMax,
+        scratchMax
+      );
+
       Cartesian3.minimumByComponent(
         modelPositionMin,
-        primitiveRenderResources.positionMin,
+        primitivePositionMin,
         modelPositionMin
       );
       Cartesian3.maximumByComponent(
         modelPositionMax,
-        primitiveRenderResources.positionMax,
+        primitivePositionMax,
         modelPositionMax
       );
 
@@ -461,7 +475,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
 
       runtimePrimitive.drawCommands = drawCommands;
-      this._drawCommands.push.apply(this._drawCommands, drawCommands);
     }
   }
 
@@ -474,7 +487,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   this._boundingSphere = BoundingSphere.transformWithoutScale(
     this._boundingSphere,
     this._axisCorrectionMatrix,
-    this._boundingSphere
+    model._boundingSphere
   );
 
   model._boundingSphere = BoundingSphere.transform(
@@ -482,7 +495,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     model.modelMatrix,
     model._boundingSphere
   );
-
   model._initialRadius = model._boundingSphere.radius;
   model._boundingSphere.radius *= model._clampedScale;
 };

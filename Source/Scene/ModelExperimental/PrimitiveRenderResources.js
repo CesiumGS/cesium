@@ -205,36 +205,27 @@ export default function PrimitiveRenderResources(
   );
 
   /**
-   * The minimum position value for this primitive with its node's transform applied.
+   * The minimum position value for this primitive.
    *
    * @type {Cartesian3}
    * @readonly
    *
    * @private
    */
-  this.positionMin = Matrix4.multiplyByPoint(
-    this.runtimeNode.computedTransform,
-    positionMinMax.min,
-    new Cartesian3()
-  );
+  this.positionMin = Cartesian3.clone(positionMinMax.min, new Cartesian3());
 
   /**
-   * The maximum position value for this primitive with its node's transform applied.
+   * The maximum position value for this primitive.
    *
    * @type {Cartesian3}
    * @readonly
    *
    * @private
    */
-  this.positionMax = Matrix4.multiplyByPoint(
-    this.runtimeNode.computedTransform,
-    positionMinMax.max,
-    new Cartesian3()
-  );
+  this.positionMax = Cartesian3.clone(positionMinMax.max, new Cartesian3());
 
   /**
-   * The bounding sphere that contains all the vertices in this primitive. This accounts
-   * for the transform of the node it belongs to.
+   * The bounding sphere that contains all the vertices in this primitive.
    *
    * @type {BoundingSphere}
    * @readonly
@@ -247,7 +238,7 @@ export default function PrimitiveRenderResources(
     new BoundingSphere()
   );
 
-  //this.boundingSphere.radius = 1000;
+  //this.boundingSphere.radius = 100000000;
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.

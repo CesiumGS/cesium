@@ -63,7 +63,7 @@ export default function buildDrawCommands(
 
   const sceneGraph = model.sceneGraph;
 
-  const modelMatrix = Matrix4.multiply(
+  const modelMatrix = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.runtimeNode.computedTransform,
     new Matrix4()
