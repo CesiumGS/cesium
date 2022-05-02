@@ -6,7 +6,6 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 

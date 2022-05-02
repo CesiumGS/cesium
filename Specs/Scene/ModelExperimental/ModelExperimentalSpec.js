@@ -25,7 +25,7 @@ import {
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
-fdescribe(
+describe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
     const webglStub = !!window.webglStub;
