@@ -1,0 +1,14 @@
+{
+  "id": "voxel",
+  "classes": {
+    "voxel": {
+      "properties": {
+        "a": {
+          "type": "FLOAT32",
+          "required": false
+        }
+      }
+    },
+    "tile": {}
+  }
+}

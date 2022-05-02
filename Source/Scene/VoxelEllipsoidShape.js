@@ -468,7 +468,6 @@ VoxelEllipsoidShape.prototype.update = function (
     hasLongitudeRangeOverHalfShape;
 
   // Latitude
-  const latitudeRangeRender = latitudeMaxRender - latitudeMinRender;
   const hasLatitudeMaxUnderHalfRender =
     latitudeMaxRender < -flatLatitudeEpsilon;
   const hasLatitudeMaxEqualHalfRender =

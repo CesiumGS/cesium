@@ -324,19 +324,16 @@ GltfVoxelProvider.prototype.update = function (frameState) {
  */
 GltfVoxelProvider.prototype.requestData = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tileX = defaultValue(options.tileX, 0);
-  const tileY = defaultValue(options.tileY, 0);
-  const tileZ = defaultValue(options.tileZ, 0);
-  const tileLevel = defaultValue(options.tileLevel, 0);
-
   //>>includeStart('debug', pragmas.debug);
   if (!this.ready) {
     throw new DeveloperError(
       "requestData must not be called before the provider is ready."
     );
   }
-  if (!(tileLevel === 0 && tileX === 0 && tileY === 0 && tileZ === 0)) {
-    throw new DeveloperError("GltfVoxelProvider can only have one tile");
+
+  const tileLevel = defaultValue(options.tileLevel, 0);
+  if (tileLevel > 0) {
+    return undefined;
   }
   //>>includeEnd('debug');
 

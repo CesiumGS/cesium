@@ -2221,9 +2221,6 @@ function buildDrawCommands(that, context) {
 
   that._drawCommand = drawCommand;
   that._drawCommandPick = drawCommandPick;
-
-  // console.log(drawCommand.shaderProgram._fragmentShaderText);
-  console.log("recompile");
 }
 
 /**
