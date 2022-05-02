@@ -7,6 +7,7 @@
   - [VSCode Guide](VSCodeGuide/README.md) - How to set up VSCode.
 - [Coding Guide](CodingGuide/README.md) - JavaScript and GLSL coding conventions and best practices for design, maintainability, and performance.
 - [Testing Guide](TestingGuide/README.md) - How to run the CesiumJS tests and write awesome tests.
+- [Performance Testing Guide](PerformanceTestingGuide) - Best practices for measuring runtime performance.
 - [Documentation Guide](DocumentationGuide/README.md) - How to write great reference documentation.
 - [Code Review Guide](CodeReviewGuide/README.md) - Best practices for reviewing code in pull requests.
 - [Presenter's Guide](PresentersGuide/README.md) - Tips for giving talks.
