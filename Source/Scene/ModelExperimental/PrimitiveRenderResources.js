@@ -188,15 +188,6 @@ export default function PrimitiveRenderResources(
    */
   this.primitiveType = primitive.primitiveType;
 
-  /**
-   * The minimum and maximum values of this primitive's POSITION attribute.
-   * Used to construct the bounding sphere for the model that the primitive belongs to.
-   *
-   * @type {Object}
-   * @readonly
-   *
-   * @private
-   */
   const positionMinMax = ModelExperimentalUtility.getPositionMinMax(
     primitive,
     nodeRenderResources.instancingTranslationMin,

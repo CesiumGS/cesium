@@ -364,8 +364,10 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
-const scratchMin = new Cartesian3();
-const scratchMax = new Cartesian3();
+const scratchModelPositionMin = new Cartesian3();
+const scratchModelPositionMax = new Cartesian3();
+const scratchPrimitivePositionMin = new Cartesian3();
+const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the draw commands for each primitive in the model.
  *
@@ -389,15 +391,17 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  const modelPositionMin = new Cartesian3(
+  const modelPositionMin = Cartesian3.fromElements(
     Number.MAX_VALUE,
     Number.MAX_VALUE,
-    Number.MAX_VALUE
+    Number.MAX_VALUE,
+    scratchModelPositionMin
   );
-  const modelPositionMax = new Cartesian3(
+  const modelPositionMax = Cartesian3.fromElements(
     -Number.MAX_VALUE,
     -Number.MAX_VALUE,
-    -Number.MAX_VALUE
+    -Number.MAX_VALUE,
+    scratchModelPositionMax
   );
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -450,12 +454,12 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       const primitivePositionMin = Matrix4.multiplyByPoint(
         nodeTransform,
         primitiveRenderResources.positionMin,
-        scratchMin
+        scratchPrimitivePositionMin
       );
       const primitivePositionMax = Matrix4.multiplyByPoint(
         nodeTransform,
         primitiveRenderResources.positionMax,
-        scratchMax
+        scratchPrimitivePositionMax
       );
 
       Cartesian3.minimumByComponent(
