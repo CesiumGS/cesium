@@ -105,6 +105,8 @@ export default function ModelExperimentalPrimitive(options) {
 
   /**
    * Update stages to apply to this primitive.
+   *
+   * @private
    */
   this.updateStages = [];
 

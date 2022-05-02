@@ -334,7 +334,11 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     return;
   }
 
-  if (this._loadAsTypedArray) {
+  // WebGL1 has no way to retrieve the contents of buffers that are
+  // on the GPU. Therefore, the index buffer is stored in CPU memory
+  // in case it needs to be referenced later.
+  const useWebgl2 = frameState.context.webgl2;
+  if (this._loadAsTypedArray || !useWebgl2) {
     // Unload everything except the typed array
     this.unload();
 

@@ -11,8 +11,6 @@ const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in 
 const int PRIMARY_STEPS = 16; // Number of times the ray from the camera to the world position (primary ray) is sampled.
 const int LIGHT_STEPS = 4; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
-vec2 HEIGHT_SCALE = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
-
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
  * the transmittance value for the ray.
@@ -64,6 +62,7 @@ void computeScattering(
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
     vec2 opticalDepth = vec2(0.0);
+    vec2 heightScale = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
 
     // Sample positions on the primary ray.
     for (int i = 0; i < PRIMARY_STEPS; i++) {
@@ -74,7 +73,7 @@ void computeScattering(
         float sampleHeight = length(samplePosition) - atmosphereInnerRadius;
 
         // Calculate and accumulate density of particles at the sample position.
-        vec2 sampleDensity = exp(-sampleHeight / HEIGHT_SCALE) * rayStepLength;
+        vec2 sampleDensity = exp(-sampleHeight / heightScale) * rayStepLength;
         opticalDepth += sampleDensity;
 
         // Generate ray from the sample position segment to the light source, up to the outer ring of the atmosphere.
@@ -96,7 +95,7 @@ void computeScattering(
             float lightHeight = length(lightPosition) - atmosphereInnerRadius;
 
             // Calculate density of photons at the light sample position.
-            lightOpticalDepth += exp(-lightHeight / HEIGHT_SCALE) * lightStepLength;
+            lightOpticalDepth += exp(-lightHeight / heightScale) * lightStepLength;
 
             // Increment distance on light ray.
             lightPositionLength += lightStepLength;

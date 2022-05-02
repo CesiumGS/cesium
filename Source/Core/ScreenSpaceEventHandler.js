@@ -893,6 +893,83 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 }
 
 /**
+ * @typedef {Object} ScreenSpaceEventHandler.PositionedEvent
+ *
+ * An Event that occurs at a single position on screen.
+ *
+ * @property {Cartesian2} position
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.PositionedEventCallback
+ *
+ * The callback invoked when a positioned event triggers an event listener.
+ *
+ * @param {ScreenSpaceEventHandler.PositionedEvent} event The event which triggered the listener
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.MotionEvent
+ *
+ * An Event that starts at one position and ends at another.
+ *
+ * @property {Cartesian2} startPosition
+ * @property {Cartesian2} endPosition
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.MotionEventCallback
+ *
+ * The callback invoked when a motion event triggers an event listener.
+ *
+ * @param {ScreenSpaceEventHandler.MotionEvent} event The event which triggered the listener
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.TwoPointEvent
+ *
+ * An Event that occurs at a two positions on screen.
+ *
+ * @property {Cartesian2} position1
+ * @property {Cartesian2} position2
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.TwoPointEventCallback
+ *
+ * The callback invoked when a two-point event triggers an event listener.
+ *
+ * @param {ScreenSpaceEventHandler.TwoPointEvent} event The event which triggered the listener
+ */
+
+/**
+ * @typedef {Object} ScreenSpaceEventHandler.TwoPointMotionEvent
+ *
+ * An Event that starts at a two positions on screen and moves to two other positions.
+ *
+ * @property {Cartesian2} position1
+ * @property {Cartesian2} position2
+ * @property {Cartesian2} previousPosition1
+ * @property {Cartesian2} previousPosition2
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.TwoPointMotionEventCallback
+ *
+ * The callback invoked when a two-point motion event triggers an event listener.
+ *
+ * @param {ScreenSpaceEventHandler.TwoPointMotionEvent} event The event which triggered the listener
+ */
+
+/**
+ * @callback ScreenSpaceEventHandler.WheelEventCallback
+ *
+ * The callback invoked when a mouse-wheel event triggers an event listener.
+ *
+ * @param {number} delta The amount that the mouse wheel moved
+ */
+
+/**
  * Handles user input events. Custom functions can be added to be executed on
  * when the user enters input.
  *
@@ -937,9 +1014,9 @@ function ScreenSpaceEventHandler(element) {
 /**
  * Set a function to be executed on an input event.
  *
- * @param {Function} action Function to be executed when the input event occurs.
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} action Function to be executed when the input event occurs.
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
@@ -966,11 +1043,11 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
 /**
  * Returns the function to be executed on an input event.
  *
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
- * @returns {Function} The function to be executed on an input event.
+ * @returns {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} The function to be executed on an input event.
  *
  * @see ScreenSpaceEventHandler#setInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
@@ -989,8 +1066,8 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
 /**
  * Removes the function to be executed on an input event.
  *
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
