@@ -1,5 +1,6 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -386,7 +387,17 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  const boundingSpheres = [];
+  const modelPositionMin = new Cartesian3(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE
+  );
+  const modelPositionMax = new Cartesian3(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE
+  );
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -429,10 +440,20 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
-        primitiveRenderResources.boundingSphere
+        primitiveRenderResources.boundingSphere,
+        new BoundingSphere()
       );
 
-      boundingSpheres.push(runtimePrimitive.boundingSphere);
+      Cartesian3.minimumByComponent(
+        modelPositionMin,
+        primitiveRenderResources.positionMin,
+        modelPositionMin
+      );
+      Cartesian3.maximumByComponent(
+        modelPositionMax,
+        primitiveRenderResources.positionMax,
+        modelPositionMax
+      );
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -440,10 +461,21 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
 
       runtimePrimitive.drawCommands = drawCommands;
+      this._drawCommands.push.apply(this._drawCommands, drawCommands);
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+  this._boundingSphere = BoundingSphere.fromCornerPoints(
+    modelPositionMin,
+    modelPositionMax,
+    new BoundingSphere()
+  );
+
+  this._boundingSphere = BoundingSphere.transformWithoutScale(
+    this._boundingSphere,
+    this._axisCorrectionMatrix,
+    this._boundingSphere
+  );
 
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,

@@ -135,6 +135,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.count).toBe(6);
     expect(primitiveResources.indices).toBe(primitive.indices);
     expect(primitiveResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
+    expect(primitiveResources.positionMin).toEqual(new Cartesian3(-1, -1, -1));
+    expect(primitiveResources.positionMax).toEqual(new Cartesian3(1, 1, 1));
     // The points are in a cube from -1, -1, -1 to 1, 1, 1. The center is
     // (0, 0, 0). The full diagonal is 2 * sqrt(3), so half is sqrt(3)
     expect(primitiveResources.boundingSphere.center).toEqualEpsilon(
@@ -163,7 +165,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.count).toBe(8);
     expect(primitiveResources.indices).not.toBeDefined();
     expect(primitiveResources.primitiveType).toBe(PrimitiveType.POINTS);
-
+    expect(primitiveResources.positionMin).toEqual(new Cartesian3(-2, -2, -2));
+    expect(primitiveResources.positionMax).toEqual(new Cartesian3(2, 2, 2));
     // The points are in a cube from -2, -2, -2 to 2, 2, 2. The center is
     // (0, 0, 0). The full diagonal is 4 * sqrt(3), so half is 2 * sqrt(3)
     expect(primitiveResources.boundingSphere.center).toEqualEpsilon(

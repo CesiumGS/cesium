@@ -1,10 +1,12 @@
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
@@ -166,6 +168,7 @@ export default function PrimitiveRenderResources(
     ? primitive.indices.count
     : ModelExperimentalUtility.getAttributeBySemantic(primitive, "POSITION")
         .count;
+
   /**
    * The indices for this primitive
    *
@@ -175,6 +178,7 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.indices = primitive.indices;
+
   /**
    * The primitive type such as TRIANGLES or POINTS
    *
@@ -184,18 +188,66 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.primitiveType = primitive.primitiveType;
+
   /**
-   * The bounding sphere that contains all the vertices in this primitive.
+   * The minimum and maximum values of this primitive's POSITION attribute.
+   * Used to construct the bounding sphere for the model that the primitive belongs to.
    *
-   * @type {BoundingSphere}
+   * @type {Object}
+   * @readonly
+   *
+   * @private
    */
-  this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+  const positionMinMax = ModelExperimentalUtility.getPositionMinMax(
     primitive,
-    Matrix4.IDENTITY,
-    nodeRenderResources.instancingTranslationMax,
-    nodeRenderResources.instancingTranslationMin
+    nodeRenderResources.instancingTranslationMin,
+    nodeRenderResources.instancingTranslationMax
   );
 
+  /**
+   * The minimum position value for this primitive with its node's transform applied.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionMin = Matrix4.multiplyByPoint(
+    this.runtimeNode.computedTransform,
+    positionMinMax.min,
+    new Cartesian3()
+  );
+
+  /**
+   * The maximum position value for this primitive with its node's transform applied.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionMax = Matrix4.multiplyByPoint(
+    this.runtimeNode.computedTransform,
+    positionMinMax.max,
+    new Cartesian3()
+  );
+
+  /**
+   * The bounding sphere that contains all the vertices in this primitive. This accounts
+   * for the transform of the node it belongs to.
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  this.boundingSphere = BoundingSphere.fromCornerPoints(
+    this.positionMin,
+    this.positionMax,
+    new BoundingSphere()
+  );
+
+  //this.boundingSphere.radius = 1000;
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.
