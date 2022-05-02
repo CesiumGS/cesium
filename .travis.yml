@@ -18,6 +18,7 @@ script:
   - npm pack &> /dev/null
 
   - npm --silent run buildApps
+  - npm --silent run build-specs
 
   - npm --silent run deploy-s3 -- -c 'public, max-age=1800' --confirm
   - npm --silent run deploy-status -- --status success --message Deployed

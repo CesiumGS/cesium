@@ -21,6 +21,8 @@ import {
   Color,
   StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
+  PrimitiveType,
+  WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -29,6 +31,13 @@ describe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
     const webglStub = !!window.webglStub;
+
+    const triangleWithoutIndicesUrl =
+      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+    const triangleStripUrl =
+      "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+    const triangleFanUrl =
+      "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
 
     const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
@@ -45,11 +54,22 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const morphPrimitivesTestUrl =
+      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
+    const animatedTriangleUrl =
+      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+
+    const pointCloudUrl =
+      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
 
     let scene;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene({
+        requestWebgl2: true,
+      });
     });
 
     afterAll(function () {
@@ -75,22 +95,90 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model, shouldRender, zoomToModel) {
+    const scratchBytes = [];
+
+    function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      zoomToModel = defaultValue(zoomToModel, true);
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+      const zoomToModel = defaultValue(options.zoomToModel, true);
       if (zoomToModel) {
         zoomTo(model);
       }
+
+      const backgroundColor = defaultValue(
+        options.backgroundColor,
+        Color.BLACK
+      );
+      scene.backgroundColor = backgroundColor;
+      const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
+
+      const time = defaultValue(
+        options.time,
+        JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"))
+      );
+
       expect({
         scene: scene,
-        time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+        time: time,
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(backgroundColorBytes);
         } else {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual(backgroundColorBytes);
         }
       });
+
+      scene.backgroundColor = Color.BLACK;
+    }
+
+    function verifyDebugWireframe(model, primitiveType, options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      const modelHasIndices = defaultValue(options.hasIndices, true);
+      const targetScene = defaultValue(options.scene, scene);
+
+      const commandList = scene.frameState;
+      const commandCounts = [];
+      let i, command;
+
+      targetScene.renderForSpecs();
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(primitiveType);
+        if (!modelHasIndices) {
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+        commandCounts.push(command.count);
+      }
+
+      model.debugWireframe = true;
+      expect(model._drawCommandsBuilt).toBe(false);
+
+      targetScene.renderForSpecs();
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(PrimitiveType.LINES);
+        expect(command.vertexArray.indexBuffer).toBeDefined();
+
+        const expectedCount = WireframeIndexGenerator.getWireframeIndicesCount(
+          primitiveType,
+          commandCounts[i]
+        );
+        expect(command.count).toEqual(expectedCount);
+      }
+
+      model.debugWireframe = false;
+      expect(model._drawCommandsBuilt).toBe(false);
+
+      targetScene.renderForSpecs();
+      for (i = 0; i < commandList.length; i++) {
+        command = commandList[i];
+        expect(command.primitiveType).toBe(primitiveType);
+        if (!modelHasIndices) {
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+        expect(command.count).toEqual(commandCounts[i]);
+      }
     }
 
     it("initializes and renders from Uint8Array", function () {
@@ -215,6 +303,76 @@ describe(
           .catch(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("renders glTF with morph targets", function () {
+      const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: morphPrimitivesTestUrl,
+          },
+          scene
+        ).then(function (model) {
+          // The background color must be changed because the model's texture
+          // contains black, which can confuse the test.
+          const renderOptions = {
+            backgroundColor: Color.BLUE,
+          };
+
+          // The model is a plane made three-dimensional by morph targets.
+          // If morph targets aren't supported, the model won't appear in the camera.
+          verifyRender(model, true, renderOptions);
+        });
+      });
+    });
+
+    it("renders model without animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene
+      ).then(function (model) {
+        const animationCollection = model.activeAnimations;
+        expect(animationCollection).toBeDefined();
+        expect(animationCollection.length).toBe(0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+      });
+    });
+
+    it("renders model with animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene
+      ).then(function (model) {
+        // The model rotates such that it leaves the view of the camera
+        // halfway into its animation.
+        const startTime = JulianDate.fromDate(
+          new Date("January 1, 2014 12:00:00 UTC")
+        );
+        const animationCollection = model.activeAnimations;
+        animationCollection.add({
+          index: 0,
+          startTime: startTime,
+        });
+        expect(animationCollection.length).toBe(1);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          time: startTime,
+        });
+
+        const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
+        verifyRender(model, false, {
+          zoomToModel: false,
+          time: time,
+        });
       });
     });
 
@@ -344,6 +502,86 @@ describe(
           expect(model.show).toEqual(true);
           verifyRender(model, true);
         });
+      });
+    });
+
+    it("debugWireframe works", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
+        });
+      });
+    });
+
+    it("debugWireframe works for WebGL2", function () {
+      if (!sceneWithWebgl2.context.webgl2) {
+        return;
+      }
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
+            scene: sceneWithWebgl2,
+          });
+        });
+      });
+    });
+
+    it("debugWireframe works for model without indices", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleWithoutIndicesUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
+          hasIndices: false,
+        });
+      });
+    });
+
+    it("debugWireframe works for model with triangle strip", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleStripUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLE_STRIP);
+      });
+    });
+
+    it("debugWireframe works for model with triangle fan", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: triangleFanUrl },
+        scene
+      ).then(function (model) {
+        verifyDebugWireframe(model, PrimitiveType.TRIANGLE_FAN);
+      });
+    });
+
+    it("debugWireframe ignores points", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: pointCloudUrl },
+        scene
+      ).then(function (model) {
+        const commandList = scene.frameState;
+        let i, command;
+        for (i = 0; i < commandList.length; i++) {
+          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
+
+        model.debugWireframe = true;
+        for (i = 0; i < commandList.length; i++) {
+          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          expect(command.vertexArray.indexBuffer).toBeUndefined();
+        }
       });
     });
 
@@ -790,8 +1028,8 @@ describe(
         };
 
         let result;
+        verifyRender(model, true);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
           result = rgba;
         });
 
@@ -897,9 +1135,13 @@ describe(
           },
           scene
         ).then(function (model) {
+          const renderOptions = {
+            zoomToModel: false,
+          };
+
           const expectedRadius = 0.866;
           scene.renderForSpecs();
-          verifyRender(model, true, false);
+          verifyRender(model, true, renderOptions);
 
           // Verify that minimumPixelSize didn't affect other parameters
           expect(model.scale).toEqual(1.0);
@@ -926,19 +1168,23 @@ describe(
         },
         scene
       ).then(function (model) {
+        const renderOptions = {
+          zoomToModel: false,
+        };
+
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
 
         model.minimumPixelSize = 0.0;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, false, false);
+        verifyRender(model, false, renderOptions);
 
         model.minimumPixelSize = 1;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
       });
     });
 
@@ -1321,6 +1567,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });
@@ -1355,6 +1602,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });

@@ -50,14 +50,6 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
-    const expectedTransform = Matrix4.multiplyTransformation(
-      runtimeNode.transformToRoot,
-      runtimeNode.transform,
-      new Matrix4()
-    );
-    expect(Matrix4.equals(nodeResources.transform, expectedTransform)).toBe(
-      true
-    );
     expect(nodeResources.attributes).toEqual([]);
     expect(nodeResources.renderStateOptions).toEqual({});
   });

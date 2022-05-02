@@ -180,7 +180,7 @@ function processAttribute(
 
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -234,6 +234,7 @@ function addAttributeToRenderResources(
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,
     vertexBuffer: attribute.buffer,
+    count: attribute.count,
     componentsPerAttribute: AttributeType.getNumberOfComponents(type),
     componentDatatype: componentDatatype,
     offsetInBytes: attribute.byteOffset,
@@ -346,10 +347,12 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   const variableName = attributeInfo.variableName;
 
   if (variableName === "tangentMC") {
-    // declare tangent as vec3, the w component is only used for computing
-    // the bitangent. Also, the tangent is in model coordinates in the vertex
-    // shader but in eye space in the fragment coordinates
+    // The w component of the tangent is only used for computing the bitangent,
+    // so it can be separated from the other tangent components.
     shaderBuilder.addStructField(vsStructId, "vec3", "tangentMC");
+    shaderBuilder.addStructField(vsStructId, "float", "tangentSignMC");
+    // The tangent is in model coordinates in the vertex shader
+    // but in eye space in the fragment coordinates
     shaderBuilder.addStructField(fsStructId, "vec3", "tangentEC");
   } else if (variableName === "normalMC") {
     // Normals are in model coordinates in the vertex shader but in eye
@@ -370,7 +373,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
+function updateInitializeAttributesFunction(shaderBuilder, attributeInfo) {
   if (attributeInfo.isQuantized) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
@@ -378,13 +381,14 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
 
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
-  let line;
+  const lines = [];
   if (variableName === "tangentMC") {
-    line = "attributes.tangentMC = a_tangentMC.xyz;";
+    lines.push("attributes.tangentMC = a_tangentMC.xyz;");
+    lines.push("attributes.tangentSignMC = a_tangentMC.w;");
   } else {
-    line = `attributes.${variableName} = a_${variableName};`;
+    lines.push(`attributes.${variableName} = a_${variableName};`);
   }
-  shaderBuilder.addFunctionLines(functionId, [line]);
+  shaderBuilder.addFunctionLines(functionId, lines);
 }
 
 function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
@@ -428,14 +432,6 @@ function handleBitangents(shaderBuilder, attributes) {
   }
 
   shaderBuilder.addDefine("HAS_BITANGENTS");
-
-  // compute the bitangent according to the formula in the glTF spec
-  shaderBuilder.addFunctionLines(
-    GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
-    [
-      "attributes.bitangentMC = normalize(cross(a_normalMC, a_tangentMC.xyz) * a_tangentMC.w);",
-    ]
-  );
 
   shaderBuilder.addVarying("vec3", "v_bitangentEC");
   shaderBuilder.addStructField(

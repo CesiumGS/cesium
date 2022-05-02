@@ -1,5 +1,4 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
 /**
@@ -41,20 +40,25 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
 function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
   let i, j;
 
-  const sceneGraphTransform = Matrix4.multiplyTransformation(
+  // Apply the current node's transform to the end of the chain
+  transformToRoot = Matrix4.multiplyTransformation(
     transformToRoot,
     runtimeNode.transform,
     new Matrix4()
   );
 
-  for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
+  runtimeNode.updateComputedTransform();
+
+  const primitivesLength = runtimeNode.runtimePrimitives.length;
+  for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
+    const drawCommandsLength = runtimePrimitive.drawCommands.length;
+    for (j = 0; j < drawCommandsLength; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
       drawCommand.modelMatrix = Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
-        sceneGraphTransform,
+        transformToRoot,
         drawCommand.modelMatrix
       );
       drawCommand.boundingVolume = BoundingSphere.transform(
@@ -65,20 +69,18 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     }
   }
 
-  if (defined(runtimeNode.children)) {
-    for (i = 0; i < runtimeNode.children.length; i++) {
-      const childRuntimeNode =
-        sceneGraph._runtimeNodes[runtimeNode.children[i]];
+  const childrenLength = runtimeNode.children.length;
+  for (i = 0; i < childrenLength; i++) {
+    const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
-      childRuntimeNode._transformToRoot = Matrix4.clone(
-        sceneGraphTransform,
-        childRuntimeNode._transformToRoot
-      );
+    // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+    childRuntimeNode._transformToRoot = Matrix4.clone(
+      transformToRoot,
+      childRuntimeNode._transformToRoot
+    );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph, sceneGraphTransform);
-      childRuntimeNode._transformDirty = false;
-    }
+    updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
+    childRuntimeNode._transformDirty = false;
   }
 }
 

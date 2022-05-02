@@ -81,7 +81,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "USE_DEQUANTIZATION",
       ]);
-      ShaderBuilderTester.expectHasVertexFunction(
+      ShaderBuilderTester.expectHasVertexFunctionUnordered(
         shaderBuilder,
         DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
         DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
@@ -236,7 +236,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "USE_DEQUANTIZATION",
       ]);
-      ShaderBuilderTester.expectHasVertexFunction(
+      ShaderBuilderTester.expectHasVertexFunctionUnordered(
         shaderBuilder,
         DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
         DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,

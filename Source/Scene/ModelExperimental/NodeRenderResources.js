@@ -1,6 +1,5 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
-import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -88,19 +87,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.runtimeNode = runtimeNode;
-
-  /**
-   * The transform from the node's local space to scene graph space for this node.
-   *
-   * @type {Matrix4}
-   *
-   * @private
-   */
-  this.transform = Matrix4.multiplyTransformation(
-    runtimeNode.transformToRoot,
-    runtimeNode.transform,
-    new Matrix4()
-  );
 
   /**
    * An array of objects describing vertex attributes that will eventually

@@ -122,14 +122,14 @@ function generateNatural(points) {
  * @param {Object} options Object with the following properties:
  * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
- * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
- * @param {Cartesian3[]} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
- * @param {Cartesian3[]} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
+ * @param {Cartesian3[]} options.points The array of control points.
+ * @param {Cartesian3[]} options.inTangents The array of incoming tangents at each control point.
+ * @param {Cartesian3[]} options.outTangents The array of outgoing tangents at each control point.
  *
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
  * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
- *
+ * @exception {DeveloperError} inTangents and outTangents must be of the same type as points.
  *
  * @example
  * // Create a G<sup>1</sup> continuous Hermite spline
@@ -159,10 +159,12 @@ function generateNatural(points) {
  *
  * const p0 = spline.evaluate(times[0]);
  *
- * @see CatmullRomSpline
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see LinearSpline
+ * @see CatmullRomSpline
  * @see QuaternionSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function HermiteSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -203,6 +205,18 @@ function HermiteSpline(options) {
 
   this._times = times;
   this._points = points;
+  this._pointType = Spline.getPointType(points[0]);
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    this._pointType !== Spline.getPointType(inTangents[0]) ||
+    this._pointType !== Spline.getPointType(outTangents[0])
+  ) {
+    throw new DeveloperError(
+      "inTangents and outTangents must be of the same type as points."
+    );
+  }
+  //>>includeEnd('debug');
+
   this._inTangents = inTangents;
   this._outTangents = outTangents;
 
@@ -225,7 +239,7 @@ Object.defineProperties(HermiteSpline.prototype, {
   },
 
   /**
-   * An array of {@link Cartesian3} control points.
+   * An array of control points.
    *
    * @memberof HermiteSpline.prototype
    *
@@ -239,7 +253,7 @@ Object.defineProperties(HermiteSpline.prototype, {
   },
 
   /**
-   * An array of {@link Cartesian3} incoming tangents at each control point.
+   * An array of incoming tangents at each control point.
    *
    * @memberof HermiteSpline.prototype
    *
@@ -253,7 +267,7 @@ Object.defineProperties(HermiteSpline.prototype, {
   },
 
   /**
-   * An array of {@link Cartesian3} outgoing tangents at each control point.
+   * An array of outgoing tangents at each control point.
    *
    * @memberof HermiteSpline.prototype
    *
@@ -346,7 +360,7 @@ HermiteSpline.createC1 = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Number[]} options.times The array of control point times.
  * @param {Cartesian3[]} options.points The array of control points.
- * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
+ * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
  *
  * @exception {DeveloperError} points and times are required.
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
@@ -410,14 +424,15 @@ HermiteSpline.createNaturalCubic = function (options) {
  *
  * @param {Object} options Object with the following properties:
  * @param {Number[]} options.times The array of control point times.
- * @param {Cartesian3[]} options.points The array of control points.
+ * @param {Number[]|Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
  * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
- * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
+ * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
  *
  * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
+ * @exception {DeveloperError} firstTangent and lastTangent must be of the same type as points.
  *
  * @example
  * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
@@ -463,6 +478,19 @@ HermiteSpline.createClampedCubic = function (options) {
   }
   //>>includeEnd('debug');
 
+  const PointType = Spline.getPointType(points[0]);
+
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    PointType !== Spline.getPointType(firstTangent) ||
+    PointType !== Spline.getPointType(lastTangent)
+  ) {
+    throw new DeveloperError(
+      "firstTangent and lastTangent must be of the same type as points."
+    );
+  }
+  //>>includeEnd('debug');
+
   if (points.length < 3) {
     return new LinearSpline({
       points: points,
@@ -482,23 +510,12 @@ HermiteSpline.createClampedCubic = function (options) {
   });
 };
 
+//prettier-ignore
 HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
-  2.0,
-  -3.0,
-  0.0,
-  1.0,
-  -2.0,
-  3.0,
-  0.0,
-  0.0,
-  1.0,
-  -2.0,
-  1.0,
-  0.0,
-  1.0,
-  -1.0,
-  0.0,
-  0.0
+  2.0, -3.0, 0.0, 1.0,
+  -2.0, 3.0, 0.0, 0.0,
+  1.0, -2.0, 1.0, 0.0,
+  1.0, -1.0, 0.0, 0.0
 );
 
 /**
@@ -548,19 +565,16 @@ HermiteSpline.prototype.clampTime = Spline.prototype.clampTime;
  *                             in the array <code>times</code>.
  */
 HermiteSpline.prototype.evaluate = function (time, result) {
-  if (!defined(result)) {
-    result = new Cartesian3();
-  }
   const points = this.points;
   const times = this.times;
   const inTangents = this.inTangents;
   const outTangents = this.outTangents;
 
-  const i = (this._lastTimeIndex = this.findTimeInterval(
-    time,
-    this._lastTimeIndex
-  ));
-  const u = (time - times[i]) / (times[i + 1] - times[i]);
+  this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
+  const i = this._lastTimeIndex;
+
+  const timesDelta = times[i + 1] - times[i];
+  const u = (time - times[i]) / timesDelta;
 
   const timeVec = scratchTimeVec;
   timeVec.z = u;
@@ -568,18 +582,39 @@ HermiteSpline.prototype.evaluate = function (time, result) {
   timeVec.x = timeVec.y * u;
   timeVec.w = 1.0;
 
+  // Coefficients are returned in the following order:
+  // start, end, out-tangent, in-tangent
   const coefs = Matrix4.multiplyByVector(
     HermiteSpline.hermiteCoefficientMatrix,
     timeVec,
     timeVec
   );
 
-  result = Cartesian3.multiplyByScalar(points[i], coefs.x, result);
-  Cartesian3.multiplyByScalar(points[i + 1], coefs.y, scratchTemp);
-  Cartesian3.add(result, scratchTemp, result);
-  Cartesian3.multiplyByScalar(outTangents[i], coefs.z, scratchTemp);
-  Cartesian3.add(result, scratchTemp, result);
-  Cartesian3.multiplyByScalar(inTangents[i], coefs.w, scratchTemp);
-  return Cartesian3.add(result, scratchTemp, result);
+  // Multiply the out-tangent and in-tangent values by the time delta.
+  coefs.z *= timesDelta;
+  coefs.w *= timesDelta;
+
+  const PointType = this._pointType;
+
+  if (PointType === Number) {
+    return (
+      points[i] * coefs.x +
+      points[i + 1] * coefs.y +
+      outTangents[i] * coefs.z +
+      inTangents[i] * coefs.w
+    );
+  }
+
+  if (!defined(result)) {
+    result = new PointType();
+  }
+
+  result = PointType.multiplyByScalar(points[i], coefs.x, result);
+  PointType.multiplyByScalar(points[i + 1], coefs.y, scratchTemp);
+  PointType.add(result, scratchTemp, result);
+  PointType.multiplyByScalar(outTangents[i], coefs.z, scratchTemp);
+  PointType.add(result, scratchTemp, result);
+  PointType.multiplyByScalar(inTangents[i], coefs.w, scratchTemp);
+  return PointType.add(result, scratchTemp, result);
 };
 export default HermiteSpline;
