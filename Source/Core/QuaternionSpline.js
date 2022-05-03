@@ -38,13 +38,16 @@ function createEvaluateFunction(spline) {
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
  *
+ * @exception {DeveloperError} points and times are required
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
- *
+
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see HermiteSpline
  * @see CatmullRomSpline
  * @see LinearSpline
- * @see WeightSpline
+ * @see MorphWeightSpline
  */
 function QuaternionSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -77,7 +77,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.renderStateOptions = clone(modelRenderResources.renderStateOptions);
 
-  // other properties
+  // Other properties.
   /**
    * A reference to the runtime node
    *
@@ -87,14 +87,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.runtimeNode = runtimeNode;
-  /**
-   * The computed model matrix for this node.
-   *
-   * @type {Matrix4}
-   *
-   * @private
-   */
-  this.modelMatrix = runtimeNode.transform;
+
   /**
    * An array of objects describing vertex attributes that will eventually
    * be used to create a {@link VertexArray} for the draw command. Attributes

@@ -4,6 +4,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -22,7 +23,7 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
+import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
@@ -30,7 +31,9 @@ import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
+import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
@@ -38,7 +41,6 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
-import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 
@@ -55,7 +57,17 @@ import Pass from "../Renderer/Pass.js";
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
-  const contentHeader = header.content;
+
+  const hasContentsArray = defined(header.contents);
+  const hasMultipleContents =
+    (hasContentsArray && header.contents.length > 1) ||
+    hasExtension(header, "3DTILES_multiple_contents");
+
+  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
+  const contentHeader =
+    hasContentsArray && !hasMultipleContents
+      ? header.contents[0]
+      : header.content;
 
   /**
    * The local transform of this tile.
@@ -196,15 +208,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   let content;
   let hasEmptyContent = false;
-  let hasMultipleContents = false;
   let contentState;
   let contentResource;
   let serverKey;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (hasExtension(header, "3DTILES_multiple_contents")) {
-    hasMultipleContents = true;
+  if (hasMultipleContents) {
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
     // relative to the tileset, so the base resource is used.
@@ -278,8 +288,23 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContent = false;
 
   /**
-   * When <code>true</code>, the tile has multiple contents via the
-   * <code>3DTILES_multiple_contents</code> extension.
+   * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
+   * for tiles transcoded by <code>Implicit3DTileContent</code>.
+   * <p>
+   * This is <code>false</code> until the tile's content is loaded.
+   * </p>
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.hasImplicitContentMetadata = false;
+
+  /**
+   * When <code>true</code>, the tile has multiple contents, either in the tile JSON (3D Tiles 1.1)
+   * or via the <code>3DTILES_multiple_contents</code> extension.
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
@@ -290,29 +315,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.hasMultipleContents = hasMultipleContents;
 
-  let metadata;
-  if (hasExtension(header, "3DTILES_metadata")) {
-    // This assumes that tileset.metadata has been created before any
-    // tiles are constructed.
-    const extension = header.extensions["3DTILES_metadata"];
-    const classes = tileset.metadata.schema.classes;
-    const tileClass = classes[extension.class];
-    metadata = new TileMetadata({
-      tile: extension,
-      class: tileClass,
-    });
-  }
-
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this
-   * stores a {@link TileMetadata} object for accessing tile metadata.
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
+   * this stores a {@link TileMetadata} object for accessing tile metadata.
    *
    * @type {TileMetadata}
    * @readonly
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  this.metadata = metadata;
+  this.metadata = findTileMetadata(tileset, header);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -390,7 +402,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * For implicit tiling, an ImplicitTileset object will be attached to a
-   * placeholder tile with the <code>3DTILES_implicit_tiling</code> extension.
+   * placeholder tile with either implicit tiling in the JSON (3D Tiles 1.1)
+   * or the <code>3DTILES_implicit_tiling</code> extension.
    * This way the {@link Implicit3DTileContent} can access the tile later once the content is fetched.
    *
    * @type {ImplicitTileset|undefined}
@@ -1048,11 +1061,11 @@ Cesium3DTile.prototype.requestContent = function () {
 };
 
 /**
- * The <code>3DTILES_multiple_contents</code> extension allows multiple
- * {@link Cesium3DTileContent} within a single tile. Due to differences
- * in request scheduling, this is handled separately.
+ * Multiple {@link Cesium3DTileContent}s are allowed within a single tile either through
+ * the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
+ * Due to differences in request scheduling, this is handled separately.
  * <p>
- * This implementation of <code>3DTILES_multiple_contents</code> does not
+ * This implementation of multiple contents does not
  * support tile expiry like requestSingleContent does. If this changes,
  * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
  * </p>
@@ -1066,13 +1079,15 @@ function requestMultipleContents(tile) {
   if (!defined(multipleContents)) {
     // Create the content object immediately, it will handle scheduling
     // requests for inner contents.
-    const extensionHeader =
-      tile._header.extensions["3DTILES_multiple_contents"];
+    const contentsJson = hasExtension(tile._header, "3DTILES_multiple_contents")
+      ? tile._header.extensions["3DTILES_multiple_contents"]
+      : tile._header;
+
     multipleContents = new Multiple3DTileContent(
       tileset,
       tile,
       tile._contentResource.clone(),
-      extensionHeader
+      contentsJson
     );
     tile._content = multipleContents;
   }
@@ -1083,8 +1098,8 @@ function requestMultipleContents(tile) {
   }
 
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = when.defer();
-  tile._contentReadyPromise = when.defer();
+  tile._contentReadyToProcessPromise = defer();
+  tile._contentReadyPromise = defer();
 
   multipleContents.contentsFetchedPromise
     .then(function () {
@@ -1124,7 +1139,7 @@ function requestMultipleContents(tile) {
         tile._contentReadyPromise.resolve(content);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       multipleContentFailed(tile, tileset, error);
     });
 
@@ -1174,8 +1189,8 @@ function requestSingleContent(tile) {
   const previousState = tile._contentState;
   const tileset = tile._tileset;
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = when.defer();
-  tile._contentReadyPromise = when.defer();
+  tile._contentReadyToProcessPromise = defer();
+  tile._contentReadyPromise = defer();
   ++tileset.statistics.numberOfPendingRequests;
 
   promise
@@ -1214,7 +1229,7 @@ function requestSingleContent(tile) {
         tile._contentReadyPromise.resolve(content);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (request.state === RequestState.CANCELLED) {
         // Cancelled due to low priority - try again later.
         tile._contentState = previousState;
@@ -1260,7 +1275,10 @@ function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-  if (preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE) {
+  if (
+    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE ||
+    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
+  ) {
     tile.hasImplicitContent = true;
   }
 
@@ -1288,8 +1306,25 @@ function makeContent(tile, arrayBuffer) {
     );
   }
 
-  const contentHeader = tile._header.content;
-  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
+  const contentHeader = defined(tile._header.contents)
+    ? tile._header.contents[0]
+    : tile._header.content;
+
+  if (tile.hasImplicitContentMetadata) {
+    const subtree = tile.implicitSubtree;
+    const coordinates = tile.implicitCoordinates;
+    content.metadata = subtree.getContentMetadataView(coordinates, 0);
+  } else if (!tile.hasImplicitContent) {
+    content.metadata = findContentMetadata(tileset, contentHeader);
+  }
+
+  const groupMetadata = findGroupMetadata(tileset, contentHeader);
+  if (defined(groupMetadata)) {
+    content.group = new Cesium3DContentGroup({
+      metadata: groupMetadata,
+    });
+  }
+
   return content;
 }
 
@@ -1644,6 +1679,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
+
   if (hasExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
     return new TileBoundingS2Cell(
       boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
@@ -1831,7 +1867,7 @@ function updateContent(tile, tileset, frameState) {
   const content = tile._content;
   const expiredContent = tile._expiredContent;
 
-  // expired content is not supported for 3DTILES_multiple_contents
+  // expired content is not supported for multiple contents
   if (!tile.hasMultipleContents && defined(expiredContent)) {
     if (!tile.contentReady) {
       // Render the expired content while the content loads

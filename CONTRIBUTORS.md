@@ -313,3 +313,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jon Beniston](https://github.com/srcejon)
 - [Ugnius Malukas](https://github.com/ugnelis)
 - [Justin Peter](https://github.com/TheMagicNacho)
+- [Gu Miao](https://github.com/Gu-Miao)
+- [Shen WeiQun](https://github.com/ShenWeiQun)
+- [四季留歌](https://github.com/onsummer)
+- [Yuri Chen](https://github.com/yurichen17)
+- [David Ferguson](https://github.com/jdfwarrior)

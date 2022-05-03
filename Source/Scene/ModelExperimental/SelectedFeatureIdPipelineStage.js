@@ -1,7 +1,9 @@
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/SelectedFeatureIdStageCommon.js";
 import ModelComponents from "../ModelComponents.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The selected feature ID pipeline stage is responsible for handling the
@@ -45,11 +47,12 @@ SelectedFeatureIdPipelineStage.process = function (
   const model = renderResources.model;
   const node = renderResources.runtimeNode.node;
   const selectedFeatureIds = getSelectedFeatureIds(model, node, primitive);
+  const shaderDestination = selectedFeatureIds.shaderDestination;
 
   shaderBuilder.addDefine(
     "HAS_SELECTED_FEATURE_ID",
     undefined,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   // Add a define to insert the variable to use.
@@ -58,7 +61,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     "SELECTED_FEATURE_ID",
     selectedFeatureIds.variableName,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   // Add a define to the shader to distinguish feature ID attributes from
@@ -67,10 +70,24 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     selectedFeatureIds.featureIdDefine,
     undefined,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   updateFeatureStruct(shaderBuilder);
+
+  const nullFeatureId = selectedFeatureIds.featureIds.nullFeatureId;
+  const uniformMap = renderResources.uniformMap;
+  if (defined(nullFeatureId)) {
+    shaderBuilder.addDefine(
+      "HAS_NULL_FEATURE_ID",
+      undefined,
+      shaderDestination
+    );
+    shaderBuilder.addUniform("int", "model_nullFeatureId", shaderDestination);
+    uniformMap.model_nullFeatureId = function () {
+      return nullFeatureId;
+    };
+  }
 
   if (selectedFeatureIds.shaderDestination === ShaderDestination.BOTH) {
     shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);
@@ -101,10 +118,15 @@ function getSelectedFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+      node.instances.featureIds,
+      model.instanceFeatureIdLabel
+    );
 
     if (defined(featureIds)) {
-      variableName = `instanceFeatureId_${model.instanceFeatureIdIndex}`;
+      // Either label could be used here, but prefer label as it may be more
+      // meaningful when debugging
+      variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
       return {
         featureIds: featureIds,
         variableName: variableName,
@@ -114,8 +136,12 @@ function getSelectedFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = primitive.featureIds[model.featureIdIndex];
-  variableName = `featureId_${model.featureIdIndex}`;
+  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    primitive.featureIds,
+    model.featureIdLabel
+  );
+  // again, prefer label for being more descriptive
+  variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
   return {
     featureIds: featureIds,
     variableName: variableName,

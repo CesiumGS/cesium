@@ -17,6 +17,7 @@ Thumbs.db
 /Source/Cesium.d.ts
 
 /Specs/SpecList.js
+/Specs/jasmine/**
 /Source/Shaders/**/*.js
 /Source/ThirdParty/Shaders/**/*.js
 /Source/Workers/**
@@ -44,7 +45,6 @@ Source/ThirdParty/rbush.js
 Source/ThirdParty/topojson.js
 Source/ThirdParty/Tween.js
 Source/ThirdParty/Uri.js
-Source/ThirdParty/when.js
 Source/ThirdParty/zip.js
 Source/ThirdParty/Workers/pako_inflate.min.js
 Source/ThirdParty/Workers/pako_deflate.min.js

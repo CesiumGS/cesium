@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import ArcGisMapServerImageryProvider from "./ArcGisMapServerImageryProvider.js";
 import BingMapsImageryProvider from "./BingMapsImageryProvider.js";
 import TileMapServiceImageryProvider from "./TileMapServiceImageryProvider.js";
@@ -175,7 +174,7 @@ function IonImageryProvider(options) {
 
   this._readyPromise = promise.then(function (endpoint) {
     if (endpoint.type !== "IMAGERY") {
-      return when.reject(
+      return Promise.reject(
         new RuntimeError(`Cesium ion asset ${assetId} is not an imagery asset.`)
       );
     }
@@ -190,7 +189,7 @@ function IonImageryProvider(options) {
       const factory = ImageryProviderMapping[externalType];
 
       if (!defined(factory)) {
-        return when.reject(
+        return Promise.reject(
           new RuntimeError(
             `Unrecognized Cesium ion imagery type: ${externalType}`
           )
@@ -499,10 +498,8 @@ IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */

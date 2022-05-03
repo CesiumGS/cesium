@@ -2,12 +2,12 @@ import {
   BufferLoader,
   clone,
   CompressedTextureBuffer,
+  defer,
   GltfBufferViewLoader,
   GltfImageLoader,
   FeatureDetection,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
@@ -95,7 +95,7 @@ describe("Scene/GltfImageLoader", function () {
       ktx2BasisMipmapBuffer = new Uint8Array(arrayBuffer);
     });
 
-    return when.all([ktx2BasisBufferPromise, ktx2BasisMipmapBufferPromise]);
+    return Promise.all([ktx2BasisBufferPromise, ktx2BasisMipmapBufferPromise]);
   });
 
   afterAll(function () {
@@ -167,10 +167,10 @@ describe("Scene/GltfImageLoader", function () {
   });
 
   it("rejects promise if buffer view fails to load", function () {
-    const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.reject(error)
-    );
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      const error = new Error("404 Not Found");
+      return Promise.reject(error);
+    });
 
     const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
@@ -186,7 +186,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load embedded image\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
@@ -195,7 +195,7 @@ describe("Scene/GltfImageLoader", function () {
 
   it("rejects promise if image format is not recognized", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(gifBuffer)
+      Promise.resolve(gifBuffer)
     );
 
     const imageLoader = new GltfImageLoader({
@@ -212,7 +212,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load embedded image\nImage format is not recognized"
         );
@@ -220,8 +220,10 @@ describe("Scene/GltfImageLoader", function () {
   });
 
   it("rejects promise if uri fails to load", function () {
-    const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(when.reject(error));
+    spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+      const error = new Error("404 Not Found");
+      return Promise.reject(error);
+    });
 
     const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
@@ -237,7 +239,7 @@ describe("Scene/GltfImageLoader", function () {
       .then(function (imageLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load image: image.png\n404 Not Found"
         );
@@ -246,7 +248,7 @@ describe("Scene/GltfImageLoader", function () {
 
   function loadsFromBufferView(imageBuffer) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(imageBuffer)
+      Promise.resolve(imageBuffer)
     );
 
     const imageLoader = new GltfImageLoader({
@@ -291,7 +293,7 @@ describe("Scene/GltfImageLoader", function () {
     }
 
     spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
-      when.resolve(ktx2BasisBuffer)
+      Promise.resolve(ktx2BasisBuffer)
     );
 
     const imageLoader = new GltfImageLoader({
@@ -318,7 +320,7 @@ describe("Scene/GltfImageLoader", function () {
     }
 
     spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
-      when.resolve(ktx2BasisMipmapBuffer)
+      Promise.resolve(ktx2BasisMipmapBuffer)
     );
 
     const imageLoader = new GltfImageLoader({
@@ -341,7 +343,7 @@ describe("Scene/GltfImageLoader", function () {
 
   it("loads from uri", function () {
     spyOn(Resource.prototype, "fetchImage").and.returnValue(
-      when.resolve(image)
+      Promise.resolve(image)
     );
 
     const imageLoader = new GltfImageLoader({
@@ -392,7 +394,7 @@ describe("Scene/GltfImageLoader", function () {
 
   it("destroys image loader", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(pngBuffer)
+      Promise.resolve(pngBuffer)
     );
 
     const unloadBufferView = spyOn(
@@ -424,7 +426,7 @@ describe("Scene/GltfImageLoader", function () {
   });
 
   function resolveBufferViewAfterDestroy(reject) {
-    const deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
@@ -471,15 +473,24 @@ describe("Scene/GltfImageLoader", function () {
     resolveBufferViewAfterDestroy(true);
   });
 
-  function resolveImageFromTypedArrayAfterDestroy(reject) {
+  function resolveImageFromTypedArrayAfterDestroy(rejectPromise) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(pngBuffer)
+      Promise.resolve(pngBuffer)
     );
 
-    const deferredPromise = when.defer();
-    spyOn(GltfImageLoader, "_loadImageFromTypedArray").and.returnValue(
-      deferredPromise.promise
-    );
+    let promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(image);
+      }
+    });
+    if (rejectPromise) {
+      promise = promise.catch(function (e) {
+        // swallow that error we just threw
+      });
+    }
+    spyOn(GltfImageLoader, "_loadImageFromTypedArray").and.returnValue(promise);
 
     // Load a copy of the buffer view into the cache so that the buffer view
     // promise resolves even if the image loader is destroyed
@@ -501,33 +512,38 @@ describe("Scene/GltfImageLoader", function () {
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
-    imageLoader.destroy();
+    return promise.then(function () {
+      imageLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(image);
-    }
+      expect(imageLoader.image).not.toBeDefined();
+      expect(imageLoader.isDestroyed()).toBe(true);
 
-    expect(imageLoader.image).not.toBeDefined();
-    expect(imageLoader.isDestroyed()).toBe(true);
-
-    ResourceCache.unload(bufferViewLoaderCopy);
+      ResourceCache.unload(bufferViewLoaderCopy);
+    });
   }
 
   it("handles resolving image from typed array after destroy", function () {
-    resolveImageFromTypedArrayAfterDestroy(false);
+    return resolveImageFromTypedArrayAfterDestroy(false);
   });
 
   it("handles rejecting image from typed array after destroy", function () {
-    resolveImageFromTypedArrayAfterDestroy(true);
+    return resolveImageFromTypedArrayAfterDestroy(true);
   });
 
-  function resolveUriAfterDestroy(reject) {
-    const deferredPromise = when.defer();
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveUriAfterDestroy(rejectPromise) {
+    let promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(image);
+      }
+    });
+    if (rejectPromise) {
+      promise = promise.catch(function (e) {
+        // swallow that error we just threw
+      });
+    }
+    spyOn(Resource.prototype, "fetchImage").and.returnValue(promise);
 
     const imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
@@ -540,23 +556,19 @@ describe("Scene/GltfImageLoader", function () {
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
-    imageLoader.destroy();
+    return promise.then(function () {
+      imageLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(image);
-    }
-
-    expect(imageLoader.image).not.toBeDefined();
-    expect(imageLoader.isDestroyed()).toBe(true);
+      expect(imageLoader.image).not.toBeDefined();
+      expect(imageLoader.isDestroyed()).toBe(true);
+    });
   }
 
   it("handles resolving uri after destroy", function () {
-    resolveUriAfterDestroy(false);
+    return resolveUriAfterDestroy(false);
   });
 
   it("handles rejecting uri after destroy", function () {
-    resolveUriAfterDestroy(true);
+    return resolveUriAfterDestroy(true);
   });
 });

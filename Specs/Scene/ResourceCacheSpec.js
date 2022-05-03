@@ -7,7 +7,6 @@ import {
   ResourceCache,
   ResourceCacheKey,
   SupportedImageFormats,
-  when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
@@ -248,10 +247,15 @@ describe(
       ],
     };
 
+    // Index buffers will load as typed arrays only in WebGL1.
+    // In order to load them as buffers, the scene must have WebGL2 enabled.
     let scene;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene();
+      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
@@ -264,7 +268,7 @@ describe(
 
     it("loads resource", function () {
       const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -334,7 +338,7 @@ describe(
 
     it("destroys resource when reference count reaches 0", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const destroy = spyOn(
@@ -391,7 +395,7 @@ describe(
 
     it("unload throws if resourceLoader has already been unloaded from the cache", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -415,7 +419,7 @@ describe(
 
     it("gets resource", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -475,7 +479,7 @@ describe(
 
     it("loads external schema", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -580,7 +584,7 @@ describe(
 
     it("loads external buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getExternalBufferCacheKey({
@@ -624,7 +628,7 @@ describe(
       const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
@@ -673,7 +677,7 @@ describe(
 
     it("loads buffer view", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getBufferViewCacheKey({
@@ -755,11 +759,11 @@ describe(
 
     it("loads draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getDracoCacheKey({
@@ -844,7 +848,7 @@ describe(
 
     it("loads vertex buffer from buffer view", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -886,11 +890,11 @@ describe(
 
     it("loads vertex buffer from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -936,7 +940,7 @@ describe(
 
     it("loads vertex buffer as typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -1048,9 +1052,9 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("loads index buffer from accessor", function () {
+    it("loads index buffer from accessor as buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1082,20 +1086,20 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer).toBeDefined();
+        }
+      );
     });
 
     it("loads index buffer from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1130,16 +1134,16 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer).toBeDefined();
+        }
+      );
     });
 
-    it("loads index buffer as typed array", function () {
+    it("loads index buffer as typed array using option", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1159,12 +1163,12 @@ describe(
 
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.typedArray).toBeDefined();
-        expect(indexBufferLoader.buffer).toBeUndefined();
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.typedArray).toBeDefined();
+          expect(indexBufferLoader.buffer).toBeUndefined();
+        }
+      );
     });
 
     it("loadIndexBuffer throws if gltf is undefined", function () {
@@ -1213,7 +1217,7 @@ describe(
 
     it("loads image", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const expectedCacheKey = ResourceCacheKey.getImageCacheKey({
@@ -1295,7 +1299,7 @@ describe(
 
     it("loads texture", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const expectedCacheKey = ResourceCacheKey.getTextureCacheKey({

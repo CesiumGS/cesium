@@ -12,10 +12,13 @@ import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
+import SkinningPipelineStage from "./SkinningPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -23,6 +26,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {ModelComponents.Node} options.node The node that this primitive belongs to.
  * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
@@ -32,10 +36,14 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
  */
 export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const primitive = options.primitive;
+  const node = options.node;
+  const model = options.model;
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.primitive", options.primitive);
-  Check.typeOf.object("options.node", options.node);
-  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.node", node);
+  Check.typeOf.object("options.model", model);
   //>>includeEnd('debug');
 
   /**
@@ -45,7 +53,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.primitive = options.primitive;
+  this.primitive = primitive;
 
   /**
    * A reference to the node this primitive belongs to.
@@ -54,7 +62,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.node = options.node;
+  this.node = node;
 
   /**
    * A reference to the model
@@ -63,7 +71,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.model = options.model;
+  this.model = model;
 
   /**
    * Pipeline stages to apply to this primitive. This
@@ -97,6 +105,8 @@ export default function ModelExperimentalPrimitive(options) {
 
   /**
    * Update stages to apply to this primitive.
+   *
+   * @private
    */
   this.updateStages = [];
 
@@ -119,6 +129,9 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const model = this.model;
   const customShader = model.customShader;
 
+  const hasMorphTargets =
+    defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
+  const hasSkinning = defined(node.skin);
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -139,6 +152,14 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 
   pipelineStages.push(GeometryPipelineStage);
 
+  if (hasMorphTargets) {
+    pipelineStages.push(MorphTargetsPipelineStage);
+  }
+
+  if (hasSkinning) {
+    pipelineStages.push(SkinningPipelineStage);
+  }
+
   if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
     pipelineStages.push(PointCloudAttenuationPipelineStage);
   }
@@ -151,7 +172,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     pipelineStages.push(MaterialPipelineStage);
   }
 
+  // These stages are always run to ensure structs
+  // are declared to avoid compilation errors.
   pipelineStages.push(FeatureIdPipelineStage);
+  pipelineStages.push(MetadataPipelineStage);
 
   if (featureIdFlags.hasPropertyTable) {
     pipelineStages.push(SelectedFeatureIdPipelineStage);
@@ -179,7 +203,10 @@ function inspectFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+      node.instances.featureIds,
+      model.instanceFeatureIdLabel
+    );
 
     if (defined(featureIds)) {
       return {
@@ -189,7 +216,10 @@ function inspectFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = primitive.featureIds[model.featureIdIndex];
+  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    primitive.featureIds,
+    model.featureIdLabel
+  );
   if (defined(featureIds)) {
     return {
       hasFeatureIds: true,

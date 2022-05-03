@@ -5,6 +5,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -25,7 +26,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Vector3DTileClampedPolylinesVS from "../Shaders/Vector3DTileClampedPolylinesVS.js";
 import Vector3DTileClampedPolylinesFS from "../Shaders/Vector3DTileClampedPolylinesFS.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import ClassificationType from "./ClassificationType.js";
@@ -114,7 +114,7 @@ function Vector3DTileClampedPolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._verticesPromise = undefined;
 
@@ -123,7 +123,7 @@ function Vector3DTileClampedPolylines(options) {
     .then(function () {
       updateMinimumMaximumHeights(that, that._rectangle, that._ellipsoid);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       this._readyPromise.reject(error);
     });
 }
@@ -279,44 +279,48 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    when(verticesPromise, function (result) {
-      if (polylines._keepDecodedPositions) {
-        polylines._decodedPositions = new Float64Array(result.decodedPositions);
-        polylines._decodedPositionOffsets = new Uint32Array(
-          result.decodedPositionOffsets
+    Promise.resolve(verticesPromise)
+      .then(function (result) {
+        if (polylines._keepDecodedPositions) {
+          polylines._decodedPositions = new Float64Array(
+            result.decodedPositions
+          );
+          polylines._decodedPositionOffsets = new Uint32Array(
+            result.decodedPositionOffsets
+          );
+        }
+
+        polylines._startEllipsoidNormals = new Float32Array(
+          result.startEllipsoidNormals
         );
-      }
+        polylines._endEllipsoidNormals = new Float32Array(
+          result.endEllipsoidNormals
+        );
+        polylines._startPositionAndHeights = new Float32Array(
+          result.startPositionAndHeights
+        );
+        polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
+          result.startFaceNormalAndVertexCornerIds
+        );
+        polylines._endPositionAndHeights = new Float32Array(
+          result.endPositionAndHeights
+        );
+        polylines._endFaceNormalAndHalfWidths = new Float32Array(
+          result.endFaceNormalAndHalfWidths
+        );
+        polylines._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
-      polylines._startEllipsoidNormals = new Float32Array(
-        result.startEllipsoidNormals
-      );
-      polylines._endEllipsoidNormals = new Float32Array(
-        result.endEllipsoidNormals
-      );
-      polylines._startPositionAndHeights = new Float32Array(
-        result.startPositionAndHeights
-      );
-      polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
-        result.startFaceNormalAndVertexCornerIds
-      );
-      polylines._endPositionAndHeights = new Float32Array(
-        result.endPositionAndHeights
-      );
-      polylines._endFaceNormalAndHalfWidths = new Float32Array(
-        result.endFaceNormalAndHalfWidths
-      );
-      polylines._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
+        const indexDatatype = result.indexDatatype;
+        polylines._indices =
+          indexDatatype === IndexDatatype.UNSIGNED_SHORT
+            ? new Uint16Array(result.indices)
+            : new Uint32Array(result.indices);
 
-      const indexDatatype = result.indexDatatype;
-      polylines._indices =
-        indexDatatype === IndexDatatype.UNSIGNED_SHORT
-          ? new Uint16Array(result.indices)
-          : new Uint32Array(result.indices);
-
-      polylines._ready = true;
-    }).otherwise(function (error) {
-      polylines._readyPromise.reject(error);
-    });
+        polylines._ready = true;
+      })
+      .catch(function (error) {
+        polylines._readyPromise.reject(error);
+      });
   }
 
   if (polylines._ready && !defined(polylines._va)) {

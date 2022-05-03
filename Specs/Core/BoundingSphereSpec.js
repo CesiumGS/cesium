@@ -10,6 +10,7 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { OrientedBoundingBox } from "../../Source/Cesium.js";
 import { Plane } from "../../Source/Cesium.js";
+import { Quaternion } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 
@@ -581,6 +582,56 @@ describe("Core/BoundingSphere", function () {
     }).toThrowDeveloperError();
   });
 
+  it("fromTransformation works with a result parameter", function () {
+    const translation = new Cartesian3(1.0, 2.0, 3.0);
+    const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, 0.4);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const expectedRadius = 0.5 * Cartesian3.magnitude(scale);
+    const transformation = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+
+    const sphere = new BoundingSphere();
+    const result = BoundingSphere.fromTransformation(transformation, sphere);
+
+    expect(result.center).toEqual(translation);
+    expect(result.radius).toEqualEpsilon(expectedRadius, CesiumMath.EPSILON14);
+    expect(result).toBe(sphere);
+  });
+
+  it("fromTransformation works without a result parameter", function () {
+    const translation = new Cartesian3(1.0, 2.0, 3.0);
+    const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, 0.4);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const expectedRadius = 0.5 * Cartesian3.magnitude(scale);
+    const transformation = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+
+    const sphere = BoundingSphere.fromTransformation(transformation);
+    expect(sphere.center).toEqual(translation);
+    expect(sphere.radius).toEqualEpsilon(expectedRadius, CesiumMath.EPSILON14);
+  });
+
+  it("fromTransformation works with a transformation that has zero scale", function () {
+    const transformation = Matrix4.fromScale(Cartesian3.ZERO);
+
+    const sphere = BoundingSphere.fromTransformation(transformation);
+
+    expect(sphere.center).toEqual(Cartesian3.ZERO);
+    expect(sphere.radius).toEqual(0.0);
+  });
+
+  it("throws from fromTransformation with undefined transformation parameter", function () {
+    expect(function () {
+      BoundingSphere.fromTransformation(undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("intersectPlane with sphere on the positive side of a plane", function () {
     const sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
     const normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
@@ -978,7 +1029,7 @@ describe("Core/BoundingSphere", function () {
     // account for this possibility.
     distanceFromCenter -= CesiumMath.EPSILON9;
 
-    expect(distanceFromCenter).toBeLessThanOrEqualTo(boundingSphere.radius);
+    expect(distanceFromCenter).toBeLessThanOrEqual(boundingSphere.radius);
   }
 
   it("fromRectangleWithHeights2D includes specified min and max heights", function () {

@@ -4,6 +4,7 @@ import { TimeInterval } from "../../Source/Cesium.js";
 import { TimeIntervalCollection } from "../../Source/Cesium.js";
 import { Entity } from "../../Source/Cesium.js";
 import { EntityCollection } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 
 describe("DataSources/EntityCollection", function () {
   function CollectionListener() {
@@ -471,7 +472,7 @@ describe("DataSources/EntityCollection", function () {
 
     expect(function () {
       entityCollection.add(entity2);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("contains returns true if in collection", function () {

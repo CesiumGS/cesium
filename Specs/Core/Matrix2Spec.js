@@ -1,6 +1,8 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix2 } from "../../Source/Cesium.js";
+import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
 describe("Core/Matrix2", function () {
   it("default constructor creates values array with all zeros.", function () {
@@ -17,48 +19,6 @@ describe("Core/Matrix2", function () {
     expect(matrix[Matrix2.COLUMN1ROW0]).toEqual(2.0);
     expect(matrix[Matrix2.COLUMN0ROW1]).toEqual(3.0);
     expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
-  });
-
-  it("can pack and unpack", function () {
-    const array = [];
-    const matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
-    Matrix2.pack(matrix, array);
-    expect(array.length).toEqual(Matrix2.packedLength);
-    expect(Matrix2.unpack(array)).toEqual(matrix);
-  });
-
-  it("can pack and unpack with offset", function () {
-    const packed = new Array(3);
-    const offset = 3;
-    const matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
-
-    Matrix2.pack(matrix, packed, offset);
-    expect(packed.length).toEqual(offset + Matrix2.packedLength);
-
-    const result = new Matrix2();
-    const returnedResult = Matrix2.unpack(packed, offset, result);
-    expect(returnedResult).toBe(result);
-    expect(result).toEqual(matrix);
-  });
-
-  it("pack throws with undefined matrix", function () {
-    const array = [];
-    expect(function () {
-      Matrix2.pack(undefined, array);
-    }).toThrowDeveloperError();
-  });
-
-  it("pack throws with undefined array", function () {
-    const matrix = new Matrix2();
-    expect(function () {
-      Matrix2.pack(matrix, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("unpack throws with undefined array", function () {
-    expect(function () {
-      Matrix2.unpack(undefined);
-    }).toThrowDeveloperError();
   });
 
   it("fromArray works without a result parameter", function () {
@@ -156,12 +116,6 @@ describe("Core/Matrix2", function () {
     const matrix = Matrix2.fromRotation(CesiumMath.toRadians(90.0), result);
     expect(matrix).toBe(result);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
-  });
-
-  it("fromRotation throws without angle", function () {
-    expect(function () {
-      Matrix2.fromRotation();
-    }).toThrowDeveloperError();
   });
 
   it("clone works without a result parameter", function () {
@@ -294,8 +248,42 @@ describe("Core/Matrix2", function () {
     expect(result).toEqual(expected);
   });
 
+  it("setScale works", function () {
+    const oldScale = new Cartesian2(2.0, 3.0);
+    const newScale = new Cartesian2(4.0, 5.0);
+
+    const matrix = Matrix2.fromScale(oldScale, new Matrix2());
+    const result = new Matrix2();
+
+    expect(Matrix2.getScale(matrix, new Cartesian2())).toEqual(oldScale);
+
+    const returnedResult = Matrix2.setScale(matrix, newScale, result);
+
+    expect(Matrix2.getScale(returnedResult, new Cartesian2())).toEqual(
+      newScale
+    );
+    expect(result).toBe(returnedResult);
+  });
+
+  it("setUniformScale works", function () {
+    const oldScale = new Cartesian2(2.0, 3.0);
+    const newScale = 4.0;
+
+    const matrix = Matrix2.fromScale(oldScale, new Matrix2());
+    const result = new Matrix2();
+
+    expect(Matrix2.getScale(matrix, new Cartesian2())).toEqual(oldScale);
+
+    const returnedResult = Matrix2.setUniformScale(matrix, newScale, result);
+
+    expect(Matrix2.getScale(returnedResult, new Cartesian2())).toEqual(
+      new Cartesian2(newScale, newScale)
+    );
+    expect(result).toBe(returnedResult);
+  });
+
   it("getScale works", function () {
-    const scale = new Cartesian2(1.0, 2.0);
+    const scale = new Cartesian2(2.0, 3.0);
     const result = new Cartesian2();
     const computedScale = Matrix2.getScale(Matrix2.fromScale(scale), result);
 
@@ -303,24 +291,52 @@ describe("Core/Matrix2", function () {
     expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
   });
 
-  it("getScale throws without a matrix", function () {
-    expect(function () {
-      Matrix2.getScale();
-    }).toThrowDeveloperError();
-  });
-
   it("getMaximumScale works", function () {
-    const m = Matrix2.fromScale(new Cartesian2(1.0, 2.0));
+    const m = Matrix2.fromScale(new Cartesian2(2.0, 3.0));
     expect(Matrix2.getMaximumScale(m)).toEqualEpsilon(
-      2.0,
+      3.0,
       CesiumMath.EPSILON14
     );
   });
 
-  it("getMaximumScale throws without a matrix", function () {
-    expect(function () {
-      Matrix2.getMaximumScale();
-    }).toThrowDeveloperError();
+  it("setRotation works", function () {
+    const scaleVec = new Cartesian2(2.0, 3.0);
+    const scale = Matrix2.fromScale(scaleVec, new Matrix2());
+    const rotation = Matrix2.fromRotation(0.5, new Matrix2());
+    const scaleRotation = Matrix2.setRotation(scale, rotation, new Matrix2());
+
+    const extractedScale = Matrix2.getScale(scaleRotation, new Cartesian2());
+    const extractedRotation = Matrix2.getRotation(scaleRotation, new Matrix2());
+
+    expect(extractedScale).toEqualEpsilon(scaleVec, CesiumMath.EPSILON14);
+    expect(extractedRotation).toEqualEpsilon(rotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation returns matrix without scale", function () {
+    const matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0]);
+    const expectedRotation = Matrix2.fromArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0),
+      3.0 / Math.sqrt(3.0 * 3.0 + 4.0 * 4.0),
+      4.0 / Math.sqrt(3.0 * 3.0 + 4.0 * 4.0),
+    ]);
+    const rotation = Matrix2.getRotation(matrix, new Matrix2());
+    expect(rotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation does not modify rotation matrix", function () {
+    const matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0]);
+    const duplicateMatrix = Matrix2.clone(matrix, new Matrix2());
+    const expectedRotation = Matrix2.fromArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0),
+      3.0 / Math.sqrt(3.0 * 3.0 + 4.0 * 4.0),
+      4.0 / Math.sqrt(3.0 * 3.0 + 4.0 * 4.0),
+    ]);
+    const result = Matrix2.getRotation(matrix, new Matrix2());
+    expect(result).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+    expect(matrix).toEqual(duplicateMatrix);
+    expect(matrix).not.toBe(result);
   });
 
   it("multiply works", function () {
@@ -407,6 +423,33 @@ describe("Core/Matrix2", function () {
     expect(m).toEqual(expected);
   });
 
+  it("multiplyByUniformScale works", function () {
+    const m = new Matrix2(2, 3, 4, 5);
+    const scale = 2.0;
+    const expected = Matrix2.multiply(
+      m,
+      Matrix2.fromUniformScale(scale),
+      new Matrix2()
+    );
+    const result = new Matrix2();
+    const returnedResult = Matrix2.multiplyByUniformScale(m, scale, result);
+    expect(returnedResult).toBe(result);
+    expect(result).toEqual(expected);
+  });
+
+  it('multiplyByUniformScale works with "this" result parameter', function () {
+    const m = new Matrix2(2, 3, 4, 5);
+    const scale = 2.0;
+    const expected = Matrix2.multiply(
+      m,
+      Matrix2.fromUniformScale(scale),
+      new Matrix2()
+    );
+    const returnedResult = Matrix2.multiplyByUniformScale(m, scale, m);
+    expect(returnedResult).toBe(m);
+    expect(m).toEqual(expected);
+  });
+
   it("multiplyByVector works", function () {
     const left = new Matrix2(1, 2, 3, 4);
     const right = new Cartesian2(5, 6);
@@ -459,12 +502,6 @@ describe("Core/Matrix2", function () {
     const returnedResult = Matrix2.transpose(matrix, matrix);
     expect(matrix).toBe(returnedResult);
     expect(matrix).toEqual(expected);
-  });
-
-  it("abs throws without a matrix", function () {
-    expect(function () {
-      return Matrix2.abs();
-    }).toThrowDeveloperError();
   });
 
   it("abs works", function () {
@@ -586,6 +623,12 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
+  it("fromRotation throws without angle", function () {
+    expect(function () {
+      Matrix2.fromRotation();
+    }).toThrowDeveloperError();
+  });
+
   it("clone returns undefined without matrix parameter", function () {
     expect(Matrix2.clone(undefined)).toBeUndefined();
   });
@@ -618,7 +661,7 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without of range index parameter", function () {
+  it("getColumn throws with out of range index parameter", function () {
     const matrix = new Matrix2();
     expect(function () {
       Matrix2.getColumn(matrix, 2);
@@ -639,7 +682,7 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without of range index parameter", function () {
+  it("setColumn throws with out of range index parameter", function () {
     const matrix = new Matrix2();
     const cartesian = new Cartesian2();
     expect(function () {
@@ -653,7 +696,7 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without of range index parameter", function () {
+  it("getRow throws with out of range index parameter", function () {
     const matrix = new Matrix2();
     expect(function () {
       Matrix2.getRow(matrix, 2);
@@ -674,11 +717,65 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without of range index parameter", function () {
+  it("setRow throws with out of range index parameter", function () {
     const matrix = new Matrix2();
     const cartesian = new Cartesian2();
     expect(function () {
       Matrix2.setRow(matrix, 2, cartesian);
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a matrix", function () {
+    expect(function () {
+      Matrix2.setScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a scale", function () {
+    expect(function () {
+      Matrix2.setScale(new Matrix2());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a matrix", function () {
+    expect(function () {
+      Matrix2.setUniformScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a scale", function () {
+    expect(function () {
+      Matrix2.setUniformScale(new Matrix2());
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a matrix", function () {
+    expect(function () {
+      Matrix2.getScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("getMaximumScale throws without a matrix", function () {
+    expect(function () {
+      Matrix2.getMaximumScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix2.setRotation();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a rotation", function () {
+    expect(function () {
+      return Matrix2.setRotation(new Matrix2());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix2.getRotation();
     }).toThrowDeveloperError();
   });
 
@@ -706,6 +803,19 @@ describe("Core/Matrix2", function () {
     const m = new Matrix2();
     expect(function () {
       Matrix2.multiplyByScale(m, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no matrix parameter", function () {
+    expect(function () {
+      Matrix2.multiplyByUniformScale(undefined, new Cartesian2());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no scale parameter", function () {
+    const m = new Matrix2();
+    expect(function () {
+      Matrix2.multiplyByUniformScale(m, undefined);
     }).toThrowDeveloperError();
   });
 
@@ -748,73 +858,109 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without result parameter", function () {
+  it("abs throws without a matrix", function () {
+    expect(function () {
+      return Matrix2.abs();
+    }).toThrowDeveloperError();
+  });
+
+  it("getColumn throws without a result parameter", function () {
     expect(function () {
       Matrix2.getColumn(new Matrix2(), 1);
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without result parameter", function () {
+  it("setColumn throws without a result parameter", function () {
     expect(function () {
       Matrix2.setColumn(new Matrix2(), 1, new Cartesian2());
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without result parameter", function () {
+  it("getRow throws without a result parameter", function () {
     expect(function () {
       Matrix2.getRow(new Matrix2(), 1);
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without result parameter", function () {
+  it("setRow throws without a result parameter", function () {
     expect(function () {
       Matrix2.setRow(new Matrix2(), 1, new Cartesian2());
     }).toThrowDeveloperError();
   });
 
-  it("getScale throws without result parameter", function () {
+  it("setScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix2.setScale(new Matrix2(), new Cartesian2());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix2.setUniformScale(new Matrix2(), 1.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a result parameter", function () {
     expect(function () {
       Matrix2.getScale(new Matrix2());
     }).toThrowDeveloperError();
   });
 
-  it("multiply throws without result parameter", function () {
+  it("setRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix2.setRotation(new Matrix2(), new Matrix2());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix2.getRotation(new Matrix2());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiply throws without a result parameter", function () {
     expect(function () {
       Matrix2.multiply(new Matrix2(), new Matrix2());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScale throws without result parameter", function () {
+  it("multiplyByScale throws without a result parameter", function () {
     expect(function () {
       Matrix2.multiplyByScale(new Matrix2(), new Cartesian2());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByVector throws without result parameter", function () {
+  it("multiplyByUniformScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix2.multiplyByUniformScale(new Matrix2(), new Cartesian2());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByVector throws without a result parameter", function () {
     expect(function () {
       Matrix2.multiplyByVector(new Matrix2(), new Cartesian2());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScalar throws without result parameter", function () {
+  it("multiplyByScalar throws without a result parameter", function () {
     expect(function () {
       Matrix2.multiplyByScalar(new Matrix2(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("negate throws without result parameter", function () {
+  it("negate throws without a result parameter", function () {
     expect(function () {
       Matrix2.negate(new Matrix2());
     }).toThrowDeveloperError();
   });
 
-  it("transpose throws without result parameter", function () {
+  it("transpose throws without a result parameter", function () {
     expect(function () {
       Matrix2.transpose(new Matrix2());
     }).toThrowDeveloperError();
   });
 
-  it("abs throws without result parameter", function () {
+  it("abs throws without a result parameter", function () {
     expect(function () {
       Matrix2.abs(new Matrix2());
     }).toThrowDeveloperError();
@@ -829,4 +975,16 @@ describe("Core/Matrix2", function () {
       expect(intArray[index]).toEqual(index + 1);
     }
   });
+
+  createPackableSpecs(Matrix2, new Matrix2(0, -1, 1, 0), [0, 1, -1, 0]);
+  createPackableArraySpecs(
+    Matrix2,
+    [
+      new Matrix2(1, 0, 0, 1),
+      new Matrix2(1, 2, 3, 4),
+      new Matrix2(0, 1, -1, 0),
+    ],
+    [1, 0, 0, 1, 1, 3, 2, 4, 0, -1, 1, 0],
+    4
+  );
 });

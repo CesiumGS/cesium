@@ -740,7 +740,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
 /**
  * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
- * tighly and fully encompases the box.
+ * tightly and fully encompasses the box.
  *
  * @param {Cartesian3} [corner] The minimum height over the rectangle.
  * @param {Cartesian3} [oppositeCorner] The maximum height over the rectangle.
@@ -875,6 +875,40 @@ BoundingSphere.fromOrientedBoundingBox = function (
 
   result.center = Cartesian3.clone(orientedBoundingBox.center, result.center);
   result.radius = Cartesian3.magnitude(u);
+
+  return result;
+};
+
+const scratchFromTransformationCenter = new Cartesian3();
+const scratchFromTransformationScale = new Cartesian3();
+
+/**
+ * Computes a tight-fitting bounding sphere enclosing the provided affine transformation.
+ *
+ * @param {Matrix4} transformation The affine transformation.
+ * @param {BoundingSphere} [result] The object onto which to store the result.
+ * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+ */
+BoundingSphere.fromTransformation = function (transformation, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("transformation", transformation);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new BoundingSphere();
+  }
+
+  const center = Matrix4.getTranslation(
+    transformation,
+    scratchFromTransformationCenter
+  );
+  const scale = Matrix4.getScale(
+    transformation,
+    scratchFromTransformationScale
+  );
+  const radius = 0.5 * Cartesian3.magnitude(scale);
+  result.center = Cartesian3.clone(center, result.center);
+  result.radius = radius;
 
   return result;
 };

@@ -6,6 +6,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -22,7 +23,6 @@ import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import ModelLoadResources from "./ModelLoadResources.js";
 import ModelUtility from "./ModelUtility.js";
@@ -155,7 +155,7 @@ function ClassificationModel(options) {
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.

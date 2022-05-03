@@ -6,6 +6,7 @@ import {
   Matrix4,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -74,23 +75,23 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     const resource = new Resource("http://example.com/test.b3dm");
     expect(function () {
       return loadB3dmArrayBuffer(resource, arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   }
 
   it("loads BatchedNoBatchIds", function () {
     return loadB3dm(noBatchIdsUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      const featureMetadata = components.featureMetadata;
-      expect(featureMetadata).toBeUndefined();
+      const structuralMetadata = components.structuralMetadata;
+      expect(structuralMetadata).toBeUndefined();
     });
   });
 
   it("loads BatchedWithBatchTable", function () {
     return loadB3dm(withBatchTableUrl).then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
-      const propertyTable = featureMetadata.getPropertyTable(0);
+      const structuralMetadata = components.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeDefined();
@@ -100,8 +101,8 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   it("loads BatchedWithBatchTableBinary", function () {
     return loadB3dm(withBatchTableBinaryUrl).then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
-      const propertyTable = featureMetadata.getPropertyTable(0);
+      const structuralMetadata = components.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeDefined();
@@ -111,8 +112,8 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   it("loads BatchedWithoutBatchTableUrl", function () {
     return loadB3dm(withoutBatchTableUrl).then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
-      const propertyTable = featureMetadata.getPropertyTable(0);
+      const structuralMetadata = components.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeUndefined();
@@ -122,8 +123,8 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   it("loads BatchedWithRtcCenterUrl", function () {
     return loadB3dm(withRtcCenterUrl).then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
-      const propertyTable = featureMetadata.getPropertyTable(0);
+      const structuralMetadata = components.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
 
@@ -136,8 +137,8 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   it("loads BatchTableHierarchy", function () {
     return loadB3dm(withBatchTableHierarchy).then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
-      const propertyTable = featureMetadata.getPropertyTable(0);
+      const structuralMetadata = components.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(30);
       expect(propertyTable._batchTableHierarchy).toBeDefined();

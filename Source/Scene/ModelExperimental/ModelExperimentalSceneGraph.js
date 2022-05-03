@@ -1,19 +1,25 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
+import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
+import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -29,9 +35,11 @@ import ShadowMode from "../ShadowMode.js";
  */
 export default function ModelExperimentalSceneGraph(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const components = options.modelComponents;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.model", options.model);
-  Check.typeOf.object("options.modelComponents", options.modelComponents);
+  Check.typeOf.object("options.modelComponents", components);
   //>>includeEnd('debug');
 
   /**
@@ -52,7 +60,7 @@ export default function ModelExperimentalSceneGraph(options) {
    *
    * @private
    */
-  this._modelComponents = options.modelComponents;
+  this._components = components;
 
   /**
    * Pipeline stages to apply across the model.
@@ -95,6 +103,28 @@ export default function ModelExperimentalSceneGraph(options) {
   this._rootNodes = [];
 
   /**
+   * The indices of the skinned nodes in the runtime nodes array. These refer
+   * to the nodes that will be manipulated by their skin, as opposed to the nodes
+   * acting as joints for the skin.
+   *
+   * @type {Number[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._skinnedNodes = [];
+
+  /**
+   * The runtime skins that affect nodes in the scene graph.
+   *
+   * @type {ModelExperimentalSkin[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._runtimeSkins = [];
+
+  /**
    * Once computed, the {@link DrawCommand}s that are used to render this
    * scene graph are stored here.
    *
@@ -118,7 +148,13 @@ export default function ModelExperimentalSceneGraph(options) {
   this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+
+  this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+    components.upAxis,
+    components.forwardAxis,
+    new Matrix4()
+  );
 
   initialize(this);
 }
@@ -134,7 +170,7 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
    */
   components: {
     get: function () {
-      return this._modelComponents;
+      return this._components;
     },
   },
 
@@ -151,6 +187,22 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
       return this._computedModelMatrix;
     },
   },
+
+  /**
+   * A matrix to correct from y-up in some model formats (e.g. glTF) to the
+   * z-up coordinate system Cesium uses.
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  axisCorrectionMatrix: {
+    get: function () {
+      return this._axisCorrectionMatrix;
+    },
+  },
+
   /**
    * The bounding sphere containing all the primitives in the scene graph.
    *
@@ -167,36 +219,85 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
-  const components = sceneGraph._modelComponents;
+  const components = sceneGraph._components;
   const scene = components.scene;
+
+  computeModelMatrix(sceneGraph);
+
+  const nodes = components.nodes;
+  const nodesLength = nodes.length;
+
+  // Initialize this array to be the same size as the nodes array in the model's file.
+  // This is so nodes can be stored by their index in the file, for future ease of access.
+  sceneGraph._runtimeNodes = new Array(nodesLength);
+
+  const rootNodes = scene.nodes;
+  const rootNodesLength = rootNodes.length;
+  const transformToRoot = Matrix4.IDENTITY;
+  for (let i = 0; i < rootNodesLength; i++) {
+    const rootNode = scene.nodes[i];
+
+    const rootNodeIndex = traverseSceneGraph(
+      sceneGraph,
+      rootNode,
+      transformToRoot
+    );
+
+    sceneGraph._rootNodes.push(rootNodeIndex);
+  }
+
+  // Handle skins after all runtime nodes are created
+  const skins = components.skins;
+  const runtimeSkins = sceneGraph._runtimeSkins;
+
+  const skinsLength = skins.length;
+  for (let i = 0; i < skinsLength; i++) {
+    const skin = skins[i];
+    runtimeSkins.push(
+      new ModelExperimentalSkin({
+        skin: skin,
+        sceneGraph: sceneGraph,
+      })
+    );
+  }
+
+  const skinnedNodes = sceneGraph._skinnedNodes;
+  const skinnedNodesLength = skinnedNodes.length;
+  for (let i = 0; i < skinnedNodesLength; i++) {
+    const skinnedNodeIndex = skinnedNodes[i];
+    const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
+
+    // Use the index of the skin in the model components to find
+    // the corresponding runtime skin.
+    const skin = nodes[skinnedNodeIndex].skin;
+    const skinIndex = skin.index;
+
+    skinnedNode._runtimeSkin = runtimeSkins[skinIndex];
+    skinnedNode.updateJointMatrices();
+  }
+}
+
+function computeModelMatrix(sceneGraph) {
+  const components = sceneGraph._components;
   const model = sceneGraph._model;
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
     components.transform,
-    new Matrix4()
+    sceneGraph._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph._computedModelMatrix,
-    components.upAxis,
-    components.forwardAxis
+    sceneGraph._axisCorrectionMatrix,
+    sceneGraph._computedModelMatrix
   );
 
-  const rootNodes = scene.nodes;
-  for (let i = 0; i < rootNodes.length; i++) {
-    const rootNode = scene.nodes[i];
-    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
-      rootNode
-    );
-    const rootNodeIndex = traverseSceneGraph(
-      sceneGraph,
-      rootNode,
-      rootNodeTransform
-    );
-
-    sceneGraph._rootNodes.push(rootNodeIndex);
-  }
+  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    sceneGraph._computedModelMatrix,
+    model.computedScale,
+    sceneGraph._computedModelMatrix
+  );
 }
 
 /**
@@ -205,62 +306,68 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} transform The current computed transform for this node.
+ * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, transform) {
+function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
+  const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
-  let i;
-  if (defined(node.children)) {
-    for (i = 0; i < node.children.length; i++) {
-      const childNode = node.children[i];
-      const childNodeTransform = Matrix4.multiply(
-        transform,
-        ModelExperimentalUtility.getNodeTransform(childNode),
-        new Matrix4()
-      );
+  const childrenLength = node.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    const childNode = node.children[i];
+    const childNodeTransformToRoot = Matrix4.multiplyTransformation(
+      transformToRoot,
+      transform,
+      new Matrix4()
+    );
 
-      const childIndex = traverseSceneGraph(
-        sceneGraph,
-        childNode,
-        childNodeTransform
-      );
-      childrenIndices.push(childIndex);
-    }
+    const childIndex = traverseSceneGraph(
+      sceneGraph,
+      childNode,
+      childNodeTransformToRoot
+    );
+    childrenIndices.push(childIndex);
   }
 
   // Process node and mesh primitives.
   const runtimeNode = new ModelExperimentalNode({
     node: node,
     transform: transform,
+    transformToRoot: transformToRoot,
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
 
-  if (defined(node.primitives)) {
-    for (i = 0; i < node.primitives.length; i++) {
-      runtimeNode.runtimePrimitives.push(
-        new ModelExperimentalPrimitive({
-          primitive: node.primitives[i],
-          node: node,
-          model: sceneGraph._model,
-        })
-      );
-    }
+  const primitivesLength = node.primitives.length;
+  for (let i = 0; i < primitivesLength; i++) {
+    runtimeNode.runtimePrimitives.push(
+      new ModelExperimentalPrimitive({
+        primitive: node.primitives[i],
+        node: node,
+        model: sceneGraph._model,
+      })
+    );
   }
 
-  sceneGraph._runtimeNodes.push(runtimeNode);
+  const index = node.index;
+  sceneGraph._runtimeNodes[index] = runtimeNode;
+  if (defined(node.skin)) {
+    sceneGraph._skinnedNodes.push(index);
+  }
 
-  // The position of the runtime node in the array.
-  return sceneGraph._runtimeNodes.length - 1;
+  return index;
 }
 
+const scratchModelPositionMin = new Cartesian3();
+const scratchModelPositionMax = new Cartesian3();
+const scratchPrimitivePositionMin = new Cartesian3();
+const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the draw commands for each primitive in the model.
  *
@@ -284,7 +391,19 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  const boundingSpheres = [];
+  const modelPositionMin = Cartesian3.fromElements(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    scratchModelPositionMin
+  );
+  const modelPositionMax = Cartesian3.fromElements(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    scratchModelPositionMax
+  );
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -305,6 +424,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
     }
 
+    const nodeTransform = runtimeNode.computedTransform;
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
@@ -327,10 +447,31 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
-        primitiveRenderResources.boundingSphere
+        primitiveRenderResources.boundingSphere,
+        new BoundingSphere()
       );
 
-      boundingSpheres.push(primitiveRenderResources.boundingSphere);
+      const primitivePositionMin = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMin,
+        scratchPrimitivePositionMin
+      );
+      const primitivePositionMax = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMax,
+        scratchPrimitivePositionMax
+      );
+
+      Cartesian3.minimumByComponent(
+        modelPositionMin,
+        primitivePositionMin,
+        modelPositionMin
+      );
+      Cartesian3.maximumByComponent(
+        modelPositionMax,
+        primitivePositionMax,
+        modelPositionMax
+      );
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -341,12 +482,25 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-  BoundingSphere.transform(
-    this._boundingSphere,
-    this._model.modelMatrix,
-    this._model._boundingSphere
+  this._boundingSphere = BoundingSphere.fromCornerPoints(
+    modelPositionMin,
+    modelPositionMax,
+    new BoundingSphere()
   );
+
+  this._boundingSphere = BoundingSphere.transformWithoutScale(
+    this._boundingSphere,
+    this._axisCorrectionMatrix,
+    this._boundingSphere
+  );
+
+  model._boundingSphere = BoundingSphere.transform(
+    this._boundingSphere,
+    model.modelMatrix,
+    model._boundingSphere
+  );
+  model._initialRadius = model._boundingSphere.radius;
+  model._boundingSphere.radius *= model._clampedScale;
 };
 
 /**
@@ -361,12 +515,31 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
+
+  if (model.imageBasedLighting.enabled) {
+    modelPipelineStages.push(ImageBasedLightingPipelineStage);
+  }
+
+  if (model.isClippingEnabled()) {
+    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
+
+  if (
+    defined(model.splitDirection) &&
+    model.splitDirection !== SplitDirection.NONE
+  ) {
+    modelPipelineStages.push(ModelSplitterPipelineStage);
+  }
 };
 
-ModelExperimentalSceneGraph.prototype.update = function (frameState) {
+ModelExperimentalSceneGraph.prototype.update = function (
+  frameState,
+  updateForAnimations
+) {
   let i, j, k;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -375,6 +548,10 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
       const nodeUpdateStage = runtimeNode.updateStages[j];
       nodeUpdateStage.update(runtimeNode, this, frameState);
+    }
+
+    if (updateForAnimations) {
+      this.updateJointMatrices();
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
@@ -388,23 +565,30 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
-  Matrix4.multiply(
-    this._computedModelMatrix,
-    this._modelComponents.transform,
-    this._computedModelMatrix
-  );
+  computeModelMatrix(this);
 
-  ModelExperimentalUtility.correctModelMatrix(
-    this._computedModelMatrix,
-    this._modelComponents.upAxis,
-    this._modelComponents.forwardAxis
-  );
-
+  // Mark all root nodes as dirty. Any and all children will be
+  // affected recursively in the update stage.
   const rootNodes = this._rootNodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    node.updateModelMatrix();
+    node._transformDirty = true;
+  }
+};
+
+/**
+ * Updates the joint matrices for the skins and nodes of the model.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
+  const skinnedNodes = this._skinnedNodes;
+  const length = skinnedNodes.length;
+
+  for (let i = 0; i < length; i++) {
+    const nodeIndex = skinnedNodes[i];
+    const runtimeNode = this._runtimeNodes[nodeIndex];
+    runtimeNode.updateJointMatrices();
   }
 };
 

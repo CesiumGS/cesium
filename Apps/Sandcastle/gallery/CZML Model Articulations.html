@@ -90,7 +90,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("test model");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             console.error(error);
           });
         //Sandcastle_End

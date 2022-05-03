@@ -41,7 +41,6 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
@@ -4767,14 +4766,16 @@ function load(dataSource, czml, options, clear) {
 
   DataSource.setLoading(dataSource, true);
 
-  return when(promise, function (czml) {
-    return loadCzml(dataSource, czml, sourceUri, clear);
-  }).otherwise(function (error) {
-    DataSource.setLoading(dataSource, false);
-    dataSource._error.raiseEvent(dataSource, error);
-    console.log(error);
-    return when.reject(error);
-  });
+  return Promise.resolve(promise)
+    .then(function (czml) {
+      return loadCzml(dataSource, czml, sourceUri, clear);
+    })
+    .catch(function (error) {
+      DataSource.setLoading(dataSource, false);
+      dataSource._error.raiseEvent(dataSource, error);
+      console.log(error);
+      return Promise.reject(error);
+    });
 }
 
 function loadCzml(dataSource, czml, sourceUri, clear) {
@@ -4825,7 +4826,7 @@ function DocumentPacket() {
 /**
  * @typedef {Object} CzmlDataSource.LoadOptions
  *
- * Initialization options for the `load` method.
+ * Initialization options for the <code>load</code> method.
  *
  * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
@@ -4986,9 +4987,21 @@ Object.defineProperties(CzmlDataSource.prototype, {
 });
 
 /**
+ * @callback CzmlDataSource.UpdaterFunction
+ *
+ * A CZML processing function that adds or updates entities in the provided
+ * collection based on the provided CZML packet.
+ *
+ * @param {Entity} entity
+ * @param {Object} packet
+ * @param {EntityCollection} entityCollection
+ * @param {string} sourceUri
+ */
+
+/**
  * Gets the array of CZML processing functions.
  * @memberof CzmlDataSource
- * @type Array
+ * @type {Array.<CzmlDataSource.UpdaterFunction>}
  */
 CzmlDataSource.updaters = [
   processBillboard, //
@@ -5020,8 +5033,8 @@ CzmlDataSource.updaters = [
  * Processes the provided url or CZML object without clearing any existing data.
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+ * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
+ *
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.process = function (czml, options) {
@@ -5033,7 +5046,7 @@ CzmlDataSource.prototype.process = function (czml, options) {
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
-
+ *
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.load = function (czml, options) {

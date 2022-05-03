@@ -13,6 +13,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 const ModelColorPipelineStage = {};
+ModelColorPipelineStage.name = "ModelColorPipelineStage"; // Helps with debugging
 
 ModelColorPipelineStage.COLOR_UNIFORM_NAME = "model_color";
 ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";

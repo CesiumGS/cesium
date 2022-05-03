@@ -31,7 +31,6 @@ import { ShadowMap } from "../../Source/Cesium.js";
 import { ShadowMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/ShadowMap",
@@ -48,6 +47,7 @@ describe(
 
     const boxUrl = "./Data/Models/Shadows/Box.gltf";
     const boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
+    const boxNoNormalsUrl = "./Data/Models/Shadows/BoxNoNormals.gltf";
     const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
     const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
 
@@ -57,6 +57,7 @@ describe(
 
     let boxExperimental;
     let boxTranslucentExperimental;
+    let boxNoNormalsExperimental;
 
     let room;
     let floor;
@@ -165,6 +166,15 @@ describe(
         })
       );
       modelPromises.push(
+        loadModelExperimental({
+          gltf: boxNoNormalsUrl,
+          modelMatrix: boxTransformExperimental,
+          show: false,
+        }).then(function (model) {
+          boxNoNormalsExperimental = model;
+        })
+      );
+      modelPromises.push(
         loadModel({
           url: boxUrl,
           modelMatrix: floorTransform,
@@ -205,7 +215,7 @@ describe(
       primitiveFloor = createPrimitive(floorTransform, 2.0, Color.RED);
       primitiveFloorRTC = createPrimitiveRTC(floorTransform, 2.0, Color.RED);
 
-      return when.all(modelPromises);
+      return Promise.all(modelPromises);
     });
 
     function createPrimitive(transform, size, color) {
@@ -573,6 +583,13 @@ describe(
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucentExperimental, floor);
+    });
+
+    it("model without normals casts shadows onto another model", function () {
+      boxNoNormalsExperimental.show = true;
+      floor.show = true;
+      createCascadedShadowMap();
+      verifyShadows(boxNoNormalsExperimental, floor);
     });
 
     it("model with cutout texture casts shadows onto another model", function () {
@@ -1358,7 +1375,7 @@ describe(
       }
 
       // When using WebGL, this value is 8. When using the stub, this value is 4.
-      expect(spy1.calls.count()).toBeLessThanOrEqualTo(8);
+      expect(spy1.calls.count()).toBeLessThanOrEqual(8);
       expect(spy2.calls.count()).toEqual(4);
 
       box.show = false;

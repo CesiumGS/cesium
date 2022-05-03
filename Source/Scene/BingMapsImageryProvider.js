@@ -2,6 +2,7 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,7 +12,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import BingMapsStyle from "./BingMapsStyle.js";
 import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -196,7 +196,7 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   let tileProtocol = this._tileProtocol;
 
@@ -301,12 +301,12 @@ function BingMapsImageryProvider(options) {
   function requestMetadata() {
     const promise = metadataResource.fetchJsonp("jsonp");
     BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   }
 
   const promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (defined(promise)) {
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   } else {
     requestMetadata();
   }
@@ -636,10 +636,8 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
@@ -663,14 +661,14 @@ BingMapsImageryProvider.prototype.requestImage = function (
   );
 
   if (defined(promise)) {
-    return promise.otherwise(function (error) {
+    return promise.catch(function (error) {
       // One cause of an error here is that the image we tried to load was zero-length.
       // This isn't actually a problem, since it indicates that there is no tile.
       // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
       if (defined(error.blob) && error.blob.size === 0) {
         return DiscardEmptyTilePolicy.EMPTY_IMAGE;
       }
-      return when.reject(error);
+      return Promise.reject(error);
     });
   }
 
@@ -686,10 +684,7 @@ BingMapsImageryProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- *                   It may also be undefined if picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 BingMapsImageryProvider.prototype.pickFeatures = function (
   x,

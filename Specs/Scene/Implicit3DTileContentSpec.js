@@ -1,6 +1,7 @@
 import {
   Batched3DModel3DTileContent,
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
@@ -30,6 +31,7 @@ describe(
     const tilesetResource = new Resource({
       url: "https://example.com/tileset.json",
     });
+
     const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
     };
@@ -48,14 +50,12 @@ describe(
           author: "Cesium",
         },
       },
-      extensions: {
-        "3DTILES_implicit_tiling": {
-          subdivisionScheme: "QUADTREE",
-          subtreeLevels: 2,
-          maximumLevel: 1,
-          subtrees: {
-            uri: "https://example.com/{level}/{x}/{y}.subtree",
-          },
+      implicitTiling: {
+        subdivisionScheme: "QUADTREE",
+        subtreeLevels: 2,
+        availableLevels: 2,
+        subtrees: {
+          uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
       },
       extras: {
@@ -63,11 +63,20 @@ describe(
       },
     };
 
-    const implicitTileset = new ImplicitTileset(
-      tilesetResource,
-      tileJson,
-      metadataSchema
-    );
+    let implicitTileset;
+    let rootCoordinates;
+
+    const quadtreeJson = {
+      tileAvailability: {
+        constant: 1,
+      },
+      contentAvailability: {
+        constant: 1,
+      },
+      childSubtreeAvailability: {
+        constant: 0,
+      },
+    };
 
     const quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
       tileAvailability: {
@@ -88,16 +97,6 @@ describe(
         isInternal: true,
       },
     }).subtreeBuffer;
-
-    const rootCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: implicitTileset.subdivisionScheme,
-      subtreeLevels: implicitTileset.subtreeLevels,
-      level: 0,
-      x: 0,
-      y: 0,
-      z: 0,
-    });
-
     function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
       const level = tile.implicitCoordinates.level;
       if (minLevel <= level && level <= maxLevel) {
@@ -126,6 +125,20 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
+      implicitTileset = new ImplicitTileset(
+        tilesetResource,
+        tileJson,
+        metadataSchema
+      );
+
+      rootCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitTileset.subdivisionScheme,
+        subtreeLevels: implicitTileset.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+      });
     });
 
     afterAll(function () {
@@ -153,11 +166,31 @@ describe(
       scene.primitives.removeAll();
     });
 
+    it("loads subtree using JSON", function () {
+      const content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeJson
+      );
+      return content.readyPromise.then(function () {
+        const expectedChildrenCounts = [4, 0, 0, 0, 0];
+        const tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+        expect(expectedChildrenCounts.length).toEqual(tiles.length);
+        for (let i = 0; i < tiles.length; i++) {
+          expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+        }
+      });
+    });
+
     it("expands subtree", function () {
       const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -178,6 +211,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -224,6 +258,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -274,6 +309,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -287,6 +323,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -300,6 +337,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -323,6 +361,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -344,6 +383,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -363,6 +403,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -385,6 +426,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -396,6 +438,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -437,6 +480,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -484,6 +528,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -506,6 +551,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -528,6 +574,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -576,6 +623,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -876,9 +924,9 @@ describe(
       });
     });
 
-    describe("3DTILES_multiple_contents", function () {
+    describe("multiple contents", function () {
       const implicitMultipleContentsUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
 
       it("a single content is transcoded as a regular tile", function () {
         return Cesium3DTilesTester.loadTileset(
@@ -891,14 +939,14 @@ describe(
           expect(transcodedRoot.content).toBeInstanceOf(
             Batched3DModel3DTileContent
           );
-          expect(transcodedRootHeader.content).toEqual({
+          expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
           expect(transcodedRootHeader.extensions).not.toBeDefined();
         });
       });
 
-      it("multiple contents are transcoded to a tile with a 3DTILES_multiple_contents extension", function () {
+      it("multiple contents are transcoded to a tile", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
@@ -914,8 +962,87 @@ describe(
           }
         });
       });
+    });
 
-      it("passes extensions through correctly", function () {
+    describe("3DTILES_multiple_contents", function () {
+      const implicitMultipleContentsLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0.json";
+
+      // Same as above tileset, but with "content" instead of "contents"
+      const implicitMultipleContentsLegacyWithContentUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0_content.json";
+
+      it("a single content is transcoded as a regular tile (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyUrl
+        ).then(function (tileset) {
+          // The root tile of this tileset only has one available content
+          const transcodedRoot = tileset.root.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
+          expect(transcodedRoot.content).toBeInstanceOf(
+            Batched3DModel3DTileContent
+          );
+          expect(transcodedRootHeader.contents[0]).toEqual({
+            uri: "ground/0/0/0.b3dm",
+          });
+          expect(transcodedRootHeader.extensions).not.toBeDefined();
+        });
+      });
+
+      it("a single content is transcoded as a regular tile (legacy with 'content')", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyWithContentUrl
+        ).then(function (tileset) {
+          // The root tile of this tileset only has one available content
+          const transcodedRoot = tileset.root.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
+          expect(transcodedRoot.content).toBeInstanceOf(
+            Batched3DModel3DTileContent
+          );
+          expect(transcodedRootHeader.contents[0]).toEqual({
+            uri: "ground/0/0/0.b3dm",
+          });
+          expect(transcodedRootHeader.extensions).not.toBeDefined();
+        });
+      });
+
+      it("multiple contents are transcoded to a tile (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyUrl
+        ).then(function (tileset) {
+          const childTiles = tileset.root.children[0].children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
+            const content = childTile.content;
+            expect(content).toBeInstanceOf(Multiple3DTileContent);
+
+            const childTileHeader = childTile._header;
+            expect(childTileHeader.content).not.toBeDefined();
+          }
+        });
+      });
+
+      it("multiple contents are transcoded to a tile (legacy with 'content')", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyWithContentUrl
+        ).then(function (tileset) {
+          const childTiles = tileset.root.children[0].children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
+            const content = childTile.content;
+            expect(content).toBeInstanceOf(Multiple3DTileContent);
+
+            const childTileHeader = childTile._header;
+            expect(childTileHeader.content).not.toBeDefined();
+          }
+        });
+      });
+
+      it("passes extensions through correctly (legacy)", function () {
         const originalLoadJson = Cesium3DTileset.loadJson;
         const metadataExtension = {
           group: "buildings",
@@ -928,33 +1055,38 @@ describe(
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
             const multiContent =
               tilesetJson.root.extensions["3DTILES_multiple_contents"];
-            multiContent.content.forEach(function (content) {
+            multiContent.contents.forEach(function (content) {
               content.extensions = {
                 "3DTILES_metadata": metadataExtension,
               };
             });
 
             tilesetJson.root.extensions["3DTILES_extension"] = otherExtension;
+            tilesetJson.extensionsUsed.push("3DTILES_metadata");
+            tilesetJson.extensions = {};
+            tilesetJson.extensions["3DTILES_metadata"] = {
+              schema: {},
+            };
             return tilesetJson;
           });
         });
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           // the placeholder tile does not have any extensions.
           const placeholderTile = tileset.root;
           const placeholderHeader = placeholderTile._header;
           expect(placeholderHeader.extensions).not.toBeDefined();
-          expect(placeholderHeader.content.extensions).not.toBeDefined();
+          expect(placeholderHeader.contents[0].extensions).not.toBeDefined();
 
           const transcodedRoot = placeholderTile.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRootHeader.extensions).toEqual({
             "3DTILES_extension": otherExtension,
           });
-          expect(transcodedRootHeader.content.extensions).toEqual({
+          expect(transcodedRootHeader.contents[0].extensions).toEqual({
             "3DTILES_metadata": metadataExtension,
           });
 
@@ -967,8 +1099,7 @@ describe(
               otherExtension
             );
 
-            const innerContentHeaders =
-              childTileHeader.extensions["3DTILES_multiple_contents"].content;
+            const innerContentHeaders = childTileHeader.contents;
 
             innerContentHeaders.forEach(function (header) {
               expect(header.extensions).toEqual({
@@ -980,60 +1111,72 @@ describe(
       });
     });
 
-    describe("3DTILES_metadata", function () {
+    describe("metadata", function () {
       const implicitTilesetUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
       const implicitGroupMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset_1.1.json";
+      const implicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.1.json";
+      const implicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
       const implicitHeightSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset_1.1.json";
       const implicitS2HeightSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset_1.1.json";
       const implicitTileBoundingVolumeSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset_1.1.json";
       const implicitHeightAndSphereSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset_1.1.json";
       const implicitHeightAndRegionSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset_1.1.json";
       const implicitContentBoundingVolumeSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset_1.1.json";
       const implicitContentHeightSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset_1.1.json";
       const implicitContentHeightAndRegionSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset_1.1.json";
       const implicitGeometricErrorSemanticsUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset_1.1.json";
 
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              componentType: "STRING",
-            },
-            height: {
-              componentType: "FLOAT32",
+      let groupMetadataClass;
+      let groupMetadata;
+      beforeAll(function () {
+        groupMetadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
             },
           },
-        },
-      });
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
           },
-        },
-        class: metadataClass,
+          class: groupMetadataClass,
+        });
       });
 
-      it("assigns groupMetadata", function () {
+      it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
           }
         );
       });
@@ -1048,14 +1191,14 @@ describe(
           const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
-          const groups = tileset.metadata.groups;
-          const ground = groups.ground;
+          const groups = tileset.metadataExtension.groups;
+          const ground = groups[0];
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
           );
           expect(ground.getProperty("priority")).toBe(0);
 
-          const sky = groups.sky;
+          const sky = groups[1];
           expect(sky.getProperty("color")).toEqual(
             new Cartesian3(206, 237, 242)
           );
@@ -1065,13 +1208,123 @@ describe(
             if (tile.hasMultipleContents) {
               // child tiles have multiple contents
               const contents = tile.content.innerContents;
-              expect(contents[0].groupMetadata).toBe(ground);
-              expect(contents[1].groupMetadata).toBe(sky);
+              expect(contents[0].group.metadata).toBe(ground);
+              expect(contents[1].group.metadata).toBe(sky);
             } else {
               // parent tile is a single b3dm tile
-              expect(tile.content.groupMetadata).toBe(ground);
+              expect(tile.content.group.metadata).toBe(ground);
             }
           });
+        });
+      });
+
+      it("assigning content metadata throws", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentMetadataUrl
+        ).then(function (tileset) {
+          expect(function () {
+            const placeholderTile = tileset.root;
+            const content = placeholderTile.content;
+            content.metadata = {};
+          }).toThrowDeveloperError();
+        });
+      });
+
+      it("content metadata gets transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentMetadataUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 0, 30, 40];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const subtree = tile.implicitSubtree;
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+            const metadata = tile.content.metadata;
+
+            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
+              expect(metadata.getProperty("height")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("height")).toBe(
+                expectedHeights[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
+      it("multiple content metadata views get transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          // All tiles except the subtree root tile have tree content
+          const expectedAges = [21, 7, 11, 16];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
+          }
         });
       });
 
@@ -1379,6 +1632,492 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitGeometricErrorSemanticsUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          // This tileset defines the geometric error in a
+          // property with metadata semantic TILE_GEOMETRIC_ERROR.
+          // Check that each tile has the right geometric error.
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          const geometricErrors = tiles.map(function (tile) {
+            return tile.geometricError;
+          });
+          // prettier-ignore
+          const expectedGeometricErrors = [
+            300, 203, 112, 113, 114, 115, 201, 104, 105, 106,
+            107, 202, 108, 109, 110, 111, 200, 103, 101, 102, 100
+          ];
+          expect(geometricErrors).toEqual(expectedGeometricErrors);
+        });
+      });
+    });
+
+    describe("3DTILES_metadata", function () {
+      const implicitGroupMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset_1.0.json";
+      const implicitContentMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.0.json";
+      const implicitMultipleContentsMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
+      const implicitHeightSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset_1.0.json";
+      const implicitS2HeightSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset_1.0.json";
+      const implicitTileBoundingVolumeSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset_1.0.json";
+      const implicitHeightAndSphereSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset_1.0.json";
+      const implicitHeightAndRegionSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset_1.0.json";
+      const implicitContentBoundingVolumeSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset_1.0.json";
+      const implicitContentHeightSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset_1.0.json";
+      const implicitContentHeightAndRegionSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset_1.0.json";
+      const implicitGeometricErrorSemanticsLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset_1.0.json";
+
+      it("group metadata gets transcoded correctly (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitGroupMetadataLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+          const groups = tileset.metadataExtension.groups;
+          const ground = groups[0];
+          expect(ground.getProperty("color")).toEqual(
+            new Cartesian3(120, 68, 32)
+          );
+          expect(ground.getProperty("priority")).toBe(0);
+
+          const sky = groups[1];
+          expect(sky.getProperty("color")).toEqual(
+            new Cartesian3(206, 237, 242)
+          );
+          expect(sky.getProperty("priority")).toBe(1);
+
+          tiles.forEach(function (tile) {
+            if (tile.hasMultipleContents) {
+              // child tiles have multiple contents
+              const contents = tile.content.innerContents;
+              expect(contents[0].group.metadata).toBe(ground);
+              expect(contents[1].group.metadata).toBe(sky);
+            } else {
+              // parent tile is a single b3dm tile
+              expect(tile.content.group.metadata).toBe(ground);
+            }
+          });
+        });
+      });
+
+      it("content metadata gets transcoded correctly (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentMetadataLegacyUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 0, 30, 40];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const subtree = tile.implicitSubtree;
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+            const metadata = tile.content.metadata;
+
+            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
+              expect(metadata.getProperty("height")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("height")).toBe(
+                expectedHeights[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
+      it("multiple content metadata views get transcoded correctly (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsMetadataLegacyUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          // All tiles except the subtree root tile have tree content
+          const expectedAges = [21, 7, 11, 16];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
+          }
+        });
+      });
+
+      // view (lon, lat, height) = (0, 0, 0) from height meters above
+      function viewCartographicOrigin(height) {
+        const center = Cartesian3.fromDegrees(0.0, 0.0);
+        const offset = new Cartesian3(0, 0, height);
+        scene.camera.lookAt(center, offset);
+      }
+
+      it("uses height semantics to adjust region bounding volumes (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
+
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses height semantics to adjust S2 bounding volumes (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitS2HeightSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitS2Volume =
+            placeholderTile.implicitTileset.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ];
+          const minimumHeight = implicitS2Volume.minimumHeight;
+          const maximumHeight = implicitS2Volume.maximumHeight;
+
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tileS2Volume = tiles[i].boundingVolume;
+            expect(tileS2Volume.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileS2Volume.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      // get half the bounding cube width from the bounding box's
+      // halfAxes matrix
+      function getHalfWidth(boundingBox) {
+        return boundingBox.boundingVolume.halfAxes[0];
+      }
+
+      it("ignores height semantics if the implicit volume is a box (legacy)", function () {
+        const cameraHeight = 100;
+        const rootHalfWidth = 10;
+        const originalLoadJson = Cesium3DTileset.loadJson;
+        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+            tilesetJson.root.boundingVolume = {
+              box: [
+                Ellipsoid.WGS84.radii.x + cameraHeight,
+                0,
+                0,
+                rootHalfWidth,
+                0,
+                0,
+                0,
+                rootHalfWidth,
+                0,
+                0,
+                0,
+                rootHalfWidth,
+              ],
+            };
+            return tilesetJson;
+          });
+        });
+
+        viewCartographicOrigin(cameraHeight);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+
+          // TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT only apply to
+          // regions, so this will check that they are not used.
+          tiles.forEach(function (tile) {
+            const level = tile.implicitCoordinates.level;
+            const halfWidth = getHalfWidth(tile.boundingVolume);
+            // Even for floats, divide by 2 operations are exact as long
+            // as there is no overflow.
+            expect(halfWidth).toEqual(rootHalfWidth / Math.pow(2, level));
+          });
+        });
+      });
+
+      it("uses tile bounding box from metadata semantics if present (legacy)", function () {
+        viewCartographicOrigin(124000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTileBoundingVolumeSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root.children[0];
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const rootHalfWidth = 2048;
+          expect(getHalfWidth(subtreeRootTile.boundingVolume)).toBe(
+            rootHalfWidth
+          );
+
+          for (let level = 1; level < 4; level++) {
+            const halfWidthAtLevel = rootHalfWidth / (1 << level);
+            const tiles = [];
+            gatherTilesPreorder(subtreeRootTile, level, level, tiles);
+            for (let i = 0; i < tiles.length; i++) {
+              // In this tileset, each tile's TILE_BOUNDING_BOX is
+              // smaller than the implicit tile bounds. Make sure
+              // this is true.
+              const tile = tiles[i];
+              const halfWidth = getHalfWidth(tile.boundingVolume);
+              expect(halfWidth).toBeLessThan(halfWidthAtLevel);
+            }
+          }
+        });
+      });
+
+      it("prioritizes height semantics over bounding volume semantics (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightAndSphereSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
+
+          // This tileset uses TILE_BOUNDING_SPHERE, TILE_MINIMUM_HEIGHT, and
+          // TILE_MAXIMUM_HEIGHT but TILE_BOUNDING_SPHERE is ignored
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeDefined();
+            expect(tileRegion.maximumHeight).toBeDefined();
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses height semantics to adjust region semantic (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightAndRegionSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          const west = implicitRegion[0];
+          const south = implicitRegion[1];
+          const east = implicitRegion[2];
+          const north = implicitRegion[3];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
+
+          // This tileset uses TILE_BOUNDING_REGION, TILE_MINIMUM_HEIGHT, and
+          // TILE_MAXIMUM_HEIGHT to set tighter bounding volumes
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+            // Check that the bounding volume is using the explicit tile regions
+            // which are shrunken compared to the implicit tile regions
+            expect(tileRegion.rectangle.west).toBeGreaterThan(west);
+            expect(tileRegion.rectangle.south).toBeGreaterThan(south);
+            expect(tileRegion.rectangle.east).toBeLessThan(east);
+            expect(tileRegion.rectangle.north).toBeLessThan(north);
+          }
+        });
+      });
+
+      it("uses content bounding box from metadata semantics if present (legacy)", function () {
+        viewCartographicOrigin(124000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentBoundingVolumeSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root.children[0];
+          const subtreeRootTile = placeholderTile.children[0];
+
+          // This tileset defines the content bounding spheres in a
+          // property with metadata semantic CONTENT_BOUNDING_SPHERE.
+          // Check that each tile has a content bounding volume.
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          tiles.forEach(function (tile) {
+            expect(
+              tile.contentBoundingVolume instanceof TileBoundingSphere
+            ).toBe(true);
+            expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
+          });
+        });
+      });
+
+      it("uses content height semantics to adjust implicit region (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentHeightSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
+
+          // This tileset uses CONTENT_MINIMUM_HEIGHT and CONTENT_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const contentRegion = tiles[i].contentBoundingVolume;
+            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses content height semantics to adjust content region semantic (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentHeightAndRegionSemanticsLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          const implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          const west = implicitRegion[0];
+          const south = implicitRegion[1];
+          const east = implicitRegion[2];
+          const north = implicitRegion[3];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
+
+          // This tileset uses CONTENT_BOUNDING_REGION, CONTENT_MINIMUM_HEIGHT, and
+          // CONTENT_MAXIMUM_HEIGHT to set tighter bounding volumes
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const contentRegion = tiles[i].contentBoundingVolume;
+            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
+            // Check that the content bounding volume is using the explicit tile
+            // regions which are shrunken compared to the implicit tile regions
+            expect(contentRegion.rectangle.west).toBeGreaterThan(west);
+            expect(contentRegion.rectangle.south).toBeGreaterThan(south);
+            expect(contentRegion.rectangle.east).toBeLessThan(east);
+            expect(contentRegion.rectangle.north).toBeLessThan(north);
+          }
+        });
+      });
+
+      it("uses geometric error from metadata semantics if present (legacy)", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitGeometricErrorSemanticsLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];

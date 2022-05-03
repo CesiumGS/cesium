@@ -2,6 +2,7 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,7 +12,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
@@ -218,7 +218,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   const metadataResource = resource.getDerivedResource({
     url: "query",
@@ -321,7 +321,10 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message = `An error occurred while accessing ${metadataResource.url}.`;
+    const message = defaultValue(
+      e.message,
+      `An error occurred while accessing ${metadataResource.url}.`
+    );
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -336,8 +339,14 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
 
   function requestMetadata() {
-    const metadata = metadataResource.fetchText();
-    when(metadata, metadataSuccess, metadataFailure);
+    metadataResource
+      .fetchText()
+      .then(function (text) {
+        metadataSuccess(text);
+      })
+      .catch(function (e) {
+        metadataFailure(e);
+      });
   }
 
   requestMetadata();
@@ -676,10 +685,8 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
@@ -722,10 +729,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- *                   It may also be undefined if picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function (
   x,

@@ -204,7 +204,7 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultClampAnimations
     );
-    model.imageBasedLightingFactor = Property.getValueOrDefault(
+    model.imageBasedLighting.imageBasedLightingFactor = Property.getValueOrDefault(
       modelGraphics._imageBasedLightingFactor,
       time,
       defaultImageBasedLightingFactor
@@ -436,7 +436,7 @@ function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
 }
 
 function checkModelLoad(model, entity, modelHash) {
-  model.readyPromise.otherwise(function (error) {
+  model.readyPromise.catch(function (error) {
     console.error(error);
     modelHash[entity.id].loadFail = true;
   });

@@ -38,7 +38,7 @@ const InstanceAttributeSemantic = {
    * @type {String}
    * @constant
    */
-  FEATURE_ID: "FEATURE_ID",
+  FEATURE_ID: "_FEATURE_ID",
 };
 
 /**
@@ -70,8 +70,6 @@ InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
     case "SCALE":
       return InstanceAttributeSemantic.SCALE;
     case "_FEATURE_ID":
-    case "FEATURE_ID":
-      // EXT_feature_metadata uses _FEATURE_ID, EXT_mesh_features drops the underscore
       return InstanceAttributeSemantic.FEATURE_ID;
   }
 
