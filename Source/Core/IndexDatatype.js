@@ -137,6 +137,24 @@ IndexDatatype.createTypedArray = function (
 };
 
 /**
+ * Gets the {@link IndexDatatype} for the provided TypedArray instance.
+ *
+ * @param {Uint8Array|Uint16Array|Uint32Array} array The typed array.
+ * @returns {IndexDatatype} The IndexDatatype for the provided array, or undefined if the array is not a Uint8Array, Uint16Array, or Uint32Array.
+ */
+IndexDatatype.fromTypedArray = function (array) {
+  if (array instanceof Uint8Array) {
+    return IndexDatatype.UNSIGNED_BYTE;
+  }
+  if (array instanceof Uint16Array) {
+    return IndexDatatype.UNSIGNED_SHORT;
+  }
+  if (array instanceof Uint32Array) {
+    return IndexDatatype.UNSIGNED_INT;
+  }
+};
+
+/**
  * Creates a typed array from a source array buffer.  The resulting typed array will store indices, using either <code><Uint16Array</code>
  * or <code>Uint32Array</code> depending on the number of vertices.
  *

@@ -6,12 +6,16 @@ import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import AttributeType from "../AttributeType.js";
 import ModelComponents from "../ModelComponents.js";
 import ResourceLoader from "../ResourceLoader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
+import Cartographic from "../../Core/Cartographic.js";
+import Transforms from "../../Core/Transforms.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 
 /**
  * Loads a GeoJson model.
@@ -25,16 +29,16 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.json The GeoJson object.
+ * @param {Object} options.geoJson The GeoJson object.
  */
 export default function GeoJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.json", options.json);
+  Check.typeOf.object("options.geoJson", options.geoJson);
   //>>includeEnd('debug');
 
-  this._json = options.json;
+  this._geoJson = options.geoJson;
   this._promise = defer();
   this._components = undefined;
 }
@@ -94,11 +98,28 @@ Object.defineProperties(GeoJsonLoader.prototype, {
  * @private
  */
 GeoJsonLoader.prototype.load = function () {
-  this._components = parse(this._json);
-  this._promise.resolve(this);
+  // Nothing to load
 };
 
-const scratchPosition = new Cartesian3();
+/**
+ * Processes the resource until it becomes ready.
+ *
+ * @param {FrameState} frameState The frame state.
+ * @private
+ */
+GeoJsonLoader.prototype.process = function (frameState) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
+
+  if (defined(this._components)) {
+    return;
+  }
+
+  this._components = parse(this._geoJson, frameState);
+  this._geoJson = undefined;
+  this._promise.resolve(this);
+};
 
 function ParsedFeature() {
   this.lines = undefined;
@@ -112,7 +133,7 @@ function ParseResult() {
 function parsePosition(position) {
   const x = position[0];
   const y = position[1];
-  const z = position[2];
+  const z = defaultValue(position[2], 0.0);
   return new Cartesian3(x, y, z);
 }
 
@@ -140,7 +161,7 @@ function parsePolygon(coordinates) {
   const linesLength = coordinates.length;
   const lines = new Array(linesLength);
   for (let i = 0; i < linesLength; i++) {
-    lines[i] = parseLineString(coordinates[i]);
+    lines[i] = parseLineString(coordinates[i])[0];
   }
   return lines;
 }
@@ -198,13 +219,14 @@ const geoJsonObjectTypes = {
   Feature: parseFeature,
 };
 
-function parse(json) {
-  const result = new ParseResult();
-  result.features = [];
+const scratchCartesian = new Cartesian3();
 
-  const processFunction = geoJsonObjectTypes[json.type];
-  if (defined(processFunction)) {
-    processFunction(json, result);
+function parse(geoJson, frameState) {
+  const result = new ParseResult();
+
+  const parseFunction = geoJsonObjectTypes[geoJson.type];
+  if (defined(parseFunction)) {
+    parseFunction(geoJson, result);
   }
 
   let vertexCount = 0;
@@ -217,26 +239,17 @@ function parse(json) {
     for (let j = 0; j < linesLength; j++) {
       const line = feature.lines[j];
       vertexCount += line.length;
-      indexCount += line.length * 2;
+      indexCount += (line.length - 1) * 2;
     }
   }
 
-  const positionsTypedArray = new Float32Array(vertexCount * 3);
-  const indicesTypedArray = IndexDatatype.createTypedArray(
-    vertexCount,
-    indexCount
-  );
-
-  let vertexCounter = 0;
-  let indexCounter = 0;
-
-  const cartoMin = new Cartesian3(
+  const cartographicMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY
   );
 
-  const cartoMax = new Cartesian3(
+  const cartographicMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY
@@ -249,96 +262,167 @@ function parse(json) {
       const line = feature.lines[j];
       const positionsLength = line.length;
       for (let k = 0; k < positionsLength; k++) {
-        Cartesian3.minimumByComponent(cartoMin, line[k]);
+        Cartesian3.minimumByComponent(
+          cartographicMin,
+          line[k],
+          cartographicMin
+        );
+        Cartesian3.maximumByComponent(
+          cartographicMax,
+          line[k],
+          cartographicMax
+        );
       }
     }
   }
 
-  const cartoBottomCenter = new Cartesian3(
-    cartoMax[0] - cartoMin[0],
-    cartoMax[1] - cartoMin[0],
-    cartoMin[2]
+  const cartographicCenter = Cartesian3.midpoint(
+    cartographicMin,
+    cartographicMax,
+    new Cartesian3()
   );
+  const ecefCenter = Cartesian3.fromDegrees(
+    cartographicCenter.x,
+    cartographicCenter.y,
+    cartographicCenter.z,
+    Ellipsoid.WGS84,
+    new Cartesian3()
+  );
+  const toLocal = Transforms.eastNorthUpToFixedFrame(
+    ecefCenter,
+    Ellipsoid.WGS84,
+    new Matrix4()
+  );
+  const toGlobal = Matrix4.inverseTransformation(toLocal, new Matrix4());
+
+  const positionsTypedArray = new Float32Array(vertexCount * 3);
+  const indicesTypedArray = IndexDatatype.createTypedArray(
+    vertexCount,
+    indexCount
+  );
+  const indexDatatype = IndexDatatype.fromTypedArray(indicesTypedArray);
+
+  const localMin = new Cartesian3(
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY
+  );
+
+  const localMax = new Cartesian3(
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY
+  );
+
+  let vertexCounter = 0;
+  let segmentCounter = 0;
+
+  for (let i = 0; i < featuresLength; i++) {
+    const feature = result.features[i];
+    const linesLength = feature.lines.length;
+    for (let j = 0; j < linesLength; j++) {
+      const line = feature.lines[j];
+      const positionsLength = line.length;
+      for (let k = 0; k < positionsLength; k++) {
+        const cartographic = line[k];
+        const globalCartesian = Cartesian3.fromDegrees(
+          cartographic.x,
+          cartographic.y,
+          cartographic.z,
+          Ellipsoid.WGS84,
+          scratchCartesian
+        );
+        const localCartesian = Matrix4.multiplyByPoint(
+          toLocal,
+          globalCartesian,
+          scratchCartesian
+        );
+
+        Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
+        Cartesian3.maximumByComponent(localMax, localCartesian, localMax);
+
+        Cartesian3.pack(localCartesian, positionsTypedArray, vertexCounter * 3);
+
+        if (k < positionsLength - 1) {
+          indicesTypedArray[segmentCounter * 2] = segmentCounter;
+          indicesTypedArray[segmentCounter * 2 + 1] = segmentCounter + 1;
+        }
+
+        vertexCounter++;
+        segmentCounter++;
+      }
+    }
+  }
+
+  const vertexBuffer = Buffer.createVertexBuffer({
+    typedArray: positionsTypedArray,
+    context: frameState.context,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  vertexBuffer.vertexArrayDestroyable = false;
+
+  const indexBuffer = Buffer.createIndexBuffer({
+    typedArray: indicesTypedArray,
+    context: frameState.context,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
+  indexBuffer.vertexArrayDestroyable = false;
+
+  const attribute = new ModelComponents.Attribute();
+  attribute.name = VertexAttributeSemantic.POSITION;
+  attribute.semantic = VertexAttributeSemantic.POSITION;
+  attribute.componentDatatype = ComponentDatatype.FLOAT;
+  attribute.type = AttributeType.VEC3;
+  attribute.count = vertexCount;
+  attribute.min = localMin;
+  attribute.max = localMax;
+  attribute.buffer = vertexBuffer;
+
+  const attributes = [attribute];
+
+  const material = new ModelComponents.Material();
+  material.unlit = true;
+
+  const indices = new ModelComponents.Indices();
+  indices.indexDatatype = indexDatatype;
+  indices.count = indicesTypedArray.length;
+  indices.buffer = indexBuffer;
+
+  const featureId = new ModelComponents.FeatureIdAttribute();
+  featureId.featureCount = featuresLength;
+  featureId.propertyTableId = undefined; // TODO
+  featureId.setIndex = 0;
+  featureId.positionalLabel = "featureId_0";
+
+  const featureIds = [featureId];
+
+  const primitive = new ModelComponents.Primitive();
+  primitive.attributes = attributes;
+  primitive.indices = indices;
+  // primitive.featureIds = featureIds;
+  primitive.primitiveType = PrimitiveType.LINES;
+  primitive.material = material;
+
+  const primitives = [primitive];
+
+  const node = new ModelComponents.Node();
+  node.name = "root";
+  node.index = 0;
+  node.primitives = primitives;
+
+  const nodes = [node];
+
+  const scene = new ModelComponents.Scene();
+  scene.nodes = nodes;
+
+  const components = new ModelComponents.Components();
+  components.scene = scene;
+  components.nodes = nodes;
+  components.transform = toGlobal;
+
+  return components;
 }
-
-// function parse(json) {
-//   const coords = json.coordinates[0];
-//   const coordsLength = coords.length;
-//   const vertexCount = coordsLength;
-
-//   const positionsArray = new Float32Array(vertexCount * 3);
-//   for (let i = 0; i < coordsLength; i++) {
-//     const coord = coords[i];
-//     const cartesian = Cartesian3.fromDegrees(
-//       coord[0],
-//       coord[1],
-//       0.0,
-//       Ellipsoid.WGS84,
-//       scratchPosition
-//     );
-//     Cartesian3.pack(cartesian, positionsArray, i * 3);
-//   }
-
-//   const attribute = new ModelComponents.Attribute();
-//   attribute.name = "POSITION";
-//   attribute.semantic = VertexAttributeSemantic.POSITION;
-//   attribute.componentDatatype = ComponentDatatype.FLOAT;
-//   attribute.type = AttributeType.VEC3;
-//   attribute.count = vertexCount;
-//   attribute.min = new Cartesian3();
-//   attribute.max = new Cartesian3();
-//   attribute.packedTypedArray = positionsArray;
-
-//   const attributes = new Array(1);
-//   attributes[0] = attribute;
-
-//   const material = new ModelComponents.Material();
-//   material.unlit = true;
-
-//   const primitive = new ModelComponents.Primitive();
-//   primitive.attributes = attributes;
-//   // primitive.indices = indices; // not necessary?
-//   primitive.primitiveType = PrimitiveType.LINE_STRIP;
-//   primitive.material = material;
-
-//   // primitive.featureIds = featureIds; // TODO
-
-//   const primitives = new Array(1);
-//   primitives[0] = primitive;
-
-//   const node = new ModelComponents.Node();
-//   node.name = "root";
-//   node.index = 0;
-//   node.primitives = primitives;
-
-//   const nodes = new Array(1);
-//   nodes[0] = node;
-
-//   const skins = new Array(0);
-//   const animations = new Array(0);
-
-//   const scene = new ModelComponents.Scene();
-//   scene.nodes = nodes;
-
-//   const asset = new ModelComponents.Asset();
-//   asset.credits = undefined; // TODO?
-
-//   const components = new ModelComponents.Components();
-//   components.asset = asset;
-//   components.scene = scene;
-//   components.nodes = nodes;
-//   components.skins = skins;
-//   components.animations = animations;
-//   return components;
-// }
-
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GeoJsonLoader.prototype.process = function (frameState) {};
 
 /**
  * Unloads the resource.
