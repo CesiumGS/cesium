@@ -54,8 +54,9 @@ function addWhitePixelCanvas(textureAtlas, labelCollection) {
   context2D.fillStyle = "#fff";
   context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  const index = textureAtlas.addImageSync(whitePixelCanvasId, canvas);
-  labelCollection._whitePixelIndex = index;
+  textureAtlas.addImage(whitePixelCanvasId, canvas).then(function (index) {
+    labelCollection._whitePixelIndex = index;
+  });
 }
 
 // reusable object for calling writeTextToCanvas
