@@ -1530,28 +1530,28 @@ int getOctreeParentIndex(int octreeIndex) {
     return parentOctreeIndex;
 }
 
-void traverseOctreeDownwards(in vec3 positionUv, inout ivec4 octreeCoords, inout int parentOctreeIndex, out SampleData sampleDatas[SAMPLE_COUNT]) {
-    float sizeAtLevel = 1.0 / pow(2.0, float(octreeCoords.w));
-    vec3 start = vec3(octreeCoords.xyz) * sizeAtLevel;
+void traverseOctreeDownwards(inout TraversalData traversalData, out SampleData sampleDatas[SAMPLE_COUNT]) {
+    float sizeAtLevel = 1.0 / pow(2.0, float(traversalData.octreeCoords.w));
+    vec3 start = vec3(traversalData.octreeCoords.xyz) * sizeAtLevel;
     vec3 end = start + vec3(sizeAtLevel);
 
     for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
         // Find out which octree child contains the position
         // 0 if before center, 1 if after
         vec3 center = 0.5 * (start + end);
-        vec3 childCoord = step(center, positionUv);
+        vec3 childCoord = step(center, traversalData.positionUvShapeSpace);
 
         // Get octree coords for the next level down
-        octreeCoords.xyz = octreeCoords.xyz * 2 + ivec3(childCoord);
-        octreeCoords.w += 1;
+        traversalData.octreeCoords.xyz = traversalData.octreeCoords.xyz * 2 + ivec3(childCoord);
+        traversalData.octreeCoords.w += 1;
 
-        OctreeNodeData childData = getOctreeChildData(parentOctreeIndex, ivec3(childCoord));
+        OctreeNodeData childData = getOctreeChildData(traversalData.parentOctreeIndex, ivec3(childCoord));
 
         if (childData.flag == OCTREE_FLAG_INTERNAL) {
             // keep going deeper
             start = mix(start, center, childCoord);
             end = mix(center, end, childCoord);
-            parentOctreeIndex = childData.data;
+            traversalData.parentOctreeIndex = childData.data;
         } else {
             getOctreeLeafData(childData, sampleDatas);
             return;
@@ -1575,7 +1575,7 @@ void traverseOctree(in vec3 positionUv, out TraversalData traversalData, out Sam
     }
     else
     {
-        traverseOctreeDownwards(traversalData.positionUvShapeSpace, traversalData.octreeCoords, traversalData.parentOctreeIndex, sampleDatas);
+        traverseOctreeDownwards(traversalData, sampleDatas);
         float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
         traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords);
         traversalData.stepT = u_stepSize / dimAtLevel;
@@ -1610,7 +1610,7 @@ void traverseOctreeFromExisting(in vec3 positionUv, inout TraversalData traversa
         }
 
         // Go down tree
-        traverseOctreeDownwards(traversalData.positionUvShapeSpace, traversalData.octreeCoords, traversalData.parentOctreeIndex, sampleDatas);
+        traverseOctreeDownwards(traversalData, sampleDatas);
         float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
         traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
         traversalData.stepT = u_stepSize / dimAtLevel;
