@@ -54,9 +54,7 @@ function addWhitePixelCanvas(textureAtlas, labelCollection) {
   context2D.fillStyle = "#fff";
   context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  textureAtlas.addImage(whitePixelCanvasId, canvas).then(function (index) {
-    labelCollection._whitePixelIndex = index;
-  });
+  textureAtlas.addImage(whitePixelCanvasId, canvas);
 }
 
 // reusable object for calling writeTextToCanvas
@@ -598,7 +596,6 @@ function LabelCollection(options) {
 
   this._textureAtlas = undefined;
   this._backgroundTextureAtlas = undefined;
-  this._whitePixelIndex = undefined;
 
   this._backgroundBillboardCollection = new BillboardCollection({
     scene: this._scene,
