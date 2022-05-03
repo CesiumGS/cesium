@@ -1419,10 +1419,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
         // Final location in the megatexture
         vec3 uv = tileUvOffset + voxelUvOffset;
 
-        for (int i = 0; i < PROPERTY_COUNT; ++i) {
-            vec4 sample = texture3D(u_megatextureTextures[i], uv);
-            samples[i] = decodeTextureSample(sample);
-        }
+        return getPropertiesFromMegatextureAtUv(uv);
     #endif
 }
 
