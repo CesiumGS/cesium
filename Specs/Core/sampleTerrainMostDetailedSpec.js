@@ -1,16 +1,19 @@
 import { Cartographic } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
 import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;
   beforeAll(function () {
-    worldTerrain = createWorldTerrain();
+    worldTerrain = new CesiumTerrainProvider({
+      url: "Data/CesiumTerrainTileJson/9_759_335",
+      requestVertexNormals: false,
+      requestWaterMask: false,
+    });
     return worldTerrain.readyPromise;
   });
 
-  xit("queries heights", function () {
+  it("queries heights", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -27,7 +30,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     });
   });
 
-  xit("should throw querying heights from Small Terrain", function () {
+  it("should throw querying heights from Small Terrain", function () {
     const terrainProvider = new CesiumTerrainProvider({
       url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
     });
@@ -44,7 +47,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
       .catch(function () {});
   });
 
-  xit("uses a suitable common tile height for a range of locations", function () {
+  it("uses a suitable common tile height for a range of locations", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -58,7 +61,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     });
   });
 
-  xit("requires terrainProvider and positions", function () {
+  it("requires terrainProvider and positions", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -73,7 +76,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     }).toThrowDeveloperError();
   });
 
-  xit("works for a dodgy point right near the edge of a tile", function () {
+  it("works for a dodgy point right near the edge of a tile", function () {
     const positions = [
       new Cartographic(0.33179290856829535, 0.7363107781851078),
     ];
