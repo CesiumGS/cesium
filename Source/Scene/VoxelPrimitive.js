@@ -2141,12 +2141,12 @@ function buildDrawCommands(that, context) {
     }
   }
 
-  // getPropertiesFrom2DMegatextureAtUv
+  // getPropertiesFromMegatextureAtUv
   {
-    const functionId = "getPropertiesFrom2DMegatextureAtUv";
+    const functionId = "getPropertiesFromMegatextureAtUv";
     shaderBuilder.addFunction(
       functionId,
-      `${propertiesStructName} getPropertiesFrom2DMegatextureAtUv(vec2 texcoord)`,
+      `${propertiesStructName} getPropertiesFromMegatextureAtUv(vec2 texcoord)`,
       ShaderDestination.FRAGMENT
     );
     shaderBuilder.addFunctionLines(functionId, [

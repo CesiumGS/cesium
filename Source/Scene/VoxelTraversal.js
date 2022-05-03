@@ -244,7 +244,7 @@ function VoxelTraversal(
    */
   this.leafNodeTexelSizeUv = undefined;
 
-  const useLeafNodeTexture = this._useLeafNodeTexture;
+  const useLeafNodeTexture = this.useLeafNodeTexture;
   if (useLeafNodeTexture) {
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
@@ -1415,7 +1415,7 @@ const GpuOctreeFlag = {
  */
 function generateOctree(that) {
   const keyframeLocation = that._keyframeLocation;
-  const useLeafNodes = that._useLeafNodeTexture;
+  const useLeafNodes = that.useLeafNodeTexture;
   const frameNumber = that._frameNumber;
 
   let internalNodeCount = 0;

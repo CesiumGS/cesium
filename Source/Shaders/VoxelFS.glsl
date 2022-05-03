@@ -104,17 +104,18 @@ void setStatistics(inout Statistics statistics) {
     statistics.temperature.min = 20.0;
     statistics.temperature.max = 50.0;
 }
-Properties getPropertiesFrom2DMegatextureAtUv(vec2 texcoord) {
-    Properties properties;
-    properties.temperature = texture2D(u_megatextureTextures[0], texcoord).r;
-    properties.direction = texture2D(u_megatextureTextures[1], texcoord).rgb;
-    return properties;
-}
-Properties getPropertiesFrom3DMegatextureAtUv(vec3 texcoord) {
-    Properties properties;
-    properties.temperature = texture3D(u_megatextureTextures[0], texcoord).r;
-    properties.direction = texture3D(u_megatextureTextures[1], texcoord).rgb;
-    return properties;
+Properties getPropertiesFromMegatextureAtUv(vec2 texcoord) {
+    #if defined(MEGATEXTURE_2D)
+        Properties properties;
+        properties.temperature = texture2D(u_megatextureTextures[0], texcoord).r;
+        properties.direction = texture2D(u_megatextureTextures[1], texcoord).rgb;
+        return properties;
+    #else
+        Properties properties;
+        properties.temperature = texture3D(u_megatextureTextures[0], texcoord).r;
+        properties.direction = texture3D(u_megatextureTextures[1], texcoord).rgb;
+        return properties;
+    #endif
 }
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     vec3 direction = fsInput.metadata.direction;
@@ -1383,7 +1384,7 @@ Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxel
 
     When doing nearest neighbor the megatexture only needs to be sampled once at the closest Z slice.
 */
-Properties getPropertiesFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
+Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
 {
     #if defined(NEAREST_SAMPLING)
         // Round to the center of the nearest voxel
@@ -1406,20 +1407,20 @@ Properties getPropertiesFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 vox
     vec2 uv0 = tileUvOffset + sliceUvOffset0 + voxelUvOffset;
 
     #if defined(NEAREST_SAMPLING)
-        return getPropertiesFrom2DMegatextureAtUv(uv0);
+        return getPropertiesFromMegatextureAtUv(uv0);
     #else
         float sliceLerp = fract(slice);
         int sliceIndex1 = intMin(sliceIndex + 1, voxelDims.z - 1);
         vec2 sliceUvOffset1 = index1DTo2DTexcoord(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
         vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
-        Properties properties0 = getPropertiesFrom2DMegatextureAtUv(uv0);
-        Properties properties1 = getPropertiesFrom2DMegatextureAtUv(uv1);
+        Properties properties0 = getPropertiesFromMegatextureAtUv(uv0);
+        Properties properties1 = getPropertiesFromMegatextureAtUv(uv1);
         return mixProperties(properties0, properties1, sliceLerp);
     #endif
 }
 #endif
 
-Properties getPropertiesFromMegatextureAtTileUv(in SampleData sampleData) {
+Properties getPropertiesFromMegatexture(in SampleData sampleData) {
     vec3 tileUv = clamp(sampleData.tileUv, vec3(0.0), vec3(1.0)); // TODO is the clamp necessary?
     int tileIndex = sampleData.megatextureIndex;
     vec3 voxelCoord = tileUv * vec3(u_dimensions);
@@ -1430,22 +1431,18 @@ Properties getPropertiesFromMegatextureAtTileUv(in SampleData sampleData) {
         voxelCoord += vec3(u_paddingBefore);
     #endif
 
-    #if defined(MEGATEXTURE_3D)
-        return getPropertiesFrom3DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
-    #elif defined(MEGATEXTURE_2D)
-        return getPropertiesFrom2DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
-    #endif
+    return getPropertiesFromMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
 }
 
-// Convert an array of mixed-resolution sample datas to a final weighted properties.
-Properties getPropertiesFromMegatextureAtLocalPosition(SampleData sampleDatas[SAMPLE_COUNT]) {
+// Convert an array of sample datas to a final weighted properties.
+Properties getPropertiesFromMegatexture(SampleData sampleDatas[SAMPLE_COUNT]) {
     #if (SAMPLE_COUNT == 1)
-        return getPropertiesFromMegatextureAtTileUv(sampleDatas[0]);
+        return getPropertiesFromMegatexture(sampleDatas[0]);
     #else
         // When more than one sample is taken the accumulator needs to start at 0
         Properties properties = clearProperties();
         for (int i = 0; i < SAMPLE_COUNT; ++i) {
-            Properties tempProperties = getPropertiesFromMegatextureAtTileUv(sampleDatas[i]);        
+            Properties tempProperties = getPropertiesFromMegatexture(sampleDatas[i]);        
             properties = sumProperties(properties, tempProperties)
         }
         return properties;
@@ -1655,7 +1652,7 @@ void main()
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
-        Properties properties = getPropertiesFromMegatextureAtLocalPosition(sampleDatas);
+        Properties properties = getPropertiesFromMegatexture(sampleDatas);
         
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
