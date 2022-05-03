@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
+- Fixed [#10342](https://github.com/CesiumGS/cesium/issues/10342)
 
 ### 1.93 - 2022-05-02
 
