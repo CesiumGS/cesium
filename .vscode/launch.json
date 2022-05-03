@@ -7,12 +7,9 @@
             "name": "Launch Server",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run-script",
-                "start"
-            ],
+            "runtimeArgs": ["run-script", "start"],
             "noDebug": true,
-            "serverReadyAction": {
+            "serverReadyAction":{
                 "action": "startDebugging",
                 "name": "Launch in Chrome",
                 "pattern": "Cesium development server running locally."
@@ -23,13 +20,6 @@
             "request": "launch",
             "type": "pwa-chrome",
             "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}"
-        },
-        {
-            "name": "GeoJSON",
-            "request": "launch",
-            "type": "pwa-chrome",
-            "url": "http://localhost:8080/Apps/Sandcastle/index.html?src=GeoJson.html",
             "webRoot": "${workspaceFolder}"
         }
     ]

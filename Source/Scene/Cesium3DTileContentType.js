@@ -124,7 +124,7 @@ const Cesium3DTileContentType = {
    */
   MULTIPLE_CONTENT: "multipleContent",
   /**
-   * GeoJSON content for glTF MAXAR_content_geojson extension.
+   * GeoJSON content for <code>MAXAR_content_geojson</code> extension.
    *
    * @type {String}
    * @constant

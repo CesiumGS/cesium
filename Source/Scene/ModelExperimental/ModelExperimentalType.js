@@ -57,12 +57,12 @@ const ModelExperimentalType = {
   TILE_PNTS: "PNTS",
 
   /**
-   * A GeoJson
+   * GeoJSON content for <code>MAXAR_content_geojson</code> extension
    *
    * @type {String}
    * @constant
    */
-  GEOJSON: "GEOJSON",
+  TILE_GEOJSON: "TILE_GEOJSON",
 };
 
 /**
@@ -80,6 +80,7 @@ ModelExperimentalType.is3DTiles = function (modelType) {
     case ModelExperimentalType.TILE_B3DM:
     case ModelExperimentalType.TILE_I3DM:
     case ModelExperimentalType.TILE_PNTS:
+    case ModelExperimentalType.TILE_GEOJSON:
       return true;
     case ModelExperimentalType.GLTF:
       return false;
