@@ -60,6 +60,7 @@ const Instances = ModelComponents.Instances;
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  */
 function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -77,6 +78,10 @@ function I3dmLoader(options) {
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadIndicesForWireframe = defaultValue(
+    options.loadIndicesForWireframe,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -95,6 +100,7 @@ function I3dmLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAsTypedArray = loadAsTypedArray;
+  this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = I3dmLoaderState.UNLOADED;
   this._promise = defer();
@@ -229,6 +235,7 @@ I3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
+    loadIndicesForWireframe: this._loadIndicesForWireframe,
   };
 
   if (gltfFormat === 0) {

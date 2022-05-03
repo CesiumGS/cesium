@@ -143,7 +143,7 @@ describe(
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
 
-      const commandList = scene.frameState;
+      const commandList = targetScene.frameState;
       const commandCounts = [];
       let i, command;
 

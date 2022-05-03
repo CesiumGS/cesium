@@ -80,7 +80,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load in the index buffer as a typed array so the wireframe indices can be created later.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @private
  */
 export default function GltfLoader(options) {

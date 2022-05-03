@@ -358,6 +358,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,
     splitDirection: tileset.splitDirection,
+    enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
   };
 
