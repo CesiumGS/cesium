@@ -175,7 +175,8 @@ struct TraversalData {
 
 struct SampleData {
     int megatextureIndex;
-    int levelsAbove;
+    int levelsAbove; // TODO find a way to remove this
+    vec3 tileUv;
     #if (SAMPLE_COUNT > 1)
         float weight;
     #endif
@@ -1418,7 +1419,9 @@ Properties getPropertiesFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 vox
 }
 #endif
 
-Properties getPropertiesFromMegatextureAtTileUv(vec3 tileUv, int tileIndex) {
+Properties getPropertiesFromMegatextureAtTileUv(in SampleData sampleData) {
+    vec3 tileUv = clamp(sampleData.tileUv, vec3(0.0), vec3(1.0)); // TODO is the clamp necessary?
+    int tileIndex = sampleData.megatextureIndex;
     vec3 voxelCoord = tileUv * vec3(u_dimensions);
     ivec3 dimensions = u_dimensions;
 
@@ -1434,34 +1437,15 @@ Properties getPropertiesFromMegatextureAtTileUv(vec3 tileUv, int tileIndex) {
     #endif
 }
 
-vec3 computeAncestorUv(vec3 positionUvLocal, int levelsAbove, ivec4 octreeCoords) {
-    if (levelsAbove > 0) {
-        // In some cases positionUvLocal goes outside the 0 to 1 bounds, such as when sampling neighbor voxels on the edge of a tile.
-        // This needs to be handled carefully, especially for mixed resolution, or else the wrong part of the tile is read.
-        // https://www.wolframalpha.com/input/?i=sign%28x%29+*+max%280%2C+%28abs%28x-0.5%29-0.5%29%29
-        vec3 overflow = sign(positionUvLocal) * max(abs(positionUvLocal - vec3(0.5)) - vec3(0.5), vec3(0.0));
-        positionUvLocal = clamp(positionUvLocal, vec3(0.0), vec3(1.0 - czm_epsilon6)); // epsilon to avoid fract(1) = 0 situation
-
-        // Calcuate a new local uv relative to the ancestor tile.
-        float levelsAboveFactor = 1.0 / pow(2.0, float(levelsAbove));
-        positionUvLocal = fract((vec3(octreeCoords.xyz) + positionUvLocal) * levelsAboveFactor) + overflow * levelsAboveFactor;
-    } else {
-        positionUvLocal = clamp(positionUvLocal, vec3(0.0), vec3(1.0));
-    }
-    return positionUvLocal;
-}
-
 // Convert an array of mixed-resolution sample datas to a final weighted properties.
-Properties getPropertiesFromMegatextureAtLocalPosition(vec3 positionUvLocal, ivec4 octreeCoords, SampleData sampleDatas[SAMPLE_COUNT]) {
+Properties getPropertiesFromMegatextureAtLocalPosition(SampleData sampleDatas[SAMPLE_COUNT]) {
     #if (SAMPLE_COUNT == 1)
-        vec3 actualUv = computeAncestorUv(positionUvLocal, sampleDatas[0].levelsAbove, octreeCoords);
-        return getPropertiesFromMegatextureAtTileUv(actualUv, sampleDatas[0].megatextureIndex);
+        return getPropertiesFromMegatextureAtTileUv(sampleDatas[0]);
     #else
         // When more than one sample is taken the accumulator needs to start at 0
         Properties properties = clearProperties();
         for (int i = 0; i < SAMPLE_COUNT; ++i) {
-            vec3 actualUv = computeAncestorUv(positionUvLocal, sampleDatas[i].levelsAbove, octreeCoords);
-            Properties tempProperties = getPropertiesFromMegatextureAtTileUv(actualUvLocal, sampleDatas[i].megatextureIndex);        
+            Properties tempProperties = getPropertiesFromMegatextureAtTileUv(sampleDatas[i]);        
             properties = sumProperties(properties, tempProperties)
         }
         return properties;
@@ -1541,11 +1525,11 @@ void traverseOctreeDownwards(inout TraversalData traversalData, out SampleData s
         vec3 center = 0.5 * (start + end);
         vec3 childCoord = step(center, traversalData.positionUvShapeSpace);
 
-        // Get octree coords for the next level down
-        traversalData.octreeCoords.xyz = traversalData.octreeCoords.xyz * 2 + ivec3(childCoord);
-        traversalData.octreeCoords.w += 1;
-
         OctreeNodeData childData = getOctreeChildData(traversalData.parentOctreeIndex, ivec3(childCoord));
+
+        // Get octree coords for the next level down
+        ivec4 parentOctreeCoords = traversalData.octreeCoords;
+        traversalData.octreeCoords = ivec4(parentOctreeCoords.xyz * 2 + ivec3(childCoord), parentOctreeCoords.w + 1);
 
         if (childData.flag == OCTREE_FLAG_INTERNAL) {
             // keep going deeper
@@ -1553,7 +1537,20 @@ void traverseOctreeDownwards(inout TraversalData traversalData, out SampleData s
             end = mix(center, end, childCoord);
             traversalData.parentOctreeIndex = childData.data;
         } else {
+            float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+            traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
+            traversalData.stepT = u_stepSize / dimAtLevel;
+
             getOctreeLeafData(childData, sampleDatas);
+            for (int i = 0; i < SAMPLE_COUNT; i++) {
+                bool usingParent = sampleDatas[i].levelsAbove == 1;
+                if (usingParent) {
+                    float parentDimAtLevel = pow(2.0, float(parentOctreeCoords.w));
+                    sampleDatas[i].tileUv = traversalData.positionUvShapeSpace * parentDimAtLevel - vec3(parentOctreeCoords.xyz);
+                } else {
+                    sampleDatas[i].tileUv = traversalData.positionUvLocal;
+                }
+            }
             return;
         }
     }
@@ -1576,9 +1573,6 @@ void traverseOctree(in vec3 positionUv, out TraversalData traversalData, out Sam
     else
     {
         traverseOctreeDownwards(traversalData, sampleDatas);
-        float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-        traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords);
-        traversalData.stepT = u_stepSize / dimAtLevel;
     }
 }
 
@@ -1611,9 +1605,6 @@ void traverseOctreeFromExisting(in vec3 positionUv, inout TraversalData traversa
 
         // Go down tree
         traverseOctreeDownwards(traversalData, sampleDatas);
-        float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-        traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
-        traversalData.stepT = u_stepSize / dimAtLevel;
     }
 }
 
@@ -1651,12 +1642,6 @@ void main()
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctree(positionUv, traversalData, sampleDatas);
 
-    // if (traversalData.octreeCoords.w == 6 && traversalData.octreeCoords.x == 33 && traversalData.octreeCoords.y == 49 && traversalData.octreeCoords.z == 63) {
-    //     if (sampleDatas[0].levelsAbove == 1) {
-    //         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); return;
-    //     }
-    // }
-
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
         currT += noise * traversalData.stepT;
@@ -1670,7 +1655,7 @@ void main()
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
-        Properties properties = getPropertiesFromMegatextureAtLocalPosition(traversalData.positionUvLocal, traversalData.octreeCoords, sampleDatas);
+        Properties properties = getPropertiesFromMegatextureAtLocalPosition(sampleDatas);
         
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
