@@ -2,6 +2,10 @@
 
 ### 1.94 - 2022-06-01
 
+##### Breaking Changes :mega:
+
+- Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
+
 ##### Fixes :wrench:
 
 - Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)

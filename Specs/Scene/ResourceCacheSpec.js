@@ -1241,6 +1241,7 @@ describe(
 
       return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
         function (indexBufferLoader) {
+          expect(indexBufferLoader.typedArray).toBeUndefined();
           expect(indexBufferLoader.buffer).toBeDefined();
         }
       );
