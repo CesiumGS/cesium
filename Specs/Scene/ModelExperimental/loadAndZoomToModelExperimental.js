@@ -20,6 +20,8 @@ function loadAndZoomToModelExperimental(options, scene) {
         upAxis: options.upAxis,
         forwardAxis: options.forwardAxis,
         debugShowBoundingVolume: options.debugShowBoundingVolume,
+        enableDebugWireframe: options.enableDebugWireframe,
+        debugWireframe: options.debugWireframe,
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
         incrementallyLoadTextures: options.incrementallyLoadTextures,

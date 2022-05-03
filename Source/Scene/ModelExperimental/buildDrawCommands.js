@@ -44,6 +44,7 @@ export default function buildDrawCommands(
 
   const indexBuffer = getIndexBuffer(
     primitiveRenderResources,
+    model,
     debugWireframe,
     frameState
   );
@@ -175,8 +176,18 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
-function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
-  if (debugWireframe) {
+function getIndexBuffer(
+  primitiveRenderResources,
+  model,
+  debugWireframe,
+  frameState
+) {
+  const context = frameState.context;
+  const useWebgl2 = context.webgl2;
+  // It is always possible to generate the wireframe index buffer in WebGL2.
+  // However, in WebGL1, this will only work  if the model was constructed with
+  // enableDebugWireframe set to true.
+  if (debugWireframe && (model._enableDebugWireframe || useWebgl2)) {
     return createWireframeIndexBuffer(primitiveRenderResources, frameState);
   }
 

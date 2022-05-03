@@ -80,7 +80,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
- *
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load in the index buffer as a typed array so the wireframe indices can be created later.
  * @private
  */
 export default function GltfLoader(options) {
@@ -101,6 +101,10 @@ export default function GltfLoader(options) {
     options.renameBatchIdSemantic,
     false
   );
+  const loadIndicesForWireframe = defaultValue(
+    options.loadIndicesForWireframe,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -119,6 +123,7 @@ export default function GltfLoader(options) {
   this._forwardAxis = forwardAxis;
   this._loadAsTypedArray = loadAsTypedArray;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
+  this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -378,7 +383,7 @@ function loadVertexBuffer(
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(loader, gltf, accessorId, draco, loadAsTypedArray) {
+function loadIndexBuffer(loader, gltf, accessorId, draco) {
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -386,7 +391,8 @@ function loadIndexBuffer(loader, gltf, accessorId, draco, loadAsTypedArray) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loadAsTypedArray,
+    loadAsTypedArray: loader._loadAsTypedArray,
+    loadForWireframe: loader._loadIndicesForWireframe,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
@@ -710,15 +716,7 @@ function loadIndices(loader, gltf, accessorId, draco) {
   const indices = new Indices();
   indices.count = accessor.count;
 
-  const loadAsTypedArray = loader._loadAsTypedArray;
-
-  const indexBufferLoader = loadIndexBuffer(
-    loader,
-    gltf,
-    accessorId,
-    draco,
-    loadAsTypedArray
-  );
+  const indexBufferLoader = loadIndexBuffer(loader, gltf, accessorId, draco);
 
   indexBufferLoader.promise.then(function (indexBufferLoader) {
     if (loader.isDestroyed()) {
