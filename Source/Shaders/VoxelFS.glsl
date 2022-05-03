@@ -1331,26 +1331,6 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
 // --------------------------------------------------------
 // Megatexture
 // --------------------------------------------------------
-
-// TODO: 3D megatexture has not been implemented yet
-#if defined(MEGATEXTURE_3D)
-Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
-{
-    // Tile location
-    vec3 tileUvOffset = indexToUv3d(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
-
-    // Voxel location
-    vec3 voxelUvOffset = clamp(voxelCoord, vec3(0.5), vec3(voxelDims) - vec2(0.5)) * u_megatextureVoxelSizeUv;
-
-    // Final location in the megatexture
-    vec3 uv = tileUvOffset + voxelUvOffset;
-
-    for (int i = 0; i < PROPERTY_COUNT; ++i) {
-        vec4 sample = texture3D(u_megatextureTextures[i], uv);
-        samples[i] = decodeTextureSample(sample);
-    }
-}
-#elif defined(MEGATEXTURE_2D)
 /*
     How is 3D data stored in a 2D megatexture?
 
@@ -1384,54 +1364,66 @@ Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxel
 
     When doing nearest neighbor the megatexture only needs to be sampled once at the closest Z slice.
 */
-Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
-{
-    #if defined(NEAREST_SAMPLING)
-        // Round to the center of the nearest voxel
-        voxelCoord = floor(voxelCoord) + vec3(0.5); 
-    #endif
-
-    // Tile location
-    vec2 tileUvOffset = index1DTo2DTexcoord(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
-
-    // Slice location
-    float slice = voxelCoord.z - 0.5;
-    int sliceIndex = int(floor(slice));
-    int sliceIndex0 = intClamp(sliceIndex, 0, voxelDims.z - 1);
-    vec2 sliceUvOffset0 = index1DTo2DTexcoord(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
-
-    // Voxel location
-    vec2 voxelUvOffset = clamp(voxelCoord.xy, vec2(0.5), vec2(voxelDims.xy) - vec2(0.5)) * u_megatextureVoxelSizeUv;
-
-    // Final location in the megatexture
-    vec2 uv0 = tileUvOffset + sliceUvOffset0 + voxelUvOffset;
-
-    #if defined(NEAREST_SAMPLING)
-        return getPropertiesFromMegatextureAtUv(uv0);
-    #else
-        float sliceLerp = fract(slice);
-        int sliceIndex1 = intMin(sliceIndex + 1, voxelDims.z - 1);
-        vec2 sliceUvOffset1 = index1DTo2DTexcoord(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
-        vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
-        Properties properties0 = getPropertiesFromMegatextureAtUv(uv0);
-        Properties properties1 = getPropertiesFromMegatextureAtUv(uv1);
-        return mixProperties(properties0, properties1, sliceLerp);
-    #endif
-}
-#endif
 
 Properties getPropertiesFromMegatexture(in SampleData sampleData) {
     vec3 tileUv = clamp(sampleData.tileUv, vec3(0.0), vec3(1.0)); // TODO is the clamp necessary?
     int tileIndex = sampleData.megatextureIndex;
     vec3 voxelCoord = tileUv * vec3(u_dimensions);
-    ivec3 dimensions = u_dimensions;
+    ivec3 voxelDimensions = u_dimensions;
 
     #if defined(PADDING)
-        dimensions += u_paddingBefore + u_paddingAfter;
+        voxelDimensions += u_paddingBefore + u_paddingAfter;
         voxelCoord += vec3(u_paddingBefore);
     #endif
 
-    return getPropertiesFromMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
+    #if defined(NEAREST_SAMPLING)
+        // Round to the center of the nearest voxel
+        voxelCoord = floor(voxelCoord) + vec3(0.5); 
+    #endif
+
+    #if defined(MEGATEXTURE_2D)
+        // Tile location
+        vec2 tileUvOffset = index1DTo2DTexcoord(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
+
+        // Slice location
+        float slice = voxelCoord.z - 0.5;
+        int sliceIndex = int(floor(slice));
+        int sliceIndex0 = intClamp(sliceIndex, 0, voxelDimensions.z - 1);
+        vec2 sliceUvOffset0 = index1DTo2DTexcoord(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
+
+        // Voxel location
+        vec2 voxelUvOffset = clamp(voxelCoord.xy, vec2(0.5), vec2(voxelDimensions.xy) - vec2(0.5)) * u_megatextureVoxelSizeUv;
+
+        // Final location in the megatexture
+        vec2 uv0 = tileUvOffset + sliceUvOffset0 + voxelUvOffset;
+
+        #if defined(NEAREST_SAMPLING)
+            return getPropertiesFromMegatextureAtUv(uv0);
+        #else
+            float sliceLerp = fract(slice);
+            int sliceIndex1 = intMin(sliceIndex + 1, voxelDimensions.z - 1);
+            vec2 sliceUvOffset1 = index1DTo2DTexcoord(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
+            vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
+            Properties properties0 = getPropertiesFromMegatextureAtUv(uv0);
+            Properties properties1 = getPropertiesFromMegatextureAtUv(uv1);
+            return mixProperties(properties0, properties1, sliceLerp);
+        #endif
+    #elif defined(MEGATEXTURE_3D)
+        // TODO: 3D megatexture has not been implemented yet
+        // Tile location
+        vec3 tileUvOffset = indexToUv3d(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
+
+        // Voxel location
+        vec3 voxelUvOffset = clamp(voxelCoord, vec3(0.5), vec3(voxelDimensions) - vec2(0.5)) * u_megatextureVoxelSizeUv;
+
+        // Final location in the megatexture
+        vec3 uv = tileUvOffset + voxelUvOffset;
+
+        for (int i = 0; i < PROPERTY_COUNT; ++i) {
+            vec4 sample = texture3D(u_megatextureTextures[i], uv);
+            samples[i] = decodeTextureSample(sample);
+        }
+    #endif
 }
 
 // Convert an array of sample datas to a final weighted properties.
