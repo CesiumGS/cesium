@@ -165,6 +165,14 @@ struct OctreeNodeData {
     int flag;
 };
 
+struct TraversalData {
+    vec3 positionUvShapeSpace;
+    vec3 positionUvLocal;
+    float stepT;
+    ivec4 octreeCoords;
+    int parentOctreeIndex;
+};
+
 struct SampleData {
     int megatextureIndex;
     int levelsAbove;
@@ -1551,61 +1559,61 @@ void traverseOctreeDownwards(in vec3 positionUv, inout ivec4 octreeCoords, inout
     }
 }
 
-void traverseOctree(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, out float stepT, out ivec4 octreeCoords, out int parentOctreeIndex, out SampleData sampleDatas[SAMPLE_COUNT]) {
-    octreeCoords = ivec4(0);
-    parentOctreeIndex = 0;
+void traverseOctree(in vec3 positionUv, out TraversalData traversalData, out SampleData sampleDatas[SAMPLE_COUNT]) {
+    traversalData.octreeCoords = ivec4(0);
+    traversalData.parentOctreeIndex = 0;
 
     // TODO: is it possible for this to be out of bounds, and does it matter?
-    positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
-    positionUvLocal = positionUvShapeSpace;
+    traversalData.positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+    traversalData.positionUvLocal = traversalData.positionUvShapeSpace;
 
     OctreeNodeData rootData = getOctreeRootData();
     if (rootData.flag == OCTREE_FLAG_LEAF) {
         // No child data, only the root tile has data
         getOctreeLeafData(rootData, sampleDatas);
-        stepT = u_stepSize;
+        traversalData.stepT = u_stepSize;
     }
     else
     {
-        traverseOctreeDownwards(positionUvShapeSpace, octreeCoords, parentOctreeIndex, sampleDatas);
-        float dimAtLevel = pow(2.0, float(octreeCoords.w));
-        positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords);
-        stepT = u_stepSize / dimAtLevel;
+        traverseOctreeDownwards(traversalData.positionUvShapeSpace, traversalData.octreeCoords, traversalData.parentOctreeIndex, sampleDatas);
+        float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+        traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords);
+        traversalData.stepT = u_stepSize / dimAtLevel;
     }
 }
 
-void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpace, out vec3 positionUvLocal, inout float stepT, inout ivec4 octreeCoords, inout int parentOctreeIndex, inout SampleData sampleDatas[SAMPLE_COUNT]) {
-    float dimAtLevel = pow(2.0, float(octreeCoords.w));
-    positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);    
-    positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
+void traverseOctreeFromExisting(in vec3 positionUv, inout TraversalData traversalData, inout SampleData sampleDatas[SAMPLE_COUNT]) {
+    float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+    traversalData.positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);    
+    traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
     
     // Note: This code assumes the position is always inside the root tile.
-    bool insideTile = octreeCoords.w == 0 || inRange(positionUvLocal, vec3(0.0), vec3(1.0)); 
+    bool insideTile = traversalData.octreeCoords.w == 0 || inRange(traversalData.positionUvLocal, vec3(0.0), vec3(1.0)); 
 
     if (!insideTile)
     {
         // Go up tree
         for (int i = 0; i < OCTREE_MAX_LEVELS; ++i)
         {
-            octreeCoords.xyz /= ivec3(2);
-            octreeCoords.w -= 1;
-            dimAtLevel /= 2.0;
+            traversalData.octreeCoords.xyz /= ivec3(2);
+            traversalData.octreeCoords.w -= 1;
+            dimAtLevel *= 0.5;
 
-            positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
-            insideTile = octreeCoords.w == 0 || inRange(positionUvLocal, vec3(0.0), vec3(1.0));
+            traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
+            insideTile = traversalData.octreeCoords.w == 0 || inRange(traversalData.positionUvLocal, vec3(0.0), vec3(1.0));
             
             if (!insideTile) {
-                parentOctreeIndex = getOctreeParentIndex(parentOctreeIndex);
+                traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
             } else {
                 break;
             }
         }
 
         // Go down tree
-        traverseOctreeDownwards(positionUvShapeSpace, octreeCoords, parentOctreeIndex, sampleDatas);
-        float dimAtLevel = pow(2.0, float(octreeCoords.w));
-        positionUvLocal = positionUvShapeSpace * dimAtLevel - vec3(octreeCoords.xyz);
-        stepT = u_stepSize / dimAtLevel;
+        traverseOctreeDownwards(traversalData.positionUvShapeSpace, traversalData.octreeCoords, traversalData.parentOctreeIndex, sampleDatas);
+        float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+        traversalData.positionUvLocal = traversalData.positionUvShapeSpace * dimAtLevel - vec3(traversalData.octreeCoords.xyz);
+        traversalData.stepT = u_stepSize / dimAtLevel;
     }
 }
 
@@ -1630,8 +1638,6 @@ void main()
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
 
-    // gl_FragColor = vec4(convertUvToShapeUvSpace(positionUv).yyy, 1.0); return;
-
     vec4 colorAccum = vec4(0.0);
 
     #if defined(DESPECKLE)
@@ -1641,18 +1647,20 @@ void main()
     #endif
 
     // Traverse the tree from the start position
-    vec3 positionUvShapeSpace;
-    vec3 positionUvLocal;
-    float stepT;
-    ivec4 octreeCoords;
-    int parentOctreeIndex;
+    TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctree(positionUv, positionUvShapeSpace, positionUvLocal, stepT, octreeCoords, parentOctreeIndex, sampleDatas);
+    traverseOctree(positionUv, traversalData, sampleDatas);
+
+    // if (traversalData.octreeCoords.w == 6 && traversalData.octreeCoords.x == 33 && traversalData.octreeCoords.y == 49 && traversalData.octreeCoords.z == 63) {
+    //     if (sampleDatas[0].levelsAbove == 1) {
+    //         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); return;
+    //     }
+    // }
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * stepT;
-        positionUv += noise * stepT * viewDirUv;
+        currT += noise * traversalData.stepT;
+        positionUv += noise * traversalData.stepT * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -1662,16 +1670,16 @@ void main()
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
-        Properties properties = getPropertiesFromMegatextureAtLocalPosition(positionUvLocal, octreeCoords, sampleDatas);
+        Properties properties = getPropertiesFromMegatextureAtLocalPosition(traversalData.positionUvLocal, traversalData.octreeCoords, sampleDatas);
         
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
-        fragmentInput.voxel.positionUvLocal = positionUvLocal;
+        fragmentInput.voxel.positionShapeUv = traversalData.positionUvShapeSpace;
+        fragmentInput.voxel.positionUvLocal = traversalData.positionUvLocal;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.travelDistance = stepT;
+        fragmentInput.voxel.travelDistance = traversalData.stepT;
 
         #if defined(STYLE_USE_POSITION_EC)
             styleInput.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
@@ -1719,8 +1727,8 @@ void main()
         }
 
         // Keep raymarching
-        currT += stepT;
-        positionUv += stepT * viewDirUv;
+        currT += traversalData.stepT;
+        positionUv += traversalData.stepT * viewDirUv;
 
         // Check if there's more intersections.
         if (currT > endT) {
@@ -1742,7 +1750,7 @@ void main()
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctree but is optimized for the common
         // case where the ray is in the same tile as the previous step.
-        traverseOctreeFromExisting(positionUv, positionUvShapeSpace, positionUvLocal, stepT, octreeCoords, parentOctreeIndex, sampleDatas);
+        traverseOctreeFromExisting(positionUv, traversalData, sampleDatas);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
