@@ -128,4 +128,18 @@ describe("Core/IndexDatatype", function () {
       IndexDatatype.getSizeInBytes(undefined);
     }).toThrowDeveloperError();
   });
+
+  it("IndexDatatype.fromTypedArray works", function () {
+    expect(IndexDatatype.fromTypedArray(new Uint8Array())).toBe(
+      IndexDatatype.UNSIGNED_BYTE
+    );
+    expect(IndexDatatype.fromTypedArray(new Uint16Array())).toBe(
+      IndexDatatype.UNSIGNED_SHORT
+    );
+    expect(IndexDatatype.fromTypedArray(new Uint32Array())).toBe(
+      IndexDatatype.UNSIGNED_INT
+    );
+    expect(IndexDatatype.fromTypedArray(new Int8Array())).toBeUndefined();
+    expect(IndexDatatype.fromTypedArray([])).toBeUndefined();
+  });
 });
