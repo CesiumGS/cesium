@@ -47,7 +47,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
    * @default undefined
    */
   this.animationTime = options.animationTime;
-  this._prevAnimationTime = undefined;
+  this._prevAnimationDelta = undefined;
 
   /**
    * The event fired when this animation is started.  This can be used, for
@@ -249,7 +249,7 @@ Object.defineProperties(ModelAnimation.prototype, {
  * @returns {Number} Returns the local animation time.
  *
  * @example
- * // Use real time for model animation (also set 
+ * // Use real time for model animation (also set
  * // ModelAnimationCollection#animateWhilePaused)
  * function animationTime(duration) {
  *     return Date.now() / 1000 / duration;

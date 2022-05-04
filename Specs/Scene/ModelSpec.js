@@ -1915,6 +1915,7 @@ describe(
         new Date("January 1, 2014 12:00:00 UTC")
       );
       const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = false;
       let animationTime = 0;
       const a = animations.add({
         name: "animation_1",
@@ -1927,12 +1928,65 @@ describe(
       a.update.addEventListener(spyUpdate);
 
       animBoxesModel.show = true;
+      // triggers an update with localTime 0
       scene.renderForSpecs(time);
       animationTime = 0.5;
+      // triggers an update with localTime 0.5
       scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+      // should not trigger an update because animationTime didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.5;
+      // should not trigger an update because the scene time didn't change
       scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
       animationTime = 1.7;
+      // triggers an update with localTime 1.7
       scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("animates while paused with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = true;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      // update(0)
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      // update(0.5)
+      scene.renderForSpecs(time);
+      // no update, because animationTime didn't change
+      scene.renderForSpecs(time);
+      animationTime = 1.7;
+      // update(1.7)
+      scene.renderForSpecs(time);
 
       expect(spyUpdate.calls.count()).toEqual(3);
       expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(

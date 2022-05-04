@@ -442,15 +442,14 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       (delta <= 1.0 || repeat) &&
       !pastStopTime;
 
-    if (
-      delta === scheduledAnimation._prevAnimationTime &&
-      !play === (scheduledAnimation._state === ModelAnimationState.STOPPED)
-    ) {
+    if (delta === scheduledAnimation._prevAnimationDelta) {
+      const animationStopped =
+        scheduledAnimation._state === ModelAnimationState.STOPPED;
       // no change to delta, and no change to the animation state means we can
       // skip the update this time around.
-      continue;
+      if (play !== animationStopped) continue;
     }
-    scheduledAnimation._prevAnimationTime = delta;
+    scheduledAnimation._prevAnimationDelta = delta;
 
     // If it IS, or WAS, animating...
     if (play || scheduledAnimation._state === ModelAnimationState.ANIMATING) {
