@@ -9,7 +9,7 @@
 ##### Additions :tada:
 
 - Added `IndexDatatype.fromTypedArray`. [#10350](https://github.com/CesiumGS/cesium/pull/10350)
-- Fixed crash for zero-area `region` bounding volumes in a 3D Tileset.
+- Fixed crash for zero-area `region` bounding volumes in a 3D Tileset. [#10351](https://github.com/CesiumGS/cesium/pull/10351)
 
 ##### Fixes :wrench:
 
