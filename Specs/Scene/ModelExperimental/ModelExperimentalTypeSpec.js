@@ -17,6 +17,9 @@ describe("Scene/ModelExperimental/ModelExperimentalType", function () {
     expect(
       ModelExperimentalType.is3DTiles(ModelExperimentalType.TILE_PNTS)
     ).toBe(true);
+    expect(
+      ModelExperimentalType.is3DTiles(ModelExperimentalType.TILE_GEOJSON)
+    ).toBe(true);
   });
 
   it("is3DTiles throws for invalid value", function () {

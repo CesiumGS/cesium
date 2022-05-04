@@ -115,7 +115,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     });
   });
 
-  it("renders I3DM content", function () {
+  it("renders i3dm content", function () {
     if (!scene.context.instancedArrays) {
       return;
     }

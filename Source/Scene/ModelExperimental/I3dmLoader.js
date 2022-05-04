@@ -50,9 +50,9 @@ const Instances = ModelComponents.Instances;
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.i3dmResource The {@link Resource} containing the I3DM.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the I3DM contents.
- * @param {Number} [options.byteOffset=0] The byte offset to the beginning of the I3DM contents in the array buffer.
+ * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
+ * @param {Number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -187,7 +187,7 @@ Object.defineProperties(I3dmLoader.prototype, {
  * @private
  */
 I3dmLoader.prototype.load = function () {
-  // Parse the I3DM into its various sections.
+  // Parse the i3dm into its various sections.
   const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
   const featureTableJson = i3dm.featureTableJson;
@@ -203,7 +203,7 @@ I3dmLoader.prototype.load = function () {
   );
   this._featureTable = featureTable;
 
-  // Get the number of instances in the I3DM.
+  // Get the number of instances in the i3dm.
   const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
   featureTable.featuresLength = instancesLength;
   if (!defined(instancesLength)) {
@@ -288,7 +288,7 @@ I3dmLoader.prototype.load = function () {
 function handleError(i3dmLoader, error) {
   i3dmLoader.unload();
   i3dmLoader._state = I3dmLoaderState.FAILED;
-  const errorMessage = "Failed to load I3DM";
+  const errorMessage = "Failed to load i3dm";
   error = i3dmLoader.getError(errorMessage, error);
   i3dmLoader._promise.reject(error);
 }
@@ -537,7 +537,7 @@ function createInstances(loader, components) {
 }
 
 /**
- * Returns a typed array of positions from the I3DM's feature table. The positions
+ * Returns a typed array of positions from the i3dm's feature table. The positions
  * returned are dequantized, if dequantization is applied.
  *
  * @private

@@ -22,7 +22,12 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 
 /**
- * Loads a GeoJson model.
+ * Loads a GeoJson model as part of the MAXAR_content_geojson extension with the following constraints:
+ * <ul>
+ *   <li>The top level GeoJSON type must be FeatureCollection or Feature.</li>
+ *   <li>The geometry type must be LineString, MultiLineString, MultiPolygon, or Polygon.</li>
+ *   <li>All geometry types are converted to lines.</li>
+ * </ul>
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
