@@ -423,7 +423,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         pastStopTime ? stopTime : sceneTime,
         startTime
       );
-      delta = scheduledAnimation.animationTime
+      delta = defined(scheduledAnimation.animationTime)
         ? scheduledAnimation.animationTime(duration, seconds)
         : seconds / duration;
     }
