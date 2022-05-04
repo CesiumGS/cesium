@@ -8,7 +8,7 @@
 
 ##### Additions :tada:
 
-- Added `IndexDatatype.fromTypedArray`.
+- Added `IndexDatatype.fromTypedArray`. [#10350](https://github.com/CesiumGS/cesium/pull/10350)
 
 ##### Fixes :wrench:
 
