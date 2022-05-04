@@ -16,7 +16,6 @@ Below is an example of how this code might look. Properties like "temperature" a
 #define INTERSECTION_COUNT ###
 #define JITTER
 #define NEAREST_SAMPLING
-#define DESPECKLE
 #define STATISTICS
 #define PADDING
 #define PICKING
@@ -1623,12 +1622,6 @@ void main()
 
     vec4 colorAccum = vec4(0.0);
 
-    #if defined(DESPECKLE)
-        vec4 colorAccumTemp = vec4(0.0);
-        int nonZeroCount = 0;
-        int nonZeroMax = 3;
-    #endif
-
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
@@ -1671,31 +1664,8 @@ void main()
         color.rgb = max(color.rgb, vec3(0.0));
         color.a = clamp(color.a, 0.0, 1.0);
 
-        #if defined(DESPECKLE)
-            if (color.a < (1.0 - ALPHA_ACCUM_MAX)) {
-                float partialAlpha = float(nonZeroCount) / float(nonZeroMax);
-                colorAccum.a += partialAlpha * (colorAccumTemp.a - colorAccum.a);
-                colorAccum.rgb += partialAlpha * colorAccumTemp.rgb;
-                colorAccumTemp = vec4(0.0);
-                nonZeroCount = 0;
-            } else {
-                nonZeroCount++;
-                if (nonZeroCount == 1) {
-                    colorAccumTemp.a = colorAccum.a;
-                }
-                colorAccumTemp += (1.0 - colorAccumTemp.a) * vec4(color.rgb * color.a, color.a);
-
-                if (nonZeroCount >= nonZeroMax) {
-                    colorAccum.a = colorAccumTemp.a;
-                    colorAccum.rgb += colorAccumTemp.rgb;
-                    colorAccumTemp = vec4(0.0);
-                    nonZeroCount = 0;
-                }
-            }
-        #else
-            // Pre-multiplied alpha blend
-            colorAccum += (1.0 - colorAccum.a) * vec4(color.rgb * color.a, color.a);
-        #endif
+        // Pre-multiplied alpha blend
+        colorAccum += (1.0 - colorAccum.a) * vec4(color.rgb * color.a, color.a);
 
         // Stop traversing if the alpha has been fully saturated
         if (colorAccum.a > ALPHA_ACCUM_MAX) {

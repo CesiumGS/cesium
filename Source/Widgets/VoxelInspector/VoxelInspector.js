@@ -67,7 +67,6 @@ function VoxelInspector(container, scene) {
   displayPanelContents.appendChild(
     createCheckbox("Nearest Sampling", "nearestSampling")
   );
-  displayPanelContents.appendChild(createCheckbox("Despeckle", "despeckle"));
 
   const screenSpaceErrorContainer = document.createElement("div");
   screenSpaceErrorContainer.appendChild(

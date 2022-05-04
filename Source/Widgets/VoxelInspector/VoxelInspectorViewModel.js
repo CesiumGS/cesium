@@ -202,12 +202,6 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: true,
   });
   addProperty({
-    name: "despeckle",
-    initialValue: false,
-    setPrimitiveFunction: true,
-    getPrimitiveFunction: true,
-  });
-  addProperty({
     name: "screenSpaceError",
     initialValue: 4.0,
     setPrimitiveFunction: true,

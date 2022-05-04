@@ -322,12 +322,6 @@ function VoxelPrimitive(options) {
    * @type {Boolean}
    * @private
    */
-  this._despeckle = false;
-
-  /**
-   * @type {Boolean}
-   * @private
-   */
   this._depthTest = true;
 
   /**
@@ -827,28 +821,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       //>>includeEnd('debug');
 
       this._stepSizeMultiplier = stepSize;
-    },
-  },
-
-  /**
-   * Gets or sets whether to reduce thin and noisy details.
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {Boolean}
-   */
-  despeckle: {
-    get: function () {
-      return this._despeckle;
-    },
-    set: function (despeckle) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool("despeckle", despeckle);
-      //>>includeEnd('debug');
-
-      if (this._despeckle !== despeckle) {
-        this._despeckle = despeckle;
-        this._shaderDirty = true;
-      }
     },
   },
 
@@ -1726,7 +1698,6 @@ function buildDrawCommands(that, context) {
   const minimumValues = provider.minimumValues;
   const maximumValues = provider.maximumValues;
   const keyframeCount = that._keyframeCount;
-  const despeckle = that._despeckle;
   const jitter = that._jitter;
   const nearestSampling = that._nearestSampling;
   const customShader = that._customShader;
@@ -1798,9 +1769,6 @@ function buildDrawCommands(that, context) {
       undefined,
       ShaderDestination.FRAGMENT
     );
-  }
-  if (despeckle) {
-    shaderBuilder.addDefine("DESPECKLE", undefined, ShaderDestination.FRAGMENT);
   }
   if (hasStatistics) {
     shaderBuilder.addDefine(
