@@ -156,6 +156,7 @@ TileBoundingRegion.prototype.computeBoundingVolumes = function (ellipsoid) {
 const cartesian3Scratch = new Cartesian3();
 const cartesian3Scratch2 = new Cartesian3();
 const cartesian3Scratch3 = new Cartesian3();
+const westNormalScratch = new Cartesian3();
 const eastWestNormalScratch = new Cartesian3();
 const westernMidpointScratch = new Cartesian3();
 const easternMidpointScratch = new Cartesian3();
@@ -186,7 +187,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   const westNormal = Cartesian3.cross(
     westernMidpointCartesian,
     Cartesian3.UNIT_Z,
-    cartesian3Scratch
+    westNormalScratch
   );
   Cartesian3.normalize(westNormal, tileBB.westNormal);
 
@@ -212,7 +213,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   );
 
   if (Cartesian3.magnitude(westVector) === 0.0) {
-    westVector = Cartesian3.clone(tileBB.westNormal, westVector);
+    westVector = Cartesian3.clone(westNormal, westVector);
   }
 
   const eastWestNormal = Cartesian3.normalize(
