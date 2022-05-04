@@ -39,7 +39,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
-        // Example 1: Draw a small textured polygon on the globe surface.
+        // Example 1: Small textured polygon.
         let positions = Cesium.Cartesian3.fromDegreesArray([
           -117.4,
           37.4,
@@ -70,7 +70,7 @@
           }),
         });
 
-        // Example 2: Draw a small textured polygon with holes on the globe surface.
+        // Example 2: Small textured polygon with holes.
         let polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
             -116.5,
@@ -192,7 +192,7 @@
           }),
         });
 
-        // Example 3: Draw a large textured polygon with perPositionHeights.
+        // Example 3: Large (subdivided) textured polygon with perPositionHeights.
         polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArrayHeights([
             -115,
@@ -259,7 +259,7 @@
           }),
         });
 
-        // Example 4: Draw a large textured polygon on the globe surface (breaks).
+        // Example 4: Large (subdivided) textured polygon.
         positions = Cesium.Cartesian3.fromDegreesArray([
           -112,
           38,
@@ -290,7 +290,7 @@
           }),
         });
 
-        // Example 5 Draw an extruded polygon (breaks)
+        // Example 5: Textured extruded polygon.
         positions = Cesium.Cartesian3.fromDegreesArray([
           -109.4,
           37.4,
@@ -322,7 +322,7 @@
           }),
         });
 
-        // Example 6: Draw a textured extruded polygon with perPositionHeights (breaks).
+        // Example 6: Textured extruded polygon with perPositionHeights.
         positions = Cesium.Cartesian3.fromDegreesArrayHeights([
           -108.4,
           37.4,
@@ -387,7 +387,7 @@
           })
         );
 
-        // Ground primitive: doesn't work.
+        // Example 7: Ground primitive - custom texture coordinates are not expected to work, but the polygon should render.
 
         positions = Cesium.Cartesian3.fromDegreesArray([
           -105,
