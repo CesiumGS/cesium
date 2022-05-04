@@ -234,11 +234,7 @@ gulp.task("build", async function () {
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(
-    createWorkers(),
-    createGalleryList(),
-    generateThirdParty()
-  );
+  return Promise.join(createWorkers(), createGalleryList());
 });
 
 gulp.task("build-watch", function () {
@@ -297,6 +293,10 @@ gulp.task("build-specs", function buildSpecs() {
   );
 
   return promise;
+});
+
+gulp.task("build-third-party", function () {
+  return generateThirdParty();
 });
 
 gulp.task("clean", function (done) {
@@ -461,6 +461,7 @@ gulp.task(
     delete packageJson.scripts.build;
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
+    delete packageJson.scripts["build-third-party"];
     delete packageJson.scripts.buildApps;
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
@@ -1736,7 +1737,7 @@ function createSpecList() {
  */
 function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   if (!fs.existsSync(path)) {
-    return Promise.resolve([]);
+    return Promise.reject(`${path} does not exist`);
   }
 
   const fsReadFile = Promise.promisify(fs.readFile);

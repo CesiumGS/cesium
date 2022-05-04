@@ -957,7 +957,7 @@ When adding or updating a third-party library:
   1. Update [`ThirdParty.extra.json`](../../../ThirdParty.extra.json) with the package `name`. If it is an npm module included in [`package.json`](../../../package.json), use the exact package name.
   2. If the library is _not_ an npm module included in `package.json`, provide the `license`, `version`, and `url` fields. Otherwise, this information can be detected using `package.json`.
   3. If there is a special case regarding the license, such as choosing to use a single license from a list of multiple available ones, providing the `license` field will override information detected using `package.json`. The `notes` field should also be provided in the case explaining the exception.
-  4. Run `npm run build` and commit the resulting `ThirdParty.json`
+  4. Run `npm run build-third-party` and commit the resulting `ThirdParty.json`
 
 ## Widgets
 
