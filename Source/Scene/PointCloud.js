@@ -456,7 +456,10 @@ function createResources(pointCloud, frameState) {
 
   let batchIdsVertexBuffer;
   if (hasBatchIds) {
-    batchIds = prepareVertexAttribute(batchIds, "batchIds");
+    batchIds.typedArray = prepareVertexAttribute(
+      batchIds.typedArray,
+      "batchIds"
+    );
     batchIdsVertexBuffer = Buffer.createVertexBuffer({
       context: context,
       typedArray: batchIds.typedArray,

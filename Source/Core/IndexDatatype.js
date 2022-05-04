@@ -188,6 +188,12 @@ IndexDatatype.fromTypedArray = function (array) {
   if (array instanceof Uint32Array) {
     return IndexDatatype.UNSIGNED_INT;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be a Uint8Array, Uint16Array, or Uint32Array."
+  );
+  //>>includeEnd('debug');
 };
 
 export default Object.freeze(IndexDatatype);
