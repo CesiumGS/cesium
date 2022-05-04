@@ -2,9 +2,19 @@
 
 ### 1.94 - 2022-06-01
 
+##### Additions :tada:
+
+- Added `Cesium3DTileStyle.fromUrl` for loading a style from a url.
+
 ##### Fixes :wrench:
 
 - Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
+- Fixed race condition which can occur when updating `Cesium3DTileStyle` before its `readyPromise` has resolved. [#10345](https://github.com/CesiumGS/cesium/issues/10345)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.95. Use `Cesium3DTileStyle.fromUrl` instead if loading a style from a url.
+- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.95. Use `Cesium3DTileStyle.fromUrl` instead if loading a style from a url.
 
 ### 1.93 - 2022-05-02
 

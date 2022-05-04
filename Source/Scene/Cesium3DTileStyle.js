@@ -1,6 +1,7 @@
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import ConditionsExpression from "./ConditionsExpression.js";
@@ -16,7 +17,7 @@ import Expression from "./Expression.js";
  * @alias Cesium3DTileStyle
  * @constructor
  *
- * @param {Resource|String|Object} [style] The url of a style or an object defining a style.
+ * @param {Object} [style] An object defining a style.
  *
  * @example
  * tileset.style = new Cesium.Cesium3DTileStyle({
@@ -82,19 +83,24 @@ function Cesium3DTileStyle(style) {
 
   this._colorShaderTranslucent = false;
 
-  let promise;
   if (typeof style === "string" || style instanceof Resource) {
-    const resource = Resource.createIfNeeded(style);
-    promise = resource.fetchJson(style);
-  } else {
-    promise = Promise.resolve(style);
-  }
+    //>>includeStart('debug', pragmas.debug);
+    deprecationWarning(
+      "Cesium3DTileStyle constructor",
+      "string or Resource style parameter in the Cesium3DTileStyle constructor was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead."
+    );
+    //>>includeEnd('debug');
 
-  const that = this;
-  this._readyPromise = promise.then(function (styleJson) {
-    setup(that, styleJson);
-    return that;
-  });
+    const resource = Resource.createIfNeeded(style);
+    const that = this;
+    this._readyPromise = resource.fetchJson(style).then(function (styleJson) {
+      setup(that, styleJson);
+      return that;
+    });
+  } else {
+    setup(this, style);
+    this._readyPromise = Promise.resolve(this);
+  }
 }
 
 function setup(that, styleJson) {
@@ -207,11 +213,18 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    *
    * @type {Boolean}
    * @readonly
+   * @deprecated
    *
    * @default false
    */
   ready: {
     get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      deprecationWarning(
+        "ready",
+        "ready was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead if loading a style from a url."
+      );
+      //>>includeEnd('debug');
       return this._ready;
     },
   },
@@ -223,9 +236,16 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    *
    * @type {Promise.<Cesium3DTileStyle>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      deprecationWarning(
+        "readyPromise",
+        "readyPromise was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead if loading a style from a url."
+      );
+      //>>includeEnd('debug');
       return this._readyPromise;
     },
   },
@@ -1632,6 +1652,28 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     },
   },
 });
+
+/**
+ * Asynchronously creates a Cesium3DTileStyle from a url.
+ *
+ * @param {Resource|String} url The url of the style to be loaded.
+ *
+ * @returns {Promise.<Cesium3DTileStyle>} A promise which resolves to the created style
+ *
+ * @private
+ */
+Cesium3DTileStyle.fromUrl = function (url) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(url)) {
+    throw new DeveloperError("url is required");
+  }
+  //>>includeEnd('debug');
+
+  const resource = Resource.createIfNeeded(url);
+  return resource.fetchJson(url).then(function (styleJson) {
+    return new Cesium3DTileStyle(styleJson);
+  });
+};
 
 /**
  * Gets the color shader function for this style.
