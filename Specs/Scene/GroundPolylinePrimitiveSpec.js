@@ -212,7 +212,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -229,7 +231,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      });
     });
 
     it("adds afterRender promise to frame state", function () {
@@ -529,9 +533,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -552,9 +556,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });

@@ -174,52 +174,49 @@
 
         function offsetByDistance() {
           Sandcastle.declare(offsetByDistance);
-          Cesium.when.all(
-            [
-              Cesium.Resource.createIfNeeded(
-                "../images/Cesium_Logo_overlay.png"
-              ).fetchImage(),
-              Cesium.Resource.createIfNeeded(
-                "../images/facility.gif"
-              ).fetchImage(),
-            ],
-            function (images) {
-              const billboards = scene.primitives.add(
-                new Cesium.BillboardCollection()
-              );
+          Promise.all([
+            Cesium.Resource.createIfNeeded(
+              "../images/Cesium_Logo_overlay.png"
+            ).fetchImage(),
+            Cesium.Resource.createIfNeeded(
+              "../images/facility.gif"
+            ).fetchImage(),
+          ]).then(function (images) {
+            const billboards = scene.primitives.add(
+              new Cesium.BillboardCollection()
+            );
 
-              // As viewer zooms closer to facility billboard,
-              // increase pixelOffset on CesiumLogo billboard to this height
-              const facilityHeight = images[1].height;
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            const facilityHeight = images[1].height;
 
-              // colocated billboards, separate as viewer gets closer
-              billboards.add({
-                image: images[1],
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-              });
-              billboards.add({
-                image: images[0],
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
-                pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
-                  1.0e3,
-                  1.0,
-                  1.5e6,
-                  0.0
-                ),
-                translucencyByDistance: new Cesium.NearFarScalar(
-                  1.0e3,
-                  1.0,
-                  1.5e6,
-                  0.1
-                ),
-              });
-            }
-          );
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+              image: images[1],
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            });
+            billboards.add({
+              image: images[0],
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
+              pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
+                1.0e3,
+                1.0,
+                1.5e6,
+                0.0
+              ),
+              translucencyByDistance: new Cesium.NearFarScalar(
+                1.0e3,
+                1.0,
+                1.5e6,
+                0.1
+              ),
+            });
+          });
         }
 
         function addPointBillboards() {

@@ -1,367 +1,65 @@
-/**
- This is a version of Jasmine's boot.js modified to work with specs defined with ES6.  The original comments from boot.js follow.
+import customizeJasmine from "./customizeJasmine.js";
+import defined from "../Source/Core/defined.js";
+import queryToObject from "../Source/Core/queryToObject.js";
 
- Starting with version 2.0, this file "boots" Jasmine, performing all of the necessary initialization before executing the loaded environment and all of a project's specs. This file should be loaded after `jasmine.js` and `jasmine_html.js`, but before any project source files or spec files are loaded. Thus this file can also be used to customize Jasmine for a project.
+const queryString = queryToObject(window.location.search.substring(1));
 
- If a project is using Jasmine via the standalone distribution, this file can be customized directly. If a project is using Jasmine via the [Ruby gem][jasmine-gem], this file can be copied into the support directory via `jasmine copy_boot_js`. Other environments (e.g., Python) will have different mechanisms.
+let webglValidation = false;
+let webglStub = false;
+const built = window.location.search.indexOf("built") !== -1;
+const release = window.location.search.indexOf("release") !== -1;
+const categoryString = queryString.category;
+const excludeCategoryString = queryString.not;
 
- The location of `boot.js` can be specified and/or overridden in `jasmine.yml`.
-
- [jasmine-gem]: http://github.com/pivotal/jasmine-gem
- */
-
-// Use a pragma so we can remove this code when building specs for running in ES5
-
-//>>includeStart('debug', pragmas.debug);
-import * as Cesium from "../Source/Cesium.js";
-//>>includeEnd('debug');
-
-import addDefaultMatchers from "./addDefaultMatchers.js";
-import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
-
-// set this for uniform test resolution across devices
-window.devicePixelRatio = 1;
-
-function getQueryParameter(name) {
-  var match = new RegExp("[?&]" + name + "=([^&]*)").exec(
-    window.location.search
-  );
-  return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+if (defined(queryString.webglValidation)) {
+  webglValidation = true;
 }
 
-var release = getQueryParameter("release");
+if (defined(queryString.webglStub)) {
+  webglStub = true;
+}
 
-/*global jasmineRequire,jasmine,exports,specs*/
-
-var when = Cesium.when;
-
-/**
- * ## Require &amp; Instantiate
- *
- * Require Jasmine's core files. Specifically, this requires and attaches all of Jasmine's code to the `jasmine` reference.
- */
-window.jasmine = jasmineRequire.core(jasmineRequire);
-
-window.specsUsingRelease = release;
-
-/**
- * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
- */
-jasmineRequire.html(jasmine);
-
-/**
- * Create the Jasmine environment. This is used to run all specs in a project.
- */
-var env = jasmine.getEnv();
-
-/**
- * ## The Global Interface
- *
- * Build up the functions that will be exposed as the Jasmine public interface. A project can customize, rename or alias any of these functions as desired, provided the implementation remains unchanged.
- */
-var jasmineInterface = jasmineRequire["interface"](jasmine, env);
-
-/**
- * Helper function for readability below.
- */
-function extend(destination, source) {
-  for (var property in source) {
-    if (source.hasOwnProperty(property)) {
-      destination[property] = source[property];
-    }
+if (built) {
+  if (release) {
+    window.CESIUM_BASE_URL = "../Build/Cesium";
+  } else {
+    window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
   }
-  return destination;
-}
-
-/**
- * Add all of the Jasmine global/public interface to the proper global, so a project can use the public interface directly. For example, calling `describe` in specs instead of `jasmine.getEnv().describe`.
- */
-if (typeof window === "undefined" && typeof exports === "object") {
-  extend(exports, jasmineInterface);
 } else {
-  extend(window, jasmineInterface);
+  window.CESIUM_BASE_URL = "../Source/";
 }
 
-// Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
-// call done() when a returned promise resolves.
-var originalIt = window.it;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
-window.it = function (description, f, timeout, categories) {
-  originalIt(
-    description,
-    function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    },
-    timeout,
-    categories
-  );
-};
-
-var originalFit = window.fit;
-
-window.fit = function (description, f, timeout, categories) {
-  originalFit(
-    description,
-    function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    },
-    timeout,
-    categories
-  );
-};
-
-var originalBeforeEach = window.beforeEach;
-
-window.beforeEach = function (f) {
-  originalBeforeEach(function (done) {
-    var result = f();
-    when(
-      result,
-      function () {
-        done();
-      },
-      function (e) {
-        done.fail("promise rejected: " + e.toString());
-      }
-    );
-  });
-};
-
-var originalAfterEach = window.afterEach;
-
-window.afterEach = function (f) {
-  originalAfterEach(function (done) {
-    var result = f();
-    when(
-      result,
-      function () {
-        done();
-      },
-      function (e) {
-        done.fail("promise rejected: " + e.toString());
-      }
-    );
-  });
-};
-
-var originalBeforeAll = window.beforeAll;
-
-window.beforeAll = function (f) {
-  originalBeforeAll(function (done) {
-    var result = f();
-    when(
-      result,
-      function () {
-        done();
-      },
-      function (e) {
-        done.fail("promise rejected: " + e.toString());
-      }
-    );
-  });
-};
-
-var originalAfterAll = window.afterAll;
-
-window.afterAll = function (f) {
-  originalAfterAll(function (done) {
-    var result = f();
-    when(
-      result,
-      function () {
-        done();
-      },
-      function (e) {
-        done.fail("promise rejected: " + e.toString());
-      }
-    );
-  });
-};
-
-/**
- * ## Runner Parameters
- *
- * More browser specific code - wrap the query string in an object and to allow for getting/setting parameters from the runner user interface.
- */
-
-var queryString = Cesium.queryToObject(window.location.search.substring(1));
-
-if (queryString.webglValidation !== undefined) {
-  window.webglValidation = true;
-}
-
-if (queryString.webglStub !== undefined) {
-  window.webglStub = true;
-}
-
-var queryStringForSpecFocus = Cesium.clone(queryString);
-if (queryStringForSpecFocus.category === "none") {
-  delete queryStringForSpecFocus.category;
-}
-
-var catchingExceptions = queryString["catch"];
-env.catchExceptions(
-  typeof catchingExceptions === "undefined" ? true : catchingExceptions
-);
-
-/**
- * ## Reporters
- * The `HtmlReporter` builds all of the HTML UI for the runner page. This reporter paints the dots, stars, and x's for specs, as well as all spec names and all failures (if any).
- */
-var htmlReporter = new jasmine.HtmlReporter({
-  env: env,
-  onRaiseExceptionsClick: function () {
-    queryString["catch"] = !env.catchingExceptions();
-  },
-  addToExistingQueryString: function (key, value) {
-    queryStringForSpecFocus[key] = value;
-    return "?" + Cesium.objectToQuery(queryStringForSpecFocus);
-  },
-  getContainer: function () {
-    return document.body;
-  },
-  createElement: function () {
-    return document.createElement.apply(document, arguments);
-  },
-  createTextNode: function () {
-    return document.createTextNode.apply(document, arguments);
-  },
-  timer: new jasmine.Timer(),
-});
-
-/**
- * The `jsApiReporter` also receives spec results, and is used by any environment that needs to extract the results  from JavaScript.
- */
-env.addReporter(jasmineInterface.jsApiReporter);
-env.addReporter(htmlReporter);
-
-var categoryString = queryString.category;
-
-var categories;
-if (categoryString) {
-  categories = categoryString.split(",");
-}
-
-var notCategoryString = queryString.not;
-
-var notCategories;
-if (notCategoryString) {
-  notCategories = notCategoryString.split(",");
-}
-
-/**
- * Filter which specs will be run by matching the start of the full name against the `spec` query param.
- */
-var specFilter = new jasmine.HtmlSpecFilter({
+const specFilter = new jasmine.HtmlSpecFilter({
   filterString: function () {
     return queryString.spec;
   },
 });
 
-env.specFilter = function (spec) {
-  if (!specFilter.matches(spec.getFullName())) {
-    return false;
-  }
+const env = jasmine.getEnv();
+env.configure({
+  stopSpecOnExpectationFailure: false,
+  stopOnSpecFailure: false,
+  random: false,
+  hideDisabled: true,
+  specFilter: function (spec) {
+    if (
+      !specFilter.matches(spec.getFullName()) ||
+      (categoryString === "none" && !defined(queryString.spec))
+    ) {
+      return false;
+    }
 
-  // If we're not filtering by category, include this spec.
-  if (!categories && !notCategories) {
     return true;
-  }
-
-  // At least one of this spec's categories must match one of the selected categories.
-  var keep = false;
-  var toCheck;
-  var i;
-
-  if (categories && categories.indexOf("All") < 0) {
-    toCheck = spec;
-    while (!keep && toCheck) {
-      if (toCheck.categories) {
-        if (categories.indexOf(toCheck.categories) >= 0) {
-          keep = true;
-        }
-
-        for (i = 0; !keep && i < toCheck.categories.length; ++i) {
-          if (categories.indexOf(toCheck.categories[i]) >= 0) {
-            keep = true;
-          }
-        }
-      }
-
-      toCheck = toCheck.parentSuite;
-    }
-  } else {
-    keep = true;
-  }
-
-  if (notCategories) {
-    toCheck = spec;
-    while (keep && toCheck) {
-      if (toCheck.categories) {
-        if (notCategories.indexOf(toCheck.categories) >= 0) {
-          keep = false;
-        }
-
-        for (i = 0; keep && i < toCheck.categories.length; ++i) {
-          if (categories.indexOf(toCheck.categories[i]) >= 0) {
-            keep = false;
-          }
-        }
-      }
-
-      toCheck = toCheck.parentSuite;
-    }
-  }
-
-  return keep;
-};
-
-/**
- * Setting up timing functions to be able to be overridden. Certain browsers (Safari, IE 8, phantomjs) require this hack.
- */
-window.setTimeout = window.setTimeout;
-window.setInterval = window.setInterval;
-window.clearTimeout = window.clearTimeout;
-window.clearInterval = window.clearInterval;
-
-/**
- * ## Execution
- *
- * Load the modules via AMD, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment.
- */
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-
-htmlReporter.initialize();
-
-var release = getQueryParameter("release");
-env.beforeEach(function () {
-  addDefaultMatchers(!release).call(env);
-});
-env.beforeEach(function () {
-  env.addCustomEqualityTester(equalsMethodEqualityTester);
+  },
 });
 
-//>>includeStart('debug', pragmas.debug);
-import("./SpecList.js").then(function () {
-  env.execute();
-});
-//>>includeEnd('debug');
+customizeJasmine(
+  env,
+  categoryString,
+  excludeCategoryString,
+  webglValidation,
+  webglStub,
+  release
+);

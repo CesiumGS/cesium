@@ -5,7 +5,7 @@ import { GoogleEarthEnterpriseTileInformation } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {
@@ -88,22 +88,22 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     key = new Uint8Array(0);
     expect(function () {
       decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
 
     key = new Uint8Array(1);
     expect(function () {
       decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
 
     key = new Uint8Array(2);
     expect(function () {
       decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
 
     key = new Uint8Array(3);
     expect(function () {
       decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("populateSubtree", function () {
@@ -122,7 +122,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       );
       index = (index + 1) % 4;
 
-      return when();
+      return Promise.resolve();
     });
 
     const metadata = new GoogleEarthEnterpriseMetadata({
@@ -289,7 +289,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e.message).toContain(url);
       });
   });

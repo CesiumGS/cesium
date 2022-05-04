@@ -1,4 +1,5 @@
 import { DefaultProxy } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -7,8 +8,6 @@ import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { TerrainProvider } from "../../Source/Cesium.js";
 import { VRTheWorldTerrainProvider } from "../../Source/Cesium.js";
-import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";
@@ -131,9 +130,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
       expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
         provider.getLevelMaximumGeometricError(1) * 2.0,
@@ -236,7 +233,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     terrainProvider.errorEvent.addEventListener(function () {
       deferred.resolve();
@@ -265,9 +262,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         crossOrigin,
         deferred
       ) {
-        expect(
-          request.url.indexOf(".tif?cesium=true")
-        ).toBeGreaterThanOrEqualTo(0);
+        expect(request.url.indexOf(".tif?cesium=true")).toBeGreaterThanOrEqual(
+          0
+        );
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(
@@ -281,9 +278,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         url: baseUrl,
       });
 
-      return pollToPromise(function () {
-        return terrainProvider.ready;
-      })
+      return terrainProvider.readyPromise
         .then(function () {
           expect(terrainProvider.tilingScheme).toBeInstanceOf(
             GeographicTilingScheme
@@ -313,9 +308,8 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         url: baseUrl,
       });
 
-      return pollToPromise(function () {
-        return terrainProvider.ready;
-      }).then(function () {
+      return terrainProvider.readyPromise.then(function () {
+        const promises = [];
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
@@ -325,6 +319,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
             0,
             createRequest()
           );
+          promises.push(promise);
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();
@@ -333,8 +328,15 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         expect(promise).toBeUndefined();
 
         for (i = 0; i < deferreds.length; ++i) {
-          deferreds[i].resolve();
+          const deferred = deferreds[i];
+          Resource._Implementations.loadImageElement(
+            "Data/Images/Red16x16.png",
+            false,
+            deferred
+          );
         }
+
+        return Promise.all(promises);
       });
     });
   });

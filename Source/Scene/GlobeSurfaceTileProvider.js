@@ -1601,6 +1601,24 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_oceanNormalMap: function () {
       return this.properties.oceanNormalMap;
     },
+    u_atmosphereLightIntensity: function () {
+      return this.properties.atmosphereLightIntensity;
+    },
+    u_atmosphereRayleighCoefficient: function () {
+      return this.properties.atmosphereRayleighCoefficient;
+    },
+    u_atmosphereMieCoefficient: function () {
+      return this.properties.atmosphereMieCoefficient;
+    },
+    u_atmosphereRayleighScaleHeight: function () {
+      return this.properties.atmosphereRayleighScaleHeight;
+    },
+    u_atmosphereMieScaleHeight: function () {
+      return this.properties.atmosphereMieScaleHeight;
+    },
+    u_atmosphereMieAnisotropy: function () {
+      return this.properties.atmosphereMieAnisotropy;
+    },
     u_lightingFadeDistance: function () {
       return this.properties.lightingFadeDistance;
     },
@@ -1777,6 +1795,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       oceanNormalMap: undefined,
       lightingFadeDistance: new Cartesian2(6500000.0, 9000000.0),
       nightFadeDistance: new Cartesian2(10000000.0, 40000000.0),
+      atmosphereLightIntensity: 10.0,
+      atmosphereRayleighCoefficient: new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6),
+      atmosphereMieCoefficient: new Cartesian3(21e-6, 21e-6, 21e-6),
+      atmosphereRayleighScaleHeight: 10000.0,
+      atmosphereMieScaleHeight: 3200.0,
+      atmosphereMieAnisotropy: 0.9,
       hsbShift: new Cartesian3(),
 
       center3D: undefined,
@@ -2096,7 +2120,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const hasVertexNormals =
     tileProvider.terrainProvider.ready &&
     tileProvider.terrainProvider.hasVertexNormals;
-  const enableFog = frameState.fog.enabled && !cameraUnderground;
+  const enableFog =
+    frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =
     tileProvider.showGroundAtmosphere && frameState.mode === SceneMode.SCENE3D;
   const castShadows =
@@ -2237,6 +2262,18 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.dynamicAtmosphereLightingFromSun =
     tileProvider.dynamicAtmosphereLightingFromSun;
   surfaceShaderSetOptions.showGroundAtmosphere = showGroundAtmosphere;
+  surfaceShaderSetOptions.atmosphereLightIntensity =
+    tileProvider.atmosphereLightIntensity;
+  surfaceShaderSetOptions.atmosphereRayleighCoefficient =
+    tileProvider.atmosphereRayleighCoefficient;
+  surfaceShaderSetOptions.atmosphereMieCoefficient =
+    tileProvider.atmosphereMieCoefficient;
+  surfaceShaderSetOptions.atmosphereRayleighScaleHeight =
+    tileProvider.atmosphereRayleighScaleHeight;
+  surfaceShaderSetOptions.atmosphereMieScaleHeight =
+    tileProvider.atmosphereMieScaleHeight;
+  surfaceShaderSetOptions.atmosphereMieAnisotropy =
+    tileProvider.atmosphereMieAnisotropy;
   surfaceShaderSetOptions.perFragmentGroundAtmosphere = perFragmentGroundAtmosphere;
   surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
   surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
@@ -2330,6 +2367,18 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     uniformMapProperties.nightFadeDistance.x =
       tileProvider.nightFadeOutDistance;
     uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
+    uniformMapProperties.atmosphereLightIntensity =
+      tileProvider.atmosphereLightIntensity;
+    uniformMapProperties.atmosphereRayleighCoefficient =
+      tileProvider.atmosphereRayleighCoefficient;
+    uniformMapProperties.atmosphereMieCoefficient =
+      tileProvider.atmosphereMieCoefficient;
+    uniformMapProperties.atmosphereRayleighScaleHeight =
+      tileProvider.atmosphereRayleighScaleHeight;
+    uniformMapProperties.atmosphereMieScaleHeight =
+      tileProvider.atmosphereMieScaleHeight;
+    uniformMapProperties.atmosphereMieAnisotropy =
+      tileProvider.atmosphereMieAnisotropy;
     uniformMapProperties.zoomedOutOceanSpecularIntensity =
       tileProvider.zoomedOutOceanSpecularIntensity;
 

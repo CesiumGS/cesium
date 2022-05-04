@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import CubeMap from "./CubeMap.js";
 
 /**
@@ -30,7 +29,7 @@ import CubeMap from "./CubeMap.js";
  *     negativeZ : 'skybox_nz.png'
  * }).then(function(cubeMap) {
  *     // use the cubemap
- * }).otherwise(function(error) {
+ * }).catch(function(error) {
  *     // an error occurred
  * });
  *
@@ -77,7 +76,7 @@ function loadCubeMap(context, urls, skipColorSpaceConversion) {
     Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions),
   ];
 
-  return when.all(facePromises, function (images) {
+  return Promise.all(facePromises).then(function (images) {
     return new CubeMap({
       context: context,
       source: {

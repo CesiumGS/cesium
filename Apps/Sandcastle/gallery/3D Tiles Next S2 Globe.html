@@ -104,10 +104,10 @@
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
-              float featureId = fsInput.featureIds.featureId_0;
+              int featureId = fsInput.featureIds.featureId_0;
               // Use cartesian coordinates but scale to be roughly [-1, 1]
               vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;
-              if (featureId == 60.0)
+              if (featureId == 60)
               {
                 // Something like FM synthesis to make irregularly spaced waves
                 float wave = sin(14.0 * positionWC.z - u_time);

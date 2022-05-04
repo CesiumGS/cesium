@@ -4,7 +4,6 @@ import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { TileCoordinatesImageryProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/TileCoordinatesImageryProvider", function () {
   it("conforms to ImageryProvider interface", function () {
@@ -60,7 +59,9 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
         new GeographicTilingScheme().rectangle
       );
 
-      return when(provider.requestImage(0, 0, 0), function (image) {
+      return Promise.resolve(provider.requestImage(0, 0, 0)).then(function (
+        image
+      ) {
         expect(image).toBeDefined();
       });
     });

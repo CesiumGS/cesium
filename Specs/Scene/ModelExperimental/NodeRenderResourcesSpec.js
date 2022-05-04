@@ -1,5 +1,6 @@
 import {
   Axis,
+  Cartesian3,
   Matrix4,
   ModelExperimentalNode,
   ModelRenderResources,
@@ -20,6 +21,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
   const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
+    transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
     sceneGraph: mockSceneGraph,
     children: [],
   });
@@ -48,7 +50,6 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
-    expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
     expect(nodeResources.attributes).toEqual([]);
     expect(nodeResources.renderStateOptions).toEqual({});
   });

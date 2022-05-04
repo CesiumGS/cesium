@@ -106,9 +106,13 @@ const Cesium3DTileContentFactory = {
       tileset,
       tile,
       resource,
+      undefined,
       arrayBuffer,
       byteOffset
     );
+  },
+  subtreeJson: function (tileset, tile, resource, json) {
+    return new Implicit3DTileContent(tileset, tile, resource, json);
   },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;

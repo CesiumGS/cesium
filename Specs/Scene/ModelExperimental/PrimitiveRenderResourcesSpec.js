@@ -35,6 +35,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
+    transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
     sceneGraph: mockSceneGraph,
     children: [],
   });
@@ -80,18 +81,6 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const runtimePrimitive = new ModelExperimentalPrimitive({
-    primitive: primitive,
-    node: mockNode,
-    model: mockModel,
-  });
-
-  const runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
-    primitive: primitiveWithoutIndices,
-    node: mockNode,
-    model: mockModel,
-  });
-
   const expectedDepthTest = {
     depthTest: {
       enabled: true,
@@ -99,6 +88,22 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
     blending: BlendingState.DISABLED,
   };
+
+  let runtimePrimitive;
+  let runtimePrimitiveWithoutIndices;
+  beforeAll(function () {
+    runtimePrimitive = new ModelExperimentalPrimitive({
+      primitive: primitive,
+      node: mockNode,
+      model: mockModel,
+    });
+
+    runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+      primitive: primitiveWithoutIndices,
+      node: mockNode,
+      model: mockModel,
+    });
+  });
 
   it("throws for undefined nodeRenderResources", function () {
     expect(function () {
@@ -130,6 +135,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.count).toBe(6);
     expect(primitiveResources.indices).toBe(primitive.indices);
     expect(primitiveResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
+    expect(primitiveResources.positionMin).toEqual(new Cartesian3(-1, -1, -1));
+    expect(primitiveResources.positionMax).toEqual(new Cartesian3(1, 1, 1));
     // The points are in a cube from -1, -1, -1 to 1, 1, 1. The center is
     // (0, 0, 0). The full diagonal is 2 * sqrt(3), so half is sqrt(3)
     expect(primitiveResources.boundingSphere.center).toEqualEpsilon(
@@ -158,7 +165,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.count).toBe(8);
     expect(primitiveResources.indices).not.toBeDefined();
     expect(primitiveResources.primitiveType).toBe(PrimitiveType.POINTS);
-
+    expect(primitiveResources.positionMin).toEqual(new Cartesian3(-2, -2, -2));
+    expect(primitiveResources.positionMax).toEqual(new Cartesian3(2, 2, 2));
     // The points are in a cube from -2, -2, -2 to 2, 2, 2. The center is
     // (0, 0, 0). The full diagonal is 4 * sqrt(3), so half is 2 * sqrt(3)
     expect(primitiveResources.boundingSphere.center).toEqualEpsilon(
@@ -234,7 +242,6 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     );
 
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
-    expect(primitiveResources.modelMatrix).toEqual(runtimeNode.modelMatrix);
     expect(primitiveResources.attributes).toEqual([]);
 
     // The primitive should have inherited the renderStateOptions of the node's

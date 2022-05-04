@@ -304,14 +304,13 @@
           "Sample Everest Terrain at Level 9",
           function () {
             const terrainSamplePositions = createGrid(0.005);
-            Cesium.when(
+            Promise.resolve(
               Cesium.sampleTerrain(
                 viewer.terrainProvider,
                 9,
                 terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
+              )
+            ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
           "sampleButtons"
@@ -327,13 +326,12 @@
               return;
             }
             const terrainSamplePositions = createGrid(0.0005);
-            Cesium.when(
+            Promise.resolve(
               Cesium.sampleTerrainMostDetailed(
                 viewer.terrainProvider,
                 terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
+              )
+            ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
           "sampleButtons"

@@ -348,7 +348,11 @@
               const propertyValue = feature.getProperty(propertyName);
               const property = metadataClass.properties[propertyName];
 
-              tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${property.componentType}</td><td>${propertyValue}</td></tr>`;
+              const propertyType = Cesium.defaultValue(
+                property.componentType,
+                property.type
+              );
+              tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${propertyType}</td><td>${propertyValue}</td></tr>`;
             }
             tableHtmlScratch +=
               "<tr><th colspan='4'><i style='font-size:10px'>Hover on a row for description</i></th></tr></tbody></table>";

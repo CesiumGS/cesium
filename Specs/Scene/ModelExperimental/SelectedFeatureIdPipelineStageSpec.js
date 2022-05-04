@@ -20,6 +20,8 @@ describe(
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    const largeFeatureIdTexture =
+      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -96,9 +98,10 @@ describe(
           node: node,
         },
         model: {
-          featureIdIndex: 0,
-          instanceFeatureIdIndex: 0,
+          featureIdLabel: "featureId_0",
+          instanceFeatureIdLabel: "instanceFeatureId_0",
         },
+        uniformMap: {},
         hasPropertyTable: false,
       };
     }
@@ -110,7 +113,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 2;
+        renderResources.model.featureIdLabel = "featureId_1";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -125,12 +128,12 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_2",
+          "SELECTED_FEATURE_ID defaultIdsTest",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_2",
+          "SELECTED_FEATURE_ID defaultIdsTest",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
@@ -148,7 +151,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 0;
+        renderResources.model.featureIdLabel = "landCover";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -163,7 +166,7 @@ describe(
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_TEXTURE",
-          "SELECTED_FEATURE_ID featureId_0",
+          "SELECTED_FEATURE_ID landCover",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
         ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
@@ -179,7 +182,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.instanceFeatureIdIndex = 1;
+        renderResources.model.instanceFeatureIdLabel = "section";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -193,12 +196,12 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID instanceFeatureId_1",
+          "SELECTED_FEATURE_ID section",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID instanceFeatureId_1",
+          "SELECTED_FEATURE_ID section",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
@@ -206,6 +209,41 @@ describe(
         ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
         ]);
+      });
+    });
+
+    it("handles null feature ID when present", function () {
+      return loadGltf(largeFeatureIdTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
+        renderResources.model.featureIdLabel = "idsGWithNull";
+
+        SelectedFeatureIdPipelineStage.process(
+          renderResources,
+          primitive,
+          frameState
+        );
+        expect(renderResources.hasPropertyTable).toBe(true);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        verifyFeatureStruct(shaderBuilder);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NULL_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_TEXTURE",
+          "SELECTED_FEATURE_ID idsGWithNull",
+        ]);
+        ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+          _shadersSelectedFeatureIdStageCommon,
+        ]);
+
+        const uniformMap = renderResources.uniformMap;
+        expect(uniformMap.model_nullFeatureId()).toBe(10);
       });
     });
   },

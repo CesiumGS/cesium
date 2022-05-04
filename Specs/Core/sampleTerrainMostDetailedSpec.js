@@ -41,7 +41,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
       .then(function () {
         fail("the promise should not resolve");
       })
-      .otherwise(function () {});
+      .catch(function () {});
   });
 
   it("uses a suitable common tile height for a range of locations", function () {

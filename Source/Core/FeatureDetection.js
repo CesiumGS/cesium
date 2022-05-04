@@ -1,5 +1,5 @@
-import when from "../ThirdParty/when.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Fullscreen from "./Fullscreen.js";
@@ -160,6 +160,18 @@ function isWindows() {
   return isWindowsResult;
 }
 
+let isIPadOrIOSResult;
+function isIPadOrIOS() {
+  if (!defined(isIPadOrIOSResult)) {
+    isIPadOrIOSResult =
+      navigator.platform === "iPhone" ||
+      navigator.platform === "iPod" ||
+      navigator.platform === "iPad";
+  }
+
+  return isIPadOrIOSResult;
+}
+
 function firefoxVersion() {
   return isFirefox() && firefoxVersionResult;
 }
@@ -224,7 +236,7 @@ supportsWebP.initialize = function () {
     return supportsWebP._promise;
   }
 
-  const supportsWebPDeferred = when.defer();
+  const supportsWebPDeferred = defer();
   supportsWebP._promise = supportsWebPDeferred.promise;
   if (isEdge()) {
     // Edge's WebP support with WebGL is incomplete.
@@ -310,6 +322,7 @@ const FeatureDetection = {
   isFirefox: isFirefox,
   firefoxVersion: firefoxVersion,
   isWindows: isWindows,
+  isIPadOrIOS: isIPadOrIOS,
   hardwareConcurrency: defaultValue(theNavigator.hardwareConcurrency, 3),
   supportsPointerEvents: supportsPointerEvents,
   supportsImageRenderingPixelated: supportsImageRenderingPixelated,

@@ -23,6 +23,7 @@ import pollToPromise from "../pollToPromise.js";
 import { addDefaults } from "../../Source/Cesium.js";
 import { parseGlb } from "../../Source/Cesium.js";
 import { updateVersion } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 
 describe(
   "Scene/ClassificationModel",
@@ -288,7 +289,7 @@ describe(
           return new ClassificationModel({
             gltf: gltf,
           });
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 
@@ -299,7 +300,7 @@ describe(
           return new ClassificationModel({
             gltf: gltf,
           });
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 
@@ -310,7 +311,7 @@ describe(
           return new ClassificationModel({
             gltf: gltf,
           });
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 
@@ -321,7 +322,7 @@ describe(
           return new ClassificationModel({
             gltf: gltf,
           });
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 
@@ -332,7 +333,7 @@ describe(
           return new ClassificationModel({
             gltf: gltf,
           });
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
   },

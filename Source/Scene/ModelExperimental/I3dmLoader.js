@@ -5,9 +5,10 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import FeatureMetadata from "../FeatureMetadata.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import I3dmParser from "../I3dmParser.js";
@@ -21,7 +22,6 @@ import Quaternion from "../../Core/Quaternion.js";
 import ResourceLoader from "../ResourceLoader.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
-import when from "../../ThirdParty/when.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
@@ -97,7 +97,7 @@ function I3dmLoader(options) {
   this._loadAsTypedArray = loadAsTypedArray;
 
   this._state = I3dmLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 
   this._gltfLoader = undefined;
 
@@ -217,7 +217,7 @@ I3dmLoader.prototype.load = function () {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
   }
 
-  // Save the batch table section to use for FeatureMetadata generation.
+  // Save the batch table section to use for StructuralMetadata generation.
   this._batchTable = {
     json: batchTableJson,
     binary: batchTableBinary,
@@ -264,13 +264,13 @@ I3dmLoader.prototype.load = function () {
       const components = gltfLoader.components;
       components.transform = that._transform;
       createInstances(that, components);
-      createFeatureMetadata(that, components);
+      createStructuralMetadata(that, components);
       that._components = components;
 
       that._state = I3dmLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -300,7 +300,7 @@ I3dmLoader.prototype.process = function (frameState) {
   }
 };
 
-function createFeatureMetadata(loader, components) {
+function createStructuralMetadata(loader, components) {
   const batchTable = loader._batchTable;
   const instancesLength = loader._instancesLength;
 
@@ -308,10 +308,10 @@ function createFeatureMetadata(loader, components) {
     return;
   }
 
-  let featureMetadata;
+  let structuralMetadata;
   if (defined(batchTable.json)) {
-    // Add the feature metadata from the batch table to the model components.
-    featureMetadata = parseBatchTable({
+    // Add the structural metadata from the batch table to the model components.
+    structuralMetadata = parseBatchTable({
       count: instancesLength,
       batchTable: batchTable.json,
       binaryBody: batchTable.binary,
@@ -322,13 +322,13 @@ function createFeatureMetadata(loader, components) {
       name: MetadataClass.BATCH_TABLE_CLASS_NAME,
       count: instancesLength,
     });
-    featureMetadata = new FeatureMetadata({
+    structuralMetadata = new StructuralMetadata({
       schema: {},
       propertyTables: [emptyPropertyTable],
     });
   }
 
-  components.featureMetadata = featureMetadata;
+  components.structuralMetadata = structuralMetadata;
 }
 
 const positionScratch = new Cartesian3();
@@ -517,6 +517,7 @@ function createInstances(loader, components) {
   const featureIdInstanceAttribute = new FeatureIdAttribute();
   featureIdInstanceAttribute.propertyTableId = 0;
   featureIdInstanceAttribute.setIndex = 0;
+  featureIdInstanceAttribute.positionalLabel = "instanceFeatureId_0";
   instances.featureIds.push(featureIdInstanceAttribute);
 
   // Apply instancing to every node that has at least one primitive.

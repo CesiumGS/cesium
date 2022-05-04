@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Cartesian2 from "./Cartesian2.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
@@ -71,7 +70,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
 
   const that = this;
   const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  this._readyPromise = when(options.url)
+  this._readyPromise = Promise.resolve(options.url)
     .then(function (url) {
       let resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
@@ -126,12 +125,12 @@ function ArcGISTiledElevationTerrainProvider(options) {
         );
         that._tilingScheme = new WebMercatorTilingScheme(tilingSchemeOptions);
       } else {
-        return when.reject(new RuntimeError("Invalid spatial reference"));
+        return Promise.reject(new RuntimeError("Invalid spatial reference"));
       }
 
       const tileInfo = metadata.tileInfo;
       if (!defined(tileInfo)) {
-        return when.reject(new RuntimeError("tileInfo is required"));
+        return Promise.reject(new RuntimeError("tileInfo is required"));
       }
 
       that._width = tileInfo.rows + 1;
@@ -184,10 +183,10 @@ function ArcGISTiledElevationTerrainProvider(options) {
 
       return true;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       const message = `An error occurred while accessing ${that._resource.url}.`;
       TileProviderError.handleError(undefined, that, that._errorEvent, message);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 
   this._errorEvent = new Event();
@@ -355,7 +354,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
   });
 
   const hasAvailability = this._hasAvailability;
-  let availabilityPromise = when.resolve(true);
+  let availabilityPromise = Promise.resolve(true);
   let availabilityRequest;
   if (
     hasAvailability &&
@@ -380,8 +379,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
 
   const that = this;
   const tilesAvailable = this._tilesAvailable;
-  return when
-    .join(promise, availabilityPromise)
+  return Promise.all([promise, availabilityPromise])
     .then(function (result) {
       return new HeightmapTerrainData({
         buffer: result[0],
@@ -394,7 +392,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
         encoding: that._encoding,
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (
         defined(availabilityRequest) &&
         availabilityRequest.state === RequestState.CANCELLED
@@ -403,12 +401,12 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
 
         // Don't reject the promise till the request is actually cancelled
         // Otherwise it will think the request failed, but it didn't.
-        return request.deferred.promise.always(function () {
+        return request.deferred.promise.finally(function () {
           request.state = RequestState.CANCELLED;
-          return when.reject(error);
+          return Promise.reject(error);
         });
       }
-      return when.reject(error);
+      return Promise.reject(error);
     });
 };
 
@@ -490,7 +488,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined} This provider does not support loading availability.
  */
 ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
@@ -695,7 +693,7 @@ function requestAvailability(that, level, x, y) {
     request: request,
   };
 
-  promise = promise.always(function (result) {
+  promise = promise.finally(function (result) {
     delete availableCache[url];
 
     return result;

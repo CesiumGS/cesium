@@ -36,12 +36,15 @@ function PointCloud3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
+
+  this._metadata = undefined;
+
   this._pickId = undefined; // Only defined when batchTable is undefined
   this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -129,18 +132,27 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -343,6 +355,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
   pointCloud.normalShading = pointCloudShading.normalShading;
   pointCloud.geometricError = getGeometricError(this);
   pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+  pointCloud.splitDirection = tileset.splitDirection;
   if (
     defined(pointCloudShading) &&
     defined(pointCloudShading.maximumAttenuation)

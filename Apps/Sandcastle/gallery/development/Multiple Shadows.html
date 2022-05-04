@@ -92,7 +92,7 @@
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               window.alert(error);
             });
 

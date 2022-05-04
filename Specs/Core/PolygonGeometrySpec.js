@@ -1251,8 +1251,8 @@ describe("Core/PolygonGeometry", function () {
 
     const st = p.attributes.st.values;
     for (let i = 0; i < st.length; i++) {
-      expect(st[i]).toBeGreaterThanOrEqualTo(0);
-      expect(st[i]).toBeLessThanOrEqualTo(1);
+      expect(st[i]).toBeGreaterThanOrEqual(0);
+      expect(st[i]).toBeLessThanOrEqual(1);
     }
   });
 
@@ -1282,8 +1282,8 @@ describe("Core/PolygonGeometry", function () {
 
     const st = p.attributes.st.values;
     for (let i = 0; i < st.length; i++) {
-      expect(st[i]).toBeGreaterThanOrEqualTo(0);
-      expect(st[i]).toBeLessThanOrEqualTo(1);
+      expect(st[i]).toBeGreaterThanOrEqual(0);
+      expect(st[i]).toBeLessThanOrEqual(1);
     }
   });
 

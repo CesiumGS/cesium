@@ -1,4 +1,3 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -83,6 +82,50 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   }
 };
 
+/**
+ * Similar to getAttributeBySemantic, but search using the name field only,
+ * as custom attributes do not have a semantic.
+ *
+ * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
+ * @param {String} name The name of the attribute as it appears in the model file.
+ * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
+ *
+ * @private
+ */
+ModelExperimentalUtility.getAttributeByName = function (object, name) {
+  const attributes = object.attributes;
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    if (attribute.name === name) {
+      return attribute;
+    }
+  }
+};
+
+/**
+ * Find a feature ID from an array with label or positionalLabel matching the
+ * given label
+ * @param {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>} featureIds
+ * @param {String} label the label to search for
+ * @return {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
+ *
+ * @private
+ */
+ModelExperimentalUtility.getFeatureIdsByLabel = function (featureIds, label) {
+  for (let i = 0; i < featureIds.length; i++) {
+    const featureIdSet = featureIds[i];
+    if (
+      featureIdSet.positionalLabel === label ||
+      featureIdSet.label === label
+    ) {
+      return featureIdSet;
+    }
+  }
+
+  return undefined;
+};
+
 ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
   if (!defined(attributes)) {
     return false;
@@ -151,74 +194,82 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
 
 const cartesianMaxScratch = new Cartesian3();
 const cartesianMinScratch = new Cartesian3();
+
 /**
- * Create a bounding sphere from a primitive's POSITION attribute and model
- * matrix.
+ * Get the minimum and maximum values for a primitive's POSITION attribute.
+ * This is used to compute the bounding sphere of the primitive, as well as
+ * the bounding sphere of the whole model.
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
- * @param {Matrix4} modelMatrix The primitive's model matrix.
- * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
+ * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
+ *
+ * @return {Object} An object containing the minimum and maximum position values.
+ *
+ * @private
  */
-ModelExperimentalUtility.createBoundingSphere = function (
+ModelExperimentalUtility.getPositionMinMax = function (
   primitive,
-  modelMatrix,
-  instancingTranslationMax,
-  instancingTranslationMin
+  instancingTranslationMin,
+  instancingTranslationMax
 ) {
   const positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
 
-  const positionMax = positionGltfAttribute.max;
-  const positionMin = positionGltfAttribute.min;
+  let positionMax = positionGltfAttribute.max;
+  let positionMin = positionGltfAttribute.min;
 
-  let boundingSphere;
   if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
-    const computedMin = Cartesian3.add(
+    positionMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,
       cartesianMinScratch
     );
-    const computedMax = Cartesian3.add(
+    positionMax = Cartesian3.add(
       positionMax,
       instancingTranslationMax,
       cartesianMaxScratch
     );
-    boundingSphere = BoundingSphere.fromCornerPoints(computedMin, computedMax);
-  } else {
-    boundingSphere = BoundingSphere.fromCornerPoints(positionMin, positionMax);
   }
 
-  BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
-  return boundingSphere;
+  return {
+    min: positionMin,
+    max: positionMax,
+  };
 };
 
 /**
  * Model matrices in a model file (e.g. glTF) are typically in a different
- * coordinate system, such as with y-up instead of z-up. This method adjusts
- * the matrix so z is up, x is forward.
+ * coordinate system, such as with y-up instead of z-up in 3D Tiles.
+ * This function returns a matrix that will correct this such that z is up,
+ * and x is forward.
  *
- * @param {Matrix4} modelMatrix The original model matrix. This will be updated in place
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
+ * @param {Matrix4} result The matrix in which to store the result.
+ * @return {Matrix4} The axis correction matrix
  *
  * @private
  */
-ModelExperimentalUtility.correctModelMatrix = function (
-  modelMatrix,
+ModelExperimentalUtility.getAxisCorrectionMatrix = function (
   upAxis,
-  forwardAxis
+  forwardAxis,
+  result
 ) {
+  result = Matrix4.clone(Matrix4.IDENTITY, result);
+
   if (upAxis === Axis.Y) {
-    Matrix4.multiplyTransformation(modelMatrix, Axis.Y_UP_TO_Z_UP, modelMatrix);
+    result = Matrix4.clone(Axis.Y_UP_TO_Z_UP, result);
   } else if (upAxis === Axis.X) {
-    Matrix4.multiplyTransformation(modelMatrix, Axis.X_UP_TO_Z_UP, modelMatrix);
+    result = Matrix4.clone(Axis.X_UP_TO_Z_UP, result);
   }
 
   if (forwardAxis === Axis.Z) {
     // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
-    Matrix4.multiplyTransformation(modelMatrix, Axis.Z_UP_TO_X_UP, modelMatrix);
+    result = Matrix4.multiplyTransformation(result, Axis.Z_UP_TO_X_UP, result);
   }
+
+  return result;
 };
