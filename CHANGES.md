@@ -6,6 +6,10 @@
 
 - Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
 
+##### Additions :tada:
+
+- Fixed crash for zero-area `region` bounding volumes in a 3D Tileset.
+
 ##### Fixes :wrench:
 
 - Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
