@@ -259,7 +259,7 @@
           }),
         });
 
-        // Example 4: Large (subdivided) textured polygon.
+        // Example 4: Large (subdivided) textured polygon with RHUMB arc type.
         positions = Cesium.Cartesian3.fromDegreesArray([
           -112,
           38,
@@ -287,6 +287,7 @@
             vertexFormat:
               Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
+            arcType: Cesium.ArcType.RHUMB,
           }),
         });
 
