@@ -1555,6 +1555,9 @@ void traverseOctree(in vec3 positionUv, out TraversalData traversalData, out Sam
         // No child data, only the root tile has data
         getOctreeLeafData(rootData, sampleDatas);
         traversalData.stepT = u_stepSize;
+        for (int i = 0; i < SAMPLE_COUNT; i++) {
+            sampleDatas[i].tileUv = traversalData.positionUvLocal;
+        }
     }
     else
     {
@@ -1570,8 +1573,11 @@ void traverseOctreeFromExisting(in vec3 positionUv, inout TraversalData traversa
     // Note: This code assumes the position is always inside the root tile.
     bool insideTile = traversalData.octreeCoords.w == 0 || inRange(traversalData.positionUvLocal, vec3(0.0), vec3(1.0)); 
 
-    if (!insideTile)
-    {
+    if (insideTile) {
+        for (int i = 0; i < SAMPLE_COUNT; i++) {
+            sampleDatas[i].tileUv = traversalData.positionUvLocal;
+        }
+    } else {
         // Go up tree
         for (int i = 0; i < OCTREE_MAX_LEVELS; ++i)
         {
@@ -1719,8 +1725,7 @@ void main()
         }
 
         // Traverse the tree from the current ray position.
-        // This is similar to traverseOctree but is optimized for the common
-        // case where the ray is in the same tile as the previous step.
+        // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
         traverseOctreeFromExisting(positionUv, traversalData, sampleDatas);
     }
 
