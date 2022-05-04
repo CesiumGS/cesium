@@ -78,10 +78,12 @@ describe(
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
+      sceneWithWebgl2.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -141,7 +143,7 @@ describe(
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
 
-      const commandList = scene.frameState;
+      const commandList = targetScene.frameState;
       const commandCounts = [];
       let i, command;
 
@@ -517,15 +519,46 @@ describe(
       });
     });
 
-    it("debugWireframe works", function () {
+    it("debugWireframe works for WebGL1 if enableDebugWireframe is true", function () {
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer) },
+          { gltf: new Uint8Array(buffer), enableDebugWireframe: true },
           scene
         ).then(function (model) {
           verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
+        });
+      });
+    });
+
+    it("debugWireframe does nothing in WebGL1 if enableDebugWireframe is false", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
+          scene
+        ).then(function (model) {
+          const commandList = scene.frameState;
+          const commandCounts = [];
+          let i, command;
+          scene.renderForSpecs();
+          for (i = 0; i < commandList.length; i++) {
+            command = commandList[i];
+            expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+            commandCounts.push(command.count);
+          }
+
+          model.debugWireframe = true;
+          expect(model._drawCommandsBuilt).toBe(false);
+
+          scene.renderForSpecs();
+          for (i = 0; i < commandList.length; i++) {
+            command = commandList[i];
+            expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+            expect(command.count).toEqual(commandCounts[i]);
+          }
         });
       });
     });
@@ -550,7 +583,7 @@ describe(
 
     it("debugWireframe works for model without indices", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleWithoutIndicesUrl },
+        { gltf: triangleWithoutIndicesUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
@@ -561,7 +594,7 @@ describe(
 
     it("debugWireframe works for model with triangle strip", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleStripUrl },
+        { gltf: triangleStripUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_STRIP);
@@ -570,7 +603,7 @@ describe(
 
     it("debugWireframe works for model with triangle fan", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleFanUrl },
+        { gltf: triangleFanUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_FAN);
@@ -579,7 +612,7 @@ describe(
 
     it("debugWireframe ignores points", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: pointCloudUrl },
+        { gltf: pointCloudUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         const commandList = scene.frameState;
