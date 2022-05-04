@@ -740,7 +740,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
 
 /**
  * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
- * tighly and fully encompases the box.
+ * tightly and fully encompasses the box.
  *
  * @param {Cartesian3} [corner] The minimum height over the rectangle.
  * @param {Cartesian3} [oppositeCorner] The maximum height over the rectangle.

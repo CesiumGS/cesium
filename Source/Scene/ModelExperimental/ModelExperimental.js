@@ -46,7 +46,8 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
@@ -244,6 +245,10 @@ export default function ModelExperimental(options) {
     false
   );
 
+  this._enableDebugWireframe = defaultValue(
+    options.enableDebugWireframe,
+    false
+  );
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
@@ -675,7 +680,10 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere.
+   * Gets the model's bounding sphere in its local coordinate system. This does not
+   * take into account glTF animations, skins, or morph targets. It also does not
+   * account for {@link ModelExperimental#minimumPixelSize}.
+   *
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1244,7 +1252,7 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  // This is done without a dirty flag so that the model matrix can be update in-place
+  // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;
@@ -1477,7 +1485,8 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
@@ -1512,6 +1521,7 @@ ModelExperimental.fromGltf = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
   const gltf = options.gltf;
@@ -1558,6 +1568,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -1602,6 +1613,7 @@ ModelExperimental.fromI3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
   const loader = new I3dmLoader(loaderOptions);
 
@@ -1680,6 +1692,7 @@ function makeModelOptions(loader, modelType, options) {
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
+    enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     opaquePass: options.opaquePass,

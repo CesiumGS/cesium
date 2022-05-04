@@ -39,9 +39,16 @@ export default function buildDrawCommands(
 
   const model = primitiveRenderResources.model;
   let primitiveType = primitiveRenderResources.primitiveType;
-  const debugWireframe =
+  let debugWireframe =
     model.debugWireframe && PrimitiveType.isTriangles(primitiveType);
 
+  const context = frameState.context;
+  const useWebgl2 = context.webgl2;
+
+  // Generating index buffers for wireframes is always possible in WebGL2.
+  // However, this will only work in WebGL1 if the model was constructed with
+  // enableDebugWireframe set to true.
+  debugWireframe = debugWireframe && (model._enableDebugWireframe || useWebgl2);
   const indexBuffer = getIndexBuffer(
     primitiveRenderResources,
     debugWireframe,
@@ -49,7 +56,7 @@ export default function buildDrawCommands(
   );
 
   const vertexArray = new VertexArray({
-    context: frameState.context,
+    context: context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
@@ -74,7 +81,7 @@ export default function buildDrawCommands(
 
   const sceneGraph = model.sceneGraph;
 
-  const modelMatrix = Matrix4.multiply(
+  const modelMatrix = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.runtimeNode.computedTransform,
     new Matrix4()
@@ -218,17 +225,17 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
 
   const vertexCount = positionAttribute.count;
   const indices = primitiveRenderResources.indices;
-  const context = frameState.context;
+
   let originalIndices;
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
-    const useWebgl2 = context.webgl2;
-    if (useWebgl2 && defined(indicesBuffer)) {
-      originalIndices = IndexDatatype.createTypedArray(
-        vertexCount,
-        indicesCount
-      );
+    if (defined(indicesBuffer)) {
+      const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
+      originalIndices = useUint8Array
+        ? new Uint8Array(indicesCount)
+        : IndexDatatype.createTypedArray(vertexCount, indicesCount);
+
       indicesBuffer.getBufferData(originalIndices);
     } else {
       originalIndices = indices.typedArray;
@@ -246,7 +253,7 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
   );
 
   return Buffer.createIndexBuffer({
-    context: context,
+    context: frameState.context,
     typedArray: wireframeIndices,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
