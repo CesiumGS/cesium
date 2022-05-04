@@ -1763,10 +1763,11 @@ function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 }
 
 /**
- * Extracts name, license, and url from `package.json` file
+ * Extracts name, license, and url from `package.json` file.
  *
  * @param packageName {string} Name of package
  * @param discoveredDependencies {Array<string>} List of previously discovered modules
+ * @param licenseOverride {Array<string>} If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
  * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 function getLicenseDataFromPackage(
@@ -1785,7 +1786,7 @@ function getLicenseDataFromPackage(
   const fsReadFile = Promise.promisify(fs.readFile);
 
   if (fs.existsSync(packagePath)) {
-    //Package exists at top-level, so use it.
+    // Package exists at top-level, so use it.
     promise = fsReadFile(packagePath);
   } else {
     return Promise.reject(
@@ -1833,6 +1834,7 @@ function generateThirdParty() {
   const discoveredDependencies = [];
   const fsWriteFile = Promise.promisify(fs.writeFile);
 
+  // Generate ThirdParty.json from ThirdParty.extra.json and package.json
   return getLicenseDataFromThirdPartyExtra(
     "ThirdParty.extra.json",
     discoveredDependencies
