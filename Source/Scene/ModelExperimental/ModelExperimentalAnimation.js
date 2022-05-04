@@ -45,6 +45,16 @@ function ModelExperimentalAnimation(model, animation, options) {
   this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
 
   /**
+   * If this is defined, it will be used to compute the local animation time
+   * instead of the scene's time.
+   *
+   * @type {ModelAnimation.AnimationTimeCallback}
+   * @default undefined
+   */
+  this.animationTime = options.animationTime;
+  this._prevAnimationDelta = undefined;
+
+  /**
    * The event fired when this animation is started.  This can be used, for
    * example, to play a sound or start a particle system, when the animation starts.
    * <p>
@@ -381,4 +391,26 @@ ModelExperimentalAnimation.prototype.animate = function (time) {
   }
 };
 
+/**
+ * A function used to compute the local animation time for a ModelExperimentalAnimation.
+ * @callback ModelExperimentalAnimation.AnimationTimeCallback
+ *
+ * @param {Number} duration The animation's original duration in seconds.
+ * @param {Number} seconds The seconds since the animation started, in scene time.
+ * @returns {Number} Returns the local animation time.
+ *
+ * @example
+ * // Use real time for model animation (also set
+ * // ModelExperimentalAnimationCollection#animateWhilePaused)
+ * function animationTime(duration) {
+ *     return Date.now() / 1000 / duration;
+ * }
+ *
+ * @example
+ * // Offset the phase of the animation, so it starts halfway
+ * // through its cycle.
+ * function animationTime(duration, seconds) {
+ *     return seconds / duration + .5;
+ * }
+ */
 export default ModelExperimentalAnimation;
