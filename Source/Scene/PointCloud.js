@@ -367,7 +367,7 @@ function createResources(pointCloud, frameState) {
   const positions = parsedContent.positions;
   const colors = parsedContent.colors;
   const normals = parsedContent.normals;
-  let batchIds = parsedContent.batchIds;
+  const batchIds = parsedContent.batchIds;
   const styleableProperties = parsedContent.styleableProperties;
   const hasStyleableProperties = defined(styleableProperties);
   const isQuantized = pointCloud._isQuantized;
