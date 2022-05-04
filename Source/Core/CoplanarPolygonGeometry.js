@@ -130,7 +130,7 @@ function createGeometryFromPolygon(
 
     if (vertexFormat.st) {
       if (
-        hardcodedTextureCoordinates &&
+        defined(hardcodedTextureCoordinates) &&
         hardcodedTextureCoordinates.positions.length === length
       ) {
         textureCoordinates[stIndex++] =
@@ -275,7 +275,7 @@ function CoplanarPolygonGeometry(options) {
     ) +
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
-    (textureCoordinates
+    (defined(textureCoordinates)
       ? PolygonGeometryLibrary.computeHierarchyPackedLength(
           textureCoordinates,
           Cartesian2
@@ -360,7 +360,7 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex += VertexFormat.packedLength;
 
   array[startingIndex++] = value._stRotation;
-  if (value._textureCoordinates) {
+  if (defined(value._textureCoordinates)) {
     startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
       value._textureCoordinates,
       array,
@@ -422,7 +422,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
           startingIndex,
           Cartesian2
         );
-  if (textureCoordinates) {
+  if (defined(textureCoordinates)) {
     startingIndex = textureCoordinates.startingIndex;
     delete textureCoordinates.startingIndex;
   } else {
@@ -534,7 +534,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     return identity;
   };
 
-  const textureCoordinatePolygons = textureCoordinates
+  const textureCoordinatePolygons = hasTextureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
         true,
@@ -565,7 +565,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         vertexFormat,
         boundingRectangle,
         stRotation,
-        textureCoordinates ? textureCoordinatePolygons[i] : undefined,
+        hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
         projectPoint,
         normal,
         tangent,

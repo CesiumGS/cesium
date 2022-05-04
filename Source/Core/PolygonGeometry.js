@@ -972,7 +972,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
   array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
   array[startingIndex++] = value._arcType;
-  if (value._textureCoordinates) {
+  if (defined(value._textureCoordinates)) {
     startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
       value._textureCoordinates,
       array,
@@ -1045,7 +1045,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
           startingIndex,
           Cartesian2
         );
-  if (textureCoordinates) {
+  if (defined(textureCoordinates)) {
     startingIndex = textureCoordinates.startingIndex;
     delete textureCoordinates.startingIndex;
   } else {
@@ -1139,6 +1139,8 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const arcType = polygonGeometry._arcType;
   const textureCoordinates = polygonGeometry._textureCoordinates;
 
+  const hasTextureCoordinates = defined(textureCoordinates);
+
   let outerPositions = polygonHierarchy.positions;
   if (outerPositions.length < 3) {
     return;
@@ -1151,7 +1153,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
-    defined(textureCoordinates),
+    hasTextureCoordinates,
     tangentPlane.projectPointsOntoPlane.bind(tangentPlane),
     !perPositionHeight,
     ellipsoid
@@ -1164,7 +1166,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     return identity;
   };
 
-  const textureCoordinatePolygons = textureCoordinates
+  const textureCoordinatePolygons = hasTextureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
         true,
@@ -1222,7 +1224,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
       const splitGeometry = createGeometryFromPositionsExtruded(
         ellipsoid,
         polygons[i],
-        defined(textureCoordinates) ? textureCoordinatePolygons[i] : undefined,
+        hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
         granularity,
         hierarchy[i],
         perPositionHeight,
@@ -1288,9 +1290,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         geometry: PolygonGeometryLibrary.createGeometryFromPositions(
           ellipsoid,
           polygons[i],
-          defined(textureCoordinates)
-            ? textureCoordinatePolygons[i]
-            : undefined,
+          hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
           granularity,
           perPositionHeight,
           vertexFormat,
