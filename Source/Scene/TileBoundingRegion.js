@@ -205,17 +205,22 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   );
   Cartesian3.normalize(eastNormal, tileBB.eastNormal);
 
-  // Compute the normal of the plane bounding the southern edge of the tile.
-  const westVector = Cartesian3.subtract(
+  let westVector = Cartesian3.subtract(
     westernMidpointCartesian,
     easternMidpointCartesian,
     cartesian3Scratch
   );
+
+  if (Cartesian3.magnitude(westVector) === 0.0) {
+    westVector = Cartesian3.clone(tileBB.westNormal, westVector);
+  }
+
   const eastWestNormal = Cartesian3.normalize(
     westVector,
     eastWestNormalScratch
   );
 
+  // Compute the normal of the plane bounding the southern edge of the tile.
   const south = rectangle.south;
   let southSurfaceNormal;
 
@@ -259,6 +264,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   // Compute the normal of the plane bounding the northern edge of the tile.
   const north = rectangle.north;
   let northSurfaceNormal;
+
   if (north < 0.0) {
     // Compute a plane that doesn't cut through the tile.
     cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;

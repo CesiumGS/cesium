@@ -5,15 +5,19 @@ import defaultValue from "../../Core/defaultValue.js";
 import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import AttributeType from "../AttributeType.js";
-import ModelComponents from "../ModelComponents.js";
-import ResourceLoader from "../ResourceLoader.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Transforms from "../../Core/Transforms.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import Transforms from "../../Core/Transforms.js";
+import AttributeType from "../AttributeType.js";
+import JsonMetadataTable from "../JsonMetadataTable.js";
+import MetadataSchema from "../MetadataSchema.js";
+import ModelComponents from "../ModelComponents.js";
+import PropertyTable from "../PropertyTable.js";
+import ResourceLoader from "../ResourceLoader.js";
+import StructuralMetadata from "../StructuralMetadata.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 
@@ -229,19 +233,54 @@ function parse(geoJson, frameState) {
     parseFunction(geoJson, result);
   }
 
-  let vertexCount = 0;
-  let indexCount = 0;
+  const featureCount = result.features.length;
 
-  const featuresLength = result.features.length;
-  for (let i = 0; i < featuresLength; i++) {
+  if (featureCount === 0) {
+    throw new RuntimeError("GeoJSON must have at least one feature");
+  }
+
+  const properties = {};
+
+  for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
-    const linesLength = feature.lines.length;
-    for (let j = 0; j < linesLength; j++) {
-      const line = feature.lines[j];
-      vertexCount += line.length;
-      indexCount += (line.length - 1) * 2;
+    const featureProperties = feature.properties;
+    for (const propertyId in featureProperties) {
+      if (featureProperties.hasOwnProperty(propertyId)) {
+        if (!defined(properties[propertyId])) {
+          properties[propertyId] = new Array(featureCount);
+        }
+      }
     }
   }
+
+  for (let i = 0; i < featureCount; i++) {
+    const feature = result.features[i];
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const value = defaultValue(feature.properties[propertyId], "");
+        properties[propertyId][i] = value;
+      }
+    }
+  }
+
+  const jsonMetadataTable = new JsonMetadataTable({
+    count: featureCount,
+    properties: properties,
+  });
+
+  const propertyTable = new PropertyTable({
+    id: 0,
+    count: featureCount,
+    jsonMetadataTable: jsonMetadataTable,
+  });
+  const propertyTables = [propertyTable];
+
+  const schema = new MetadataSchema({});
+
+  const structuralMetadata = new StructuralMetadata({
+    schema: schema,
+    propertyTables: propertyTables,
+  });
 
   const cartographicMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
@@ -255,7 +294,7 @@ function parse(geoJson, frameState) {
     Number.NEGATIVE_INFINITY
   );
 
-  for (let i = 0; i < featuresLength; i++) {
+  for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
     const linesLength = feature.lines.length;
     for (let j = 0; j < linesLength; j++) {
@@ -288,14 +327,28 @@ function parse(geoJson, frameState) {
     Ellipsoid.WGS84,
     new Cartesian3()
   );
-  const toLocal = Transforms.eastNorthUpToFixedFrame(
+  const toGlobal = Transforms.eastNorthUpToFixedFrame(
     ecefCenter,
     Ellipsoid.WGS84,
     new Matrix4()
   );
-  const toGlobal = Matrix4.inverseTransformation(toLocal, new Matrix4());
+  const toLocal = Matrix4.inverseTransformation(toGlobal, new Matrix4());
+
+  let vertexCount = 0;
+  let indexCount = 0;
+
+  for (let i = 0; i < featureCount; i++) {
+    const feature = result.features[i];
+    const linesLength = feature.lines.length;
+    for (let j = 0; j < linesLength; j++) {
+      const line = feature.lines[j];
+      vertexCount += line.length;
+      indexCount += (line.length - 1) * 2;
+    }
+  }
 
   const positionsTypedArray = new Float32Array(vertexCount * 3);
+  const featureIdsTypedArray = new Float32Array(vertexCount);
   const indicesTypedArray = IndexDatatype.createTypedArray(
     vertexCount,
     indexCount
@@ -317,7 +370,7 @@ function parse(geoJson, frameState) {
   let vertexCounter = 0;
   let segmentCounter = 0;
 
-  for (let i = 0; i < featuresLength; i++) {
+  for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
     const linesLength = feature.lines.length;
     for (let j = 0; j < linesLength; j++) {
@@ -343,6 +396,8 @@ function parse(geoJson, frameState) {
 
         Cartesian3.pack(localCartesian, positionsTypedArray, vertexCounter * 3);
 
+        featureIdsTypedArray[vertexCounter] = i;
+
         if (k < positionsLength - 1) {
           indicesTypedArray[segmentCounter * 2] = segmentCounter;
           indicesTypedArray[segmentCounter * 2 + 1] = segmentCounter + 1;
@@ -354,12 +409,19 @@ function parse(geoJson, frameState) {
     }
   }
 
-  const vertexBuffer = Buffer.createVertexBuffer({
+  const positionBuffer = Buffer.createVertexBuffer({
     typedArray: positionsTypedArray,
     context: frameState.context,
     usage: BufferUsage.STATIC_DRAW,
   });
-  vertexBuffer.vertexArrayDestroyable = false;
+  positionBuffer.vertexArrayDestroyable = false;
+
+  const featureIdBuffer = Buffer.createVertexBuffer({
+    typedArray: featureIdsTypedArray,
+    context: frameState.context,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  featureIdBuffer.vertexArrayDestroyable = false;
 
   const indexBuffer = Buffer.createIndexBuffer({
     typedArray: indicesTypedArray,
@@ -369,17 +431,24 @@ function parse(geoJson, frameState) {
   });
   indexBuffer.vertexArrayDestroyable = false;
 
-  const attribute = new ModelComponents.Attribute();
-  attribute.name = VertexAttributeSemantic.POSITION;
-  attribute.semantic = VertexAttributeSemantic.POSITION;
-  attribute.componentDatatype = ComponentDatatype.FLOAT;
-  attribute.type = AttributeType.VEC3;
-  attribute.count = vertexCount;
-  attribute.min = localMin;
-  attribute.max = localMax;
-  attribute.buffer = vertexBuffer;
+  const positionAttribute = new ModelComponents.Attribute();
+  positionAttribute.semantic = VertexAttributeSemantic.POSITION;
+  positionAttribute.componentDatatype = ComponentDatatype.FLOAT;
+  positionAttribute.type = AttributeType.VEC3;
+  positionAttribute.count = vertexCount;
+  positionAttribute.min = localMin;
+  positionAttribute.max = localMax;
+  positionAttribute.buffer = positionBuffer;
 
-  const attributes = [attribute];
+  const featureIdAttribute = new ModelComponents.Attribute();
+  featureIdAttribute.semantic = VertexAttributeSemantic.FEATURE_ID;
+  featureIdAttribute.setIndex = 0;
+  featureIdAttribute.componentDatatype = ComponentDatatype.FLOAT;
+  featureIdAttribute.type = AttributeType.SCALAR;
+  featureIdAttribute.count = vertexCount;
+  featureIdAttribute.buffer = featureIdBuffer;
+
+  const attributes = [positionAttribute, featureIdAttribute];
 
   const material = new ModelComponents.Material();
   material.unlit = true;
@@ -390,8 +459,8 @@ function parse(geoJson, frameState) {
   indices.buffer = indexBuffer;
 
   const featureId = new ModelComponents.FeatureIdAttribute();
-  featureId.featureCount = featuresLength;
-  featureId.propertyTableId = undefined; // TODO
+  featureId.featureCount = featureCount;
+  featureId.propertyTableId = 0;
   featureId.setIndex = 0;
   featureId.positionalLabel = "featureId_0";
 
@@ -400,14 +469,13 @@ function parse(geoJson, frameState) {
   const primitive = new ModelComponents.Primitive();
   primitive.attributes = attributes;
   primitive.indices = indices;
-  // primitive.featureIds = featureIds;
+  primitive.featureIds = featureIds;
   primitive.primitiveType = PrimitiveType.LINES;
   primitive.material = material;
 
   const primitives = [primitive];
 
   const node = new ModelComponents.Node();
-  node.name = "root";
   node.index = 0;
   node.primitives = primitives;
 
@@ -420,6 +488,7 @@ function parse(geoJson, frameState) {
   components.scene = scene;
   components.nodes = nodes;
   components.transform = toGlobal;
+  components.structuralMetadata = structuralMetadata;
 
   return components;
 }
