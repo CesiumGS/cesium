@@ -13,8 +13,8 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.95. Use `Cesium3DTileStyle.fromUrl` instead if loading a style from a url.
-- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.95. Use `Cesium3DTileStyle.fromUrl` instead if loading a style from a url.
+- `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead.
+- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead.
 
 ### 1.93 - 2022-05-02
 

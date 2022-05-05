@@ -87,7 +87,7 @@ function Cesium3DTileStyle(style) {
     //>>includeStart('debug', pragmas.debug);
     deprecationWarning(
       "Cesium3DTileStyle constructor",
-      "string or Resource style parameter in the Cesium3DTileStyle constructor was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead."
+      "string or Resource style parameter in the Cesium3DTileStyle constructor was deprecated in Cesium 1.94.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
     );
     //>>includeEnd('debug');
 
@@ -222,7 +222,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
       //>>includeStart('debug', pragmas.debug);
       deprecationWarning(
         "ready",
-        "ready was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead if loading a style from a url."
+        "ready was deprecated in Cesium 1.94.  It will be removed in 1.96.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
       );
       //>>includeEnd('debug');
       return this._ready;
@@ -243,7 +243,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
       //>>includeStart('debug', pragmas.debug);
       deprecationWarning(
         "readyPromise",
-        "readyPromise was deprecated in Cesium 1.94.  It will be removed in 1.96.  Use Cesium3DTileStyle.fromUrl instead if loading a style from a url."
+        "readyPromise was deprecated in Cesium 1.94.  It will be removed in 1.96.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
       );
       //>>includeEnd('debug');
       return this._readyPromise;
