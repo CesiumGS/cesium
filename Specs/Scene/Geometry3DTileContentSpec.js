@@ -331,26 +331,20 @@ describe(
       tileset.style = new Cesium3DTileStyle({
         show: "false",
       });
-      return tileset.style.readyPromise
-        .then(function () {
-          expectRender(scene, [255, 0, 0, 255]);
-          tileset.style = new Cesium3DTileStyle({
-            show: "true",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expectRender(scene, [255, 255, 255, 255]);
 
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgba(0, 0, 255, 1.0)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expectRender(scene, [0, 0, 255, 255]);
-          return tileset;
-        });
+      expectRender(scene, [255, 0, 0, 255]);
+      tileset.style = new Cesium3DTileStyle({
+        show: "true",
+      });
+
+      expectRender(scene, [255, 255, 255, 255]);
+
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgba(0, 0, 255, 1.0)",
+      });
+
+      expectRender(scene, [0, 0, 255, 255]);
+      return tileset;
     }
 
     it("renders on 3D Tiles", function () {

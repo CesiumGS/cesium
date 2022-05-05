@@ -105,18 +105,16 @@ describe(
             color: "color('red')",
           });
 
-          return tileset.style.readyPromise.then(function () {
-            scene.renderForSpecs();
+          scene.renderForSpecs();
 
-            // Forces destroyed shaders to be released
-            scene.context.shaderCache.destroyReleasedShaderPrograms();
+          // Forces destroyed shaders to be released
+          scene.context.shaderCache.destroyReleasedShaderPrograms();
 
-            tileset.pointCloudShading.eyeDomeLighting = true;
+          tileset.pointCloudShading.eyeDomeLighting = true;
 
-            scene.renderForSpecs();
+          scene.renderForSpecs();
 
-            expect(scene.frameState.commandList.length).toBe(3);
-          });
+          expect(scene.frameState.commandList.length).toBe(3);
         }
       );
     });
