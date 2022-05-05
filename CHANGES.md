@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileStyle.fromUrl` for loading a style from a url.
+- Added `Cesium3DTileStyle.fromUrl` for loading a style from a url. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
 
 ##### Fixes :wrench:
 
