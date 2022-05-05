@@ -950,6 +950,15 @@ function Foo() {
 - Not pollute the global namespace.
 - Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
 
+When adding or updating a third-party library:
+
+- Ensure [LICENSE.md](../../../LICENSE.md) is updated with the library's name and full copyright notice.
+- If a library is shipped as part of the CesiumJS release, it should be included in the generated [`ThirdParty.json`](../../../ThirdParty.json).
+  1. Update [`ThirdParty.extra.json`](../../../ThirdParty.extra.json) with the package `name`. If it is an npm module included in [`package.json`](../../../package.json), use the exact package name.
+  2. If the library is _not_ an npm module included in `package.json`, provide the `license`, `version`, and `url` fields. Otherwise, this information can be detected using `package.json`.
+  3. If there is a special case regarding the license, such as choosing to use a single license from a list of multiple available ones, providing the `license` field will override information detected using `package.json`. The `notes` field should also be provided in the case explaining the exception.
+  4. Run `npm run build-third-party` and commit the resulting `ThirdParty.json`
+
 ## Widgets
 
 Cesium includes a handful of standard widgets that are used in the Viewer, including animation and timeline controls, a base layer picker, and a geocoder. These widgets are all built using [Knockout](http://knockoutjs.com/)) for automatic UI refreshing. Knockout uses a Model View ViewModel (MVVM) design pattern. You can learn more about this design pattern in [Understanding MVVM - A Guide For JavaScript Developers](https://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
