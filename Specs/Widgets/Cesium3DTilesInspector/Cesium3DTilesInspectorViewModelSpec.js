@@ -300,10 +300,7 @@ describe(
           url: tilesetUrl,
         });
 
-        return Promise.all([
-          viewModel.tileset.readyPromise,
-          style.readyPromise,
-        ]);
+        return viewModel.tileset.readyPromise;
       });
 
       afterAll(function () {
@@ -333,12 +330,10 @@ describe(
         viewModel.styleString = JSON.stringify(s);
         viewModel.compileStyle();
         viewModel._update();
-        return style.readyPromise.then(function () {
-          expect(viewModel.tileset.style.style.color).toBe("color('red')");
-          expect(viewModel.tileset.style.style.meta.description).toBe(
-            "'Building id ${id} has height ${Height}.'"
-          );
-        });
+        expect(viewModel.tileset.style.style.color).toBe("color('red')");
+        expect(viewModel.tileset.style.style.meta.description).toBe(
+          "'Building id ${id} has height ${Height}.'"
+        );
       });
 
       it("does not throw on invalid value", function () {
