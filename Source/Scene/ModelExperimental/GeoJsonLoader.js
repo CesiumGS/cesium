@@ -25,8 +25,10 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * Loads a GeoJson model as part of the MAXAR_content_geojson extension with the following constraints:
  * <ul>
  *   <li>The top level GeoJSON type must be FeatureCollection or Feature.</li>
- *   <li>The geometry type must be LineString, MultiLineString, MultiPolygon, or Polygon.</li>
- *   <li>All geometry types are converted to lines.</li>
+ *   <li>The geometry types must be LineString, MultiLineString, MultiPolygon, or Polygon.</li>
+ *   <li>All geometries are converted to geodesic lines.</li>
+ *   <li>Only WGS84 geographic coordinates are supported.</li>
+ *   <li>Only geographic coordinate reference system is supported.</li>
  * </ul>
  * <p>
  * Implements the {@link ResourceLoader} interface.
@@ -179,7 +181,7 @@ function parseMultiPolygon(coordinates) {
   const polygonsLength = coordinates.length;
   const lines = [];
   for (let i = 0; i < polygonsLength; i++) {
-    lines.push.apply(parsePolygon(coordinates[i]));
+    Array.prototype.push.apply(lines, parsePolygon(coordinates[i]));
   }
   return lines;
 }
@@ -248,7 +250,10 @@ function parse(geoJson, frameState) {
 
   for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
-    const featureProperties = feature.properties;
+    const featureProperties = defaultValue(
+      feature.properties,
+      defaultValue.EMPTY_OBJECT
+    );
     for (const propertyId in featureProperties) {
       if (featureProperties.hasOwnProperty(propertyId)) {
         if (!defined(properties[propertyId])) {
@@ -404,12 +409,12 @@ function parse(geoJson, frameState) {
         featureIdsTypedArray[vertexCounter] = i;
 
         if (k < positionsLength - 1) {
-          indicesTypedArray[segmentCounter * 2] = segmentCounter;
-          indicesTypedArray[segmentCounter * 2 + 1] = segmentCounter + 1;
+          indicesTypedArray[segmentCounter * 2] = vertexCounter;
+          indicesTypedArray[segmentCounter * 2 + 1] = vertexCounter + 1;
+          segmentCounter++;
         }
 
         vertexCounter++;
-        segmentCounter++;
       }
     }
   }
