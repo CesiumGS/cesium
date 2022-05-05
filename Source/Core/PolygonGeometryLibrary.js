@@ -217,7 +217,7 @@ PolygonGeometryLibrary.subdivideTexcoordLine = function (
 
   // Resize the result array.
   const texcoords = result;
-  texcoords.result = subdivisions * 2;
+  texcoords.length = subdivisions * 2;
 
   // Compute texture coordinates using linear interpolation.
   let index = 0;
@@ -781,7 +781,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
     edgePositions = new Array(topEdgeLength * 2);
 
     if (hasTexcoords) {
-      topEdgeTexcoordLength = length * 2 * 2;
+      topEdgeTexcoordLength = (numVertices + length) * 2;
       edgeTexcoords = new Array(topEdgeTexcoordLength * 2);
     }
 
