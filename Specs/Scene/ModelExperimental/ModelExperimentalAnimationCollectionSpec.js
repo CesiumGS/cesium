@@ -627,7 +627,6 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
         new Date("January 1, 2014 12:00:00 UTC")
       );
       const animationCollection = model.activeAnimations;
-      animationCollection.animateWhilePaused = false;
       let animationTime = 0;
       const animation = animationCollection.add({
         index: 0,
@@ -642,8 +641,10 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       scene.renderForSpecs(time);
       animationTime = 0.1;
       scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, scratchJulianDate));
+      // no update because animationTime didn't change
       scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
       animationTime = 0.2;
+      // no update because scene time didn't change
       scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
       animationTime = 0.3;
       scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
@@ -690,6 +691,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       scene.renderForSpecs(time);
       animationTime = 0.1;
       scene.renderForSpecs(time);
+      // no update because animationTime didn't change
       scene.renderForSpecs(time);
       animationTime = 0.3;
       scene.renderForSpecs(time);

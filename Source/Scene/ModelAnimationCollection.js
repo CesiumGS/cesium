@@ -423,8 +423,8 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         pastStopTime ? stopTime : sceneTime,
         startTime
       );
-      delta = defined(scheduledAnimation.animationTime)
-        ? scheduledAnimation.animationTime(duration, seconds)
+      delta = defined(scheduledAnimation._animationTime)
+        ? scheduledAnimation._animationTime(duration, seconds)
         : seconds / duration;
     }
 
@@ -447,7 +447,9 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         scheduledAnimation._state === ModelAnimationState.STOPPED;
       // no change to delta, and no change to the animation state means we can
       // skip the update this time around.
-      if (play !== animationStopped) continue;
+      if (play !== animationStopped) {
+        continue;
+      }
     }
     scheduledAnimation._prevAnimationDelta = delta;
 

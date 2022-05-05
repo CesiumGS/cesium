@@ -456,8 +456,8 @@ ModelExperimentalAnimationCollection.prototype.update = function (frameState) {
         reachedStopTime ? stopTime : sceneTime,
         startTime
       );
-      delta = defined(runtimeAnimation.animationTime)
-        ? runtimeAnimation.animationTime(duration, seconds)
+      delta = defined(runtimeAnimation._animationTime)
+        ? runtimeAnimation._animationTime(duration, seconds)
         : seconds / duration;
     }
 
@@ -480,7 +480,9 @@ ModelExperimentalAnimationCollection.prototype.update = function (frameState) {
         runtimeAnimation._state === ModelAnimationState.STOPPED;
       // no change to delta, and no change to the animation state means we can
       // skip the update this time around.
-      if (play !== animationStopped) continue;
+      if (play !== animationStopped) {
+        continue;
+      }
     }
     runtimeAnimation._prevAnimationDelta = delta;
 

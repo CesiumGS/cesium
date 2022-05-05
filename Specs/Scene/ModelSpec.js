@@ -1961,7 +1961,7 @@ describe(
 
     it("animates while paused with an explicit animation time", function () {
       const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
+        new Date("January 1, 2014 12:00:01 UTC")
       );
       const animations = animBoxesModel.activeAnimations;
       animations.animateWhilePaused = true;
@@ -2003,6 +2003,7 @@ describe(
       );
       expect(animations.remove(a)).toEqual(true);
       animBoxesModel.show = false;
+      animations.animateWhilePaused = false;
     });
 
     it("animates with a multiplier", function () {

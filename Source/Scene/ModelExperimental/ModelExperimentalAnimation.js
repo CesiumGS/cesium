@@ -43,15 +43,7 @@ function ModelExperimentalAnimation(model, animation, options) {
   this._multiplier = defaultValue(options.multiplier, 1.0);
   this._reverse = defaultValue(options.reverse, false);
   this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
-
-  /**
-   * If this is defined, it will be used to compute the local animation time
-   * instead of the scene's time.
-   *
-   * @type {ModelAnimation.AnimationTimeCallback}
-   * @default undefined
-   */
-  this.animationTime = options.animationTime;
+  this._animationTime = options.animationTime;
   this._prevAnimationDelta = undefined;
 
   /**
@@ -333,6 +325,19 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
       return this._loop;
     },
   },
+
+  /**
+   * If this is defined, it will be used to compute the local animation time
+   * instead of the scene's time.
+   *
+   * @type {ModelExperimentalAnimation.AnimationTimeCallback}
+   * @default undefined
+   */
+  animationTime: {
+    get: function () {
+      return this._animationTime;
+    },
+  },
 });
 
 function initialize(runtimeAnimation) {
@@ -400,8 +405,7 @@ ModelExperimentalAnimation.prototype.animate = function (time) {
  * @returns {Number} Returns the local animation time.
  *
  * @example
- * // Use real time for model animation (also set
- * // ModelExperimentalAnimationCollection#animateWhilePaused)
+ * // Use real time for model animation (assuming animateWhilePaused was set to true)
  * function animationTime(duration) {
  *     return Date.now() / 1000 / duration;
  * }
@@ -410,7 +414,7 @@ ModelExperimentalAnimation.prototype.animate = function (time) {
  * // Offset the phase of the animation, so it starts halfway
  * // through its cycle.
  * function animationTime(duration, seconds) {
- *     return seconds / duration + .5;
+ *     return seconds / duration + 0.5;
  * }
  */
 export default ModelExperimentalAnimation;
