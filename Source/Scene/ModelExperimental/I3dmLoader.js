@@ -5,7 +5,6 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import StructuralMetadata from "../StructuralMetadata.js";
@@ -97,7 +96,7 @@ function I3dmLoader(options) {
   this._loadAsTypedArray = loadAsTypedArray;
 
   this._state = I3dmLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 
   this._gltfLoader = undefined;
 
@@ -114,17 +113,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(I3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready. Returns undefined if the load function has not yet been called.
    *
    * @memberof I3dmLoader.prototype
    *
-   * @type {Promise.<I3dmLoader>}
+   * @type {Promise.<I3dmLoader>|Undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
 
@@ -255,7 +254,7 @@ I3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  gltfLoader.promise
+  this._promise = gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -268,13 +267,13 @@ I3dmLoader.prototype.load = function () {
       that._components = components;
 
       that._state = I3dmLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
 };
 
@@ -283,7 +282,7 @@ function handleError(i3dmLoader, error) {
   i3dmLoader._state = I3dmLoaderState.FAILED;
   const errorMessage = "Failed to load I3DM";
   error = i3dmLoader.getError(errorMessage, error);
-  i3dmLoader._promise.reject(error);
+  return Promise.reject(error);
 }
 
 I3dmLoader.prototype.process = function (frameState) {

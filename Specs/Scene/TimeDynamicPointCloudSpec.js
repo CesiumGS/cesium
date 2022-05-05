@@ -779,10 +779,9 @@ describe(
       });
     });
 
-    // Throws an un-catchable 404
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("frame failed event is raised from request failure", function () {
+    it("frame failed event is raised from request failure", function () {
       const pointCloud = createTimeDynamicPointCloud();
+      let frameRejectedCount = 0;
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
         request,
         responseType,
@@ -792,7 +791,13 @@ describe(
         deferred,
         overrideMimeType
       ) {
-        deferred.reject("404");
+        if (request.toString().includes("PointCloudTimeDynamic")) {
+          deferred.reject("404");
+          // Allow the promise a frame to resolve
+          deferred.promise.catch(function () {
+            frameRejectedCount++;
+          });
+        }
       });
       const spyUpdate = jasmine.createSpy("listener");
       pointCloud.frameFailed.addEventListener(spyUpdate);
@@ -803,12 +808,18 @@ describe(
         scene.renderForSpecs();
       }
 
-      for (i = 0; i < 5; ++i) {
-        const arg = spyUpdate.calls.argsFor(i)[0];
-        expect(arg).toBeDefined();
-        expect(arg.uri).toContain(`${i}.pnts`);
-        expect(arg.message).toBe("404");
-      }
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return frameRejectedCount === 5;
+      }).then(function () {
+        expect(spyUpdate.calls.count()).toEqual(5);
+        for (i = 0; i < 5; ++i) {
+          const arg = spyUpdate.calls.argsFor(i)[0];
+          expect(arg).toBeDefined();
+          expect(arg.uri).toContain(`${i}.pnts`);
+          expect(arg.message).toBe("404");
+        }
+      });
     });
 
     it("failed frame event is raised from Draco failure", function () {

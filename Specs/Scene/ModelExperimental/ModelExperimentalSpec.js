@@ -169,9 +169,7 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when texture fails to load", function () {
+    it("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
@@ -192,9 +190,7 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when external buffer fails to load", function () {
+    it("rejects ready promise when external buffer fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";

@@ -4,7 +4,6 @@ import Color from "../../Core/Color.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
@@ -64,7 +63,8 @@ export default function PntsLoader(options) {
   this._decodePromise = undefined;
   this._decodedAttributes = undefined;
 
-  this._promise = defer();
+  this._promise = undefined;
+  this._process = function (frameState) {};
   this._state = ResourceLoaderState.UNLOADED;
   this._buffers = [];
 
@@ -80,17 +80,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(PntsLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready. Returns undefined if the load function has not yet been called.
    *
    * @memberof PntsLoader.prototype
    *
-   * @type {Promise.<PntsLoader>}
+   * @type {Promise.<PntsLoader>|Undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -147,14 +147,21 @@ Object.defineProperties(PntsLoader.prototype, {
 PntsLoader.prototype.load = function () {
   this._parsedContent = PntsParser.parse(this._arrayBuffer, this._byteOffset);
   this._state = ResourceLoaderState.PROCESSING;
+
+  const loader = this;
+  this._promise = new Promise(function (resolve, reject) {
+    loader._process = function (frameState) {
+      if (loader._state === ResourceLoaderState.PROCESSING) {
+        if (!defined(loader._decodePromise)) {
+          decodeDraco(loader, frameState.context).then(resolve).catch(reject);
+        }
+      }
+    };
+  });
 };
 
 PntsLoader.prototype.process = function (frameState) {
-  if (this._state === ResourceLoaderState.PROCESSING) {
-    if (!defined(this._decodePromise)) {
-      decodeDraco(this, frameState.context);
-    }
-  }
+  this._process(frameState);
 };
 
 function decodeDraco(loader, context) {
@@ -175,7 +182,7 @@ function decodeDraco(loader, context) {
   }
 
   loader._decodePromise = decodePromise;
-  decodePromise
+  return decodePromise
     .then(function (decodeDracoResult) {
       if (loader.isDestroyed()) {
         return;
@@ -186,13 +193,13 @@ function decodeDraco(loader, context) {
       }
       makeComponents(loader, context);
       loader._state = ResourceLoaderState.READY;
-      loader._promise.resolve(loader);
+      return loader;
     })
     .catch(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load Draco";
-      loader._promise.reject(loader.getError(errorMessage, error));
+      return Promise.reject(loader.getError(errorMessage, error));
     });
 }
 

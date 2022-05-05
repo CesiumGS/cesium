@@ -31,7 +31,7 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
     if (defined(error)) {
       message += `\n${error.message}`;
     }
-    model._readyPromise.reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   };
 };
 

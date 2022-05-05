@@ -667,29 +667,15 @@ describe(
     });
 
     function resolveBufferViewAfterDestroy(rejectPromise) {
-      let promise = new Promise(function (resolve, reject) {
+      const promise = new Promise(function (resolve, reject) {
         if (rejectPromise) {
           reject(new Error());
         } else {
           resolve(arrayBuffer);
         }
       });
-      if (rejectPromise) {
-        promise = promise.catch(function (e) {
-          // swallow that error we just threw
-        });
-      }
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
-
-      // Load a copy of the buffer view into the cache so that the buffer view
-      // promise resolves even if the vertex buffer loader is destroyed
-      const bufferViewLoaderCopy = ResourceCache.loadBufferView({
-        gltf: gltfUncompressed,
-        bufferViewId: 0,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
@@ -702,13 +688,11 @@ describe(
       expect(vertexBufferLoader.buffer).not.toBeDefined();
 
       vertexBufferLoader.load();
-      return promise.finally(function () {
-        vertexBufferLoader.destroy();
+      vertexBufferLoader.destroy();
 
+      return vertexBufferLoader.promise.finally(function () {
         expect(vertexBufferLoader.buffer).not.toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(true);
-
-        ResourceCache.unload(bufferViewLoaderCopy);
       });
     }
 
@@ -721,10 +705,6 @@ describe(
     });
 
     function resolveDracoAfterDestroy(rejectPromise) {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
-      );
-
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
@@ -735,51 +715,39 @@ describe(
         accessorId: 0,
       });
 
-      expect(vertexBufferLoader.buffer).not.toBeDefined();
-
-      let promise = new Promise(function (resolve, reject) {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+        // After we resolve, process again, then destroy
         setTimeout(function () {
           loaderProcess(vertexBufferLoader, scene);
-          if (rejectPromise) {
-            reject(new Error());
-          } else {
-            resolve(decodeDracoResults);
-          }
+          vertexBufferLoader.destroy();
         }, 1);
+        return Promise.resolve(arrayBuffer);
       });
-      if (rejectPromise) {
-        promise = promise.catch(function (e) {
-          // swallow that error we just threw
-        });
-      }
 
       const decodeBufferView = spyOn(
         DracoLoader,
         "decodeBufferView"
       ).and.callFake(function () {
-        return promise;
+        return new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            if (rejectPromise) {
+              reject(new Error());
+            } else {
+              resolve(decodeDracoResults);
+            }
+          }, 1);
+        });
       });
 
-      // Load a copy of the draco loader into the cache so that the draco loader
-      // promise resolves even if the vertex buffer loader is destroyed
-      const dracoLoaderCopy = ResourceCache.loadDraco({
-        gltf: gltfDraco,
-        draco: dracoExtension,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
 
       vertexBufferLoader.load();
       loaderProcess(vertexBufferLoader, scene);
-      return promise.finally(function () {
+      return vertexBufferLoader.promise.finally(function () {
         expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
-
-        vertexBufferLoader.destroy();
 
         expect(vertexBufferLoader.buffer).not.toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(true);
-
-        ResourceCache.unload(dracoLoaderCopy);
       });
     }
 

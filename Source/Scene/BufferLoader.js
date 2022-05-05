@@ -1,5 +1,4 @@
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -42,7 +41,7 @@ export default function BufferLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -61,7 +60,7 @@ Object.defineProperties(BufferLoader.prototype, {
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -98,24 +97,31 @@ Object.defineProperties(BufferLoader.prototype, {
  */
 BufferLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
-    this._promise.resolve(this);
-    return;
+    this._promise = Promise.resolve(this);
+  } else {
+    this._promise = loadExternalBuffer(this);
   }
-
-  loadExternalBuffer(this);
+  return this._promise;
 };
 
 function loadExternalBuffer(bufferLoader) {
   const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  BufferLoader._fetchArrayBuffer(resource)
+  const promise = BufferLoader._fetchArrayBuffer(resource);
+
+  // TODO: I don't think this is OK-- The request is cancelled, no?
+  if (!defined(promise)) {
+    return Promise.resolve(bufferLoader);
+  }
+
+  return promise
     .then(function (arrayBuffer) {
       if (bufferLoader.isDestroyed()) {
         return;
       }
       bufferLoader._typedArray = new Uint8Array(arrayBuffer);
       bufferLoader._state = ResourceLoaderState.READY;
-      bufferLoader._promise.resolve(bufferLoader);
+      return bufferLoader;
     })
     .catch(function (error) {
       if (bufferLoader.isDestroyed()) {
@@ -123,7 +129,7 @@ function loadExternalBuffer(bufferLoader) {
       }
       bufferLoader._state = ResourceLoaderState.FAILED;
       const errorMessage = `Failed to load external buffer: ${resource.url}`;
-      bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
+      return Promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }
 

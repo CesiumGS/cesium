@@ -6,7 +6,6 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
-  defer,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
@@ -2718,22 +2717,22 @@ describe(
     it("resolves before textures are loaded when incrementallyLoadTextures is true", function () {
       const textureCreate = spyOn(Texture, "create").and.callThrough();
 
-      const deferredPromise = defer();
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        deferredPromise.promise
-      );
-
-      const image = new Image();
-      image.src =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
-
       const options = {
         incrementallyLoadTextures: true,
       };
+      const promise = loadGltf(boxTextured, options);
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(
+        promise.then(function () {
+          const image = new Image();
+          image.src =
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-      return loadGltf(boxTextured, options).then(function (gltfLoader) {
+          return image;
+        })
+      );
+
+      return promise.then(function (gltfLoader) {
         expect(textureCreate).not.toHaveBeenCalled();
-        deferredPromise.resolve(image);
 
         // Continue processing to load in textures
         return pollToPromise(function () {
@@ -2744,11 +2743,13 @@ describe(
               loader._state === ResourceLoaderState.FAILED
             );
           });
-        }).then(function () {
-          return gltfLoader.texturesLoadedPromise.then(function () {
+        })
+          .then(function () {
+            return gltfLoader.texturesLoadedPromise;
+          })
+          .then(function () {
             expect(textureCreate).toHaveBeenCalled();
           });
-        });
       });
     });
 
@@ -2794,9 +2795,7 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects promise if glTF JSON fails to load", function () {
+    it("rejects promise if glTF JSON fails to load", function () {
       const error = new Error("404 Not Found");
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
         Promise.reject(error)
@@ -2813,13 +2812,7 @@ describe(
 
       gltfLoader.load();
 
-      const textureLoaderPromise = gltfLoader.texturesLoadedPromise.catch(
-        function (runtimeError) {
-          // Because of how the error is handled, textureLoadedPromise also rejects which must be caught
-        }
-      );
-
-      const promise = gltfLoader.promise
+      return gltfLoader.promise
         .then(function () {
           fail();
         })
@@ -2828,13 +2821,9 @@ describe(
             "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found"
           );
         });
-
-      return Promise.all([promise, textureLoaderPromise]);
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects promise if resource fails to load", function () {
+    it("rejects promises if resource fails to load", function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -2863,16 +2852,19 @@ describe(
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      const texturePromise = gltfLoader.texturesLoadedPromise.catch(function (
-        runtimeError
-      ) {
-        expect(runtimeError.message).toBe(
-          "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
-        );
-      });
-
-      const promise = waitForLoaderProcess(gltfLoader, scene)
-        .then(function (gltfLoader) {
+      return waitForLoaderProcess(gltfLoader, scene)
+        .then(function () {
+          fail();
+        })
+        .catch(function (runtimeError) {
+          expect(runtimeError.message).toBe(
+            "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
+          );
+        })
+        .then(function () {
+          return gltfLoader.texturesLoadedPromise;
+        })
+        .then(function () {
           fail();
         })
         .catch(function (runtimeError) {
@@ -2883,11 +2875,9 @@ describe(
           expect(destroyIndexBufferLoader.calls.count()).toBe(1);
           expect(destroyTextureLoader.calls.count()).toBe(1);
         });
-
-      return Promise.all([texturePromise, promise]);
     });
 
-    function resolveGltfJsonAfterDestroy(reject) {
+    function resolveGltfJsonAfterDestroy(rejectPromise) {
       const gltf = {
         asset: {
           version: "2.0",
@@ -2895,9 +2885,15 @@ describe(
       };
       const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
-      const deferredPromise = defer();
+      const fetchPromise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+        } else {
+          resolve(arrayBuffer);
+        }
+      });
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        deferredPromise.promise
+        fetchPromise
       );
 
       const gltfUri = "https://example.com/model.glb";
@@ -2917,27 +2913,23 @@ describe(
 
       expect(gltfLoader.components).not.toBeDefined();
 
-      gltfLoader.load();
+      const promise = gltfLoader.load();
       gltfLoader.destroy();
 
-      if (reject) {
-        deferredPromise.reject(new Error());
-      } else {
-        deferredPromise.resolve(arrayBuffer);
-      }
+      return promise.then(function () {
+        expect(gltfLoader.components).not.toBeDefined();
+        expect(gltfLoader.isDestroyed()).toBe(true);
 
-      expect(gltfLoader.components).not.toBeDefined();
-      expect(gltfLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(gltfJsonLoaderCopy);
+        ResourceCache.unload(gltfJsonLoaderCopy);
+      });
     }
 
     it("handles resolving glTF JSON after destroy", function () {
-      resolveGltfJsonAfterDestroy(false);
+      return resolveGltfJsonAfterDestroy(false);
     });
 
     it("handles rejecting glTF JSON after destroy", function () {
-      resolveGltfJsonAfterDestroy(true);
+      return resolveGltfJsonAfterDestroy(true);
     });
 
     it("loads vertex attributes and indices as typed arrays", function () {

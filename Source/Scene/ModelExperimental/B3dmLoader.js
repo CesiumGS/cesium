@@ -5,7 +5,6 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -88,7 +87,7 @@ function B3dmLoader(options) {
 
   this._state = B3dmLoaderState.UNLOADED;
 
-  this._promise = defer();
+  this._promise = undefined;
 
   this._gltfLoader = undefined;
 
@@ -109,17 +108,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(B3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the load function has not yet been called.
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise.<B3dmLoader>}
+   * @type {Promise.<B3dmLoader>|Undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
 
@@ -222,7 +221,7 @@ B3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  gltfLoader.promise
+  this._promise = gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -234,13 +233,13 @@ B3dmLoader.prototype.load = function () {
       that._components = components;
 
       that._state = B3dmLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
 };
 
@@ -249,7 +248,7 @@ function handleError(b3dmLoader, error) {
   b3dmLoader._state = B3dmLoaderState.FAILED;
   const errorMessage = "Failed to load b3dm";
   error = b3dmLoader.getError(errorMessage, error);
-  b3dmLoader._promise.reject(error);
+  return Promise.reject(error);
 }
 
 B3dmLoader.prototype.process = function (frameState) {

@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import MeshoptDecoder from "../ThirdParty/meshoptimizer.js";
@@ -87,7 +86,8 @@ export default function GltfBufferViewLoader(options) {
   this._bufferLoader = undefined;
   this._typedArray = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
+  this._process = function (loader, frameState) {};
 }
 
 if (defined(Object.create)) {
@@ -107,7 +107,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -150,8 +150,39 @@ GltfBufferViewLoader.prototype.load = function () {
   this._state = ResourceLoaderState.LOADING;
 
   const that = this;
+  const bufferViewPromise = new Promise(function (resolve) {
+    that._process = function (loader, frameState) {
+      if (!loader._hasMeshopt) {
+        return;
+      }
 
-  bufferLoader.promise
+      if (!defined(loader._typedArray)) {
+        return;
+      }
+
+      if (loader._state !== ResourceLoaderState.PROCESSING) {
+        return;
+      }
+
+      const count = loader._meshoptCount;
+      const byteStride = loader._meshoptByteStride;
+      const result = new Uint8Array(count * byteStride);
+      MeshoptDecoder.decodeGltfBuffer(
+        result,
+        count,
+        byteStride,
+        loader._typedArray,
+        loader._meshoptMode,
+        loader._meshoptFilter
+      );
+
+      loader._typedArray = result;
+      loader._state = ResourceLoaderState.READY;
+      resolve(loader);
+    };
+  });
+
+  this._promise = bufferLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -169,10 +200,11 @@ GltfBufferViewLoader.prototype.load = function () {
       that._typedArray = bufferViewTypedArray;
       if (that._hasMeshopt) {
         that._state = ResourceLoaderState.PROCESSING;
-      } else {
-        that._state = ResourceLoaderState.READY;
-        that._promise.resolve(that);
+        return bufferViewPromise;
       }
+
+      that._state = ResourceLoaderState.READY;
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
@@ -181,8 +213,10 @@ GltfBufferViewLoader.prototype.load = function () {
       that.unload();
       that._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load buffer view";
-      that._promise.reject(that.getError(errorMessage, error));
+      return Promise.reject(that.getError(errorMessage, error));
     });
+
+  return this._promise;
 };
 
 function getBufferLoader(bufferViewLoader) {
@@ -214,33 +248,7 @@ GltfBufferViewLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  if (!this._hasMeshopt) {
-    return;
-  }
-
-  if (!defined(this._typedArray)) {
-    return;
-  }
-
-  if (this._state !== ResourceLoaderState.PROCESSING) {
-    return;
-  }
-
-  const count = this._meshoptCount;
-  const byteStride = this._meshoptByteStride;
-  const result = new Uint8Array(count * byteStride);
-  MeshoptDecoder.decodeGltfBuffer(
-    result,
-    count,
-    byteStride,
-    this._typedArray,
-    this._meshoptMode,
-    this._meshoptFilter
-  );
-
-  this._typedArray = result;
-  this._state = ResourceLoaderState.READY;
-  this._promise.resolve(this);
+  return this._process(this, frameState);
 };
 
 /**

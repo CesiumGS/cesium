@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
@@ -59,7 +58,7 @@ export default function GltfJsonLoader(options) {
   this._gltf = undefined;
   this._bufferLoaders = [];
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -79,7 +78,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -129,22 +128,23 @@ GltfJsonLoader.prototype.load = function () {
   }
 
   const that = this;
-
-  return processPromise
+  this._promise = processPromise
     .then(function (gltf) {
       if (that.isDestroyed()) {
         return;
       }
       that._gltf = gltf;
       that._state = ResourceLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function loadFromUri(gltfJsonLoader) {
@@ -161,7 +161,7 @@ function handleError(gltfJsonLoader, error) {
   gltfJsonLoader.unload();
   gltfJsonLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = `Failed to load glTF: ${gltfJsonLoader._gltfResource.url}`;
-  gltfJsonLoader._promise.reject(gltfJsonLoader.getError(errorMessage, error));
+  return Promise.reject(gltfJsonLoader.getError(errorMessage, error));
 }
 
 function upgradeVersion(gltfJsonLoader, gltf) {

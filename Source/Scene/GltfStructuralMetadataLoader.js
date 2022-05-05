@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import parseStructuralMetadata from "./parseStructuralMetadata.js";
@@ -69,7 +68,7 @@ export default function GltfStructuralMetadataLoader(options) {
   this._schemaLoader = undefined;
   this._structuralMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -91,7 +90,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -138,7 +137,11 @@ GltfStructuralMetadataLoader.prototype.load = function () {
 
   const that = this;
 
-  Promise.all([bufferViewsPromise, texturesPromise, schemaPromise])
+  this._promise = Promise.all([
+    bufferViewsPromise,
+    texturesPromise,
+    schemaPromise,
+  ])
     .then(function (results) {
       if (that.isDestroyed()) {
         return;
@@ -163,7 +166,7 @@ GltfStructuralMetadataLoader.prototype.load = function () {
         });
       }
       that._state = ResourceLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
@@ -172,7 +175,7 @@ GltfStructuralMetadataLoader.prototype.load = function () {
       that.unload();
       that._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load structural metadata";
-      that._promise.reject(that.getError(errorMessage, error));
+      return Promise.reject(that.getError(errorMessage, error));
     });
 };
 

@@ -1,5 +1,4 @@
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import MetadataSchema from "./MetadataSchema.js";
@@ -44,7 +43,7 @@ export default function MetadataSchemaLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -64,7 +63,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -103,17 +102,18 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
  */
 MetadataSchemaLoader.prototype.load = function () {
   if (defined(this._schema)) {
-    this._promise.resolve(this);
-    return;
+    this._promise = Promise.resolve(this);
+  } else {
+    this._promise = loadExternalSchema(this);
   }
 
-  loadExternalSchema(this);
+  return this._promise;
 };
 
 function loadExternalSchema(schemaLoader) {
   const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
-  resource
+  return resource
     .fetchJson()
     .then(function (json) {
       if (schemaLoader.isDestroyed()) {
@@ -121,7 +121,7 @@ function loadExternalSchema(schemaLoader) {
       }
       schemaLoader._schema = new MetadataSchema(json);
       schemaLoader._state = ResourceLoaderState.READY;
-      schemaLoader._promise.resolve(schemaLoader);
+      return schemaLoader;
     })
     .catch(function (error) {
       if (schemaLoader.isDestroyed()) {
@@ -129,7 +129,7 @@ function loadExternalSchema(schemaLoader) {
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
       const errorMessage = `Failed to load schema: ${resource.url}`;
-      schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
+      return Promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }
 
