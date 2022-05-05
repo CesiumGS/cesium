@@ -215,12 +215,12 @@ describe("Scene/ModelExperimental/GeoJsonLoader", function () {
   });
 
   it("destroys GeoJson loader", function () {
-    // return loadGeoJson(geoJsonPolygonUrl).then(function (loader) {
-    //   expect(loader.components).toBeDefined();
-    //   expect(loader.isDestroyed()).toBe(false);
-    //   loader.destroy();
-    //   expect(loader.components).toBeUndefined();
-    //   expect(loader.isDestroyed()).toBe(true);
-    // });
+    return loadGeoJson(geoJsonPolygonUrl).then(function (loader) {
+      expect(loader.components).toBeDefined();
+      expect(loader.isDestroyed()).toBe(false);
+      loader.destroy();
+      expect(loader.components).toBeUndefined();
+      expect(loader.isDestroyed()).toBe(true);
+    });
   });
 });

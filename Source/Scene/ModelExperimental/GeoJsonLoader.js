@@ -28,7 +28,6 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  *   <li>The geometry types must be LineString, MultiLineString, MultiPolygon, or Polygon.</li>
  *   <li>All geometries are converted to geodesic lines.</li>
  *   <li>Only WGS84 geographic coordinates are supported.</li>
- *   <li>Only geographic coordinate reference system is supported.</li>
  * </ul>
  * <p>
  * Implements the {@link ResourceLoader} interface.
