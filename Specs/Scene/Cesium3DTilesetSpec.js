@@ -2002,9 +2002,9 @@ describe(
     });
 
     it("debugWireframe", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enableDebugWireframe: true,
+      }).then(function (tileset) {
         viewRootOnly();
         tileset.debugWireframe = true;
         scene.renderForSpecs();
