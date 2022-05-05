@@ -650,6 +650,7 @@ function createGeometryFromPositionsExtruded(
 
   let wallGeo = PolygonGeometryLibrary.computeWallGeometry(
     outerRing,
+    textureCoordinates,
     ellipsoid,
     granularity,
     perPositionHeight,
@@ -678,6 +679,7 @@ function createGeometryFromPositionsExtruded(
 
     wallGeo = PolygonGeometryLibrary.computeWallGeometry(
       hole,
+      textureCoordinates,
       ellipsoid,
       granularity,
       perPositionHeight,

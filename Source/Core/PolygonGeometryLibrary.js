@@ -135,6 +135,18 @@ PolygonGeometryLibrary.unpackPolygonHierarchy = function (
   };
 };
 
+const distance2DScratch = new Cartesian2();
+function getPointAtDistance2D(p0, p1, distance, length) {
+  Cartesian2.subtract(p1, p0, distance2DScratch);
+  Cartesian2.multiplyByScalar(
+    distance2DScratch,
+    distance / length,
+    distance2DScratch
+  );
+  Cartesian2.add(p0, distance2DScratch, distance2DScratch);
+  return [distance2DScratch.x, distance2DScratch.y];
+}
+
 const distanceScratch = new Cartesian3();
 function getPointAtDistance(p0, p1, distance, length) {
   Cartesian3.subtract(p1, p0, distanceScratch);
@@ -172,6 +184,52 @@ PolygonGeometryLibrary.subdivideRhumbLineCount = function (
   return Math.pow(2, countDivide);
 };
 
+/**
+ * Subdivides texture coordinates based on the subdivision of the associated world positions.
+ *
+ * @param {Cartesian2} t0 First texture coordinate.
+ * @param {Cartesian2} t1 Second texture coordinate.
+ * @param {Cartesian3} p0 First world position.
+ * @param {Cartesian3} p1 Second world position.
+ * @param {Number} minDistance Minimum distance for a segment.
+ * @param {Array<Cartesian2>} result The subdivided texture coordinates.
+ *
+ * @private
+ */
+PolygonGeometryLibrary.subdivideTexcoordLine = function (
+  t0,
+  t1,
+  p0,
+  p1,
+  minDistance,
+  result
+) {
+  // Compute the number of subdivisions.
+  const subdivisions = PolygonGeometryLibrary.subdivideLineCount(
+    p0,
+    p1,
+    minDistance
+  );
+
+  // Compute the distance between each subdivided point.
+  const length2D = Cartesian2.distance(t0, t1);
+  const distanceBetweenCoords = length2D / subdivisions;
+
+  // Resize the result array.
+  const texcoords = result;
+  texcoords.result = subdivisions * 2;
+
+  // Compute texture coordinates using linear interpolation.
+  let index = 0;
+  for (let i = 0; i < subdivisions; i++) {
+    const t = getPointAtDistance2D(t0, t1, i * distanceBetweenCoords, length2D);
+    texcoords[index++] = t[0];
+    texcoords[index++] = t[1];
+  }
+
+  return texcoords;
+};
+
 PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
   const numVertices = PolygonGeometryLibrary.subdivideLineCount(
     p0,
@@ -197,6 +255,57 @@ PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
   }
 
   return positions;
+};
+
+/**
+ * Subdivides texture coordinates based on the subdivision of the associated world positions using a rhumb line.
+ *
+ * @param {Cartesian2} t0 First texture coordinate.
+ * @param {Cartesian2} t1 Second texture coordinate.
+ * @param {Ellipsoid} ellipsoid The ellipsoid.
+ * @param {Cartesian3} p0 First world position.
+ * @param {Cartesian3} p1 Second world position.
+ * @param {Number} minDistance Minimum distance for a segment.
+ * @param {Array<Cartesian2>} result The subdivided texture coordinates.
+ *
+ * @private
+ */
+PolygonGeometryLibrary.subdivideTexcoordRhumbLine = function (
+  t0,
+  t1,
+  ellipsoid,
+  p0,
+  p1,
+  minDistance,
+  result
+) {
+  // Compute the surface distance.
+  const c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
+  const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
+  const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+  const n = rhumb.surfaceDistance / minDistance;
+
+  // Compute the number of subdivisions.
+  const countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
+  const subdivisions = Math.pow(2, countDivide);
+
+  // Compute the distance between each subdivided point.
+  const length2D = Cartesian2.distance(t0, t1);
+  const distanceBetweenCoords = length2D / subdivisions;
+
+  // Resize the result array.
+  const texcoords = result;
+  texcoords.length = subdivisions * 2;
+
+  // Compute texture coordinates using linear interpolation.
+  let index = 0;
+  for (let i = 0; i < subdivisions; i++) {
+    const t = getPointAtDistance2D(t0, t1, i * distanceBetweenCoords, length2D);
+    texcoords[index++] = t[0];
+    texcoords[index++] = t[1];
+  }
+
+  return texcoords;
 };
 
 PolygonGeometryLibrary.subdivideRhumbLine = function (
@@ -612,12 +721,14 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
   }
 };
 
+const computeWallTexcoordsSubdivided = [];
 const computeWallIndicesSubdivided = [];
 const p1Scratch = new Cartesian3();
 const p2Scratch = new Cartesian3();
 
 PolygonGeometryLibrary.computeWallGeometry = function (
   positions,
+  textureCoordinates,
   ellipsoid,
   granularity,
   perPositionHeight,
@@ -628,9 +739,17 @@ PolygonGeometryLibrary.computeWallGeometry = function (
   let i;
   let p1;
   let p2;
+  let t1;
+  let t2;
+  let edgeTexcoords;
+  let topEdgeTexcoordLength;
 
   let length = positions.length;
   let index = 0;
+  let textureIndex = 0;
+
+  const hasTexcoords = defined(textureCoordinates);
+  const texcoords = hasTexcoords ? textureCoordinates.positions : undefined;
 
   if (!perPositionHeight) {
     const minDistance = CesiumMath.chordLength(
@@ -660,11 +779,24 @@ PolygonGeometryLibrary.computeWallGeometry = function (
 
     topEdgeLength = (numVertices + length) * 3;
     edgePositions = new Array(topEdgeLength * 2);
+
+    if (hasTexcoords) {
+      topEdgeTexcoordLength = length * 2 * 2;
+      edgeTexcoords = new Array(topEdgeTexcoordLength * 2);
+    }
+
     for (i = 0; i < length; i++) {
       p1 = positions[i];
       p2 = positions[(i + 1) % length];
 
       let tempPositions;
+      let tempTexcoords;
+
+      if (hasTexcoords) {
+        t1 = texcoords[i];
+        t2 = texcoords[(i + 1) % length];
+      }
+
       if (arcType === ArcType.GEODESIC) {
         tempPositions = PolygonGeometryLibrary.subdivideLine(
           p1,
@@ -672,6 +804,16 @@ PolygonGeometryLibrary.computeWallGeometry = function (
           minDistance,
           computeWallIndicesSubdivided
         );
+        if (hasTexcoords) {
+          tempTexcoords = PolygonGeometryLibrary.subdivideTexcoordLine(
+            t1,
+            t2,
+            p1,
+            p2,
+            minDistance,
+            computeWallTexcoordsSubdivided
+          );
+        }
       } else if (arcType === ArcType.RHUMB) {
         tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(
           ellipsoid,
@@ -680,6 +822,17 @@ PolygonGeometryLibrary.computeWallGeometry = function (
           minDistance,
           computeWallIndicesSubdivided
         );
+        if (hasTexcoords) {
+          tempTexcoords = PolygonGeometryLibrary.subdivideTexcoordRhumbLine(
+            t1,
+            t2,
+            ellipsoid,
+            p1,
+            p2,
+            minDistance,
+            computeWallTexcoordsSubdivided
+          );
+        }
       }
       const tempPositionsLength = tempPositions.length;
       for (let j = 0; j < tempPositionsLength; ++j, ++index) {
@@ -698,10 +851,33 @@ PolygonGeometryLibrary.computeWallGeometry = function (
       edgePositions[index] = p2.z;
       edgePositions[index + topEdgeLength] = p2.z;
       ++index;
+
+      if (hasTexcoords) {
+        const tempTexcoordsLength = tempTexcoords.length;
+        for (let k = 0; k < tempTexcoordsLength; ++k, ++textureIndex) {
+          edgeTexcoords[textureIndex] = tempTexcoords[k];
+          edgeTexcoords[textureIndex + topEdgeTexcoordLength] =
+            tempTexcoords[k];
+        }
+
+        edgeTexcoords[textureIndex] = t2.x;
+        edgeTexcoords[textureIndex + topEdgeTexcoordLength] = t2.x;
+        ++textureIndex;
+
+        edgeTexcoords[textureIndex] = t2.y;
+        edgeTexcoords[textureIndex + topEdgeTexcoordLength] = t2.y;
+        ++textureIndex;
+      }
     }
   } else {
     topEdgeLength = length * 3 * 2;
     edgePositions = new Array(topEdgeLength * 2);
+
+    if (hasTexcoords) {
+      topEdgeTexcoordLength = length * 2 * 2;
+      edgeTexcoords = new Array(topEdgeTexcoordLength * 2);
+    }
+
     for (i = 0; i < length; i++) {
       p1 = positions[i];
       p2 = positions[(i + 1) % length];
@@ -717,6 +893,27 @@ PolygonGeometryLibrary.computeWallGeometry = function (
       ++index;
       edgePositions[index] = edgePositions[index + topEdgeLength] = p2.z;
       ++index;
+
+      if (hasTexcoords) {
+        t1 = texcoords[i];
+        t2 = texcoords[(i + 1) % length];
+        edgeTexcoords[textureIndex] = edgeTexcoords[
+          textureIndex + topEdgeTexcoordLength
+        ] = t1.x;
+        ++textureIndex;
+        edgeTexcoords[textureIndex] = edgeTexcoords[
+          textureIndex + topEdgeTexcoordLength
+        ] = t1.y;
+        ++textureIndex;
+        edgeTexcoords[textureIndex] = edgeTexcoords[
+          textureIndex + topEdgeTexcoordLength
+        ] = t2.x;
+        ++textureIndex;
+        edgeTexcoords[textureIndex] = edgeTexcoords[
+          textureIndex + topEdgeTexcoordLength
+        ] = t2.y;
+        ++textureIndex;
+      }
     }
   }
 
@@ -756,7 +953,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
     indices[edgeIndex++] = LR;
   }
 
-  return new Geometry({
+  const geometryOptions = {
     attributes: new GeometryAttributes({
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
@@ -766,6 +963,18 @@ PolygonGeometryLibrary.computeWallGeometry = function (
     }),
     indices: indices,
     primitiveType: PrimitiveType.TRIANGLES,
-  });
+  };
+
+  if (hasTexcoords) {
+    geometryOptions.attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: edgeTexcoords,
+    });
+  }
+
+  const geometry = new Geometry(geometryOptions);
+
+  return geometry;
 };
 export default PolygonGeometryLibrary;
