@@ -234,6 +234,7 @@ const scratchCartesian = new Cartesian3();
 function parse(geoJson, frameState) {
   const result = new ParseResult();
 
+  // Parse the GeoJSON
   const parseFunction = geoJsonObjectTypes[geoJson.type];
   if (defined(parseFunction)) {
     parseFunction(geoJson, result);
@@ -245,8 +246,8 @@ function parse(geoJson, frameState) {
     throw new RuntimeError("GeoJSON must have at least one feature");
   }
 
+  // Allocate space for property values
   const properties = {};
-
   for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
     const featureProperties = defaultValue(
@@ -262,6 +263,7 @@ function parse(geoJson, frameState) {
     }
   }
 
+  // Fill in the property values. Default to empty string for undefined values.
   for (let i = 0; i < featureCount; i++) {
     const feature = result.features[i];
     for (const propertyId in properties) {
@@ -291,6 +293,7 @@ function parse(geoJson, frameState) {
     propertyTables: propertyTables,
   });
 
+  // Find the cartographic bounding box
   const cartographicMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
@@ -324,6 +327,7 @@ function parse(geoJson, frameState) {
     }
   }
 
+  // Compute the ENU matrix
   const cartographicCenter = Cartesian3.midpoint(
     cartographicMin,
     cartographicMax,
@@ -343,6 +347,7 @@ function parse(geoJson, frameState) {
   );
   const toLocal = Matrix4.inverseTransformation(toGlobal, new Matrix4());
 
+  // Count the number of vertices and indices
   let vertexCount = 0;
   let indexCount = 0;
 
@@ -356,6 +361,7 @@ function parse(geoJson, frameState) {
     }
   }
 
+  // Allocate typed arrays
   const positionsTypedArray = new Float32Array(vertexCount * 3);
   const featureIdsTypedArray = new Float32Array(vertexCount);
   const indicesTypedArray = IndexDatatype.createTypedArray(
@@ -364,6 +370,7 @@ function parse(geoJson, frameState) {
   );
   const indexDatatype = IndexDatatype.fromTypedArray(indicesTypedArray);
 
+  // Process the data. Convert positions to local ENU. Generate indices.
   const localMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
@@ -418,6 +425,7 @@ function parse(geoJson, frameState) {
     }
   }
 
+  // Create GPU buffers
   const positionBuffer = Buffer.createVertexBuffer({
     typedArray: positionsTypedArray,
     context: frameState.context,
@@ -440,6 +448,7 @@ function parse(geoJson, frameState) {
   });
   indexBuffer.vertexArrayDestroyable = false;
 
+  // Create ModelComponents
   const positionAttribute = new ModelComponents.Attribute();
   positionAttribute.semantic = VertexAttributeSemantic.POSITION;
   positionAttribute.componentDatatype = ComponentDatatype.FLOAT;
