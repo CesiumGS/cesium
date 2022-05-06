@@ -57,6 +57,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
    * A human-readable name for this attribute
    *
    * @memberof PropertyAttribute.prototype
+   *
    * @type {String}
    * @readonly
    * @private
@@ -70,6 +71,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
    * An identifier for this attribute. Useful for debugging.
    *
    * @memberof PropertyAttribute.prototype
+   *
    * @type {String|Number}
    * @readonly
    * @private
@@ -83,6 +85,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
    * The class that properties conform to.
    *
    * @memberof PropertyAttribute.prototype
+   *
    * @type {MetadataClass}
    * @readonly
    * @private
@@ -94,9 +97,25 @@ Object.defineProperties(PropertyAttribute.prototype, {
   },
 
   /**
+   * The properties in this property attribute.
+   *
+   * @memberof PropertyAttribute.prototype
+   *
+   * @type {PropertyAttributeProperty}
+   * @readonly
+   * @private
+   */
+  properties: {
+    get: function () {
+      return this._properties;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof PropertyAttribute.prototype
+   *
    * @type {*}
    * @readonly
    * @private
@@ -111,6 +130,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
    * Extensions in the JSON object.
    *
    * @memberof PropertyAttribute.prototype
+   *
    * @type {Object}
    * @readonly
    * @private

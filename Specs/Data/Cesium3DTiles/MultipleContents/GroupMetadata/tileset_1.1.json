@@ -41,7 +41,6 @@
   },
   "groups": [
     {
-      "id": "buildings",
       "class": "layer",
       "properties": {
         "color": [255, 127, 0],
@@ -50,7 +49,6 @@
       }
     },
     {
-      "id": "cubes",
       "class": "layer",
       "properties": {
         "color": [0, 255, 127],

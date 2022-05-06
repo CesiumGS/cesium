@@ -97,34 +97,36 @@ describe("DataSources/KmlDataSource", function () {
 
   const screenOverlayContainer = document.createElement("div");
 
+  const uberCamera = {
+    positionWC: new Cartesian3(0.0, 0.0, 0.0),
+    directionWC: new Cartesian3(0.0, 0.0, 1.0),
+    upWC: new Cartesian3(0.0, 1.0, 0.0),
+    pitch: 0.0,
+    heading: 0.0,
+    frustum: new PerspectiveFrustum(),
+    computeViewRectangle: function () {
+      return Rectangle.MAX_VALUE;
+    },
+    pickEllipsoid: function () {
+      return undefined;
+    },
+  };
+
+  const uberCanvas = {
+    clientWidth: 512,
+    clientHeight: 512,
+  };
+
   const options = {
-    camera: {
-      positionWC: new Cartesian3(0.0, 0.0, 0.0),
-      directionWC: new Cartesian3(0.0, 0.0, 1.0),
-      upWC: new Cartesian3(0.0, 1.0, 0.0),
-      pitch: 0.0,
-      heading: 0.0,
-      frustum: new PerspectiveFrustum(),
-      computeViewRectangle: function () {
-        return Rectangle.MAX_VALUE;
-      },
-      pickEllipsoid: function () {
-        return undefined;
-      },
-    },
-    canvas: {
-      clientWidth: 512,
-      clientHeight: 512,
-    },
     credit: "This is my credit",
     screenOverlayContainer: screenOverlayContainer,
   };
-  options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
-  options.camera.frustum.aspectRatio = 1.0;
+  uberCamera.frustum.fov = CesiumMath.PI_OVER_FOUR;
+  uberCamera.frustum.aspectRatio = 1.0;
 
   beforeEach(function () {
     // Reset camera - x value will change during onStop tests
-    options.camera.positionWC.x = 0.0;
+    uberCamera.positionWC.x = 0.0;
   });
 
   it("default constructor has expected values", function () {
@@ -431,8 +433,6 @@ describe("DataSources/KmlDataSource", function () {
             </Document>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       sourceUri: "NameFromUri.kml",
     }).then(function (dataSource) {
       expect(dataSource.name).toEqual("NameInKml", options);
@@ -449,8 +449,6 @@ describe("DataSources/KmlDataSource", function () {
             </kml>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       sourceUri: "NameFromUri.kml",
     }).then(function (dataSource) {
       expect(dataSource.name).toEqual("NameInKml", options);
@@ -464,8 +462,6 @@ describe("DataSources/KmlDataSource", function () {
             </Document>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       sourceUri: "NameFromUri.kml",
     }).then(function (dataSource) {
       expect(dataSource.name).toEqual("NameFromUri.kml");
@@ -2166,8 +2162,6 @@ describe("DataSources/KmlDataSource", function () {
           </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       sourceUri: "http://test.invalid",
     }).then(function (dataSource) {
       const entities = dataSource.entities.values;
@@ -2537,8 +2531,6 @@ describe("DataSources/KmlDataSource", function () {
         </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       sourceUri: "http://test.invalid",
     }).then(function (dataSource) {
       const entity = dataSource.entities.values[0];
@@ -3153,8 +3145,6 @@ describe("DataSources/KmlDataSource", function () {
           </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       clampToGround: true,
     }).then(function (dataSource) {
       const entities = dataSource.entities.values;
@@ -3957,8 +3947,6 @@ describe("DataSources/KmlDataSource", function () {
             </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       clampToGround: true,
     }).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
@@ -4012,8 +4000,6 @@ describe("DataSources/KmlDataSource", function () {
             </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       clampToGround: true,
     }).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
@@ -4169,8 +4155,6 @@ describe("DataSources/KmlDataSource", function () {
           </Placemark>';
 
     return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-      camera: options.camera,
-      canvas: options.canvas,
       clampToGround: true,
     }).then(function (dataSource) {
       const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
@@ -4536,7 +4520,11 @@ describe("DataSources/KmlDataSource", function () {
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
-      options
+      Object.assign({
+        canvas: uberCanvas,
+        camera: uberCamera,
+        options: options,
+      })
     ).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(3);
@@ -4551,7 +4539,7 @@ describe("DataSources/KmlDataSource", function () {
       dataSource.refreshEvent.addEventListener(spy);
 
       // Move the camera and call update to set the last camera view
-      options.camera.positionWC.x = 1.0;
+      uberCamera.positionWC.x = 1.0;
       dataSource.update(0);
 
       return pollToPromise(function () {
@@ -4764,7 +4752,10 @@ describe("DataSources/KmlDataSource", function () {
       deferred.reject();
     });
 
-    KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+    KmlDataSource.load(
+      parser.parseFromString(kml, "text/xml"),
+      Object.assign({ camera: uberCamera, canvas: uberCanvas }, options)
+    );
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
@@ -4800,7 +4791,10 @@ describe("DataSources/KmlDataSource", function () {
       deferred.reject();
     });
 
-    KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+    const src = new KmlDataSource();
+    src.camera = uberCamera;
+    src.canvas = uberCanvas;
+    src.load(parser.parseFromString(kml, "text/xml"), options);
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
@@ -4870,7 +4864,7 @@ describe("DataSources/KmlDataSource", function () {
           return undefined;
         },
       },
-      canvas: options.canvas,
+      canvas: uberCanvas,
     };
 
     return KmlDataSource.load(
@@ -5648,11 +5642,11 @@ describe("DataSources/KmlDataSource", function () {
     const camera = createCamera({
       offset: Cartesian3.fromDegrees(-110, 30, 1000),
     });
-    Camera.clone(options.camera, camera);
+    Camera.clone(uberCamera, camera);
 
     const kmlOptions = {
       camera: camera,
-      canvas: options.canvas,
+      canvas: uberCanvas,
     };
 
     camera._mode = SceneMode.MORPHING;

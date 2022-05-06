@@ -33,7 +33,6 @@
   },
   "groups": [
     {
-      "id": "residentialDistrict",
       "class": "residential",
       "properties": {
         "population": 300000,
@@ -41,7 +40,6 @@
       }
     },
     {
-      "id": "commercialDistrict",
       "class": "commercial",
       "properties": {
         "businessCount": 143

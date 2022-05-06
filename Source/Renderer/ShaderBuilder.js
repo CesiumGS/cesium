@@ -353,7 +353,10 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 
   const location = this._nextAttributeLocation;
   this._attributeLocations[identifier] = location;
-  this._nextAttributeLocation++;
+
+  // Most attributes only require a single attribute location, but matrices
+  // require more.
+  this._nextAttributeLocation += getAttributeLocationCount(type);
   return location;
 };
 
@@ -517,6 +520,19 @@ function generateStructLines(shaderBuilder) {
     vertexLines: vertexLines,
     fragmentLines: fragmentLines,
   };
+}
+
+function getAttributeLocationCount(glslType) {
+  switch (glslType) {
+    case "mat2":
+      return 2;
+    case "mat3":
+      return 3;
+    case "mat4":
+      return 4;
+    default:
+      return 1;
+  }
 }
 
 function generateFunctionLines(shaderBuilder) {

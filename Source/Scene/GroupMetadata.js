@@ -26,7 +26,6 @@ function GroupMetadata(options) {
   const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.group", group);
   Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');

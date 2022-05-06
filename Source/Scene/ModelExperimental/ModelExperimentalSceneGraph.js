@@ -4,16 +4,21 @@ import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
+import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
+import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -29,9 +34,11 @@ import ShadowMode from "../ShadowMode.js";
  */
 export default function ModelExperimentalSceneGraph(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const components = options.modelComponents;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.model", options.model);
-  Check.typeOf.object("options.modelComponents", options.modelComponents);
+  Check.typeOf.object("options.modelComponents", components);
   //>>includeEnd('debug');
 
   /**
@@ -52,7 +59,7 @@ export default function ModelExperimentalSceneGraph(options) {
    *
    * @private
    */
-  this._modelComponents = options.modelComponents;
+  this._components = components;
 
   /**
    * Pipeline stages to apply across the model.
@@ -95,6 +102,28 @@ export default function ModelExperimentalSceneGraph(options) {
   this._rootNodes = [];
 
   /**
+   * The indices of the skinned nodes in the runtime nodes array. These refer
+   * to the nodes that will be manipulated by their skin, as opposed to the nodes
+   * acting as joints for the skin.
+   *
+   * @type {Number[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._skinnedNodes = [];
+
+  /**
+   * The runtime skins that affect nodes in the scene graph.
+   *
+   * @type {ModelExperimentalSkin[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._runtimeSkins = [];
+
+  /**
    * Once computed, the {@link DrawCommand}s that are used to render this
    * scene graph are stored here.
    *
@@ -120,6 +149,12 @@ export default function ModelExperimentalSceneGraph(options) {
   this._boundingSphere = undefined;
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
+  this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+    components.upAxis,
+    components.forwardAxis,
+    new Matrix4()
+  );
+
   initialize(this);
 }
 
@@ -134,7 +169,7 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
    */
   components: {
     get: function () {
-      return this._modelComponents;
+      return this._components;
     },
   },
 
@@ -151,6 +186,22 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
       return this._computedModelMatrix;
     },
   },
+
+  /**
+   * A matrix to correct from y-up in some model formats (e.g. glTF) to the
+   * z-up coordinate system Cesium uses.
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  axisCorrectionMatrix: {
+    get: function () {
+      return this._axisCorrectionMatrix;
+    },
+  },
+
   /**
    * The bounding sphere containing all the primitives in the scene graph.
    *
@@ -167,32 +218,22 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
-  const components = sceneGraph._modelComponents;
+  const components = sceneGraph._components;
   const scene = components.scene;
-  const model = sceneGraph._model;
 
-  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
-    model.modelMatrix,
-    components.transform,
-    sceneGraph._computedModelMatrix
-  );
+  computeModelMatrix(sceneGraph);
 
-  sceneGraph._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
-    sceneGraph._computedModelMatrix,
-    components.upAxis,
-    components.forwardAxis,
-    sceneGraph._computedModelMatrix
-  );
+  const nodes = components.nodes;
+  const nodesLength = nodes.length;
 
-  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
-    sceneGraph._computedModelMatrix,
-    model.computedScale,
-    sceneGraph._computedModelMatrix
-  );
+  // Initialize this array to be the same size as the nodes array in the model's file.
+  // This is so nodes can be stored by their index in the file, for future ease of access.
+  sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
+  const rootNodesLength = rootNodes.length;
   const transformToRoot = Matrix4.IDENTITY;
-  for (let i = 0; i < rootNodes.length; i++) {
+  for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
     const rootNodeIndex = traverseSceneGraph(
@@ -203,6 +244,59 @@ function initialize(sceneGraph) {
 
     sceneGraph._rootNodes.push(rootNodeIndex);
   }
+
+  // Handle skins after all runtime nodes are created
+  const skins = components.skins;
+  const runtimeSkins = sceneGraph._runtimeSkins;
+
+  const skinsLength = skins.length;
+  for (let i = 0; i < skinsLength; i++) {
+    const skin = skins[i];
+    runtimeSkins.push(
+      new ModelExperimentalSkin({
+        skin: skin,
+        sceneGraph: sceneGraph,
+      })
+    );
+  }
+
+  const skinnedNodes = sceneGraph._skinnedNodes;
+  const skinnedNodesLength = skinnedNodes.length;
+  for (let i = 0; i < skinnedNodesLength; i++) {
+    const skinnedNodeIndex = skinnedNodes[i];
+    const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
+
+    // Use the index of the skin in the model components to find
+    // the corresponding runtime skin.
+    const skin = nodes[skinnedNodeIndex].skin;
+    const skinIndex = skin.index;
+
+    skinnedNode._runtimeSkin = runtimeSkins[skinIndex];
+    skinnedNode.updateJointMatrices();
+  }
+}
+
+function computeModelMatrix(sceneGraph) {
+  const components = sceneGraph._components;
+  const model = sceneGraph._model;
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+    model.modelMatrix,
+    components.transform,
+    sceneGraph._computedModelMatrix
+  );
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+    sceneGraph._computedModelMatrix,
+    sceneGraph._axisCorrectionMatrix,
+    sceneGraph._computedModelMatrix
+  );
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    sceneGraph._computedModelMatrix,
+    model.computedScale,
+    sceneGraph._computedModelMatrix
+  );
 }
 
 /**
@@ -225,7 +319,8 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // Traverse through scene graph.
   let i;
   if (defined(node.children)) {
-    for (i = 0; i < node.children.length; i++) {
+    const childrenLength = node.children.length;
+    for (i = 0; i < childrenLength; i++) {
       const childNode = node.children[i];
       const childNodeTransformToRoot = Matrix4.multiplyTransformation(
         transformToRoot,
@@ -252,7 +347,8 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   });
 
   if (defined(node.primitives)) {
-    for (i = 0; i < node.primitives.length; i++) {
+    const primitivesLength = node.primitives.length;
+    for (i = 0; i < primitivesLength; i++) {
       runtimeNode.runtimePrimitives.push(
         new ModelExperimentalPrimitive({
           primitive: node.primitives[i],
@@ -263,10 +359,13 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
     }
   }
 
-  sceneGraph._runtimeNodes.push(runtimeNode);
+  const index = node.index;
+  sceneGraph._runtimeNodes[index] = runtimeNode;
+  if (defined(node.skin)) {
+    sceneGraph._skinnedNodes.push(index);
+  }
 
-  // The position of the runtime node in the array.
-  return sceneGraph._runtimeNodes.length - 1;
+  return index;
 }
 
 /**
@@ -373,8 +472,24 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
+  }
+
+  if (model.imageBasedLighting.enabled) {
+    modelPipelineStages.push(ImageBasedLightingPipelineStage);
+  }
+
+  if (model.isClippingEnabled()) {
+    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
+
+  if (
+    defined(model.splitDirection) &&
+    model.splitDirection !== SplitDirection.NONE
+  ) {
+    modelPipelineStages.push(ModelSplitterPipelineStage);
   }
 };
 
@@ -400,26 +515,7 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
-  const model = this._model;
-
-  this._computedModelMatrix = Matrix4.multiplyTransformation(
-    model.modelMatrix,
-    this._modelComponents.transform,
-    this._computedModelMatrix
-  );
-
-  this._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
-    this._computedModelMatrix,
-    this._modelComponents.upAxis,
-    this._modelComponents.forwardAxis,
-    this._computedModelMatrix
-  );
-
-  this._computedModelMatrix = Matrix4.multiplyByUniformScale(
-    this._computedModelMatrix,
-    model.computedScale,
-    this._computedModelMatrix
-  );
+  computeModelMatrix(this);
 
   // Mark all root nodes as dirty. Any and all children will be
   // affected recursively in the update stage.
@@ -427,6 +523,17 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
     node._transformDirty = true;
+  }
+};
+
+ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
+  const model = this._model;
+  const skinnedNodes = model._skinnedNodes;
+  const length = skinnedNodes.length;
+
+  for (let i = 0; i < length; i++) {
+    const node = skinnedNodes[i];
+    node.updateJointMatrices();
   }
 };
 

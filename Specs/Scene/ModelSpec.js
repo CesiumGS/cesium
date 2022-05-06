@@ -1,4 +1,4 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
+import { Cartesian2, ImageBasedLighting } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
@@ -858,106 +858,7 @@ describe(
       texturedBoxModel.distanceDisplayCondition = undefined;
     });
 
-    it("renders with spherical harmonics", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-
-        const L00 = new Cartesian3(
-          0.692622075009195,
-          0.4543516001819,
-          0.36910172299235
-        ); // L00, irradiance, pre-scaled base
-        const L1_1 = new Cartesian3(
-          0.289407068366422,
-          0.16789310162658,
-          0.106174907004792
-        ); // L1-1, irradiance, pre-scaled base
-        const L10 = new Cartesian3(
-          -0.591502034778913,
-          -0.28152432317119,
-          0.124647554708491
-        ); // L10, irradiance, pre-scaled base
-        const L11 = new Cartesian3(
-          0.34945458117126,
-          0.163273486841657,
-          -0.03095643545207
-        ); // L11, irradiance, pre-scaled base
-        const L2_2 = new Cartesian3(
-          0.22171176447426,
-          0.11771991868122,
-          0.031381053430064
-        ); // L2-2, irradiance, pre-scaled base
-        const L2_1 = new Cartesian3(
-          -0.348955284677868,
-          -0.187256994042823,
-          -0.026299717727617
-        ); // L2-1, irradiance, pre-scaled base
-        const L20 = new Cartesian3(
-          0.119982671127227,
-          0.076784552175028,
-          0.055517838847755
-        ); // L20, irradiance, pre-scaled base
-        const L21 = new Cartesian3(
-          -0.545546043202299,
-          -0.279787444030397,
-          -0.086854000285261
-        ); // L21, irradiance, pre-scaled base
-        const L22 = new Cartesian3(
-          0.160417569726332,
-          0.120896423762313,
-          0.121102528320197
-        ); // L22, irradiance, pre-scaled base
-        m.sphericalHarmonicCoefficients = [
-          L00,
-          L1_1,
-          L10,
-          L11,
-          L2_2,
-          L2_1,
-          L20,
-          L21,
-          L22,
-        ];
-
-        scene.highDynamicRange = true;
-        verifyRender(m);
-        primitives.remove(m);
-        scene.highDynamicRange = false;
-      });
-    });
-
-    it("renders with specular environment map", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
-
-        return pollToPromise(function () {
-          scene.highDynamicRange = true;
-          scene.render();
-          scene.highDynamicRange = false;
-          return (
-            defined(m._specularEnvironmentMapAtlas) &&
-            m._specularEnvironmentMapAtlas.ready
-          );
-        }).then(function () {
-          scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
-          scene.highDynamicRange = false;
-        });
-      });
-    });
-
-    it("distanceDisplayCondition throws when ner >= far", function () {
+    it("distanceDisplayCondition throws when near >= far", function () {
       expect(function () {
         texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(
           100.0,
@@ -3846,7 +3747,34 @@ describe(
       });
     });
 
-    it("renders with imageBaseLightingFactor", function () {
+    it("renders with imageBasedLighting", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+
+        const modelIBL = model.imageBasedLighting;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          const ibl = new ImageBasedLighting({
+            imageBasedLightingFactor: new Cartesian2(0.0, 0.0),
+          });
+          model.imageBasedLighting = ibl;
+          expect(model.imageBasedLighting !== modelIBL);
+          expect(modelIBL.isDestroyed()).toBe(true);
+
+          expect(scene).notToRender(rgba);
+
+          ibl.imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+          expect(scene).toRender(rgba);
+
+          ibl.destroy();
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with imageBasedLightingFactor", function () {
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
@@ -3856,6 +3784,120 @@ describe(
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with luminanceAtZenith", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          model.luminanceAtZenith = 0.0;
+          expect(scene).notToRender(rgba);
+
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with spherical harmonic coefficients", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (m) {
+        m.scale = 20.0; // Source model is very small, so scale up a bit
+
+        const L00 = new Cartesian3(
+          0.692622075009195,
+          0.4543516001819,
+          0.36910172299235
+        ); // L00, irradiance, pre-scaled base
+        const L1_1 = new Cartesian3(
+          0.289407068366422,
+          0.16789310162658,
+          0.106174907004792
+        ); // L1-1, irradiance, pre-scaled base
+        const L10 = new Cartesian3(
+          -0.591502034778913,
+          -0.28152432317119,
+          0.124647554708491
+        ); // L10, irradiance, pre-scaled base
+        const L11 = new Cartesian3(
+          0.34945458117126,
+          0.163273486841657,
+          -0.03095643545207
+        ); // L11, irradiance, pre-scaled base
+        const L2_2 = new Cartesian3(
+          0.22171176447426,
+          0.11771991868122,
+          0.031381053430064
+        ); // L2-2, irradiance, pre-scaled base
+        const L2_1 = new Cartesian3(
+          -0.348955284677868,
+          -0.187256994042823,
+          -0.026299717727617
+        ); // L2-1, irradiance, pre-scaled base
+        const L20 = new Cartesian3(
+          0.119982671127227,
+          0.076784552175028,
+          0.055517838847755
+        ); // L20, irradiance, pre-scaled base
+        const L21 = new Cartesian3(
+          -0.545546043202299,
+          -0.279787444030397,
+          -0.086854000285261
+        ); // L21, irradiance, pre-scaled base
+        const L22 = new Cartesian3(
+          0.160417569726332,
+          0.120896423762313,
+          0.121102528320197
+        ); // L22, irradiance, pre-scaled base
+        m.sphericalHarmonicCoefficients = [
+          L00,
+          L1_1,
+          L10,
+          L11,
+          L2_2,
+          L2_1,
+          L20,
+          L21,
+          L22,
+        ];
+
+        scene.highDynamicRange = true;
+        verifyRender(m);
+        primitives.remove(m);
+        scene.highDynamicRange = false;
+      });
+    });
+
+    it("renders with specular environment map", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (m) {
+        m.scale = 20.0; // Source model is very small, so scale up a bit
+        m.specularEnvironmentMaps =
+          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
+
+        const ibl = m.imageBasedLighting;
+        return pollToPromise(function () {
+          scene.highDynamicRange = true;
+          scene.render();
+          scene.highDynamicRange = false;
+          return (
+            defined(ibl.specularEnvironmentMapAtlas) &&
+            ibl.specularEnvironmentMapAtlas.ready
+          );
+        }).then(function () {
+          scene.highDynamicRange = true;
+          verifyRender(m);
+          primitives.remove(m);
+          scene.highDynamicRange = false;
         });
       });
     });

@@ -25,7 +25,7 @@ function createMissingFunctionMessageFunction(
 
 function makeThrowFunction(debug, Type, name) {
   if (debug) {
-    return function (util, customEqualityTesters) {
+    return function (util) {
       return {
         compare: function (actual, expected) {
           // based on the built-in Jasmine toThrow matcher
@@ -43,7 +43,7 @@ function makeThrowFunction(debug, Type, name) {
           }
 
           if (exception) {
-            result = exception instanceof Type;
+            result = exception instanceof Type || exception.name === name;
           }
 
           let message;
@@ -79,7 +79,7 @@ function makeThrowFunction(debug, Type, name) {
 
 function createDefaultMatchers(debug) {
   return {
-    toBeBetween: function (util, customEqualityTesters) {
+    toBeBetween: function (util) {
       return {
         compare: function (actual, lower, upper) {
           if (lower > upper) {
@@ -92,7 +92,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toStartWith: function (util, customEqualityTesters) {
+    toStartWith: function (util) {
       return {
         compare: function (actual, expected) {
           return { pass: actual.slice(0, expected.length) === expected };
@@ -100,7 +100,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toEndWith: function (util, customEqualityTesters) {
+    toEndWith: function (util) {
       return {
         compare: function (actual, expected) {
           return { pass: actual.slice(-expected.length) === expected };
@@ -108,20 +108,22 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toEqual: function (util, customEqualityTesters) {
+    toEqual: function (util) {
       return {
         compare: function (actual, expected) {
           return {
-            pass: equals(util, customEqualityTesters, actual, expected),
+            pass: equals(util, actual, expected),
           };
         },
       };
     },
 
-    toEqualEpsilon: function (util, customEqualityTesters) {
+    toEqualEpsilon: function (util) {
       return {
         compare: function (actual, expected, epsilon) {
           function equalityTester(a, b) {
+            a = typedArrayToArray(a);
+            b = typedArrayToArray(b);
             if (Array.isArray(a) && Array.isArray(b)) {
               if (a.length !== b.length) {
                 return false;
@@ -165,17 +167,31 @@ function createDefaultMatchers(debug) {
               return Math.abs(a - b) <= epsilon;
             }
 
-            return undefined;
+            if (defined(a) && defined(b)) {
+              const keys = Object.keys(a);
+              for (let i = 0; i < keys.length; i++) {
+                if (!b.hasOwnProperty(keys[i])) {
+                  return false;
+                }
+                const aVal = a[keys[i]];
+                const bVal = b[keys[i]];
+                if (!equalityTester(aVal, bVal)) {
+                  return false;
+                }
+              }
+              return true;
+            }
+
+            return equals(util, a, b);
           }
 
-          const result = equals(util, [equalityTester], actual, expected);
-
+          const result = equalityTester(actual, expected);
           return { pass: result };
         },
       };
     },
 
-    toConformToInterface: function (util, customEqualityTesters) {
+    toConformToInterface: function (util) {
       return {
         compare: function (actual, expectedInterface) {
           // All function properties on the prototype should also exist on the actual's prototype.
@@ -204,35 +220,23 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toRender: function (util, customEqualityTesters) {
+    toRender: function (util) {
       return {
         compare: function (actual, expected) {
-          return renderEquals(
-            util,
-            customEqualityTesters,
-            actual,
-            expected,
-            true
-          );
+          return renderEquals(util, actual, expected, true);
         },
       };
     },
 
-    notToRender: function (util, customEqualityTesters) {
+    notToRender: function (util) {
       return {
         compare: function (actual, expected) {
-          return renderEquals(
-            util,
-            customEqualityTesters,
-            actual,
-            expected,
-            false
-          );
+          return renderEquals(util, actual, expected, false);
         },
       };
     },
 
-    toRenderAndCall: function (util, customEqualityTesters) {
+    toRenderAndCall: function (util) {
       return {
         compare: function (actual, expected) {
           const actualRgba = renderAndReadPixels(actual);
@@ -252,7 +256,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toRenderPixelCountAndCall: function (util, customEqualityTesters) {
+    toRenderPixelCountAndCall: function (util) {
       return {
         compare: function (actual, expected) {
           const actualRgba = renderAndReadPixels(actual);
@@ -272,7 +276,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toPickPrimitive: function (util, customEqualityTesters) {
+    toPickPrimitive: function (util) {
       return {
         compare: function (actual, expected, x, y, width, height) {
           return pickPrimitiveEquals(actual, expected, x, y, width, height);
@@ -280,7 +284,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    notToPick: function (util, customEqualityTesters) {
+    notToPick: function (util) {
       return {
         compare: function (actual, x, y, width, height) {
           return pickPrimitiveEquals(actual, undefined, x, y, width, height);
@@ -288,7 +292,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toDrillPickPrimitive: function (util, customEqualityTesters) {
+    toDrillPickPrimitive: function (util) {
       return {
         compare: function (actual, expected, x, y, width, height) {
           return drillPickPrimitiveEquals(actual, 1, x, y, width, height);
@@ -296,7 +300,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    notToDrillPick: function (util, customEqualityTesters) {
+    notToDrillPick: function (util) {
       return {
         compare: function (actual, x, y, width, height) {
           return drillPickPrimitiveEquals(actual, 0, x, y, width, height);
@@ -304,7 +308,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toPickAndCall: function (util, customEqualityTesters) {
+    toPickAndCall: function (util) {
       return {
         compare: function (actual, expected, args) {
           const scene = actual;
@@ -325,7 +329,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toDrillPickAndCall: function (util, customEqualityTesters) {
+    toDrillPickAndCall: function (util) {
       return {
         compare: function (actual, expected, limit) {
           const scene = actual;
@@ -346,7 +350,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toPickFromRayAndCall: function (util, customEqualityTesters) {
+    toPickFromRayAndCall: function (util) {
       return {
         compare: function (actual, expected, ray, objectsToExclude, width) {
           const scene = actual;
@@ -367,7 +371,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toDrillPickFromRayAndCall: function (util, customEqualityTesters) {
+    toDrillPickFromRayAndCall: function (util) {
       return {
         compare: function (
           actual,
@@ -400,7 +404,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toSampleHeightAndCall: function (util, customEqualityTesters) {
+    toSampleHeightAndCall: function (util) {
       return {
         compare: function (
           actual,
@@ -427,7 +431,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toClampToHeightAndCall: function (util, customEqualityTesters) {
+    toClampToHeightAndCall: function (util) {
       return {
         compare: function (
           actual,
@@ -458,7 +462,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toPickPositionAndCall: function (util, customEqualityTesters) {
+    toPickPositionAndCall: function (util) {
       return {
         compare: function (actual, expected, x, y) {
           const scene = actual;
@@ -482,7 +486,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toReadPixels: function (util, customEqualityTesters) {
+    toReadPixels: function (util) {
       return {
         compare: function (actual, expected) {
           let context;
@@ -531,7 +535,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    notToReadPixels: function (util, customEqualityTesters) {
+    notToReadPixels: function (util) {
       return {
         compare: function (actual, expected) {
           const context = actual;
@@ -561,7 +565,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    contextToRenderAndCall: function (util, customEqualityTesters) {
+    contextToRenderAndCall: function (util) {
       return {
         compare: function (actual, expected) {
           const actualRgba = contextRenderAndReadPixels(actual).color;
@@ -581,7 +585,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    contextToRender: function (util, customEqualityTesters) {
+    contextToRender: function (util) {
       return {
         compare: function (actual, expected) {
           return expectContextToRender(actual, expected, true);
@@ -589,7 +593,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    notContextToRender: function (util, customEqualityTesters) {
+    notContextToRender: function (util) {
       return {
         compare: function (actual, expected) {
           return expectContextToRender(actual, expected, false);
@@ -597,7 +601,7 @@ function createDefaultMatchers(debug) {
       };
     },
 
-    toBeImageOrImageBitmap: function (util, customEqualityTesters) {
+    toBeImageOrImageBitmap: function (util) {
       return {
         compare: function (actual) {
           if (typeof createImageBitmap !== "function") {
@@ -673,13 +677,7 @@ function typedArrayToArray(array) {
   return array;
 }
 
-function renderEquals(
-  util,
-  customEqualityTesters,
-  actual,
-  expected,
-  expectEqual
-) {
+function renderEquals(util, actual, expected, expectEqual) {
   const actualRgba = renderAndReadPixels(actual);
 
   // When the WebGL stub is used, all WebGL function calls are noops so
@@ -692,7 +690,7 @@ function renderEquals(
     };
   }
 
-  const eq = equals(util, customEqualityTesters, actualRgba, expected);
+  const eq = equals(util, actualRgba, expected);
   const pass = expectEqual ? eq : !eq;
 
   let message;

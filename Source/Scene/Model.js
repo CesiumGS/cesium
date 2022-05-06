@@ -1,5 +1,4 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -12,6 +11,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -21,6 +21,7 @@ import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import ImageBasedLighting from "./ImageBasedLighting.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
@@ -221,11 +222,12 @@ const uriToGuid = {};
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
- * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -686,23 +688,34 @@ function Model(options) {
   this._sourceVersion = undefined;
   this._sourceKHRTechniquesWebGL = undefined;
 
-  this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
-  Cartesian2.clone(
-    options.imageBasedLightingFactor,
-    this._imageBasedLightingFactor
-  );
   this._lightColor = Cartesian3.clone(options.lightColor);
 
-  this._luminanceAtZenith = undefined;
-  this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
+  const hasIndividualIBLParameters =
+    defined(options.imageBasedLightingFactor) ||
+    defined(options.luminanceAtZenith) ||
+    defined(options.sphericalHarmonicCoefficients) ||
+    defined(options.specularEnvironmentMaps);
 
-  this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
-  this._specularEnvironmentMaps = options.specularEnvironmentMaps;
-  this._shouldUpdateSpecularMapAtlas = true;
-  this._specularEnvironmentMapAtlas = undefined;
-
-  this._useDefaultSphericalHarmonics = false;
-  this._useDefaultSpecularMaps = false;
+  if (defined(options.imageBasedLighting)) {
+    this._imageBasedLighting = options.imageBasedLighting;
+    this._shouldDestroyImageBasedLighting = false;
+  } else if (hasIndividualIBLParameters) {
+    deprecationWarning(
+      "ImageBasedLightingConstructor",
+      "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
+    );
+    // Create image-based lighting from the old constructor parameters.
+    this._imageBasedLighting = new ImageBasedLighting({
+      imageBasedLightingFactor: options.imageBasedLightingFactor,
+      luminanceAtZenith: options.luminanceAtZenith,
+      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
+      specularEnvironmentMaps: options.specularEnvironmentMaps,
+    });
+    this._shouldDestroyImageBasedLighting = true;
+  } else {
+    this._imageBasedLighting = new ImageBasedLighting();
+    this._shouldDestroyImageBasedLighting = true;
+  }
 
   this._shouldRegenerateShaders = false;
 }
@@ -1161,62 +1174,6 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
-   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian2}
-   * @default Cartesian2(1.0, 1.0)
-   */
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLightingFactor;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLightingFactor", value);
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        1.0
-      );
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        1.0
-      );
-      //>>includeEnd('debug');
-      const imageBasedLightingFactor = this._imageBasedLightingFactor;
-      if (
-        value === imageBasedLightingFactor ||
-        Cartesian2.equals(value, imageBasedLightingFactor)
-      ) {
-        return;
-      }
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) ||
-        (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) ||
-        (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
-      Cartesian2.clone(value, this._imageBasedLightingFactor);
-    },
-  },
-
-  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
@@ -1246,6 +1203,54 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * The properties for managing image-based lighting on this model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ImageBasedLighting}
+   */
+  imageBasedLighting: {
+    get: function () {
+      return this._imageBasedLighting;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
+
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+        this._shouldRegenerateShaders = true;
+      }
+    },
+  },
+
+  /**
+   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {Cartesian2}
+   * @default Cartesian2(1.0, 1.0)
+   */
+  imageBasedLightingFactor: {
+    get: function () {
+      return this._imageBasedLighting.imageBasedLightingFactor;
+    },
+    set: function (value) {
+      this._imageBasedLighting.imageBasedLightingFactor = value;
+    },
+  },
+
+  /**
    * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
    * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
    *
@@ -1257,18 +1262,10 @@ Object.defineProperties(Model.prototype, {
    */
   luminanceAtZenith: {
     get: function () {
-      return this._luminanceAtZenith;
+      return this._imageBasedLighting.luminanceAtZenith;
     },
     set: function (value) {
-      const lum = this._luminanceAtZenith;
-      if (value === lum) {
-        return;
-      }
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (defined(lum) && !defined(value)) ||
-        (defined(value) && !defined(lum));
-      this._luminanceAtZenith = value;
+      this._imageBasedLighting.luminanceAtZenith = value;
     },
   },
 
@@ -1277,7 +1274,7 @@ Object.defineProperties(Model.prototype, {
    * computed from the atmosphere color is used.
    * <p>
    * There are nine <code>Cartesian3</code> coefficients.
-   * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
+   * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
    * </p>
    *
    * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
@@ -1292,21 +1289,10 @@ Object.defineProperties(Model.prototype, {
    */
   sphericalHarmonicCoefficients: {
     get: function () {
-      return this._sphericalHarmonicCoefficients;
+      return this._imageBasedLighting.sphericalHarmonicCoefficients;
     },
     set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
-        throw new DeveloperError(
-          "sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values."
-        );
-      }
-      //>>includeEnd('debug');
-      if (value === this._sphericalHarmonicCoefficients) {
-        return;
-      }
-      this._sphericalHarmonicCoefficients = value;
-      this._shouldRegenerateShaders = true;
+      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
     },
   },
 
@@ -1320,13 +1306,10 @@ Object.defineProperties(Model.prototype, {
    */
   specularEnvironmentMaps: {
     get: function () {
-      return this._specularEnvironmentMaps;
+      return this._imageBasedLighting.specularEnvironmentMaps;
     },
     set: function (value) {
-      this._shouldUpdateSpecularMapAtlas =
-        this._shouldUpdateSpecularMapAtlas ||
-        value !== this._specularEnvironmentMaps;
-      this._specularEnvironmentMaps = value;
+      this._imageBasedLighting.specularEnvironmentMaps = value;
     },
   },
 
@@ -1475,6 +1458,12 @@ function containsGltfMagic(uint8Array) {
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -2546,9 +2535,8 @@ function createProgram(programToCreate, model, context) {
     drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
-  const useIBL =
-    model._imageBasedLightingFactor.x > 0.0 ||
-    model._imageBasedLightingFactor.y > 0.0;
+  const imageBasedLighting = model._imageBasedLighting;
+  const useIBL = imageBasedLighting.enabled;
   if (useIBL) {
     drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
@@ -2568,31 +2556,26 @@ function createProgram(programToCreate, model, context) {
   }
 
   if (OctahedralProjectedCubeMap.isSupported(context)) {
-    const usesSH =
-      defined(model._sphericalHarmonicCoefficients) ||
-      model._useDefaultSphericalHarmonics;
-    const usesSM =
-      (defined(model._specularEnvironmentMapAtlas) &&
-        model._specularEnvironmentMapAtlas.ready) ||
-      model._useDefaultSpecularMaps;
-    const addMatrix = usesSH || usesSM || useIBL;
+    const useSHC = imageBasedLighting.useSphericalHarmonicCoefficients;
+    const useSEM = imageBasedLighting.useSpecularEnvironmentMaps;
+    const addMatrix = useSHC || useSEM || useIBL;
     if (addMatrix) {
       drawFS = `uniform mat3 gltf_iblReferenceFrameMatrix; \n${drawFS}`;
     }
 
-    if (defined(model._sphericalHarmonicCoefficients)) {
+    if (defined(imageBasedLighting.sphericalHarmonicCoefficients)) {
       drawFS = `${
         "#define DIFFUSE_IBL \n" +
         "#define CUSTOM_SPHERICAL_HARMONICS \n" +
         "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n"
       }${drawFS}`;
-    } else if (model._useDefaultSphericalHarmonics) {
+    } else if (imageBasedLighting.useDefaultSphericalHarmonics) {
       drawFS = `#define DIFFUSE_IBL \n${drawFS}`;
     }
 
     if (
-      defined(model._specularEnvironmentMapAtlas) &&
-      model._specularEnvironmentMapAtlas.ready
+      defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
+      imageBasedLighting.specularEnvironmentMapAtlas.ready
     ) {
       drawFS = `${
         "#define SPECULAR_IBL \n" +
@@ -2601,12 +2584,12 @@ function createProgram(programToCreate, model, context) {
         "uniform vec2 gltf_specularMapSize; \n" +
         "uniform float gltf_maxSpecularLOD; \n"
       }${drawFS}`;
-    } else if (model._useDefaultSpecularMaps) {
+    } else if (imageBasedLighting.useDefaultSpecularMaps) {
       drawFS = `#define SPECULAR_IBL \n${drawFS}`;
     }
   }
 
-  if (defined(model._luminanceAtZenith)) {
+  if (defined(imageBasedLighting.luminanceAtZenith)) {
     drawFS = `${
       "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
     }${drawFS}`;
@@ -2666,9 +2649,8 @@ function recreateProgram(programToCreate, model, context) {
     drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
-  const useIBL =
-    model._imageBasedLightingFactor.x > 0.0 ||
-    model._imageBasedLightingFactor.y > 0.0;
+  const imageBasedLighting = model._imageBasedLighting;
+  const useIBL = imageBasedLighting.enabled;
   if (useIBL) {
     drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
@@ -2688,31 +2670,26 @@ function recreateProgram(programToCreate, model, context) {
   }
 
   if (OctahedralProjectedCubeMap.isSupported(context)) {
-    const usesSH =
-      defined(model._sphericalHarmonicCoefficients) ||
-      model._useDefaultSphericalHarmonics;
-    const usesSM =
-      (defined(model._specularEnvironmentMapAtlas) &&
-        model._specularEnvironmentMapAtlas.ready) ||
-      model._useDefaultSpecularMaps;
-    const addMatrix = usesSH || usesSM || useIBL;
+    const useSHC = imageBasedLighting.useSphericalHarmonicCoefficients;
+    const useSEM = imageBasedLighting.useSpecularEnvironmentMaps;
+    const addMatrix = useSHC || useSEM || useIBL;
     if (addMatrix) {
       drawFS = `uniform mat3 gltf_iblReferenceFrameMatrix; \n${drawFS}`;
     }
 
-    if (defined(model._sphericalHarmonicCoefficients)) {
+    if (defined(imageBasedLighting.sphericalHarmonicCoefficients)) {
       drawFS = `${
         "#define DIFFUSE_IBL \n" +
         "#define CUSTOM_SPHERICAL_HARMONICS \n" +
         "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n"
       }${drawFS}`;
-    } else if (model._useDefaultSphericalHarmonics) {
+    } else if (imageBasedLighting.useDefaultSphericalHarmonics) {
       drawFS = `#define DIFFUSE_IBL \n${drawFS}`;
     }
 
     if (
-      defined(model._specularEnvironmentMapAtlas) &&
-      model._specularEnvironmentMapAtlas.ready
+      defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
+      imageBasedLighting.specularEnvironmentMapAtlas.ready
     ) {
       drawFS = `${
         "#define SPECULAR_IBL \n" +
@@ -2721,12 +2698,12 @@ function recreateProgram(programToCreate, model, context) {
         "uniform vec2 gltf_specularMapSize; \n" +
         "uniform float gltf_maxSpecularLOD; \n"
       }${drawFS}`;
-    } else if (model._useDefaultSpecularMaps) {
+    } else if (imageBasedLighting.useDefaultSpecularMaps) {
       drawFS = `#define SPECULAR_IBL \n${drawFS}`;
     }
   }
 
-  if (defined(model._luminanceAtZenith)) {
+  if (defined(imageBasedLighting.luminanceAtZenith)) {
     drawFS = `${
       "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
     }${drawFS}`;
@@ -3829,7 +3806,7 @@ function createColorBlendFunction(model) {
 
 function createIBLFactorFunction(model) {
   return function () {
-    return model._imageBasedLightingFactor;
+    return model._imageBasedLighting.imageBasedLightingFactor;
   };
 }
 
@@ -3841,31 +3818,33 @@ function createLightColorFunction(model) {
 
 function createLuminanceAtZenithFunction(model) {
   return function () {
-    return model.luminanceAtZenith;
+    return model._imageBasedLighting.luminanceAtZenith;
   };
 }
 
 function createSphericalHarmonicCoefficientsFunction(model) {
   return function () {
-    return model._sphericalHarmonicCoefficients;
+    return model._imageBasedLighting.sphericalHarmonicCoefficients;
   };
 }
 
 function createSpecularEnvironmentMapFunction(model) {
   return function () {
-    return model._specularEnvironmentMapAtlas.texture;
+    return model._imageBasedLighting.specularEnvironmentMapAtlas.texture;
   };
 }
 
 function createSpecularEnvironmentMapSizeFunction(model) {
   return function () {
-    return model._specularEnvironmentMapAtlas.texture.dimensions;
+    return model._imageBasedLighting.specularEnvironmentMapAtlas.texture
+      .dimensions;
   };
 }
 
 function createSpecularEnvironmentMapLOD(model) {
   return function () {
-    return model._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    return model._imageBasedLighting.specularEnvironmentMapAtlas
+      .maximumMipmapLevel;
   };
 }
 
@@ -5241,9 +5220,9 @@ function distanceDisplayConditionVisible(model, frameState) {
   return distance2 >= nearSquared && distance2 <= farSquared;
 }
 
-const scratchClippingPlanesMatrix = new Matrix4();
 const scratchIBLReferenceFrameMatrix4 = new Matrix4();
 const scratchIBLReferenceFrameMatrix3 = new Matrix3();
+const scratchClippingPlanesMatrix = new Matrix4();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -5488,65 +5467,6 @@ Model.prototype.update = function (frameState) {
     }
   }
 
-  const iblSupported = OctahedralProjectedCubeMap.isSupported(context);
-  if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
-    this._shouldUpdateSpecularMapAtlas = false;
-    this._specularEnvironmentMapAtlas =
-      this._specularEnvironmentMapAtlas &&
-      this._specularEnvironmentMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
-    if (defined(this._specularEnvironmentMaps)) {
-      this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(
-        this._specularEnvironmentMaps
-      );
-      const that = this;
-      this._specularEnvironmentMapAtlas.readyPromise
-        .then(function () {
-          that._shouldRegenerateShaders = true;
-        })
-        .catch(function (error) {
-          console.error(`Error loading specularEnvironmentMaps: ${error}`);
-        });
-    }
-
-    // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.
-    this._shouldRegenerateShaders = true;
-  }
-
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
-  }
-
-  const recompileWithDefaultAtlas =
-    !defined(this._specularEnvironmentMapAtlas) &&
-    defined(frameState.specularEnvironmentMaps) &&
-    !this._useDefaultSpecularMaps;
-  const recompileWithoutDefaultAtlas =
-    !defined(frameState.specularEnvironmentMaps) &&
-    this._useDefaultSpecularMaps;
-
-  const recompileWithDefaultSHCoeffs =
-    !defined(this._sphericalHarmonicCoefficients) &&
-    defined(frameState.sphericalHarmonicCoefficients) &&
-    !this._useDefaultSphericalHarmonics;
-  const recompileWithoutDefaultSHCoeffs =
-    !defined(frameState.sphericalHarmonicCoefficients) &&
-    this._useDefaultSphericalHarmonics;
-
-  this._shouldRegenerateShaders =
-    this._shouldRegenerateShaders ||
-    recompileWithDefaultAtlas ||
-    recompileWithoutDefaultAtlas ||
-    recompileWithDefaultSHCoeffs ||
-    recompileWithoutDefaultSHCoeffs;
-
-  this._useDefaultSpecularMaps =
-    !defined(this._specularEnvironmentMapAtlas) &&
-    defined(frameState.specularEnvironmentMaps);
-  this._useDefaultSphericalHarmonics =
-    !defined(this._sphericalHarmonicCoefficients) &&
-    defined(frameState.sphericalHarmonicCoefficients);
-
   const silhouette = hasSilhouette(this, frameState);
   const translucent = isTranslucent(this);
   const invisible = isInvisible(this);
@@ -5559,6 +5479,8 @@ Model.prototype.update = function (frameState) {
     displayConditionPassed &&
     this.scale !== 0.0 &&
     (!invisible || silhouette);
+
+  this._imageBasedLighting.update(frameState);
 
   if ((show && this._state === ModelState.LOADED) || justLoaded) {
     const animated =
@@ -5658,34 +5580,10 @@ Model.prototype.update = function (frameState) {
     // a common reference (such as the root).
     const referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
 
-    if (isClippingEnabled(this)) {
-      let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-      clippingPlanesMatrix = Matrix4.multiply(
-        context.uniformState.view3D,
-        referenceMatrix,
-        clippingPlanesMatrix
-      );
-      clippingPlanesMatrix = Matrix4.multiply(
-        clippingPlanesMatrix,
-        clippingPlanes.modelMatrix,
-        clippingPlanesMatrix
-      );
-      this._clippingPlanesMatrix = Matrix4.inverseTranspose(
-        clippingPlanesMatrix,
-        this._clippingPlanesMatrix
-      );
-      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
-    }
-
-    const usesSH =
-      defined(this._sphericalHarmonicCoefficients) ||
-      this._useDefaultSphericalHarmonics;
-    const usesSM =
-      (defined(this._specularEnvironmentMapAtlas) &&
-        this._specularEnvironmentMapAtlas.ready) ||
-      this._useDefaultSpecularMaps;
-
-    if (usesSH || usesSM) {
+    if (
+      this._imageBasedLighting.useSphericalHarmonicCoefficients ||
+      this._imageBasedLighting.useSpecularEnvironmentMaps
+    ) {
       let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
       let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
@@ -5708,9 +5606,31 @@ Model.prototype.update = function (frameState) {
       );
     }
 
-    let shouldRegenerateShaders = this._shouldRegenerateShaders;
-    shouldRegenerateShaders =
-      shouldRegenerateShaders ||
+    this._shouldRegenerateShaders =
+      this._shouldRegenerateShaders ||
+      this._imageBasedLighting.shouldRegenerateShaders;
+
+    if (isClippingEnabled(this)) {
+      let clippingPlanesMatrix = scratchClippingPlanesMatrix;
+      clippingPlanesMatrix = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        clippingPlanesMatrix
+      );
+      clippingPlanesMatrix = Matrix4.multiply(
+        clippingPlanesMatrix,
+        clippingPlanes.modelMatrix,
+        clippingPlanesMatrix
+      );
+      this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+        clippingPlanesMatrix,
+        this._clippingPlanesMatrix
+      );
+      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+    }
+
+    this._shouldRegenerateShaders =
+      this._shouldRegenerateShaders ||
       this._clippingPlanesState !== currentClippingPlanesState;
     this._clippingPlanesState = currentClippingPlanesState;
 
@@ -5718,17 +5638,17 @@ Model.prototype.update = function (frameState) {
     const currentlyColorShadingEnabled = isColorShadingEnabled(this);
     if (currentlyColorShadingEnabled !== this._colorShadingEnabled) {
       this._colorShadingEnabled = currentlyColorShadingEnabled;
-      shouldRegenerateShaders = true;
+      this._shouldRegenerateShaders = true;
     }
 
     // Regenerate shaders if splitting was enabled/disabled from last update
     const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
     if (this._splittingEnabled !== splittingEnabled) {
       this._splittingEnabled = splittingEnabled;
-      shouldRegenerateShaders = true;
+      this._shouldRegenerateShaders = true;
     }
 
-    if (shouldRegenerateShaders) {
+    if (this._shouldRegenerateShaders) {
       regenerateShaders(this, frameState);
     } else {
       updateColor(this, frameState, false);
@@ -6004,9 +5924,14 @@ Model.prototype.destroy = function () {
   }
   this._clippingPlanes = undefined;
 
-  this._specularEnvironmentMapAtlas =
-    this._specularEnvironmentMapAtlas &&
-    this._specularEnvironmentMapAtlas.destroy();
+  if (
+    this._shouldDestroyImageBasedLighting &&
+    !this._imageBasedLighting.isDestroyed()
+  ) {
+    this._imageBasedLighting.destroy();
+  }
+
+  this._imageBasedLighting = undefined;
 
   return destroyObject(this);
 };

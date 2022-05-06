@@ -74,14 +74,12 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
       schema: schemaJson,
       groups: [
         {
-          id: "neighborhoodA",
           class: "neighborhood",
           properties: {
             color: "RED",
           },
         },
         {
-          id: "neighborhoodB",
           class: "neighborhood",
           properties: {
             color: "GREEN",
@@ -121,11 +119,9 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     const neighborhoodA = metadata.groups[0];
     const neighborhoodB = metadata.groups[1];
 
-    expect(neighborhoodA.id).toBe(metadata.groupIds[0]);
     expect(neighborhoodA.class).toBe(neighborhoodClass);
     expect(neighborhoodA.getProperty("color")).toBe("RED");
     expect(neighborhoodB.class).toBe(neighborhoodClass);
-    expect(neighborhoodB.id).toBe(metadata.groupIds[1]);
     expect(neighborhoodB.getProperty("color")).toBe("GREEN");
 
     expect(metadata.statistics).toBe(statistics);

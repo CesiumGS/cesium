@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -110,16 +111,32 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     ShaderDestination.FRAGMENT
   );
 
-  let index;
+  // .pnts point clouds store sRGB color rather than linear color
+  const modelType = renderResources.model.type;
+  if (modelType === ModelExperimentalType.TILE_PNTS) {
+    shaderBuilder.addDefine(
+      "HAS_SRGB_COLOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
   for (let i = 0; i < primitive.attributes.length; i++) {
     const attribute = primitive.attributes[i];
-    if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const attributeLocationCount = AttributeType.getAttributeLocationCount(
+      attribute.type
+    );
+
+    let index;
+    if (attributeLocationCount > 1) {
+      index = renderResources.attributeIndex;
+      renderResources.attributeIndex += attributeLocationCount;
+    } else if (attribute.semantic === VertexAttributeSemantic.POSITION) {
       index = 0;
     } else {
-      // The attribute index is taken from the node render resources, which may have added some attributes of its own.
       index = renderResources.attributeIndex++;
     }
-    processAttribute(renderResources, attribute, index);
+    processAttribute(renderResources, attribute, index, attributeLocationCount);
   }
 
   handleBitangents(shaderBuilder, primitive.attributes);
@@ -132,11 +149,26 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   shaderBuilder.addFragmentLines([GeometryStageFS]);
 };
 
-function processAttribute(renderResources, attribute, attributeIndex) {
+function processAttribute(
+  renderResources,
+  attribute,
+  attributeIndex,
+  attributeLocationCount
+) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
 
-  addAttributeToRenderResources(renderResources, attribute, attributeIndex);
+  if (attributeLocationCount > 1) {
+    // matrices are stored as multiple attributes, one per column vector.
+    addMatrixAttributeToRenderResources(
+      renderResources,
+      attribute,
+      attributeIndex,
+      attributeLocationCount
+    );
+  } else {
+    addAttributeToRenderResources(renderResources, attribute, attributeIndex);
+  }
   addAttributeDeclaration(shaderBuilder, attributeInfo);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
@@ -146,19 +178,9 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     addSemanticDefine(shaderBuilder, attribute);
   }
 
-  // .pnts point clouds store sRGB color rather than linear color
-  const modelType = renderResources.model.type;
-  if (modelType === ModelExperimentalType.TILE_PNTS) {
-    shaderBuilder.addDefine(
-      "HAS_SRGB_COLOR",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -222,6 +244,58 @@ function addAttributeToRenderResources(
   renderResources.attributes.push(vertexAttribute);
 }
 
+function addMatrixAttributeToRenderResources(
+  renderResources,
+  attribute,
+  attributeIndex,
+  columnCount
+) {
+  const quantization = attribute.quantization;
+  let type;
+  let componentDatatype;
+  if (defined(quantization)) {
+    type = quantization.type;
+    componentDatatype = quantization.componentDatatype;
+  } else {
+    type = attribute.type;
+    componentDatatype = attribute.componentDatatype;
+  }
+
+  const normalized = attribute.normalized;
+
+  // componentCount is either 4, 9 or 16
+  const componentCount = AttributeType.getNumberOfComponents(type);
+  // componentsPerColumn is either 2, 3, or 4
+  const componentsPerColumn = componentCount / columnCount;
+
+  const componentSizeInBytes = ComponentDatatype.getSizeInBytes(
+    componentDatatype
+  );
+
+  const columnLengthInBytes = componentsPerColumn * componentSizeInBytes;
+
+  // The stride between corresponding columns of two matrices is constant
+  // regardless of where you start
+  const strideInBytes = attribute.byteStride;
+
+  for (let i = 0; i < columnCount; i++) {
+    const offsetInBytes = attribute.byteOffset + i * columnLengthInBytes;
+
+    // upload a single column vector.
+    const columnAttribute = {
+      index: attributeIndex + i,
+      vertexBuffer: attribute.buffer,
+      componentsPerAttribute: componentsPerColumn,
+      componentDatatype: componentDatatype,
+      offsetInBytes: offsetInBytes,
+      strideInBytes: strideInBytes,
+      normalize: normalized,
+    };
+
+    renderResources.attributes.push(columnAttribute);
+  }
+}
+
 function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   const variableName = attributeInfo.variableName;
   let varyingName = `v_${variableName}`;
@@ -272,10 +346,12 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   const variableName = attributeInfo.variableName;
 
   if (variableName === "tangentMC") {
-    // declare tangent as vec3, the w component is only used for computing
-    // the bitangent. Also, the tangent is in model coordinates in the vertex
-    // shader but in eye space in the fragment coordinates
+    // The w component of the tangent is only used for computing the bitangent,
+    // so it can be separated from the other tangent components.
     shaderBuilder.addStructField(vsStructId, "vec3", "tangentMC");
+    shaderBuilder.addStructField(vsStructId, "float", "tangentSignMC");
+    // The tangent is in model coordinates in the vertex shader
+    // but in eye space in the fragment coordinates
     shaderBuilder.addStructField(fsStructId, "vec3", "tangentEC");
   } else if (variableName === "normalMC") {
     // Normals are in model coordinates in the vertex shader but in eye
@@ -296,7 +372,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
+function updateInitializeAttributesFunction(shaderBuilder, attributeInfo) {
   if (attributeInfo.isQuantized) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
@@ -304,13 +380,14 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
 
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
-  let line;
+  const lines = [];
   if (variableName === "tangentMC") {
-    line = "attributes.tangentMC = a_tangentMC.xyz;";
+    lines.push("attributes.tangentMC = a_tangentMC.xyz;");
+    lines.push("attributes.tangentSignMC = a_tangentMC.w;");
   } else {
-    line = `attributes.${variableName} = a_${variableName};`;
+    lines.push(`attributes.${variableName} = a_${variableName};`);
   }
-  shaderBuilder.addFunctionLines(functionId, [line]);
+  shaderBuilder.addFunctionLines(functionId, lines);
 }
 
 function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
@@ -354,14 +431,6 @@ function handleBitangents(shaderBuilder, attributes) {
   }
 
   shaderBuilder.addDefine("HAS_BITANGENTS");
-
-  // compute the bitangent according to the formula in the glTF spec
-  shaderBuilder.addFunctionLines(
-    GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
-    [
-      "attributes.bitangentMC = normalize(cross(a_normalMC, a_tangentMC.xyz) * a_tangentMC.w);",
-    ]
-  );
 
   shaderBuilder.addVarying("vec3", "v_bitangentEC");
   shaderBuilder.addStructField(

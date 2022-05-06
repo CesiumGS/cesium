@@ -1,5 +1,6 @@
 import {
   AlphaPipelineStage,
+  BatchTexturePipelineStage,
   CustomShader,
   CustomShaderMode,
   CustomShaderPipelineStage,
@@ -9,15 +10,17 @@ import {
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
+  MetadataPipelineStage,
+  ModelExperimentalPrimitive,
   ModelExperimentalType,
+  MorphTargetsPipelineStage,
   PickingPipelineStage,
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
   PrimitiveType,
   SelectedFeatureIdPipelineStage,
+  SkinningPipelineStage,
   VertexAttributeSemantic,
-  BatchTexturePipelineStage,
-  ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
@@ -97,6 +100,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -118,6 +122,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -154,6 +159,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
@@ -197,6 +203,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
@@ -251,6 +258,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       DequantizationPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -276,6 +284,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -303,6 +312,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -330,6 +340,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -367,6 +378,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -398,6 +410,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -428,6 +441,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -455,6 +469,76 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures the pipeline stages for morph targets", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        morphTargets: [{}],
+        morphWeights: [0.0],
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.GLTF,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MorphTargetsPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures the pipeline stages for skinning", function () {
+    const mockSkin = {
+      index: 0,
+      inverseBindMatrices: [],
+      joints: [],
+    };
+
+    const mockNode = {
+      skin: mockSkin,
+    };
+
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.GLTF,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+        pointCloudShading: undefined,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      SkinningPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];

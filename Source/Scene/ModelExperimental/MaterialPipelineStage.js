@@ -9,6 +9,8 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import ModelComponents from "../ModelComponents.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 const Material = ModelComponents.Material;
 const MetallicRoughness = ModelComponents.MetallicRoughness;
@@ -84,8 +86,14 @@ MaterialPipelineStage.process = function (
     );
   }
 
+  // If the primitive does not have normals, fall back to unlit lighting.
+  const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.NORMAL
+  );
+
   const lightingOptions = renderResources.lightingOptions;
-  if (material.unlit) {
+  if (material.unlit || !hasNormals) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
     lightingOptions.lightingModel = LightingModel.PBR;

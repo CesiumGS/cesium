@@ -23,7 +23,9 @@ function loadAndZoomToModelExperimental(options, scene) {
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
         incrementallyLoadTextures: options.incrementallyLoadTextures,
+        clippingPlanes: options.clippingPlanes,
         lightColor: options.lightColor,
+        imageBasedLighting: options.imageBasedLighting,
         backFaceCulling: options.backFaceCulling,
         showCreditsOnScreen: options.showCreditsOnScreen,
       });

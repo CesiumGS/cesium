@@ -201,7 +201,8 @@ struct VertexInput {
     Attributes attributes;
     // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
     FeatureIds featureIds;
-    // In the future, metadata will be added here.
+    // Metadata properties. See the Metadata Struct section below.
+    Metadata metadata;
 };
 ```
 
@@ -216,7 +217,8 @@ struct FragmentInput {
     Attributes attributes;
     // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
     FeatureIds featureIds;
-    // In the future, metadata will be added here.
+    // Metadata properties. See the Metadata Struct section below.
+    Metadata metadata;
 };
 ```
 
@@ -553,6 +555,124 @@ to the `EXT_feature_metadata` extension:
   }
 ]
 ```
+
+## `Metadata` struct
+
+This struct contains the relevant metadata properties accessible to the
+model from the
+[`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata)
+glTF extension (or the older
+[`EXT_feature_metadata`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata) extension).
+
+The following types of metadata are currently supported:
+
+- property attributes from the `EXT_structural_metadata` glTF extension.
+- property textures from the `EXT_structural_metadata` glTF extension. Only
+  types with `componentType: UINT8` are currently supported.
+
+Regardless of the source of metadata, the properties are collected into a single
+struct by property ID. For example, if the metadata class looked like this:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        "temperature": {
+          "name": "Surface Temperature",
+          "type": "SCALAR",
+          "componentType": "FLOAT32"
+        }
+      }
+    }
+  }
+}
+```
+
+This will show up in the shader as the struct field as follows:
+
+```
+struct Metadata {
+  float temperature;
+}
+```
+
+Now the temperature can be accessed as `vsInput.metadata.temperature` or
+`fsInput.metadata.temperature`.
+
+### Normalized values
+
+If the class property specifies `normalized: true`, the property will appear
+in the shader as the appropriate floating point type (e.g. `float` or `vec3`).
+All components will be between the range of `[0, 1]` (unsigned) or `[-1, 1]`
+(signed).
+
+For example,
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        // damage normalized between 0.0 and 1.0 though stored as a UINT8 in
+        // the glTF
+        "damageAmount": {
+          "name": "Wall damage (normalized)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true
+        }
+      }
+    }
+  }
+}
+```
+
+This will appear as a `float` value from 0.0 to 1.0, accessible via
+`(vsInput|fsInput).metadata.damageAmount`
+
+### Offset and scale
+
+If the property provides an `offset` or `scale`, this is automatically applied
+after normalization (when applicable). This is useful to pre-scale values into
+a convenient range.
+
+For example, consider taking a normalized temperature value and automatically
+converting this to Celsius or Fahrenheit:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        // scaled to the range [0, 100] in °C
+        "temperatureCelsius": {
+          "name": "Temperature (°C)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true,
+          // offset defaults to 0, scale defaults to 1
+          "scale": 100
+        },
+        // scaled/shifted to the range [32, 212] in °F
+        "temperatureFahrenheit": {
+          "name": "Temperature (°C)",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "normalized": true,
+          "offset": 32,
+          "scale": 180
+        }
+      }
+    }
+  }
+}
+```
+
+In the shader, `(vsInput|fsInput).metadata.temperatureCelsius` will be a `float`
+with a value between 0.0 and 100.0, while
+`(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
+range of `[32.0, 212.0]`.
 
 ## `czm_modelVertexOutput` struct
 

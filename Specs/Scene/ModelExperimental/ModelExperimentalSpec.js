@@ -1,6 +1,10 @@
 import {
+  Cartesian2,
   Cesium3DTileStyle,
+  ClippingPlane,
+  ClippingPlaneCollection,
   FeatureDetection,
+  ImageBasedLighting,
   JulianDate,
   defaultValue,
   Matrix4,
@@ -41,6 +45,8 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const morphPrimitivesTestUrl =
+      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
 
     let scene;
 
@@ -71,22 +77,36 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model, shouldRender, zoomToModel) {
+    const scratchBytes = [];
+
+    function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      zoomToModel = defaultValue(zoomToModel, true);
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+      const zoomToModel = defaultValue(options.zoomToModel, true);
       if (zoomToModel) {
         zoomTo(model);
       }
+
+      const backgroundColor = defaultValue(
+        options.backgroundColor,
+        Color.BLACK
+      );
+      scene.backgroundColor = backgroundColor;
+      const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
+
       expect({
         scene: scene,
         time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(backgroundColorBytes);
         } else {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual(backgroundColorBytes);
         }
       });
+
+      scene.backgroundColor = Color.BLACK;
     }
 
     it("initializes and renders from Uint8Array", function () {
@@ -207,6 +227,29 @@ describe(
           .catch(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("renders glTF with morph targets", function () {
+      const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: morphPrimitivesTestUrl,
+          },
+          scene
+        ).then(function (model) {
+          // The background color must be changed because the model's texture
+          // contains black, which can confuse the test.
+          const renderOptions = {
+            backgroundColor: Color.BLUE,
+          };
+
+          // The model is a plane made three-dimensional by morph targets.
+          // If morph targets aren't supported, the model won't appear in the camera.
+          verifyRender(model, true, renderOptions);
+        });
       });
     });
 
@@ -734,6 +777,66 @@ describe(
       );
     });
 
+    it("initializes with imageBasedLighting", function () {
+      const ibl = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+        luminanceAtZenith: 0.5,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
+        scene
+      ).then(function (model) {
+        expect(model.imageBasedLighting).toBe(ibl);
+      });
+    });
+
+    it("creates default imageBasedLighting", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const imageBasedLighting = model.imageBasedLighting;
+        expect(imageBasedLighting).toBeDefined();
+        expect(
+          Cartesian2.equals(
+            imageBasedLighting.imageBasedLightingFactor,
+            new Cartesian2(1, 1)
+          )
+        ).toBe(true);
+        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
+        expect(
+          imageBasedLighting.sphericalHarmonicCoefficients
+        ).toBeUndefined();
+        expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
+      });
+    });
+
+    it("changing imageBasedLighting works", function () {
+      const imageBasedLighting = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        let result;
+        verifyRender(model, true);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          result = rgba;
+        });
+
+        model.imageBasedLighting = imageBasedLighting;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(result);
+        });
+      });
+    });
+
     it("initializes with scale", function () {
       return loadAndZoomToModelExperimental(
         {
@@ -829,9 +932,13 @@ describe(
           },
           scene
         ).then(function (model) {
+          const renderOptions = {
+            zoomToModel: false,
+          };
+
           const expectedRadius = 0.866;
           scene.renderForSpecs();
-          verifyRender(model, true, false);
+          verifyRender(model, true, renderOptions);
 
           // Verify that minimumPixelSize didn't affect other parameters
           expect(model.scale).toEqual(1.0);
@@ -858,19 +965,23 @@ describe(
         },
         scene
       ).then(function (model) {
+        const renderOptions = {
+          zoomToModel: false,
+        };
+
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
 
         model.minimumPixelSize = 0.0;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, false, false);
+        verifyRender(model, false, renderOptions);
 
         model.minimumPixelSize = 1;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
       });
     });
 
@@ -1046,6 +1157,98 @@ describe(
       });
     });
 
+    it("enables back-face culling", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: true,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("disables back-face culling", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: false,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("ignores back-face culling when translucent", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: true,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+
+        model.color = new Color(0, 0, 1.0, 0.5);
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("toggles back-face culling at runtime", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: false,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        model.backFaceCulling = true;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
     it("ignores back-face culling toggles when translucent", function () {
       return loadAndZoomToModelExperimental(
         {
@@ -1080,6 +1283,168 @@ describe(
       });
     });
 
+    it("throws when given clipping planes attached to another model", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      )
+        .then(function (model) {
+          return loadAndZoomToModelExperimental(
+            { gltf: boxTexturedGlbUrl },
+            scene
+          );
+        })
+        .then(function (model2) {
+          expect(function () {
+            model2.clippingPlanes = clippingPlanes;
+          }).toThrowDeveloperError();
+        });
+    });
+
+    it("updates clipping planes when clipping planes are enabled", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        const gl = scene.frameState.context._gl;
+        spyOn(gl, "texImage2D").and.callThrough();
+
+        scene.renderForSpecs();
+        const callsBeforeClipping = gl.texImage2D.calls.count();
+
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        // When clipping planes are created, we expect two calls to texImage2D
+        // (one for initial creation, and one for copying the data in)
+        // because clipping planes is stored inside a texture.
+        expect(gl.texImage2D.calls.count() - callsBeforeClipping).toEqual(2);
+      });
+    });
+
+    it("initializes and updates with clipping planes", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes = undefined;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
+    it("updating clipping planes properties works", function () {
+      const direction = Cartesian3.multiplyByScalar(
+        Cartesian3.UNIT_X,
+        -1,
+        new Cartesian3()
+      );
+      const plane = new ClippingPlane(direction, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        // The clipping plane should cut the model in half such that
+        // we see the back faces.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(modelColor);
+        });
+
+        plane.distance = 10.0; // Move the plane away from the model
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes apply edge styling", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+        edgeWidth: 25.0, // make large enough to show up on the render
+        edgeColor: Color.BLUE,
+      });
+
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        model.clippingPlanes = clippingPlanes;
+
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 255, 255]);
+        });
+
+        clippingPlanes.edgeWidth = 0.0;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes union regions", function () {
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [
+          new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
+          new ClippingPlane(Cartesian3.UNIT_X, -2.0),
+        ],
+        unionClippingRegions: true,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, true);
+
+        // These planes are defined such that the model is outside their union.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes.unionClippingRegions = false;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelExperimental(
@@ -1111,6 +1476,46 @@ describe(
         }
         expect(loader.isDestroyed()).toEqual(true);
         expect(model.isDestroyed()).toEqual(true);
+      });
+    });
+
+    it("destroys attached ClippingPlaneCollections", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+        });
+
+        model.clippingPlanes = clippingPlanes;
+        expect(model.isDestroyed()).toEqual(false);
+        expect(clippingPlanes.isDestroyed()).toEqual(false);
+
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toEqual(true);
+        expect(clippingPlanes.isDestroyed()).toEqual(true);
+      });
+    });
+
+    it("destroys ClippingPlaneCollections that are detached", function () {
+      let clippingPlanes;
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+        });
+        model.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        model.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
       });
     });
 
