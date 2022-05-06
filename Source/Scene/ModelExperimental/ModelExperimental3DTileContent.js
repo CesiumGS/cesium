@@ -334,6 +334,29 @@ ModelExperimental3DTileContent.fromPnts = function (
   return content;
 };
 
+ModelExperimental3DTileContent.fromGeoJson = function (
+  tileset,
+  tile,
+  resource,
+  geoJson
+) {
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+
+  const additionalOptions = {
+    geoJson: geoJson,
+    resource: resource,
+  };
+
+  const modelOptions = makeModelOptions(
+    tileset,
+    tile,
+    content,
+    additionalOptions
+  );
+  content._model = ModelExperimental.fromGeoJson(modelOptions);
+  return content;
+};
+
 function makeModelOptions(tileset, tile, content, additionalOptions) {
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
@@ -358,6 +381,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,
     splitDirection: tileset.splitDirection,
+    enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
   };
 

@@ -137,5 +137,13 @@ const Cesium3DTileContentFactory = {
       json
     );
   },
+  geoJson: function (tileset, tile, resource, json) {
+    return ModelExperimental3DTileContent.fromGeoJson(
+      tileset,
+      tile,
+      resource,
+      json
+    );
+  },
 };
 export default Cesium3DTileContentFactory;

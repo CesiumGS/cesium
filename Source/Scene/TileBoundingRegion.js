@@ -156,6 +156,7 @@ TileBoundingRegion.prototype.computeBoundingVolumes = function (ellipsoid) {
 const cartesian3Scratch = new Cartesian3();
 const cartesian3Scratch2 = new Cartesian3();
 const cartesian3Scratch3 = new Cartesian3();
+const westNormalScratch = new Cartesian3();
 const eastWestNormalScratch = new Cartesian3();
 const westernMidpointScratch = new Cartesian3();
 const easternMidpointScratch = new Cartesian3();
@@ -186,7 +187,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   const westNormal = Cartesian3.cross(
     westernMidpointCartesian,
     Cartesian3.UNIT_Z,
-    cartesian3Scratch
+    westNormalScratch
   );
   Cartesian3.normalize(westNormal, tileBB.westNormal);
 
@@ -205,17 +206,22 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   );
   Cartesian3.normalize(eastNormal, tileBB.eastNormal);
 
-  // Compute the normal of the plane bounding the southern edge of the tile.
-  const westVector = Cartesian3.subtract(
+  let westVector = Cartesian3.subtract(
     westernMidpointCartesian,
     easternMidpointCartesian,
     cartesian3Scratch
   );
+
+  if (Cartesian3.magnitude(westVector) === 0.0) {
+    westVector = Cartesian3.clone(westNormal, westVector);
+  }
+
   const eastWestNormal = Cartesian3.normalize(
     westVector,
     eastWestNormalScratch
   );
 
+  // Compute the normal of the plane bounding the southern edge of the tile.
   const south = rectangle.south;
   let southSurfaceNormal;
 
@@ -259,6 +265,7 @@ function computeBox(tileBB, rectangle, ellipsoid) {
   // Compute the normal of the plane bounding the northern edge of the tile.
   const north = rectangle.north;
   let northSurfaceNormal;
+
   if (north < 0.0) {
     // Compute a plane that doesn't cut through the tile.
     cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;
