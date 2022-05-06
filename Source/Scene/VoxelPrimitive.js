@@ -307,10 +307,10 @@ function VoxelPrimitive(options) {
   this._nearestSampling = false;
 
   /**
-   * @type {Boolean}
+   * @type {Number}
    * @private
    */
-  this._smoothLevelBlend = 0.0;
+  this._levelBlendFactor = 0.0;
 
   /**
    * @type {Number}
@@ -366,24 +366,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._uniforms = {
-    /**
-     * @ignore
-     * @type {Texture}
-     */
     octreeInternalNodeTexture: undefined,
     octreeInternalNodeTilesPerRow: 0,
     octreeInternalNodeTexelSizeUv: new Cartesian2(),
-    /**
-     * @ignore
-     * @type {Texture}
-     */
     octreeLeafNodeTexture: undefined,
     octreeLeafNodeTilesPerRow: 0,
     octreeLeafNodeTexelSizeUv: new Cartesian2(),
-    /**
-     * @ignore
-     * @type {Texture[]}
-     */
     megatextureTextures: [],
     megatextureSliceDimensions: new Cartesian2(),
     megatextureTileDimensions: new Cartesian2(),
@@ -399,7 +387,7 @@ function VoxelPrimitive(options) {
     transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
-    stepSize: 1.0,
+    stepSize: 0,
     pickColor: new Color(),
   };
 
@@ -782,24 +770,23 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets smooth blending between levels.
+   * Controls how quickly to blend between different levels of the tree.
+   * 0.0 means an instantaneous pop.
+   * 1.0 means a full linear blend.
    *
    * @memberof VoxelPrimitive.prototype
-   * @type {Boolean}
+   * @type {Number}
    */
-  smoothLevelBlend: {
+  levelBlendFactor: {
     get: function () {
-      return this._smoothLevelBlend;
+      return this._levelBlendFactor;
     },
-    set: function (smoothLevelBlend) {
+    set: function (levelBlendFactor) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool("smoothLevelBlend", smoothLevelBlend);
+      Check.typeOf.number("levelBlendFactor", levelBlendFactor);
       //>>includeEnd('debug');
 
-      if (this._smoothLevelBlend !== smoothLevelBlend) {
-        this._smoothLevelBlend = smoothLevelBlend;
-        this._shaderDirty = true;
-      }
+      this._levelBlendFactor = CesiumMath.clamp(levelBlendFactor, 0.0, 1.0);
     },
   },
 
@@ -1476,6 +1463,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
       keyframeLocation = timeIntervalIndex + t;
     }
 
+    const sampleCountOld = traversal._sampleCount;
+
     // Update the voxel traversal
     traversal.update(
       frameState,
@@ -1483,6 +1472,11 @@ VoxelPrimitive.prototype.update = function (frameState) {
       shapeDirty, // recomputeBoundingVolumes
       this._disableUpdate // pauseUpdate
     );
+
+    if (sampleCountOld !== traversal._sampleCount) {
+      this._shaderDirty = true;
+    }
+
     const hasLoadedData = traversal.isRenderable(traversal.rootNode);
 
     if (hasLoadedData && this._debugDraw) {
@@ -1702,6 +1696,7 @@ function getGlslField(type, index) {
  */
 function buildDrawCommands(that, context) {
   const provider = that._provider;
+  const traversal = that._traversal;
   const shapeType = provider.shape;
   const names = provider.names;
   const types = provider.types;
@@ -1716,7 +1711,7 @@ function buildDrawCommands(that, context) {
   const maximumValues = provider.maximumValues;
   const jitter = that._jitter;
   const nearestSampling = that._nearestSampling;
-  const smoothLevelBlend = that._smoothLevelBlend;
+  const sampleCount = traversal._sampleCount;
   const customShader = that._customShader;
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
@@ -1788,14 +1783,6 @@ function buildDrawCommands(that, context) {
     );
   }
 
-  if (smoothLevelBlend) {
-    shaderBuilder.addDefine(
-      "SMOOTH_LEVEL_BLEND",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   if (hasStatistics) {
     shaderBuilder.addDefine(
       "STATISTICS",
@@ -1820,7 +1807,6 @@ function buildDrawCommands(that, context) {
     ShaderDestination.FRAGMENT
   );
 
-  const sampleCount = smoothLevelBlend ? 2 : 1;
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",
     `${sampleCount}`,

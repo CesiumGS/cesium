@@ -151,6 +151,12 @@ function VoxelTraversal(
    * @type {Number}
    * @private
    */
+  this._sampleCount = undefined;
+
+  /**
+   * @type {Number}
+   * @private
+   */
   this._keyframeLocation = 0;
 
   /**
@@ -261,12 +267,15 @@ VoxelTraversal.prototype.update = function (
   const maximumTileCount = this.megatextures[0].maximumTileCount;
   const keyframeCount = this._keyframeCount;
 
-  const hasSmoothLevelBlend = primitive._smoothLevelBlend;
+  const levelBlendFactor = primitive._levelBlendFactor;
+  const haslevelBlendFactor = levelBlendFactor > 0.0;
   const hasKeyframes = keyframeCount > 1;
   const sampleCount =
-    (hasSmoothLevelBlend ? 2 : 1) * (hasKeyframes > 1 ? 2 : 1);
-  const useLeafNodeTexture = sampleCount >= 2;
-  if (useLeafNodeTexture && !defined(this.leafNodeTexture)) {
+    (haslevelBlendFactor ? 2 : 1) * (hasKeyframes > 1 ? 2 : 1);
+  this._sampleCount = sampleCount;
+
+  const useLeafNodes = sampleCount >= 2;
+  if (useLeafNodes && !defined(this.leafNodeTexture)) {
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
     const leafNodeTilesPerRow = Math.floor(
@@ -294,7 +303,7 @@ VoxelTraversal.prototype.update = function (
       this.leafNodeTexelSizeUv
     );
     this.leafNodeTilesPerRow = leafNodeTilesPerRow;
-  } else if (!useLeafNodeTexture && defined(this.leafNodeTexture)) {
+  } else if (!useLeafNodes && defined(this.leafNodeTexture)) {
     this.leafNodeTexture = this.leafNodeTexture.destroy();
   }
 
@@ -313,7 +322,7 @@ VoxelTraversal.prototype.update = function (
     const timestamp0 = getTimestamp();
     loadAndUnload(this, frameState);
     const timestamp1 = getTimestamp();
-    generateOctree(this, sampleCount);
+    generateOctree(this, sampleCount, levelBlendFactor);
     const timestamp2 = getTimestamp();
 
     const debugStatistics = this._debugPrint;
@@ -1421,12 +1430,13 @@ const GpuOctreeFlag = {
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
  * @param {Number} sampleCount
+ * @param {Number} levelBlendFactor
  */
-function generateOctree(that, sampleCount) {
+function generateOctree(that, sampleCount, levelBlendFactor) {
   const primitive = that._primitive;
   const keyframeLocation = that._keyframeLocation;
   const frameNumber = that._frameNumber;
-  const useLeafNodes = sampleCount > 1;
+  const useLeafNodes = sampleCount >= 2;
 
   let internalNodeCount = 0;
   let leafNodeCount = 0;
@@ -1517,6 +1527,7 @@ function generateOctree(that, sampleCount) {
             const parentSse = node.parent.screenSpaceError;
             const targetSse = primitive._screenSpaceError;
             lodLerp = (targetSse - sse) / (parentSse - sse);
+            lodLerp = (lodLerp + levelBlendFactor - 1.0) / levelBlendFactor;
             lodLerp = CesiumMath.clamp(lodLerp, 0.0, 1.0);
           }
 

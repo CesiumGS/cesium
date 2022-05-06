@@ -67,6 +67,9 @@ function VoxelInspector(container, scene) {
   displayPanelContents.appendChild(
     createCheckbox("Nearest Sampling", "nearestSampling")
   );
+  displayPanelContents.appendChild(
+    makeRangeInput("Level Blend Factor", "levelBlendFactor", 0.0, 1.0)
+  );
 
   const screenSpaceErrorContainer = document.createElement("div");
   screenSpaceErrorContainer.appendChild(

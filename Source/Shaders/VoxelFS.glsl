@@ -313,7 +313,6 @@ uniform float u_stepSize;
     #define CYLINDER_INTERSECTION_INDEX_RADIUS_MAX
     #define CYLINDER_INTERSECTION_INDEX_RADIUS_MIN
     #define CYLINDER_INTERSECTION_INDEX_ANGLE 
-
     */
 
     // Cylinder uniforms
@@ -1436,9 +1435,14 @@ Properties getPropertiesFromMegatexture(SampleData sampleDatas[SAMPLE_COUNT]) {
         // When more than one sample is taken the accumulator needs to start at 0
         Properties properties = clearProperties();
         for (int i = 0; i < SAMPLE_COUNT; ++i) {
-            Properties tempProperties = getPropertiesFromMegatexture(sampleDatas[i]);
-            tempProperties = scaleProperties(tempProperties, sampleDatas[i].weight);
-            properties = sumProperties(properties, tempProperties);
+            float weight = sampleDatas[i].weight;
+
+            // Avoid reading the megatexture when the weight is 0 as it can be costly.
+            if (weight > 0.0) {
+                Properties tempProperties = getPropertiesFromMegatexture(sampleDatas[i]);
+                tempProperties = scaleProperties(tempProperties, weight);
+                properties = sumProperties(properties, tempProperties);
+            }
         }
         return properties;
     #endif
