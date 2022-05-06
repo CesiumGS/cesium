@@ -181,14 +181,14 @@ function isCartesianAlmostEqual(a, b) {
  * Gives the point on the mesh where the give ray intersects
  * @param {Ray} ray
  * @param {boolean} cullBackFaces
- * @param {FrameState} frameState
+ * @param {SceneMode} mode
  * @param projection
  * @returns {Cartesian3}
  */
 TerrainMesh.prototype.pickRay = function (
   ray,
   cullBackFaces,
-  frameState,
+  mode,
   projection
 ) {
   const trace = window.showPickDetails;
@@ -202,10 +202,11 @@ TerrainMesh.prototype.pickRay = function (
 
   const hasOctree = !!this._octreeTrianglePicking;
   const canUseOctree =
-    frameState /* not always passed in */ &&
-    frameState.mode === SceneMode.SCENE3D /* 3d mode only*/ &&
-    frameState.terrainExaggeration ===
-      1; /* the octree is baked for default terrain exaggeration */
+    // 3d mode only
+    mode === SceneMode.SCENE3D /* 3d mode only*/ &&
+    // the octree is baked for default terrain exaggeration, so we can only trust its result when we're
+    //  not using terrain exaggeration
+    this.encoding.exaggeration === 1;
 
   if (hasOctree && canUseOctree) {
     newPickValue = this._octreeTrianglePicking.rayIntersect(
@@ -220,7 +221,7 @@ TerrainMesh.prototype.pickRay = function (
     oldPickValue = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
-      frameState.mode,
+      mode,
       projection,
       traceDetails
     );
@@ -243,7 +244,7 @@ TerrainMesh.prototype.pickRay = function (
     const oldPickAgain = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
-      frameState.mode,
+      mode,
       projection,
       traceDetails
     );
