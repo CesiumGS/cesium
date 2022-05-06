@@ -21,9 +21,10 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
 import B3dmLoader from "./B3dmLoader.js";
+import GeoJsonLoader from "./GeoJsonLoader.js";
+import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
-import I3dmLoader from "./I3dmLoader.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -1619,6 +1620,23 @@ ModelExperimental.fromI3dm = function (options) {
   const modelOptions = makeModelOptions(
     loader,
     ModelExperimentalType.TILE_I3DM,
+    options
+  );
+  const model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromGeoJson = function (options) {
+  const loaderOptions = {
+    geoJson: options.geoJson,
+  };
+  const loader = new GeoJsonLoader(loaderOptions);
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_GEOJSON,
     options
   );
   const model = new ModelExperimental(modelOptions);

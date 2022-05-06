@@ -3181,6 +3181,7 @@ Cesium3DTileset.supportedExtensions = {
   "3DTILES_bounding_volume_S2": true,
   "3DTILES_batch_table_hierarchy": true,
   "3DTILES_draco_point_compression": true,
+  MAXAR_content_geojson: true,
 };
 
 /**
