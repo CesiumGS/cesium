@@ -480,9 +480,15 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     );
   }
 
-  // Unload everything except the vertex buffer
+  // Unload everything except the vertex buffer if the scene only uses 3D mode.
+  // Otherwise, the typed array must be stored to properly project positions
+  // into 2D mode / Columbus View.
+  const scene3DOnly = frameState.scene3DOnly;
   this.unload();
 
+  if (!scene3DOnly) {
+    this._typedArray = typedArray;
+  }
   this._buffer = buffer;
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);

@@ -214,13 +214,18 @@ describe(
     };
 
     let scene;
+    let sceneWith3DOnly;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWith3DOnly = createScene({
+        scene3DOnly: true,
+      });
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWith3DOnly.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -389,7 +394,7 @@ describe(
         });
     });
 
-    it("loads from buffer view", function () {
+    it("loads as buffer and typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -427,8 +432,52 @@ describe(
         expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           positions.byteLength
         );
-        expect(vertexBufferLoader.typedArray).toBeUndefined();
+        expect(vertexBufferLoader.typedArray.byteLength).toBe(
+          positions.byteLength
+        );
       });
+    });
+
+    it("loads as buffer only if scene3DOnly is true", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(arrayBuffer)
+      );
+
+      // Simulate JobScheduler not being ready for a few frames
+      const processCallsTotal = 3;
+      let processCallsCount = 0;
+      const jobScheduler = sceneWith3DOnly.frameState.jobScheduler;
+      const originalJobSchedulerExecute = jobScheduler.execute;
+      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
+        job,
+        jobType
+      ) {
+        if (processCallsCount++ >= processCallsTotal) {
+          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
+        }
+        return false;
+      });
+
+      const vertexBufferLoader = new GltfVertexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+      });
+
+      vertexBufferLoader.load();
+
+      return waitForLoaderProcess(vertexBufferLoader, sceneWith3DOnly).then(
+        function (vertexBufferLoader) {
+          loaderProcess(vertexBufferLoader, sceneWith3DOnly); // Check that calling process after load doesn't break anything
+          expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
+            positions.byteLength
+          );
+          expect(vertexBufferLoader.typedArray).toBeUndefined();
+        }
+      );
     });
 
     it("creates vertex buffer synchronously", function () {
@@ -454,10 +503,13 @@ describe(
         expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           positions.byteLength
         );
+        expect(vertexBufferLoader.typedArray.byteLength).toBe(
+          positions.byteLength
+        );
       });
     });
 
-    it("loads as typed array", function () {
+    it("loads as typed array only", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -521,7 +573,9 @@ describe(
         expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           decodedPositions.byteLength
         );
-
+        expect(vertexBufferLoader.typedArray.byteLength).toBe(
+          decodedPositions.byteLength
+        );
         const quantization = vertexBufferLoader.quantization;
         expect(quantization.octEncoded).toBe(false);
         expect(quantization.quantizedVolumeOffset).toEqual(

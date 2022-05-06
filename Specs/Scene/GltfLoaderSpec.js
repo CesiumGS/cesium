@@ -317,7 +317,7 @@ describe(
         expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
         expect(positionAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(positionAttribute.quantization).toBeUndefined();
-        expect(positionAttribute.typedArray).toBeUndefined();
+        expect(positionAttribute.typedArray).toBeDefined();
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(288);
         expect(positionAttribute.byteStride).toBe(12);
@@ -333,7 +333,7 @@ describe(
         expect(normalAttribute.max).toEqual(new Cartesian3(1.0, 1.0, 1.0));
         expect(normalAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(normalAttribute.quantization).toBeUndefined();
-        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.typedArray).toBeDefined();
         expect(normalAttribute.buffer).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(12);
@@ -353,7 +353,7 @@ describe(
         expect(texcoordAttribute.max).toEqual(new Cartesian2(6.0, 1.0));
         expect(texcoordAttribute.constant).toEqual(Cartesian2.ZERO);
         expect(texcoordAttribute.quantization).toBeUndefined();
-        expect(texcoordAttribute.typedArray).toBeUndefined();
+        expect(texcoordAttribute.typedArray).toBeDefined();
         expect(texcoordAttribute.buffer).toBeDefined();
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBe(8);
@@ -517,7 +517,7 @@ describe(
         expect(colorAttribute.max).toBeUndefined();
         expect(colorAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(colorAttribute.quantization).toBeUndefined();
-        expect(colorAttribute.typedArray).toBeUndefined();
+        expect(colorAttribute.typedArray).toBeDefined();
         expect(colorAttribute.buffer).toBeDefined();
         expect(colorAttribute.byteOffset).toBe(0);
         expect(colorAttribute.byteStride).toBe(16);
@@ -607,7 +607,7 @@ describe(
         expect(morphPositions0.max).toEqual(new Cartesian3(0.0, 1.0, 0.0));
         expect(morphPositions0.constant).toEqual(Cartesian3.ZERO);
         expect(morphPositions0.quantization).toBeUndefined();
-        expect(morphPositions0.typedArray).toBeUndefined();
+        expect(morphPositions0.typedArray).toBeDefined();
         expect(morphPositions0.buffer).toBeDefined();
         expect(morphPositions0.byteOffset).toBe(36);
         expect(morphPositions0.byteStride).toBe(12);
@@ -623,7 +623,7 @@ describe(
         expect(morphPositions1.max).toEqual(new Cartesian3(1.0, 1.0, 0.0));
         expect(morphPositions1.constant).toEqual(Cartesian3.ZERO);
         expect(morphPositions1.quantization).toBeUndefined();
-        expect(morphPositions1.typedArray).toBeUndefined();
+        expect(morphPositions1.typedArray).toBeDefined();
         expect(morphPositions1.buffer).toBeDefined();
         expect(morphPositions1.byteOffset).toBe(72);
         expect(morphPositions1.byteStride).toBe(12);
@@ -694,7 +694,7 @@ describe(
         expect(jointsAttribute.max).toBeUndefined();
         expect(jointsAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(jointsAttribute.quantization).toBeUndefined();
-        expect(jointsAttribute.typedArray).toBeUndefined();
+        expect(jointsAttribute.typedArray).toBeDefined();
         expect(jointsAttribute.buffer).toBeDefined();
         expect(jointsAttribute.byteOffset).toBe(0);
         expect(jointsAttribute.byteStride).toBe(16);
@@ -712,7 +712,7 @@ describe(
         expect(weightsAttribute.max).toBeUndefined();
         expect(weightsAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(weightsAttribute.quantization).toBeUndefined();
-        expect(weightsAttribute.typedArray).toBeUndefined();
+        expect(weightsAttribute.typedArray).toBeDefined();
         expect(weightsAttribute.buffer).toBeDefined();
         expect(weightsAttribute.byteOffset).toBe(160);
         expect(weightsAttribute.byteStride).toBe(16);
@@ -1312,7 +1312,7 @@ describe(
         expect(featureIdAttribute.max).toBe(9);
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeUndefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeDefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
@@ -1441,7 +1441,7 @@ describe(
         expect(featureIdAttribute.max).toBe(9);
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeUndefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeDefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
@@ -1903,7 +1903,7 @@ describe(
         expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
         expect(positionAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(positionAttribute.quantization).toBeUndefined();
-        expect(positionAttribute.typedArray).toBeUndefined();
+        expect(positionAttribute.typedArray).toBeDefined();
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(288);
         expect(positionAttribute.byteStride).toBe(12);
@@ -1919,7 +1919,7 @@ describe(
         expect(normalAttribute.max).toEqual(new Cartesian3(1.0, 1.0, 1.0));
         expect(normalAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(normalAttribute.quantization).toBeUndefined();
-        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.typedArray).toBeDefined();
         expect(normalAttribute.buffer).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(12);
@@ -1939,7 +1939,7 @@ describe(
         expect(texcoordAttribute.max).toEqual(new Cartesian2(6.0, 1.0));
         expect(texcoordAttribute.constant).toEqual(Cartesian2.ZERO);
         expect(texcoordAttribute.quantization).toBeUndefined();
-        expect(texcoordAttribute.typedArray).toBeUndefined();
+        expect(texcoordAttribute.typedArray).toBeDefined();
         expect(texcoordAttribute.buffer).toBeDefined();
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBe(8);
@@ -1957,7 +1957,7 @@ describe(
         expect(warpMatrixAttribute.max).toBeUndefined();
         expect(warpMatrixAttribute.constant).toEqual(Matrix2.ZERO);
         expect(warpMatrixAttribute.quantization).toBeUndefined();
-        expect(warpMatrixAttribute.typedArray).toBeUndefined();
+        expect(warpMatrixAttribute.typedArray).toBeDefined();
         expect(warpMatrixAttribute.buffer).toBeDefined();
         expect(warpMatrixAttribute.byteOffset).toBe(0);
         expect(warpMatrixAttribute.byteStride).toBe(16);
@@ -1975,7 +1975,7 @@ describe(
         expect(temperaturesAttribute.max).toBeUndefined();
         expect(temperaturesAttribute.constant).toEqual(Cartesian2.ZERO);
         expect(temperaturesAttribute.quantization).toBeUndefined();
-        expect(temperaturesAttribute.typedArray).toBeUndefined();
+        expect(temperaturesAttribute.typedArray).toBeDefined();
         expect(temperaturesAttribute.buffer).toBeDefined();
         expect(temperaturesAttribute.byteOffset).toBe(0);
         expect(temperaturesAttribute.byteStride).toBe(4);
@@ -2879,7 +2879,7 @@ describe(
           )
         );
         expect(positionAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(positionAttribute.typedArray).toBeUndefined();
+        expect(positionAttribute.typedArray).toBeDefined();
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
         expect(positionAttribute.byteStride).toBeUndefined();
@@ -2928,7 +2928,7 @@ describe(
           )
         );
         expect(normalAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.typedArray).toBeDefined();
         expect(normalAttribute.buffer).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBeUndefined();
@@ -2959,7 +2959,7 @@ describe(
           new Cartesian2(0.9846059706495423, 0.9809754626608782)
         );
         expect(texcoordAttribute.constant).toEqual(Cartesian2.ZERO);
-        expect(texcoordAttribute.typedArray).toBeUndefined();
+        expect(texcoordAttribute.typedArray).toBeDefined();
         expect(texcoordAttribute.buffer).toBeDefined();
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBeUndefined();

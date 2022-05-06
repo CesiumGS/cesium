@@ -622,7 +622,8 @@ function loadAttribute(
     gltfSemantic,
     draco,
     dequantize,
-    loadAsTypedArray
+    loadAsTypedArray,
+    loadAsTypedArrayPacked
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -640,9 +641,8 @@ function loadAttribute(
       );
       attribute.byteOffset = 0;
       attribute.byteStride = undefined;
-    } else if (loadAsTypedArray) {
-      attribute.typedArray = vertexBufferLoader.typedArray;
     } else {
+      attribute.typedArray = vertexBufferLoader.typedArray;
       attribute.buffer = vertexBufferLoader.buffer;
     }
 
