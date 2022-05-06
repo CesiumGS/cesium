@@ -270,8 +270,7 @@ VoxelTraversal.prototype.update = function (
   const levelBlendFactor = primitive._levelBlendFactor;
   const haslevelBlendFactor = levelBlendFactor > 0.0;
   const hasKeyframes = keyframeCount > 1;
-  const sampleCount =
-    (haslevelBlendFactor ? 2 : 1) * (hasKeyframes > 1 ? 2 : 1);
+  const sampleCount = (haslevelBlendFactor ? 2 : 1) * (hasKeyframes ? 2 : 1);
   this._sampleCount = sampleCount;
 
   const useLeafNodes = sampleCount >= 2;
@@ -1532,7 +1531,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
           }
 
           const levelDifferenceChild = levelDifference;
-          const levelDifferenceParent = levelDifference + 1;
+          const levelDifferenceParent = 1;
           const megatextureIndexChild = keyframeNode.megatextureIndex;
           const megatextureIndexParent = parentKeyframeNode.megatextureIndex;
 
