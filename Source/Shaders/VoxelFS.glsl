@@ -88,6 +88,12 @@ Properties sumProperties(Properties propertiesA, Properties propertiesB) {
     properties.direction = propertiesA.direction + propertiesB.direction;
     return properties;
 }
+Properties scaleProperties(Properties properties, float scale) {
+    Properties scaledProperties = properties;
+    scaledProperties.temperature *= scale;
+    scaledProperties.direction *= scale;
+    return scaledProperties;
+}
 Properties mixProperties(Properties propertiesA, Properties propertiesB, float mixFactor) {
     Properties properties;
     properties.temperature = mix(propertiesA.temperature, propertiesB.temperature, mixFactor);
@@ -1430,8 +1436,9 @@ Properties getPropertiesFromMegatexture(SampleData sampleDatas[SAMPLE_COUNT]) {
         // When more than one sample is taken the accumulator needs to start at 0
         Properties properties = clearProperties();
         for (int i = 0; i < SAMPLE_COUNT; ++i) {
-            Properties tempProperties = getPropertiesFromMegatexture(sampleDatas[i]);        
-            properties = sumProperties(properties, tempProperties)
+            Properties tempProperties = getPropertiesFromMegatexture(sampleDatas[i]);
+            tempProperties = scaleProperties(tempProperties, sampleDatas[i].weight);
+            properties = sumProperties(properties, tempProperties);
         }
         return properties;
     #endif
@@ -1620,8 +1627,6 @@ void main()
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
 
-    vec4 colorAccum = vec4(0.0);
-
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
@@ -1638,6 +1643,8 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
+    vec4 colorAccum = vec4(0.0);
+
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
         Properties properties = getPropertiesFromMegatexture(sampleDatas);
@@ -1652,7 +1659,7 @@ void main()
         fragmentInput.voxel.travelDistance = traversalData.stepT;
 
         #if defined(STYLE_USE_POSITION_EC)
-            styleInput.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
+            fragmentInput.voxel.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
         #endif
 
         // Run the custom shader

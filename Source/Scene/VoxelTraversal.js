@@ -221,31 +221,52 @@ function VoxelTraversal(
   );
 
   /**
-   * @type {Boolean}
-   * @readonly
-   */
-  this.useLeafNodeTexture = keyframeCount > 1;
-
-  /**
-   * @type {Texture|undefined}
+   * Only generated when there are two or more samples.
+   * @type {Texture}
    * @readonly
    */
   this.leafNodeTexture = undefined;
 
   /**
-   * @type {Number|undefined}
+   * Only generated when there are two or more samples.
+   * @type {Number}
    * @readonly
    */
   this.leafNodeTilesPerRow = undefined;
 
   /**
-   * @type {Cartesian2|undefined}
+   * Only generated when there are two or more samples.
+   * @type {Cartesian2}
    * @readonly
    */
-  this.leafNodeTexelSizeUv = undefined;
+  this.leafNodeTexelSizeUv = new Cartesian2();
+}
 
-  const useLeafNodeTexture = this.useLeafNodeTexture;
-  if (useLeafNodeTexture) {
+VoxelTraversal.simultaneousRequestCountMaximum = 50;
+
+/**
+ * @param {FrameState} frameState
+ * @param {Number} keyframeLocation
+ * @param {Boolean} recomputeBoundingVolumes
+ * @param {Boolean} pauseUpdate
+ */
+VoxelTraversal.prototype.update = function (
+  frameState,
+  keyframeLocation,
+  recomputeBoundingVolumes,
+  pauseUpdate
+) {
+  const primitive = this._primitive;
+  const context = frameState.context;
+  const maximumTileCount = this.megatextures[0].maximumTileCount;
+  const keyframeCount = this._keyframeCount;
+
+  const hasSmoothLevelBlend = primitive._smoothLevelBlend;
+  const hasKeyframes = keyframeCount > 1;
+  const sampleCount =
+    (hasSmoothLevelBlend ? 2 : 1) * (hasKeyframes > 1 ? 2 : 1);
+  const useLeafNodeTexture = sampleCount >= 2;
+  if (useLeafNodeTexture && !defined(this.leafNodeTexture)) {
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
     const leafNodeTilesPerRow = Math.floor(
@@ -267,29 +288,16 @@ function VoxelTraversal(
         magnificationFilter: TextureMagnificationFilter.NEAREST,
       }),
     });
-    this.leafNodeTexelSizeUv = new Cartesian2(
+    this.leafNodeTexelSizeUv = Cartesian2.fromElements(
       1.0 / leafNodeTextureDimensionX,
-      1.0 / leafNodeTextureDimensionY
+      1.0 / leafNodeTextureDimensionY,
+      this.leafNodeTexelSizeUv
     );
     this.leafNodeTilesPerRow = leafNodeTilesPerRow;
+  } else if (!useLeafNodeTexture && defined(this.leafNodeTexture)) {
+    this.leafNodeTexture = this.leafNodeTexture.destroy();
   }
-}
 
-VoxelTraversal.simultaneousRequestCountMaximum = 50;
-
-/**
- * @param {FrameState} frameState
- * @param {Number} keyframeLocation
- * @param {Boolean} recomputeBoundingVolumes
- * @param {Boolean} pauseUpdate
- */
-VoxelTraversal.prototype.update = function (
-  frameState,
-  keyframeLocation,
-  recomputeBoundingVolumes,
-  pauseUpdate
-) {
-  const keyframeCount = this._keyframeCount;
   this._keyframeLocation = CesiumMath.clamp(
     keyframeLocation,
     0.0,
@@ -305,7 +313,7 @@ VoxelTraversal.prototype.update = function (
     const timestamp0 = getTimestamp();
     loadAndUnload(this, frameState);
     const timestamp1 = getTimestamp();
-    generateOctree(this);
+    generateOctree(this, sampleCount);
     const timestamp2 = getTimestamp();
 
     const debugStatistics = this._debugPrint;
@@ -1412,11 +1420,13 @@ const GpuOctreeFlag = {
  *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
+ * @param {Number} sampleCount
  */
-function generateOctree(that) {
+function generateOctree(that, sampleCount) {
+  const primitive = that._primitive;
   const keyframeLocation = that._keyframeLocation;
-  const useLeafNodes = that.useLeafNodeTexture;
   const frameNumber = that._frameNumber;
+  const useLeafNodes = sampleCount > 1;
 
   let internalNodeCount = 0;
   let leafNodeCount = 0;
@@ -1475,18 +1485,53 @@ function generateOctree(that) {
       // Store the leaf node information instead
       // Recursion stops here because there are no renderable children
       if (useLeafNodes) {
-        const previousKeyframeNode = node.renderableKeyframeNodePrevious;
-        const nextKeyframeNode = node.renderableKeyframeNodeNext;
-        leafNodeOctreeData[leafNodeCount * 5 + 0] =
-          node.renderableKeyframeNodeLerp;
-        leafNodeOctreeData[leafNodeCount * 5 + 1] =
-          node.level - previousKeyframeNode.spatialNode.level;
-        leafNodeOctreeData[leafNodeCount * 5 + 2] =
-          node.level - nextKeyframeNode.spatialNode.level;
-        leafNodeOctreeData[leafNodeCount * 5 + 3] =
-          previousKeyframeNode.megatextureIndex;
-        leafNodeOctreeData[leafNodeCount * 5 + 4] =
-          nextKeyframeNode.megatextureIndex;
+        const baseIdx = leafNodeCount * 5;
+
+        const useTimeDynamic = false;
+        if (useTimeDynamic) {
+          const previousKeyframeNode = node.renderableKeyframeNodePrevious;
+          const nextKeyframeNode = node.renderableKeyframeNodeNext;
+          const prevKeyframeLevel = previousKeyframeNode.spatialNode.level;
+          const nextKeyframeLevel = nextKeyframeNode.spatialNode.level;
+          const prevKeyframeLevelDifference = node.level - prevKeyframeLevel;
+          const nextKeyframeLevelDifference = node.level - nextKeyframeLevel;
+
+          leafNodeOctreeData[baseIdx + 0] = node.renderableKeyframeNodeLerp;
+          leafNodeOctreeData[baseIdx + 1] = prevKeyframeLevelDifference;
+          leafNodeOctreeData[baseIdx + 2] = nextKeyframeLevelDifference;
+          leafNodeOctreeData[baseIdx + 3] =
+            previousKeyframeNode.megatextureIndex;
+          leafNodeOctreeData[baseIdx + 4] = nextKeyframeNode.megatextureIndex;
+        } else {
+          const keyframeNode = node.renderableKeyframeNodePrevious;
+          const levelDifference = node.level - keyframeNode.spatialNode.level;
+
+          const parentNode = keyframeNode.spatialNode.parent;
+          const parentKeyframeNode = defined(parentNode)
+            ? parentNode.renderableKeyframeNodePrevious
+            : keyframeNode;
+
+          let lodLerp = 0.0;
+          if (node.parent !== undefined) {
+            const sse = node.screenSpaceError;
+            const parentSse = node.parent.screenSpaceError;
+            const targetSse = primitive._screenSpaceError;
+            lodLerp = (targetSse - sse) / (parentSse - sse);
+            lodLerp = CesiumMath.clamp(lodLerp, 0.0, 1.0);
+          }
+
+          const levelDifferenceChild = levelDifference;
+          const levelDifferenceParent = levelDifference + 1;
+          const megatextureIndexChild = keyframeNode.megatextureIndex;
+          const megatextureIndexParent = parentKeyframeNode.megatextureIndex;
+
+          leafNodeOctreeData[baseIdx + 0] = lodLerp;
+          leafNodeOctreeData[baseIdx + 1] = levelDifferenceChild;
+          leafNodeOctreeData[baseIdx + 2] = levelDifferenceParent;
+          leafNodeOctreeData[baseIdx + 3] = megatextureIndexChild;
+          leafNodeOctreeData[baseIdx + 4] = megatextureIndexParent;
+        }
+
         internalNodeOctreeData[parentEntryIndex] =
           (GpuOctreeFlag.LEAF << 16) | leafNodeCount;
       } else {

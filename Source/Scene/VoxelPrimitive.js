@@ -261,12 +261,6 @@ function VoxelPrimitive(options) {
   //  */
   // this._clock = options.clock;
 
-  // /**
-  //  * @type {Number}
-  //  * @private
-  //  */
-  // this._keyframeCount = 1;
-
   // Transforms and other values that are computed when the shape changes
 
   /**
@@ -311,6 +305,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._nearestSampling = false;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
+  this._smoothLevelBlend = 0.0;
 
   /**
    * @type {Number}
@@ -782,6 +782,28 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * Gets or sets smooth blending between levels.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Boolean}
+   */
+  smoothLevelBlend: {
+    get: function () {
+      return this._smoothLevelBlend;
+    },
+    set: function (smoothLevelBlend) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("smoothLevelBlend", smoothLevelBlend);
+      //>>includeEnd('debug');
+
+      if (this._smoothLevelBlend !== smoothLevelBlend) {
+        this._smoothLevelBlend = smoothLevelBlend;
+        this._shaderDirty = true;
+      }
+    },
+  },
+
+  /**
    * Gets or sets the screen space error in pixels. If the screen space size
    * of a voxel is greater than the screen space error, the tile is subdivided.
    * Lower screen space error corresponds with higher detail rendering, but could
@@ -1087,12 +1109,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     });
     uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
 
-    // const keyframeCount = defaultValue(provider.keyframeCount, 1);
-    // // TODO remove?
-    // that._keyframeCount = defaultValue(
-    //   provider.keyframeCount,
-    //   that._keyframeCount
-    // );
     // // TODO remove?
     // that._timeIntervalCollection = defaultValue(
     //   provider.timeIntervalCollection,
@@ -1349,7 +1365,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     const types = provider.types;
     const componentTypes = provider.componentTypes;
-    const keyframeCount = 1; //this._keyframeCount;
 
     // Traversal setup
     // It's ok for memory byte length to be undefined.
@@ -1364,6 +1379,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
         )
       : undefined;
 
+    const keyframeCount = defaultValue(provider.keyframeCount, 1);
+
     this._traversal = new VoxelTraversal(
       this,
       context,
@@ -1377,7 +1394,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     // Set uniforms that come from the traversal.
     // TODO: should this be done in VoxelTraversal?
     const traversal = this._traversal;
-    const useLeafNodeTexture = traversal.useLeafNodeTexture;
 
     uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
     uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
@@ -1385,15 +1401,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
       uniforms.octreeInternalNodeTexelSizeUv
     );
     uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
-
-    if (useLeafNodeTexture) {
-      uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
-      uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
-        traversal.leafNodeTexelSizeUv,
-        uniforms.octreeLeafNodeTexelSizeUv
-      );
-      uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
-    }
 
     const megatextures = traversal.megatextures;
     const megatexture = megatextures[0];
@@ -1489,6 +1496,16 @@ VoxelPrimitive.prototype.update = function (frameState) {
       if (this._useLogDepth !== frameState.useLogDepth) {
         this._useLogDepth = frameState.useLogDepth;
         this._shaderDirty = true;
+      }
+
+      const leafNodeTexture = traversal.leafNodeTexture;
+      if (defined(leafNodeTexture)) {
+        uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
+        uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
+          traversal.leafNodeTexelSizeUv,
+          uniforms.octreeLeafNodeTexelSizeUv
+        );
+        uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
       }
 
       // Rebuild shaders
@@ -1697,9 +1714,9 @@ function buildDrawCommands(that, context) {
   const shapeDefines = shape.shaderDefines;
   const minimumValues = provider.minimumValues;
   const maximumValues = provider.maximumValues;
-  const keyframeCount = that._keyframeCount;
   const jitter = that._jitter;
   const nearestSampling = that._nearestSampling;
+  const smoothLevelBlend = that._smoothLevelBlend;
   const customShader = that._customShader;
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
@@ -1770,6 +1787,15 @@ function buildDrawCommands(that, context) {
       ShaderDestination.FRAGMENT
     );
   }
+
+  if (smoothLevelBlend) {
+    shaderBuilder.addDefine(
+      "SMOOTH_LEVEL_BLEND",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
   if (hasStatistics) {
     shaderBuilder.addDefine(
       "STATISTICS",
@@ -1794,7 +1820,7 @@ function buildDrawCommands(that, context) {
     ShaderDestination.FRAGMENT
   );
 
-  const sampleCount = keyframeCount > 1 ? 2 : 1;
+  const sampleCount = smoothLevelBlend ? 2 : 1;
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",
     `${sampleCount}`,
@@ -2041,6 +2067,26 @@ function buildDrawCommands(that, context) {
     shaderBuilder.addFunctionLines(functionId, [
       `return ${propertiesFieldName};`,
     ]);
+  }
+
+  // scaleProperties function
+  {
+    const functionId = "scaleProperties";
+    shaderBuilder.addFunction(
+      functionId,
+      `${propertiesStructName} scaleProperties(${propertiesStructName} ${propertiesFieldName}, float scale)`,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [
+      `${propertiesStructName} scaledProperties = ${propertiesFieldName};`,
+    ]);
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      shaderBuilder.addFunctionLines(functionId, [
+        `scaledProperties.${name} *= scale;`,
+      ]);
+    }
+    shaderBuilder.addFunctionLines(functionId, [`return scaledProperties;`]);
   }
 
   // mixProperties
