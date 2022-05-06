@@ -165,6 +165,12 @@ ComponentDatatype.fromTypedArray = function (array) {
   if (array instanceof Float64Array) {
     return ComponentDatatype.DOUBLE;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array."
+  );
+  //>>includeEnd('debug');
 };
 
 /**
