@@ -42,9 +42,9 @@ import SceneMode from "./SceneMode.js";
  *
  * An orientation given by numeric heading, pitch, and roll
  *
- * @property {number} heading The heading in radians
- * @property {number} pitch The pitch in radians
- * @property {number} roll The roll in meters
+ * @property {number} [heading] The heading in radians
+ * @property {number} [pitch] The pitch in radians
+ * @property {number} [roll] The roll in meters
  **/
 
 /**
