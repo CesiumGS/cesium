@@ -1,8 +1,9 @@
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -133,7 +134,7 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * A reference to the runtime node
+   * A reference to the runtime primitive
    *
    * @type {ModelExperimentalPrimitive}
    * @readonly
@@ -166,6 +167,7 @@ export default function PrimitiveRenderResources(
     ? primitive.indices.count
     : ModelExperimentalUtility.getAttributeBySemantic(primitive, "POSITION")
         .count;
+
   /**
    * The indices for this primitive
    *
@@ -175,6 +177,7 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.indices = primitive.indices;
+
   /**
    * The primitive type such as TRIANGLES or POINTS
    *
@@ -184,16 +187,45 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.primitiveType = primitive.primitiveType;
+
+  const positionMinMax = ModelExperimentalUtility.getPositionMinMax(
+    primitive,
+    nodeRenderResources.instancingTranslationMin,
+    nodeRenderResources.instancingTranslationMax
+  );
+
+  /**
+   * The minimum position value for this primitive.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionMin = Cartesian3.clone(positionMinMax.min, new Cartesian3());
+
+  /**
+   * The maximum position value for this primitive.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionMax = Cartesian3.clone(positionMinMax.max, new Cartesian3());
+
   /**
    * The bounding sphere that contains all the vertices in this primitive.
    *
    * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
    */
-  this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
-    primitive,
-    Matrix4.IDENTITY,
-    nodeRenderResources.instancingTranslationMax,
-    nodeRenderResources.instancingTranslationMin
+  this.boundingSphere = BoundingSphere.fromCornerPoints(
+    this.positionMin,
+    this.positionMax,
+    new BoundingSphere()
   );
 
   /**

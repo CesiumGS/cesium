@@ -85,11 +85,16 @@ describe(
         model: {
           type: ModelExperimentalType.TILE_GLTF,
         },
+        runtimeNode: {
+          morphWeights: undefined,
+        },
       };
 
       return loadGltf(morphPrimitivesTestUrl).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
+
+        renderResources.runtimeNode.morphWeights = [1.0];
 
         MorphTargetsPipelineStage.process(renderResources, primitive);
 
@@ -137,7 +142,9 @@ describe(
         ]);
 
         const uniformMap = renderResources.uniformMap;
-        expect(uniformMap.u_morphWeights()).toBe(primitive.morphWeights);
+        expect(uniformMap.u_morphWeights()).toBe(
+          renderResources.runtimeNode.morphWeights
+        );
       });
     });
 
@@ -149,12 +156,16 @@ describe(
         model: {
           type: ModelExperimentalType.TILE_GLTF,
         },
+        runtimeNode: {
+          morphWeights: undefined,
+        },
       };
 
       return loadGltf(animatedMorphCubeUrl).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
+        renderResources.runtimeNode.morphWeights = [0.5, 0.5];
         MorphTargetsPipelineStage.process(renderResources, primitive);
 
         const shaderBuilder = renderResources.shaderBuilder;
@@ -234,7 +245,9 @@ describe(
         ]);
 
         const uniformMap = renderResources.uniformMap;
-        expect(uniformMap.u_morphWeights()).toBe(primitive.morphWeights);
+        expect(uniformMap.u_morphWeights()).toBe(
+          renderResources.runtimeNode.morphWeights
+        );
       });
     });
   },

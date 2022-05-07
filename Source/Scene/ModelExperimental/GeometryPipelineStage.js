@@ -234,6 +234,7 @@ function addAttributeToRenderResources(
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,
     vertexBuffer: attribute.buffer,
+    count: attribute.count,
     componentsPerAttribute: AttributeType.getNumberOfComponents(type),
     componentDatatype: componentDatatype,
     offsetInBytes: attribute.byteOffset,

@@ -295,6 +295,10 @@ gulp.task("build-specs", function buildSpecs() {
   return promise;
 });
 
+gulp.task("build-third-party", function () {
+  return generateThirdParty();
+});
+
 gulp.task("clean", function (done) {
   rimraf.sync("Build");
   globby.sync(filesToClean).forEach(function (file) {
@@ -457,6 +461,7 @@ gulp.task(
     delete packageJson.scripts.build;
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
+    delete packageJson.scripts["build-third-party"];
     delete packageJson.scripts.buildApps;
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
@@ -1618,7 +1623,7 @@ function createTypeScriptDefinitions() {
   const publicModules = new Set();
   //eslint-disable-next-line no-cond-assign
   while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^\s|\(]+)/);
+    const moduleName = matches[2].match(/([^<\s|\(]+)/);
     publicModules.add(moduleName[1]);
   }
 
@@ -1653,14 +1658,6 @@ function createTypeScriptDefinitions() {
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
   source = `declare module "cesium" {
-
-/**
- * Private interfaces to support PropertyBag being a dictionary-like object.
- */
-interface DictionaryLike {
-    [index: string]: any;
-}
-
 ${source}
 }
 
@@ -1722,6 +1719,140 @@ function createSpecList() {
   });
 
   fs.writeFileSync(path.join("Specs", "SpecList.js"), contents);
+}
+
+/**
+ * Reads `ThirdParty.extra.json` file
+ * @param path {string} Path to `ThirdParty.extra.json`
+ * @param discoveredDependencies {Array<string>} List of previously discovered modules
+ * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ */
+function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
+  if (!fs.existsSync(path)) {
+    return Promise.reject(`${path} does not exist`);
+  }
+
+  const fsReadFile = Promise.promisify(fs.readFile);
+
+  return fsReadFile(path).then(function (contents) {
+    const thirdPartyExtra = JSON.parse(contents);
+    return Promise.map(thirdPartyExtra, function (module) {
+      if (!discoveredDependencies.includes(module.name)) {
+        // If this is not a npm module, return existing info
+        if (!packageJson.devDependencies[module.name]) {
+          discoveredDependencies.push(module.name);
+          return Promise.resolve(module);
+        }
+
+        return getLicenseDataFromPackage(
+          module.name,
+          discoveredDependencies,
+          module.license,
+          module.notes
+        );
+      }
+    });
+  });
+}
+
+/**
+ * Extracts name, license, and url from `package.json` file.
+ *
+ * @param packageName {string} Name of package
+ * @param discoveredDependencies {Array<string>} List of previously discovered modules
+ * @param licenseOverride {Array<string>} If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
+ * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
+ */
+function getLicenseDataFromPackage(
+  packageName,
+  discoveredDependencies,
+  licenseOverride,
+  notes
+) {
+  if (discoveredDependencies.includes(packageName)) {
+    return Promise.resolve([]);
+  }
+  discoveredDependencies.push(packageName);
+
+  let promise;
+  const packagePath = path.join("node_modules", packageName, "package.json");
+  const fsReadFile = Promise.promisify(fs.readFile);
+
+  if (fs.existsSync(packagePath)) {
+    // Package exists at top-level, so use it.
+    promise = fsReadFile(packagePath);
+  } else {
+    return Promise.reject(
+      new Error(`Unable to find ${packageName} license information`)
+    );
+  }
+
+  return promise.then(function (contents) {
+    const packageJson = JSON.parse(contents);
+
+    // Check for license
+    let licenseField = licenseOverride;
+
+    if (!licenseField) {
+      licenseField = [packageJson.license];
+    }
+
+    if (!licenseField && packageJson.licenses) {
+      licenseField = packageJson.licenses;
+    }
+
+    if (!licenseField) {
+      console.log(`No license found for ${packageName}`);
+      licenseField = ["NONE"];
+    }
+
+    let version = packageJson.version;
+    if (!packageJson.version) {
+      console.log(`No version information found for ${packageName}`);
+      version = "NONE";
+    }
+
+    return {
+      name: packageName,
+      license: licenseField,
+      version: version,
+      url: `https://www.npmjs.com/package/${packageName}`,
+      notes: notes,
+    };
+  });
+}
+
+function generateThirdParty() {
+  let licenseJson = [];
+  const discoveredDependencies = [];
+  const fsWriteFile = Promise.promisify(fs.writeFile);
+
+  // Generate ThirdParty.json from ThirdParty.extra.json and package.json
+  return getLicenseDataFromThirdPartyExtra(
+    "ThirdParty.extra.json",
+    discoveredDependencies
+  )
+    .then(function (licenseInfo) {
+      licenseJson = licenseJson.concat(licenseInfo);
+    })
+    .then(function () {
+      licenseJson.sort(function (a, b) {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      });
+
+      return fsWriteFile(
+        "ThirdParty.json",
+        JSON.stringify(licenseJson, null, 2)
+      );
+    });
 }
 
 function createGalleryList() {

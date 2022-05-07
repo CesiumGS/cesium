@@ -45,7 +45,7 @@ const whitePixelCanvasId = "ID_WHITE_PIXEL";
 const whitePixelSize = new Cartesian2(4, 4);
 const whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
 
-function addWhitePixelCanvas(textureAtlas, labelCollection) {
+function addWhitePixelCanvas(textureAtlas) {
   const canvas = document.createElement("canvas");
   canvas.width = whitePixelSize.x;
   canvas.height = whitePixelSize.y;
@@ -54,8 +54,9 @@ function addWhitePixelCanvas(textureAtlas, labelCollection) {
   context2D.fillStyle = "#fff";
   context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  const index = textureAtlas.addImageSync(whitePixelCanvasId, canvas);
-  labelCollection._whitePixelIndex = index;
+  // Canvas operations take a frame to draw. Use the asynchronous add function which resolves a promise and allows the draw to complete,
+  // but there's no need to wait on the promise before operation can continue
+  textureAtlas.addImage(whitePixelCanvasId, canvas);
 }
 
 // reusable object for calling writeTextToCanvas
@@ -597,7 +598,6 @@ function LabelCollection(options) {
 
   this._textureAtlas = undefined;
   this._backgroundTextureAtlas = undefined;
-  this._whitePixelIndex = undefined;
 
   this._backgroundBillboardCollection = new BillboardCollection({
     scene: this._scene,
@@ -910,7 +910,7 @@ LabelCollection.prototype.update = function (frameState) {
       initialSize: whitePixelSize,
     });
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-    addWhitePixelCanvas(this._backgroundTextureAtlas, this);
+    addWhitePixelCanvas(this._backgroundTextureAtlas);
   }
 
   const len = this._labelsToUpdate.length;
