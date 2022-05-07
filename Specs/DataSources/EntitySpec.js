@@ -31,6 +31,7 @@ describe("DataSources/Entity", function () {
     let entity = new Entity();
     expect(entity.id).toBeDefined();
     expect(entity.name).toBeUndefined();
+    expect(entity.children).toBe(0);
     expect(entity.billboard).toBeUndefined();
     expect(entity.box).toBeUndefined();
     expect(entity.corridor).toBeUndefined();
@@ -527,5 +528,12 @@ describe("DataSources/Entity", function () {
       false,
     ]);
     expect(entity.isShowing).toBe(true);
+  });
+
+  it("get throws if passed undefined", function () {
+    const entity = new Entity();
+    expect(function () {
+      entity.getChild(undefined);
+    }).toThrowDeveloperError();
   });
 });
