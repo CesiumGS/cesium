@@ -6,6 +6,7 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
+  defaultValue,
   defer,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
@@ -15,6 +16,7 @@ import {
   GltfVertexBufferLoader,
   IndexDatatype,
   InstanceAttributeSemantic,
+  InterpolationType,
   JobScheduler,
   PrimitiveType,
   Matrix2,
@@ -106,14 +108,18 @@ describe(
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
+    let sceneWithWebgl2;
     const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene();
+      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -148,11 +154,13 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const targetScene = defaultValue(options.scene, scene);
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      return waitForLoaderProcess(gltfLoader, scene);
+      return waitForLoaderProcess(gltfLoader, targetScene);
     }
 
     function loadGltfFromJson(gltfPath, options) {
@@ -631,7 +639,7 @@ describe(
         expect(positionAttribute.buffer).toBe(morphPositions1.buffer);
         expect(positionAttribute.buffer.sizeInBytes).toBe(108);
 
-        expect(primitive.morphWeights).toEqual([0.5, 0.5]);
+        expect(rootNode.morphWeights).toEqual([0.5, 0.5]);
       });
     });
 
@@ -647,8 +655,7 @@ describe(
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          expect(primitive.morphWeights).toEqual([0.0, 0.0]);
+          expect(rootNode.morphWeights).toEqual([0.0, 0.0]);
         }
       );
     });
@@ -792,9 +799,7 @@ describe(
           new Quaternion(0.0, 0.0, 0.0, 1.0),
         ];
         expect(sampler.input).toEqual(expectedInput);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
 
         const length = expectedOutput.length;
         for (let i = 0; i < length; i++) {
@@ -839,9 +844,7 @@ describe(
 
         const sampler = animation.samplers[0];
         expect(sampler.input.length).toEqual(127);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
         expect(sampler.output.length).toEqual(254);
 
         expect(animation.channels.length).toEqual(1);
@@ -865,9 +868,7 @@ describe(
 
         let sampler = stepScaleAnimation.samplers[0];
         expect(sampler.input.length).toEqual(sampler.output.length);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.STEP
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.STEP);
         expect(sampler.output[0] instanceof Cartesian3).toBe(true);
 
         expect(stepScaleAnimation.channels.length).toEqual(1);
@@ -885,9 +886,7 @@ describe(
         sampler = cubicSplineRotation.samplers[0];
         // For cubic spline interpolation, each keyframe requires 3 output entries
         expect(sampler.output.length).toEqual(sampler.input.length * 3);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.CUBICSPLINE
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.CUBICSPLINE);
         expect(sampler.output[0] instanceof Quaternion).toBe(true);
 
         expect(cubicSplineRotation.channels.length).toEqual(1);
@@ -903,9 +902,7 @@ describe(
 
         sampler = linearTranslation.samplers[0];
         expect(sampler.input.length).toEqual(sampler.output.length);
-        expect(sampler.interpolation).toEqual(
-          ModelComponents.InterpolationType.LINEAR
-        );
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
         expect(sampler.output[0] instanceof Cartesian3).toBe(true);
 
         expect(linearTranslation.channels.length).toEqual(1);
@@ -3033,6 +3030,55 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
+      });
+    });
+
+    it("loads indices in typed array for wireframes in WebGL1", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.typedArray).toBeDefined();
+      });
+    });
+
+    it("loads indices in buffer for wireframes in WebGL2", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+        scene: sceneWithWebgl2,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.buffer).toBeDefined();
       });
     });
 

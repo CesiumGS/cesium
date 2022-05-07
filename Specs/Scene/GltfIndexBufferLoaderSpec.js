@@ -257,13 +257,17 @@ describe(
     };
 
     let scene;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene();
+      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -389,7 +393,7 @@ describe(
         });
     });
 
-    it("loads from accessor", function () {
+    it("loads from accessor into buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -430,32 +434,7 @@ describe(
       });
     });
 
-    it("creates index buffer synchronously", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
-      );
-
-      const indexBufferLoader = new GltfIndexBufferLoader({
-        resourceCache: ResourceCache,
-        gltf: gltfUncompressed,
-        accessorId: 3,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        asynchronous: false,
-      });
-
-      indexBufferLoader.load();
-
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          indicesUint16.byteLength
-        );
-      });
-    });
-
-    it("loads as typed array", function () {
+    it("loads from accessor as typed array using option", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -484,6 +463,107 @@ describe(
       });
     });
 
+    // Index buffers will load as typed arrays only in WebGL1.
+    // In order to load them as buffers, the scene must have WebGL2 enabled.
+    it("loads from accessor as typed array for wireframe in WebGL1", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createIndexBuffer").and.callThrough();
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: false,
+        loadForWireframe: true,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray.byteLength).toBe(
+          indicesUint16.byteLength
+        );
+        expect(indexBufferLoader.buffer).toBeUndefined();
+        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
+      });
+    });
+
+    // Data can be retrieved from GPU buffers in WebGL2, so loadForWireframe
+    // should be ignored if using WebGL2.
+    it("loads from accessor as buffer for wireframe in WebGL2", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(arrayBuffer)
+      );
+
+      // Simulate JobScheduler not being ready for a few frames
+      const processCallsTotal = 3;
+      let processCallsCount = 0;
+      const jobScheduler = scene.frameState.jobScheduler;
+      const originalJobSchedulerExecute = jobScheduler.execute;
+      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
+        job,
+        jobType
+      ) {
+        if (processCallsCount++ >= processCallsTotal) {
+          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
+        }
+        return false;
+      });
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadForWireframe: true,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          loaderProcess(indexBufferLoader, sceneWithWebgl2); // Check that calling process after load doesn't break anything
+          expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+            indicesUint16.byteLength
+          );
+          expect(indexBufferLoader.typedArray).toBeUndefined();
+        }
+      );
+    });
+
+    it("creates index buffer synchronously", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(arrayBuffer)
+      );
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        asynchronous: false,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+            indicesUint16.byteLength
+          );
+        }
+      );
+    });
+
     function loadIndices(accessorId, expectedByteLength) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
@@ -499,11 +579,11 @@ describe(
 
       indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
+        }
+      );
     }
 
     it("loads uint32 indices", function () {
@@ -548,14 +628,14 @@ describe(
 
       indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          decodedIndices.byteLength
-        );
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
+          expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+            decodedIndices.byteLength
+          );
+        }
+      );
     });
 
     it("uses the decoded data's type instead of the accessor component type", function () {
@@ -581,12 +661,12 @@ describe(
 
       indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.indexDatatype).toBe(5123);
-        expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.indexDatatype).toBe(5123);
+          expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
+        }
+      );
     });
 
     it("destroys index buffer loaded from buffer view", function () {
@@ -614,19 +694,19 @@ describe(
 
       indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer).toBeDefined();
+          expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-        indexBufferLoader.destroy();
+          indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadBufferView).toHaveBeenCalled();
-        expect(destroyIndexBuffer).toHaveBeenCalled();
-      });
+          expect(indexBufferLoader.buffer).not.toBeDefined();
+          expect(indexBufferLoader.isDestroyed()).toBe(true);
+          expect(unloadBufferView).toHaveBeenCalled();
+          expect(destroyIndexBuffer).toHaveBeenCalled();
+        }
+      );
     });
 
     it("destroys index buffer loaded from draco", function () {
@@ -659,19 +739,19 @@ describe(
 
       indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer).toBeDefined();
+          expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-        indexBufferLoader.destroy();
+          indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadDraco).toHaveBeenCalled();
-        expect(destroyIndexBuffer).toHaveBeenCalled();
-      });
+          expect(indexBufferLoader.buffer).not.toBeDefined();
+          expect(indexBufferLoader.isDestroyed()).toBe(true);
+          expect(unloadDraco).toHaveBeenCalled();
+          expect(destroyIndexBuffer).toHaveBeenCalled();
+        }
+      );
     });
 
     function resolveBufferViewAfterDestroy(reject) {
@@ -747,7 +827,7 @@ describe(
 
       let promise = new Promise(function (resolve, reject) {
         setTimeout(function () {
-          loaderProcess(indexBufferLoader, scene);
+          loaderProcess(indexBufferLoader, sceneWithWebgl2);
           if (rejectPromise) {
             reject(new Error());
           } else {
@@ -771,7 +851,7 @@ describe(
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
-      loaderProcess(indexBufferLoader, scene);
+      loaderProcess(indexBufferLoader, sceneWithWebgl2);
       return promise.finally(function () {
         expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 

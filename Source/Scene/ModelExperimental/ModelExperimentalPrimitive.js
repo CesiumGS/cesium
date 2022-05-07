@@ -26,6 +26,7 @@ import SkinningPipelineStage from "./SkinningPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {ModelComponents.Node} options.node The node that this primitive belongs to.
  * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
@@ -35,10 +36,14 @@ import SkinningPipelineStage from "./SkinningPipelineStage.js";
  */
 export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const primitive = options.primitive;
+  const node = options.node;
+  const model = options.model;
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.primitive", options.primitive);
-  Check.typeOf.object("options.node", options.node);
-  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.node", node);
+  Check.typeOf.object("options.model", model);
   //>>includeEnd('debug');
 
   /**
@@ -48,7 +53,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.primitive = options.primitive;
+  this.primitive = primitive;
 
   /**
    * A reference to the node this primitive belongs to.
@@ -57,7 +62,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.node = options.node;
+  this.node = node;
 
   /**
    * A reference to the model
@@ -66,7 +71,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.model = options.model;
+  this.model = model;
 
   /**
    * Pipeline stages to apply to this primitive. This
@@ -100,6 +105,8 @@ export default function ModelExperimentalPrimitive(options) {
 
   /**
    * Update stages to apply to this primitive.
+   *
+   * @private
    */
   this.updateStages = [];
 

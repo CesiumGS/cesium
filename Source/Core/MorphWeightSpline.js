@@ -7,7 +7,7 @@ import Spline from "./Spline.js";
 /**
  * A spline that linearly interpolates over an array of weight values used by morph targets.
  *
- * @alias WeightSpline
+ * @alias MorphWeightSpline
  * @constructor
  *
  * @param {Object} options Object with the following properties:
@@ -32,12 +32,14 @@ import Spline from "./Spline.js";
  *
  * const p0 = spline.evaluate(times[0]);
  *
+ * @see ConstantSpline
+ * @see SteppedSpline
  * @see LinearSpline
  * @see HermiteSpline
  * @see CatmullRomSpline
  * @see QuaternionSpline
  */
-function WeightSpline(options) {
+function MorphWeightSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const weights = options.weights;
@@ -61,7 +63,7 @@ function WeightSpline(options) {
   this._lastTimeIndex = 0;
 }
 
-Object.defineProperties(WeightSpline.prototype, {
+Object.defineProperties(MorphWeightSpline.prototype, {
   /**
    * An array of times for the control weights.
    *
@@ -103,7 +105,8 @@ Object.defineProperties(WeightSpline.prototype, {
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
-WeightSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+MorphWeightSpline.prototype.findTimeInterval =
+  Spline.prototype.findTimeInterval;
 
 /**
  * Wraps the given time to the period covered by the spline.
@@ -112,7 +115,7 @@ WeightSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
  * @param {Number} time The time.
  * @return {Number} The time, wrapped around to the updated animation.
  */
-WeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+MorphWeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
@@ -121,7 +124,7 @@ WeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  * @param {Number} time The time.
  * @return {Number} The time, clamped to the animation period.
  */
-WeightSpline.prototype.clampTime = Spline.prototype.clampTime;
+MorphWeightSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
@@ -134,7 +137,7 @@ WeightSpline.prototype.clampTime = Spline.prototype.clampTime;
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
-WeightSpline.prototype.evaluate = function (time, result) {
+MorphWeightSpline.prototype.evaluate = function (time, result) {
   const weights = this.weights;
   const times = this.times;
 
@@ -155,4 +158,4 @@ WeightSpline.prototype.evaluate = function (time, result) {
 
   return result;
 };
-export default WeightSpline;
+export default MorphWeightSpline;

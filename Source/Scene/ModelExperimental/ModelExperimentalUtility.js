@@ -1,4 +1,3 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -195,48 +194,50 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
 
 const cartesianMaxScratch = new Cartesian3();
 const cartesianMinScratch = new Cartesian3();
+
 /**
- * Create a bounding sphere from a primitive's POSITION attribute and model
- * matrix.
+ * Get the minimum and maximum values for a primitive's POSITION attribute.
+ * This is used to compute the bounding sphere of the primitive, as well as
+ * the bounding sphere of the whole model.
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
- * @param {Matrix4} modelMatrix The primitive's model matrix.
- * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
+ * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
+ *
+ * @return {Object} An object containing the minimum and maximum position values.
+ *
+ * @private
  */
-ModelExperimentalUtility.createBoundingSphere = function (
+ModelExperimentalUtility.getPositionMinMax = function (
   primitive,
-  modelMatrix,
-  instancingTranslationMax,
-  instancingTranslationMin
+  instancingTranslationMin,
+  instancingTranslationMax
 ) {
   const positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
 
-  const positionMax = positionGltfAttribute.max;
-  const positionMin = positionGltfAttribute.min;
+  let positionMax = positionGltfAttribute.max;
+  let positionMin = positionGltfAttribute.min;
 
-  let boundingSphere;
   if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
-    const computedMin = Cartesian3.add(
+    positionMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,
       cartesianMinScratch
     );
-    const computedMax = Cartesian3.add(
+    positionMax = Cartesian3.add(
       positionMax,
       instancingTranslationMax,
       cartesianMaxScratch
     );
-    boundingSphere = BoundingSphere.fromCornerPoints(computedMin, computedMax);
-  } else {
-    boundingSphere = BoundingSphere.fromCornerPoints(positionMin, positionMax);
   }
 
-  BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
-  return boundingSphere;
+  return {
+    min: positionMin,
+    max: positionMax,
+  };
 };
 
 /**

@@ -568,14 +568,6 @@ function Primitive() {
   this.morphTargets = [];
 
   /**
-   * An array of weights to be applied to morph targets.
-   *
-   * @type {Number[]}
-   * @private
-   */
-  this.morphWeights = [];
-
-  /**
    * The indices.
    *
    * @type {ModelComponents.Indices}
@@ -688,7 +680,7 @@ function Skin() {
    * @type {ModelComponents.Node[]}
    * @private
    */
-  this.joints = undefined;
+  this.joints = [];
 
   /**
    * The inverse bind matrices of the joints.
@@ -696,7 +688,7 @@ function Skin() {
    * @type {Matrix4[]}
    * @private
    */
-  this.inverseBindMatrices = undefined;
+  this.inverseBindMatrices = [];
 }
 
 /**
@@ -790,6 +782,15 @@ function Node() {
    * @private
    */
   this.scale = undefined;
+
+  /**
+   * An array of weights to be applied to the primitives' morph targets.
+   * These are supplied by either the node or its mesh.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.morphWeights = [];
 }
 
 /**
@@ -811,32 +812,19 @@ function Scene() {
 }
 
 /**
- * The type of interpolation used in an animation.
- *
- * @alias {ModelComponents.InterpolationType}
- * @enum {Number}
- *
- * @private
- */
-const InterpolationType = {
-  STEP: 0,
-  LINEAR: 1,
-  CUBICSPLINE: 2,
-};
-
-/**
- * The property of the node that is targeted by an animation.
+ * The property of the node that is targeted by an animation. The values of
+ * this enum are used to look up the appropriate property on the runtime node.
  *
  * @alias {ModelComponents.AnimatedPropertyType}
- * @enum {Number}
+ * @enum {String}
  *
  * @private
  */
 const AnimatedPropertyType = {
-  TRANSLATION: 0,
-  ROTATION: 1,
-  SCALE: 2,
-  WEIGHTS: 3,
+  TRANSLATION: "translation",
+  ROTATION: "rotation",
+  SCALE: "scale",
+  WEIGHTS: "weights",
 };
 
 /**
@@ -855,12 +843,12 @@ function AnimationSampler() {
    * @type {Number[]}
    * @private
    */
-  this.input = undefined;
+  this.input = [];
 
   /**
    * The method used to interpolate between the animation's keyframe data.
    *
-   * @type {ModelComponents.InterpolationType}
+   * @type {InterpolationType}
    * @private
    */
   this.interpolation = undefined;
@@ -871,7 +859,7 @@ function AnimationSampler() {
    * @type {Number[]|Cartesian3[]|Quaternion[]}
    * @private
    */
-  this.output = undefined;
+  this.output = [];
 }
 
 /**
@@ -1008,21 +996,21 @@ function Components() {
    *
    * @type {ModelComponents.Node[]}
    */
-  this.nodes = undefined;
+  this.nodes = [];
 
   /**
    * All skins in the model.
    *
    * @type {ModelComponents.Skin[]}
    */
-  this.skins = undefined;
+  this.skins = [];
 
   /**
    * All animations in the model.
    *
    * @type {ModelComponents.Animation[]}
    */
-  this.animations = undefined;
+  this.animations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1364,7 +1352,6 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
-ModelComponents.InterpolationType = Object.freeze(InterpolationType);
 ModelComponents.AnimatedPropertyType = Object.freeze(AnimatedPropertyType);
 ModelComponents.AnimationSampler = AnimationSampler;
 ModelComponents.AnimationTarget = AnimationTarget;

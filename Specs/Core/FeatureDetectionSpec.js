@@ -124,6 +124,11 @@ describe("Core/FeatureDetection", function () {
     }
   });
 
+  it("detects iPad or iOS", function () {
+    const iPadOrIOS = FeatureDetection.isIPadOrIOS();
+    expect(typeof iPadOrIOS).toEqual("boolean");
+  });
+
   it("detects imageRendering support", function () {
     const supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
     expect(typeof supportsImageRenderingPixelated).toEqual("boolean");

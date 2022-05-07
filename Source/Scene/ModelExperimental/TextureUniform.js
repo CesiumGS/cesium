@@ -19,8 +19,8 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @param {Boolean} [options.repeat=true] When defined, the texture sampler will be set to wrap in both directions
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] When options.typedArray is defined, this is used to determine the pixel format of the texture
  * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] When options.typedArray is defined, this is the data type of pixel values in the typed array.
- * @param {TextureMinificationFilter} [textureMinificationFilter=TextureMinificationFilter.LINEAR] The minification filter of the texture sampler.
- * @param {TextureMagnificationFilter} [textureMagnificationFilter=TextureMagnificationFilter.LINEAR] The magnification filter of the texture sampler.
+ * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The minification filter of the texture sampler.
+ * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The magnification filter of the texture sampler.
  * @param {Number} [options.maximumAnisotropy=1.0] The maximum anisotropy of the texture sampler
  *
  * @alias TextureUniform

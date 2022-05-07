@@ -1,5 +1,6 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -317,24 +318,21 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
-  let i;
-  if (defined(node.children)) {
-    const childrenLength = node.children.length;
-    for (i = 0; i < childrenLength; i++) {
-      const childNode = node.children[i];
-      const childNodeTransformToRoot = Matrix4.multiplyTransformation(
-        transformToRoot,
-        transform,
-        new Matrix4()
-      );
+  const childrenLength = node.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    const childNode = node.children[i];
+    const childNodeTransformToRoot = Matrix4.multiplyTransformation(
+      transformToRoot,
+      transform,
+      new Matrix4()
+    );
 
-      const childIndex = traverseSceneGraph(
-        sceneGraph,
-        childNode,
-        childNodeTransformToRoot
-      );
-      childrenIndices.push(childIndex);
-    }
+    const childIndex = traverseSceneGraph(
+      sceneGraph,
+      childNode,
+      childNodeTransformToRoot
+    );
+    childrenIndices.push(childIndex);
   }
 
   // Process node and mesh primitives.
@@ -346,17 +344,15 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
     sceneGraph: sceneGraph,
   });
 
-  if (defined(node.primitives)) {
-    const primitivesLength = node.primitives.length;
-    for (i = 0; i < primitivesLength; i++) {
-      runtimeNode.runtimePrimitives.push(
-        new ModelExperimentalPrimitive({
-          primitive: node.primitives[i],
-          node: node,
-          model: sceneGraph._model,
-        })
-      );
-    }
+  const primitivesLength = node.primitives.length;
+  for (let i = 0; i < primitivesLength; i++) {
+    runtimeNode.runtimePrimitives.push(
+      new ModelExperimentalPrimitive({
+        primitive: node.primitives[i],
+        node: node,
+        model: sceneGraph._model,
+      })
+    );
   }
 
   const index = node.index;
@@ -368,6 +364,10 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
+const scratchModelPositionMin = new Cartesian3();
+const scratchModelPositionMax = new Cartesian3();
+const scratchPrimitivePositionMin = new Cartesian3();
+const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the draw commands for each primitive in the model.
  *
@@ -391,7 +391,19 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  const boundingSpheres = [];
+  const modelPositionMin = Cartesian3.fromElements(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    scratchModelPositionMin
+  );
+  const modelPositionMax = Cartesian3.fromElements(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    scratchModelPositionMax
+  );
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -412,6 +424,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
     }
 
+    const nodeTransform = runtimeNode.computedTransform;
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
@@ -434,10 +447,31 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
-        primitiveRenderResources.boundingSphere
+        primitiveRenderResources.boundingSphere,
+        new BoundingSphere()
       );
 
-      boundingSpheres.push(runtimePrimitive.boundingSphere);
+      const primitivePositionMin = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMin,
+        scratchPrimitivePositionMin
+      );
+      const primitivePositionMax = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMax,
+        scratchPrimitivePositionMax
+      );
+
+      Cartesian3.minimumByComponent(
+        modelPositionMin,
+        primitivePositionMin,
+        modelPositionMin
+      );
+      Cartesian3.maximumByComponent(
+        modelPositionMax,
+        primitivePositionMax,
+        modelPositionMax
+      );
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -448,14 +482,23 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+  this._boundingSphere = BoundingSphere.fromCornerPoints(
+    modelPositionMin,
+    modelPositionMax,
+    new BoundingSphere()
+  );
+
+  this._boundingSphere = BoundingSphere.transformWithoutScale(
+    this._boundingSphere,
+    this._axisCorrectionMatrix,
+    this._boundingSphere
+  );
 
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
   );
-
   model._initialRadius = model._boundingSphere.radius;
   model._boundingSphere.radius *= model._clampedScale;
 };
@@ -493,7 +536,10 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   }
 };
 
-ModelExperimentalSceneGraph.prototype.update = function (frameState) {
+ModelExperimentalSceneGraph.prototype.update = function (
+  frameState,
+  updateForAnimations
+) {
   let i, j, k;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -502,6 +548,10 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
       const nodeUpdateStage = runtimeNode.updateStages[j];
       nodeUpdateStage.update(runtimeNode, this, frameState);
+    }
+
+    if (updateForAnimations) {
+      this.updateJointMatrices();
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
@@ -526,14 +576,19 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   }
 };
 
+/**
+ * Updates the joint matrices for the skins and nodes of the model.
+ *
+ * @private
+ */
 ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
-  const model = this._model;
-  const skinnedNodes = model._skinnedNodes;
+  const skinnedNodes = this._skinnedNodes;
   const length = skinnedNodes.length;
 
   for (let i = 0; i < length; i++) {
-    const node = skinnedNodes[i];
-    node.updateJointMatrices();
+    const nodeIndex = skinnedNodes[i];
+    const runtimeNode = this._runtimeNodes[nodeIndex];
+    runtimeNode.updateJointMatrices();
   }
 };
 
