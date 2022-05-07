@@ -343,16 +343,6 @@ Object.defineProperties(Entity.prototype, {
     },
   },
   /**
-   * Gets the list of all children currently associated with this entity
-   * @memberof Entity.prototype
-   * @type {Entity[]}
-   */
-  children: {
-    get: function () {
-      return this._children;
-    },
-  },
-  /**
    * Gets the names of all properties registered on this instance.
    * @memberof Entity.prototype
    * @type {string[]}
