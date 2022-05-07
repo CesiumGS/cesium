@@ -343,6 +343,17 @@ Object.defineProperties(Entity.prototype, {
     },
   },
   /**
+   * Get the number of children for the entity
+   * @memberof Entity.prototype
+   * @type {Number}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      return this._children.length;
+    },
+  },
+  /**
    * Gets the names of all properties registered on this instance.
    * @memberof Entity.prototype
    * @type {string[]}
@@ -724,6 +735,22 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
     );
   }
   return result;
+};
+
+/**
+ * Gets the child by index from the Entities array of children
+ *
+ * @param {Number} index the index to retrieve.
+ * @returns {Entity} The child entity at the specified index.
+ */
+Entity.prototype.getChild = function (index) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
+
+  return this._children[index];
 };
 
 /**
