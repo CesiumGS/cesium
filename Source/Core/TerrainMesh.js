@@ -202,13 +202,14 @@ TerrainMesh.prototype.pickRay = function (
 
   const hasOctree = !!this._octreeTrianglePicking;
   const canUseOctree =
+    hasOctree &&
     // 3d mode only
     mode === SceneMode.SCENE3D /* 3d mode only*/ &&
     // the octree is baked for default terrain exaggeration, so we can only trust its result when we're
     //  not using terrain exaggeration
     this.encoding.exaggeration === 1;
 
-  if (hasOctree && canUseOctree) {
+  if (canUseOctree) {
     newPickValue = this._octreeTrianglePicking.rayIntersect(
       ray,
       cullBackFaces,
@@ -217,7 +218,10 @@ TerrainMesh.prototype.pickRay = function (
     );
   }
 
-  if (!window.disableDefaultPickStrategy) {
+  if (!window.disableDefaultPickStrategy || !canUseOctree) {
+    // if we've not elected to disable the default pick strategy entirely;
+    //  or we can't use the octree, so we have no other choice, then
+    //  use the default pick strategy
     oldPickValue = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,

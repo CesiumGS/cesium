@@ -775,7 +775,7 @@ Globe.prototype.pickWorldCoordinates = function (
   for (i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
-      scene.frameState,
+      scene.mode,
       scene.mapProjection,
       cullBackFaces,
       result
@@ -938,8 +938,9 @@ Globe.prototype.getHeight = function (cartographic) {
 
   const intersection = tile.data.pick(
     ray,
-    // why is mode passed as undefined? I'm not sure, it's always been this way
-    undefined,
+    // If you're asking for globe "height", you're probably expecting the answer
+    //  with respect to 3D mode, not whatever mode the scene is currently in
+    SceneMode.SCENE3D,
     projection,
     false,
     scratchGetHeightIntersection
