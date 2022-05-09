@@ -2500,14 +2500,12 @@ describe(
           expect(statistics.numberOfPendingRequests).toEqual(1);
           scene.primitives.remove(tileset);
 
-          return root.contentReadyPromise
-            .then(function (root) {
-              fail("should not resolve");
-            })
-            .catch(function (error) {
-              // Expect the root to not have added any children from the external tileset JSON file
-              expect(root.children.length).toEqual(0);
-            });
+          return root.contentReadyPromise.then(function (content) {
+            expect(content).toBeUndefined();
+
+            // Expect the root to not have added any children from the external tileset JSON file
+            expect(root.children.length).toEqual(0);
+          });
         }
       );
     });
@@ -2521,13 +2519,10 @@ describe(
         scene.renderForSpecs(); // Request root
         scene.primitives.remove(tileset);
 
-        return root.contentReadyPromise
-          .then(function (content) {
-            fail("should not resolve");
-          })
-          .catch(function (error) {
-            expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
-          });
+        return root.contentReadyPromise.then(function (content) {
+          expect(content).toBeUndefined();
+          expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
+        });
       });
     });
 
