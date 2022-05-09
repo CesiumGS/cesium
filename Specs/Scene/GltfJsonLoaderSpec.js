@@ -738,14 +738,15 @@ describe("Scene/GltfJsonLoader", function () {
     );
 
     const buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
-    const fetchPromise = new Promise(function (resolve, reject) {
-      if (rejectPromise) {
-        reject(new Error());
-      } else {
-        resolve(buffer);
-      }
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+        } else {
+          resolve(buffer);
+        }
+      });
     });
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(fetchPromise);
 
     const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
