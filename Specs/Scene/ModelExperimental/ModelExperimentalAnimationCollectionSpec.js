@@ -3,6 +3,7 @@ import {
   ModelAnimationLoop,
   ModelExperimental,
   ResourceCache,
+  Math as CesiumMath,
 } from "../../../Source/Cesium.js";
 
 import createScene from "../../createScene.js";
@@ -612,6 +613,102 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       expect(spyUpdate.calls.argsFor(0)[2]).toEqual(0.0);
       expect(spyUpdate.calls.argsFor(1)[2]).toEqual(0.5);
       expect(spyUpdate.calls.argsFor(1)[2]).toEqual(0.5);
+    });
+  });
+
+  it("animates with an explicit animation time", function () {
+    return loadAndZoomToModelExperimental(
+      {
+        gltf: animatedTriangleUrl,
+      },
+      scene
+    ).then(function (model) {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animationCollection = model.activeAnimations;
+      let animationTime = 0;
+      const animation = animationCollection.add({
+        index: 0,
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      animation.update.addEventListener(spyUpdate);
+
+      scene.renderForSpecs(time);
+      animationTime = 0.1;
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, scratchJulianDate));
+      // no update because animationTime didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
+      animationTime = 0.2;
+      // no update because scene time didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
+      animationTime = 0.3;
+      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, scratchJulianDate));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.1,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        0.3,
+        CesiumMath.EPSILON14
+      );
+    });
+  });
+
+  it("animates while paused with an explicit animation time", function () {
+    return loadAndZoomToModelExperimental(
+      {
+        gltf: animatedTriangleUrl,
+      },
+      scene
+    ).then(function (model) {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animationCollection = model.activeAnimations;
+      animationCollection.animateWhilePaused = true;
+      let animationTime = 0;
+      const animation = animationCollection.add({
+        index: 0,
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      animation.update.addEventListener(spyUpdate);
+
+      scene.renderForSpecs(time);
+      animationTime = 0.1;
+      scene.renderForSpecs(time);
+      // no update because animationTime didn't change
+      scene.renderForSpecs(time);
+      animationTime = 0.3;
+      scene.renderForSpecs(time);
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.1,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        0.3,
+        CesiumMath.EPSILON14
+      );
     });
   });
 
