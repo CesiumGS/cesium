@@ -1,5 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
@@ -24,6 +25,7 @@ import B3dmLoader from "./B3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
+import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -251,6 +253,8 @@ export default function ModelExperimental(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._sceneMode = undefined;
 
   initialize(this);
 }
@@ -1202,6 +1206,11 @@ ModelExperimental.prototype.update = function (frameState) {
 
   this._defaultTexture = context.defaultTexture;
 
+  if (frameState.mode !== this._sceneMode) {
+    this.resetDrawCommands();
+    this._sceneMode = frameState.mode;
+  }
+
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
@@ -1327,6 +1336,7 @@ function scaleInPixels(positionWC, radius, frameState) {
 }
 
 const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 function getScale(model, frameState) {
   let scale = model.scale;
@@ -1342,6 +1352,21 @@ function getScale(model, frameState) {
     scratchPosition.x = m[12];
     scratchPosition.y = m[13];
     scratchPosition.z = m[14];
+
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      const projection = frameState.mapProjection;
+      const cartographic = projection.ellipsoid.cartesianToCartographic(
+        scratchPosition,
+        scratchCartographic
+      );
+      projection.project(cartographic, scratchPosition);
+      Cartesian3.fromElements(
+        scratchPosition.z,
+        scratchPosition.x,
+        scratchPosition.y,
+        scratchPosition
+      );
+    }
 
     const radius = model.boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);

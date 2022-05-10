@@ -1,6 +1,7 @@
 import BlendingState from "../BlendingState.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
@@ -18,6 +19,11 @@ import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
+import SceneMode from "../SceneMode.js";
+import SceneTransforms from "../SceneTransforms.js";
+
+const scratchPositionMin = new Cartesian3();
+const scratchPositionMax = new Cartesian3();
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -47,7 +53,6 @@ export default function buildDrawCommands(
     debugWireframe,
     frameState
   );
-
   const vertexArray = new VertexArray({
     context: frameState.context,
     indexBuffer: indexBuffer,
@@ -71,20 +76,32 @@ export default function buildDrawCommands(
   model._resources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
-
+  const mode = frameState.mode;
   const sceneGraph = model.sceneGraph;
 
-  const modelMatrix = Matrix4.multiplyTransformation(
+  const computedModelMatrix = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.runtimeNode.computedTransform,
     new Matrix4()
   );
 
-  primitiveRenderResources.boundingSphere = BoundingSphere.transform(
-    primitiveRenderResources.boundingSphere,
-    modelMatrix,
-    primitiveRenderResources.boundingSphere
-  );
+  let modelMatrix;
+  let boundingSphere;
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+    boundingSphere = computeBoundingSphere2D(
+      primitiveRenderResources,
+      computedModelMatrix,
+      frameState
+    );
+    modelMatrix = Matrix4.clone(Matrix4.IDENTITY, new Matrix4());
+  } else {
+    modelMatrix = computedModelMatrix;
+    boundingSphere = BoundingSphere.transform(
+      primitiveRenderResources.boundingSphere,
+      modelMatrix,
+      primitiveRenderResources.boundingSphere
+    );
+  }
 
   let count = primitiveRenderResources.count;
   if (debugWireframe) {
@@ -96,7 +113,7 @@ export default function buildDrawCommands(
   }
 
   const command = new DrawCommand({
-    boundingVolume: primitiveRenderResources.boundingSphere,
+    boundingVolume: boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
@@ -175,6 +192,9 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
+/**
+ * @private
+ */
 function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
   if (debugWireframe) {
     return createWireframeIndexBuffer(primitiveRenderResources, frameState);
@@ -251,4 +271,41 @@ function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
+}
+
+/**
+ * @private
+ */
+function computeBoundingSphere2D(
+  primitiveRenderResources,
+  modelMatrix,
+  frameState
+) {
+  const projectedMin = Matrix4.multiplyByPoint(
+    modelMatrix,
+    primitiveRenderResources.positionMin,
+    scratchPositionMin
+  );
+  const projectedMax = Matrix4.multiplyByPoint(
+    modelMatrix,
+    primitiveRenderResources.positionMax,
+    scratchPositionMax
+  );
+
+  SceneTransforms.computeActualWgs84Position(
+    frameState,
+    projectedMin,
+    projectedMin
+  );
+  SceneTransforms.computeActualWgs84Position(
+    frameState,
+    projectedMax,
+    projectedMax
+  );
+
+  return BoundingSphere.fromCornerPoints(
+    projectedMin,
+    projectedMax,
+    new BoundingSphere()
+  );
 }

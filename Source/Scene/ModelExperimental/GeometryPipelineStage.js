@@ -1,14 +1,21 @@
-import defined from "../../Core/defined.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartographic from "../../Core/Cartographic.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defined from "../../Core/defined.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
-import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import SceneMode from "../SceneMode.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -49,10 +56,15 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
+ * @param {FrameState} frameState The frame state.
  *
  * @private
  */
-GeometryPipelineStage.process = function (renderResources, primitive) {
+GeometryPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
   const shaderBuilder = renderResources.shaderBuilder;
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
@@ -136,7 +148,13 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     } else {
       index = renderResources.attributeIndex++;
     }
-    processAttribute(renderResources, attribute, index, attributeLocationCount);
+    processAttribute(
+      renderResources,
+      attribute,
+      index,
+      attributeLocationCount,
+      frameState
+    );
   }
 
   handleBitangents(shaderBuilder, primitive.attributes);
@@ -153,7 +171,8 @@ function processAttribute(
   renderResources,
   attribute,
   attributeIndex,
-  attributeLocationCount
+  attributeLocationCount,
+  frameState
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
@@ -167,7 +186,12 @@ function processAttribute(
       attributeLocationCount
     );
   } else {
-    addAttributeToRenderResources(renderResources, attribute, attributeIndex);
+    addAttributeToRenderResources(
+      renderResources,
+      attribute,
+      attributeIndex,
+      frameState
+    );
   }
   addAttributeDeclaration(shaderBuilder, attributeInfo);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
@@ -208,7 +232,8 @@ function addSemanticDefine(shaderBuilder, attribute) {
 function addAttributeToRenderResources(
   renderResources,
   attribute,
-  attributeIndex
+  attributeIndex,
+  frameState
 ) {
   const quantization = attribute.quantization;
   let type;
@@ -230,10 +255,24 @@ function addAttributeToRenderResources(
     renderResources.featureIdVertexAttributeSetIndex = setIndex + 1;
   }
 
+  const isPositionAttribute = semantic === VertexAttributeSemantic.POSITION;
+  if (isPositionAttribute && defined(attribute.typedArray)) {
+    modifyResourcesFor2D(renderResources, attribute, frameState);
+  }
+
+  // Unload the typed array
+  attribute.typedArray = undefined;
+
+  const mode = frameState.mode;
+  const sceneMode2D =
+    mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
+  const useBuffer2D = isPositionAttribute && sceneMode2D;
+  const buffer = useBuffer2D ? attribute.buffer2D : attribute.buffer;
+
   const vertexAttribute = {
     index: attributeIndex,
-    value: defined(attribute.buffer) ? undefined : attribute.constant,
-    vertexBuffer: attribute.buffer,
+    value: defined(buffer) ? undefined : attribute.constant,
+    vertexBuffer: buffer,
     count: attribute.count,
     componentsPerAttribute: AttributeType.getNumberOfComponents(type),
     componentDatatype: componentDatatype,
@@ -444,6 +483,102 @@ function handleBitangents(shaderBuilder, attributes) {
     "vec3",
     "bitangentEC"
   );
+}
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
+
+function projectPositionTo2D(position, modelMatrix, projection, result) {
+  const transformedPosition = Matrix4.multiplyByPoint(
+    modelMatrix,
+    position,
+    scratchPosition
+  );
+
+  const ellipsoid = projection.ellipsoid;
+  const cartographic = ellipsoid.cartesianToCartographic(
+    transformedPosition,
+    scratchCartographic
+  );
+
+  const projectedPosition = projection.project(cartographic, scratchPosition);
+  result = Cartesian3.fromElements(
+    projectedPosition.z,
+    projectedPosition.x,
+    projectedPosition.y,
+    result
+  );
+
+  return result;
+}
+
+const scratchInitialPosition = new Cartesian3();
+
+function createPositionsTypedArrayFor2D(
+  typedArray,
+  attributeByteOffset,
+  modelMatrix,
+  projection
+) {
+  const floatArray = new Float32Array(
+    typedArray.buffer,
+    typedArray.byteOffset,
+    typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
+  );
+
+  const projectedArray = floatArray.slice();
+  const startIndex = attributeByteOffset / Float32Array.BYTES_PER_ELEMENT;
+  const length = projectedArray.length;
+  for (let i = startIndex; i < length; i += 3) {
+    const initialPosition = Cartesian3.fromArray(
+      floatArray,
+      i,
+      scratchInitialPosition
+    );
+
+    const projectedPosition = projectPositionTo2D(
+      initialPosition,
+      modelMatrix,
+      projection,
+      initialPosition
+    );
+
+    projectedArray[i] = projectedPosition.x;
+    projectedArray[i + 1] = projectedPosition.y;
+    projectedArray[i + 2] = projectedPosition.z;
+  }
+
+  return projectedArray;
+}
+
+const scratchMatrix = new Matrix4();
+
+function modifyResourcesFor2D(renderResources, attribute, frameState) {
+  const modelMatrix = renderResources.model.sceneGraph.computedModelMatrix;
+  const nodeComputedTransform = renderResources.runtimeNode.computedTransform;
+  const computedModelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    nodeComputedTransform,
+    scratchMatrix
+  );
+  const projection = frameState.mapProjection;
+
+  // Project the positions relative to the bounding sphere's center.
+  const projectedPositions = createPositionsTypedArrayFor2D(
+    attribute.typedArray,
+    attribute.byteOffset,
+    computedModelMatrix,
+    projection
+  );
+
+  const buffer = Buffer.createVertexBuffer({
+    context: frameState.context,
+    typedArray: projectedPositions,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  buffer.vertexArrayDestroyable = false;
+
+  attribute.buffer2D = buffer;
 }
 
 export default GeometryPipelineStage;
