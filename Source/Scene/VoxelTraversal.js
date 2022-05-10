@@ -426,9 +426,10 @@ function recomputeBoundingVolumesRecursive(that, node) {
 function requestTiles(that, keyframeNode) {
   const keys = Object.keys(that.megatextures);
   const length = keys.length;
+  const keyframe = keyframeNode.keyframe;
   for (let i = 0; i < length; i++) {
     const metadataName = keys[i];
-    requestData(that, keyframeNode, metadataName);
+    requestData(that, keyframeNode, metadataName, keyframe);
   }
 }
 /**
@@ -1496,7 +1497,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
 
-        const useTimeDynamic = false;
+        const useTimeDynamic = true;
         if (useTimeDynamic) {
           const previousKeyframeNode = node.renderableKeyframeNodePrevious;
           const nextKeyframeNode = node.renderableKeyframeNodeNext;

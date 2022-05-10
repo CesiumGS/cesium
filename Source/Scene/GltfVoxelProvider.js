@@ -317,25 +317,33 @@ GltfVoxelProvider.prototype.update = function (frameState) {
  * @param {Number} [options.tileX=0] The tile's X coordinate.
  * @param {Number} [options.tileY=0] The tile's Y coordinate.
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
+ * @param {Number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
  *
  * @exception {DeveloperError} The provider must be ready.
  * @exception {DeveloperError} Only level 0 can be requested.
  */
 GltfVoxelProvider.prototype.requestData = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   if (!this.ready) {
     throw new DeveloperError(
       "requestData must not be called before the provider is ready."
     );
   }
+  //>>includeEnd('debug');
 
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  // glTF current doesn't support level of detail.
   const tileLevel = defaultValue(options.tileLevel, 0);
   if (tileLevel > 0) {
     return undefined;
   }
-  //>>includeEnd('debug');
+  // glTF currently doesn't support time-dynamic.
+  const keyframe = defaultValue(options.keyframe, 0);
+  if (keyframe > 0) {
+    return undefined;
+  }
 
   return Promise.resolve(this._data);
 };

@@ -249,17 +249,11 @@ function VoxelPrimitive(options) {
    */
   this._pickId = undefined;
 
-  // /**
-  //  * @type {TimeIntervalCollection}
-  //  * @private
-  //  */
-  // this._timeIntervalCollection = undefined;
-
-  // /**
-  //  * @type {Clock}
-  //  * @private
-  //  */
-  // this._clock = options.clock;
+  /**
+   * @type {Clock}
+   * @private
+   */
+  this._clock = options.clock;
 
   // Transforms and other values that are computed when the shape changes
 
@@ -1096,12 +1090,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     });
     uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
 
-    // // TODO remove?
-    // that._timeIntervalCollection = defaultValue(
-    //   provider.timeIntervalCollection,
-    //   that._timeIntervalCollection
-    // );
-
     const dimensions = provider.dimensions;
     const shapeType = provider.shape;
 
@@ -1425,7 +1413,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   if (this._ready && this._shapeVisible) {
     const traversal = this._traversal;
     const clock = this._clock;
-    const timeIntervalCollection = this._timeIntervalCollection;
+    const timeIntervalCollection = provider.timeIntervalCollection;
 
     // Find the keyframe location to render at. Doesn't need to be a whole number.
     let keyframeLocation = 0.0;

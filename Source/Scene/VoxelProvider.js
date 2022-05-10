@@ -195,6 +195,30 @@ Object.defineProperties(VoxelProvider.prototype, {
   maximumTileCount: {
     get: DeveloperError.throwInstantiationError,
   },
+
+  /**
+   * Gets the number of keyframes in the dataset.
+   * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Number}
+   * @readonly
+   */
+  keyframeCount: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
+   * Gets the {@link TimeIntervalCollection} for the dataset, or undefined if it doesn't have timestamps.
+   * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {TimeIntervalCollection}
+   * @readonly
+   */
+  timeIntervalCollection: {
+    get: DeveloperError.throwInstantiationError,
+  },
 });
 
 /**
@@ -206,6 +230,7 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @param {Number} [options.tileX=0] The tile's X coordinate.
  * @param {Number} [options.tileY=0] The tile's Y coordinate.
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
+ * @param {Number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
  *
  * @exception {DeveloperError} The provider must be ready.

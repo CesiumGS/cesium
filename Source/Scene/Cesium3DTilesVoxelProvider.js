@@ -383,17 +383,12 @@ const scratchImplicitTileCoordinates = new ImplicitTileCoordinates({
  * @param {Number} [options.tileX=0] The tile's X coordinate.
  * @param {Number} [options.tileY=0] The tile's Y coordinate.
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
+ * @param {Number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
  *
  * @exception {DeveloperError} The provider must be ready.
  */
 Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tileLevel = defaultValue(options.tileLevel, 0);
-  const tileX = defaultValue(options.tileX, 0);
-  const tileY = defaultValue(options.tileY, 0);
-  const tileZ = defaultValue(options.tileZ, 0);
-
   //>>includeStart('debug', pragmas.debug);
   if (!this.ready) {
     throw new DeveloperError(
@@ -401,6 +396,18 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
     );
   }
   //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const tileLevel = defaultValue(options.tileLevel, 0);
+  const tileX = defaultValue(options.tileX, 0);
+  const tileY = defaultValue(options.tileY, 0);
+  const tileZ = defaultValue(options.tileZ, 0);
+  const keyframe = defaultValue(options.keyframe, 0);
+
+  // 3D Tiles currently doesn't support time-dynamic data.
+  if (keyframe !== 0) {
+    return undefined;
+  }
 
   // 1. Load the subtree that the tile belongs to (possibly from the subtree cache)
   // 1a. If not in the cache, load the subtree resource
