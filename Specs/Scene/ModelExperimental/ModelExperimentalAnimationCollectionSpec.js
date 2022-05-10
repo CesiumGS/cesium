@@ -647,7 +647,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       // no update because scene time didn't change
       scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
       animationTime = 0.3;
-      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, scratchJulianDate));
 
       expect(spyUpdate.calls.count()).toEqual(3);
       expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
