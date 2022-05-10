@@ -1,6 +1,7 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { HermiteSpline } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/HermiteSpline", function () {
   let points;
@@ -46,6 +47,17 @@ describe("Core/HermiteSpline", function () {
         times: times,
         inTangents: [Cartesian3.ZERO],
         outTangents: [Cartesian3.UNIT_X],
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws when inTangents and outTangents are not the same type as points.", function () {
+    expect(function () {
+      return new HermiteSpline({
+        points: points,
+        times: times,
+        inTangents: [0, 0, 0],
+        outTangents: [0, 0, 0],
       });
     }).toThrowDeveloperError();
   });
@@ -371,7 +383,55 @@ describe("Core/HermiteSpline", function () {
     }).toThrowDeveloperError();
   });
 
-  it("evaluate with result parameter", function () {
+  it("evaluate returns number value", function () {
+    const numberTimes = [0.0, 0.5, 1.0];
+    const numberPoints = [0.0, 1.0, 0.0];
+    const numberInTangents = [0, 1];
+    const numberOutTangents = [0, -3];
+    const hs = new HermiteSpline({
+      times: numberTimes,
+      points: numberPoints,
+      inTangents: numberInTangents,
+      outTangents: numberOutTangents,
+    });
+
+    let point = hs.evaluate(numberTimes[1]);
+    expect(point).toEqual(numberPoints[1]);
+
+    const expected = 0.25;
+    point = hs.evaluate(0.75);
+    expect(point).toEqual(expected);
+  });
+
+  it("evaluate returns cartesian3 value", function () {
+    const cartesianTimes = [0.0, 0.5, 1.0];
+    const cartesianPoints = [
+      new Cartesian3(-1.0, 0.0, 0.0),
+      new Cartesian3(1.0, 2.0, 0.0),
+      new Cartesian3(-1.0, 0.0, 0.0),
+    ];
+    const cartesianInTangents = [Cartesian3.ZERO, Cartesian3.ZERO];
+    const cartesianOutTangents = [
+      Cartesian3.ZERO,
+      new Cartesian3(0.0, -3.0, 0.0),
+    ];
+
+    const hs = new HermiteSpline({
+      times: cartesianTimes,
+      points: cartesianPoints,
+      inTangents: cartesianInTangents,
+      outTangents: cartesianOutTangents,
+    });
+
+    let point = hs.evaluate(cartesianTimes[1]);
+    expect(point).toEqual(cartesianPoints[1]);
+
+    const expected = new Cartesian3(0.0, 0.8125, 0.0);
+    point = hs.evaluate(0.75);
+    expect(point).toEqual(expected);
+  });
+
+  it("evaluate returns cartesian3 value with result parameter", function () {
     const hs = HermiteSpline.createNaturalCubic({
       points: points,
       times: times,
@@ -380,6 +440,53 @@ describe("Core/HermiteSpline", function () {
     const point = hs.evaluate(times[0], result);
     expect(point).toBe(result);
     expect(result).toEqual(points[0]);
+  });
+
+  const quaternionTimes = [0.0, 0.5, 1.0];
+  const quaternionPoints = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.0, 0.0, -0.3827, 0.9239),
+    new Quaternion(0.0, 0.0, -0.7071, 0.7071),
+  ];
+  const quaternionInTangents = [
+    new Quaternion(0.0, 0.0, -0.04789, 0.9988),
+    new Quaternion(-0.0, 0.0, -0.03546, 0.99937),
+  ];
+  const quaternionOutTangents = [
+    Quaternion.IDENTITY,
+    new Quaternion(0.0, 0.0, -0.04789, 0.9988),
+  ];
+
+  it("evaluate returns quaternion value", function () {
+    const hs = new HermiteSpline({
+      times: quaternionTimes,
+      points: quaternionPoints,
+      inTangents: quaternionInTangents,
+      outTangents: quaternionOutTangents,
+    });
+
+    let point = hs.evaluate(quaternionTimes[1]);
+    expect(point).toEqual(quaternionPoints[1]);
+
+    const expected = new Quaternion(0.0, 0.0, -0.54567, 0.81546);
+    point = hs.evaluate(0.75);
+    expect(Quaternion.equalsEpsilon(point, expected, CesiumMath.EPSILON4)).toBe(
+      true
+    );
+  });
+
+  it("evaluate returns quaternion value with result parameter", function () {
+    const hs = new HermiteSpline({
+      times: quaternionTimes,
+      points: quaternionPoints,
+      inTangents: quaternionInTangents,
+      outTangents: quaternionOutTangents,
+    });
+
+    const result = new Quaternion();
+    const point = hs.evaluate(quaternionTimes[1], result);
+    expect(point).toBe(result);
+    expect(result).toEqual(quaternionPoints[1]);
   });
 
   it("createNaturalCubic with 2 control points defaults to lerp", function () {

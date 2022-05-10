@@ -39,7 +39,8 @@
           "node" : 0,
           "path" : "rotation"
         }
-      } ]
+      } ],
+      "name": "Sample Animation"
     }
   ],
 

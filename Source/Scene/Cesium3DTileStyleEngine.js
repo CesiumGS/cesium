@@ -37,7 +37,7 @@ Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset) {
     return;
   }
 
-  if (defined(this._style) && !this._style.ready) {
+  if (defined(this._style) && !this._style._ready) {
     return;
   }
 

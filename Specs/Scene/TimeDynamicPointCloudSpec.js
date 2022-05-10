@@ -466,20 +466,17 @@ describe(
           pointSize: 10,
         }),
       });
-      return loadAllFrames(pointCloud)
-        .then(function () {
-          expect(scene).toRender([0, 0, 255, 255]);
-          pointCloud.style = new Cesium3DTileStyle({
-            color: 'color("lime")',
-            pointSize: 10,
-          });
-          return pointCloud.style.readyPromise;
-        })
-        .then(function () {
-          expect(scene).toRender([0, 255, 0, 255]);
-          goToFrame(1); // Also check that the style is updated for the next frame
-          expect(scene).toRender([0, 255, 0, 255]);
+      return loadAllFrames(pointCloud).then(function () {
+        expect(scene).toRender([0, 0, 255, 255]);
+        pointCloud.style = new Cesium3DTileStyle({
+          color: 'color("lime")',
+          pointSize: 10,
         });
+
+        expect(scene).toRender([0, 255, 0, 255]);
+        goToFrame(1); // Also check that the style is updated for the next frame
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
     });
 
     it("make style dirty", function () {

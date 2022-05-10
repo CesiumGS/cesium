@@ -676,6 +676,42 @@ describe(
       });
     });
 
+    it("adds define to shader if wireframe is enabled", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: {
+            debugWireframe: true,
+          },
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_EMISSIVE_TEXTURE",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_NORMAL_TEXTURE",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "HAS_OCCLUSION_TEXTURE",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_WIREFRAME",
+        ]);
+      });
+    });
+
     it("_processTextureTransform updates the shader and uniform map", function () {
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};

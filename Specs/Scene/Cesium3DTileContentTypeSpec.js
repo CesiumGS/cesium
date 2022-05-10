@@ -18,7 +18,14 @@ describe("Scene/Cesium3DTileContentType", function () {
   });
 
   it("isBinaryFormat returns false for other content types", function () {
-    const types = ["gltf", "external", "multipleContent", "notAMagic"];
+    const types = [
+      "gltf",
+      "subtreeJson",
+      "externalTileset",
+      "multipleContent",
+      "geoJson",
+      "notAMagic",
+    ];
     types.map(function (type) {
       expect(Cesium3DTileContentType.isBinaryFormat(type)).toBe(false);
     });

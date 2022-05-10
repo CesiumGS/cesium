@@ -247,14 +247,20 @@ describe(
       ],
     };
 
+    // Index buffers will load as typed arrays only in WebGL1.
+    // In order to load them as buffers, the scene must have WebGL2 enabled.
     let scene;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene();
+      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -1047,7 +1053,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("loads index buffer from accessor", function () {
+    it("loads index buffer from accessor as buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -1129,14 +1135,14 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-      });
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.buffer).toBeDefined();
+        }
+      );
     });
 
-    it("loads index buffer as typed array", function () {
+    it("loads index buffer as typed array using option", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -1164,6 +1170,81 @@ describe(
         expect(indexBufferLoader.typedArray).toBeDefined();
         expect(indexBufferLoader.buffer).toBeUndefined();
       });
+    });
+
+    it("loads index buffer as typed array for wireframes in WebGL1", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: false,
+      });
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: false,
+        loadForWireframe: true,
+      });
+
+      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeUndefined();
+      });
+    });
+
+    it("loads index buffer as buffer for wireframes in WebGL2", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadForWireframe: true,
+      });
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadForWireframe: true,
+      });
+
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
+      expect(cacheEntry.referenceCount).toBe(1);
+
+      // The existing resource is returned if the computed cache key is the same
+      expect(
+        ResourceCache.loadIndexBuffer({
+          gltf: gltfUncompressed,
+          accessorId: 2,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+        })
+      ).toBe(indexBufferLoader);
+
+      expect(cacheEntry.referenceCount).toBe(2);
+
+      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
+        function (indexBufferLoader) {
+          expect(indexBufferLoader.typedArray).toBeUndefined();
+          expect(indexBufferLoader.buffer).toBeDefined();
+        }
+      );
     });
 
     it("loadIndexBuffer throws if gltf is undefined", function () {

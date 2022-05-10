@@ -49,9 +49,9 @@ const Instances = ModelComponents.Instances;
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.i3dmResource The {@link Resource} containing the I3DM.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the I3DM contents.
- * @param {Number} [options.byteOffset=0] The byte offset to the beginning of the I3DM contents in the array buffer.
+ * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
+ * @param {Number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -59,6 +59,7 @@ const Instances = ModelComponents.Instances;
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  */
 function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -76,6 +77,10 @@ function I3dmLoader(options) {
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadIndicesForWireframe = defaultValue(
+    options.loadIndicesForWireframe,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -94,6 +99,7 @@ function I3dmLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAsTypedArray = loadAsTypedArray;
+  this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = I3dmLoaderState.UNLOADED;
   this._promise = undefined;
@@ -180,7 +186,7 @@ Object.defineProperties(I3dmLoader.prototype, {
  * @private
  */
 I3dmLoader.prototype.load = function () {
-  // Parse the I3DM into its various sections.
+  // Parse the i3dm into its various sections.
   const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
   const featureTableJson = i3dm.featureTableJson;
@@ -196,7 +202,7 @@ I3dmLoader.prototype.load = function () {
   );
   this._featureTable = featureTable;
 
-  // Get the number of instances in the I3DM.
+  // Get the number of instances in the i3dm.
   const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
   featureTable.featuresLength = instancesLength;
   if (!defined(instancesLength)) {
@@ -228,6 +234,7 @@ I3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
+    loadIndicesForWireframe: this._loadIndicesForWireframe,
   };
 
   if (gltfFormat === 0) {
@@ -280,7 +287,7 @@ I3dmLoader.prototype.load = function () {
 function handleError(i3dmLoader, error) {
   i3dmLoader.unload();
   i3dmLoader._state = I3dmLoaderState.FAILED;
-  const errorMessage = "Failed to load I3DM";
+  const errorMessage = "Failed to load i3dm";
   error = i3dmLoader.getError(errorMessage, error);
   return Promise.reject(error);
 }
@@ -529,7 +536,7 @@ function createInstances(loader, components) {
 }
 
 /**
- * Returns a typed array of positions from the I3DM's feature table. The positions
+ * Returns a typed array of positions from the i3dm's feature table. The positions
  * returned are dequantized, if dequantization is applied.
  *
  * @private
