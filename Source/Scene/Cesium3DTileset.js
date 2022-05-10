@@ -1000,11 +1000,19 @@ function Cesium3DTileset(options) {
       return Cesium3DTileset.loadJson(resource);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       that._root = that.loadTileset(resource, tilesetJson);
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
         ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
