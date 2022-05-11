@@ -139,13 +139,8 @@ function createWorker(processor) {
   );
 
   const bootstrapMessage = {
-    loaderConfig: {
-      paths: {
-        Workers: buildModuleUrl("Workers"),
-      },
-      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-    },
-    workerModule: processor._workerPath,
+    baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+    workerModule: buildModuleUrl(`${processor._workerPath}.js`),
   };
 
   worker.postMessage(bootstrapMessage);

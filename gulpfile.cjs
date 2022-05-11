@@ -37,6 +37,7 @@ const rollupCommonjs = require("@rollup/plugin-commonjs");
 const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
+const esbuild = require("esbuild");
 
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -146,8 +147,8 @@ const copyrightHeader = fs.readFileSync(
   "utf8"
 );
 
-function createWorkers() {
-  rimraf.sync("Build/createWorkers");
+function createWorkers(minify) {
+  //rimraf.sync("Build/createWorkers");
 
   globby
     .sync([
@@ -161,27 +162,40 @@ function createWorkers() {
 
   const workers = globby.sync(["Source/WorkersES6/**"]);
 
-  return rollup
-    .rollup({
-      input: workers,
-      onwarn: rollupWarning,
-    })
-    .then(function (bundle) {
-      return bundle.write({
-        dir: "Build/createWorkers",
-        banner:
-          "/* This file is automatically rebuilt by the Cesium build process. */",
-        format: "amd",
-      });
-    })
-    .then(function () {
-      return streamToPromise(
-        gulp.src("Build/createWorkers/**").pipe(gulp.dest("Source/Workers"))
-      );
-    })
-    .then(function () {
-      rimraf.sync("Build/createWorkers");
-    });
+  // return rollup
+  //   .rollup({
+  //     input: workers,
+  //     onwarn: rollupWarning,
+  //   })
+  //   .then(function (bundle) {
+  //     return bundle.write({
+  //       dir: "Build/createWorkers",
+  //       banner:
+  //         "/* This file is automatically rebuilt by the Cesium build process. */",
+  //       format: "amd",
+  //     });
+  //   })
+  //   .then(function () {
+  //     return streamToPromise(
+  //       gulp.src("Build/createWorkers/**").pipe(gulp.dest("Source/Workers"))
+  //     );
+  //   })
+  //   .then(function () {
+  //     rimraf.sync("Build/createWorkers");
+  //   });
+
+  return esbuild.build({
+    entryPoints: workers,
+    bundle: true,
+    format: "iife",
+    globalName: "workerModule",
+    minify: minify,
+    target: "es6",
+    // TODO: Banner
+    sourcemap: true,
+    external: ["https", "http", "zlib"],
+    outdir: "Source/Workers",
+  });
 }
 
 async function buildThirdParty() {
@@ -229,13 +243,36 @@ gulp.task("build", async function () {
     "utf8"
   );
 
-  await buildThirdParty();
+  //await buildThirdParty();
   glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(createWorkers(), createGalleryList());
+  return Promise.join(
+    buildCesiumJs({
+      minify: false,
+      release: false,
+      path: "Build/index.js",
+    }),
+    createWorkers(),
+    createGalleryList()
+  );
 });
+
+function buildCesiumJs(options) {
+  return esbuild.build({
+    entryPoints: ["Source/Cesium.js"],
+    bundle: true,
+    //analyze: true,
+    format: options.release ? "iife" : "esm",
+    globalName: options.release ? "Cesium" : undefined,
+    minify: options.minify || false,
+    sourcemap: true,
+    target: "es6",
+    external: ["https", "http", "zlib"],
+    outfile: options.path,
+  });
+}
 
 gulp.task("build-watch", function () {
   return gulp.watch(watchedFiles, gulp.series("build"));
@@ -1251,34 +1288,23 @@ gulp.task("convertToModules", function () {
 });
 
 function combineCesium(debug, minify, combineOutput) {
-  const plugins = [];
+  // const plugins = [];
 
-  if (!debug) {
-    plugins.push(
-      rollupPluginStripPragma({
-        pragmas: ["debug"],
-      })
-    );
-  }
-  if (minify) {
-    plugins.push(rollupPluginTerser.terser());
-  }
+  // if (!debug) {
+  //   plugins.push(
+  //     rollupPluginStripPragma({
+  //       pragmas: ["debug"],
+  //     })
+  //   );
+  // }
+  // if (minify) {
+  //   plugins.push(rollupPluginTerser.terser());
+  // }
 
-  return rollup
-    .rollup({
-      input: "Source/Cesium.js",
-      plugins: plugins,
-      onwarn: rollupWarning,
-    })
-    .then(function (bundle) {
-      return bundle.write({
-        format: "umd",
-        name: "Cesium",
-        file: path.join(combineOutput, "Cesium.js"),
-        sourcemap: debug,
-        banner: copyrightHeader,
-      });
-    });
+  return buildCesiumJs({
+    release: true,
+    minify: minify,
+  });
 }
 
 function combineWorkers(debug, minify, combineOutput) {
