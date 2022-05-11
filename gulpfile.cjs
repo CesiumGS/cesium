@@ -252,7 +252,7 @@ gulp.task("build", async function () {
     buildCesiumJs({
       minify: false,
       release: false,
-      path: "Build/index.js",
+      path: "Build/combineOutput/combined/Cesium.js",
     }),
     createWorkers(),
     createGalleryList()
@@ -1410,8 +1410,8 @@ function combineJavaScript(options) {
   );
 
   const promise = Promise.join(
-    combineCesium(!removePragmas, minify, combineOutput),
-    combineWorkers(!removePragmas, minify, combineOutput),
+    //   combineCesium(!removePragmas, minify, combineOutput),
+    //   combineWorkers(!removePragmas, minify, combineOutput),
     minifyModules(outputDirectory)
   );
 
