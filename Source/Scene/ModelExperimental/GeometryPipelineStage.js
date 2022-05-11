@@ -515,19 +515,19 @@ function projectPositionTo2D(position, modelMatrix, projection, result) {
 const scratchInitialPosition = new Cartesian3();
 
 function createPositionsTypedArrayFor2D(
-  typedArray,
-  attributeByteOffset,
+  attribute,
   modelMatrix,
-  projection
+  projection,
+  referencePoint
 ) {
+  const typedArray = attribute.typedArray;
   const floatArray = new Float32Array(
     typedArray.buffer,
     typedArray.byteOffset,
     typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
   );
-
   const projectedArray = floatArray.slice();
-  const startIndex = attributeByteOffset / Float32Array.BYTES_PER_ELEMENT;
+  const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
   const length = projectedArray.length;
   for (let i = startIndex; i < length; i += 3) {
     const initialPosition = Cartesian3.fromArray(
@@ -543,18 +543,26 @@ function createPositionsTypedArrayFor2D(
       initialPosition
     );
 
-    projectedArray[i] = projectedPosition.x;
-    projectedArray[i + 1] = projectedPosition.y;
-    projectedArray[i + 2] = projectedPosition.z;
+    const relativePosition = Cartesian3.subtract(
+      projectedPosition,
+      referencePoint,
+      projectedPosition
+    );
+
+    projectedArray[i] = relativePosition.x;
+    projectedArray[i + 1] = relativePosition.y;
+    projectedArray[i + 2] = relativePosition.z;
   }
 
   return projectedArray;
 }
 
 const scratchMatrix = new Matrix4();
+const scratchReferencePoint = new Cartesian3();
 
 function modifyResourcesFor2D(renderResources, attribute, frameState) {
-  const modelMatrix = renderResources.model.sceneGraph.computedModelMatrix;
+  const sceneGraph = renderResources.model.sceneGraph;
+  const modelMatrix = sceneGraph.computedModelMatrix;
   const nodeComputedTransform = renderResources.runtimeNode.computedTransform;
   const computedModelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
@@ -563,12 +571,20 @@ function modifyResourcesFor2D(renderResources, attribute, frameState) {
   );
   const projection = frameState.mapProjection;
 
-  // Project the positions relative to the bounding sphere's center.
-  const projectedPositions = createPositionsTypedArrayFor2D(
-    attribute.typedArray,
-    attribute.byteOffset,
+  const boundingSphere = renderResources.boundingSphere;
+  const referencePoint = projectPositionTo2D(
+    boundingSphere.center,
     computedModelMatrix,
-    projection
+    projection,
+    scratchReferencePoint
+  );
+
+  // Project the positions relative to the bounding sphere's projected center.
+  const projectedPositions = createPositionsTypedArrayFor2D(
+    attribute,
+    computedModelMatrix,
+    projection,
+    referencePoint
   );
 
   const buffer = Buffer.createVertexBuffer({

@@ -93,7 +93,7 @@ export default function buildDrawCommands(
       computedModelMatrix,
       frameState
     );
-    modelMatrix = Matrix4.clone(Matrix4.IDENTITY, new Matrix4());
+    modelMatrix = Matrix4.fromTranslation(boundingSphere.center, new Matrix4());
   } else {
     modelMatrix = computedModelMatrix;
     boundingSphere = BoundingSphere.transform(

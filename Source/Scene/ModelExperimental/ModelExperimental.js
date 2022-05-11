@@ -678,10 +678,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere in its local coordinate system. This does not
-   * take into account glTF animations, skins, or morph targets. It also does not
-   * account for {@link ModelExperimental#minimumPixelSize}.
-   *
+   * Gets the model's bounding sphere in world space. This does not take into account
+   * glTF animations, skins, or morph targets. It also does not account for
+   * {@link ModelExperimental#minimumPixelSize}.
    *
    * @memberof ModelExperimental.prototype
    *
