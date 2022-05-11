@@ -1205,14 +1205,14 @@ ModelExperimental.prototype.update = function (frameState) {
 
   this._defaultTexture = context.defaultTexture;
 
+  // short-circuit if the model resources aren't ready.
+  if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   if (frameState.mode !== this._sceneMode) {
     this.resetDrawCommands();
     this._sceneMode = frameState.mode;
-  }
-
-  // short-circuit if the model resources aren't ready.
-  if (!this._resourcesLoaded) {
-    return;
   }
 
   if (this._featureTableIdDirty) {

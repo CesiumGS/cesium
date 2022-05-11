@@ -1,5 +1,4 @@
 import AttributeType from "../AttributeType.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
@@ -193,7 +192,15 @@ function processAttribute(
       frameState
     );
   }
-  addAttributeDeclaration(shaderBuilder, attributeInfo);
+
+  const use2D =
+    frameState.mode === SceneMode.SCENE2D ||
+    frameState.mode === SceneMode.COLUMBUS_VIEW;
+  const isPositionAttribute =
+    attribute.semantic === VertexAttributeSemantic.POSITION;
+  const skipQuantization = use2D && isPositionAttribute;
+
+  addAttributeDeclaration(shaderBuilder, attributeInfo, skipQuantization);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
   // For common attributes like positions, normals and tangents, the code is
@@ -204,7 +211,11 @@ function processAttribute(
 
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitializeAttributesFunction(shaderBuilder, attributeInfo);
+  updateInitializeAttributesFunction(
+    shaderBuilder,
+    attributeInfo,
+    skipQuantization
+  );
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -257,7 +268,7 @@ function addAttributeToRenderResources(
 
   const isPositionAttribute = semantic === VertexAttributeSemantic.POSITION;
   if (isPositionAttribute && defined(attribute.typedArray)) {
-    modifyResourcesFor2D(renderResources, attribute, frameState);
+    createPositionBufferFor2D(renderResources, attribute, frameState);
   }
 
   // Unload the typed array
@@ -359,13 +370,17 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   shaderBuilder.addVarying(glslType, varyingName);
 }
 
-function addAttributeDeclaration(shaderBuilder, attributeInfo) {
+function addAttributeDeclaration(
+  shaderBuilder,
+  attributeInfo,
+  skipQuantization
+) {
   const semantic = attributeInfo.attribute.semantic;
   const variableName = attributeInfo.variableName;
 
   let attributeName;
   let glslType;
-  if (attributeInfo.isQuantized) {
+  if (attributeInfo.isQuantized && !skipQuantization) {
     attributeName = `a_quantized_${variableName}`;
     glslType = attributeInfo.quantizedGlslType;
   } else {
@@ -412,8 +427,12 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitializeAttributesFunction(shaderBuilder, attributeInfo) {
-  if (attributeInfo.isQuantized) {
+function updateInitializeAttributesFunction(
+  shaderBuilder,
+  attributeInfo,
+  skipQuantization
+) {
+  if (attributeInfo.isQuantized && !skipQuantization) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
   }
@@ -485,14 +504,14 @@ function handleBitangents(shaderBuilder, attributes) {
   );
 }
 
-const scratchPosition = new Cartesian3();
+const scratchProjectedPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 
 function projectPositionTo2D(position, modelMatrix, projection, result) {
   const transformedPosition = Matrix4.multiplyByPoint(
     modelMatrix,
     position,
-    scratchPosition
+    scratchProjectedPosition
   );
 
   const ellipsoid = projection.ellipsoid;
@@ -501,7 +520,10 @@ function projectPositionTo2D(position, modelMatrix, projection, result) {
     scratchCartographic
   );
 
-  const projectedPosition = projection.project(cartographic, scratchPosition);
+  const projectedPosition = projection.project(
+    cartographic,
+    scratchProjectedPosition
+  );
   result = Cartesian3.fromElements(
     projectedPosition.z,
     projectedPosition.x,
@@ -512,7 +534,7 @@ function projectPositionTo2D(position, modelMatrix, projection, result) {
   return result;
 }
 
-const scratchInitialPosition = new Cartesian3();
+const scratchPosition = new Cartesian3();
 
 function createPositionsTypedArrayFor2D(
   attribute,
@@ -521,11 +543,22 @@ function createPositionsTypedArrayFor2D(
   referencePoint
 ) {
   const typedArray = attribute.typedArray;
-  const floatArray = new Float32Array(
-    typedArray.buffer,
-    typedArray.byteOffset,
-    typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
-  );
+
+  let floatArray;
+  if (defined(attribute.quantization)) {
+    // Dequantize the positions if necessary.
+    floatArray = dequantizePositionsTypedArray(
+      attribute.typedArray,
+      attribute.quantization
+    );
+  } else {
+    floatArray = new Float32Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
+    );
+  }
+
   const projectedArray = floatArray.slice();
   const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
   const length = projectedArray.length;
@@ -533,7 +566,7 @@ function createPositionsTypedArrayFor2D(
     const initialPosition = Cartesian3.fromArray(
       floatArray,
       i,
-      scratchInitialPosition
+      scratchPosition
     );
 
     const projectedPosition = projectPositionTo2D(
@@ -557,10 +590,40 @@ function createPositionsTypedArrayFor2D(
   return projectedArray;
 }
 
+function dequantizePositionsTypedArray(typedArray, quantization) {
+  const length = typedArray.length;
+  const dequantizedArray = new Float32Array(length);
+  const quantizedVolumeOffset = quantization.quantizedVolumeOffset;
+  const quantizedVolumeStepSize = quantization.quantizedVolumeStepSize;
+  for (let i = 0; i < length; i += 3) {
+    const initialPosition = Cartesian3.fromArray(
+      typedArray,
+      i,
+      scratchPosition
+    );
+    const scaledPosition = Cartesian3.multiplyComponents(
+      initialPosition,
+      quantizedVolumeStepSize,
+      initialPosition
+    );
+    const dequantizedPosition = Cartesian3.add(
+      scaledPosition,
+      quantizedVolumeOffset,
+      scaledPosition
+    );
+
+    dequantizedArray[i] = dequantizedPosition.x;
+    dequantizedArray[i + 1] = dequantizedPosition.y;
+    dequantizedArray[i + 2] = dequantizedPosition.z;
+  }
+
+  return dequantizedArray;
+}
+
 const scratchMatrix = new Matrix4();
 const scratchReferencePoint = new Cartesian3();
 
-function modifyResourcesFor2D(renderResources, attribute, frameState) {
+function createPositionBufferFor2D(renderResources, attribute, frameState) {
   const sceneGraph = renderResources.model.sceneGraph;
   const modelMatrix = sceneGraph.computedModelMatrix;
   const nodeComputedTransform = renderResources.runtimeNode.computedTransform;
@@ -570,8 +633,9 @@ function modifyResourcesFor2D(renderResources, attribute, frameState) {
     scratchMatrix
   );
   const projection = frameState.mapProjection;
-
   const boundingSphere = renderResources.boundingSphere;
+
+  // Project the center of the bounding sphere in 2D.
   const referencePoint = projectPositionTo2D(
     boundingSphere.center,
     computedModelMatrix,
@@ -579,7 +643,7 @@ function modifyResourcesFor2D(renderResources, attribute, frameState) {
     scratchReferencePoint
   );
 
-  // Project the positions relative to the bounding sphere's projected center.
+  // Project positions relative to the bounding sphere's projected center.
   const projectedPositions = createPositionsTypedArrayFor2D(
     attribute,
     computedModelMatrix,
@@ -587,6 +651,7 @@ function modifyResourcesFor2D(renderResources, attribute, frameState) {
     referencePoint
   );
 
+  // Put the resulting data in a GPU buffer.
   const buffer = Buffer.createVertexBuffer({
     context: frameState.context,
     typedArray: projectedPositions,
