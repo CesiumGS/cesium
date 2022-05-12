@@ -6,6 +6,7 @@ import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
 import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
@@ -1477,6 +1478,7 @@ ModelExperimental.prototype.destroyResources = function () {
  *
  * @param {Object} options Object with the following properties:
  * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource} [options.url] The url to the .gltf file. Deprecated, use options.gltf instead.
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1512,9 +1514,21 @@ ModelExperimental.prototype.destroyResources = function () {
  */
 ModelExperimental.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.gltf", options.gltf);
+  if (!defined(options.gltf) && !defined(options.url)) {
+    throw new DeveloperError("options.gltf is required.");
+  }
   //>>includeEnd('debug');
+
+  if (defined(options.url)) {
+    deprecationWarning(
+      "ModelExperimental.fromGltf",
+      "options.url is deprecated. Use options.gltf instead."
+    );
+  }
+
+  const gltf = defaultValue(options.gltf, options.url);
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
@@ -1523,8 +1537,6 @@ ModelExperimental.fromGltf = function (options) {
     forwardAxis: options.forwardAxis,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
-
-  const gltf = options.gltf;
 
   const basePath = defaultValue(options.basePath, "");
   const baseResource = Resource.createIfNeeded(basePath);
@@ -1538,7 +1550,7 @@ ModelExperimental.fromGltf = function (options) {
     loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else {
-    loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
+    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
   }
 
   const loader = new GltfLoader(loaderOptions);

@@ -267,6 +267,20 @@ describe(
       });
     });
 
+    it("initializes and renders with url", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          url: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        verifyRender(model, true);
+      });
+    });
+
     // Throws an extraneous promise through the texture loader which cannot be cleanly caught
     // https://github.com/CesiumGS/cesium/issues/10178
     xit("rejects ready promise when texture fails to load", function () {
