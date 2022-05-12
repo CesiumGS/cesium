@@ -9,6 +9,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         content: options.content,
         color: options.color,
         gltf: options.gltf,
+        url: options.url,
         show: options.show,
         customShader: options.customShader,
         basePath: options.basePath,
