@@ -1497,7 +1497,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
 
-        const useTimeDynamic = true;
+        const useTimeDynamic = false;
         if (useTimeDynamic) {
           const previousKeyframeNode = node.renderableKeyframeNodePrevious;
           const nextKeyframeNode = node.renderableKeyframeNodeNext;

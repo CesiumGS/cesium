@@ -17,7 +17,9 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import BlendingState from "./BlendingState.js";
+import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import CullFace from "./CullFace.js";
+import getClippingFunction from "./getClippingFunction.js";
 import Material from "./Material.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
@@ -180,6 +182,27 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._maxClippingBoundsOld = new Cartesian3();
+
+  /**
+   * Clipping planes on the primitive
+   *
+   * @type {ClippingPlaneCollection}
+   * @private
+   */
+  this._clippingPlanes = undefined;
+
+  /**
+   * Keeps track of when the clipping planes change
+   *
+   * @type {Number}
+   * @private
+   */
+  this._clippingPlanesState = 0;
+
+  /**
+   * Keeps track of when the clipping planes are enabled / disabled
+   */
+  this._clippingPlanesEnabled = false;
 
   /**
    * The primitive's model matrix.
@@ -381,6 +404,8 @@ function VoxelPrimitive(options) {
     transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
+    clippingPlanesTexture: undefined,
+    clippingPlanesMatrix: new Matrix4(),
     stepSize: 0,
     pickColor: new Color(),
   };
@@ -974,6 +999,22 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * The {@link ClippingPlaneCollection} used to selectively disable rendering the primitive.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {ClippingPlaneCollection}
+   */
+  clippingPlanes: {
+    get: function () {
+      return this._clippingPlanes;
+    },
+    set: function (clippingPlanes) {
+      // Don't need to check if undefined, it's handled in the setOwner function
+      ClippingPlaneCollection.setOwner(clippingPlanes, this, "_clippingPlanes");
+    },
+  },
+
+  /**
    * Gets or sets the custom shader. If undefined, {@link VoxelPrimitive.DefaultCustomShader} is set.
    *
    * @memberof VoxelPrimitive.prototype
@@ -1480,6 +1521,45 @@ VoxelPrimitive.prototype.update = function (frameState) {
         this._shaderDirty = true;
       }
 
+      // Check if clipping planes changed
+      const clippingPlanes = this._clippingPlanes;
+      if (defined(clippingPlanes)) {
+        clippingPlanes.update(frameState);
+        const clippingPlanesState = clippingPlanes.clippingPlanesState;
+        const clippingPlanesEnabled = clippingPlanes.enabled;
+        if (
+          this._clippingPlanesState !== clippingPlanesState ||
+          this._clippingPlanesEnabled !== clippingPlanesEnabled
+        ) {
+          this._clippingPlanesState = clippingPlanesState;
+          this._clippingPlanesEnabled = clippingPlanesEnabled;
+          if (clippingPlanesEnabled) {
+            uniforms.clippingPlanesTexture = clippingPlanes.texture;
+
+            // Compute the clipping plane's transformation to uv space and then take the inverse
+            // transpose to properly transform the hessian normal form of the plane.
+
+            // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
+            // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
+            // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+
+            const transformPositionUvToWorld = this._transformPositionUvToWorld;
+            uniforms.clippingPlanesMatrix = Matrix4.transpose(
+              Matrix4.multiplyTransformation(
+                Matrix4.inverse(
+                  clippingPlanes.modelMatrix,
+                  uniforms.clippingPlanesMatrix
+                ),
+                transformPositionUvToWorld,
+                uniforms.clippingPlanesMatrix
+              ),
+              uniforms.clippingPlanesMatrix
+            );
+          }
+          this._shaderDirty = true;
+        }
+      }
+
       const leafNodeTexture = traversal.leafNodeTexture;
       if (defined(leafNodeTexture)) {
         uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
@@ -1703,6 +1783,12 @@ function buildDrawCommands(that, context) {
   const customShader = that._customShader;
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
+  const clippingPlanes = that._clippingPlanes;
+  const clippingPlanesLength =
+    defined(clippingPlanes) && clippingPlanes.enabled
+      ? clippingPlanes.length
+      : 0;
+
   let uniformMap = that._uniformMap;
 
   // Build shader
@@ -1779,8 +1865,31 @@ function buildDrawCommands(that, context) {
     );
   }
 
+  if (clippingPlanesLength > 0) {
+    shaderBuilder.addDefine(
+      "CLIPPING_PLANES",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addDefine(
+      "CLIPPING_PLANES_COUNT",
+      clippingPlanesLength,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
   // Count how many intersections the shader will do.
   let intersectionCount = shape.shaderMaximumIntersectionsLength;
+
+  if (clippingPlanesLength > 0) {
+    shaderBuilder.addDefine(
+      "CLIPPING_PLANES_INTERSECTION_INDEX",
+      intersectionCount,
+      ShaderDestination.FRAGMENT
+    );
+    intersectionCount += clippingPlanesLength;
+  }
+
   if (depthTest) {
     shaderBuilder.addDefine(
       "DEPTH_INTERSECTION_INDEX",
@@ -1789,6 +1898,7 @@ function buildDrawCommands(that, context) {
     );
     intersectionCount += 1;
   }
+
   shaderBuilder.addDefine(
     "INTERSECTION_COUNT",
     intersectionCount,
@@ -2254,6 +2364,7 @@ VoxelPrimitive.prototype.destroy = function () {
 
   this._pickId = this._pickId && this._pickId.destroy();
   this._traversal = this._traversal && this._traversal.destroy();
+  this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
   return destroyObject(this);
 };

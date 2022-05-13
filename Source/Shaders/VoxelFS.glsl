@@ -19,6 +19,9 @@ Below is an example of how this code might look. Properties like "temperature" a
 #define STATISTICS
 #define PADDING
 #define PICKING
+#define CLIPPING_PLANES
+#define CLIPPING_PLANES_COUNT
+#define CLIPPING_PLANES_INTERSECTION_INDEX
 
 // Uniforms
 uniform sampler2D u_megatextureTextures[PROPERTY_COUNT];
@@ -197,6 +200,11 @@ uniform float u_stepSize;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
+#endif
+
+#if defined(CLIPPING_PLANES)
+    uniform sampler2D u_clippingPlanesTexture;
+    uniform mat4 u_clippingPlanesMatrix;
 #endif
 
 #if defined(SHAPE_BOX)
@@ -604,6 +612,26 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
     if (outside) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
     
     return vec4(-INF_HIT, t, t, +INF_HIT);
+}
+#endif
+
+#if defined(CLIPPING_PLANES)
+// Plane is in Hessian Normal Form
+vec2 intersectPlane(Ray ray, vec4 plane) {
+    vec3 o = ray.pos;
+    vec3 d = ray.dir;
+    vec3 n = plane.xyz; // normal
+    float w = plane.w; // -dot(pointOnPlane, normal)
+
+    float a = dot(o, n);
+    float b = dot(d, n);
+    float t = -(w + a) / b;
+
+    if (dot(d, n) > 0.0) {
+        return vec2(t, +INF_HIT);
+    } else {
+        return vec2(-INF_HIT, t);
+    }
 }
 #endif
 
@@ -1278,6 +1306,21 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 }
 #endif
 
+#if defined(CLIPPING_PLANES)
+void intersectClippingPlanes(Ray ray, inout Intersections ix) {
+    for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
+        int pixY = i / CLIPPING_PLANES_COUNT;
+        int pixX = i - (pixY * CLIPPING_PLANES_COUNT);
+        vec2 uv = (vec2(pixX, pixY) + 0.5) / float(CLIPPING_PLANES_COUNT);
+        vec4 localPlane = texture2D(u_clippingPlanesTexture, uv);
+        // u_clippingPlanesMatrix bakes in the transformation to UV space.
+        vec4 planeUv = czm_transformPlane(localPlane, u_clippingPlanesMatrix);
+        vec2 intersection = intersectPlane(ray, planeUv);
+        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i, intersection);
+    }
+}
+#endif
+
 #if defined(DEPTH_TEST)
 void intersectDepth(vec2 screenCoord, Ray ray, inout Intersections ix) {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenCoord));
@@ -1307,6 +1350,11 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
         // Positive shape was completely missed - so exit early.
         return vec2(NO_HIT);
     }
+
+    // Clipping planes
+    #if defined(CLIPPING_PLANES)
+        intersectClippingPlanes(ray, ix);
+    #endif
 
     // Depth
     #if defined(DEPTH_TEST)
