@@ -268,6 +268,20 @@ describe(
       });
     });
 
+    it("initializes and renders with url", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          url: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        verifyRender(model, true);
+      });
+    });
+
     it("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {

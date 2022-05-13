@@ -46,6 +46,17 @@ function ModelAnimationCollection(model) {
    */
   this.animationRemoved = new Event();
 
+  /**
+   * When true, the animation will play even when the scene time is paused. However,
+   * whether animation takes place will depend on the animationTime functions assigned
+   * to the model's animations. By default, this is based on scene time, so models using
+   * the default will not animate regardless of this setting.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  this.animateWhilePaused = false;
+
   this._model = model;
   this._scheduledAnimations = [];
   this._previousTime = undefined;
@@ -93,6 +104,7 @@ function add(collection, index, options) {
  * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
  * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
+ * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelAnimation} The animation that was added to the collection.
  *
  * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
@@ -204,6 +216,7 @@ ModelAnimationCollection.prototype.add = function (options) {
  * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
  * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
+ * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
  *
  * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
@@ -366,8 +379,10 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     return false;
   }
 
-  if (JulianDate.equals(frameState.time, this._previousTime)) {
-    // Animations are currently only time-dependent so do not animate when paused or picking
+  if (
+    !this.animateWhilePaused &&
+    JulianDate.equals(frameState.time, this._previousTime)
+  ) {
     return false;
   }
   this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
@@ -397,22 +412,21 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     const duration = scheduledAnimation._duration;
     const stopTime = scheduledAnimation.stopTime;
 
+    const pastStartTime = JulianDate.lessThanOrEquals(startTime, sceneTime);
+    const pastStopTime =
+      defined(stopTime) && JulianDate.greaterThan(sceneTime, stopTime);
+
     // [0.0, 1.0] normalized local animation time
-    let delta =
-      duration !== 0.0
-        ? JulianDate.secondsDifference(sceneTime, startTime) / duration
-        : 0.0;
-
-    // Clamp delta to stop time, if defined.
-    if (
-      duration !== 0.0 &&
-      defined(stopTime) &&
-      JulianDate.greaterThan(sceneTime, stopTime)
-    ) {
-      delta = JulianDate.secondsDifference(stopTime, startTime) / duration;
+    let delta = 0.0;
+    if (duration !== 0.0) {
+      const seconds = JulianDate.secondsDifference(
+        pastStopTime ? stopTime : sceneTime,
+        startTime
+      );
+      delta = defined(scheduledAnimation._animationTime)
+        ? scheduledAnimation._animationTime(duration, seconds)
+        : seconds / duration;
     }
-
-    const pastStartTime = delta >= 0.0;
 
     // Play animation if
     // * we are after the start time or the animation is being repeated, and
@@ -426,7 +440,18 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     const play =
       (pastStartTime || (repeat && !defined(scheduledAnimation.startTime))) &&
       (delta <= 1.0 || repeat) &&
-      (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
+      !pastStopTime;
+
+    if (delta === scheduledAnimation._prevAnimationDelta) {
+      const animationStopped =
+        scheduledAnimation._state === ModelAnimationState.STOPPED;
+      // no change to delta, and no change to the animation state means we can
+      // skip the update this time around.
+      if (play !== animationStopped) {
+        continue;
+      }
+    }
+    scheduledAnimation._prevAnimationDelta = delta;
 
     // If it IS, or WAS, animating...
     if (play || scheduledAnimation._state === ModelAnimationState.ANIMATING) {
@@ -446,7 +471,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       ) {
         const floor = Math.floor(delta);
         const fract = delta - floor;
-        // When even use (1.0 - fract) to mirror repeat
+        // When odd use (1.0 - fract) to mirror repeat
         delta = floor % 2 === 1.0 ? 1.0 - fract : fract;
       }
 
