@@ -20,6 +20,7 @@ Below is an example of how this code might look. Properties like "temperature" a
 #define PADDING
 #define PICKING
 #define CLIPPING_PLANES
+#define CLIPPING_PLANES_UNION
 #define CLIPPING_PLANES_COUNT
 #define CLIPPING_PLANES_INTERSECTION_INDEX
 
@@ -1318,6 +1319,48 @@ void intersectClippingPlanes(Ray ray, inout Intersections ix) {
         vec2 intersection = intersectPlane(ray, planeUv);
         setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i, intersection);
     }
+
+    #if !defined(CLIPPING_PLANES_UNION)
+        // Sort the clipping intersections by t and record whether the interval is
+        // going in the positive or negative direction.
+        vec2 intersections[CLIPPING_PLANES_COUNT];
+        for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
+            vec2 entryExitT = getIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i);
+            bool goingUpward = entryExitT.y == +INF_HIT;
+            float direction = float(goingUpward); // 0 = downward, 1 = updard
+            float t = goingUpward ? entryExitT.x : entryExitT.y;
+            intersections[i] = vec2(t, direction);
+        }
+
+        // Do bubble sort on the intersections
+        const int sortPasses = CLIPPING_PLANES_COUNT - 1;
+        for (int n = sortPasses; n > 0; --n) {
+            for (int i = 0; i < sortPasses; ++i) {
+                // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
+                // loop with non-constant condition, so it has to break early instead
+                if (i >= n) { break; }
+                vec2 ix0 = intersections[i + 0];
+                vec2 ix1 = intersections[i + 1];
+                float tmin = min(ix0.x, ix1.x);
+                float tmax = max(ix0.x, ix1.x);
+                float dmin = tmin == ix0.x ? ix0.y : ix1.y;
+                float dmax = tmin == ix0.x ? ix1.y : ix0.y;
+                intersections[i + 0] = vec2(tmin, dmin);
+                intersections[i + 1] = vec2(tmax, dmax);            
+            }
+        }
+
+        // Find the intersection intervals
+        for (int i = 0; i < CLIPPING_PLANES_COUNT - 1; i++) {
+            vec2 ix0 = intersections[i + 0];
+            vec2 ix1 = intersections[i + 1];
+
+            // positive direction followed by negative direction
+            bool foundIntersection = ix0.y == 1.0 && ix1.y == 0.0;
+            vec2 entryExitT = foundIntersection ? vec2(ix0.x, ix1.x) : vec2(NO_HIT);
+            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i, entryExitT);
+        }
+    #endif
 }
 #endif
 

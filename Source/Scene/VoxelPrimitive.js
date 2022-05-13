@@ -1876,6 +1876,13 @@ function buildDrawCommands(that, context) {
       clippingPlanesLength,
       ShaderDestination.FRAGMENT
     );
+    if (clippingPlanes.unionClippingRegions) {
+      shaderBuilder.addDefine(
+        "CLIPPING_PLANES_UNION",
+        undefined,
+        ShaderDestination.FRAGMENT
+      );
+    }
   }
 
   // Count how many intersections the shader will do.
