@@ -1,5 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import SceneMode from "../SceneMode.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -26,6 +27,11 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  * @private
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
+  // TODO
+  const mode = frameState.mode;
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+    return;
+  }
   if (runtimeNode._transformDirty) {
     updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transformToRoot);
     runtimeNode._transformDirty = false;

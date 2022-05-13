@@ -79,23 +79,20 @@ export default function buildDrawCommands(
   const mode = frameState.mode;
   const sceneGraph = model.sceneGraph;
 
-  const computedModelMatrix = Matrix4.multiplyTransformation(
+  const modelMatrix = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.runtimeNode.computedTransform,
     new Matrix4()
   );
 
-  let modelMatrix;
   let boundingSphere;
   if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
     boundingSphere = computeBoundingSphere2D(
       primitiveRenderResources,
-      computedModelMatrix,
+      modelMatrix,
       frameState
     );
-    modelMatrix = Matrix4.fromTranslation(boundingSphere.center, new Matrix4());
   } else {
-    modelMatrix = computedModelMatrix;
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
       modelMatrix,

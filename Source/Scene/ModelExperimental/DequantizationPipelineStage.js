@@ -2,8 +2,6 @@ import defined from "../../Core/defined.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import SceneMode from "../SceneMode.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The dequantization stage generates shader code to dequantize attributes
@@ -58,16 +56,7 @@ DequantizationPipelineStage.process = function (
     const attribute = attributes[i];
     const quantization = attribute.quantization;
     if (!defined(quantization)) {
-      // non-quantized attributes were already handled in GeometryPipelineStage
-      continue;
-    }
-
-    const use2D =
-      frameState.mode === SceneMode.SCENE2D ||
-      frameState.mode === SceneMode.COLUMBUS_VIEW;
-    if (use2D && attribute.semantic === VertexAttributeSemantic.POSITION) {
-      // in 2D / CV mode, the positions will have been dequantized in
-      // GeometryPipelineStage and projected to 2D coordinates.
+      // Non-quantized attributes were already handled in GeometryPipelineStage
       continue;
     }
 
