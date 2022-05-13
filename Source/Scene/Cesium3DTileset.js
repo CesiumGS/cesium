@@ -2652,7 +2652,7 @@ function addTileDebugLabel(tile, tileset, position) {
       }
       attributes += urls.length;
     } else {
-      labelString += `\nUrl: ${tile._header.content.uri}`;
+      labelString += `\nUrl: ${tile.content.url}`;
       attributes++;
     }
   }
