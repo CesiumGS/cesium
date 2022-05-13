@@ -107,14 +107,7 @@ BufferLoader.prototype.load = function () {
 function loadExternalBuffer(bufferLoader) {
   const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  const promise = BufferLoader._fetchArrayBuffer(resource);
-
-  // TODO: I don't think this is OK-- The request is cancelled, no?
-  if (!defined(promise)) {
-    return Promise.resolve(bufferLoader);
-  }
-
-  return promise
+  return BufferLoader._fetchArrayBuffer(resource)
     .then(function (arrayBuffer) {
       if (bufferLoader.isDestroyed()) {
         return;

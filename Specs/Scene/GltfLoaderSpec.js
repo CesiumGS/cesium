@@ -879,7 +879,6 @@ describe(
         );
 
         const cubicSplineRotation = animations[4];
-        console.log(cubicSplineRotation);
         expect(cubicSplineRotation.samplers.length).toEqual(1);
 
         sampler = cubicSplineRotation.samplers[0];

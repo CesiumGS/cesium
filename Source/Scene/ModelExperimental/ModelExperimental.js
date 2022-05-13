@@ -257,6 +257,7 @@ export default function ModelExperimental(options) {
   );
 
   this._completeLoad = function (model, frameState) {};
+  this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
 }
 
@@ -350,7 +351,7 @@ function initialize(model) {
     loader.texturesLoadedPromise,
     Promise.resolve()
   );
-  texturesLoadedPromise
+  model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
@@ -412,6 +413,22 @@ Object.defineProperties(ModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise;
+    },
+  },
+
+  /**
+   * A promise that resolves when all textures are loaded.
+   * When <code>incrementallyLoadTextures</code> is true this may resolve after
+   * <code>promise</code> resolves.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Promise<void>}
+   * @readonly
+   */
+  texturesLoadedPromise: {
+    get: function () {
+      return this._texturesLoadedPromise;
     },
   },
 

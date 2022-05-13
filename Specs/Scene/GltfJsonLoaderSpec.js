@@ -12,9 +12,6 @@ describe("Scene/GltfJsonLoader", function () {
   const gltfResource = new Resource({
     url: gltfUri,
   });
-  const bufferResource = new Resource({
-    url: "https://example.com/external.bin",
-  });
 
   const gltf1 = {
     asset: {
@@ -775,23 +772,6 @@ describe("Scene/GltfJsonLoader", function () {
   function resolvesTypedArrayAfterDestroy(rejectPromise) {
     const typedArray = generateJsonBuffer(gltf1);
 
-    const buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
-    const promise = new Promise(function (resolve, reject) {
-      if (rejectPromise) {
-        reject(new Error());
-        return;
-      }
-
-      resolve(buffer);
-    });
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
-
-    // Load a copy of the buffer into the cache so that the buffer loader
-    // promise resolves even if the glTF loader is destroyed
-    const bufferLoaderCopy = ResourceCache.loadExternalBuffer({
-      resource: bufferResource,
-    });
-
     const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
@@ -799,6 +779,17 @@ describe("Scene/GltfJsonLoader", function () {
       typedArray: typedArray,
     });
 
+    const buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+          return;
+        }
+
+        resolve(buffer);
+      });
+    });
     expect(gltfJsonLoader.gltf).not.toBeDefined();
 
     gltfJsonLoader.load();
@@ -806,8 +797,6 @@ describe("Scene/GltfJsonLoader", function () {
     return gltfJsonLoader.promise.then(function () {
       expect(gltfJsonLoader.gltf).not.toBeDefined();
       expect(gltfJsonLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(bufferLoaderCopy);
     });
   }
 

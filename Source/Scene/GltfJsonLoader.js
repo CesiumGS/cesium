@@ -242,15 +242,18 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
 function processGltfJson(gltfJsonLoader, gltf) {
   addPipelineExtras(gltf);
 
-  return decodeDataUris(gltf).then(function () {
-    return upgradeVersion(gltfJsonLoader, gltf).then(function () {
+  return decodeDataUris(gltf)
+    .then(function () {
+      return upgradeVersion(gltfJsonLoader, gltf);
+    })
+    .then(function () {
       addDefaults(gltf);
-      return loadEmbeddedBuffers(gltfJsonLoader, gltf).then(function () {
-        removePipelineExtras(gltf);
-        return gltf;
-      });
+      return loadEmbeddedBuffers(gltfJsonLoader, gltf);
+    })
+    .then(function () {
+      removePipelineExtras(gltf);
+      return gltf;
     });
-  });
 }
 
 function processGltfTypedArray(gltfJsonLoader, typedArray) {

@@ -632,7 +632,7 @@ describe(
           deferred,
           overrideMimeType
         ) {
-          deferred.reject();
+          deferred.reject(new Error());
         });
         scene.renderForSpecs(); // Request root
         const root = tileset.root;
