@@ -1897,7 +1897,9 @@ function buildDrawCommands(that, context) {
       intersectionCount,
       ShaderDestination.FRAGMENT
     );
-    if (clippingPlanesUnion) {
+    if (clippingPlanesLength === 1) {
+      intersectionCount += 1;
+    } else if (clippingPlanesUnion) {
       intersectionCount += 2;
     } else {
       intersectionCount += 1;

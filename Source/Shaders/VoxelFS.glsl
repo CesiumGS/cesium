@@ -1309,7 +1309,13 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
 #if defined(CLIPPING_PLANES)
 void intersectClippingPlanes(Ray ray, inout Intersections ix) {
-    #if defined(CLIPPING_PLANES_UNION)
+    #if (CLIPPING_PLANES_COUNT == 1)
+        // Union and intersection are the same when there's one clipping plane, and the code
+        // is more simplified.
+        vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, 0, u_clippingPlanesMatrix);
+        vec2 intersection = intersectPlane(ray, planeUv);
+        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, intersection);
+    #elif defined(CLIPPING_PLANES_UNION)
         float minPositiveT = +INF_HIT;
         float maxNegativeT = -INF_HIT;
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
@@ -1323,7 +1329,7 @@ void intersectClippingPlanes(Ray ray, inout Intersections ix) {
         }
         setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 0, vec2(-INF_HIT, maxNegativeT));
         setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 1, vec2(minPositiveT, +INF_HIT));
-    #else 
+    #else // intersection
         float maxPositiveT = -INF_HIT;
         float minNegativeT = +INF_HIT;
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
