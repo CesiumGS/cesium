@@ -1309,56 +1309,36 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
 #if defined(CLIPPING_PLANES)
 void intersectClippingPlanes(Ray ray, inout Intersections ix) {
-    for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
-        int pixY = i / CLIPPING_PLANES_COUNT;
-        int pixX = i - (pixY * CLIPPING_PLANES_COUNT);
-        vec2 uv = (vec2(pixX, pixY) + 0.5) / float(CLIPPING_PLANES_COUNT);
-        vec4 localPlane = texture2D(u_clippingPlanesTexture, uv);
-        // u_clippingPlanesMatrix bakes in the transformation to UV space.
-        vec4 planeUv = czm_transformPlane(localPlane, u_clippingPlanesMatrix);
-        vec2 intersection = intersectPlane(ray, planeUv);
-        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i, intersection);
-    }
-
-    #if !defined(CLIPPING_PLANES_UNION)
-        // Sort the clipping intersections by t and record whether the interval is
-        // going in the positive or negative direction.
-        vec2 intersections[CLIPPING_PLANES_COUNT];
+    #if defined(CLIPPING_PLANES_UNION)
+        float minPositiveT = +INF_HIT;
+        float maxNegativeT = -INF_HIT;
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
-            vec2 entryExitT = getIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i);
-            bool goingUpward = entryExitT.y == +INF_HIT;
-            float direction = float(goingUpward); // 0 = downward, 1 = updard
-            float t = goingUpward ? entryExitT.x : entryExitT.y;
-            intersections[i] = vec2(t, direction);
-        }
-
-        // Do bubble sort on the intersections
-        const int sortPasses = CLIPPING_PLANES_COUNT - 1;
-        for (int n = sortPasses; n > 0; --n) {
-            for (int i = 0; i < sortPasses; ++i) {
-                // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
-                // loop with non-constant condition, so it has to break early instead
-                if (i >= n) { break; }
-                vec2 ix0 = intersections[i + 0];
-                vec2 ix1 = intersections[i + 1];
-                float tmin = min(ix0.x, ix1.x);
-                float tmax = max(ix0.x, ix1.x);
-                float dmin = tmin == ix0.x ? ix0.y : ix1.y;
-                float dmax = tmin == ix0.x ? ix1.y : ix0.y;
-                intersections[i + 0] = vec2(tmin, dmin);
-                intersections[i + 1] = vec2(tmax, dmax);            
+            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
+            vec2 intersection = intersectPlane(ray, planeUv);
+            if (intersection.y == +INF_HIT) {
+                minPositiveT = min(minPositiveT, intersection.x);
+            } else {
+                maxNegativeT = max(maxNegativeT, intersection.y);
             }
         }
-
-        // Find the intersection intervals
-        for (int i = 0; i < CLIPPING_PLANES_COUNT - 1; i++) {
-            vec2 ix0 = intersections[i + 0];
-            vec2 ix1 = intersections[i + 1];
-
-            // positive direction followed by negative direction
-            bool foundIntersection = ix0.y == 1.0 && ix1.y == 0.0;
-            vec2 entryExitT = foundIntersection ? vec2(ix0.x, ix1.x) : vec2(NO_HIT);
-            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + i, entryExitT);
+        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 0, vec2(-INF_HIT, maxNegativeT));
+        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 1, vec2(minPositiveT, +INF_HIT));
+    #else 
+        float maxPositiveT = -INF_HIT;
+        float minNegativeT = +INF_HIT;
+        for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
+            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
+            vec2 intersection = intersectPlane(ray, planeUv);
+            if (intersection.y == +INF_HIT) {
+                maxPositiveT = max(maxPositiveT, intersection.x);
+            } else {
+                minNegativeT = min(minNegativeT, intersection.y);
+            }
+        }
+        if (maxPositiveT < minNegativeT) {
+            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, vec2(maxPositiveT, minNegativeT));
+        } else {
+            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, vec2(NO_HIT));
         }
     #endif
 }

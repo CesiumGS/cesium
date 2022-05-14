@@ -1788,6 +1788,9 @@ function buildDrawCommands(that, context) {
     defined(clippingPlanes) && clippingPlanes.enabled
       ? clippingPlanes.length
       : 0;
+  const clippingPlanesUnion = defined(clippingPlanes)
+    ? clippingPlanes.unionClippingRegions
+    : false;
 
   let uniformMap = that._uniformMap;
 
@@ -1876,7 +1879,7 @@ function buildDrawCommands(that, context) {
       clippingPlanesLength,
       ShaderDestination.FRAGMENT
     );
-    if (clippingPlanes.unionClippingRegions) {
+    if (clippingPlanesUnion) {
       shaderBuilder.addDefine(
         "CLIPPING_PLANES_UNION",
         undefined,
@@ -1894,7 +1897,11 @@ function buildDrawCommands(that, context) {
       intersectionCount,
       ShaderDestination.FRAGMENT
     );
-    intersectionCount += clippingPlanesLength;
+    if (clippingPlanesUnion) {
+      intersectionCount += 2;
+    } else {
+      intersectionCount += 1;
+    }
   }
 
   if (depthTest) {
@@ -2269,6 +2276,32 @@ function buildDrawCommands(that, context) {
     shaderBuilder.addFunctionLines(functionId, [
       `return ${propertiesFieldName};`,
     ]);
+  }
+
+  if (clippingPlanesLength > 0) {
+    // Extract the getClippingPlane function from the getClippingFunction string.
+    // This is a bit of a hack.
+    const functionId = "getClippingPlane";
+    const entireFunction = getClippingFunction(clippingPlanes, context);
+    const functionSignatureBegin = 0;
+    const functionSignatureEnd = entireFunction.indexOf(")") + 1;
+    const functionBodyBegin =
+      entireFunction.indexOf("{", functionSignatureEnd) + 1;
+    const functionBodyEnd = entireFunction.indexOf("}", functionBodyBegin);
+    const functionSignature = entireFunction.slice(
+      functionSignatureBegin,
+      functionSignatureEnd
+    );
+    const functionBody = entireFunction.slice(
+      functionBodyBegin,
+      functionBodyEnd
+    );
+    shaderBuilder.addFunction(
+      functionId,
+      functionSignature,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [functionBody]);
   }
 
   // Compile shaders
