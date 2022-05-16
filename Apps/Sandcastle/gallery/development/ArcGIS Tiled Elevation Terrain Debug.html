@@ -368,9 +368,9 @@
                 window.lastPickDetails.traceDetails.hits) ||
               [];
 
-            const unpackedOctreeNodes = root._unpackedOctree;
+            const octreeNodes = root._nodes;
             const transform = root._transform;
-            const allNodes = flattenOctree(unpackedOctreeNodes[0]);
+            const allNodes = flattenOctree(octreeNodes[0]);
             const nodesToDraw = allNodes.filter(function (n) {
               return n.level === level;
             });

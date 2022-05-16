@@ -5,7 +5,89 @@ import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
 import Ray from "./Ray.js";
 
-// TODO: need to handle 2d picking somehow
+/**
+ * Create an octree object for the main thread for testing intersection
+ * @param octree The octree created used {@link OctreeTrianglePicking.createOctree}
+ * @param triangleVerticesCallback A function which calculates the Cartesian3 positions of a given triangle index
+ * @alias OctreeTrianglePicking
+ * @constructor
+ * @private
+ */
+function OctreeTrianglePicking(octree, triangleVerticesCallback) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("octree.inverseTransform", octree.inverseTransform);
+  Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
+  //>>includeEnd('debug');
+
+  this._inverseTransform = Matrix4.unpack(octree.inverseTransform);
+  this._nodes = octree.nodes;
+  this._transform = Matrix4.unpack(octree.transform);
+
+  this._triangleVerticesCallback = triangleVerticesCallback;
+}
+
+const scratchTransformedRay = new Ray();
+
+/**
+ * Ray intersection test
+ * @param {Ray} ray
+ * @param {Boolean} cullBackFaces
+ * @param {Cartesian3} result
+ * @param {object} trace
+ * @returns {Cartesian3} result
+ */
+OctreeTrianglePicking.prototype.rayIntersect = function (
+  ray,
+  cullBackFaces,
+  result,
+  trace
+) {
+  const invTransform = this._inverseTransform;
+
+  const transformedRay = scratchTransformedRay;
+  transformedRay.origin = Matrix4.multiplyByPoint(
+    invTransform,
+    ray.origin,
+    transformedRay.origin
+  );
+  transformedRay.direction = Matrix4.multiplyByPointAsVector(
+    invTransform,
+    ray.direction,
+    transformedRay.direction
+  );
+
+  return rayIntersectOctree(
+    this._nodes[0],
+    ray,
+    transformedRay,
+    this._triangleVerticesCallback,
+    cullBackFaces,
+    trace
+  );
+};
+
+/**
+ * Create an in-memory octree from a list of packed triangles
+ * @param {Float32Array} triangles
+ * @param {Matrix4} inverseTransform
+ * @param {Matrix4} transform
+ * @param {OrientedBoundingBox} obb
+ */
+OctreeTrianglePicking.createOctree = function (
+  triangles,
+  inverseTransform,
+  transform,
+  obb
+) {
+  const nodes = createOctree(triangles);
+  return {
+    triangles: triangles,
+    nodes: nodes,
+    inverseTransform: Matrix4.pack(inverseTransform, [], 0),
+    transform: transform,
+    obb: obb,
+  };
+};
 
 const invalidIntersection = Number.MAX_VALUE;
 
@@ -492,87 +574,5 @@ function nodeAddTriangle(
   //  is going to fail (it's a triangle on a border of a aabb); so we can just return null and skip the check
   return childMatchCount === 1 ? lastChildMatch : null;
 }
-
-/**
- * @constructor
- */
-function OctreeTrianglePicking(packedOctree, triangleVerticesCallback) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object(
-    "packedOctree.inverseTransform",
-    packedOctree.inverseTransform
-  );
-  Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
-  //>>includeEnd('debug');
-
-  this._inverseTransform = Matrix4.unpack(packedOctree.inverseTransform);
-  this._triangles = packedOctree.triangles;
-  this._unpackedOctree = packedOctree.unpackedOctree;
-  this._transform = Matrix4.unpack(packedOctree.transform);
-
-  this._triangleVerticesCallback = triangleVerticesCallback;
-}
-
-const scratchTransformedRay = new Ray();
-
-/**
- * @param {Ray} ray
- * @param {Boolean} cullBackFaces
- * @param {Cartesian3} result
- * @param {object} trace
- * @returns {Cartesian3} result
- */
-OctreeTrianglePicking.prototype.rayIntersect = function (
-  ray,
-  cullBackFaces,
-  result,
-  trace
-) {
-  const invTransform = this._inverseTransform;
-
-  const transformedRay = scratchTransformedRay;
-  transformedRay.origin = Matrix4.multiplyByPoint(
-    invTransform,
-    ray.origin,
-    transformedRay.origin
-  );
-  transformedRay.direction = Matrix4.multiplyByPointAsVector(
-    invTransform,
-    ray.direction,
-    transformedRay.direction
-  );
-
-  return rayIntersectOctree(
-    this._unpackedOctree[0],
-    ray,
-    transformedRay,
-    this._triangleVerticesCallback,
-    cullBackFaces,
-    trace
-  );
-};
-
-/**
- *
- * @param {Float32Array} triangles
- * @param {Matrix4} inverseTransform
- * @param {Matrix4} transform
- * @param {OrientedBoundingBox} obb
- */
-OctreeTrianglePicking.createPackedOctree = function (
-  triangles,
-  inverseTransform,
-  transform,
-  obb
-) {
-  const nodes = createOctree(triangles);
-  return {
-    triangles: triangles,
-    unpackedOctree: nodes,
-    inverseTransform: Matrix4.pack(inverseTransform, [], 0),
-    transform: transform,
-    obb: obb,
-  };
-};
 
 export default OctreeTrianglePicking;

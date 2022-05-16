@@ -233,7 +233,7 @@ function createVerticesFromQuantizedTerrainMesh(
     inverseTransform
   );
   console.timeEnd("making packed triangles");
-  const packedOctree = OctreeTrianglePicking.createPackedOctree(
+  const octree = OctreeTrianglePicking.createOctree(
     packedTriangles,
     inverseTransform,
     transform,
@@ -452,7 +452,7 @@ function createVerticesFromQuantizedTerrainMesh(
     occludeePointInScaledSpace: occludeePointInScaledSpace,
     encoding: encoding,
     indexCountWithoutSkirts: parameters.indices.length,
-    packedOctree: packedOctree,
+    octree: octree,
   };
 }
 

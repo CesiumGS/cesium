@@ -565,7 +565,7 @@ HeightmapTessellator.computeVertices = function (options) {
     );
     console.timeEnd("making packed triangles");
 
-    octree = OctreeTrianglePicking.createPackedOctree(
+    octree = OctreeTrianglePicking.createOctree(
       packedTriangles,
       inverseTransform,
       transform,
