@@ -119,11 +119,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(I3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready. Returns undefined if the load function has not yet been called.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof I3dmLoader.prototype
    *
-   * @type {Promise.<I3dmLoader>|Undefined}
+   * @type {Promise.<I3dmLoader>|undefined}
    * @readonly
    * @private
    */
@@ -183,6 +183,7 @@ Object.defineProperties(I3dmLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<I3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 I3dmLoader.prototype.load = function () {
@@ -282,6 +283,8 @@ I3dmLoader.prototype.load = function () {
       }
       return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function handleError(i3dmLoader, error) {

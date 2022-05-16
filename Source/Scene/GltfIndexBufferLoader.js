@@ -160,6 +160,7 @@ const scratchIndexBufferJob = new CreateIndexBufferJob();
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfIndexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfIndexBufferLoader.prototype.load = function () {

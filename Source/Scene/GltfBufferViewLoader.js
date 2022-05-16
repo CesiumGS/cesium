@@ -97,11 +97,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfBufferViewLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof GltfBufferViewLoader.prototype
    *
-   * @type {Promise.<GltfBufferViewLoader>}
+   * @type {Promise.<GltfBufferViewLoader>|undefined}
    * @readonly
    * @private
    */
@@ -142,6 +142,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfBufferViewLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfBufferViewLoader.prototype.load = function () {

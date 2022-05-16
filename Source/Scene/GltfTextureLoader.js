@@ -134,6 +134,7 @@ const scratchTextureJob = new CreateTextureJob();
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfTextureLoader.prototype.load = function () {

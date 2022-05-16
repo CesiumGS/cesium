@@ -80,11 +80,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(PntsLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready. Returns undefined if the load function has not yet been called.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof PntsLoader.prototype
    *
-   * @type {Promise.<PntsLoader>|Undefined}
+   * @type {Promise.<PntsLoader>|undefined}
    * @readonly
    * @private
    */
@@ -142,6 +142,7 @@ Object.defineProperties(PntsLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 PntsLoader.prototype.load = function () {

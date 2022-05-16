@@ -114,11 +114,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(B3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the load function has not yet been called.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise.<B3dmLoader>|Undefined}
+   * @type {Promise.<B3dmLoader>|undefined}
    * @readonly
    * @private
    */
@@ -177,6 +177,7 @@ Object.defineProperties(B3dmLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<B3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 B3dmLoader.prototype.load = function () {
@@ -248,6 +249,8 @@ B3dmLoader.prototype.load = function () {
       }
       return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function handleError(b3dmLoader, error) {

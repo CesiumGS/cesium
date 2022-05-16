@@ -123,11 +123,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfVertexBufferLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof GltfVertexBufferLoader.prototype
    *
-   * @type {Promise.<GltfVertexBufferLoader>}
+   * @type {Promise.<GltfVertexBufferLoader>|undefined}
    * @readonly
    * @private
    */
@@ -196,6 +196,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfVertexBufferLoader.prototype.load = function () {

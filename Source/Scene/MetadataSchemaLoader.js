@@ -53,11 +53,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(MetadataSchemaLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {Promise.<MetadataSchemaLoader>}
+   * @type {Promise.<MetadataSchemaLoader>|undefined}
    * @readonly
    * @private
    */
@@ -98,6 +98,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<MetadataSchemaLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 MetadataSchemaLoader.prototype.load = function () {

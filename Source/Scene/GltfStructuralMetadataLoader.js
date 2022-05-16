@@ -80,11 +80,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof GltfStructuralMetadataLoader.prototype
    *
-   * @type {Promise.<GltfStructuralMetadataLoader>}
+   * @type {Promise.<GltfStructuralMetadataLoader>|undefined}
    * @readonly
    * @private
    */
@@ -125,6 +125,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfStructuralMetadataLoader.prototype.load = function () {

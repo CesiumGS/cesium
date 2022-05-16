@@ -109,6 +109,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfDracoLoader.prototype.load = function () {

@@ -157,11 +157,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof GltfLoader.prototype
    *
-   * @type {Promise.<GltfLoader>}
+   * @type {Promise.<GltfLoader>|undefined}
    * @readonly
    * @private
    */
@@ -219,6 +219,7 @@ Object.defineProperties(GltfLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfLoader.prototype.load = function () {
