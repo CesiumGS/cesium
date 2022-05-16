@@ -67,6 +67,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] // TODO
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -255,6 +256,7 @@ export default function ModelExperimental(options) {
   );
 
   this._sceneMode = undefined;
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   initialize(this);
 }
@@ -1529,6 +1531,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] // TODO
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1542,6 +1545,7 @@ ModelExperimental.fromGltf = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadAsTypedArray: options.projectTo2D,
   };
 
   const gltf = options.gltf;
@@ -1713,7 +1717,6 @@ function makeModelOptions(loader, modelType, options) {
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
-    // TODO:
-    // add option for accurate 2d projection
+    projectTo2D: options.projectTo2D,
   };
 }

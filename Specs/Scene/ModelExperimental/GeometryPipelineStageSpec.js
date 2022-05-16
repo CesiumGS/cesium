@@ -1,12 +1,17 @@
 import {
   AttributeType,
+  BoundingSphere,
+  Cartesian3,
   combine,
   ComponentDatatype,
-  GltfLoader,
+  defaultValue,
   GeometryPipelineStage,
+  GltfLoader,
+  Matrix4,
   ModelExperimentalType,
   Resource,
   ResourceCache,
+  SceneMode,
   SelectedFeatureIdPipelineStage,
   ShaderBuilder,
   VertexAttributeSemantic,
@@ -15,9 +20,15 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
+    const scratchMatrix = new Matrix4();
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(1.0, 2.0, 3.0),
+      1.0
+    );
+
     const positionOnlyPrimitive = {
       attributes: [
         {
@@ -72,14 +83,21 @@ describe(
       "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
 
     let scene;
+    let scene2D;
     const gltfLoaders = [];
 
     beforeAll(function () {
-      scene = createScene();
+      scene = createScene({
+        scene3DOnly: true,
+      });
+      scene2D = createScene();
+      scene2D._mode = SceneMode.SCENE2D;
+      scene2D.updateFrameState();
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      scene2D.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -121,11 +139,17 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      return waitForLoaderProcess(gltfLoader, scene);
+      // To load the vertex buffers as typed arrays,
+      // scene3DOnly must be false.
+      const loadTypedArrays = defaultValue(options.loadTypedArrays, false);
+      const targetScene = loadTypedArrays ? scene2D : scene;
+
+      return waitForLoaderProcess(gltfLoader, targetScene);
     }
 
     it("processes POSITION attribute from primitive", function () {
@@ -138,7 +162,11 @@ describe(
         },
       };
 
-      GeometryPipelineStage.process(renderResources, positionOnlyPrimitive);
+      GeometryPipelineStage.process(
+        renderResources,
+        positionOnlyPrimitive,
+        scene._frameState
+      );
 
       const shaderBuilder = renderResources.shaderBuilder;
       const attributes = renderResources.attributes;
@@ -199,6 +227,102 @@ describe(
       verifyFeatureStruct(shaderBuilder);
     });
 
+    it("processes POSITION attribute from primitive for 2D", function () {
+      const renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
+        boundingSphere: boundingSphere,
+      };
+
+      GeometryPipelineStage.process(
+        renderResources,
+        positionOnlyPrimitive,
+        scene2D._frameState
+      );
+
+      const shaderBuilder = renderResources.shaderBuilder;
+      const attributes = renderResources.attributes;
+
+      expect(attributes.length).toEqual(1);
+      const positionAttribute = attributes[0];
+      expect(positionAttribute.index).toEqual(0);
+      expect(positionAttribute.vertexBuffer).toBeDefined();
+      expect(positionAttribute.componentsPerAttribute).toEqual(3);
+      expect(positionAttribute.componentDatatype).toEqual(
+        ComponentDatatype.FLOAT
+      );
+      expect(positionAttribute.offsetInBytes).toBe(0);
+      expect(positionAttribute.strideInBytes).toBe(12);
+
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        ["    vec3 positionMC;", "    vec3 position2D;"]
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
+      );
+      ShaderBuilderTester.expectHasVertexFunctionUnordered(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+        [
+          "    attributes.positionMC = a_positionMC;",
+          "    attributes.position2D = a_position2D;",
+        ]
+      );
+      ShaderBuilderTester.expectHasVertexFunctionUnordered(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        []
+      );
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec3 v_positionEC;",
+        "varying vec3 v_positionMC;",
+        "varying vec3 v_positionWC;",
+      ]);
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "USE_2D_POSITIONS",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasAttributes(
+        shaderBuilder,
+        "attribute vec3 a_positionMC;",
+        ["attribute vec3 a_position2D;"]
+      );
+      verifyFeatureStruct(shaderBuilder);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform mat4 u_modelMatrix2D;",
+      ]);
+
+      const translationMatrix = Matrix4.fromTranslation(
+        boundingSphere.center,
+        scratchMatrix
+      );
+      const expected = Matrix4.multiplyTransformation(
+        scene._frameState.camera.viewMatrix,
+        translationMatrix,
+        translationMatrix
+      );
+      expect(renderResources.uniformMap.u_modelMatrix2D()).toEqual(expected);
+    });
+
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
       const renderResources = {
         attributes: [],
@@ -213,7 +337,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -314,6 +442,131 @@ describe(
       });
     });
 
+    // TODO: add one for draco compressed typed array
+    it("processes POSITION typed array from primitive for 2D", function () {
+      const renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          sceneGraph: {
+            computedModelMatrix: Matrix4.IDENTITY,
+          },
+        },
+        runtimeNode: {
+          computedTransform: Matrix4.IDENTITY,
+        },
+        boundingSphere: boundingSphere,
+      };
+
+      return loadGltf(boxTextured, { loadTypedArrays: true }).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene2D._frameState
+        );
+
+        // Check that all typed arrays have been unloaded
+        const primitiveAttributes = primitive.attributes;
+        const length = primitiveAttributes.length;
+        for (let i = 0; i < length; i++) {
+          const attribute = primitiveAttributes[i];
+          expect(attribute.typedArray).toBeUndefined();
+
+          // Expect the 2D positions to be stored in the attribute.
+          if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+            expect(attribute.buffer2D).toBeDefined();
+          }
+        }
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(4);
+
+        const normalAttribute = attributes[0];
+        expect(normalAttribute.index).toEqual(1);
+
+        const positionAttribute = attributes[1];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(288);
+        expect(positionAttribute.strideInBytes).toBe(12);
+
+        const position2DAttribute = attributes[2];
+        expect(position2DAttribute.index).toEqual(2);
+        expect(position2DAttribute.vertexBuffer).toBeDefined();
+        expect(position2DAttribute.componentsPerAttribute).toEqual(3);
+        expect(position2DAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(position2DAttribute.offsetInBytes).toBe(288);
+        expect(position2DAttribute.strideInBytes).toBe(12);
+
+        const texCoord0Attribute = attributes[3];
+        expect(texCoord0Attribute.index).toEqual(3);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 position2D;",
+            "    vec3 normalMC;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.position2D = a_position2D;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+          "USE_2D_POSITIONS",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          [
+            "attribute vec3 a_position2D;",
+            "attribute vec3 a_normalMC;",
+            "attribute vec2 a_texCoord_0;",
+          ]
+        );
+        verifyFeatureStruct(shaderBuilder);
+
+        const translationMatrix = Matrix4.fromTranslation(
+          boundingSphere.center,
+          scratchMatrix
+        );
+        const expected = Matrix4.multiplyTransformation(
+          scene._frameState.camera.viewMatrix,
+          translationMatrix,
+          translationMatrix
+        );
+        expect(renderResources.uniformMap.u_modelMatrix2D()).toEqual(expected);
+      });
+    });
+
     it("processes POSITION, NORMAL, TEXCOORD and TANGENT attributes from primitive", function () {
       const renderResources = {
         attributes: [],
@@ -328,7 +581,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -474,7 +731,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -597,7 +858,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[2].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -742,7 +1007,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -840,7 +1109,11 @@ describe(
         },
       };
 
-      GeometryPipelineStage.process(renderResources, customAttributePrimitive);
+      GeometryPipelineStage.process(
+        renderResources,
+        customAttributePrimitive,
+        scene._frameState
+      );
 
       const shaderBuilder = renderResources.shaderBuilder;
       const attributes = renderResources.attributes;
@@ -933,7 +1206,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -1033,7 +1310,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -1117,7 +1398,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -1214,7 +1499,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;
@@ -1338,7 +1627,11 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
 
-        GeometryPipelineStage.process(renderResources, primitive);
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene._frameState
+        );
 
         const shaderBuilder = renderResources.shaderBuilder;
         const attributes = renderResources.attributes;

@@ -1,4 +1,5 @@
 import AttributeType from "../AttributeType.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
@@ -144,7 +145,7 @@ GeometryPipelineStage.process = function (
   const mode = frameState.mode;
   const use2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
 
-  // The reference point, a.k.a. the projected center of the bounding sphere,
+  // The reference point, a.k.a. the center of the projected bounding sphere,
   // will be computed and stored when the position attribute is processed. This is
   // used for the 2D model matrix uniform.
   let referencePoint2D;
@@ -359,7 +360,7 @@ function addAttributeToRenderResources(
     vertexBuffer: attribute.buffer2D,
     count: attribute.count,
     componentsPerAttribute: componentsPerAttribute,
-    componentDatatype: componentDatatype,
+    componentDatatype: ComponentDatatype.FLOAT, // The positions will always be projected as floats.
     offsetInBytes: attribute.byteOffset,
     strideInBytes: attribute.byteStride,
     normalize: attribute.normalized,
@@ -625,63 +626,6 @@ function projectPositionTo2D(position, modelMatrix, projection, result) {
 
 const scratchPosition = new Cartesian3();
 
-function createPositionsTypedArrayFor2D(
-  attribute,
-  modelMatrix,
-  projection,
-  referencePoint
-) {
-  const typedArray = attribute.typedArray;
-
-  let floatArray;
-  if (defined(attribute.quantization)) {
-    // Dequantize the positions if necessary.
-    floatArray = dequantizePositionsTypedArray(
-      attribute.typedArray,
-      attribute.quantization
-    );
-  } else {
-    floatArray = new Float32Array(
-      typedArray.buffer,
-      typedArray.byteOffset,
-      typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
-    );
-  }
-
-  const projectedArray = floatArray.slice();
-  const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
-  const length = projectedArray.length;
-  for (let i = startIndex; i < length; i += 3) {
-    const initialPosition = Cartesian3.fromArray(
-      floatArray,
-      i,
-      scratchPosition
-    );
-
-    const projectedPosition = projectPositionTo2D(
-      initialPosition,
-      modelMatrix,
-      projection,
-      initialPosition
-    );
-
-    // To prevent jitter, the positions are defined relative to
-    // a common reference point. For convenience, this is the center
-    // of the primitive's bounding sphere.
-    const relativePosition = Cartesian3.subtract(
-      projectedPosition,
-      referencePoint,
-      projectedPosition
-    );
-
-    projectedArray[i] = relativePosition.x;
-    projectedArray[i + 1] = relativePosition.y;
-    projectedArray[i + 2] = relativePosition.z;
-  }
-
-  return projectedArray;
-}
-
 function dequantizePositionsTypedArray(typedArray, quantization) {
   // Draco compression is normally handled in the shader, but it must
   // be decoded here to project the positions to 2D / CV.
@@ -714,7 +658,62 @@ function dequantizePositionsTypedArray(typedArray, quantization) {
   return dequantizedArray;
 }
 
+function createPositionsTypedArrayFor2D(
+  attribute,
+  modelMatrix,
+  projection,
+  referencePoint
+) {
+  const typedArray = attribute.typedArray;
+
+  let result;
+  if (defined(attribute.quantization)) {
+    // Dequantize the positions if necessary.
+    result = dequantizePositionsTypedArray(
+      attribute.typedArray,
+      attribute.quantization
+    );
+  } else {
+    result = new Float32Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
+    );
+  }
+
+  const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
+  const length = result.length;
+  for (let i = startIndex; i < length; i += 3) {
+    const initialPosition = Cartesian3.fromArray(result, i, scratchPosition);
+
+    const projectedPosition = projectPositionTo2D(
+      initialPosition,
+      modelMatrix,
+      projection,
+      initialPosition
+    );
+
+    // To prevent jitter, the positions are defined relative to
+    // a common reference point. For convenience, this is the center
+    // of the primitive's bounding sphere.
+    const relativePosition = Cartesian3.subtract(
+      projectedPosition,
+      referencePoint,
+      projectedPosition
+    );
+
+    result[i] = relativePosition.x;
+    result[i + 1] = relativePosition.y;
+    result[i + 2] = relativePosition.z;
+  }
+
+  return result;
+}
+
 const scratchMatrix = new Matrix4();
+const scratchProjectedMin = new Cartesian3();
+const scratchProjectedMax = new Cartesian3();
+const scratchBoundingSphere = new BoundingSphere();
 
 function modifyAttributeFor2D(attribute, renderResources, frameState) {
   const sceneGraph = renderResources.model.sceneGraph;
@@ -726,17 +725,32 @@ function modifyAttributeFor2D(attribute, renderResources, frameState) {
     scratchMatrix
   );
   const projection = frameState.mapProjection;
-  const boundingSphere = renderResources.boundingSphere;
 
-  // Project the center of the bounding sphere in 2D.
-  const referencePoint = projectPositionTo2D(
-    boundingSphere.center,
+  // Compute the bounding sphere in 2D.
+  const projectedMin = projectPositionTo2D(
+    renderResources.positionMin,
     computedModelMatrix,
     projection,
+    scratchProjectedMin
+  );
+  const projectedMax = projectPositionTo2D(
+    renderResources.positionMax,
+    computedModelMatrix,
+    projection,
+    scratchProjectedMax
+  );
+  const boundingSphere = BoundingSphere.fromCornerPoints(
+    projectedMin,
+    projectedMax,
+    scratchBoundingSphere
+  );
+
+  const referencePoint = Cartesian3.clone(
+    boundingSphere.center,
     new Cartesian3()
   );
 
-  // Project positions relative to the bounding sphere's projected center.
+  // Project positions relative to the 2D bounding sphere's center.
   const projectedPositions = createPositionsTypedArrayFor2D(
     attribute,
     computedModelMatrix,
