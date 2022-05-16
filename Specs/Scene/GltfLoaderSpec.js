@@ -6,6 +6,7 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
+  defaultValue,
   defer,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
@@ -107,14 +108,18 @@ describe(
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
+    let sceneWithWebgl2;
     const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
+      sceneWithWebgl2 = createScene();
+      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -149,11 +154,13 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const targetScene = defaultValue(options.scene, scene);
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      return waitForLoaderProcess(gltfLoader, scene);
+      return waitForLoaderProcess(gltfLoader, targetScene);
     }
 
     function loadGltfFromJson(gltfPath, options) {
@@ -360,8 +367,8 @@ describe(
 
         expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
         expect(indices.count).toBe(36);
-        expect(indices.typedArray).toBeDefined();
-        expect(indices.typedArray.byteLength).toBe(72);
+        expect(indices.buffer).toBeDefined();
+        expect(indices.buffer.sizeInBytes).toBe(72);
 
         expect(positionAttribute.buffer).toBe(normalAttribute.buffer);
         expect(positionAttribute.buffer).not.toBe(texcoordAttribute.buffer);
@@ -926,7 +933,7 @@ describe(
           IndexDatatype.UNSIGNED_SHORT
         );
         expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
+        expect(primitive.indices.buffer).toBeDefined();
       });
     });
 
@@ -1982,8 +1989,8 @@ describe(
 
         expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
         expect(indices.count).toBe(36);
-        expect(indices.typedArray).toBeDefined();
-        expect(indices.typedArray.byteLength).toBe(72);
+        expect(indices.buffer).toBeDefined();
+        expect(indices.buffer.sizeInBytes).toBe(72);
 
         expect(positionAttribute.buffer).toBe(normalAttribute.buffer);
         expect(positionAttribute.buffer).not.toBe(texcoordAttribute.buffer);
@@ -2980,8 +2987,8 @@ describe(
 
         expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
         expect(indices.count).toBe(12636);
-        expect(indices.typedArray).toBeDefined();
-        expect(indices.typedArray.byteLength).toBe(25272);
+        expect(indices.buffer).toBeDefined();
+        expect(indices.buffer.sizeInBytes).toBe(25272);
 
         expect(positionAttribute.buffer).not.toBe(normalAttribute.buffer);
         expect(positionAttribute.buffer).not.toBe(texcoordAttribute.buffer);
@@ -3026,6 +3033,55 @@ describe(
       });
     });
 
+    it("loads indices in typed array for wireframes in WebGL1", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.typedArray).toBeDefined();
+      });
+    });
+
+    it("loads indices in buffer for wireframes in WebGL2", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+        scene: sceneWithWebgl2,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.buffer).toBeDefined();
+      });
+    });
+
     it("loads model from parsed JSON object", function () {
       return loadGltfFromJson(triangle).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -3044,7 +3100,7 @@ describe(
           IndexDatatype.UNSIGNED_SHORT
         );
         expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
+        expect(primitive.indices.buffer).toBeDefined();
       });
     });
 
