@@ -29,7 +29,7 @@ function findContentMetadata(tileset, contentHeader) {
   if (!defined(tileset.schema)) {
     findContentMetadata._oneTimeWarning(
       "findContentMetadata-missing-root-schema",
-      "Could not find a metadata schema for content metadata. For external tilesets, make sure the schema is added to the root tileset.json"
+      "Could not find a metadata schema for content metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json."
     );
     return undefined;
   }
