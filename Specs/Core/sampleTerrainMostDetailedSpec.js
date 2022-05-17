@@ -1,12 +1,15 @@
 import { Cartographic } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
 import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;
   beforeAll(function () {
-    worldTerrain = createWorldTerrain();
+    worldTerrain = new CesiumTerrainProvider({
+      url: "Data/CesiumTerrainTileJson/9_759_335",
+      requestVertexNormals: false,
+      requestWaterMask: false,
+    });
     return worldTerrain.readyPromise;
   });
 

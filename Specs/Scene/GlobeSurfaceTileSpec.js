@@ -3,7 +3,7 @@ import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
+import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
@@ -324,9 +324,17 @@ describe("Scene/GlobeSurfaceTile", function () {
     "pick",
     function () {
       let scene;
+      let terrainPromise;
 
       beforeAll(function () {
         scene = createScene();
+
+        terrainPromise = new CesiumTerrainProvider({
+          url: "Data/CesiumTerrainTileJson/9_759_335",
+          requestVertexNormals: true,
+          requestWaterMask: false,
+        });
+        return terrainPromise.readyPromise;
       });
 
       afterAll(function () {
@@ -334,11 +342,6 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
 
       it("gets correct results even when the mesh includes normals", function () {
-        const terrainProvider = createWorldTerrain({
-          requestVertexNormals: true,
-          requestWaterMask: false,
-        });
-
         const tile = new QuadtreeTile({
           tilingScheme: new GeographicTilingScheme(),
           level: 11,
@@ -347,7 +350,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         });
 
         processor.frameState = scene.frameState;
-        processor.terrainProvider = terrainProvider;
+        processor.terrainProvider = terrainPromise;
 
         return processor.process([tile]).then(function () {
           const ray = new Ray(
