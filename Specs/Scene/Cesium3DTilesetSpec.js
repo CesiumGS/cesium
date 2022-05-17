@@ -6,6 +6,8 @@ import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
+import { findTileMetadata } from "../../Source/Cesium.js";
+import { findContentMetadata } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
@@ -6166,6 +6168,10 @@ describe(
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
       const tilesetWithImplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
+      const tilesetWithoutRootSchemaTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalTileMetadata.json";
+      const tilesetWithoutRootSchemaContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalContentMetadata.json";
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
@@ -6381,6 +6387,23 @@ describe(
         });
       });
 
+      it("gracefully handles external tileset with tile metadata but no root schema", function () {
+        spyOn(findTileMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaTileMetadataUrl
+        ).then(function (tileset) {
+          expect(findTileMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.metadata).not.toBeDefined();
+          });
+        });
+      });
+
       it("loads explicit tileset with content metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -6480,6 +6503,24 @@ describe(
               );
             }
           }
+        });
+      });
+
+      it("gracefully handles external tileset with content metadata but no root schema", function () {
+        spyOn(findContentMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaContentMetadataUrl
+        ).then(function (tileset) {
+          expect(findContentMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.content).toBeDefined();
+            expect(tile.content.metadata).not.toBeDefined();
+          });
         });
       });
 
