@@ -1372,10 +1372,27 @@ require({
       e.preventDefault();
     };
 
+    const labelContainer = document.createElement("div");
+
+    const demoTileTitle = document.createElement("div");
+    demoTileTitle.classList.add("demoTileTitle");
+    demoTileTitle.textContent = demo.name;
+
+    const thumbnailImg = document.createElement("img");
+    thumbnailImg.src = imgSrc;
+    thumbnailImg.classList.add("demoTileThumbnail");
+    thumbnailImg.ondragstart = function () {
+      return false;
+    };
+
+    const thumbnailContainer = document.createElement("div");
+    thumbnailContainer.classList.add("demoTileThumbnailContainer");
+
+    thumbnailContainer.appendChild(thumbnailImg);
+    labelContainer.appendChild(demoTileTitle).appendChild(thumbnailContainer);
+
     new LinkButton({
-      label:
-        `<div class="demoTileTitle">${demo.name}</div>` +
-        `<img src="${imgSrc}" class="demoTileThumbnail" alt="" onDragStart="return false;" />`,
+      label: labelContainer,
     }).placeAt(demoLink);
 
     on(demoLink, "mouseover", function () {

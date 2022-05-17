@@ -71,6 +71,13 @@ body {
   white-space: nowrap;
 }
 
+.demoTileThumbnailContainer {
+  margin: auto;
+  width: 150px;
+  height: 100px;
+  overflow: hidden;
+}
+
 .demoTileThumbnail {
   max-height: 150px;
   max-width: 225px;
