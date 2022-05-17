@@ -12,4 +12,3 @@
 - [Code Review Guide](CodeReviewGuide/README.md) - Best practices for reviewing code in pull requests.
 - [Presenter's Guide](PresentersGuide/README.md) - Tips for giving talks.
 - [Committer's Guide](CommittersGuide/README.md) - What to do with commit access to the main CesiumJS repo.
-- [Custom Shader Guide](../CustomShaderGuide/README.md) - Usage guide for the `CustomShader` class, which applies custom GLSL code to models and tilesets.
