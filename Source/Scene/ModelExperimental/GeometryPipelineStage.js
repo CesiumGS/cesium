@@ -112,7 +112,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  const modelType = renderResources.model.type;
+  const model = renderResources.model;
+  const modelType = model.type;
   if (modelType === ModelExperimentalType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
@@ -121,7 +122,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     );
   }
 
-  for (let i = 0; i < primitive.attributes.length; i++) {
+  const length = primitive.attributes.length;
+  for (let i = 0; i < length; i++) {
     const attribute = primitive.attributes[i];
     const attributeLocationCount = AttributeType.getAttributeLocationCount(
       attribute.type
@@ -144,6 +146,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
+
+  updateStatistics(model.statistics, primitive);
 
   shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addFragmentLines([GeometryStageFS]);
@@ -444,6 +448,39 @@ function handleBitangents(shaderBuilder, attributes) {
     "vec3",
     "bitangentEC"
   );
+}
+
+function updateStatistics(renderResources, primitive) {
+  const statistics = renderResources.statistics;
+  const indicesCount = renderResources.count;
+  const mode = primitive.mode;
+
+  if (mode === PrimitiveType.POINTS) {
+    statistics.pointsLength += indicesCount;
+  } else if (PrimitiveType.isTriangles(mode)) {
+    statistics.trianglesLength = countTriangles(mode, indicesCount);
+  }
+
+  const attributes = primitive.attributes;
+  const length = attributes.length;
+  for (let i = 0; i < length; i++) {
+    const attribute = attributes[i];
+    if (defined(attribute.buffer)) {
+      statistics.addBuffer(attribute);
+    }
+  }
+}
+
+function countTriangles(primitiveType, indicesCount) {
+  switch (primitiveType) {
+    case PrimitiveType.TRIANGLES:
+      return indicesCount / 3;
+    case PrimitiveType.TRIANGLE_STRIP:
+    case PrimitiveType.TRIANGLE_FAN:
+      return Math.max(indicesCount - 2, 0);
+    default:
+      return 0;
+  }
 }
 
 export default GeometryPipelineStage;

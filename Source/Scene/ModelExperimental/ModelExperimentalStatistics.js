@@ -27,3 +27,14 @@ ModelExperimentalStatistics.prototype.clear = function () {
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
 };
+
+ModelExperimentalStatistics.prototype.addBuffer = function (buffer) {
+  // TODO: what about caching?
+  // TODO: What if this is present on the CPU as well?
+  this.geometryByteLength += buffer.sizeInBytes;
+};
+
+ModelExperimentalStatistics.prototype.addTexture = function (texture) {
+  // TODO: what about caching?
+  this.geometryByteLength += texture.sizeInBytes;
+};
