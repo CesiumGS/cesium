@@ -204,7 +204,7 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultClampAnimations
     );
-    model.imageBasedLighting.imageBasedLightingFactor = Property.getValueOrDefault(
+    model.imageBasedLightingFactor = Property.getValueOrDefault(
       modelGraphics._imageBasedLightingFactor,
       time,
       defaultImageBasedLightingFactor

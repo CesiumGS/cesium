@@ -1,4 +1,4 @@
-import { Cartesian2, ImageBasedLighting } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
@@ -12,6 +12,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { FeatureDetection } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { ImageBasedLighting } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix3 } from "../../Source/Cesium.js";
@@ -3874,9 +3875,10 @@ describe(
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
+        const ibl = model.imageBasedLighting;
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
-          model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+          ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
@@ -3888,9 +3890,10 @@ describe(
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
+        const ibl = model.imageBasedLighting;
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
-          model.luminanceAtZenith = 0.0;
+          ibl.luminanceAtZenith = 0.0;
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
@@ -3903,8 +3906,9 @@ describe(
         return;
       }
 
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+        const ibl = model.imageBasedLighting;
 
         const L00 = new Cartesian3(
           0.692622075009195,
@@ -3951,7 +3955,7 @@ describe(
           0.120896423762313,
           0.121102528320197
         ); // L22, irradiance, pre-scaled base
-        m.sphericalHarmonicCoefficients = [
+        ibl.sphericalHarmonicCoefficients = [
           L00,
           L1_1,
           L10,
@@ -3964,8 +3968,8 @@ describe(
         ];
 
         scene.highDynamicRange = true;
-        verifyRender(m);
-        primitives.remove(m);
+        verifyRender(model);
+        primitives.remove(model);
         scene.highDynamicRange = false;
       });
     });
@@ -3975,24 +3979,23 @@ describe(
         return;
       }
 
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+
+        const ibl = model.imageBasedLighting;
+        ibl.specularEnvironmentMaps =
           "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
 
-        const ibl = m.imageBasedLighting;
         return pollToPromise(function () {
-          scene.highDynamicRange = true;
           scene.render();
-          scene.highDynamicRange = false;
           return (
             defined(ibl.specularEnvironmentMapAtlas) &&
             ibl.specularEnvironmentMapAtlas.ready
           );
         }).then(function () {
           scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
+          verifyRender(model);
+          primitives.remove(model);
           scene.highDynamicRange = false;
         });
       });
@@ -4012,7 +4015,8 @@ describe(
           expect(rgba).toEqualEpsilon([131, 9, 9, 255], 5);
         });
 
-        model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+        const ibl = model.imageBasedLighting;
+        ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
         expect(sceneArgs).toRenderAndCall(function (rgba) {
           expect(rgba).toEqualEpsilon([102, 9, 9, 255], 5);
         });

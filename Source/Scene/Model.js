@@ -11,7 +11,6 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -224,10 +223,6 @@ const uriToGuid = {};
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -690,28 +685,9 @@ function Model(options) {
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
-  const hasIndividualIBLParameters =
-    defined(options.imageBasedLightingFactor) ||
-    defined(options.luminanceAtZenith) ||
-    defined(options.sphericalHarmonicCoefficients) ||
-    defined(options.specularEnvironmentMaps);
-
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;
     this._shouldDestroyImageBasedLighting = false;
-  } else if (hasIndividualIBLParameters) {
-    deprecationWarning(
-      "ImageBasedLightingConstructor",
-      "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
-    );
-    // Create image-based lighting from the old constructor parameters.
-    this._imageBasedLighting = new ImageBasedLighting({
-      imageBasedLightingFactor: options.imageBasedLightingFactor,
-      luminanceAtZenith: options.luminanceAtZenith,
-      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: options.specularEnvironmentMaps,
-    });
-    this._shouldDestroyImageBasedLighting = true;
   } else {
     this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
@@ -1233,87 +1209,6 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
-   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian2}
-   * @default Cartesian2(1.0, 1.0)
-   */
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLighting.imageBasedLightingFactor;
-    },
-    set: function (value) {
-      this._imageBasedLighting.imageBasedLightingFactor = value;
-    },
-  },
-
-  /**
-   * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-   * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
-   *
-   * @memberof Model.prototype
-   *
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {Number}
-   * @default 0.2
-   */
-  luminanceAtZenith: {
-    get: function () {
-      return this._imageBasedLighting.luminanceAtZenith;
-    },
-    set: function (value) {
-      this._imageBasedLighting.luminanceAtZenith = value;
-    },
-  },
-
-  /**
-   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
-   * computed from the atmosphere color is used.
-   * <p>
-   * There are nine <code>Cartesian3</code> coefficients.
-   * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
-   * </p>
-   *
-   * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-   * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
-   * supplied to {@link Model#specularEnvironmentMaps}.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian3[]}
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
-   */
-  sphericalHarmonicCoefficients: {
-    get: function () {
-      return this._imageBasedLighting.sphericalHarmonicCoefficients;
-    },
-    set: function (value) {
-      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
-    },
-  },
-
-  /**
-   * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
-   *
-   * @memberof Model.prototype
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {String}
-   * @see Model#sphericalHarmonicCoefficients
-   */
-  specularEnvironmentMaps: {
-    get: function () {
-      return this._imageBasedLighting.specularEnvironmentMaps;
-    },
-    set: function (value) {
-      this._imageBasedLighting.specularEnvironmentMaps = value;
-    },
-  },
-
-  /**
    * Gets the credit that will be displayed for the model
    * @memberof Model.prototype
    * @type {Credit}
@@ -1460,10 +1355,6 @@ function containsGltfMagic(uint8Array) {
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.

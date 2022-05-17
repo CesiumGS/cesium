@@ -2552,9 +2552,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).notToRender(rgba);
           });
         }
@@ -2568,9 +2569,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).toRenderAndCall(function (rgba2) {
               expect(rgba2).not.toEqual(rgba);
               tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
