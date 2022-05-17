@@ -145,8 +145,6 @@
           })
         );
 
-        const ibl = model.imageBasedLighting;
-
         model.readyPromise
           .then(function (model) {
             const camera = viewer.camera;
@@ -170,6 +168,7 @@
             );
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
+            const ibl = model.imageBasedLighting;
             ibl.sphericalHarmonicCoefficients = coefficients;
             ibl.specularEnvironmentMaps = environmentMapURL;
 

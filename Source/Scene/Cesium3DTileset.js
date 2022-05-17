@@ -732,8 +732,8 @@ function Cesium3DTileset(options) {
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * For example, disabling additional light sources by setting
-   * <code>tileset.imageBasedLighting.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
-   * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * <code>tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
+   * will make the tileset much darker. Here, increasing the intensity of the light source will make the tileset brighter.
    * </p>
    *
    * @type {Cartesian3}

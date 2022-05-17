@@ -218,38 +218,6 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
       }
     },
   },
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLighting.imageBasedLightingFactor;
-    },
-    set: function (value) {
-      this._imageBasedLighting.imageBasedLightingFactor = value;
-    },
-  },
-  luminanceAtZenith: {
-    get: function () {
-      return this._imageBasedLighting.luminanceAtZenith;
-    },
-    set: function (value) {
-      this._imageBasedLighting.luminanceAtZenith = value;
-    },
-  },
-  sphericalHarmonicCoefficients: {
-    get: function () {
-      return this._imageBasedLighting.sphericalHarmonicCoefficients;
-    },
-    set: function (value) {
-      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
-    },
-  },
-  specularEnvironmentMaps: {
-    get: function () {
-      return this._imageBasedLighting.specularEnvironmentMaps;
-    },
-    set: function (value) {
-      this._imageBasedLighting.specularEnvironmentMaps = value;
-    },
-  },
 });
 
 function createInstances(collection, instancesOptions) {

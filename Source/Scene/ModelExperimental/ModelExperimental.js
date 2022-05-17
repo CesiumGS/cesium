@@ -873,8 +873,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
-   * Disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
-   * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * Disabling additional light sources by setting
+   * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
+   * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
    * @memberof ModelExperimental.prototype
    *
