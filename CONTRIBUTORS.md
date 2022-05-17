@@ -278,7 +278,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Richard Becker](https://github.com/richard3d)
 - [Daniel Leone](https://github.com/danielleone)
 - [Zhou Jiang](https://github.com/aboutqx)
-- [SungHo Lim](https://github.com/SambaLim)
+- [SungHo Lim](https://github.com/sungh0lim)
 - [Michael Fink](https://github.com/vividos)
 - [Jakub Vrana](https://github.com/vrana)
 - [Edvinas Pranka](https://github.com/epranka)
