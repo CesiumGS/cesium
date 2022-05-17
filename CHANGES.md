@@ -20,6 +20,7 @@
 - Fixed label background rendering. [#10342](https://github.com/CesiumGS/cesium/issues/10342)
 - Fixed crash for zero-area `region` bounding volumes in a 3D Tileset. [#10351](https://github.com/CesiumGS/cesium/pull/10351)
 - Fixed `Cesium3DTileset.debugShowUrl` so that it works for implicit tiles too. [#10372](https://github.com/CesiumGS/cesium/issues/10372)
+- Fixed crash when an external tileset has tile or content metadata but the root tileset does not have a metadata schema. [#10387](https://github.com/CesiumGS/cesium/pull/10387)
 
 ##### Deprecated :hourglass_flowing_sand:
 
