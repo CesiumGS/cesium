@@ -5,7 +5,6 @@ import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
 import { GeographicProjection } from "../../Source/Cesium.js";
 import { GeometryInstance } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";

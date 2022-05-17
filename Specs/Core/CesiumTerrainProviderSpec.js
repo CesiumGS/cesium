@@ -1180,14 +1180,13 @@ describe("Core/CesiumTerrainProvider", function () {
       });
     });
 
-    it("Uses query parameter extensions for ion resource", function () {
+    xit("Uses query parameter extensions for ion resource", function () {
       const terrainProvider = new CesiumTerrainProvider({
         url:
           "./Specs/Data/CesiumTerrainTileJson/MetadataAvailability.tile.json",
         requestVertexNormals: true,
         requestWaterMask: true,
       });
-
       pollToPromise(function () {
         return terrainProvider.ready;
       }).then(function () {

@@ -124,6 +124,7 @@
     "build": "gulp build",
     "build-watch": "gulp build-watch",
     "build-ts": "gulp build-ts",
+    "build-third-party": "gulp build-third-party",
     "buildApps": "gulp buildApps",
     "clean": "gulp clean",
     "cloc": "gulp cloc",

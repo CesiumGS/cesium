@@ -21,9 +21,10 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
 import B3dmLoader from "./B3dmLoader.js";
+import GeoJsonLoader from "./GeoJsonLoader.js";
+import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
-import I3dmLoader from "./I3dmLoader.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -45,7 +46,8 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
@@ -243,6 +245,10 @@ export default function ModelExperimental(options) {
     false
   );
 
+  this._enableDebugWireframe = defaultValue(
+    options.enableDebugWireframe,
+    false
+  );
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
@@ -674,7 +680,10 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere.
+   * Gets the model's bounding sphere in its local coordinate system. This does not
+   * take into account glTF animations, skins, or morph targets. It also does not
+   * account for {@link ModelExperimental#minimumPixelSize}.
+   *
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1243,7 +1252,7 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  // This is done without a dirty flag so that the model matrix can be update in-place
+  // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;
@@ -1467,7 +1476,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource} options.url The url to the .gltf or .glb file.
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1476,7 +1485,8 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
@@ -1502,18 +1512,25 @@ ModelExperimental.prototype.destroyResources = function () {
  */
 ModelExperimental.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.gltf", options.gltf);
+  if (!defined(options.url) && !defined(options.gltf)) {
+    throw new DeveloperError("options.url is required.");
+  }
   //>>includeEnd('debug');
+
+  // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
+  // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
+  // glTF contents.
+  const gltf = defaultValue(options.url, options.gltf);
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
-
-  const gltf = options.gltf;
 
   const basePath = defaultValue(options.basePath, "");
   const baseResource = Resource.createIfNeeded(basePath);
@@ -1527,7 +1544,7 @@ ModelExperimental.fromGltf = function (options) {
     loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else {
-    loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
+    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
   }
 
   const loader = new GltfLoader(loaderOptions);
@@ -1557,6 +1574,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -1601,12 +1619,30 @@ ModelExperimental.fromI3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadIndicesForWireframe: options.enableDebugWireframe,
   };
   const loader = new I3dmLoader(loaderOptions);
 
   const modelOptions = makeModelOptions(
     loader,
     ModelExperimentalType.TILE_I3DM,
+    options
+  );
+  const model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromGeoJson = function (options) {
+  const loaderOptions = {
+    geoJson: options.geoJson,
+  };
+  const loader = new GeoJsonLoader(loaderOptions);
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_GEOJSON,
     options
   );
   const model = new ModelExperimental(modelOptions);
@@ -1662,6 +1698,7 @@ function makeModelOptions(loader, modelType, options) {
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
+    enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     opaquePass: options.opaquePass,
