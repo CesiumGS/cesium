@@ -5318,6 +5318,33 @@ describe(
           }
         );
       });
+
+      it("debugShowUrl works for implicit tiling", function () {
+        return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
+          function (tileset) {
+            tileset.debugShowUrl = true;
+            scene.renderForSpecs();
+
+            const expectedLabels = [
+              "Url: content/0/0/0.b3dm",
+              "Url: content/1/0/0.b3dm",
+              "Url: content/1/1/0.b3dm",
+              "Url: content/1/1/1.b3dm",
+              "Url: content/1/0/1.b3dm",
+              "Url: subtrees/0.0.0.subtree",
+            ];
+            const debugLabels = tileset._tileDebugLabels._labels;
+            const length = debugLabels.length;
+            expect(length).toBe(expectedLabels.length);
+            for (let i = 0; i < length; i++) {
+              expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+            }
+            tileset.debugShowUrl = false;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
+          }
+        );
+      });
     });
 
     describe("3DTILES_implicit_tiling", function () {
@@ -5397,6 +5424,34 @@ describe(
           expect(implicitTile.implicitCoordinates.level).toEqual(0);
           expect(implicitTile.implicitCoordinates.x).toEqual(0);
           expect(implicitTile.implicitCoordinates.y).toEqual(0);
+        });
+      });
+
+      it("debugShowUrl works for implicit tiling (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetLegacyUrl
+        ).then(function (tileset) {
+          tileset.debugShowUrl = true;
+          scene.renderForSpecs();
+
+          const expectedLabels = [
+            "Url: content/0/0/0.b3dm",
+            "Url: content/1/0/0.b3dm",
+            "Url: content/1/1/0.b3dm",
+            "Url: content/1/1/1.b3dm",
+            "Url: content/1/0/1.b3dm",
+            "Url: subtrees/0.0.0.subtree",
+          ];
+          const debugLabels = tileset._tileDebugLabels._labels;
+          const length = debugLabels.length;
+          expect(length).toBe(expectedLabels.length);
+          for (let i = 0; i < length; i++) {
+            expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+          }
+          tileset.debugShowUrl = false;
+          scene.renderForSpecs();
+          expect(tileset._tileDebugLabels).not.toBeDefined();
         });
       });
     });
