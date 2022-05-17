@@ -11,6 +11,7 @@ import GltfLoader from "../GltfLoader.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
@@ -258,6 +259,8 @@ export default function ModelExperimental(options) {
     SplitDirection.NONE
   );
 
+  this._statistics = new ModelExperimentalStatistics();
+
   initialize(this);
 }
 
@@ -407,6 +410,16 @@ Object.defineProperties(ModelExperimental.prototype, {
   loader: {
     get: function () {
       return this._loader;
+    },
+  },
+
+  /**
+   * @private
+   * @readonly
+   */
+  statistics: {
+    get: function () {
+      return this._statistics;
     },
   },
 

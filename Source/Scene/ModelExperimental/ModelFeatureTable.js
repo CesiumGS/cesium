@@ -80,6 +80,23 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   },
 
   /**
+   * Total size of the feature table in bytes for reporting statistics.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  memorySizeInBytes: {
+    get: function () {
+      console.error("TODO: ModelFeatureTable.memorySizeInBytes");
+      return 0;
+    },
+  },
+
+  /**
    * A flag to indicate whether or not the types of style commands needed by this feature table have changed.
    *
    * @memberof ModelFeatureTable.prototype

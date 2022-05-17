@@ -48,30 +48,35 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.pointsLength;
     },
   },
 
   trianglesLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.trianglesLength;
     },
   },
 
   geometryByteLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.geometryByteLength;
     },
   },
 
   texturesByteLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.texturesByteLength;
     },
   },
 
   batchTableByteLength: {
     get: function () {
+      const batchTable = this.batchTable;
+      if (defined(batchTable)) {
+        return batchTable.memorySizeInBytes;
+      }
+
       return 0;
     },
   },
