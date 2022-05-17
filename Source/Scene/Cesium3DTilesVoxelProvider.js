@@ -365,15 +365,6 @@ function Cesium3DTilesVoxelProvider(options) {
     });
 }
 
-const scratchImplicitTileCoordinates = new ImplicitTileCoordinates({
-  subdivisionScheme: ImplicitSubdivisionScheme.OCTREE, // not known yet
-  subtreeLevels: 1, // not known yet
-  level: 0,
-  x: 0,
-  y: 0,
-  z: 0,
-});
-
 /**
  * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
  * This function should not be called before {@link VoxelProvider#ready} returns true.
@@ -419,13 +410,15 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   const types = this.types;
   const componentTypes = this.componentTypes;
 
-  const tileCoordinates = scratchImplicitTileCoordinates;
-  tileCoordinates.subdivisionScheme = implicitTileset.subdivisionScheme;
-  tileCoordinates.subtreeLevels = implicitTileset.subtreeLevels;
-  tileCoordinates.level = tileLevel;
-  tileCoordinates.x = tileX;
-  tileCoordinates.y = tileY;
-  tileCoordinates.z = tileZ;
+  // Can't use a scratch variable here because the object is used inside the promise chain.
+  const tileCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: implicitTileset.subdivisionScheme,
+    subtreeLevels: implicitTileset.subtreeLevels,
+    level: tileLevel,
+    x: tileX,
+    y: tileY,
+    z: tileZ,
+  });
 
   // First load the subtree to check if the tile is available.
   // If the subtree has been requested previously it might still be in the cache.
