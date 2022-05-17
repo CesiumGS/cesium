@@ -99,8 +99,6 @@ export default function ModelExperimentalNode(options) {
    * @private
    */
   this.updateStages = [];
-
-  this.configurePipeline();
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {

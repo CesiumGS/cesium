@@ -1181,8 +1181,15 @@ describe("Core/CesiumTerrainProvider", function () {
     });
 
     it("Uses query parameter extensions for ion resource", function () {
+      const ionResource = IonResource.fromAssetId(1)
+        .then(function (resource) {
+          return resource;
+        })
+        .catch(function () {
+          return "Data/CesiumTerrainTileJson/9_759_335";
+        });
       const terrainProvider = new CesiumTerrainProvider({
-        url: IonResource.fromAssetId(1),
+        url: ionResource,
         requestVertexNormals: true,
         requestWaterMask: true,
       });

@@ -172,6 +172,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
 - Beijing Xibushijie
   - [Tang Xiaofei](https://github.com/vtxf)
+- [Maxar](https://www.maxar.com)
+  - [Erik Dahlström](https://github.com/erikdahlstrom)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
