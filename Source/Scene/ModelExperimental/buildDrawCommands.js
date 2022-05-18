@@ -8,13 +8,11 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import StencilConstants from "../StencilConstants.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
-import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
@@ -38,22 +36,9 @@ export default function buildDrawCommands(
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
   const model = primitiveRenderResources.model;
-  let primitiveType = primitiveRenderResources.primitiveType;
-  let debugWireframe =
-    model.debugWireframe && PrimitiveType.isTriangles(primitiveType);
-
   const context = frameState.context;
-  const useWebgl2 = context.webgl2;
 
-  // Generating index buffers for wireframes is always possible in WebGL2.
-  // However, this will only work in WebGL1 if the model was constructed with
-  // enableDebugWireframe set to true.
-  debugWireframe = debugWireframe && (model._enableDebugWireframe || useWebgl2);
-  const indexBuffer = getIndexBuffer(
-    primitiveRenderResources,
-    debugWireframe,
-    frameState
-  );
+  const indexBuffer = getIndexBuffer(primitiveRenderResources, frameState);
 
   const vertexArray = new VertexArray({
     context: context,
@@ -93,14 +78,7 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
-  let count = primitiveRenderResources.count;
-  if (debugWireframe) {
-    count = WireframeIndexGenerator.getWireframeIndicesCount(
-      primitiveType,
-      count
-    );
-    primitiveType = PrimitiveType.LINES;
-  }
+  const count = primitiveRenderResources.count;
 
   const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
@@ -114,7 +92,7 @@ export default function buildDrawCommands(
     count: count,
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
-    primitiveType: primitiveType,
+    primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: ShadowMode.castShadows(model.shadows),
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
@@ -182,9 +160,10 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
-function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
-  if (debugWireframe) {
-    return createWireframeIndexBuffer(primitiveRenderResources, frameState);
+function getIndexBuffer(primitiveRenderResources, frameState) {
+  const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
+  if (defined(wireframeIndexBuffer)) {
+    return wireframeIndexBuffer;
   }
 
   const indices = primitiveRenderResources.indices;
@@ -204,57 +183,6 @@ function getIndexBuffer(primitiveRenderResources, debugWireframe, frameState) {
   return Buffer.createIndexBuffer({
     context: frameState.context,
     typedArray: typedArray,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: indexDatatype,
-  });
-}
-
-/**
- * @private
- */
-function createWireframeIndexBuffer(primitiveRenderResources, frameState) {
-  let positionAttribute;
-  const attributes = primitiveRenderResources.attributes;
-  const length = attributes.length;
-  for (let i = 0; i < length; i++) {
-    if (attributes[i].index === 0) {
-      positionAttribute = attributes[i];
-      break;
-    }
-  }
-
-  const vertexCount = positionAttribute.count;
-  const indices = primitiveRenderResources.indices;
-
-  let originalIndices;
-  if (defined(indices)) {
-    const indicesBuffer = indices.buffer;
-    const indicesCount = indices.count;
-    if (defined(indicesBuffer)) {
-      const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
-      originalIndices = useUint8Array
-        ? new Uint8Array(indicesCount)
-        : IndexDatatype.createTypedArray(vertexCount, indicesCount);
-
-      indicesBuffer.getBufferData(originalIndices);
-    } else {
-      originalIndices = indices.typedArray;
-    }
-  }
-
-  const primitiveType = primitiveRenderResources.primitiveType;
-  const wireframeIndices = WireframeIndexGenerator.createWireframeIndices(
-    primitiveType,
-    vertexCount,
-    originalIndices
-  );
-  const indexDatatype = IndexDatatype.fromSizeInBytes(
-    wireframeIndices.BYTES_PER_ELEMENT
-  );
-
-  return Buffer.createIndexBuffer({
-    context: frameState.context,
-    typedArray: wireframeIndices,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
