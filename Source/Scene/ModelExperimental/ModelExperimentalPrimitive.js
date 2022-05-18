@@ -110,8 +110,6 @@ export default function ModelExperimentalPrimitive(options) {
    * @private
    */
   this.updateStages = [];
-
-  //this.configurePipeline();
 }
 
 /**

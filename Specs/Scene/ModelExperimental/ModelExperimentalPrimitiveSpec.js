@@ -34,6 +34,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     allowPicking: true,
     featureIdLabel: "featureId_0",
   };
+  const mockFrameState = {
+    context: {
+      webgl2: false,
+    },
+  };
 
   const emptyVertexShader =
     "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
@@ -127,6 +132,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -168,6 +174,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -212,6 +219,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
     primitive = new ModelExperimentalPrimitive({
@@ -231,6 +239,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -253,6 +262,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: mockModel,
     });
 
+    primitive.configurePipeline(mockFrameState);
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       DequantizationPipelineStage,
@@ -290,6 +300,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -318,6 +329,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -346,6 +358,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -383,6 +396,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -415,6 +429,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -446,6 +461,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -474,6 +490,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -504,6 +521,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
@@ -543,6 +561,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       AlphaPipelineStage,
     ];
 
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });
