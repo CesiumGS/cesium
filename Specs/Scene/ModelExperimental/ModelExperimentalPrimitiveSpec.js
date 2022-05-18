@@ -21,6 +21,7 @@ import {
   SelectedFeatureIdPipelineStage,
   SkinningPipelineStage,
   VertexAttributeSemantic,
+  WireframePipelineStage,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
@@ -37,6 +38,12 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   const mockFrameState = {
     context: {
       webgl2: false,
+    },
+  };
+
+  const mockFrameStateWebgl2 = {
+    context: {
+      webgl2: true,
     },
   };
 
@@ -502,7 +509,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
         featureIds: [],
         featureIdTextures: [],
         attributes: [],
-        primitiveType: PrimitiveType.GLTF,
+        primitiveType: PrimitiveType.TRIANGLES,
       },
       node: mockNode,
       model: {
@@ -541,7 +548,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
         featureIds: [],
         featureIdTextures: [],
         attributes: [],
-        primitiveType: PrimitiveType.GLTF,
+        primitiveType: PrimitiveType.TRIANGLES,
       },
       node: mockNode,
       model: {
@@ -562,6 +569,126 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     ];
 
     primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures pipeline for debugWireframe (WebGL 1)", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+      },
+      node: mockNode,
+      model: {
+        debugWireframe: true,
+        _enableDebugWireframe: true,
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      WireframePipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("Does not include wireframe stage if model.enableDebugWireframe is false (WebGL 1)", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+      },
+      node: mockNode,
+      model: {
+        debugWireframe: true,
+        _enableDebugWireframe: false,
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures pipeline for debugWireframe (WebGL 2)", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+      },
+      node: mockNode,
+      model: {
+        debugWireframe: true,
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      WireframePipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameStateWebgl2);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("Does not include wireframe stage for non-triangle primitives", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        debugWireframe: true,
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameStateWebgl2);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });
