@@ -1,6 +1,5 @@
 import {
   AttributeType,
-  BoundingSphere,
   Cartesian3,
   combine,
   ComponentDatatype,
@@ -460,16 +459,8 @@ fdescribe(
         );
         verifyFeatureStruct(shaderBuilder);
 
-        /*const projectedMin = 
-
-        const boundingSphere = BoundingSphere.fromCornerPoints(
-          positionMin,
-          positionMax,
-          new BoundingSphere()
-        ),*/
-
         const translationMatrix = Matrix4.fromTranslation(
-          renderResources.boundingSphere.center,
+          position2DAttribute.referencePoint2D,
           scratchMatrix
         );
         const expected = Matrix4.multiplyTransformation(
