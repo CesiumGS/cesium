@@ -37,6 +37,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {Boolean} [options.loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
+ * @param {Boolean} [options.loadFor2D=false] Load vertex buffer as both a buffer and typed array, the latter of which will be projected to 2D. This will be ignored if the scene is 3D only.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -58,6 +59,7 @@ export default function GltfVertexBufferLoader(options) {
   const asynchronous = defaultValue(options.asynchronous, true);
   const dequantize = defaultValue(options.dequantize, false);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadFor2D = defaultValue(options.loadFor2D, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -107,6 +109,7 @@ export default function GltfVertexBufferLoader(options) {
   this._asynchronous = asynchronous;
   this._dequantize = dequantize;
   this._loadAsTypedArray = loadAsTypedArray;
+  this._loadFor2D = loadFor2D;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._quantization = undefined;
@@ -480,15 +483,15 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     );
   }
 
-  // Unload everything except the vertex buffer if the scene only uses 3D mode.
-  // Otherwise, the typed array must be stored to properly project positions
-  // into 2D mode / Columbus View.
-  const scene3DOnly = frameState.scene3DOnly;
   this.unload();
 
-  if (!scene3DOnly) {
+  // If the scene only uses 3D mode, unload everything except the vertex buffer.
+  // Otherwise, store the typed array in order to accurately project positions
+  // into 2D mode / Columbus View.
+  if (this._loadFor2D && !frameState.scene3DOnly) {
     this._typedArray = typedArray;
   }
+
   this._buffer = buffer;
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);

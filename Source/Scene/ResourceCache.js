@@ -430,9 +430,9 @@ ResourceCache.loadDraco = function (options) {
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {Number} [options.accessorId] The accessor ID.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
- * @param {Boolean} [loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
- *
+ * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
+ * @param {Boolean} [options.loadFor2D=false] Load vertex buffer as both a buffer and typed array, the latter of which will be projected to 2D. This will be ignored if the scene is 3D only.
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
@@ -452,6 +452,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   const asynchronous = defaultValue(options.asynchronous, true);
   const dequantize = defaultValue(options.dequantize, false);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadFor2D = defaultValue(options.loadFor2D, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -497,6 +498,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     attributeSemantic: attributeSemantic,
     dequantize: dequantize,
     loadAsTypedArray: loadAsTypedArray,
+    loadFor2D: loadFor2D,
   });
 
   let vertexBufferLoader = ResourceCache.get(cacheKey);
@@ -517,6 +519,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     asynchronous: asynchronous,
     dequantize: dequantize,
     loadAsTypedArray: loadAsTypedArray,
+    loadFor2D: loadFor2D,
   });
 
   ResourceCache.load({
@@ -536,8 +539,8 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
- * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer. Mutually exclusive with loadForWireframe.
+ * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2 and is mutually exclusive with loadAsTypedArray.
  * @returns {GltfIndexBufferLoader} The index buffer loader.
  * @private
  */
@@ -566,6 +569,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     baseResource: baseResource,
     draco: draco,
     loadAsTypedArray: loadAsTypedArray,
+    loadForWireframe: loadForWireframe,
   });
 
   let indexBufferLoader = ResourceCache.get(cacheKey);

@@ -73,14 +73,15 @@ const GltfLoaderState = {
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
  * @param {Object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @private
  */
 export default function GltfLoader(options) {
@@ -96,13 +97,17 @@ export default function GltfLoader(options) {
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
-  const renameBatchIdSemantic = defaultValue(
-    options.renameBatchIdSemantic,
+  const loadAttributesAsTypedArray = defaultValue(
+    options.loadAttributesAsTypedArray,
     false
   );
+  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
+    false
+  );
+  const renameBatchIdSemantic = defaultValue(
+    options.renameBatchIdSemantic,
     false
   );
 
@@ -121,9 +126,10 @@ export default function GltfLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
-  this._loadAsTypedArray = loadAsTypedArray;
-  this._renameBatchIdSemantic = renameBatchIdSemantic;
+  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+  this._loadPositionsFor2D = loadPositionsFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -360,7 +366,8 @@ function loadVertexBuffer(
   semantic,
   draco,
   dequantize,
-  loadAsTypedArray
+  loadAsTypedArray,
+  loadFor2D
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -376,6 +383,7 @@ function loadVertexBuffer(
     asynchronous: loader._asynchronous,
     dequantize: dequantize,
     loadAsTypedArray: loadAsTypedArray,
+    loadFor2D: loadFor2D,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -391,7 +399,7 @@ function loadIndexBuffer(loader, gltf, accessorId, draco) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loader._loadAsTypedArray,
+    loadAsTypedArray: loader._loadAttributesForTypedArray,
     loadForWireframe: loader._loadIndicesForWireframe,
   });
 
@@ -621,6 +629,10 @@ function loadAttribute(
     return attribute;
   }
 
+  const loadFor2D =
+    modelSemantic === VertexAttributeSemantic.POSITION &&
+    loader._loadPositionsFor2D;
+
   const vertexBufferLoader = loadVertexBuffer(
     loader,
     gltf,
@@ -629,7 +641,7 @@ function loadAttribute(
     draco,
     dequantize,
     loadAsTypedArray,
-    loadAsTypedArrayPacked
+    loadFor2D
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -651,8 +663,6 @@ function loadAttribute(
       attribute.typedArray = vertexBufferLoader.typedArray;
       attribute.buffer = vertexBufferLoader.buffer;
     }
-
-    attribute.count = accessor.count;
 
     if (
       defined(draco) &&
@@ -679,7 +689,7 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     gltfSemantic,
     draco,
     false,
-    loader._loadAsTypedArray,
+    loader._loadAttributesAsTypedArray,
     false
   );
 }
@@ -1284,22 +1294,23 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
       defined(gltf.accessors[attributes.TRANSLATION].max);
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
-        // If the instances have rotations load the attributes as typed arrays
-        // so that instance matrices are computed on the CPU. This avoids the
-        // expensive quaternion -> rotation matrix conversion in the shader.
-        // If the translation accessor does not have a min and max, load the
-        // attributes as typed arrays, so the values can be used for computing
-        // an accurate bounding volume. Feature ID attributes are also loaded as
-        // typed arrays because we want to be able to add the instance's feature ID to
-        // the pick object. Load as typed arrays if GPU instancing is not supported.
+        // Load the attributes as typed arrays if:
+        // - the instances have rotations, so that instance matrices are computed on the CPU.
+        //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
+        // - the translation accessor does not have a min and max, so the values can be used
+        //   for computing an accurate bounding volume.
+        // - the attributes contain feature IDs, in order to add the instance's feature ID
+        //   to the pick object.
+        // - GPU instancing is not supported.
+        const isTransformAttribute =
+          semantic === InstanceAttributeSemantic.TRANSLATION ||
+          semantic === InstanceAttributeSemantic.ROTATION ||
+          semantic === InstanceAttributeSemantic.SCALE;
         const loadAsTypedArrayPacked =
-          loader._loadAsTypedArray ||
-          !frameState.context.instancedArrays ||
-          ((hasRotation || !hasTranslationMinMax) &&
-            (semantic === InstanceAttributeSemantic.TRANSLATION ||
-              semantic === InstanceAttributeSemantic.ROTATION ||
-              semantic === InstanceAttributeSemantic.SCALE)) ||
-          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0;
+          loader._loadAttributesAsTypedArray ||
+          ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
+          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0 ||
+          !frameState.context.instancedArrays;
 
         const accessorId = attributes[semantic];
         instances.attributes.push(

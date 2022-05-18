@@ -478,7 +478,6 @@ describe(
         accessorId: 3,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        loadAsTypedArray: false,
         loadForWireframe: true,
       });
 

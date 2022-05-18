@@ -26,7 +26,6 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
-import I3dmLoader from "./I3dmLoader.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
@@ -70,7 +69,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] // TODO
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D mode. This disables minimumPixelSize and prevents future modification to its model matrix. This cannot be set after the model has loaded.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -1539,7 +1538,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] // TODO
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D mode. This disables minimumPixelSize and prevents future modification to its model matrix. This cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1553,7 +1552,7 @@ ModelExperimental.fromGltf = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
-    loadAsTypedArray: options.projectTo2D,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
@@ -1601,6 +1600,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 

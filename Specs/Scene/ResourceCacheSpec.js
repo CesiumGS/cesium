@@ -247,19 +247,29 @@ describe(
       ],
     };
 
-    // Index buffers will load as typed arrays only in WebGL1.
-    // In order to load them as buffers, the scene must have WebGL2 enabled.
     let scene;
+
+    // Vertex buffers will load as buffers and typed arrays if loadFor2D is true,
+    // but not if the scene is 3D only.
+    let sceneWith3DOnly;
+
+    // Index buffers will load as typed arrays if loadForWireframe is true
+    // and the scene is using WebGL1. They will always be loaded as buffers
+    // in WebGL2.
     let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
+      sceneWith3DOnly = createScene({
+        scene3DOnly: true,
+      });
       sceneWithWebgl2 = createScene();
       sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWith3DOnly.destroyForSpecs();
       sceneWithWebgl2.destroyForSpecs();
     });
 
@@ -970,6 +980,68 @@ describe(
       });
     });
 
+    it("loads vertex buffer as buffer and typed array for 2D", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        loadFor2D: true,
+      });
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadFor2D: true,
+      });
+
+      expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.typedArray).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
+      });
+    });
+
+    it("loads vertex buffer as buffer if scene is 3D only", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        loadFor2D: true,
+      });
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadFor2D: true,
+      });
+
+      expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(vertexBufferLoader, sceneWith3DOnly).then(
+        function (vertexBufferLoader) {
+          expect(vertexBufferLoader.typedArray).toBeUndefined();
+          expect(vertexBufferLoader.buffer).toBeDefined();
+        }
+      );
+    });
+
     it("loadVertexBuffer throws if gltf is undefined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
@@ -1091,6 +1163,7 @@ describe(
         indexBufferLoader
       ) {
         expect(indexBufferLoader.buffer).toBeDefined();
+        expect(indexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -1142,7 +1215,7 @@ describe(
       );
     });
 
-    it("loads index buffer as typed array using option", function () {
+    it("loads index buffer as typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -1182,14 +1255,14 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        loadAsTypedArray: false,
+        loadForWireframe: true,
       });
+
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        loadAsTypedArray: false,
         loadForWireframe: true,
       });
 
@@ -1223,21 +1296,7 @@ describe(
         loadForWireframe: true,
       });
 
-      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
-      expect(cacheEntry.referenceCount).toBe(1);
-
-      // The existing resource is returned if the computed cache key is the same
-      expect(
-        ResourceCache.loadIndexBuffer({
-          gltf: gltfUncompressed,
-          accessorId: 2,
-          gltfResource: gltfResource,
-          baseResource: gltfResource,
-        })
-      ).toBe(indexBufferLoader);
-
-      expect(cacheEntry.referenceCount).toBe(2);
 
       return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
         function (indexBufferLoader) {

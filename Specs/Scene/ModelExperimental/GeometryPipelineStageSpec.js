@@ -24,10 +24,6 @@ fdescribe(
   "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
     const scratchMatrix = new Matrix4();
-    const boundingSphere = new BoundingSphere(
-      new Cartesian3(1.0, 2.0, 3.0),
-      1.0
-    );
 
     const positionOnlyPrimitive = {
       attributes: [
@@ -146,8 +142,11 @@ fdescribe(
 
       // To load the vertex buffers as typed arrays,
       // scene3DOnly must be false.
-      const loadTypedArrays = defaultValue(options.loadTypedArrays, false);
-      const targetScene = loadTypedArrays ? scene2D : scene;
+      const loadPositionsFor2D = defaultValue(
+        options.loadPositionsFor2D,
+        false
+      );
+      const targetScene = loadPositionsFor2D ? scene2D : scene;
 
       return waitForLoaderProcess(gltfLoader, targetScene);
     }
@@ -225,102 +224,6 @@ fdescribe(
         []
       );
       verifyFeatureStruct(shaderBuilder);
-    });
-
-    it("processes POSITION attribute from primitive for 2D", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-        boundingSphere: boundingSphere,
-      };
-
-      GeometryPipelineStage.process(
-        renderResources,
-        positionOnlyPrimitive,
-        scene2D._frameState
-      );
-
-      const shaderBuilder = renderResources.shaderBuilder;
-      const attributes = renderResources.attributes;
-
-      expect(attributes.length).toEqual(1);
-      const positionAttribute = attributes[0];
-      expect(positionAttribute.index).toEqual(0);
-      expect(positionAttribute.vertexBuffer).toBeDefined();
-      expect(positionAttribute.componentsPerAttribute).toEqual(3);
-      expect(positionAttribute.componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
-      );
-      expect(positionAttribute.offsetInBytes).toBe(0);
-      expect(positionAttribute.strideInBytes).toBe(12);
-
-      ShaderBuilderTester.expectHasVertexStruct(
-        shaderBuilder,
-        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
-        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
-        ["    vec3 positionMC;", "    vec3 position2D;"]
-      );
-      ShaderBuilderTester.expectHasFragmentStruct(
-        shaderBuilder,
-        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
-        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
-        ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
-      );
-      ShaderBuilderTester.expectHasVertexFunctionUnordered(
-        shaderBuilder,
-        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
-        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
-        [
-          "    attributes.positionMC = a_positionMC;",
-          "    attributes.position2D = a_position2D;",
-        ]
-      );
-      ShaderBuilderTester.expectHasVertexFunctionUnordered(
-        shaderBuilder,
-        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
-        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
-        []
-      );
-      ShaderBuilderTester.expectHasFragmentFunctionUnordered(
-        shaderBuilder,
-        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
-        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
-        []
-      );
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec3 v_positionEC;",
-        "varying vec3 v_positionMC;",
-        "varying vec3 v_positionWC;",
-      ]);
-      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-        "USE_2D_POSITIONS",
-      ]);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
-      ShaderBuilderTester.expectHasAttributes(
-        shaderBuilder,
-        "attribute vec3 a_positionMC;",
-        ["attribute vec3 a_position2D;"]
-      );
-      verifyFeatureStruct(shaderBuilder);
-
-      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform mat4 u_modelMatrix2D;",
-      ]);
-
-      const translationMatrix = Matrix4.fromTranslation(
-        boundingSphere.center,
-        scratchMatrix
-      );
-      const expected = Matrix4.multiplyTransformation(
-        scene._frameState.camera.viewMatrix,
-        translationMatrix,
-        translationMatrix
-      );
-      expect(renderResources.uniformMap.u_modelMatrix2D()).toEqual(expected);
     });
 
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
@@ -444,6 +347,8 @@ fdescribe(
 
     // TODO: add one for draco compressed typed array
     it("processes POSITION typed array from primitive for 2D", function () {
+      const positionMin = new Cartesian3(-0.5, -0.5, -0.5);
+      const positionMax = new Cartesian3(0.5, 0.5, 0.5);
       const renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
@@ -457,10 +362,11 @@ fdescribe(
         runtimeNode: {
           computedTransform: Matrix4.IDENTITY,
         },
-        boundingSphere: boundingSphere,
+        positionMin: positionMin,
+        positionMax: positionMax,
       };
 
-      return loadGltf(boxTextured, { loadTypedArrays: true }).then(function (
+      return loadGltf(boxTextured, { loadPositionsFor2D: true }).then(function (
         gltfLoader
       ) {
         const components = gltfLoader.components;
@@ -554,16 +460,24 @@ fdescribe(
         );
         verifyFeatureStruct(shaderBuilder);
 
+        /*const projectedMin = 
+
+        const boundingSphere = BoundingSphere.fromCornerPoints(
+          positionMin,
+          positionMax,
+          new BoundingSphere()
+        ),*/
+
         const translationMatrix = Matrix4.fromTranslation(
-          boundingSphere.center,
+          renderResources.boundingSphere.center,
           scratchMatrix
         );
         const expected = Matrix4.multiplyTransformation(
-          scene._frameState.camera.viewMatrix,
+          scene2D._frameState.camera.viewMatrix,
           translationMatrix,
           translationMatrix
         );
-        expect(renderResources.uniformMap.u_modelMatrix2D()).toEqual(expected);
+        expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
       });
     });
 

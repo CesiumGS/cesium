@@ -3,7 +3,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
+import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
@@ -17,6 +17,7 @@ import SceneMode from "../SceneMode.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import SceneTransforms from "../SceneTransforms.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -142,8 +143,13 @@ GeometryPipelineStage.process = function (
   }
 
   // The attributes, structs, and functions will need to be modified for 2D / CV.
+  // However, if the model is instanced, the resources will have already been
+  // modified for 2D projection in InstancingPipelineStage.
   const mode = frameState.mode;
-  const use2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
+  const sceneIs2D =
+    mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
+  const modifyFor2D =
+    sceneIs2D && !defined(renderResources.runtimeNode.node.instances);
 
   // The reference point, a.k.a. the center of the projected bounding sphere,
   // will be computed and stored when the position attribute is processed. This is
@@ -161,7 +167,7 @@ GeometryPipelineStage.process = function (
     if (attributeLocationCount > 1) {
       index = renderResources.attributeIndex;
       renderResources.attributeIndex += attributeLocationCount;
-    } else if (isPositionAttribute && !use2D) {
+    } else if (isPositionAttribute && !modifyFor2D) {
       // If the scene is in 3D, the 2D position attribute is not needed,
       // so don't increment attributeIndex.
       index = 0;
@@ -175,7 +181,7 @@ GeometryPipelineStage.process = function (
       index,
       attributeLocationCount,
       frameState,
-      use2D
+      modifyFor2D
     );
 
     if (isPositionAttribute) {
@@ -193,7 +199,7 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addFragmentLines([GeometryStageFS]);
 
   // Handle the shader define and model matrix uniform for 2D
-  if (use2D) {
+  if (modifyFor2D) {
     shaderBuilder.addDefine(
       "USE_2D_POSITIONS",
       undefined,
@@ -231,7 +237,7 @@ function processAttribute(
   attributeIndex,
   attributeLocationCount,
   frameState,
-  use2D
+  modifyFor2D
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
@@ -250,11 +256,11 @@ function processAttribute(
       attribute,
       attributeIndex,
       frameState,
-      use2D
+      modifyFor2D
     );
   }
 
-  addAttributeDeclaration(shaderBuilder, attributeInfo, use2D);
+  addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
   // For common attributes like normals and tangents, the code is
@@ -264,8 +270,8 @@ function processAttribute(
   }
 
   // Some GLSL code must be dynamically generated
-  updateAttributesStruct(shaderBuilder, attributeInfo, use2D);
-  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, use2D);
+  updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, modifyFor2D);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -295,7 +301,7 @@ function addAttributeToRenderResources(
   attribute,
   attributeIndex,
   frameState,
-  use2D
+  modifyFor2D
 ) {
   const quantization = attribute.quantization;
   let type;
@@ -337,8 +343,6 @@ function addAttributeToRenderResources(
   renderResources.attributes.push(vertexAttribute);
 
   if (!isPositionAttribute) {
-    // Unload the attribute's typed array if it exists and return.
-    attribute.typedArray = undefined;
     return;
   }
 
@@ -349,7 +353,7 @@ function addAttributeToRenderResources(
     attribute.typedArray = undefined;
   }
 
-  if (!use2D) {
+  if (!modifyFor2D) {
     return;
   }
 
@@ -444,7 +448,7 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   shaderBuilder.addVarying(glslType, varyingName);
 }
 
-function addAttributeDeclaration(shaderBuilder, attributeInfo, use2D) {
+function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
   const semantic = attributeInfo.attribute.semantic;
   const variableName = attributeInfo.variableName;
 
@@ -465,12 +469,12 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, use2D) {
     shaderBuilder.addAttribute(glslType, attributeName);
   }
 
-  if (isPosition && use2D) {
+  if (isPosition && modifyFor2D) {
     shaderBuilder.addAttribute("vec3", "a_position2D");
   }
 }
 
-function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
+function updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D) {
   const vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   const fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   const variableName = attributeInfo.variableName;
@@ -501,7 +505,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
     );
   }
 
-  if (variableName === "positionMC" && use2D) {
+  if (variableName === "positionMC" && modifyFor2D) {
     shaderBuilder.addStructField(vsStructId, "vec3", "position2D");
   }
 }
@@ -509,14 +513,14 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
 function updateInitializeAttributesFunction(
   shaderBuilder,
   attributeInfo,
-  use2D
+  modifyFor2D
 ) {
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
 
   // If the scene is in 2D / CV mode, this line should always be added
   // regardless of whether the data is quantized.
-  const use2DPosition = variableName === "positionMC" && use2D;
+  const use2DPosition = variableName === "positionMC" && modifyFor2D;
   if (use2DPosition) {
     const line = "attributes.position2D = a_position2D;";
     shaderBuilder.addFunctionLines(functionId, [line]);
@@ -593,37 +597,6 @@ function handleBitangents(shaderBuilder, attributes) {
   );
 }
 
-const scratchProjectedPosition = new Cartesian3();
-const scratchCartographic = new Cartographic();
-
-function projectPositionTo2D(position, modelMatrix, projection, result) {
-  const transformedPosition = Matrix4.multiplyByPoint(
-    modelMatrix,
-    position,
-    scratchProjectedPosition
-  );
-
-  const ellipsoid = projection.ellipsoid;
-  const cartographic = ellipsoid.cartesianToCartographic(
-    transformedPosition,
-    scratchCartographic
-  );
-
-  const projectedPosition = projection.project(
-    cartographic,
-    scratchProjectedPosition
-  );
-
-  result = Cartesian3.fromElements(
-    projectedPosition.z,
-    projectedPosition.x,
-    projectedPosition.y,
-    result
-  );
-
-  return result;
-}
-
 const scratchPosition = new Cartesian3();
 
 function dequantizePositionsTypedArray(typedArray, quantization) {
@@ -661,7 +634,7 @@ function dequantizePositionsTypedArray(typedArray, quantization) {
 function createPositionsTypedArrayFor2D(
   attribute,
   modelMatrix,
-  projection,
+  frameState,
   referencePoint
 ) {
   const typedArray = attribute.typedArray;
@@ -686,11 +659,16 @@ function createPositionsTypedArrayFor2D(
   for (let i = startIndex; i < length; i += 3) {
     const initialPosition = Cartesian3.fromArray(result, i, scratchPosition);
 
-    const projectedPosition = projectPositionTo2D(
-      initialPosition,
+    const transformedPosition = Matrix4.multiplyByPoint(
       modelMatrix,
-      projection,
+      initialPosition,
       initialPosition
+    );
+
+    const projectedPosition = SceneTransforms.computeActualWgs84Position(
+      frameState,
+      transformedPosition,
+      transformedPosition
     );
 
     // To prevent jitter, the positions are defined relative to
@@ -715,6 +693,47 @@ const scratchProjectedMin = new Cartesian3();
 const scratchProjectedMax = new Cartesian3();
 const scratchBoundingSphere = new BoundingSphere();
 
+function computeReferencePoint(
+  positionMin,
+  positionMax,
+  modelMatrix,
+  frameState
+) {
+  // Compute the bounding sphere in 2D.
+  const transformedPositionMin = Matrix4.multiplyByPoint(
+    modelMatrix,
+    positionMin,
+    scratchProjectedMin
+  );
+
+  const projectedMin = SceneTransforms.computeActualWgs84Position(
+    frameState,
+    transformedPositionMin,
+    transformedPositionMin
+  );
+
+  const transformedPositionMax = Matrix4.multiplyByPoint(
+    modelMatrix,
+    positionMax,
+    scratchProjectedMax
+  );
+
+  const projectedMax = SceneTransforms.computeActualWgs84Position(
+    frameState,
+    transformedPositionMax,
+    transformedPositionMax
+  );
+
+  const boundingSphere = BoundingSphere.fromCornerPoints(
+    projectedMin,
+    projectedMax,
+    scratchBoundingSphere
+  );
+
+  // Use the center of the 2D bounding sphere as the reference point.
+  return Cartesian3.clone(boundingSphere.center, new Cartesian3());
+}
+
 function modifyAttributeFor2D(attribute, renderResources, frameState) {
   const sceneGraph = renderResources.model.sceneGraph;
   const modelMatrix = sceneGraph.computedModelMatrix;
@@ -724,37 +743,23 @@ function modifyAttributeFor2D(attribute, renderResources, frameState) {
     nodeComputedTransform,
     scratchMatrix
   );
-  const projection = frameState.mapProjection;
 
-  // Compute the bounding sphere in 2D.
-  const projectedMin = projectPositionTo2D(
-    renderResources.positionMin,
-    computedModelMatrix,
-    projection,
-    scratchProjectedMin
-  );
-  const projectedMax = projectPositionTo2D(
-    renderResources.positionMax,
-    computedModelMatrix,
-    projection,
-    scratchProjectedMax
-  );
-  const boundingSphere = BoundingSphere.fromCornerPoints(
-    projectedMin,
-    projectedMax,
-    scratchBoundingSphere
-  );
-
-  const referencePoint = Cartesian3.clone(
-    boundingSphere.center,
-    new Cartesian3()
-  );
+  // Force the scene mode to be CV. In 2D, the projected position will have an
+  // x-coordinate of 0, which will be problematic when switching to CV mode.
+  const frameStateCV = clone(frameState);
+  frameStateCV.mode = SceneMode.COLUMBUS_VIEW;
 
   // Project positions relative to the 2D bounding sphere's center.
+  const referencePoint = computeReferencePoint(
+    renderResources.positionMin,
+    renderResources.positionMax,
+    computedModelMatrix,
+    frameStateCV
+  );
   const projectedPositions = createPositionsTypedArrayFor2D(
     attribute,
     computedModelMatrix,
-    projection,
+    frameStateCV,
     referencePoint
   );
 
