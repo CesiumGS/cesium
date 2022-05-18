@@ -143,13 +143,8 @@ GeometryPipelineStage.process = function (
   }
 
   // The attributes, structs, and functions will need to be modified for 2D / CV.
-  // However, if the model is instanced, the resources will have already been
-  // modified for 2D projection in InstancingPipelineStage.
   const mode = frameState.mode;
-  const sceneIs2D =
-    mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
-  const modifyFor2D =
-    sceneIs2D && !defined(renderResources.runtimeNode.node.instances);
+  const use2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
 
   // The reference point, a.k.a. the center of the projected bounding sphere,
   // will be computed and stored when the position attribute is processed. This is
@@ -167,7 +162,7 @@ GeometryPipelineStage.process = function (
     if (attributeLocationCount > 1) {
       index = renderResources.attributeIndex;
       renderResources.attributeIndex += attributeLocationCount;
-    } else if (isPositionAttribute && !modifyFor2D) {
+    } else if (isPositionAttribute && !use2D) {
       // If the scene is in 3D, the 2D position attribute is not needed,
       // so don't increment attributeIndex.
       index = 0;
@@ -181,7 +176,7 @@ GeometryPipelineStage.process = function (
       index,
       attributeLocationCount,
       frameState,
-      modifyFor2D
+      use2D
     );
 
     if (isPositionAttribute) {
@@ -199,7 +194,7 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addFragmentLines([GeometryStageFS]);
 
   // Handle the shader define and model matrix uniform for 2D
-  if (modifyFor2D) {
+  if (use2D) {
     shaderBuilder.addDefine(
       "USE_2D_POSITIONS",
       undefined,
@@ -237,7 +232,7 @@ function processAttribute(
   attributeIndex,
   attributeLocationCount,
   frameState,
-  modifyFor2D
+  use2D
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
@@ -256,11 +251,11 @@ function processAttribute(
       attribute,
       attributeIndex,
       frameState,
-      modifyFor2D
+      use2D
     );
   }
 
-  addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D);
+  addAttributeDeclaration(shaderBuilder, attributeInfo, use2D);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
   // For common attributes like normals and tangents, the code is
@@ -270,8 +265,8 @@ function processAttribute(
   }
 
   // Some GLSL code must be dynamically generated
-  updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D);
-  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, modifyFor2D);
+  updateAttributesStruct(shaderBuilder, attributeInfo, use2D);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, use2D);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -301,7 +296,7 @@ function addAttributeToRenderResources(
   attribute,
   attributeIndex,
   frameState,
-  modifyFor2D
+  use2D
 ) {
   const quantization = attribute.quantization;
   let type;
@@ -353,7 +348,7 @@ function addAttributeToRenderResources(
     attribute.typedArray = undefined;
   }
 
-  if (!modifyFor2D) {
+  if (!use2D) {
     return;
   }
 
@@ -448,7 +443,7 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   shaderBuilder.addVarying(glslType, varyingName);
 }
 
-function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
+function addAttributeDeclaration(shaderBuilder, attributeInfo, use2D) {
   const semantic = attributeInfo.attribute.semantic;
   const variableName = attributeInfo.variableName;
 
@@ -469,12 +464,12 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
     shaderBuilder.addAttribute(glslType, attributeName);
   }
 
-  if (isPosition && modifyFor2D) {
+  if (isPosition && use2D) {
     shaderBuilder.addAttribute("vec3", "a_position2D");
   }
 }
 
-function updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D) {
+function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
   const vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   const fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   const variableName = attributeInfo.variableName;
@@ -505,7 +500,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D) {
     );
   }
 
-  if (variableName === "positionMC" && modifyFor2D) {
+  if (variableName === "positionMC" && use2D) {
     shaderBuilder.addStructField(vsStructId, "vec3", "position2D");
   }
 }
@@ -513,14 +508,14 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, modifyFor2D) {
 function updateInitializeAttributesFunction(
   shaderBuilder,
   attributeInfo,
-  modifyFor2D
+  use2D
 ) {
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
 
   // If the scene is in 2D / CV mode, this line should always be added
   // regardless of whether the data is quantized.
-  const use2DPosition = variableName === "positionMC" && modifyFor2D;
+  const use2DPosition = variableName === "positionMC" && use2D;
   if (use2DPosition) {
     const line = "attributes.position2D = a_position2D;";
     shaderBuilder.addFunctionLines(functionId, [line]);

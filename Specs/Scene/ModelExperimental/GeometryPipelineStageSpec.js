@@ -19,7 +19,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-fdescribe(
+describe(
   "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
     const scratchMatrix = new Matrix4();
@@ -377,6 +377,7 @@ fdescribe(
           scene2D._frameState
         );
 
+        let referencePoint2D;
         // Check that all typed arrays have been unloaded
         const primitiveAttributes = primitive.attributes;
         const length = primitiveAttributes.length;
@@ -387,6 +388,8 @@ fdescribe(
           // Expect the 2D positions to be stored in the attribute.
           if (attribute.semantic === VertexAttributeSemantic.POSITION) {
             expect(attribute.buffer2D).toBeDefined();
+            expect(attribute.referencePoint2D).toBeDefined();
+            referencePoint2D = attribute.referencePoint2D;
           }
         }
 
@@ -460,7 +463,7 @@ fdescribe(
         verifyFeatureStruct(shaderBuilder);
 
         const translationMatrix = Matrix4.fromTranslation(
-          position2DAttribute.referencePoint2D,
+          referencePoint2D,
           scratchMatrix
         );
         const expected = Matrix4.multiplyTransformation(
