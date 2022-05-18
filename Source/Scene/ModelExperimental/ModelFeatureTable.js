@@ -91,7 +91,10 @@ Object.defineProperties(ModelFeatureTable.prototype, {
    */
   memorySizeInBytes: {
     get: function () {
-      console.error("TODO: ModelFeatureTable.memorySizeInBytes");
+      if (defined(this._batchTexture)) {
+        return this._batchTexture.memorySizeInBytes;
+      }
+
       return 0;
     },
   },

@@ -13,6 +13,12 @@ export default function ModelExperimentalStatistics() {
   this.trianglesLength = 0;
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
+
+  // TODO: an ES6 Set would be nicer for this
+  // Sets of buffers and textures we've already counted, so we don't
+  // double-count cached assets.
+  this.bufferIdSet = {};
+  this.textureIdSet = {};
 }
 
 /**
@@ -26,15 +32,29 @@ ModelExperimentalStatistics.prototype.clear = function () {
   this.trianglesLength = 0;
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
+  this.bufferIdSet = {};
+  this.textureIdSet = {};
 };
 
-ModelExperimentalStatistics.prototype.addBuffer = function (buffer) {
-  // TODO: what about caching?
-  // TODO: What if this is present on the CPU as well?
-  this.geometryByteLength += buffer.sizeInBytes;
+ModelExperimentalStatistics.prototype.addBuffer = function (
+  buffer,
+  hasCpuCopy
+) {
+  if (!this.bufferIdSet.hasOwnProperty(buffer._id)) {
+    // If there's a CPU copy, we need to count the memory twice
+    const copies = hasCpuCopy ? 2 : 1;
+    this.geometryByteLength += buffer.sizeInBytes * copies;
+  }
+
+  // Simulate set insertion
+  this.bufferIdSet[buffer._id] = true;
 };
 
 ModelExperimentalStatistics.prototype.addTexture = function (texture) {
-  // TODO: what about caching?
-  this.geometryByteLength += texture.sizeInBytes;
+  if (!this.textureIds.hasOwnProperty(texture._id)) {
+    this.texturesByteLength += texture.sizeInBytes;
+  }
+
+  // Simulate set insertion
+  this.textureIdSet[texture._id] = true;
 };
