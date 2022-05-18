@@ -844,10 +844,10 @@ ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   }
 
   // Slightly pad extents to avoid floating point error when fragment culling at edges.
-  south -= CesiumMath.EPSILON5;
-  west -= CesiumMath.EPSILON5;
-  north += CesiumMath.EPSILON5;
-  east += CesiumMath.EPSILON5;
+  south -= CesiumMath.EPSILON6;
+  west -= CesiumMath.EPSILON6;
+  north += CesiumMath.EPSILON6;
+  east += CesiumMath.EPSILON6;
 
   const longitudeRangeInverse = 1.0 / (east - west);
   const latitudeRangeInverse = 1.0 / (north - south);
