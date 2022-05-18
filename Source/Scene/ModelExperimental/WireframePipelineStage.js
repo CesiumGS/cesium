@@ -4,6 +4,8 @@ import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The wireframe pipeline stage generates a new index buffer for rendering the
@@ -32,7 +34,8 @@ WireframePipelineStage.process = function (
   frameState
 ) {
   const wireframeIndexBuffer = createWireframeIndexBuffer(
-    renderResources,
+    primitive,
+    renderResources.indices,
     frameState
   );
   renderResources.model._resources.push(wireframeIndexBuffer);
@@ -48,19 +51,12 @@ WireframePipelineStage.process = function (
   );
 };
 
-function createWireframeIndexBuffer(renderResources, frameState) {
-  let positionAttribute;
-  const attributes = renderResources.attributes;
-  const length = attributes.length;
-  for (let i = 0; i < length; i++) {
-    if (attributes[i].index === 0) {
-      positionAttribute = attributes[i];
-      break;
-    }
-  }
-
+function createWireframeIndexBuffer(primitive, indices, frameState) {
+  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION
+  );
   const vertexCount = positionAttribute.count;
-  const indices = renderResources.indices;
 
   let originalIndices;
   if (defined(indices)) {
@@ -78,7 +74,7 @@ function createWireframeIndexBuffer(renderResources, frameState) {
     }
   }
 
-  const primitiveType = renderResources.primitiveType;
+  const primitiveType = primitive.primitiveType;
   const wireframeIndices = WireframeIndexGenerator.createWireframeIndices(
     primitiveType,
     vertexCount,

@@ -72,7 +72,9 @@ describe(
     beforeAll(function () {
       scene = createScene();
       sceneWithWebgl2 = createScene({
-        requestWebgl2: true,
+        contextOptions: {
+          requestWebgl2: true,
+        },
       });
     });
 
