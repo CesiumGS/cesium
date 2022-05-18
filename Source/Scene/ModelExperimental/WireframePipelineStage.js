@@ -36,6 +36,7 @@ WireframePipelineStage.process = function (
     frameState
   );
   renderResources.model._resources.push(wireframeIndexBuffer);
+  renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
 
   // Update state so we render LINES with the correct index count
   const originalPrimitiveType = renderResources.primitiveType;
