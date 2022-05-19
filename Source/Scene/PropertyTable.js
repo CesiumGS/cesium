@@ -137,6 +137,30 @@ Object.defineProperties(PropertyTable.prototype, {
       return this._extensions;
     },
   },
+
+  /**
+   * Get the total amount of binary metadata stored in memory. This does
+   * not include JSON metadata
+   *
+   * @memberof PropertyTable.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  memorySizeInBytes: {
+    get: function () {
+      let totalMemory = 0;
+      if (defined(this._metadataTable)) {
+        totalMemory += this._metadataTable.memorySizeInBytes;
+      }
+
+      if (defined(this._batchTableHierarchy)) {
+        totalMemory += this._batchTableHierarchy.memorySizeInBytes;
+      }
+
+      return totalMemory;
+    },
+  },
 });
 
 /**

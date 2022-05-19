@@ -55,6 +55,8 @@ function MetadataTableProperty(options) {
   const hasStrings = type === MetadataType.STRING;
   const hasBooleans = type === MetadataType.BOOLEAN;
 
+  let memorySizeInBytes = 0;
+
   let arrayOffsets;
   if (isVariableLengthArray) {
     // EXT_structural_metadata uses arrayOffsetType.
@@ -79,6 +81,8 @@ function MetadataTableProperty(options) {
       arrayOffsetType,
       count + 1
     );
+
+    memorySizeInBytes += arrayOffsets.typedArray.byteLength;
   }
 
   const vectorComponentCount = MetadataType.getComponentCount(type);
@@ -117,6 +121,8 @@ function MetadataTableProperty(options) {
       stringOffsetType,
       componentCount + 1
     );
+
+    memorySizeInBytes += stringOffsets.typedArray.byteLength;
   }
 
   if (hasStrings || hasBooleans) {
@@ -141,6 +147,7 @@ function MetadataTableProperty(options) {
     valueType,
     valueCount
   );
+  memorySizeInBytes += values.typedArray.byteLength;
 
   let offset = property.offset;
   let scale = property.scale;
@@ -210,6 +217,7 @@ function MetadataTableProperty(options) {
   this._unpackedValues = undefined;
   this._extras = property.extras;
   this._extensions = property.extensions;
+  this._memorySizeInBytes = memorySizeInBytes;
 }
 
 Object.defineProperties(MetadataTableProperty.prototype, {
@@ -281,6 +289,20 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   extensions: {
     get: function () {
       return this._extensions;
+    },
+  },
+
+  /**
+   * Size of all typed arrays used by this table property
+   *
+   * @memberof MetadataTableProperty.prototype
+   * @type {Normal}
+   * @readonly
+   * @private
+   */
+  memorySizeInBytes: {
+    get: function () {
+      return this._memorySizeInBytes;
     },
   },
 });
