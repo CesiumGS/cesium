@@ -30,6 +30,9 @@ export default function BatchTableHierarchy(options) {
   this._parentIndexes = undefined;
   this._parentIds = undefined;
 
+  // Total memory used by the typed arrays
+  this._memorySizeInBytes = 0;
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", options.extension);
   //>>includeEnd('debug');
@@ -40,6 +43,14 @@ export default function BatchTableHierarchy(options) {
   validateHierarchy(this);
   //>>includeEnd('debug');
 }
+
+Object.defineProperties(BatchTableHierarchy.prototype, {
+  memorySizeInBytes: {
+    get: function () {
+      return this._memorySizeInBytes;
+    },
+  },
+});
 
 /**
  * Parse the batch table hierarchy from the
@@ -61,6 +72,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   let parentCounts = hierarchyJson.parentCounts;
   let parentIds = hierarchyJson.parentIds;
   let parentIdsLength = instancesLength;
+  let memorySizeInBytes = 0;
 
   if (defined(classIds.byteOffset)) {
     classIds.componentType = defaultValue(
@@ -74,6 +86,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
       binaryBody.byteOffset + classIds.byteOffset,
       instancesLength
     );
+    memorySizeInBytes += classIds.byteLength;
   }
 
   let parentIndexes;
@@ -90,6 +103,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
         binaryBody.byteOffset + parentCounts.byteOffset,
         instancesLength
       );
+      memorySizeInBytes += parentCounts.byteLength;
     }
     parentIndexes = new Uint16Array(instancesLength);
     parentIdsLength = 0;
@@ -97,6 +111,8 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
       parentIndexes[i] = parentIdsLength;
       parentIdsLength += parentCounts[i];
     }
+
+    memorySizeInBytes += parentIndexes.byteLength;
   }
 
   if (defined(parentIds) && defined(parentIds.byteOffset)) {
@@ -111,6 +127,8 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
       binaryBody.byteOffset + parentIds.byteOffset,
       parentIdsLength
     );
+
+    memorySizeInBytes += parentIds.byteLength;
   }
 
   const classesLength = classes.length;
@@ -122,6 +140,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
       properties,
       binaryBody
     );
+    memorySizeInBytes += countBinaryPropertyMemory(binaryProperties);
     classes[i].instances = combine(binaryProperties, properties);
   }
 
@@ -132,6 +151,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
     classIndexes[i] = classCounts[classId];
     ++classCounts[classId];
   }
+  memorySizeInBytes += classIndexes.byteLength;
 
   hierarchy._classes = classes;
   hierarchy._classIds = classIds;
@@ -139,6 +159,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   hierarchy._parentCounts = parentCounts;
   hierarchy._parentIndexes = parentIndexes;
   hierarchy._parentIds = parentIds;
+  hierarchy._memorySizeInBytes = memorySizeInBytes;
 }
 
 function getBinaryProperties(featuresLength, properties, binaryBody) {
@@ -187,6 +208,16 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
     }
   }
   return binaryProperties;
+}
+
+function countBinaryPropertyMemory(binaryProperties) {
+  let memorySizeInBytes = 0;
+  for (const name in binaryProperties) {
+    if (binaryProperties.hasOwnProperty(name)) {
+      memorySizeInBytes += binaryProperties[name].typedArray.byteLength;
+    }
+  }
+  return memorySizeInBytes;
 }
 
 //>>includeStart('debug', pragmas.debug);

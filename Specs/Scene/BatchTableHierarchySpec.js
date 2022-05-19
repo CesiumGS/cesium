@@ -69,6 +69,86 @@ describe("Scene/BatchTableHierarchy", function () {
   };
   const binaryHierarchyBody = new Uint8Array([1, 2, 3, 0, 1, 0, 1, 2, 3, 2]);
 
+  const binaryHierarchyWithBinaryIds = {
+    classes: [
+      {
+        name: "Box",
+        length: 3,
+        instances: {
+          items: {
+            type: "SCALAR",
+            componentType: "UNSIGNED_BYTE",
+            byteOffset: 8,
+          },
+          coordinates: {
+            type: "VEC2",
+            componentType: "UNSIGNED_BYTE",
+            byteOffset: 12,
+          },
+        },
+      },
+      {
+        name: "Pallet",
+        length: 1,
+        instances: {
+          boxCount: [1],
+        },
+      },
+    ],
+    instancesLength: 4,
+    classIds: {
+      byteOffset: 18,
+      componentType: "UNSIGNED_BYTE",
+    },
+    parentIds: {
+      byteOffset: 22,
+      componentType: "UNSIGNED_BYTE",
+    },
+    // included explicitly to test memorySizeInBytes
+    parentCounts: {
+      byteOffset: 26,
+      componentType: "UNSIGNED_BYTE",
+    },
+  };
+  const binaryHierarchyBodyWithIds = new Uint8Array([
+    // padding to simulate other data in the binary body
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    // binary property: items
+    1,
+    2,
+    3,
+    0,
+    // binary property: coordinates
+    1,
+    0,
+    1,
+    2,
+    3,
+    2,
+    // class IDs
+    0,
+    1,
+    0,
+    0,
+    // parent Ids
+    1,
+    1,
+    2,
+    3,
+    // parent counts
+    1,
+    1,
+    1,
+    1,
+  ]);
+
   it("throws without extension", function () {
     expect(function () {
       return new BatchTableHierarchy({
@@ -244,6 +324,34 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.getProperty(3, "boxCount")).not.toBeDefined();
   });
 
+  it("getProperty works with binary properties and ids", function () {
+    const hierarchy = new BatchTableHierarchy({
+      extension: binaryHierarchyWithBinaryIds,
+      binaryBody: binaryHierarchyBodyWithIds,
+    });
+    expect(hierarchy.getProperty(0, "items")).toBe(1);
+    expect(hierarchy.getProperty(0, "coordinates")).toEqual(
+      new Cartesian2(1, 0)
+    );
+    expect(hierarchy.getProperty(0, "boxCount")).toBe(1);
+
+    expect(hierarchy.getProperty(1, "items")).not.toBeDefined();
+    expect(hierarchy.getProperty(1, "coordinates")).not.toBeDefined();
+    expect(hierarchy.getProperty(1, "boxCount")).toBe(1);
+
+    expect(hierarchy.getProperty(2, "items")).toBe(2);
+    expect(hierarchy.getProperty(2, "coordinates")).toEqual(
+      new Cartesian2(1, 2)
+    );
+    expect(hierarchy.getProperty(2, "boxCount")).not.toBeDefined();
+
+    expect(hierarchy.getProperty(3, "items")).toBe(3);
+    expect(hierarchy.getProperty(3, "coordinates")).toEqual(
+      new Cartesian2(3, 2)
+    );
+    expect(hierarchy.getProperty(3, "boxCount")).not.toBeDefined();
+  });
+
   it("setProperty throws when trying to set an inherited property", function () {
     const hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
@@ -273,6 +381,24 @@ describe("Scene/BatchTableHierarchy", function () {
     const hierarchy = new BatchTableHierarchy({
       extension: binaryHierarchy,
       binaryBody: binaryHierarchyBody,
+    });
+
+    expect(hierarchy.getProperty(0, "items")).toBe(1);
+    expect(hierarchy.setProperty(0, "items", 5)).toBe(true);
+    expect(hierarchy.getProperty(0, "items")).toBe(5);
+
+    expect(hierarchy.getProperty(2, "coordinates")).toEqual(
+      new Cartesian2(1, 2)
+    );
+    const position = new Cartesian2(5, 5);
+    expect(hierarchy.setProperty(2, "coordinates", position)).toBe(true);
+    expect(hierarchy.getProperty(2, "coordinates")).toEqual(position);
+  });
+
+  it("setProperty works with binary values", function () {
+    const hierarchy = new BatchTableHierarchy({
+      extension: binaryHierarchyWithBinaryIds,
+      binaryBody: binaryHierarchyBodyWithIds,
     });
 
     expect(hierarchy.getProperty(0, "items")).toBe(1);
@@ -497,5 +623,31 @@ describe("Scene/BatchTableHierarchy", function () {
         extension: extension,
       });
     }).toThrowDeveloperError();
+  });
+
+  it("Computes memorySizeInBytes from typed arrays", function () {
+    const hierarchy = new BatchTableHierarchy({
+      extension: binaryHierarchyWithBinaryIds,
+      binaryBody: binaryHierarchyBodyWithIds,
+    });
+
+    const classIdsSize = 4;
+    const parentCountsSize = 4;
+    const parentIndexesSize = 4 * 2; // unsigned shorts
+    const parentIdsSize = 4;
+    const binaryPropertiesSize = 3 + 6; // ignoring 1 byte of padding
+    const classIndexesSize = 4 * 2;
+
+    const expectedMemory =
+      classIdsSize +
+      parentCountsSize +
+      parentIndexesSize +
+      parentIdsSize +
+      binaryPropertiesSize +
+      classIndexesSize;
+
+    // This only counts the buffers used for the batch table hierarchy
+    // extension. Cesium3DTileBatchTable handles the other properties.
+    expect(hierarchy.memorySizeInBytes).toBe(expectedMemory);
   });
 });

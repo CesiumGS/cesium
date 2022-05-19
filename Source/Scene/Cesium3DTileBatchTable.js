@@ -58,11 +58,16 @@ function Cesium3DTileBatchTable(
     batchTableJson,
     batchTableBinary
   );
-  this._batchTableBinaryProperties = getBinaryProperties(
+
+  const binaryProperties = getBinaryProperties(
     featuresLength,
     properties,
     batchTableBinary
   );
+  this._binaryPropertiesSizeInBytes = countBinaryPropertyMemory(
+    binaryProperties
+  );
+  this._batchTableBinaryProperties = binaryProperties;
 
   this._content = content;
 
@@ -78,9 +83,27 @@ function Cesium3DTileBatchTable(
 Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Cesium3DTileBatchTable.prototype, {
+  /**
+   * Estimate the size of this batch table in bytes. This includes the size of
+   * all typed arrays used as well as the size of the batch texture.
+   * This does not include JSON data, or any padding in the underlying
+   * ArrayBuffer, only a sum of typed arrays.
+   *
+   * @memberof Cesium3DTileBatchTable.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
   memorySizeInBytes: {
     get: function () {
-      return this._batchTexture.memorySizeInBytes;
+      let totalSize = this._batchTexture.memorySizeInBytes;
+      totalSize += this._binaryPropertiesSizeInBytes;
+
+      if (defined(this._batchTableHierarchy)) {
+        totalSize += this._batchTableHierarchy.memorySizeInBytes;
+      }
+
+      return totalSize;
     },
   },
 });
@@ -179,6 +202,20 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
     }
   }
   return binaryProperties;
+}
+
+function countBinaryPropertyMemory(binaryProperties) {
+  if (!defined(binaryProperties)) {
+    return 0;
+  }
+
+  let memorySizeInBytes = 0;
+  for (const name in binaryProperties) {
+    if (binaryProperties.hasOwnProperty(name)) {
+      memorySizeInBytes += binaryProperties[name].typedArray.byteLength;
+    }
+  }
+  return memorySizeInBytes;
 }
 
 Cesium3DTileBatchTable.getBinaryProperties = function (
