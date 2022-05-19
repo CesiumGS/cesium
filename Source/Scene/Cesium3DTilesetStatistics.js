@@ -29,7 +29,8 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.batchTableByteLength = 0;
+  this.batchTableByteLength = 0; // just the batch and pick texture sizes
+  this.metadataByteLength = 0; // binary metadata buffers
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {
@@ -53,6 +54,7 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
   const geometryByteLength = content.geometryByteLength;
   const texturesByteLength = content.texturesByteLength;
   const batchTableByteLength = content.batchTableByteLength;
+  const metadataByteLength = content.metadataByteLength;
 
   if (load) {
     statistics.numberOfFeaturesLoaded += decrement
@@ -68,6 +70,9 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
     statistics.batchTableByteLength += decrement
       ? -batchTableByteLength
       : batchTableByteLength;
+    statistics.metadataByteLength += decrement
+      ? -metadataByteLength
+      : metadataByteLength;
   } else {
     statistics.numberOfFeaturesSelected += decrement
       ? -featuresLength
@@ -125,5 +130,6 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
   result.batchTableByteLength = statistics.batchTableByteLength;
+  result.metadataByteLength = statistics.metadataByteLength;
 };
 export default Cesium3DTilesetStatistics;

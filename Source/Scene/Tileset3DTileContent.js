@@ -65,6 +65,12 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
     },
   },
 
+  metadataByteLength: {
+    get: function () {
+      return 0;
+    },
+  },
+
   innerContents: {
     get: function () {
       return undefined;

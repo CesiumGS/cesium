@@ -10,6 +10,7 @@ describe(
     const mockTileset = {
       _statistics: {
         batchTableByteLength: 0,
+        metadataByteLength: 0,
       },
     };
 

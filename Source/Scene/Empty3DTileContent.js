@@ -58,6 +58,12 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
+  metadataByteLength: {
+    get: function () {
+      return 0;
+    },
+  },
+
   innerContents: {
     get: function () {
       return undefined;

@@ -126,6 +126,17 @@ Object.defineProperties(Composite3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+   * always returns <code>0</code>.  Instead call <code>metadataByteLength</code> for a tile in the composite.
+   * @memberof Composite3DTileContent.prototype
+   */
+  metadataByteLength: {
+    get: function () {
+      return 0;
+    },
+  },
+
   innerContents: {
     get: function () {
       return this._contents;

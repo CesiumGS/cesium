@@ -127,6 +127,20 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
+   * Gets the estimated amount of memory used by binary metadata properties
+   * in bytes.
+   *
+   * @type {Number}
+   * @readonly
+   */
+  metadataByteLength: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+
+  /**
    * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}

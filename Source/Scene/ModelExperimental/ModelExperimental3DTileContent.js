@@ -74,7 +74,18 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
     get: function () {
       const batchTable = this.batchTable;
       if (defined(batchTable)) {
-        return batchTable.memorySizeInBytes;
+        return batchTable.batchTextureByteLength;
+      }
+
+      return 0;
+    },
+  },
+
+  metadataByteLength: {
+    get: function () {
+      const batchTable = this.batchTable;
+      if (defined(batchTable)) {
+        return batchTable.metadataByteLength;
       }
 
       return 0;

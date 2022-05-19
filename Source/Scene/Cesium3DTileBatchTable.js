@@ -75,7 +75,8 @@ function Cesium3DTileBatchTable(
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
     owner: content,
-    statistics: content.tileset.statistics,
+    // TODO: Can this be removed?
+    //statistics: content.tileset.statistics,
   });
 }
 
@@ -84,20 +85,31 @@ Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Cesium3DTileBatchTable.prototype, {
   /**
-   * Estimate the size of this batch table in bytes. This includes the size of
-   * all typed arrays used as well as the size of the batch texture.
-   * This does not include JSON data, or any padding in the underlying
-   * ArrayBuffer, only a sum of typed arrays.
+   * Size of just the batch textures, not including associated metadata
    *
    * @memberof Cesium3DTileBatchTable.prototype
    * @type {Number}
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  batchTextureSizeInBytes: {
     get: function () {
-      let totalSize = this._batchTexture.memorySizeInBytes;
-      totalSize += this._binaryPropertiesSizeInBytes;
+      return this._batchTexture.memorySizeInBytes;
+    },
+  },
+
+  /**
+   * Estimated size of the typed arrays used for metadata purposes. This
+   * does not inclue JSON data, or any padding in the underlying ArrayBuffer.
+   *
+   * @memberof Cesium3DTileBatchTable.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  metadataSizeInBytes: {
+    get: function () {
+      let totalSize = this._binaryPropertiesSizeInBytes;
 
       if (defined(this._batchTableHierarchy)) {
         totalSize += this._batchTableHierarchy.memorySizeInBytes;

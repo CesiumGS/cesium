@@ -339,6 +339,7 @@ describe(
         expect(content.geometryByteLength).toEqual(geometryByteLength);
         expect(content.texturesByteLength).toEqual(texturesByteLength);
         expect(content.batchTableByteLength).toEqual(0);
+        expect(content.metadataByteLength).toBe(0);
 
         // Color a feature and expect the texture memory to increase
         content.getFeature(0).color = Color.RED;
@@ -346,6 +347,7 @@ describe(
         expect(content.geometryByteLength).toEqual(geometryByteLength);
         expect(content.texturesByteLength).toEqual(texturesByteLength);
         expect(content.batchTableByteLength).toEqual(batchTexturesByteLength);
+        expect(content.metadataByteLength).toBe(0);
 
         // Pick the tile and expect the texture memory to increase
         scene.pickForSpecs();
@@ -354,6 +356,7 @@ describe(
         expect(content.batchTableByteLength).toEqual(
           batchTexturesByteLength + pickTexturesByteLength
         );
+        expect(content.metadataByteLength).toBe(0);
       });
     });
 

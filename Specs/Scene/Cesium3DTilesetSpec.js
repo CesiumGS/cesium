@@ -930,6 +930,7 @@ describe(
         expect(statistics.geometryByteLength).toEqual(0);
         expect(statistics.texturesByteLength).toEqual(0);
         expect(statistics.batchTableByteLength).toEqual(0);
+        expect(statistics.metadataByteLength).toEqual(0);
 
         viewRootOnly();
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
@@ -942,6 +943,7 @@ describe(
               singleTileTextureMemory
             );
             expect(statistics.batchTableByteLength).toEqual(0);
+            expect(statistics.metadataByteLength).toEqual(0);
 
             viewAllTiles();
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
@@ -954,6 +956,7 @@ describe(
                   singleTileTextureMemory * tilesLength
                 );
                 expect(statistics.batchTableByteLength).toEqual(0);
+                expect(statistics.metadataByteLength).toEqual(0);
 
                 // One feature colored, the batch table memory is now higher
                 tileset.root.content.getFeature(0).color = Color.RED;
@@ -967,6 +970,7 @@ describe(
                 expect(statistics.batchTableByteLength).toEqual(
                   singleTileBatchTextureMemory
                 );
+                expect(statistics.metadataByteLength).toEqual(0);
 
                 // All tiles picked, the texture memory is now higher
                 scene.pickForSpecs();
@@ -980,6 +984,7 @@ describe(
                   singleTileBatchTextureMemory +
                     singleTilePickTextureMemory * tilesLength
                 );
+                expect(statistics.metadataByteLength).toEqual(0);
 
                 // Tiles are still in memory when zoomed out
                 viewNothing();
@@ -994,6 +999,7 @@ describe(
                   singleTileBatchTextureMemory +
                     singleTilePickTextureMemory * tilesLength
                 );
+                expect(statistics.metadataByteLength).toEqual(0);
 
                 // Trim loaded tiles, expect the memory statistics to be 0
                 tileset.trimLoadedTiles();
@@ -1001,6 +1007,7 @@ describe(
                 expect(statistics.geometryByteLength).toEqual(0);
                 expect(statistics.texturesByteLength).toEqual(0);
                 expect(statistics.batchTableByteLength).toEqual(0);
+                expect(statistics.metadataByteLength).toEqual(0);
               }
             );
           }

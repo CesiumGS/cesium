@@ -88,7 +88,17 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return defined(this._batchTable) ? this._batchTable.memorySizeInBytes : 0;
+      return defined(this._batchTable)
+        ? this._batchTable.batchTextureSizeInBytes
+        : 0;
+    },
+  },
+
+  metadataByteLength: {
+    get: function () {
+      return defined(this._batchTable)
+        ? this._batchTable.metadataSizeInBytes
+        : 0;
     },
   },
 
