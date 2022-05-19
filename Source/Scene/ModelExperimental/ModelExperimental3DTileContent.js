@@ -72,6 +72,8 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
+      // TODO: Should this loop over ALL batch tables, or just return the
+      // selected?
       const batchTable = this.batchTable;
       if (defined(batchTable)) {
         return batchTable.batchTextureByteLength;
@@ -83,12 +85,11 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   metadataByteLength: {
     get: function () {
-      const batchTable = this.batchTable;
-      if (defined(batchTable)) {
-        return batchTable.metadataByteLength;
-      }
-
-      return 0;
+      const statistics = this._model.statistics;
+      return (
+        statistics.metadataTexturesByteLength +
+        statistics.metadataPropertiesByteLength
+      );
     },
   },
 

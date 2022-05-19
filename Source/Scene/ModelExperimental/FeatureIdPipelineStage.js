@@ -469,6 +469,7 @@ function generateImplicitFeatureIdAttribute(
     });
     vertexBuffer.vertexArrayDestroyable = false;
     model._resources.push(vertexBuffer);
+    model._statistics.addBuffer(vertexBuffer);
   } else {
     value = [implicitFeatureIds.offset];
   }

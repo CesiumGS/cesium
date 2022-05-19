@@ -451,7 +451,7 @@ function handleBitangents(shaderBuilder, attributes) {
 }
 
 function updateStatistics(renderResources, primitive) {
-  const statistics = renderResources.statistics;
+  const statistics = renderResources.model.statistics;
   const indicesCount = renderResources.count;
   const mode = primitive.mode;
 
@@ -466,7 +466,20 @@ function updateStatistics(renderResources, primitive) {
   for (let i = 0; i < length; i++) {
     const attribute = attributes[i];
     if (defined(attribute.buffer)) {
-      statistics.addBuffer(attribute);
+      const hasCpuCopy = defined(attribute.typedArray);
+      statistics.addBuffer(attribute.buffer, hasCpuCopy);
+    }
+  }
+
+  const indices = primitive.indices;
+  if (defined(indices)) {
+    if (defined(indices.buffer)) {
+      // Wireframe mode will have both GPU and CPU copies
+      const hasCpuCopy = defined(indices.typedArray);
+      statistics.addBuffer(indices.buffer, hasCpuCopy);
+    } else {
+      // No buffer, but we have a typed array
+      statistics.geometryByteLength += indices.typedArray.byteLength;
     }
   }
 }

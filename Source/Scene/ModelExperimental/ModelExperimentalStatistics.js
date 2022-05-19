@@ -14,11 +14,21 @@ export default function ModelExperimentalStatistics() {
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
 
+  // This includes property textures and feature ID textures
+  this.metadataTexturesByteLength = 0;
+
+  // This includes binary property table properties. This does not
+  // include property attributes, as those are included in geometry.
+  // Unlike metadata textures, there isn't an easy way to de-duplicate cached
+  // resources since metadata is often in typed arrays, not Buffer objects
+  this.metadataPropertiesByteLength = 0;
+
   // TODO: an ES6 Set would be nicer for this
   // Sets of buffers and textures we've already counted, so we don't
   // double-count cached assets.
   this.bufferIdSet = {};
   this.textureIdSet = {};
+  this.metadataTextureIdSet = {};
 }
 
 /**
@@ -32,6 +42,8 @@ ModelExperimentalStatistics.prototype.clear = function () {
   this.trianglesLength = 0;
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
+  this.metadataTexturesByteLength = 0;
+  this.metadataPropertiesByteLength = 0;
   this.bufferIdSet = {};
   this.textureIdSet = {};
 };
@@ -57,4 +69,13 @@ ModelExperimentalStatistics.prototype.addTexture = function (texture) {
 
   // Simulate set insertion
   this.textureIdSet[texture._id] = true;
+};
+
+ModelExperimentalStatistics.prototype.addMetadataTexture = function (texture) {
+  if (!this.metadataTextureIds.hasOwnProperty(texture._id)) {
+    this.metadataTexturesByteLength += texture.sizeInBytes;
+  }
+
+  // Simulate set insertion
+  this.metadataTextureIdSet[texture._id] = true;
 };

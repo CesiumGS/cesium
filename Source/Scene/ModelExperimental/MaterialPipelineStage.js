@@ -197,6 +197,9 @@ function processTexture(
     return defaultValue(textureReader.texture, defaultTexture);
   };
 
+  // TODO: what if the texture is not loaded?
+  statistics.addTexture(textureReader.texture);
+
   // Add a #define directive to enable using the texture in the shader
   const textureDefine = `HAS_${defineName}_TEXTURE`;
   shaderBuilder.addDefine(textureDefine, undefined, ShaderDestination.FRAGMENT);

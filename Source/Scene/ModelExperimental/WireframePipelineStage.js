@@ -33,13 +33,20 @@ WireframePipelineStage.process = function (
   primitive,
   frameState
 ) {
+  const model = renderResources.model;
   const wireframeIndexBuffer = createWireframeIndexBuffer(
     primitive,
     renderResources.indices,
     frameState
   );
-  renderResources.model._resources.push(wireframeIndexBuffer);
+  model._resources.push(wireframeIndexBuffer);
   renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
+
+  // We only need to add this for the generated buffer. in WebGL 1, the CPU
+  // copy of the original indices is already counted in the geometry stage,
+  // and in WebGL 2, the CPU copy of the original indices is discarded after
+  // generating the wireframe indices.
+  model.statistics.addBuffer(wireframeIndexBuffer);
 
   // Update state so we render LINES with the correct index count
   const originalPrimitiveType = renderResources.primitiveType;
