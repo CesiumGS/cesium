@@ -361,6 +361,10 @@ function initialize(model) {
   texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
+
+      // Re-run the pipeline so texture memory statistics are re-run
+      // TODO: surround in if (this._incrementallyLoadTextures)
+      this.resetDrawCommands();
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -1111,10 +1115,6 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
-  if (!this._drawCommandsBuilt) {
-    return;
-  }
-  this.destroyResources();
   this._drawCommandsBuilt = false;
 };
 
@@ -1242,6 +1242,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (!this._drawCommandsBuilt) {
+    this.destroyResources();
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
 

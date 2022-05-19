@@ -158,6 +158,11 @@ Object.defineProperties(StructuralMetadata.prototype, {
       return this._propertyAttributes;
     },
   },
+
+  propertyTablesByteLength: {
+    // total size in bytes across all property tables
+    get: function () {},
+  },
 });
 
 /**

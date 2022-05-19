@@ -253,6 +253,9 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
     scaleTypedArray.fill(1);
   }
 
+  // TODO: finish this
+  statistics.geometryByteLength += translationTypedArray.byteLength;
+
   for (let i = 0; i < count; i++) {
     const translation = new Cartesian3(
       translationTypedArray[i * 3],
@@ -346,7 +349,9 @@ function processFeatureIdAttributes(
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;
-    model._resources.push(vertexBuffer);
+    model._pipelineResources.push(vertexBuffer);
+
+    // TODO: add a comment that packed typed arrays are explicitly not counted
     model.statistics.addBuffer(vertexBuffer);
 
     instancingVertexAttributes.push({

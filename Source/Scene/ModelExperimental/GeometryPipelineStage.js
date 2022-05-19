@@ -466,8 +466,11 @@ function updateStatistics(renderResources, primitive) {
   for (let i = 0; i < length; i++) {
     const attribute = attributes[i];
     if (defined(attribute.buffer)) {
+      // TODO: Document typedArray vs packedTypeArray better in ModelComponents
       const hasCpuCopy = defined(attribute.typedArray);
       statistics.addBuffer(attribute.buffer, hasCpuCopy);
+    } else {
+      statistics.geometryByteLength += attribute.typedArray.byteLength;
     }
   }
 
@@ -479,6 +482,7 @@ function updateStatistics(renderResources, primitive) {
       statistics.addBuffer(indices.buffer, hasCpuCopy);
     } else {
       // No buffer, but we have a typed array
+      // TODO: this probably shouldn't happen...
       statistics.geometryByteLength += indices.typedArray.byteLength;
     }
   }
@@ -495,5 +499,8 @@ function countTriangles(primitiveType, indicesCount) {
       return 0;
   }
 }
+
+// TODO: somewhere in this file if an attribute has a typed array but no
+// buffer, throw a DeveloperError
 
 export default GeometryPipelineStage;

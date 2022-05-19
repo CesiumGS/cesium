@@ -111,6 +111,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
     },
   },
 
+  // TODO:
+  // batch table byte length now includes property tables, batch table hierarchy,
+
   /**
    * Gets the amount of memory used by the batch table textures, in bytes.
    *

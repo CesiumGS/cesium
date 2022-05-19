@@ -66,7 +66,10 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   texturesByteLength: {
     get: function () {
-      return this._model.statistics.texturesByteLength;
+      return (
+        this._model.statistics.texturesByteLength +
+        this._model.asyncTexturesByteLength
+      );
     },
   },
 

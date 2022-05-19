@@ -175,6 +175,8 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
     return indices.buffer;
   }
 
+  // TODO: move this to GeometryPipeline Stage?
+  // TODO: does this ever get called?
   const typedArray = indices.typedArray;
   const indexDatatype = IndexDatatype.fromSizeInBytes(
     typedArray.BYTES_PER_ELEMENT
@@ -186,4 +188,6 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
+
+  // TODO: add to _resources
 }
