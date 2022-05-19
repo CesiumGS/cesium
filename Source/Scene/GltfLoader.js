@@ -544,7 +544,7 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
     const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-    bufferViewLoader.promise
+    const promise = bufferViewLoader.promise
       .then(function (bufferViewLoader) {
         if (loader.isDestroyed()) {
           return;
@@ -562,6 +562,7 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
       .catch(function () {
         loadDefaultAccessorValues(accessor, values);
       });
+    loader._loaderPromises.push(promise);
 
     return values;
   }
