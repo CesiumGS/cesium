@@ -19,6 +19,7 @@ import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
+import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -95,7 +96,7 @@ export default function ModelExperimentalPrimitive(options) {
   this.drawCommands = [];
 
   /**
-   * The bounding sphere of this primitive (in object-space).
+   * The bounding sphere of this primitive in object-space.
    *
    * @type {BoundingSphere}
    *
@@ -104,13 +105,20 @@ export default function ModelExperimentalPrimitive(options) {
   this.boundingSphere = undefined;
 
   /**
+   * The bounding sphere of this primitive in 2D world space.
+   *
+   * @type {BoundingSphere}
+   *
+   * @private
+   */
+  this.boundingSphere2D = undefined;
+
+  /**
    * Update stages to apply to this primitive.
    *
    * @private
    */
   this.updateStages = [];
-
-  this.configurePipeline();
 }
 
 /**
@@ -118,9 +126,11 @@ export default function ModelExperimentalPrimitive(options) {
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
  *
+ * @param {FrameState} frameState The frame state.
+ *
  * @private
  */
-ModelExperimentalPrimitive.prototype.configurePipeline = function () {
+ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
 
@@ -128,6 +138,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const node = this.node;
   const model = this.model;
   const customShader = model.customShader;
+  const context = frameState.context;
+  const useWebgl2 = context.webgl2;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
@@ -141,6 +153,13 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
+  const generateWireframeIndices =
+    model.debugWireframe &&
+    PrimitiveType.isTriangles(primitive.primitiveType) &&
+    // Generating index buffers for wireframes is always possible in WebGL2.
+    // However, this will only work in WebGL1 if the model was constructed with
+    // enableDebugWireframe set to true.
+    (model._enableDebugWireframe || useWebgl2);
 
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
@@ -151,6 +170,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   // Start of pipeline -----------------------------------------------------
 
   pipelineStages.push(GeometryPipelineStage);
+
+  if (generateWireframeIndices) {
+    pipelineStages.push(WireframePipelineStage);
+  }
 
   if (hasMorphTargets) {
     pipelineStages.push(MorphTargetsPipelineStage);

@@ -72,7 +72,9 @@ describe(
     beforeAll(function () {
       scene = createScene();
       sceneWithWebgl2 = createScene({
-        requestWebgl2: true,
+        contextOptions: {
+          requestWebgl2: true,
+        },
       });
     });
 
@@ -264,6 +266,20 @@ describe(
           expect(model._resourcesLoaded).toEqual(true);
           verifyRender(model, true);
         });
+      });
+    });
+
+    it("initializes and renders with url", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          url: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        verifyRender(model, true);
       });
     });
 

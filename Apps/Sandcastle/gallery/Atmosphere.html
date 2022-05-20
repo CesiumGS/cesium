@@ -668,9 +668,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          orderIndependentTranslucency: false,
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
         const globe = scene.globe;
         const skyAtmosphere = scene.skyAtmosphere;

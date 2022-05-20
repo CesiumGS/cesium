@@ -428,7 +428,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      runtimePrimitive.configurePipeline();
+      runtimePrimitive.configurePipeline(frameState);
       const primitivePipelineStages = runtimePrimitive.pipelineStages;
 
       const primitiveRenderResources = new PrimitiveRenderResources(
