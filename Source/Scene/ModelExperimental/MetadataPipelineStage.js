@@ -338,7 +338,7 @@ function updateStatistics(renderResources) {
     countPropertyTextures(statistics, structuralMetadata);
 
     // Property tables are accounted for here
-    statistics.propertyTableByteLength +=
+    statistics.propertyTablesByteLength +=
       structuralMetadata.propertyTablesByteLength;
 
     // Intentionally skip property attributes since those are handled in the
@@ -354,7 +354,7 @@ function updateStatistics(renderResources) {
 
     // This does not include the property table memory, as that is already
     // counted through the structuralMetadata above.
-    statistics.propertyTableByteLength += featureTable.batchTextureByteLength;
+    statistics.propertyTablesByteLength += featureTable.batchTextureByteLength;
   }
 }
 

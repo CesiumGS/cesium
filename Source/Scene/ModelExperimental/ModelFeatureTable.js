@@ -80,7 +80,8 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   },
 
   /**
-   * Total size of the feature table in bytes for reporting statistics.
+   * Size of the batch texture. This does not count the property table size
+   * as that is counted separately through StructuralMetadata.
    *
    * @memberof ModelFeatureTable.prototype
    *

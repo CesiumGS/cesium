@@ -151,11 +151,11 @@ Object.defineProperties(PropertyTable.prototype, {
     get: function () {
       let totalByteLength = 0;
       if (defined(this._metadataTable)) {
-        totalByteLength += this._metadataTable.byteLength;
+        totalByteLength += this._metadataTable.memorySizeInBytes;
       }
 
       if (defined(this._batchTableHierarchy)) {
-        totalByteLength += this._batchTableHierarchy.byteLength;
+        totalByteLength += this._batchTableHierarchy.memorySizeInBytes;
       }
 
       return totalByteLength;

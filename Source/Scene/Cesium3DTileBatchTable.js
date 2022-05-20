@@ -85,14 +85,15 @@ Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Cesium3DTileBatchTable.prototype, {
   /**
-   * Size of just the batch textures, not including associated metadata
+   * Size of the batch table, including the batch table hierarchy's binary
+   * buffers and any binary properties. JSON data is not counted.
    *
    * @memberof Cesium3DTileBatchTable.prototype
    * @type {Number}
    * @readonly
    * @private
    */
-  batchTextureByteLength: {
+  batchTableByteLength: {
     get: function () {
       let totalByteLength = this._binaryPropertiesByteLength;
 

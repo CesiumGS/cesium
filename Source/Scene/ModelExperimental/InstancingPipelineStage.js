@@ -346,8 +346,10 @@ function processFeatureIdAttributes(
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;
-    model._pipelineResources.push(vertexBuffer);
-    model.statistics.addBuffer(vertexBuffer);
+    model._resources.push(vertexBuffer);
+
+    const hasCpuCopy = false;
+    model.statistics.addBuffer(vertexBuffer, hasCpuCopy);
 
     instancingVertexAttributes.push({
       index: renderResources.attributeIndex++,
