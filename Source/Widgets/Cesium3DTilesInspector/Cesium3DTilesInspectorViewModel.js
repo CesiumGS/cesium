@@ -116,9 +116,6 @@ function getStatistics(tileset, isPick) {
       )}</li>` +
       `<li><strong>Batch Table Memory (MB): </strong>${formatMemoryString(
         statistics.batchTableByteLength
-      )}</li>` +
-      `<li><strong>Metadata Memory (MB): </strong>${formatMemoryString(
-        statistics.metadataByteLength
       )}</li>`;
     s += "</ul>";
   }

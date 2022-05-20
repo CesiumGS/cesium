@@ -1,10 +1,7 @@
 import BlendingState from "../BlendingState.js";
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
@@ -171,23 +168,5 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
     return undefined;
   }
 
-  if (defined(indices.buffer)) {
-    return indices.buffer;
-  }
-
-  // TODO: move this to GeometryPipeline Stage?
-  // TODO: does this ever get called?
-  const typedArray = indices.typedArray;
-  const indexDatatype = IndexDatatype.fromSizeInBytes(
-    typedArray.BYTES_PER_ELEMENT
-  );
-
-  return Buffer.createIndexBuffer({
-    context: frameState.context,
-    typedArray: typedArray,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: indexDatatype,
-  });
-
-  // TODO: add to _resources
+  return indices.buffer;
 }

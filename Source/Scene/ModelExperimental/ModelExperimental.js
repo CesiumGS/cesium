@@ -268,15 +268,20 @@ function createModelFeatureTables(model, structuralMetadata) {
   const featureTables = model._featureTables;
 
   const propertyTables = structuralMetadata.propertyTables;
-  for (let i = 0; i < propertyTables.length; i++) {
+  const length = propertyTables.length;
+  let totalByteLength = 0;
+  for (let i = 0; i < length; i++) {
     const propertyTable = propertyTables[i];
     const modelFeatureTable = new ModelFeatureTable({
       model: model,
       propertyTable: propertyTable,
     });
+    totalByteLength += modelFeatureTable.batchTableByteLength;
 
     featureTables.push(modelFeatureTable);
   }
+
+  this._batchTableByteLength = totalByteLength;
 
   return featureTables;
 }
@@ -364,7 +369,7 @@ function initialize(model) {
 
       // Re-run the pipeline so texture memory statistics are re-run
       // TODO: surround in if (this._incrementallyLoadTextures)
-      this.resetDrawCommands();
+      model.resetDrawCommands();
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -419,6 +424,7 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * @private
+   * @type {ModelExperimentalStatistics}
    * @readonly
    */
   statistics: {
@@ -1232,7 +1238,8 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   const featureTables = this._featureTables;
-  for (let i = 0; i < featureTables.length; i++) {
+  const length = featureTables.length;
+  for (let i = 0; i < length; i++) {
     featureTables[i].update(frameState);
     // Check if the types of style commands needed have changed and trigger a reset of the draw commands
     // to ensure that translucent and opaque features are handled in the correct passes.
@@ -1439,7 +1446,8 @@ ModelExperimental.prototype.destroy = function () {
 
   const featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (let i = 0; i < featureTables.length; i++) {
+    const length = featureTables.length;
+    for (let i = 0; i < length; i++) {
       featureTables[i].destroy();
     }
   }

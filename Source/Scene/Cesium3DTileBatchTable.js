@@ -64,7 +64,7 @@ function Cesium3DTileBatchTable(
     properties,
     batchTableBinary
   );
-  this._binaryPropertiesSizeInBytes = countBinaryPropertyMemory(
+  this._binaryPropertiesByteLength = countBinaryPropertyMemory(
     binaryProperties
   );
   this._batchTableBinaryProperties = binaryProperties;
@@ -92,30 +92,17 @@ Object.defineProperties(Cesium3DTileBatchTable.prototype, {
    * @readonly
    * @private
    */
-  batchTextureSizeInBytes: {
+  batchTextureByteLength: {
     get: function () {
-      return this._batchTexture.memorySizeInBytes;
-    },
-  },
-
-  /**
-   * Estimated size of the typed arrays used for metadata purposes. This
-   * does not inclue JSON data, or any padding in the underlying ArrayBuffer.
-   *
-   * @memberof Cesium3DTileBatchTable.prototype
-   * @type {Number}
-   * @readonly
-   * @private
-   */
-  metadataSizeInBytes: {
-    get: function () {
-      let totalSize = this._binaryPropertiesSizeInBytes;
+      let totalByteLength = this._binaryPropertiesByteLength;
 
       if (defined(this._batchTableHierarchy)) {
-        totalSize += this._batchTableHierarchy.memorySizeInBytes;
+        totalByteLength += this._batchTableHierarchy.memorySizeInBytes;
       }
 
-      return totalSize;
+      totalByteLength += this._batchTexture.memorySizeInBytes;
+
+      return totalByteLength;
     },
   },
 });

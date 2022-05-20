@@ -66,33 +66,13 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   texturesByteLength: {
     get: function () {
-      return (
-        this._model.statistics.texturesByteLength +
-        this._model.asyncTexturesByteLength
-      );
+      return this._model.statistics.texturesByteLength;
     },
   },
 
   batchTableByteLength: {
     get: function () {
-      // TODO: Should this loop over ALL batch tables, or just return the
-      // selected?
-      const batchTable = this.batchTable;
-      if (defined(batchTable)) {
-        return batchTable.batchTextureByteLength;
-      }
-
-      return 0;
-    },
-  },
-
-  metadataByteLength: {
-    get: function () {
-      const statistics = this._model.statistics;
-      return (
-        statistics.metadataTexturesByteLength +
-        statistics.metadataPropertiesByteLength
-      );
+      return this._model.statistics.batchTableByteLength;
     },
   },
 

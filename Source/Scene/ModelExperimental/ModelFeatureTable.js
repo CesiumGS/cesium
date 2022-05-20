@@ -89,29 +89,13 @@ Object.defineProperties(ModelFeatureTable.prototype, {
    *
    * @private
    */
-  batchTextureSizeInBytes: {
+  batchTextureByteLength: {
     get: function () {
       if (defined(this._batchTexture)) {
         return this._batchTexture.memorySizeInBytes;
       }
 
       return 0;
-    },
-  },
-
-  /**
-   * Total size of binary metadata properties in the property table
-   *
-   * @memberof ModelFeatureTable.prototype
-   *
-   * @type {Number}
-   * @readonly
-   *
-   * @private
-   */
-  metadataSizeInBytes: {
-    get: function () {
-      return this._propertyTable.memorySizeInBytes;
     },
   },
 

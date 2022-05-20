@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
@@ -129,6 +130,17 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
       attribute.type
     );
 
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      !defined(attribute.buffer) &&
+      (defined(attribute.typedArray) || defined(attribute.packedTypedArray))
+    ) {
+      throw new DeveloperError(
+        "Attributes must be provided as a Buffer or constant value"
+      );
+    }
+    //>>includeEnd('debug');
+
     let index;
     if (attributeLocationCount > 1) {
       index = renderResources.attributeIndex;
@@ -147,7 +159,9 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  updateStatistics(model.statistics, primitive);
+  processIndices(primitive);
+
+  updateStatistics(renderResources, primitive);
 
   shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addFragmentLines([GeometryStageFS]);
@@ -450,6 +464,19 @@ function handleBitangents(shaderBuilder, attributes) {
   );
 }
 
+function processIndices(primitive) {
+  const indices = primitive.indices;
+  if (!defined(indices)) {
+    return;
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices.buffer)) {
+    throw new DeveloperError("Indices must be provided as a Buffer");
+  }
+  //>>includeEnd('debug');
+}
+
 function updateStatistics(renderResources, primitive) {
   const statistics = renderResources.model.statistics;
   const indicesCount = renderResources.count;
@@ -466,11 +493,8 @@ function updateStatistics(renderResources, primitive) {
   for (let i = 0; i < length; i++) {
     const attribute = attributes[i];
     if (defined(attribute.buffer)) {
-      // TODO: Document typedArray vs packedTypeArray better in ModelComponents
       const hasCpuCopy = defined(attribute.typedArray);
       statistics.addBuffer(attribute.buffer, hasCpuCopy);
-    } else {
-      statistics.geometryByteLength += attribute.typedArray.byteLength;
     }
   }
 
@@ -480,10 +504,6 @@ function updateStatistics(renderResources, primitive) {
       // Wireframe mode will have both GPU and CPU copies
       const hasCpuCopy = defined(indices.typedArray);
       statistics.addBuffer(indices.buffer, hasCpuCopy);
-    } else {
-      // No buffer, but we have a typed array
-      // TODO: this probably shouldn't happen...
-      statistics.geometryByteLength += indices.typedArray.byteLength;
     }
   }
 }
@@ -499,8 +519,5 @@ function countTriangles(primitiveType, indicesCount) {
       return 0;
   }
 }
-
-// TODO: somewhere in this file if an attribute has a typed array but no
-// buffer, throw a DeveloperError
 
 export default GeometryPipelineStage;
