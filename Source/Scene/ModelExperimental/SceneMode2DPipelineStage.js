@@ -15,7 +15,7 @@ import SceneTransforms from "../SceneTransforms.js";
 const scratchModelMatrix = new Matrix4();
 
 /**
- * The scene mode 2D stage processes the vertex attributes of a primitive.
+ * The scene mode 2D stage generates resources for rendering a primitive in 2D / CV mode.
  *
  * @namespace SceneMode2DPipelineStage
  *
@@ -25,15 +25,18 @@ const SceneMode2DPipelineStage = {};
 SceneMode2DPipelineStage.name = "SceneMode2DPipelineStage"; // Helps with debugging
 
 /**
- * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
- * the attribute objects to the render resources and setting the flags as needed.
+ * This pipeline stage processes the position attribute of a primitive and adds the relevant
+ * define and uniform matrix to the shader. It also generates new resources for the primitive
+ * in 2D. These resources persist in the runtime primitive so that the typed array used to
+ * store the positional data can be freed.
  *
- * This must go before GeometryPipelineStage in the primitive pipeline.
+ * This stage must go before the GeometryPipelineStage in the primitive pipeline.
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- *  <li> creates a vertex buffer for the projected positions of the primitive in 2D
+ *  <li> creates a vertex buffer for the positions of the primitive projected to 2D
  *  <li> creates the bounding sphere for the primitive in 2D
+ *  <li> adds a flag to the shader to use 2D positions
  *  <li> adds a uniform for the view model matrix in 2D
  * </ul>
  *
