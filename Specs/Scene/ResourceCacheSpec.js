@@ -249,20 +249,12 @@ describe(
 
     let scene;
 
-    // Vertex buffers will load as buffers and typed arrays if loadFor2D is true,
-    // but not if the scene is 3D only.
-    let sceneWith3DOnly;
-
     beforeAll(function () {
       scene = createScene();
-      sceneWith3DOnly = createScene({
-        scene3DOnly: true,
-      });
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-      sceneWith3DOnly.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -1001,37 +993,6 @@ describe(
         expect(vertexBufferLoader.typedArray).toBeDefined();
         expect(vertexBufferLoader.buffer).toBeDefined();
       });
-    });
-
-    it("loads vertex buffer as buffer if scene is 3D only", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
-      );
-
-      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
-        gltf: gltfUncompressed,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        bufferViewId: 0,
-        loadFor2D: true,
-      });
-      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
-        gltf: gltfUncompressed,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        bufferViewId: 0,
-        accessorId: 0,
-        loadFor2D: true,
-      });
-
-      expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
-
-      return waitForLoaderProcess(vertexBufferLoader, sceneWith3DOnly).then(
-        function (vertexBufferLoader) {
-          expect(vertexBufferLoader.typedArray).toBeUndefined();
-          expect(vertexBufferLoader.buffer).toBeDefined();
-        }
-      );
     });
 
     it("loadVertexBuffer throws if gltf is undefined", function () {

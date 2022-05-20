@@ -214,18 +214,13 @@ describe(
     };
 
     let scene;
-    let sceneWith3DOnly;
 
     beforeAll(function () {
       scene = createScene();
-      sceneWith3DOnly = createScene({
-        scene3DOnly: true,
-      });
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-      sceneWith3DOnly.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -474,7 +469,7 @@ describe(
       // Simulate JobScheduler not being ready for a few frames
       const processCallsTotal = 3;
       let processCallsCount = 0;
-      const jobScheduler = sceneWith3DOnly.frameState.jobScheduler;
+      const jobScheduler = scene.frameState.jobScheduler;
       const originalJobSchedulerExecute = jobScheduler.execute;
       spyOn(JobScheduler.prototype, "execute").and.callFake(function (
         job,
@@ -509,49 +504,6 @@ describe(
           positions.byteLength
         );
       });
-    });
-
-    it("loads as buffer only if scene3DOnly is true", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
-      );
-
-      // Simulate JobScheduler not being ready for a few frames
-      const processCallsTotal = 3;
-      let processCallsCount = 0;
-      const jobScheduler = sceneWith3DOnly.frameState.jobScheduler;
-      const originalJobSchedulerExecute = jobScheduler.execute;
-      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
-        job,
-        jobType
-      ) {
-        if (processCallsCount++ >= processCallsTotal) {
-          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
-        }
-        return false;
-      });
-
-      const vertexBufferLoader = new GltfVertexBufferLoader({
-        resourceCache: ResourceCache,
-        gltf: gltfUncompressed,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        bufferViewId: 0,
-        accessorId: 0,
-        loadFor2D: true,
-      });
-
-      vertexBufferLoader.load();
-
-      return waitForLoaderProcess(vertexBufferLoader, sceneWith3DOnly).then(
-        function (vertexBufferLoader) {
-          loaderProcess(vertexBufferLoader, sceneWith3DOnly); // Check that calling process after load doesn't break anything
-          expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-            positions.byteLength
-          );
-          expect(vertexBufferLoader.typedArray).toBeUndefined();
-        }
-      );
     });
 
     it("creates vertex buffer synchronously", function () {

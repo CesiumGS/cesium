@@ -600,7 +600,8 @@ function loadAttribute(
   draco,
   dequantize,
   loadAsTypedArray,
-  loadAsTypedArrayPacked
+  loadAsTypedArrayPacked,
+  frameState
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -634,7 +635,8 @@ function loadAttribute(
 
   const loadFor2D =
     modelSemantic === VertexAttributeSemantic.POSITION &&
-    loader._loadPositionsFor2D;
+    loader._loadPositionsFor2D &&
+    !frameState.scene3DOnly;
 
   const vertexBufferLoader = loadVertexBuffer(
     loader,
@@ -683,7 +685,14 @@ function loadAttribute(
   return attribute;
 }
 
-function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
+function loadVertexAttribute(
+  loader,
+  gltf,
+  accessorId,
+  gltfSemantic,
+  draco,
+  frameState
+) {
   return loadAttribute(
     loader,
     gltf,
@@ -693,7 +702,8 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     draco,
     false,
     loader._loadAttributesAsTypedArray,
-    false
+    false,
+    frameState
   );
 }
 
@@ -1085,7 +1095,14 @@ function loadPrimitive(
       if (attributes.hasOwnProperty(semantic)) {
         const accessorId = attributes[semantic];
         primitive.attributes.push(
-          loadVertexAttribute(loader, gltf, accessorId, semantic, draco)
+          loadVertexAttribute(
+            loader,
+            gltf,
+            accessorId,
+            semantic,
+            draco,
+            frameState
+          )
         );
       }
     }
