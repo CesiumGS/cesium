@@ -106,8 +106,6 @@ ModelExperimentalStatistics.prototype.addTexture = function (texture) {
 
   if (!this.textureIdSet.hasOwnProperty(texture._id)) {
     this.texturesByteLength += texture.sizeInBytes;
-  } else {
-    console.log(`dedup ${texture._id}`);
   }
 
   // Simulate set insertion

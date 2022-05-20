@@ -5,12 +5,13 @@ import {
   GltfLoader,
   I3dmLoader,
   InstancingPipelineStage,
-  Resource,
-  ResourceCache,
-  ShaderBuilder,
   Matrix4,
   Math as CesiumMath,
   ModelExperimentalUtility,
+  ModelExperimentalStatistics,
+  Resource,
+  ResourceCache,
+  ShaderBuilder,
   _shadersInstancingStageCommon,
   _shadersLegacyInstancingStageVS,
 } from "../../../Source/Cesium.js";
@@ -103,6 +104,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -132,6 +134,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -160,6 +163,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -209,6 +213,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -261,6 +266,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -345,6 +351,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
 
@@ -389,6 +396,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         modelMatrix: Matrix4.fromUniformScale(2.0),
         sceneGraph: {
           axisCorrectionMatrix: ModelExperimentalUtility.getAxisCorrectionMatrix(

@@ -46,7 +46,8 @@ WireframePipelineStage.process = function (
   // copy of the original indices is already counted in the geometry stage,
   // and in WebGL 2, the CPU copy of the original indices is discarded after
   // generating the wireframe indices.
-  model.statistics.addBuffer(wireframeIndexBuffer);
+  const hasCpuCopy = false;
+  model.statistics.addBuffer(wireframeIndexBuffer, hasCpuCopy);
 
   // Update state so we render LINES with the correct index count
   const originalPrimitiveType = renderResources.primitiveType;

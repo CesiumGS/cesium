@@ -3,6 +3,7 @@ import {
   ComponentDatatype,
   FeatureIdPipelineStage,
   GltfLoader,
+  ModelExperimentalStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -83,6 +84,7 @@ describe(
           // pointer to the global resources so they can be cleaned up
           // in afterEach()
           _resources: resources,
+          statistics: new ModelExperimentalStatistics(),
         },
         attributes: [
           {

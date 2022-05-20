@@ -7,6 +7,7 @@ import {
   Matrix3,
   MaterialPipelineStage,
   ModelAlphaOptions,
+  ModelExperimentalStatistics,
   ModelLightingOptions,
   Pass,
   Resource,
@@ -108,7 +109,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -158,7 +159,9 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: {
+            statistics: new ModelExperimentalStatistics(),
+          },
         };
 
         MaterialPipelineStage.process(
@@ -208,7 +211,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -259,7 +262,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -311,7 +314,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -361,7 +364,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -384,7 +387,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -407,7 +410,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -430,7 +433,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -453,7 +456,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         MaterialPipelineStage.process(
@@ -480,7 +483,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         const cutoff = 0.6;
@@ -509,7 +512,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
           pass: Pass.OPAQUE,
         };
 
@@ -538,6 +541,7 @@ describe(
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           model: {
+            statistics: new ModelExperimentalStatistics(),
             backFaceCulling: false,
           },
           cull: true,
@@ -568,6 +572,7 @@ describe(
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           model: {
+            statistics: new ModelExperimentalStatistics(),
             backFaceCulling: true,
           },
           cull: true,
@@ -598,6 +603,7 @@ describe(
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           model: {
+            statistics: new ModelExperimentalStatistics(),
             backFaceCulling: true,
           },
         };
@@ -629,6 +635,7 @@ describe(
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           model: {
+            statistics: new ModelExperimentalStatistics(),
             color: new Color(0, 0, 1, 0.5),
             backFaceCulling: true,
           },
@@ -659,7 +666,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
-          model: {},
+          model: { statistics: new ModelExperimentalStatistics() },
         };
 
         primitive.material.doubleSided = true;
@@ -689,6 +696,7 @@ describe(
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
           model: {
+            statistics: new ModelExperimentalStatistics(),
             debugWireframe: true,
           },
         };
@@ -724,7 +732,8 @@ describe(
         uniformMap,
         textureReader,
         "u_testTexture",
-        "TEST"
+        "TEST",
+        new ModelExperimentalStatistics()
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -754,7 +763,8 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture
+        mockFrameState.context.defaultTexture,
+        new ModelExperimentalStatistics()
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -787,7 +797,8 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture
+        mockFrameState.context.defaultTexture,
+        new ModelExperimentalStatistics()
       );
 
       expectUniformMap(uniformMap, {

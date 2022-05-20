@@ -4,6 +4,7 @@ import {
   ComponentDatatype,
   GltfLoader,
   GeometryPipelineStage,
+  ModelExperimentalStatistics,
   ModelExperimentalType,
   Resource,
   ResourceCache,
@@ -135,6 +136,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -206,6 +208,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -321,6 +324,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -467,6 +471,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -590,6 +595,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -735,6 +741,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -837,6 +844,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -926,6 +934,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -1026,6 +1035,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -1110,6 +1120,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -1207,6 +1218,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 
@@ -1329,6 +1341,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
 

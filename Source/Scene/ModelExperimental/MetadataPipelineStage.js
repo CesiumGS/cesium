@@ -348,6 +348,10 @@ function updateStatistics(renderResources) {
   // Model feature tables also have batch and pick textures that need to be
   // counted.
   const featureTables = model.featureTables;
+  if (!defined(featureTables)) {
+    return;
+  }
+
   const length = featureTables.length;
   for (let i = 0; i < length; i++) {
     const featureTable = featureTables[i];

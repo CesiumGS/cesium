@@ -1,6 +1,7 @@
 import {
   combine,
   GltfLoader,
+  ModelExperimentalStatistics,
   ModelExperimentalType,
   PickingPipelineStage,
   ShaderBuilder,
@@ -104,6 +105,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         // Setting the content property here makes PickingPipelineStage handle this
         // as part of a tileset.
         content: {
@@ -155,6 +157,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         type: ModelExperimentalType.GLTF,
       },
       runtimePrimitive: {
@@ -204,6 +207,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         type: ModelExperimentalType.GLTF,
       },
       runtimePrimitive: {
@@ -281,6 +285,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         featureIdLabel: "featureId_0",
         type: ModelExperimentalType.GLTF,
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         featureTables: [mockModelFeatureTable],
       },
       runtimeNode: {
