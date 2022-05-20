@@ -269,19 +269,15 @@ function createModelFeatureTables(model, structuralMetadata) {
 
   const propertyTables = structuralMetadata.propertyTables;
   const length = propertyTables.length;
-  let totalByteLength = 0;
   for (let i = 0; i < length; i++) {
     const propertyTable = propertyTables[i];
     const modelFeatureTable = new ModelFeatureTable({
       model: model,
       propertyTable: propertyTable,
     });
-    totalByteLength += modelFeatureTable.batchTableByteLength;
 
     featureTables.push(modelFeatureTable);
   }
-
-  this._batchTableByteLength = totalByteLength;
 
   return featureTables;
 }

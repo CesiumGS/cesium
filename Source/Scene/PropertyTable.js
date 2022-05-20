@@ -147,18 +147,18 @@ Object.defineProperties(PropertyTable.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
-      let totalMemory = 0;
+      let totalByteLength = 0;
       if (defined(this._metadataTable)) {
-        totalMemory += this._metadataTable.memorySizeInBytes;
+        totalByteLength += this._metadataTable.byteLength;
       }
 
       if (defined(this._batchTableHierarchy)) {
-        totalMemory += this._batchTableHierarchy.memorySizeInBytes;
+        totalByteLength += this._batchTableHierarchy.byteLength;
       }
 
-      return totalMemory;
+      return totalByteLength;
     },
   },
 });

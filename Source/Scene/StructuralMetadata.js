@@ -159,9 +159,52 @@ Object.defineProperties(StructuralMetadata.prototype, {
     },
   },
 
+  /**
+   * Total size in bytes across all property textures
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  propertyTexturesByteLength: {
+    get: function () {
+      if (!defined(this._propertyTextures)) {
+        return 0;
+      }
+
+      let totalByteLength = 0;
+      const length = this._propertyTextures.length;
+      for (let i = 0; i < length; i++) {
+        totalByteLength += this._propertyTextures.byteLength;
+      }
+
+      return totalByteLength;
+    },
+  },
+
+  /**
+   * Total size in bytes across all property tables
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
   propertyTablesByteLength: {
-    // total size in bytes across all property tables
-    get: function () {},
+    get: function () {
+      if (!defined(this._propertyTables)) {
+        return 0;
+      }
+
+      let totalByteLength = 0;
+      const length = this._propertyTables.length;
+      for (let i = 0; i < length; i++) {
+        totalByteLength += this._propertyTables[i].byteLength;
+      }
+
+      return totalByteLength;
+    },
   },
 });
 

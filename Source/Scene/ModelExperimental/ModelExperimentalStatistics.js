@@ -1,3 +1,5 @@
+import Check from "../../Core/Check.js";
+
 /**
  * Rendering statistics for a single model
  *
@@ -53,7 +55,7 @@ export default function ModelExperimentalStatistics() {
    * @type {Number}
    * @private
    */
-  this.propertyTableByteLength = 0;
+  this.propertyTablesByteLength = 0;
 
   // Sets of buffers and textures we've already counted, so we don't
   // double-count cached assets.
@@ -72,7 +74,7 @@ ModelExperimentalStatistics.prototype.clear = function () {
   this.trianglesLength = 0;
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.propertyTableByteLength = 0;
+  this.propertyTablesByteLength = 0;
 
   this.bufferIdSet = {};
   this.textureIdSet = {};
@@ -82,6 +84,11 @@ ModelExperimentalStatistics.prototype.addBuffer = function (
   buffer,
   hasCpuCopy
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.bool("hasCpuCopy", hasCpuCopy);
+  //>>includeEnd('debug');
+
   if (!this.bufferIdSet.hasOwnProperty(buffer._id)) {
     // If there's a CPU copy, we need to count the memory twice
     const copies = hasCpuCopy ? 2 : 1;
@@ -93,6 +100,10 @@ ModelExperimentalStatistics.prototype.addBuffer = function (
 };
 
 ModelExperimentalStatistics.prototype.addTexture = function (texture) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("texture", texture);
+  //>>includeEnd('debug');
+
   if (!this.textureIds.hasOwnProperty(texture._id)) {
     this.texturesByteLength += texture.sizeInBytes;
   }

@@ -61,13 +61,16 @@ MaterialPipelineStage.process = function (
   const defaultNormalTexture = frameState.context.defaultNormalTexture;
   const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
+  const statistics = renderResources.model.statistics;
+
   processMaterialUniforms(
     material,
     uniformMap,
     shaderBuilder,
     defaultTexture,
     defaultNormalTexture,
-    defaultEmissiveTexture
+    defaultEmissiveTexture,
+    statistics
   );
 
   if (defined(material.specularGlossiness)) {
@@ -75,14 +78,16 @@ MaterialPipelineStage.process = function (
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   } else {
     processMetallicRoughnessUniforms(
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 
@@ -185,7 +190,8 @@ function processTexture(
   textureReader,
   uniformName,
   defineName,
-  defaultTexture
+  defaultTexture,
+  statistics
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -197,8 +203,12 @@ function processTexture(
     return defaultValue(textureReader.texture, defaultTexture);
   };
 
-  // TODO: what if the texture is not loaded?
-  statistics.addTexture(textureReader.texture);
+  // If textures were loaded asynchronously, the texture may not be available
+  // the first time the pipeline is run. ModelExperimental will re-run the
+  // pipeline in that case to make sure the statistics are accurate.
+  if (defined(textureReader.texture)) {
+    statistics.addTexture(textureReader.texture);
+  }
 
   // Add a #define directive to enable using the texture in the shader
   const textureDefine = `HAS_${defineName}_TEXTURE`;
@@ -237,7 +247,8 @@ function processMaterialUniforms(
   shaderBuilder,
   defaultTexture,
   defaultNormalTexture,
-  defaultEmissiveTexture
+  defaultEmissiveTexture,
+  statistics
 ) {
   const emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
@@ -247,7 +258,8 @@ function processMaterialUniforms(
       emissiveTexture,
       "u_emissiveTexture",
       "EMISSIVE",
-      defaultEmissiveTexture
+      defaultEmissiveTexture,
+      statistics
     );
   }
 
@@ -279,7 +291,8 @@ function processMaterialUniforms(
       normalTexture,
       "u_normalTexture",
       "NORMAL",
-      defaultNormalTexture
+      defaultNormalTexture,
+      statistics
     );
   }
 
@@ -291,7 +304,8 @@ function processMaterialUniforms(
       occlusionTexture,
       "u_occlusionTexture",
       "OCCLUSION",
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 }
@@ -300,7 +314,8 @@ function processSpecularGlossinessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  statistics
 ) {
   const specularGlossiness = material.specularGlossiness;
   shaderBuilder.addDefine(
@@ -317,7 +332,8 @@ function processSpecularGlossinessUniforms(
       diffuseTexture,
       "u_diffuseTexture",
       "DIFFUSE",
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 
@@ -350,7 +366,8 @@ function processSpecularGlossinessUniforms(
       specularGlossinessTexture,
       "u_specularGlossinessTexture",
       "SPECULAR_GLOSSINESS",
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 
@@ -402,7 +419,8 @@ function processMetallicRoughnessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  statistics
 ) {
   const metallicRoughness = material.metallicRoughness;
   shaderBuilder.addDefine(
@@ -419,7 +437,8 @@ function processMetallicRoughnessUniforms(
       baseColorTexture,
       "u_baseColorTexture",
       "BASE_COLOR",
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 
@@ -454,7 +473,8 @@ function processMetallicRoughnessUniforms(
       metallicRoughnessTexture,
       "u_metallicRoughnessTexture",
       "METALLIC_ROUGHNESS",
-      defaultTexture
+      defaultTexture,
+      statistics
     );
   }
 

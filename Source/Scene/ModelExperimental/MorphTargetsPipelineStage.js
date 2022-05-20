@@ -148,6 +148,12 @@ function addMorphTargetAttributeToRenderResources(
     normalize: attribute.normalized,
   };
 
+  const statistics = renderResources.model.statistics;
+  if (defined(attribute.buffer)) {
+    const hasCpuCopy = defined(attribute.typedArray);
+    statistics.addBuffer(attribute, hasCpuCopy);
+  }
+
   renderResources.attributes.push(vertexAttribute);
 }
 
