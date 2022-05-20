@@ -111,11 +111,10 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
     },
   },
 
-  // TODO:
-  // batch table byte length now includes property tables, batch table hierarchy,
-
   /**
-   * Gets the amount of memory used by the batch table textures, in bytes.
+   * Gets the amount of memory used by the batch table textures and any binary
+   * metadata properties not accounted for in geometryByteLength or
+   * texturesByteLength
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -123,20 +122,6 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * @readonly
    */
   batchTableByteLength: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      DeveloperError.throwInstantiationError();
-    },
-  },
-
-  /**
-   * Gets the estimated amount of memory used by binary metadata properties
-   * in bytes.
-   *
-   * @type {Number}
-   * @readonly
-   */
-  metadataByteLength: {
     // eslint-disable-next-line getter-return
     get: function () {
       DeveloperError.throwInstantiationError();

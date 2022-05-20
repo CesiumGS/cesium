@@ -1646,8 +1646,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return (
         statistics.texturesByteLength +
         statistics.geometryByteLength +
-        statistics.batchTableByteLength +
-        statistics.metadataByteLength
+        statistics.batchTableByteLength
       );
     },
   },

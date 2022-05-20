@@ -108,13 +108,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._batchTable.batchTextureSizeInBytes;
-    },
-  },
-
-  metadataByteLength: {
-    get: function () {
-      return this._batchTable.metadataSizeInBytes;
+      return this._batchTable.batchTableByteLength;
     },
   },
 

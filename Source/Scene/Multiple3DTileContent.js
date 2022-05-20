@@ -183,18 +183,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
-  /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
-   * always returns <code>0</code>.  Instead call <code>metadataByteLength</code> for a specific inner content.
-   * @memberof Multiple3DTileContent.prototype
-   * @private
-   */
-  metadataByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
-
   innerContents: {
     get: function () {
       return this._contents;
