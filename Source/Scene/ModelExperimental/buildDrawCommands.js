@@ -1,7 +1,6 @@
 import BlendingState from "../BlendingState.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
@@ -18,10 +17,6 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
 import SceneMode from "../SceneMode.js";
-import SceneTransforms from "../SceneTransforms.js";
-
-const scratchPositionMin = new Cartesian3();
-const scratchPositionMax = new Cartesian3();
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -80,11 +75,8 @@ export default function buildDrawCommands(
 
   let boundingSphere;
   if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-    boundingSphere = computeBoundingSphere2D(
-      primitiveRenderResources,
-      modelMatrix,
-      frameState
-    );
+    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
+    boundingSphere = runtimePrimitive.boundingSphere2D;
   } else {
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
@@ -204,41 +196,4 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
-}
-
-/**
- * @private
- */
-function computeBoundingSphere2D(
-  primitiveRenderResources,
-  modelMatrix,
-  frameState
-) {
-  const projectedMin = Matrix4.multiplyByPoint(
-    modelMatrix,
-    primitiveRenderResources.positionMin,
-    scratchPositionMin
-  );
-  const projectedMax = Matrix4.multiplyByPoint(
-    modelMatrix,
-    primitiveRenderResources.positionMax,
-    scratchPositionMax
-  );
-
-  SceneTransforms.computeActualWgs84Position(
-    frameState,
-    projectedMin,
-    projectedMin
-  );
-  SceneTransforms.computeActualWgs84Position(
-    frameState,
-    projectedMax,
-    projectedMax
-  );
-
-  return BoundingSphere.fromCornerPoints(
-    projectedMin,
-    projectedMax,
-    new BoundingSphere()
-  );
 }

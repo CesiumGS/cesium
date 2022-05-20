@@ -207,8 +207,11 @@ export default function ModelExperimental(options) {
   this._featureTableId = undefined;
   this._featureTableIdDirty = true;
 
-  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  // Keeps track of resources that need to be destroyed when the draw commands are reset.
   this._resources = [];
+
+  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  this._modelResources = [];
 
   // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
   this._boundingSphere = new BoundingSphere();
@@ -1462,6 +1465,7 @@ ModelExperimental.prototype.destroy = function () {
   }
 
   this.destroyResources();
+  this.destroyModelResources();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -1496,6 +1500,18 @@ ModelExperimental.prototype.destroyResources = function () {
     resources[i].destroy();
   }
   this._resources = [];
+};
+
+/**
+ * Destroys resources generated for the model.
+ * @private
+ */
+ModelExperimental.prototype.destroyModelResources = function () {
+  const resources = this._modelResources;
+  for (let i = 0; i < resources.length; i++) {
+    resources[i].destroy();
+  }
+  this._modelResources = [];
 };
 
 /**

@@ -17,6 +17,8 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import SceneMode from "../SceneMode.js";
+import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
@@ -114,6 +116,17 @@ export default function ModelExperimentalPrimitive(options) {
   this.boundingSphere2D = undefined;
 
   /**
+   * A buffer containing the primitive's positions projected to 2D world coordinates.
+   * Used for rendering in 2D / CV mode.
+   *
+   * @type {Buffer}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionBuffer2D = undefined;
+
+  /**
    * Update stages to apply to this primitive.
    *
    * @private
@@ -122,8 +135,8 @@ export default function ModelExperimentalPrimitive(options) {
 }
 
 /**
- * Configure the primitive pipeline stages. If the pipeline needs to be re-run, call
- * this method again to ensure the correct sequence of pipeline stages are
+ * Configure the primitive pipeline stages. If the pipeline needs to be re-run,
+ * call this method again to ensure the correct sequence of pipeline stages are
  * used.
  *
  * @param {FrameState} frameState The frame state.
@@ -138,9 +151,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const node = this.node;
   const model = this.model;
   const customShader = model.customShader;
-  const context = frameState.context;
-  const useWebgl2 = context.webgl2;
+  const useWebgl2 = frameState.context.webgl2;
+  const mode = frameState.mode;
 
+  const use2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasSkinning = defined(node.skin);
@@ -168,6 +182,9 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
   // Start of pipeline -----------------------------------------------------
+  if (use2D && !frameState.scene3DOnly) {
+    pipelineStages.push(SceneMode2DPipelineStage);
+  }
 
   pipelineStages.push(GeometryPipelineStage);
 
