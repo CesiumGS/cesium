@@ -3,7 +3,12 @@
     "extends": [
         "../Tools/eslint-config-cesium/browser.js",
         "prettier",
-        "plugin:es/restrict-to-es5"
+        "plugin:es/no-new-in-es2015",
+        "plugin:es/no-new-in-es2016",
+        "plugin:es/no-new-in-es2017",
+        "plugin:es/no-new-in-es2018",
+        "plugin:es/no-new-in-es2019",
+        "plugin:es/no-new-in-es2020"
     ],
     "plugins": [
         "html",
