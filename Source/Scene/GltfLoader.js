@@ -391,7 +391,11 @@ function loadVertexBuffer(
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(loader, gltf, accessorId, draco) {
+function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
+  // Load the index buffer as a typed array to generate wireframes in WebGL1.
+  const loadAsTypedArray =
+    loader._loadAttributesForTypedArray ||
+    (loader._loadIndicesForWireframe && !frameState.context.webgl2);
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -399,8 +403,7 @@ function loadIndexBuffer(loader, gltf, accessorId, draco) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loader._loadAttributesForTypedArray,
-    loadForWireframe: loader._loadIndicesForWireframe,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
@@ -715,7 +718,7 @@ function loadInstancedAttribute(
   );
 }
 
-function loadIndices(loader, gltf, accessorId, draco) {
+function loadIndices(loader, gltf, accessorId, draco, frameState) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -726,7 +729,13 @@ function loadIndices(loader, gltf, accessorId, draco) {
   const indices = new Indices();
   indices.count = accessor.count;
 
-  const indexBufferLoader = loadIndexBuffer(loader, gltf, accessorId, draco);
+  const indexBufferLoader = loadIndexBuffer(
+    loader,
+    gltf,
+    accessorId,
+    draco,
+    frameState
+  );
 
   indexBufferLoader.promise.then(function (indexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -1045,7 +1054,13 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
-function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
+function loadPrimitive(
+  loader,
+  gltf,
+  gltfPrimitive,
+  supportedImageFormats,
+  frameState
+) {
   const primitive = new Primitive();
 
   const materialId = gltfPrimitive.material;
@@ -1086,7 +1101,7 @@ function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
-    primitive.indices = loadIndices(loader, gltf, indices, draco);
+    primitive.indices = loadIndices(loader, gltf, indices, draco, frameState);
   }
 
   // With the latest revision, feature IDs are defined in EXT_mesh_features
@@ -1427,7 +1442,13 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     const primitivesLength = primitives.length;
     for (let i = 0; i < primitivesLength; ++i) {
       node.primitives.push(
-        loadPrimitive(loader, gltf, primitives[i], supportedImageFormats)
+        loadPrimitive(
+          loader,
+          gltf,
+          primitives[i],
+          supportedImageFormats,
+          frameState
+        )
       );
     }
 

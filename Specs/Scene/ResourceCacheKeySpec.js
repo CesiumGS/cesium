@@ -681,20 +681,6 @@ describe("ResourceCacheKey", function () {
     );
   });
 
-  it("getIndexBufferCacheKey works with loadForWireframe", function () {
-    const cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
-      gltf: gltfUncompressed,
-      accessorId: 2,
-      gltfResource: gltfResource,
-      baseResource: baseResource,
-      loadForWireframe: true,
-    });
-
-    expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-for-wireframe"
-    );
-  });
-
   it("getIndexBufferCacheKey throws if gltf is undefined", function () {
     expect(function () {
       ResourceCacheKey.getIndexBufferCacheKey({

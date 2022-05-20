@@ -253,24 +253,16 @@ describe(
     // but not if the scene is 3D only.
     let sceneWith3DOnly;
 
-    // Index buffers will load as typed arrays if loadForWireframe is true
-    // and the scene is using WebGL1. They will always be loaded as buffers
-    // in WebGL2.
-    let sceneWithWebgl2;
-
     beforeAll(function () {
       scene = createScene();
       sceneWith3DOnly = createScene({
         scene3DOnly: true,
       });
-      sceneWithWebgl2 = createScene();
-      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
       sceneWith3DOnly.destroyForSpecs();
-      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -1208,11 +1200,11 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
-        function (indexBufferLoader) {
-          expect(indexBufferLoader.buffer).toBeDefined();
-        }
-      );
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.buffer).toBeDefined();
+      });
     });
 
     it("loads index buffer as typed array", function () {
@@ -1243,67 +1235,6 @@ describe(
         expect(indexBufferLoader.typedArray).toBeDefined();
         expect(indexBufferLoader.buffer).toBeUndefined();
       });
-    });
-
-    it("loads index buffer as typed array for wireframes in WebGL1", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
-      );
-
-      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
-        gltf: gltfUncompressed,
-        accessorId: 2,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        loadForWireframe: true,
-      });
-
-      const indexBufferLoader = ResourceCache.loadIndexBuffer({
-        gltf: gltfUncompressed,
-        accessorId: 2,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        loadForWireframe: true,
-      });
-
-      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
-
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.typedArray).toBeDefined();
-        expect(indexBufferLoader.buffer).toBeUndefined();
-      });
-    });
-
-    it("loads index buffer as buffer for wireframes in WebGL2", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
-      );
-
-      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
-        gltf: gltfUncompressed,
-        accessorId: 2,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        loadForWireframe: true,
-      });
-      const indexBufferLoader = ResourceCache.loadIndexBuffer({
-        gltf: gltfUncompressed,
-        accessorId: 2,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        loadForWireframe: true,
-      });
-
-      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
-
-      return waitForLoaderProcess(indexBufferLoader, sceneWithWebgl2).then(
-        function (indexBufferLoader) {
-          expect(indexBufferLoader.typedArray).toBeUndefined();
-          expect(indexBufferLoader.buffer).toBeDefined();
-        }
-      );
     });
 
     it("loadIndexBuffer throws if gltf is undefined", function () {
