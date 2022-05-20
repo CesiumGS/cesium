@@ -123,7 +123,8 @@ GeometryPipelineStage.process = function (
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  const modelType = renderResources.model.type;
+  const model = renderResources.model;
+  const modelType = model.type;
   if (modelType === ModelExperimentalType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
@@ -134,7 +135,8 @@ GeometryPipelineStage.process = function (
 
   // The attributes, structs, and functions will need to be modified for 2D / CV.
   const mode = frameState.mode;
-  const use2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
+  const mode2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
+  const use2D = mode2D && !frameState.scene3DOnly && model._projectTo2D;
 
   for (let i = 0; i < primitive.attributes.length; i++) {
     const attribute = primitive.attributes[i];
