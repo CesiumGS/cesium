@@ -30,7 +30,7 @@ define([
         this._set("showLabel", val);
       },
 
-      _setLabelAttr: function (content) {
+      _setLabelAttr: function (/** @type {HTMLElement} */ content) {
         this._set("label", content);
         (this.containerNode || this.focusNode).appendChild(content);
       },
