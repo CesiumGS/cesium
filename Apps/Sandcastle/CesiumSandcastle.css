@@ -73,16 +73,13 @@ body {
 
 .demoTileThumbnailContainer {
   margin: auto;
-  width: 150px;
-  height: 100px;
+  width: 153px;
   overflow: hidden;
 }
 
 .demoTileThumbnail {
-  max-height: 150px;
+  min-width: 100%;
   max-width: 225px;
-  height: 100px;
-  width: auto;
 }
 
 .demoTileTitle {
