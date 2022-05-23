@@ -1269,10 +1269,13 @@ ModelExperimental.prototype.update = function (frameState) {
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    // pragma
-    // TODO:
-    // if the scene isn't 3d only and we're going for accurate projections,
-    // throw an error
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix is only supported in 3D mode."
+      );
+    }
+    //>>includeEnd('debug');
     this._updateModelMatrix = true;
     this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
     this._boundingSphere = BoundingSphere.transform(

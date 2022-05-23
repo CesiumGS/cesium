@@ -1074,6 +1074,22 @@ describe(
       });
     });
 
+    it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(function () {
+          model.modelMatrix = Matrix4.IDENTITY;
+          scene2D.renderForSpecs();
+        }).toThrowDeveloperError();
+      });
+    });
+
     it("initializes with light color", function () {
       return loadAndZoomToModelExperimental(
         { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
