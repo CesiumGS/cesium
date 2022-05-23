@@ -415,7 +415,6 @@ describe(
       expect(content.geometryByteLength).toBe(0);
       expect(content.texturesByteLength).toBe(0);
       expect(content.batchTableByteLength).toBe(0);
-      expect(content.metadataByteLength).toBe(0);
       expect(content.innerContents).not.toBeDefined();
       expect(content.tileset).toBe(mockTileset);
       expect(content.tile).toBe(mockPlaceholderTile);

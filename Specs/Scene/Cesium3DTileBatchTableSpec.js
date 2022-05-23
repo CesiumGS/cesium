@@ -1158,56 +1158,59 @@ describe(
       );
     });
 
-    it("computes memorySizeInBytes without a batch table", function () {
+    it("computes batchTableByteLength without a batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
           const content = tileset.root.content;
           const batchTable = content.batchTable;
-          expect(batchTable.memorySizeInBytes).toBe(0);
+          expect(batchTable.batchTableByteLength).toBe(0);
 
           // The batch texture isn't created until the first pick pass
           scene.pickForSpecs();
           const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
-          expect(batchTable.memorySizeInBytes).toBe(batchTextureSize);
+          expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
         }
       );
     });
 
-    it("memorySizeInBytes does not count JSON batch table properties", function () {
+    it("batchTableByteLength does not count JSON batch table properties", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
           const content = tileset.root.content;
           const batchTable = content.batchTable;
-          expect(batchTable.memorySizeInBytes).toBe(0);
+          expect(batchTable.batchTableByteLength).toBe(0);
 
           // The batch texture isn't created until the first pick pass
           scene.pickForSpecs();
           const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
-          expect(batchTable.memorySizeInBytes).toBe(batchTextureSize);
+          expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
         }
       );
     });
 
-    it("computes memorySizeInBytes for binary batchTable", function () {
+    it("computes batchTableByteLength for binary batch table", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         withBatchTableBinaryUrl
       ).then(function (tileset) {
         const content = tileset.root.content;
         const batchTable = content.batchTable;
-        const binaryPropertiesSize = batchTable._binaryPropertiesSizeInBytes;
-        expect(batchTable.memorySizeInBytes).toBe(binaryPropertiesSize);
+        const binaryPropertiesByteLength =
+          batchTable._binaryPropertiesByteLength;
+        expect(batchTable.batchTableByteLength).toBe(
+          binaryPropertiesByteLength
+        );
 
         // The batch texture isn't created until the first pick pass
         scene.pickForSpecs();
         const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
-        expect(batchTable.memorySizeInBytes).toBe(
-          binaryPropertiesSize + batchTextureSize
+        expect(batchTable.batchTableByteLength).toBe(
+          binaryPropertiesByteLength + batchTextureSize
         );
       });
     });
 
-    it("computes memorySizeInBytes with a batch table hierarchy", function () {
+    it("computes batchTableByteLength with a batch table hierarchy", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         batchTableHierarchyUrl
@@ -1215,12 +1218,12 @@ describe(
         const content = tileset.root.content;
         const batchTable = content.batchTable;
         const hierarchySize = batchTable._batchTableHierarchy.memorySizeInBytes;
-        expect(batchTable.memorySizeInBytes).toBe(hierarchySize);
+        expect(batchTable.batchTableByteLength).toBe(hierarchySize);
 
         // The batch texture isn't created until the first pick pass
         scene.pickForSpecs();
         const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
-        expect(batchTable.memorySizeInBytes).toBe(
+        expect(batchTable.batchTableByteLength).toBe(
           hierarchySize + batchTextureSize
         );
       });

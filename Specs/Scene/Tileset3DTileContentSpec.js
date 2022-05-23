@@ -57,7 +57,6 @@ describe(
           expect(content.geometryByteLength).toBe(0);
           expect(content.texturesByteLength).toBe(0);
           expect(content.batchTableByteLength).toBe(0);
-          expect(content.metadataByteLength).toBe(0);
           expect(content.innerContents).toBeUndefined();
           expect(content.readyPromise).toBeDefined();
           expect(content.tileset).toBe(tileset);

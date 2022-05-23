@@ -110,43 +110,21 @@ describe("Scene/BatchTableHierarchy", function () {
       componentType: "UNSIGNED_BYTE",
     },
   };
+
+  // prettier-ignore
   const binaryHierarchyBodyWithIds = new Uint8Array([
     // padding to simulate other data in the binary body
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    0, 0, 0, 0, 0, 0, 0, 0,
     // binary property: items
-    1,
-    2,
-    3,
-    0,
+    1, 2, 3, 0,
     // binary property: coordinates
-    1,
-    0,
-    1,
-    2,
-    3,
-    2,
+    1, 0, 1, 2, 3, 2,
     // class IDs
-    0,
-    1,
-    0,
-    0,
+    0, 1, 0, 0,
     // parent Ids
-    1,
-    1,
-    2,
-    3,
+    1, 1, 2, 3,
     // parent counts
-    1,
-    1,
-    1,
-    1,
+    1, 1, 1, 1,
   ]);
 
   it("throws without extension", function () {
