@@ -80,7 +80,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array so wireframe indices can be created for WebGL1.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, additionally load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @private
  */
 export default function GltfLoader(options) {
@@ -727,7 +727,9 @@ function loadIndices(loader, gltf, accessorId, draco) {
 
     if (defined(indexBufferLoader.buffer)) {
       indices.buffer = indexBufferLoader.buffer;
-    } else {
+    }
+
+    if (defined(indexBufferLoader.typedArray)) {
       indices.typedArray = indexBufferLoader.typedArray;
     }
   });

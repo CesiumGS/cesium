@@ -3054,6 +3054,7 @@ describe(
         );
         expect(primitive.indices.count).toBe(3);
         expect(primitive.indices.typedArray).toBeDefined();
+        expect(primitive.indices.buffer).toBeDefined();
       });
     });
 
@@ -3078,6 +3079,7 @@ describe(
           IndexDatatype.UNSIGNED_SHORT
         );
         expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.typedArray).not.toBeDefined();
         expect(primitive.indices.buffer).toBeDefined();
       });
     });

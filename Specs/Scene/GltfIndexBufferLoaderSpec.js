@@ -470,8 +470,6 @@ describe(
         Promise.resolve(arrayBuffer)
       );
 
-      spyOn(Buffer, "createIndexBuffer").and.callThrough();
-
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
@@ -490,8 +488,10 @@ describe(
         expect(indexBufferLoader.typedArray.byteLength).toBe(
           indicesUint16.byteLength
         );
-        expect(indexBufferLoader.buffer).toBeUndefined();
-        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
+        expect(indexBufferLoader.buffer).toBeDefined();
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+          indicesUint16.byteLength
+        );
       });
     });
 
