@@ -539,7 +539,8 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer. This is mutually exclusive with loadForWireframe.
+ * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This is mutually exclusive with loadAsTypedArray.
  * @returns {GltfIndexBufferLoader} The index buffer loader.
  * @private
  */
@@ -552,6 +553,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   const draco = options.draco;
   const asynchronous = defaultValue(options.asynchronous, true);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadForWireframe = defaultValue(options.loadForWireframe, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -567,6 +569,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     baseResource: baseResource,
     draco: draco,
     loadAsTypedArray: loadAsTypedArray,
+    loadForWireframe: loadForWireframe,
   });
 
   let indexBufferLoader = ResourceCache.get(cacheKey);
@@ -584,6 +587,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     cacheKey: cacheKey,
     asynchronous: asynchronous,
     loadAsTypedArray: loadAsTypedArray,
+    loadForWireframe: loadForWireframe,
   });
 
   ResourceCache.load({

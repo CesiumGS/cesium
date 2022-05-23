@@ -29,7 +29,8 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer. Mutually exclusive with loadForWireframe.
+ * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. Mutually exclusive with loadAsTypedArray.
  * @private
  */
 export default function GltfIndexBufferLoader(options) {
@@ -43,6 +44,7 @@ export default function GltfIndexBufferLoader(options) {
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
   const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadForWireframe = defaultValue(options.loadForWireframe, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -64,6 +66,7 @@ export default function GltfIndexBufferLoader(options) {
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._loadAsTypedArray = loadAsTypedArray;
+  this._loadForWireframe = loadForWireframe;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
@@ -121,7 +124,8 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
     },
   },
   /**
-   * The typed array containing indices. This is only defined when <code>loadAsTypedArray</code> is true.
+   * The typed array containing indices. This is only defined when <code>loadAsTypedArray</code> or
+   * <code>loadForWireframe</code> are true.
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
@@ -333,7 +337,7 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     return;
   }
 
-  if (this._loadAsTypedArray) {
+  if (this._loadAsTypedArray || this._loadForWireframe) {
     // Unload everything except the typed array
     this.unload();
 

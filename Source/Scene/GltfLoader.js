@@ -393,9 +393,8 @@ function loadVertexBuffer(
 
 function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
   // Load the index buffer as a typed array to generate wireframes in WebGL1.
-  const loadAsTypedArray =
-    loader._loadAttributesForTypedArray ||
-    (loader._loadIndicesForWireframe && !frameState.context.webgl2);
+  const loadForWireframe =
+    loader._loadIndicesForWireframe && !frameState.context.webgl2;
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -403,7 +402,8 @@ function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loadAsTypedArray,
+    loadAsTypedArray: loader._loadAttributesAsTypedArray,
+    loadForWireframe: loadForWireframe,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
