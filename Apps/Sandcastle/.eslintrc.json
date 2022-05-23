@@ -11,7 +11,6 @@
         "Cesium": true
     },
     "parserOptions": {
-        "ecmaVersion": 2015,
         "sourceType": "script"
     },
     "rules": {
@@ -26,7 +25,6 @@
                 "load-cesium-es6.js"
             ],
             "parserOptions": {
-                "ecmaVersion": 2015,
                 "sourceType": "module"
             }
         }
