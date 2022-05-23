@@ -267,7 +267,7 @@ ModelUtility.computeBoundingSphere = function (model) {
   }
 
   const boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-  if (model._forwardAxis === Axis.Z) {
+  if (model.forwardAxis === Axis.Z) {
     // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
     BoundingSphere.transformWithoutScale(
       boundingSphere,

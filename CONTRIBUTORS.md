@@ -174,6 +174,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Tang Xiaofei](https://github.com/vtxf)
 - [Maxar](https://www.maxar.com)
   - [Erik Dahlström](https://github.com/erikdahlstrom)
+- [Novatron Oy](https://novatron.fi/en/)
+  - [Jussi Hirvonen](https://github.com/VsKatshuma)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
