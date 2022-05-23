@@ -159,8 +159,6 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  processIndices(primitive);
-
   updateStatistics(renderResources, primitive);
 
   shaderBuilder.addVertexLines([GeometryStageVS]);
@@ -462,19 +460,6 @@ function handleBitangents(shaderBuilder, attributes) {
     "vec3",
     "bitangentEC"
   );
-}
-
-function processIndices(primitive) {
-  const indices = primitive.indices;
-  if (!defined(indices)) {
-    return;
-  }
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(indices.buffer)) {
-    throw new DeveloperError("Indices must be provided as a Buffer");
-  }
-  //>>includeEnd('debug');
 }
 
 function updateStatistics(renderResources, primitive) {

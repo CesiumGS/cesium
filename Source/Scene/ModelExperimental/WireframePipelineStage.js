@@ -65,12 +65,13 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
     VertexAttributeSemantic.POSITION
   );
   const vertexCount = positionAttribute.count;
+  const webgl2 = frameState.context.webgl2;
 
   let originalIndices;
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
-    if (defined(indicesBuffer)) {
+    if (defined(indicesBuffer) && webgl2) {
       const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
       originalIndices = useUint8Array
         ? new Uint8Array(indicesCount)

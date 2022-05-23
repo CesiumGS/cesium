@@ -1,6 +1,7 @@
 import BlendingState from "../BlendingState.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
@@ -167,6 +168,12 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
   if (!defined(indices)) {
     return undefined;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices.buffer)) {
+    throw new DeveloperError("Indices must be provided as a Buffer");
+  }
+  //>>includeEnd('debug');
 
   return indices.buffer;
 }

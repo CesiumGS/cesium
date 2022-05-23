@@ -30,7 +30,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
- * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2.
+ * @param {Boolean} [options.loadForWireframe=false] In addition to the GPU index buffer, load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2.
  * @private
  */
 export default function GltfIndexBufferLoader(options) {
@@ -340,23 +340,16 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
 
   // WebGL1 has no way to retrieve the contents of buffers that are
   // on the GPU. Therefore, the index buffer must be stored in CPU memory
-  // to generate wireframes for models.
+  // to generate wireframes for models. The original indices are also uploaded
+  // to the GPU in case wireframe mode is toggled off at runtime.
   const useWebgl2 = frameState.context.webgl2;
   const loadTypedArrayForWireframe = !useWebgl2 && this._loadForWireframe;
-  if (this._loadAsTypedArray || loadTypedArrayForWireframe) {
-    // Unload everything except the typed array
-    this.unload();
 
-    this._typedArray = typedArray;
-    this._state = ResourceLoaderState.READY;
-    this._promise.resolve(this);
-
-    return;
-  }
+  const needsTypedArray = this._loadAsTypedArray || loadTypedArrayForWireframe;
+  const needsBuffer = !this._loadAsTypedArray;
 
   let buffer;
-
-  if (this._asynchronous) {
+  if (needsBuffer && this._asynchronous) {
     const indexBufferJob = scratchIndexBufferJob;
     indexBufferJob.set(typedArray, indexDatatype, frameState.context);
     const jobScheduler = frameState.jobScheduler;
@@ -365,14 +358,15 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
       return;
     }
     buffer = indexBufferJob.buffer;
-  } else {
+  } else if (needsBuffer) {
     buffer = createIndexBuffer(typedArray, indexDatatype, frameState.context);
   }
 
-  // Unload everything except the index buffer
+  // Unload everything except the index buffer and/or typed array
   this.unload();
 
   this._buffer = buffer;
+  this._typedArray = needsTypedArray ? typedArray : undefined;
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);
 };
