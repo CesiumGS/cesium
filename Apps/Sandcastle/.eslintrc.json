@@ -15,7 +15,6 @@
     },
     "rules": {
         "no-alert": ["off"],
-        "no-implicit-globals": "off",
         "no-unused-vars": ["off"]
     },
     "overrides": [
