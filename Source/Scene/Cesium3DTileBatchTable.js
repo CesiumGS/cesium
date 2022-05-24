@@ -75,8 +75,7 @@ function Cesium3DTileBatchTable(
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
     owner: content,
-    // TODO: Can this be removed?
-    //statistics: content.tileset.statistics,
+    statistics: content.tileset.statistics,
   });
 }
 

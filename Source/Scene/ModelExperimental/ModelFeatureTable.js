@@ -149,12 +149,7 @@ function initialize(modelFeatureTable) {
   modelFeatureTable._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     owner: modelFeatureTable,
-    // TODO: can this be removed?
-    /*
-    statistics: is3DTiles
-      ? model.content.tileset.statistics
-      : modelFeatureTable._statistics,
-    */
+    statistics: is3DTiles ? model.content.tileset.statistics : undefined,
   });
 }
 
