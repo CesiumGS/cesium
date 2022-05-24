@@ -223,7 +223,6 @@ function initialize(content, arrayBuffer, byteOffset) {
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
     pickIdLoaded: getPickIdCallback(content),
     imageBasedLighting: tileset.imageBasedLighting,
-    specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
     showCreditsOnScreen: tileset.showCreditsOnScreen,

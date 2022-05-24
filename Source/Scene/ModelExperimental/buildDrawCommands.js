@@ -158,6 +158,9 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
+/**
+ * @private
+ */
 function getIndexBuffer(primitiveRenderResources, frameState) {
   const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
   if (defined(wireframeIndexBuffer)) {

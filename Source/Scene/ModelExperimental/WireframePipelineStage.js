@@ -9,7 +9,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The wireframe pipeline stage generates a new index buffer for rendering the
- * outline of the mesh with gl.LINES.
+ * structure of the mesh with gl.LINES.
  *
  * @namespace WireframePipelineStage
  * @private
@@ -21,7 +21,7 @@ WireframePipelineStage.name = "WireframePipelineStage"; // Helps with debugging
  * Process a primitive. This modifies the render resources as follows:
  * <ul>
  *   <li>Adds a separate index buffer for wireframe indices</li>
- *   <li>Updates the primitive type and count for rendering gl.LINES</li>
+ *   <li>Updates the primitive type and count for rendering with gl.LINES</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this node
@@ -49,7 +49,7 @@ WireframePipelineStage.process = function (
   const hasCpuCopy = false;
   model.statistics.addBuffer(wireframeIndexBuffer, hasCpuCopy);
 
-  // Update state so we render LINES with the correct index count
+  // Update render resources so we render LINES with the correct index count
   const originalPrimitiveType = renderResources.primitiveType;
   const originalCount = renderResources.count;
   renderResources.primitiveType = PrimitiveType.LINES;

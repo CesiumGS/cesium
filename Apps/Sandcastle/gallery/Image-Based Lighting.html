@@ -168,12 +168,13 @@
             );
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-            model.sphericalHarmonicCoefficients = coefficients;
-            model.specularEnvironmentMaps = environmentMapURL;
+            const ibl = model.imageBasedLighting;
+            ibl.sphericalHarmonicCoefficients = coefficients;
+            ibl.specularEnvironmentMaps = environmentMapURL;
 
             // The viewModel tracks the state of our mini application.
             const viewModel = {
-              luminanceAtZenith: model.luminanceAtZenith,
+              luminanceAtZenith: ibl.luminanceAtZenith,
             };
             // Convert the viewModel members into knockout observables.
             Cesium.knockout.track(viewModel);
@@ -186,7 +187,7 @@
               Cesium.knockout
                 .getObservable(viewModel, name)
                 .subscribe(function (newValue) {
-                  model[name] = newValue;
+                  ibl[name] = newValue;
                 });
             }
 
@@ -197,11 +198,11 @@
               false,
               function (checked) {
                 if (!checked) {
-                  model.sphericalHarmonicCoefficients = coefficients;
-                  model.specularEnvironmentMaps = environmentMapURL;
+                  ibl.sphericalHarmonicCoefficients = coefficients;
+                  ibl.specularEnvironmentMaps = environmentMapURL;
                 } else {
-                  model.sphericalHarmonicCoefficients = undefined;
-                  model.specularEnvironmentMaps = undefined;
+                  ibl.sphericalHarmonicCoefficients = undefined;
+                  ibl.specularEnvironmentMaps = undefined;
                 }
               }
             );

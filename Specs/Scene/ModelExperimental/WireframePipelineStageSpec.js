@@ -84,6 +84,10 @@ describe(
     }
 
     it("Creates wireframe indices from buffer (WebGL 2)", function () {
+      if (!sceneWithWebgl2.context.webgl2) {
+        return;
+      }
+
       return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(function (
         gltfLoader
       ) {
