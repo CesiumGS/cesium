@@ -64,7 +64,6 @@ export default function buildDrawCommands(
   model._resources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
-  const mode = frameState.mode;
   const sceneGraph = model.sceneGraph;
 
   const modelMatrix = Matrix4.multiplyTransformation(
@@ -74,7 +73,7 @@ export default function buildDrawCommands(
   );
 
   let boundingSphere;
-  if (mode !== SceneMode.SCENE3D) {
+  if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
     boundingSphere = runtimePrimitive.boundingSphere2D;
   } else {

@@ -446,22 +446,10 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     return;
   }
 
-  if (!this._loadBuffer) {
-    // Unload everything except the typed array
-    this.unload();
-
-    this._typedArray = typedArray;
-    this._state = ResourceLoaderState.READY;
-    this._promise.resolve(this);
-
-    return;
-  }
-
   const accessor = this._gltf.accessors[this._accessorId];
 
   let buffer;
-
-  if (this._asynchronous) {
+  if (this._loadBuffer && this._asynchronous) {
     const vertexBufferJob = scratchVertexBufferJob;
     vertexBufferJob.set(
       typedArray,
@@ -477,7 +465,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
       return;
     }
     buffer = vertexBufferJob.buffer;
-  } else {
+  } else if (this._loadBuffer) {
     buffer = createVertexBuffer(
       typedArray,
       dequantize,
