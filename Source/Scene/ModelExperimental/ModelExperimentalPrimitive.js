@@ -155,8 +155,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const useWebgl2 = frameState.context.webgl2;
   const mode = frameState.mode;
 
-  const mode2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
-  const use2D = mode2D && !frameState.scene3DOnly && model._projectTo2D;
+  const use2D =
+    mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasSkinning = defined(node.skin);

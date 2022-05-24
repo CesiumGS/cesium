@@ -199,7 +199,7 @@ function createPositionsTypedArrayFor2D(
   referencePoint,
   frameState
 ) {
-  const typedArray = attribute.typedArray;
+  const typedArray = attribute.typedArray.slice();
 
   let result;
   if (defined(attribute.quantization)) {

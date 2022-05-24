@@ -74,7 +74,7 @@ export default function buildDrawCommands(
   );
 
   let boundingSphere;
-  if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+  if (mode !== SceneMode.SCENE3D) {
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
     boundingSphere = runtimePrimitive.boundingSphere2D;
   } else {
