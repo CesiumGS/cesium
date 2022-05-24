@@ -104,7 +104,7 @@ describe("Scene/BatchTableHierarchy", function () {
       byteOffset: 22,
       componentType: "UNSIGNED_BYTE",
     },
-    // included explicitly to test memorySizeInBytes
+    // included explicitly to test byteLength
     parentCounts: {
       byteOffset: 26,
       componentType: "UNSIGNED_BYTE",
@@ -603,7 +603,7 @@ describe("Scene/BatchTableHierarchy", function () {
     }).toThrowDeveloperError();
   });
 
-  it("Computes memorySizeInBytes from typed arrays", function () {
+  it("Computes byteLength from typed arrays", function () {
     const hierarchy = new BatchTableHierarchy({
       extension: binaryHierarchyWithBinaryIds,
       binaryBody: binaryHierarchyBodyWithIds,
@@ -616,7 +616,7 @@ describe("Scene/BatchTableHierarchy", function () {
     const binaryPropertiesSize = 3 + 6; // ignoring 1 byte of padding
     const classIndexesSize = 4 * 2;
 
-    const expectedMemory =
+    const expectedByteLength =
       classIdsSize +
       parentCountsSize +
       parentIndexesSize +
@@ -626,6 +626,6 @@ describe("Scene/BatchTableHierarchy", function () {
 
     // This only counts the buffers used for the batch table hierarchy
     // extension. Cesium3DTileBatchTable handles the other properties.
-    expect(hierarchy.memorySizeInBytes).toBe(expectedMemory);
+    expect(hierarchy.byteLength).toBe(expectedByteLength);
   });
 });

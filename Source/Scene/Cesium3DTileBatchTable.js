@@ -98,10 +98,10 @@ Object.defineProperties(Cesium3DTileBatchTable.prototype, {
       let totalByteLength = this._binaryPropertiesByteLength;
 
       if (defined(this._batchTableHierarchy)) {
-        totalByteLength += this._batchTableHierarchy.memorySizeInBytes;
+        totalByteLength += this._batchTableHierarchy.byteLength;
       }
 
-      totalByteLength += this._batchTexture.memorySizeInBytes;
+      totalByteLength += this._batchTexture.byteLength;
 
       return totalByteLength;
     },
@@ -209,13 +209,13 @@ function countBinaryPropertyMemory(binaryProperties) {
     return 0;
   }
 
-  let memorySizeInBytes = 0;
+  let byteLength = 0;
   for (const name in binaryProperties) {
     if (binaryProperties.hasOwnProperty(name)) {
-      memorySizeInBytes += binaryProperties[name].typedArray.byteLength;
+      byteLength += binaryProperties[name].typedArray.byteLength;
     }
   }
-  return memorySizeInBytes;
+  return byteLength;
 }
 
 Cesium3DTileBatchTable.getBinaryProperties = function (

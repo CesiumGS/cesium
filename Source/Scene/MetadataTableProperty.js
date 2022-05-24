@@ -55,7 +55,7 @@ function MetadataTableProperty(options) {
   const hasStrings = type === MetadataType.STRING;
   const hasBooleans = type === MetadataType.BOOLEAN;
 
-  let memorySizeInBytes = 0;
+  let byteLength = 0;
 
   let arrayOffsets;
   if (isVariableLengthArray) {
@@ -82,7 +82,7 @@ function MetadataTableProperty(options) {
       count + 1
     );
 
-    memorySizeInBytes += arrayOffsets.typedArray.byteLength;
+    byteLength += arrayOffsets.typedArray.byteLength;
   }
 
   const vectorComponentCount = MetadataType.getComponentCount(type);
@@ -122,7 +122,7 @@ function MetadataTableProperty(options) {
       componentCount + 1
     );
 
-    memorySizeInBytes += stringOffsets.typedArray.byteLength;
+    byteLength += stringOffsets.typedArray.byteLength;
   }
 
   if (hasStrings || hasBooleans) {
@@ -147,7 +147,7 @@ function MetadataTableProperty(options) {
     valueType,
     valueCount
   );
-  memorySizeInBytes += values.typedArray.byteLength;
+  byteLength += values.typedArray.byteLength;
 
   let offset = property.offset;
   let scale = property.scale;
@@ -217,7 +217,7 @@ function MetadataTableProperty(options) {
   this._unpackedValues = undefined;
   this._extras = property.extras;
   this._extensions = property.extensions;
-  this._memorySizeInBytes = memorySizeInBytes;
+  this._byteLength = byteLength;
 }
 
 Object.defineProperties(MetadataTableProperty.prototype, {
@@ -300,9 +300,9 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
-      return this._memorySizeInBytes;
+      return this._byteLength;
     },
   },
 });

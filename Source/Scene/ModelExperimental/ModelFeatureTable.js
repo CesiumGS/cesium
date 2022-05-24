@@ -93,7 +93,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   batchTextureByteLength: {
     get: function () {
       if (defined(this._batchTexture)) {
-        return this._batchTexture.memorySizeInBytes;
+        return this._batchTexture.byteLength;
       }
 
       return 0;

@@ -35,7 +35,7 @@ function MetadataTable(options) {
   Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
-  let memorySizeInBytes = 0;
+  let byteLength = 0;
   const properties = {};
   if (defined(options.properties)) {
     for (const propertyId in options.properties) {
@@ -47,7 +47,7 @@ function MetadataTable(options) {
           bufferViews: options.bufferViews,
         });
         properties[propertyId] = property;
-        memorySizeInBytes += property.memorySizeInBytes;
+        byteLength += property.byteLength;
       }
     }
   }
@@ -55,7 +55,7 @@ function MetadataTable(options) {
   this._count = count;
   this._class = metadataClass;
   this._properties = properties;
-  this._memorySizeInBytes = memorySizeInBytes;
+  this._byteLength = byteLength;
 }
 
 Object.defineProperties(MetadataTable.prototype, {
@@ -95,9 +95,9 @@ Object.defineProperties(MetadataTable.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
-      return this._memorySizeInBytes;
+      return this._byteLength;
     },
   },
 });

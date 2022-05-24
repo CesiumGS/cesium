@@ -1167,7 +1167,7 @@ describe(
 
           // The batch texture isn't created until the first pick pass
           scene.pickForSpecs();
-          const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
+          const batchTextureSize = batchTable._batchTexture.byteLength;
           expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
         }
       );
@@ -1182,7 +1182,7 @@ describe(
 
           // The batch texture isn't created until the first pick pass
           scene.pickForSpecs();
-          const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
+          const batchTextureSize = batchTable._batchTexture.byteLength;
           expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
         }
       );
@@ -1203,7 +1203,7 @@ describe(
 
         // The batch texture isn't created until the first pick pass
         scene.pickForSpecs();
-        const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
+        const batchTextureSize = batchTable._batchTexture.byteLength;
         expect(batchTable.batchTableByteLength).toBe(
           binaryPropertiesByteLength + batchTextureSize
         );
@@ -1217,12 +1217,12 @@ describe(
       ).then(function (tileset) {
         const content = tileset.root.content;
         const batchTable = content.batchTable;
-        const hierarchySize = batchTable._batchTableHierarchy.memorySizeInBytes;
+        const hierarchySize = batchTable._batchTableHierarchy.byteLength;
         expect(batchTable.batchTableByteLength).toBe(hierarchySize);
 
         // The batch texture isn't created until the first pick pass
         scene.pickForSpecs();
-        const batchTextureSize = batchTable._batchTexture.memorySizeInBytes;
+        const batchTextureSize = batchTable._batchTexture.byteLength;
         expect(batchTable.batchTableByteLength).toBe(
           hierarchySize + batchTextureSize
         );

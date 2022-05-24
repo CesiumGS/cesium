@@ -97,7 +97,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
       let memory = 0;
       if (defined(this._pickTexture)) {
