@@ -363,9 +363,10 @@ function initialize(model) {
     .then(function () {
       model._texturesLoaded = true;
 
-      // Re-run the pipeline so texture memory statistics are re-run
-      // TODO: surround in if (this._incrementallyLoadTextures)
-      model.resetDrawCommands();
+      // Re-run the pipeline so texture memory statistics are re-computed
+      if (loader._incrementallyLoadTextures) {
+        model.resetDrawCommands();
+      }
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
