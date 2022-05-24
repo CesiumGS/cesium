@@ -76,7 +76,7 @@
   });
 
   function checkGzipAndNext(req, res, next) {
-    const reqUrl = url.parse(req.url, true);
+    const reqUrl = URL.parse(req.url, true);
     const filePath = reqUrl.pathname.substring(1);
 
     const readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
@@ -113,9 +113,9 @@
       if (!/^https?:\/\//.test(remoteUrl)) {
         remoteUrl = `http://${remoteUrl}`;
       }
-      remoteUrl = url.parse(remoteUrl);
+      remoteUrl = URL.parse(remoteUrl);
       // copy query string
-      remoteUrl.search = url.parse(req.url).search;
+      remoteUrl.search = URL.parse(req.url).search;
     }
     return remoteUrl;
   }
@@ -148,7 +148,7 @@
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
       remoteUrl = Object.keys(req.query)[0];
       if (remoteUrl) {
-        remoteUrl = url.parse(remoteUrl);
+        remoteUrl = URL.parse(remoteUrl);
       }
     }
 
