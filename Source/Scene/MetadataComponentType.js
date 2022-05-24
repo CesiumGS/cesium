@@ -133,12 +133,12 @@ MetadataComponentType.getMinimum = function (type) {
       return 0;
     case MetadataComponentType.INT64:
       if (FeatureDetection.supportsBigInt()) {
-        return BigInt("-9223372036854775808"); // eslint-disable-line
+        return BigInt("-9223372036854775808");
       }
       return -Math.pow(2, 63);
     case MetadataComponentType.UINT64:
       if (FeatureDetection.supportsBigInt()) {
-        return BigInt(0); // eslint-disable-line
+        return BigInt(0);
       }
       return 0;
     case MetadataComponentType.FLOAT32:
@@ -186,13 +186,13 @@ MetadataComponentType.getMaximum = function (type) {
     case MetadataComponentType.INT64:
       if (FeatureDetection.supportsBigInt()) {
         // Need to initialize with a string otherwise the value will be 9223372036854775808
-        return BigInt("9223372036854775807"); // eslint-disable-line
+        return BigInt("9223372036854775807");
       }
       return Math.pow(2, 63) - 1;
     case MetadataComponentType.UINT64:
       if (FeatureDetection.supportsBigInt()) {
         // Need to initialize with a string otherwise the value will be 18446744073709551616
-        return BigInt("18446744073709551615"); // eslint-disable-line
+        return BigInt("18446744073709551615");
       }
       return Math.pow(2, 64) - 1;
     case MetadataComponentType.FLOAT32:
@@ -381,7 +381,7 @@ MetadataComponentType.unnormalize = function (value, type) {
       type === MetadataComponentType.UINT64) &&
     FeatureDetection.supportsBigInt()
   ) {
-    value = BigInt(value); // eslint-disable-line
+    value = BigInt(value);
   }
 
   if (value > max) {

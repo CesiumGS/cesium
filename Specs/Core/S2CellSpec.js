@@ -16,14 +16,12 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws for invalid cell ID in constructor", function () {
-    // eslint-disable-next-line new-cap
     expect(function () {
       S2Cell(BigInt(-1));
     }).toThrowDeveloperError();
   });
 
   it("throws for missing cell ID in constructor", function () {
-    // eslint-disable-next-line new-cap
     expect(function () {
       S2Cell();
     }).toThrowDeveloperError();

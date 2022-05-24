@@ -292,12 +292,10 @@ if (typeof ArrayBuffer !== "undefined") {
   }
 
   if (typeof BigInt64Array !== "undefined") {
-    // eslint-disable-next-line no-undef
     typedArrayTypes.push(BigInt64Array);
   }
 
   if (typeof BigUint64Array !== "undefined") {
-    // eslint-disable-next-line no-undef
     typedArrayTypes.push(BigUint64Array);
   }
 }

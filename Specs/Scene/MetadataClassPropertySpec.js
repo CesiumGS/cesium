@@ -610,14 +610,14 @@ describe("Scene/MetadataClassProperty", function () {
         propertyInt32: [-2147483647, 0, 2147483647],
         propertyUint32: [0, 858993459, 4294967295],
         propertyInt64: [
-          BigInt("-9223372036854775807"), // eslint-disable-line
-          BigInt(0), // eslint-disable-line
-          BigInt("9223372036854775807"), // eslint-disable-line
+          BigInt("-9223372036854775807"),
+          BigInt(0),
+          BigInt("9223372036854775807"),
         ],
         propertyUint64: [
-          BigInt(0), // eslint-disable-line
-          BigInt("3689348814741910528"), // eslint-disable-line
-          BigInt("18446744073709551615"), // eslint-disable-line
+          BigInt(0),
+          BigInt("3689348814741910528"),
+          BigInt("18446744073709551615"),
         ],
       };
 
@@ -2160,9 +2160,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2572,9 +2572,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2901,14 +2901,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
@@ -2983,14 +2977,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 

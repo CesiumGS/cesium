@@ -404,10 +404,10 @@ function createBuffer(values, componentType) {
       typedArray = new Uint32Array(values);
       break;
     case MetadataComponentType.INT64:
-      typedArray = new BigInt64Array(values); // eslint-disable-line
+      typedArray = new BigInt64Array(values);
       break;
     case MetadataComponentType.UINT64:
-      typedArray = new BigUint64Array(values); // eslint-disable-line
+      typedArray = new BigUint64Array(values);
       break;
     case MetadataComponentType.FLOAT32:
       typedArray = new Float32Array(values);

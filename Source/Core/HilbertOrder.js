@@ -38,13 +38,12 @@ HilbertOrder.encode2D = function (level, x, y) {
   let rx,
     ry,
     s,
-    // eslint-disable-next-line no-undef
     index = BigInt(0);
 
   for (s = n / 2; s > 0; s /= 2) {
     rx = (p.x & s) > 0 ? 1 : 0;
     ry = (p.y & s) > 0 ? 1 : 0;
-    // eslint-disable-next-line no-undef
+
     index += BigInt(((3 * rx) ^ ry) * s * s);
     rotate(n, p, rx, ry);
   }
@@ -67,7 +66,7 @@ HilbertOrder.decode2D = function (level, index) {
   if (level < 1) {
     throw new DeveloperError("Hilbert level cannot be less than 1.");
   }
-  // eslint-disable-next-line no-undef
+
   if (index < BigInt(0) || index >= BigInt(Math.pow(4, level))) {
     throw new DeveloperError(
       "Hilbert index exceeds valid maximum for given level."
@@ -83,14 +82,13 @@ HilbertOrder.decode2D = function (level, index) {
   let rx, ry, s, t;
 
   for (s = 1, t = index; s < n; s *= 2) {
-    // eslint-disable-next-line no-undef
     rx = 1 & Number(t / BigInt(2));
-    // eslint-disable-next-line no-undef
+
     ry = 1 & Number(t ^ BigInt(rx));
     rotate(s, p, rx, ry);
     p.x += s * rx;
     p.y += s * ry;
-    // eslint-disable-next-line no-undef
+
     t /= BigInt(4);
   }
 
