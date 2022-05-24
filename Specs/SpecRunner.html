@@ -9,24 +9,19 @@
     <script src="./jasmine/jasmine.js"></script>
     <script src="./jasmine/jasmine-html.js"></script>
     <script src="./jasmine/boot0.js"></script>
-    <script type="module" src="./spec-main.js"></script>
-    <script src="./jasmine/boot1.js"></script>
   </head>
   <body>
     <script>
-      if (window.location.search.indexOf("built") !== -1) {
-        if (window.location.search.indexOf("release") !== -1) {
-          document.write('<script src="../Build/Cesium/Cesium.js"><\/script>');
-        } else {
-          document.write(
-            '<script src="../Build/CesiumUnminified/Cesium.js"><\/script>'
-          );
-        }
-        document.write('<script src="../Build/Specs/Specs.js"><\/script>');
+      if (window.location.search.indexOf("release") !== -1) {
+        document.write('<script src="../Build/Cesium/index.js"><\/script>');
       } else {
-        window.CESIUM_BASE_URL = "../Source/";
-        document.write('<script type="module" src="./SpecList.js"><\/script>');
+        document.write(
+          '<script src="../Build/CesiumUnminified/index.js"><\/script>'
+        );
       }
     </script>
+    <script type="module" src="../Build/Specs/spec-main.js"></script>
+    <script src="./jasmine/boot1.js"></script>
+    <script type="module" src="../Build/Specs/SpecList.js"></script>
   </body>
 </html>

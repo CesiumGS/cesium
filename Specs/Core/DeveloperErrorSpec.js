@@ -21,7 +21,8 @@ describe("Core/DeveloperError", function () {
     if (window.specsUsingRelease) {
       expect(e.stack).toContain("Specs.js");
     } else {
-      expect(e.stack).toContain("DeveloperErrorSpec.js");
+      // Since source maps are used, there will not be exact filenames
+      expect(e.stack).toContain("new DeveloperError");
     }
   });
 
@@ -33,7 +34,8 @@ describe("Core/DeveloperError", function () {
     if (window.specsUsingRelease) {
       expect(str).toContain("Specs.js");
     } else {
-      expect(str).toContain("Core/DeveloperErrorSpec.js");
+      // Since source maps are used, there will not be exact filenames
+      expect(str).toContain("new DeveloperError");
     }
   });
 });

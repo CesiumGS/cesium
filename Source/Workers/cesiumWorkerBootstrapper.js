@@ -5,7 +5,7 @@ if (typeof self === "undefined") {
 self.onmessage = function (event) {
   var data = event.data;
   importScripts(data.workerModule);
-  self.onmessage = workerModule.default;
+  self.onmessage = CesiumWorker.default;
   CESIUM_BASE_URL = data.baseUrl;
 };
 
