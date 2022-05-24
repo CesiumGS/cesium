@@ -92,8 +92,8 @@ describe("Scene/StructuralMetadata", function () {
 
   it("creates structural metadata", function () {
     const mockPropertyTables = [
-      { id: 0, name: "Buildings" },
-      { id: 1, name: "Trees" },
+      { id: 0, name: "Buildings", byteLength: 8 },
+      { id: 1, name: "Trees", byteLength: 16 },
     ];
     const metadata = new StructuralMetadata({
       schema: new MetadataSchema(propertyTablesSchema),
@@ -113,6 +113,8 @@ describe("Scene/StructuralMetadata", function () {
 
     expect(buildingsTable).toBe(mockPropertyTables[0]);
     expect(treesTable).toBe(mockPropertyTables[1]);
+
+    expect(metadata.propertyTablesByteLength).toBe(24);
   });
 
   it("creates structural metadata with property textures", function () {
@@ -150,6 +152,8 @@ describe("Scene/StructuralMetadata", function () {
     expect(orthoTexture.id).toBe(1);
     expect(orthoTexture.name).toBe("Ortho Texture");
     expect(orthoTexture.class).toBe(orthoClass);
+
+    expect(metadata.propertyTablesByteLength).toBe(0);
   });
 
   it("creates structural metadata with property attributes", function () {
@@ -196,6 +200,8 @@ describe("Scene/StructuralMetadata", function () {
     expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
       "_POINT_SIZE"
     );
+
+    expect(metadata.propertyTablesByteLength).toBe(0);
   });
 
   it("creates structural metadata with extras", function () {
