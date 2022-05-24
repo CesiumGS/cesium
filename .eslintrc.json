@@ -1,13 +1,6 @@
 {
     "extends": [
-        "./Tools/eslint-config-cesium/node.js", 
+        "cesium/node.js", 
         "prettier"
-    ],
-    "env": {
-        "node": true,
-        "es6": true
-    },
-    "parserOptions": {
-        "ecmaVersion": 2019
-    }
+    ]
 }
