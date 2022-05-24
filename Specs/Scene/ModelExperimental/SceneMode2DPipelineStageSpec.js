@@ -125,7 +125,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scratchMatrix
       );
       const expected = Matrix4.multiplyTransformation(
-        scene.frameState.camera.viewMatrix,
+        scene.frameState.context.uniformState.view,
         translationMatrix,
         translationMatrix
       );
@@ -169,7 +169,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scratchMatrix
       );
       const expected = Matrix4.multiplyTransformation(
-        scene.frameState.camera.viewMatrix,
+        scene.frameState.context.uniformState.view,
         translationMatrix,
         translationMatrix
       );

@@ -41,6 +41,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     context: {
       webgl2: false,
     },
+    mode: SceneMode.SCENE3D,
   };
 
   const mockFrameStateWebgl2 = {
@@ -60,6 +61,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     context: {
       webgl2: false,
     },
+    mode: SceneMode.SCENE3D,
     scene3DOnly: true,
   };
 
