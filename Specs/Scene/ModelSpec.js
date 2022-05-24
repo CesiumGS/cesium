@@ -1058,6 +1058,18 @@ describe(
       texturedBoxModel.modelMatrix = originalMatrix;
     });
 
+    it("boundingSphere transforms from z-forward to x-forward (glTF 2.0)", function () {
+      const boundingSphere = riggedFigureModel.boundingSphere;
+      expect(boundingSphere.center).toEqualEpsilon(
+        new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
+        CesiumMath.EPSILON3
+      );
+      expect(boundingSphere.radius).toEqualEpsilon(
+        0.9484635280120018,
+        CesiumMath.EPSILON3
+      );
+    });
+
     it("destroys", function () {
       return loadModel(boxUrl).then(function (m) {
         expect(m.isDestroyed()).toEqual(false);
