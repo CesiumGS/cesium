@@ -108,11 +108,11 @@ SceneMode2DPipelineStage.process = function (
   );
   const modelView = new Matrix4();
 
-  const camera = frameState.camera;
+  const context = frameState.context;
   const uniformMap = {
     u_modelView2D: function () {
       return Matrix4.multiplyTransformation(
-        camera.viewMatrix,
+        context.uniformState.view,
         modelMatrix2D,
         modelView
       );
