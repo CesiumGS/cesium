@@ -34,7 +34,6 @@ describe(
       tileset: {
         _statistics: {
           batchTableByteLength: 0,
-          metadataByteLength: 0,
         },
         colorBlendMode: ColorBlendMode.HIGHLIGHT,
       },

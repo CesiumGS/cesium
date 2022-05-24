@@ -143,7 +143,6 @@ Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {
   const tileset = {
     _statistics: {
       batchTableByteLength: 0,
-      metadataByteLength: 0,
     },
     root: {},
   };
@@ -171,7 +170,6 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
     basePath: counter++,
     _statistics: {
       batchTableByteLength: 0,
-      metadataByteLength: 0,
     },
     imageBasedLighting: new ImageBasedLighting({
       imageBasedLighting: new Cartesian2(1, 1),
