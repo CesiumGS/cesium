@@ -27,7 +27,6 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  * @private
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
-  // TODO
   const mode = frameState.mode;
   if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
     return;

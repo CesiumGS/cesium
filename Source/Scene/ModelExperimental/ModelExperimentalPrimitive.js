@@ -117,7 +117,8 @@ export default function ModelExperimentalPrimitive(options) {
 
   /**
    * A buffer containing the primitive's positions projected to 2D world coordinates.
-   * Used for rendering in 2D / CV mode.
+   * Used for rendering in 2D / CV mode. The memory is managed by ModelExperimental;
+   * this is just a reference.
    *
    * @type {Buffer}
    * @readonly

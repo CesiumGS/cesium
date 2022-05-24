@@ -62,7 +62,7 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
-    if (defined(indicesBuffer)) {
+    if (defined(indicesBuffer) && frameState.context.webgl2) {
       const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
       originalIndices = useUint8Array
         ? new Uint8Array(indicesCount)

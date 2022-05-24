@@ -298,8 +298,8 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
- * @param {Boolean} [options.loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer. Mutually exclusive with loadFor2D.
- * @param {Boolean} [options.loadFor2D=false] Load vertex buffer as both a buffer and typed array, the latter of which will be projected to 2D. This will be ignored if the scene is 3D only and is mutually exclusive with loadAsTypedArray;
+ * @param {Boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {Boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  *
@@ -315,8 +315,8 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const draco = options.draco;
   const attributeSemantic = options.attributeSemantic;
   const dequantize = defaultValue(options.dequantize, false);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
-  const loadFor2D = defaultValue(options.loadFor2D, false);
+  const loadBuffer = defaultValue(options.loadBuffer, false);
+  const loadTypedArray = defaultValue(options.loadTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -343,16 +343,25 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     Check.typeOf.object("options.draco", draco);
     Check.typeOf.string("options.attributeSemantic", attributeSemantic);
   }
+
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true."
+    );
+  }
   //>>includeEnd('debug');
 
   let cacheKeySuffix = "";
   if (dequantize) {
     cacheKeySuffix += "-dequantize";
   }
-  if (loadAsTypedArray) {
+
+  if (loadBuffer) {
+    cacheKeySuffix += "-buffer";
+  }
+
+  if (loadTypedArray) {
     cacheKeySuffix += "-typed-array";
-  } else if (loadFor2D) {
-    cacheKeySuffix += "-for-2d";
   }
 
   if (defined(draco)) {
@@ -390,8 +399,8 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
- * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer. Mutually exclusive with loadForWireframe.
- * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2 and is mutually exclusive with loadAsTypedArray.
+ * @param {Boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
+ * @param {Boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
  *
  * @returns {String} The index buffer cache key.
  * @private
@@ -403,25 +412,28 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const draco = options.draco;
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
-  const loadForWireframe = defaultValue(options.loadForWireframe, false);
+  const loadBuffer = defaultValue(options.loadBuffer, false);
+  const loadTypedArray = defaultValue(options.loadTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.accessorId", accessorId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true."
+    );
+  }
   //>>includeEnd('debug');
 
   let cacheKeySuffix = "";
-  if (loadAsTypedArray) {
+  if (loadBuffer) {
+    cacheKeySuffix += "-buffer";
+  }
+
+  if (loadTypedArray) {
     cacheKeySuffix += "-typed-array";
-  } else if (loadForWireframe) {
-    // loadForWireframe doesn't guarantee that the result will load as a typed array,
-    // since it has to check the framestate for WebGL2. Therefore, an index loader for
-    // debug wireframe should be distinguished from a loader that explicitly requires
-    // the typed array.
-    cacheKeySuffix += "-for-wireframe";
   }
 
   if (defined(draco)) {

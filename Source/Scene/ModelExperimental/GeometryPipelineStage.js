@@ -48,7 +48,7 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
  *  <li> sets the flag for point primitive types
  * </ul>
  *
- * If the scene is not 3D only, this stage also:
+ * If the scene is in either 2D or CV mode, this stage also:
  * <ul>
  *  <li> adds an attribute for the 2D positions
  * </ul>
@@ -134,9 +134,10 @@ GeometryPipelineStage.process = function (
   }
 
   // The attributes, structs, and functions will need to be modified for 2D / CV.
-  const mode = frameState.mode;
-  const mode2D = mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW;
-  const use2D = mode2D && !frameState.scene3DOnly && model._projectTo2D;
+  const use2D =
+    frameState.mode !== SceneMode.SCENE3D &&
+    !frameState.scene3DOnly &&
+    model._projectTo2D;
 
   for (let i = 0; i < primitive.attributes.length; i++) {
     const attribute = primitive.attributes[i];
@@ -163,7 +164,6 @@ GeometryPipelineStage.process = function (
       attribute,
       index,
       attributeLocationCount,
-      frameState,
       use2D
     );
   }
@@ -183,7 +183,6 @@ function processAttribute(
   attribute,
   attributeIndex,
   attributeLocationCount,
-  frameState,
   use2D
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
@@ -295,11 +294,10 @@ function addAttributeToRenderResources(
   const buffer2D = renderResources.runtimePrimitive.positionBuffer2D;
   const positionAttribute2D = {
     index: attributeIndex,
-    value: buffer2D ? undefined : attribute.constant,
     vertexBuffer: buffer2D,
     count: attribute.count,
     componentsPerAttribute: componentsPerAttribute,
-    componentDatatype: ComponentDatatype.FLOAT, // The projected positions will always be floats.
+    componentDatatype: ComponentDatatype.FLOAT, // Projected positions will always be floats.
     offsetInBytes: attribute.byteOffset,
     strideInBytes: attribute.byteStride,
     normalize: attribute.normalized,

@@ -80,7 +80,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
@@ -372,6 +372,9 @@ function loadVertexBuffer(
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
+  const loadBuffer = !loadAsTypedArray;
+  const loadTypedArray = loadAsTypedArray || loadFor2D;
+
   const vertexBufferLoader = ResourceCache.loadVertexBuffer({
     gltf: gltf,
     gltfResource: loader._gltfResource,
@@ -382,8 +385,8 @@ function loadVertexBuffer(
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
     dequantize: dequantize,
-    loadAsTypedArray: loadAsTypedArray,
-    loadFor2D: loadFor2D,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -392,9 +395,15 @@ function loadVertexBuffer(
 }
 
 function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
+  const loadAttributesAsTypedArray = loader._loadAttributesAsTypedArray;
+
   // Load the index buffer as a typed array to generate wireframes in WebGL1.
   const loadForWireframe =
     loader._loadIndicesForWireframe && !frameState.context.webgl2;
+
+  const loadBuffer = !loadAttributesAsTypedArray;
+  const loadTypedArray = loadAttributesAsTypedArray || loadForWireframe;
+
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -402,8 +411,8 @@ function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loader._loadAttributesAsTypedArray,
-    loadForWireframe: loadForWireframe,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
@@ -754,11 +763,8 @@ function loadIndices(loader, gltf, accessorId, draco, frameState) {
 
     indices.indexDatatype = indexBufferLoader.indexDatatype;
 
-    if (defined(indexBufferLoader.buffer)) {
-      indices.buffer = indexBufferLoader.buffer;
-    } else {
-      indices.typedArray = indexBufferLoader.typedArray;
-    }
+    indices.buffer = indexBufferLoader.buffer;
+    indices.typedArray = indexBufferLoader.typedArray;
   });
 
   return indices;

@@ -235,6 +235,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -247,6 +248,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -259,6 +261,7 @@ describe(
           gltfResource: undefined,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -271,6 +274,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: undefined,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -286,6 +290,7 @@ describe(
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -297,6 +302,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -311,6 +317,7 @@ describe(
           draco: dracoExtension,
           attributeSemantic: undefined,
           accessorId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -325,6 +332,21 @@ describe(
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: undefined,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if both loadBuffer and loadTypedArray are false", function () {
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfUncompressed,
+          gltfResource: gltfResource,
+          baseResource: undefined,
+          bufferViewId: 0,
+          loadBuffer: false,
+          loadTypedArray: false,
         });
       }).toThrowDeveloperError();
     });
@@ -341,6 +363,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -374,6 +397,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -416,6 +440,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -445,7 +470,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
-        loadAsTypedArray: true,
+        loadTypedArray: true,
       });
 
       vertexBufferLoader.load();
@@ -461,7 +486,7 @@ describe(
       });
     });
 
-    it("loads as buffer and typed array for 2D", function () {
+    it("loads as both buffer and typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -488,7 +513,8 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
-        loadFor2D: true,
+        loadBuffer: true,
+        loadTypedArray: true,
       });
 
       vertexBufferLoader.load();
@@ -519,6 +545,7 @@ describe(
         bufferViewId: 0,
         asynchronous: false,
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -556,6 +583,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -602,6 +630,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "NORMAL",
         accessorId: 1,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -647,6 +676,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -693,6 +723,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
+        loadBuffer: true,
       });
 
       vertexBufferLoader.load();
@@ -743,6 +774,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        loadBuffer: true,
       });
 
       expect(vertexBufferLoader.buffer).not.toBeDefined();
@@ -779,6 +811,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
+        loadBuffer: true,
       });
 
       expect(vertexBufferLoader.buffer).not.toBeDefined();
