@@ -16,6 +16,7 @@ import VertexArray from "../../Renderer/VertexArray.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
+import SceneMode from "../SceneMode.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -63,7 +64,6 @@ export default function buildDrawCommands(
   model._resources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
-
   const sceneGraph = model.sceneGraph;
 
   const modelMatrix = Matrix4.multiplyTransformation(
@@ -72,16 +72,22 @@ export default function buildDrawCommands(
     new Matrix4()
   );
 
-  primitiveRenderResources.boundingSphere = BoundingSphere.transform(
-    primitiveRenderResources.boundingSphere,
-    modelMatrix,
-    primitiveRenderResources.boundingSphere
-  );
+  let boundingSphere;
+  if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
+    boundingSphere = runtimePrimitive.boundingSphere2D;
+  } else {
+    boundingSphere = BoundingSphere.transform(
+      primitiveRenderResources.boundingSphere,
+      modelMatrix,
+      primitiveRenderResources.boundingSphere
+    );
+  }
 
   const count = primitiveRenderResources.count;
 
   const command = new DrawCommand({
-    boundingVolume: primitiveRenderResources.boundingSphere,
+    boundingVolume: boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,

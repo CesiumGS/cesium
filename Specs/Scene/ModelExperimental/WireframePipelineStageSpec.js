@@ -108,7 +108,7 @@ describe(
 
     it("Creates wireframe indices from typedArray (WebGL 1)", function () {
       const options = {
-        loadAsTypedArray: true,
+        loadIndicesForWireframe: true,
       };
       return loadGltf(boxTexturedBinary, scene, options).then(function (
         gltfLoader

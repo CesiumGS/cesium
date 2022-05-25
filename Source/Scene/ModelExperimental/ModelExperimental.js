@@ -1,5 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
@@ -25,6 +26,7 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -67,6 +69,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -204,8 +207,11 @@ export default function ModelExperimental(options) {
   this._featureTableId = undefined;
   this._featureTableIdDirty = true;
 
-  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  // Keeps track of resources that need to be destroyed when the draw commands are reset.
   this._resources = [];
+
+  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  this._modelResources = [];
 
   // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
   this._boundingSphere = new BoundingSphere();
@@ -257,6 +263,9 @@ export default function ModelExperimental(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._sceneMode = undefined;
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   initialize(this);
 }
@@ -680,10 +689,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere in its local coordinate system. This does not
-   * take into account glTF animations, skins, or morph targets. It also does not
-   * account for {@link ModelExperimental#minimumPixelSize}.
-   *
+   * Gets the model's bounding sphere in world space. This does not take into account
+   * glTF animations, skins, or morph targets. It also does not account for
+   * {@link ModelExperimental#minimumPixelSize}.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1210,8 +1218,13 @@ ModelExperimental.prototype.update = function (frameState) {
   this._defaultTexture = context.defaultTexture;
 
   // short-circuit if the model resources aren't ready.
-  if (!this._resourcesLoaded) {
+  if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
     return;
+  }
+
+  if (frameState.mode !== this._sceneMode) {
+    this.resetDrawCommands();
+    this._sceneMode = frameState.mode;
   }
 
   if (this._featureTableIdDirty) {
@@ -1256,6 +1269,13 @@ ModelExperimental.prototype.update = function (frameState) {
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix is only supported in 3D mode."
+      );
+    }
+    //>>includeEnd('debug');
     this._updateModelMatrix = true;
     this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
     this._boundingSphere = BoundingSphere.transform(
@@ -1334,11 +1354,12 @@ function scaleInPixels(positionWC, radius, frameState) {
 }
 
 const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 function getScale(model, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize !== 0.0) {
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(
@@ -1349,6 +1370,24 @@ function getScale(model, frameState) {
     scratchPosition.x = m[12];
     scratchPosition.y = m[13];
     scratchPosition.z = m[14];
+
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      const projection = frameState.mapProjection;
+      const cartographic = projection.ellipsoid.cartesianToCartographic(
+        scratchPosition,
+        scratchCartographic
+      );
+      projection.project(cartographic, scratchPosition);
+
+      // In 2D / CV mode the map is a yz-plane in world space, so the coordinates
+      // need to be reordered accordingly.
+      Cartesian3.fromElements(
+        scratchPosition.z,
+        scratchPosition.x,
+        scratchPosition.y,
+        scratchPosition
+      );
+    }
 
     const radius = model.boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
@@ -1432,6 +1471,7 @@ ModelExperimental.prototype.destroy = function () {
   }
 
   this.destroyResources();
+  this.destroyModelResources();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -1466,6 +1506,18 @@ ModelExperimental.prototype.destroyResources = function () {
     resources[i].destroy();
   }
   this._resources = [];
+};
+
+/**
+ * Destroys resources generated for the model.
+ * @private
+ */
+ModelExperimental.prototype.destroyModelResources = function () {
+  const resources = this._modelResources;
+  for (let i = 0; i < resources.length; i++) {
+    resources[i].destroy();
+  }
+  this._modelResources = [];
 };
 
 /**
@@ -1509,6 +1561,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+@param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1530,6 +1583,7 @@ ModelExperimental.fromGltf = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
@@ -1575,6 +1629,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
@@ -1720,5 +1775,6 @@ function makeModelOptions(loader, modelType, options) {
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
+    projectTo2D: options.projectTo2D,
   };
 }

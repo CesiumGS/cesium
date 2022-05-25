@@ -240,7 +240,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.afterRender = [];
 
   /**
-   * Gets whether or not to optimized for 3D only.
+   * Gets whether or not to optimize for 3D only.
    *
    * @type {Boolean}
    * @default false

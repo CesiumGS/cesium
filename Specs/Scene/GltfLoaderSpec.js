@@ -3033,55 +3033,6 @@ describe(
       });
     });
 
-    it("loads indices in typed array for wireframes in WebGL1", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
-      });
-    });
-
-    it("loads indices in buffer for wireframes in WebGL2", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-        scene: sceneWithWebgl2,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.buffer).toBeDefined();
-      });
-    });
-
     it("loads model from parsed JSON object", function () {
       return loadGltfFromJson(triangle).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -3414,7 +3365,7 @@ describe(
 
     it("loads vertex attributes and indices as typed arrays", function () {
       const options = {
-        loadAsTypedArray: true,
+        loadAttributesAsTypedArray: true,
       };
 
       return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
@@ -3448,9 +3399,94 @@ describe(
       });
     });
 
+    it("loads position attribute as buffer and typed array for 2D projection", function () {
+      const options = {
+        loadPositionsFor2D: true,
+      };
+
+      return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.typedArray).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(12);
+        expect(positionAttribute.byteStride).toBe(24);
+
+        // Typed arrays of other attributes should not be defined
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(24);
+
+        expect(positionAttribute.typedArray.byteLength).toBe(576);
+      });
+    });
+
+    it("loads indices in typed array for wireframes in WebGL1", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.typedArray).toBeDefined();
+      });
+    });
+
+    it("loads indices in buffer for wireframes in WebGL2", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+        scene: sceneWithWebgl2,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.buffer).toBeDefined();
+      });
+    });
+
     it("loads instanced attributes as typed arrays", function () {
       const options = {
-        loadAsTypedArray: true,
+        loadAttributesAsTypedArray: true,
       };
 
       return loadGltf(boxInstancedTranslationMinMax, options).then(function (

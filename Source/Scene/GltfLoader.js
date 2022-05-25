@@ -73,14 +73,15 @@ const GltfLoaderState = {
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
  * @param {Object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @private
  */
 export default function GltfLoader(options) {
@@ -96,13 +97,17 @@ export default function GltfLoader(options) {
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
-  const renameBatchIdSemantic = defaultValue(
-    options.renameBatchIdSemantic,
+  const loadAttributesAsTypedArray = defaultValue(
+    options.loadAttributesAsTypedArray,
     false
   );
+  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
+    false
+  );
+  const renameBatchIdSemantic = defaultValue(
+    options.renameBatchIdSemantic,
     false
   );
 
@@ -121,9 +126,10 @@ export default function GltfLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
-  this._loadAsTypedArray = loadAsTypedArray;
-  this._renameBatchIdSemantic = renameBatchIdSemantic;
+  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+  this._loadPositionsFor2D = loadPositionsFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -360,10 +366,14 @@ function loadVertexBuffer(
   semantic,
   draco,
   dequantize,
-  loadAsTypedArray
+  loadAsTypedArray,
+  loadFor2D
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
+
+  const loadBuffer = !loadAsTypedArray;
+  const loadTypedArray = loadAsTypedArray || loadFor2D;
 
   const vertexBufferLoader = ResourceCache.loadVertexBuffer({
     gltf: gltf,
@@ -375,7 +385,8 @@ function loadVertexBuffer(
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
     dequantize: dequantize,
-    loadAsTypedArray: loadAsTypedArray,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -383,7 +394,16 @@ function loadVertexBuffer(
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(loader, gltf, accessorId, draco) {
+function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
+  const loadAttributesAsTypedArray = loader._loadAttributesAsTypedArray;
+
+  // Load the index buffer as a typed array to generate wireframes in WebGL1.
+  const loadForWireframe =
+    loader._loadIndicesForWireframe && !frameState.context.webgl2;
+
+  const loadBuffer = !loadAttributesAsTypedArray;
+  const loadTypedArray = loadAttributesAsTypedArray || loadForWireframe;
+
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -391,8 +411,8 @@ function loadIndexBuffer(loader, gltf, accessorId, draco) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
-    loadAsTypedArray: loader._loadAsTypedArray,
-    loadForWireframe: loader._loadIndicesForWireframe,
+    loadBuffer: loadBuffer,
+    loadTypedArray: loadTypedArray,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
@@ -589,7 +609,8 @@ function loadAttribute(
   draco,
   dequantize,
   loadAsTypedArray,
-  loadAsTypedArrayPacked
+  loadAsTypedArrayPacked,
+  frameState
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -621,6 +642,11 @@ function loadAttribute(
     return attribute;
   }
 
+  const loadFor2D =
+    modelSemantic === VertexAttributeSemantic.POSITION &&
+    loader._loadPositionsFor2D &&
+    !frameState.scene3DOnly;
+
   const vertexBufferLoader = loadVertexBuffer(
     loader,
     gltf,
@@ -628,7 +654,8 @@ function loadAttribute(
     gltfSemantic,
     draco,
     dequantize,
-    loadAsTypedArray
+    loadAsTypedArray,
+    loadFor2D
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -646,13 +673,10 @@ function loadAttribute(
       );
       attribute.byteOffset = 0;
       attribute.byteStride = undefined;
-    } else if (loadAsTypedArray) {
-      attribute.typedArray = vertexBufferLoader.typedArray;
     } else {
+      attribute.typedArray = vertexBufferLoader.typedArray;
       attribute.buffer = vertexBufferLoader.buffer;
     }
-
-    attribute.count = accessor.count;
 
     if (
       defined(draco) &&
@@ -670,7 +694,14 @@ function loadAttribute(
   return attribute;
 }
 
-function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
+function loadVertexAttribute(
+  loader,
+  gltf,
+  accessorId,
+  gltfSemantic,
+  draco,
+  frameState
+) {
   return loadAttribute(
     loader,
     gltf,
@@ -679,8 +710,9 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     gltfSemantic,
     draco,
     false,
-    loader._loadAsTypedArray,
-    false
+    loader._loadAttributesAsTypedArray,
+    false,
+    frameState
   );
 }
 
@@ -705,7 +737,7 @@ function loadInstancedAttribute(
   );
 }
 
-function loadIndices(loader, gltf, accessorId, draco) {
+function loadIndices(loader, gltf, accessorId, draco, frameState) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -716,7 +748,13 @@ function loadIndices(loader, gltf, accessorId, draco) {
   const indices = new Indices();
   indices.count = accessor.count;
 
-  const indexBufferLoader = loadIndexBuffer(loader, gltf, accessorId, draco);
+  const indexBufferLoader = loadIndexBuffer(
+    loader,
+    gltf,
+    accessorId,
+    draco,
+    frameState
+  );
 
   indexBufferLoader.promise.then(function (indexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -725,11 +763,8 @@ function loadIndices(loader, gltf, accessorId, draco) {
 
     indices.indexDatatype = indexBufferLoader.indexDatatype;
 
-    if (defined(indexBufferLoader.buffer)) {
-      indices.buffer = indexBufferLoader.buffer;
-    } else {
-      indices.typedArray = indexBufferLoader.typedArray;
-    }
+    indices.buffer = indexBufferLoader.buffer;
+    indices.typedArray = indexBufferLoader.typedArray;
   });
 
   return indices;
@@ -1035,7 +1070,13 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
-function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
+function loadPrimitive(
+  loader,
+  gltf,
+  gltfPrimitive,
+  supportedImageFormats,
+  frameState
+) {
   const primitive = new Primitive();
 
   const materialId = gltfPrimitive.material;
@@ -1060,7 +1101,14 @@ function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
       if (attributes.hasOwnProperty(semantic)) {
         const accessorId = attributes[semantic];
         primitive.attributes.push(
-          loadVertexAttribute(loader, gltf, accessorId, semantic, draco)
+          loadVertexAttribute(
+            loader,
+            gltf,
+            accessorId,
+            semantic,
+            draco,
+            frameState
+          )
         );
       }
     }
@@ -1076,7 +1124,7 @@ function loadPrimitive(loader, gltf, gltfPrimitive, supportedImageFormats) {
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
-    primitive.indices = loadIndices(loader, gltf, indices, draco);
+    primitive.indices = loadIndices(loader, gltf, indices, draco, frameState);
   }
 
   // With the latest revision, feature IDs are defined in EXT_mesh_features
@@ -1284,22 +1332,23 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
       defined(gltf.accessors[attributes.TRANSLATION].max);
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
-        // If the instances have rotations load the attributes as typed arrays
-        // so that instance matrices are computed on the CPU. This avoids the
-        // expensive quaternion -> rotation matrix conversion in the shader.
-        // If the translation accessor does not have a min and max, load the
-        // attributes as typed arrays, so the values can be used for computing
-        // an accurate bounding volume. Feature ID attributes are also loaded as
-        // typed arrays because we want to be able to add the instance's feature ID to
-        // the pick object. Load as typed arrays if GPU instancing is not supported.
+        // Load the attributes as typed arrays if:
+        // - the instances have rotations, so that instance matrices are computed on the CPU.
+        //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
+        // - the translation accessor does not have a min and max, so the values can be used
+        //   for computing an accurate bounding volume.
+        // - the attributes contain feature IDs, in order to add the instance's feature ID
+        //   to the pick object.
+        // - GPU instancing is not supported.
+        const isTransformAttribute =
+          semantic === InstanceAttributeSemantic.TRANSLATION ||
+          semantic === InstanceAttributeSemantic.ROTATION ||
+          semantic === InstanceAttributeSemantic.SCALE;
         const loadAsTypedArrayPacked =
-          loader._loadAsTypedArray ||
-          !frameState.context.instancedArrays ||
-          ((hasRotation || !hasTranslationMinMax) &&
-            (semantic === InstanceAttributeSemantic.TRANSLATION ||
-              semantic === InstanceAttributeSemantic.ROTATION ||
-              semantic === InstanceAttributeSemantic.SCALE)) ||
-          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0;
+          loader._loadAttributesAsTypedArray ||
+          ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
+          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0 ||
+          !frameState.context.instancedArrays;
 
         const accessorId = attributes[semantic];
         instances.attributes.push(
@@ -1416,7 +1465,13 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     const primitivesLength = primitives.length;
     for (let i = 0; i < primitivesLength; ++i) {
       node.primitives.push(
-        loadPrimitive(loader, gltf, primitives[i], supportedImageFormats)
+        loadPrimitive(
+          loader,
+          gltf,
+          primitives[i],
+          supportedImageFormats,
+          frameState
+        )
       );
     }
 
