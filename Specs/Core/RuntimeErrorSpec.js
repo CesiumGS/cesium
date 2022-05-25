@@ -18,10 +18,12 @@ describe("Core/RuntimeError", function () {
   });
 
   it("has a stack property", function () {
-    if (window.specsUsingRelease) {
-      expect(e.stack).toContain("Specs.js");
-    } else {
-      expect(e.stack).toContain("RuntimeErrorSpec.js");
+    // Since we are using source maps, we won't be able to map to a specific file without help from the browser developer tools.
+    // However, we should know the class if not minified
+    if (!window.specsUsingRelease) {
+      expect(e.stack).toContain("RuntimeError");
+
+      // TODO: Is there an alternative for minified code?
     }
   });
 
@@ -30,10 +32,8 @@ describe("Core/RuntimeError", function () {
 
     expect(str).toContain(`${name}: ${testMessage}`);
 
-    if (window.specsUsingRelease) {
-      expect(str).toContain("Specs.js");
-    } else {
-      expect(str).toContain("Core/RuntimeErrorSpec.js");
+    if (!window.specsUsingRelease) {
+      expect(e.stack).toContain("RuntimeError");
     }
   });
 });

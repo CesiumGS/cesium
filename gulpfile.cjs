@@ -102,6 +102,7 @@ const filesToConvertES6 = [
 ];
 const workerSourceFiles = ["Source/WorkersES6/**"];
 const specFiles = ["Specs/**/*Spec.js"];
+const testWorkers = ["Specs/TestWorkers/*.js"];
 const cssFiles = "Source/**/*.css";
 
 const copyrightHeader = fs.readFileSync(
@@ -255,44 +256,41 @@ async function buildCesiumJs(options) {
  * @param {String} options.path true if the worker output should be minified
  * @returns {Promise.<Object>} esbuild result
  */
-function createWorkers(options) {
+async function createWorkers(options) {
   const workersES6 = globby.sync(workerSourceFiles);
   const workers = globby.sync([
     "Source/Workers/**",
     "Source/ThirdParty/Workers/**",
   ]);
 
-  return Promise.join([
-    esbuild.build({
-      entryPoints: workersES6,
-      bundle: true,
-      globalName: "CesiumWorker",
-      format: "iife",
-      minify: options.minify,
-      target: "es6",
-      banner: {
-        js: copyrightHeader,
-      },
-      sourcemap: true,
-      external: ["https", "http", "zlib"],
-      outdir: path.join(options.path, "Workers"),
-      plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-      incremental: options.incremental,
-    }),
-    esbuild.build({
-      entryPoints: workers,
-      minify: options.minify,
-      target: "es6",
-      banner: {
-        js: copyrightHeader,
-      },
-      sourcemap: options.minify,
-      outdir: path.join(options.path),
-      outbase: "Source", // Maintain existing file paths
-      plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-      incremental: options.incremental,
-    }),
-  ]);
+  const result = esbuild.build({
+    entryPoints: workersES6,
+    bundle: true,
+    globalName: "CesiumWorker",
+    format: "iife",
+    minify: options.minify,
+    target: "es6",
+    banner: {
+      js: copyrightHeader,
+    },
+    sourcemap: true,
+    external: ["https", "http", "zlib"],
+    outdir: path.join(options.path, "Workers"),
+    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
+    incremental: options.incremental,
+  });
+
+  await esbuild.build({
+    entryPoints: workers,
+    banner: {
+      js: copyrightHeader,
+    },
+    outdir: path.join(options.path),
+    outbase: "Source", // Maintain existing file paths
+    // Only return results from ES6 workers. Third party workers are unlikely to change.
+  });
+
+  return result;
 }
 
 const externalResolvePlugin = {
@@ -320,8 +318,8 @@ const externalResolvePlugin = {
   },
 };
 
-function buildSpecs(options) {
-  return esbuild.build({
+async function buildSpecs(options) {
+  const results = await esbuild.build({
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
@@ -331,10 +329,26 @@ function buildSpecs(options) {
     format: "esm",
     sourcemap: true,
     target: "es6",
-    outdir: "Build/Specs",
+    outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     incremental: options.incremental,
   });
+
+  const testWorkerFiles = globby.sync(testWorkers);
+  await esbuild.build({
+    entryPoints: testWorkerFiles,
+    bundle: true,
+    globalName: "CesiumWorker",
+    format: "iife",
+    //minify: options.minify,
+    target: "es6",
+    sourcemap: true,
+    external: ["https", "http", "zlib"],
+    outdir: path.join("Build", "Specs", "TestWorkers"),
+    // Only rebuild if Spec files change. Test workers are unlikely to change.
+  });
+
+  return results;
 }
 
 gulp.task("build", async function () {
@@ -411,7 +425,7 @@ gulp.task(
       incremental: true,
     });
 
-    let [workerResult, thirdPartyWorkerResults] = await createWorkers({
+    let workerResult = await createWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
@@ -420,25 +434,31 @@ gulp.task(
 
     gulp.watch(sourceFiles, async () => {
       sourceResult = await sourceResult.rebuild();
-      specResult = await specResult.rebuild();
     });
 
-    const watcher = gulp.watch(specFiles);
-    watcher.on("add", async () => {
-      createSpecList();
-      specResult = await specResult.rebuild();
-    });
-    watcher.on("unlink", async () => {
-      createSpecList();
-      specResult = await specResult.rebuild();
-    });
-    watcher.on("unlink", async () => {
-      specResult = await specResult.rebuild();
-    });
+    gulp.watch(
+      specFiles,
+      {
+        events: ["add", "unlink"],
+      },
+      async () => {
+        createSpecList();
+        specResult = await specResult.rebuild();
+      }
+    );
+
+    gulp.watch(
+      specFiles,
+      {
+        events: ["change"],
+      },
+      async () => {
+        specResult = await specResult.rebuild();
+      }
+    );
 
     gulp.watch(workerSourceFiles, async () => {
       workerResult = await workerResult.rebuild();
-      thirdPartyWorkerResults = await thirdPartyWorkerResults.rebuild();
     });
 
     process.on("SIGINT", () => {
@@ -446,7 +466,6 @@ gulp.task(
       sourceResult.rebuild.dispose();
       specResult.rebuild.dispose();
       workerResult.rebuild.dispose();
-      thirdPartyWorkerResults.rebuild.dispose();
       process.exit(0);
     });
   })
@@ -1381,7 +1400,13 @@ gulp.task("convertToModules", function () {
  */
 function copyAssets(options) {
   const outputDirectory = options.outputDirectory;
-  const everythingElse = ["Source/**", "!**/*.js", "!**/*.glsl", "!**/*.css"];
+  const everythingElse = [
+    "Source/**",
+    "!**/*.js",
+    "!**/*.glsl",
+    "!**/*.css",
+    "!**/*.md",
+  ];
 
   const stream = gulp
     .src(everythingElse, { nodir: true })

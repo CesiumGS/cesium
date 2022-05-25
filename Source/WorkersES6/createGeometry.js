@@ -1,4 +1,4 @@
-/* global require */
+/* global importScripts, CesiumWorker, require */
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
@@ -10,14 +10,13 @@ function getModule(moduleName) {
   if (!defined(module)) {
     if (typeof exports === "object") {
       // Use CommonJS-style require.
+      // TODO: ?
       moduleCache[module] = module = require(`Workers/${moduleName}`);
     } else {
-      // Use AMD-style require.
-      // in web workers, require is synchronous
-      require([`Workers/${moduleName}`], function (f) {
-        module = f;
-        moduleCache[module] = f;
-      });
+      // Use importScripts to synchronously load the IIFE
+      importScripts(`${moduleName}.js`);
+      module = CesiumWorker.default;
+      moduleCache[module] = CesiumWorker.default;
     }
   }
   return module;

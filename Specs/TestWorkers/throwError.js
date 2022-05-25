@@ -1,9 +1,7 @@
-define(["Workers/createTaskProcessorWorker"], function (
-  createTaskProcessorWorker
+import createTaskProcessorWorker from "../../Source/WorkersES6/createTaskProcessorWorker.js";
+export default createTaskProcessorWorker(function (
+  parameters,
+  transferableObjects
 ) {
-  "use strict";
-
-  return createTaskProcessorWorker(function (parameters, transferableObjects) {
-    throw new Error(parameters.message);
-  });
+  throw new Error(parameters.message);
 });

@@ -13,8 +13,10 @@ describe("Core/TaskProcessor", function () {
   });
 
   it("works with a simple worker defined as relative to TaskProcessor._workerModulePrefix", function () {
-    TaskProcessor._workerModulePrefix = absolutize("../Specs/TestWorkers/");
-    taskProcessor = new TaskProcessor("returnParameters.js");
+    TaskProcessor._workerModulePrefix = absolutize(
+      "../Build/Specs/TestWorkers/"
+    );
+    taskProcessor = new TaskProcessor("returnParameters");
 
     const parameters = {
       prop: "blah",
@@ -36,7 +38,7 @@ describe("Core/TaskProcessor", function () {
 
   it("can be destroyed", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnParameters.js")
+      absolutize("../Build/Specs/TestWorkers/returnParameters.js")
     );
 
     expect(taskProcessor.isDestroyed()).toEqual(false);
@@ -48,7 +50,7 @@ describe("Core/TaskProcessor", function () {
 
   it("can transfer array buffer", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnByteLength.js")
+      absolutize("../Build/Specs/TestWorkers/returnByteLength.js")
     );
 
     const byteLength = 100;
@@ -74,7 +76,7 @@ describe("Core/TaskProcessor", function () {
 
   it("can transfer array buffer back from worker", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/transferArrayBuffer.js")
+      absolutize("../Build/Specs/TestWorkers/transferArrayBuffer.js")
     );
 
     const byteLength = 100;
@@ -90,7 +92,7 @@ describe("Core/TaskProcessor", function () {
 
   it("rejects promise if worker throws", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/throwError.js")
+      absolutize("../Build/Specs/TestWorkers/throwError.js")
     );
 
     const message = "foo";
@@ -110,7 +112,7 @@ describe("Core/TaskProcessor", function () {
 
   it("rejects promise if worker returns a non-clonable result", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnNonCloneable.js")
+      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js")
     );
 
     const message = "foo";
@@ -130,7 +132,7 @@ describe("Core/TaskProcessor", function () {
 
   it("successful task raises the taskCompletedEvent", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnParameters.js")
+      absolutize("../Build/Specs/TestWorkers/returnParameters.js")
     );
 
     const parameters = {
@@ -158,7 +160,7 @@ describe("Core/TaskProcessor", function () {
 
   it("unsuccessful task raises the taskCompletedEvent with error", function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnNonCloneable.js")
+      absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js")
     );
 
     const message = "foo";
@@ -190,7 +192,7 @@ describe("Core/TaskProcessor", function () {
   it("can load and compile web assembly module", function () {
     const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
     );
     const promise = taskProcessor.initWebAssemblyModule({
       modulePath: "TestWasm/testWasmWrapper",
@@ -208,9 +210,11 @@ describe("Core/TaskProcessor", function () {
   });
 
   it("uses a backup module if web assembly is not supported", function () {
-    const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
+    const binaryUrl = absolutize(
+      "../Build/Specs/TestWorkers/TestWasm/testWasm.wasm"
+    );
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
     );
 
     spyOn(FeatureDetection, "supportsWebAssembly").and.returnValue(false);
@@ -229,9 +233,11 @@ describe("Core/TaskProcessor", function () {
   });
 
   it("throws runtime error if web assembly is not supported and no backup is provided", function () {
-    const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
+    const binaryUrl = absolutize(
+      "../Build/Specs/TestWorkers/TestWasm/testWasm.wasm"
+    );
     taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnWasmConfig.js", 5)
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5)
     );
 
     spyOn(FeatureDetection, "supportsWebAssembly").and.returnValue(false);

@@ -1,11 +1,10 @@
-define(["Workers/createTaskProcessorWorker"], function (
-  createTaskProcessorWorker
-) {
-  "use strict";
+import createTaskProcessorWorker from "../../Source/WorkersES6/createTaskProcessorWorker.js";
 
-  return createTaskProcessorWorker(function (parameters, transferableObjects) {
-    const arrayBuffer = new ArrayBuffer(parameters.byteLength);
-    transferableObjects.push(arrayBuffer);
-    return arrayBuffer;
-  });
+export default createTaskProcessorWorker(function (
+  parameters,
+  transferableObjects
+) {
+  const arrayBuffer = new ArrayBuffer(parameters.byteLength);
+  transferableObjects.push(arrayBuffer);
+  return arrayBuffer;
 });

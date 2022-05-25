@@ -1,4 +1,3 @@
-/* global require */
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -296,21 +295,28 @@ function transcodeKTX2(event) {
   const wasmConfig = data.webAssemblyConfig;
   if (defined(wasmConfig)) {
     // Require and compile WebAssembly module, or use fallback if not supported
-    return require([wasmConfig.modulePath], function (mscBasisTranscoder) {
-      if (defined(wasmConfig.wasmBinaryFile)) {
-        if (!defined(mscBasisTranscoder)) {
-          mscBasisTranscoder = self.MSC_TRANSCODER;
-        }
+    let mscBasisTranscoder;
+    try {
+      /* global importScripts, BASIS */
+      importScripts(wasmConfig.modulePath);
+      mscBasisTranscoder = BASIS;
+    } catch (e) {
+      // Handled below
+    }
 
-        mscBasisTranscoder(wasmConfig).then(function (compiledModule) {
-          initWorker(compiledModule);
-        });
-      } else {
-        return mscBasisTranscoder().then(function (transcoder) {
-          initWorker(transcoder);
-        });
-      }
-    });
+    if (!defined(mscBasisTranscoder)) {
+      mscBasisTranscoder = self.MSC_TRANSCODER;
+    }
+
+    if (defined(wasmConfig.wasmBinaryFile)) {
+      mscBasisTranscoder(wasmConfig).then(function (compiledModule) {
+        initWorker(compiledModule);
+      });
+    } else {
+      return mscBasisTranscoder().then(function (transcoder) {
+        initWorker(transcoder);
+      });
+    }
   }
 }
 export default transcodeKTX2;
