@@ -122,6 +122,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(4);
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 16;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -151,6 +160,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(1);
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -200,6 +211,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       expect(attributeLines[2]).toEqual(
         "attribute vec4 a_instancingTransformRow2;"
+      );
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 16;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
       );
     });
   });
@@ -254,6 +274,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
 
       expect(renderResources.model._resources.length).toEqual(1);
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 0;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -339,6 +368,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
           CesiumMath.EPSILON10
         );
       }
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -384,6 +415,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(attributeLines[0]).toEqual(
         "attribute vec3 a_instanceTranslation;"
       );
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -484,6 +517,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(uniformMap.u_instance_nodeTransform()).toEqualEpsilon(
         expectedNodeTransform,
         CesiumMath.EPSILON8
+      );
+
+      // matrices are stored as 3 vec4s, so this is
+      // 25 matrices * 12 floats/matrix * 4 bytes/float = 1200
+      const matrixSize = 1200;
+      // 25 floats
+      const featureIdSize = 100;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
       );
     });
   });

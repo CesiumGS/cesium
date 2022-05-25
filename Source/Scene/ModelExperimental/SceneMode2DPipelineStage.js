@@ -89,6 +89,8 @@ SceneMode2DPipelineStage.process = function (
 
     runtimePrimitive.positionBuffer2D = buffer2D;
     model._modelResources.push(buffer2D);
+    const hasCpuCopy = false;
+    model.statistics.addBuffer(buffer2D, hasCpuCopy);
 
     // Unload the typed array. This is just a pointer to the array in
     // the vertex buffer loader, so if the typed array is shared by

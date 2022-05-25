@@ -82,10 +82,6 @@ const GltfLoaderState = {
  * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
-<<<<<<< HEAD
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, additionally load the index buffer as a typed array so wireframe indices can be created for WebGL1.
-=======
->>>>>>> main
  * @private
  */
 export default function GltfLoader(options) {
