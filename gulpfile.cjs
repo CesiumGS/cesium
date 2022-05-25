@@ -319,6 +319,8 @@ const externalResolvePlugin = {
 };
 
 async function buildSpecs(options) {
+  options = options || {};
+
   const results = await esbuild.build({
     entryPoints: [
       "Specs/spec-main.js",
@@ -340,7 +342,6 @@ async function buildSpecs(options) {
     bundle: true,
     globalName: "CesiumWorker",
     format: "iife",
-    //minify: options.minify,
     target: "es6",
     sourcemap: true,
     external: ["https", "http", "zlib"],
@@ -351,17 +352,13 @@ async function buildSpecs(options) {
   return results;
 }
 
-gulp.task("build", async function () {
+async function build(options) {
+  options = options || {};
   mkdirp.sync("Build");
-
-  const argv = yargs.argv;
-  const minify = argv.minify ? argv.minify : false;
-  const removePragmas = argv.pragmas ? argv.pragmas : false;
-  const node = argv.node ? argv.node : false;
 
   const outputDirectory = path.join(
     "Build",
-    `Cesium${!minify ? "Unminified" : ""}`
+    `Cesium${!options.minify ? "Unminified" : ""}`
   );
   rimraf.sync(outputDirectory);
 
@@ -379,25 +376,36 @@ gulp.task("build", async function () {
   createJsHintOptions();
   return Promise.join(
     buildCesiumJs({
-      minify: minify,
+      minify: options.minify,
       iife: true,
-      removePragmas: removePragmas,
+      removePragmas: options.removePragmas,
       path: outputDirectory,
-      node: node,
+      node: options.node,
     }),
     createWorkers({
-      minify: minify,
+      minify: options.minify,
       path: outputDirectory,
-      removePragmas: removePragmas,
+      removePragmas: options.removePragmas,
     }),
     createGalleryList(),
-    buildSpecs({
-      removePragmas: removePragmas,
-    })
+    buildSpecs()
   ).then(() => {
     return copyAssets({
       outputDirectory: outputDirectory,
     });
+  });
+}
+
+gulp.task("build", function () {
+  const argv = yargs.argv;
+  const minify = argv.minify ? argv.minify : false;
+  const removePragmas = argv.pragmas ? argv.pragmas : false;
+  const node = argv.node ? argv.node : false;
+
+  return build({
+    minify: minify,
+    removePragmas: removePragmas,
+    node: node,
   });
 });
 
@@ -421,7 +429,6 @@ gulp.task(
     });
 
     let specResult = await buildSpecs({
-      removePragmas: removePragmas,
       incremental: true,
     });
 
@@ -537,15 +544,6 @@ gulp.task("cloc", gulp.series("clean", cloc));
 
 gulp.task("default", gulp.series("build"));
 
-function combineRelease() {
-  const outputDirectory = path.join("Build", "CesiumUnminified");
-  return copyAssets({
-    outputDirectory: outputDirectory,
-  });
-}
-
-gulp.task("combineRelease", gulp.series("build", combineRelease));
-
 gulp.task("prepare", function () {
   // Copy Draco3D files from node_modules into Source
   fs.copyFileSync(
@@ -608,10 +606,23 @@ gulp.task("generateDocumentation-watch", function () {
   });
 });
 
-gulp.task("release", gulp.series("build", "build-ts", generateDocumentation));
+gulp.task(
+  "release",
+  gulp.series(
+    function () {
+      return build({
+        minify: true,
+        removePragmas: true,
+        node: true,
+      });
+    },
+    "build-ts",
+    generateDocumentation
+  )
+);
 
 gulp.task(
-  "makeZipFile",
+  "make-zip",
   gulp.series("release", function () {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
@@ -626,13 +637,12 @@ gulp.task(
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
     delete packageJson.scripts["build-third-party"];
-    delete packageJson.scripts.buildApps;
+    delete packageJson.scripts["build-apps"];
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
-    delete packageJson.scripts.combineRelease;
     delete packageJson.scripts.generateDocumentation;
     delete packageJson.scripts["generateDocumentation-watch"];
-    delete packageJson.scripts.makeZipFile;
+    delete packageJson.scripts["make-zip"];
     delete packageJson.scripts.release;
     delete packageJson.scripts.prettier;
 
