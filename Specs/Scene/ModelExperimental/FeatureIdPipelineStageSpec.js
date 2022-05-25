@@ -158,6 +158,10 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(0);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -274,6 +278,12 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        // Only the implicit attribute is counted here, the rest are handled
+        // by the geometry stage
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -390,6 +400,12 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        // Only the implicit attribute is counted here, the rest are handled
+        // by the geometry stage
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -471,6 +487,12 @@ describe(
         const featureIdTexture = primitive.featureIds[0];
         expect(uniformMap.u_featureIdTexture_0()).toBe(
           featureIdTexture.textureReader.texture
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(0);
+        expect(statistics.texturesByteLength).toBe(
+          featureIdTexture.textureReader.texture.sizeInBytes
         );
       });
     });
@@ -594,6 +616,10 @@ describe(
         expect(uniformMap.u_featureIdTexture_4()).toBe(texture);
         expect(uniformMap.u_featureIdTexture_5()).toBe(texture);
         expect(uniformMap.u_featureIdTexture_6()).toBe(texture);
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(0);
+        expect(statistics.texturesByteLength).toBe(texture.sizeInBytes);
       });
     });
 
@@ -714,6 +740,10 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
   },
