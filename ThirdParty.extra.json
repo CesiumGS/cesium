@@ -70,12 +70,6 @@
         "name": "rbush"
     },
     {
-        "name": "requirejs",
-        "license": ["MIT"],
-        "version": "2.1.20",
-        "url": "https://www.npmjs.com/package/requirejs"
-    },
-    {
         "name": "topojson-client"
     },
     {
