@@ -257,12 +257,17 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       // Each time an attribute is added, the attribute index should be incremented.
       expect(renderResources.attributeIndex).toEqual(2);
       expect(pickIdAttribute.vertexBuffer).toBeDefined();
-      expect(pickIdAttribute.vertexBuffer._sizeInBytes).toEqual(
+      expect(pickIdAttribute.vertexBuffer.sizeInBytes).toEqual(
         renderResources.instanceCount * 4
       );
       expect(pickIdAttribute.instanceDivisor).toEqual(1);
 
       expect(renderResources.model._resources.length).toEqual(5);
+
+      const statistics = renderResources.model.statistics;
+      expect(statistics.geometryByteLength).toBe(
+        renderResources.instanceCount * 4
+      );
 
       expect(renderResources.pickId).toEqual("v_pickColor");
     });
