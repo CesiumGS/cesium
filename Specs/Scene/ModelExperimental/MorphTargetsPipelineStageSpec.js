@@ -115,6 +115,9 @@ describe(
           expectedByteOffset,
           expectedStride
         );
+        expect(renderResources.model.statistics.geometryByteLength).toBe(
+          positionAttribute.vertexBuffer.sizeInBytes
+        );
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -180,6 +183,7 @@ describe(
         // These values happen to be the same for all attributes
         const expectedByteOffset = 0;
         const expectedStride = 12;
+        let totalSize = 0;
         for (let i = 0; i < length; i++) {
           const attribute = attributes[i];
           verifyMorphTargetAttribute(
@@ -188,7 +192,11 @@ describe(
             expectedByteOffset,
             expectedStride
           );
+          totalSize += attribute.vertexBuffer.sizeInBytes;
         }
+        expect(renderResources.model.statistics.geometryByteLength).toBe(
+          totalSize
+        );
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
