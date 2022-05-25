@@ -90,7 +90,10 @@ SceneMode2DPipelineStage.process = function (
     runtimePrimitive.positionBuffer2D = buffer2D;
     model._modelResources.push(buffer2D);
 
-    // Unload the typed array
+    // Unload the typed array. This is just a pointer to the array in
+    // the vertex buffer loader, so if the typed array is shared by
+    // multiple primitives (i.e. multiple instances of the same mesh),
+    // this will not affect the other primitives.
     positionAttribute.typedArray = undefined;
   }
 
@@ -200,7 +203,6 @@ function createPositionsTypedArrayFor2D(
   frameState
 ) {
   const typedArray = attribute.typedArray.slice();
-
   let result;
   if (defined(attribute.quantization)) {
     // Dequantize the positions if necessary.
@@ -218,8 +220,19 @@ function createPositionsTypedArrayFor2D(
 
   const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
   const length = result.length;
-  for (let i = startIndex; i < length; i += 3) {
+  const stride = defined(attribute.byteStride)
+    ? attribute.byteStride / Float32Array.BYTES_PER_ELEMENT
+    : 3;
+
+  for (let i = startIndex; i < length; i += stride) {
     const initialPosition = Cartesian3.fromArray(result, i, scratchPosition);
+    if (
+      isNaN(initialPosition.x) ||
+      isNaN(initialPosition.y) ||
+      isNaN(initialPosition.z)
+    ) {
+      continue;
+    }
 
     const transformedPosition = Matrix4.multiplyByPoint(
       modelMatrix,

@@ -1359,7 +1359,7 @@ const scratchCartographic = new Cartographic();
 function getScale(model, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize !== 0.0) {
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(
