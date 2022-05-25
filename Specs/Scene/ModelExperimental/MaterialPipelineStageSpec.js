@@ -353,6 +353,86 @@ describe(
       });
     });
 
+    it("updates memory statistics for metallic roughness", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        const material = primitive.material;
+        const metallicRoughness = material.metallicRoughness;
+
+        const statistics = new ModelExperimentalStatistics();
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: {
+            statistics: statistics,
+          },
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        const totalTextureSize =
+          material.emissiveTexture.texture.sizeInBytes +
+          material.normalTexture.texture.sizeInBytes +
+          material.occlusionTexture.texture.sizeInBytes +
+          metallicRoughness.baseColorTexture.texture.sizeInBytes;
+        // metallic roughness texture is the same image file as the base
+        // color texture so it is not counted
+        expect(statistics.texturesByteLength).toBe(totalTextureSize);
+      });
+    });
+
+    it("updates memory statistics for specular glossiness", function () {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        const material = primitive.material;
+        const specularGlossiness = material.specularGlossiness;
+
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const statistics = new ModelExperimentalStatistics();
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: {
+            statistics: statistics,
+          },
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        const totalTextureSize =
+          material.emissiveTexture.texture.sizeInBytes +
+          material.normalTexture.texture.sizeInBytes +
+          material.occlusionTexture.texture.sizeInBytes +
+          specularGlossiness.diffuseTexture.texture.sizeInBytes +
+          specularGlossiness.specularGlossinessTexture.texture.sizeInBytes;
+
+        expect(statistics.texturesByteLength).toBe(totalTextureSize);
+      });
+    });
+
     it("enables PBR lighting for metallic roughness materials", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -804,6 +884,30 @@ describe(
       expectUniformMap(uniformMap, {
         u_testTexture: mockTexture,
       });
+    });
+
+    it("_processTexture updates statistics", function () {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const mockTexture = {
+        sizeInBytes: 100,
+      };
+      const textureReader = {
+        texture: mockTexture,
+        texCoord: 1,
+      };
+      const statistics = new ModelExperimentalStatistics();
+      MaterialPipelineStage._processTexture(
+        shaderBuilder,
+        uniformMap,
+        textureReader,
+        "u_testTexture",
+        "TEST",
+        mockFrameState.context.defaultTexture,
+        statistics
+      );
+
+      expect(statistics.texturesByteLength).toBe(mockTexture.sizeInBytes);
     });
   },
   "WebGL"
