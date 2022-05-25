@@ -340,6 +340,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
           _projectTo2D: true,
         },
         runtimePrimitive: runtimePrimitive,
@@ -1490,6 +1491,7 @@ describe(
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelExperimentalStatistics(),
           _projectTo2D: true,
         },
         runtimePrimitive: runtimePrimitive,
