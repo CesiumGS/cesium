@@ -45,12 +45,9 @@ const travisDeployUrl =
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 const taskName = process.argv[2];
-const noDevelopmentGallery =
-  taskName === "release" || taskName === "makeZipFile";
+const noDevelopmentGallery = taskName === "release" || taskName === "make-zip";
 const minifyShaders =
-  taskName === "release" ||
-  taskName === "makeZipFile" ||
-  taskName === "buildApps";
+  taskName === "release" || taskName === "make-zip" || taskName === "buildApps";
 
 const verbose = yargs.argv.verbose;
 
@@ -85,21 +82,6 @@ const filesToClean = [
   "cesium-*.tgz",
 ];
 
-const filesToConvertES6 = [
-  "Source/**/*.js",
-  "Specs/**/*.js",
-  "!Source/ThirdParty/**",
-  "!Source/Cesium.js",
-  "!Source/copyrightHeader.js",
-  "!Source/Shaders/**",
-  "!Source/Workers/cesiumWorkerBootstrapper.js",
-  "!Source/Workers/transferTypedArrayTest.js",
-  "!Specs/karma-main.js",
-  "!Specs/karma.conf.cjs",
-  "!Specs/spec-main.js",
-  "!Specs/SpecList.js",
-  "!Specs/TestWorkers/**",
-];
 const workerSourceFiles = ["Source/WorkersES6/**"];
 const specFiles = ["Specs/**/*Spec.js"];
 const testWorkers = ["Specs/TestWorkers/*.js"];
@@ -597,12 +579,12 @@ function generateDocumentation() {
 
   return streamToPromise(stream);
 }
-gulp.task("generateDocumentation", generateDocumentation);
+gulp.task("build-doc", generateDocumentation);
 
-gulp.task("generateDocumentation-watch", function () {
+gulp.task("build-doc-watch", function () {
   return generateDocumentation().then(function () {
     console.log("Listening for changes in documentation...");
-    return gulp.watch(sourceFiles, gulp.series("generateDocumentation"));
+    return gulp.watch(sourceFiles, gulp.series("build-doc"));
   });
 });
 
@@ -632,7 +614,6 @@ gulp.task(
     delete packageJson.scripts.prepare;
 
     // Remove build and transform tasks since they do not function as intended from within the release zip
-    delete packageJson.scripts.convertToModules;
     delete packageJson.scripts.build;
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
@@ -640,8 +621,8 @@ gulp.task(
     delete packageJson.scripts["build-apps"];
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
-    delete packageJson.scripts.generateDocumentation;
-    delete packageJson.scripts["generateDocumentation-watch"];
+    delete packageJson.scripts["build-doc"];
+    delete packageJson.scripts["build-doc-watch"];
     delete packageJson.scripts["make-zip"];
     delete packageJson.scripts.release;
     delete packageJson.scripts.prettier;
@@ -1259,146 +1240,6 @@ gulp.task("test", function (done) {
     }
   );
   karma.start();
-});
-
-gulp.task("convertToModules", function () {
-  const requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
-  const noModulesRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[?)([\S\s]*?)]?([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
-  const splitRegex = /,\s*/;
-
-  const fsReadFile = Promise.promisify(fs.readFile);
-  const fsWriteFile = Promise.promisify(fs.writeFile);
-
-  const files = globby.sync(filesToConvertES6);
-
-  return Promise.map(files, function (file) {
-    return fsReadFile(file).then(function (contents) {
-      contents = contents.toString();
-      if (contents.startsWith("import")) {
-        return;
-      }
-
-      let result = requiresRegex.exec(contents);
-
-      if (result === null) {
-        result = noModulesRegex.exec(contents);
-        if (result === null) {
-          return;
-        }
-      }
-
-      const names = result[3].split(splitRegex);
-      if (names.length === 1 && names[0].trim() === "") {
-        names.length = 0;
-      }
-
-      for (let i = 0; i < names.length; ++i) {
-        if (names[i].indexOf("//") >= 0 || names[i].indexOf("/*") >= 0) {
-          console.log(
-            `${file} contains comments in the require list.  Skipping so nothing gets broken.`
-          );
-          return;
-        }
-      }
-
-      const identifiers = result[5].split(splitRegex);
-      if (identifiers.length === 1 && identifiers[0].trim() === "") {
-        identifiers.length = 0;
-      }
-
-      for (let i = 0; i < identifiers.length; ++i) {
-        if (
-          identifiers[i].indexOf("//") >= 0 ||
-          identifiers[i].indexOf("/*") >= 0
-        ) {
-          console.log(
-            `${file} contains comments in the require list.  Skipping so nothing gets broken.`
-          );
-          return;
-        }
-      }
-
-      const requires = [];
-
-      for (let i = 0; i < names.length && i < identifiers.length; ++i) {
-        requires.push({
-          name: names[i].trim(),
-          identifier: identifiers[i].trim(),
-        });
-      }
-
-      // Convert back to separate lists for the names and identifiers, and add
-      // any additional names or identifiers that don't have a corresponding pair.
-      const sortedNames = requires.map(function (item) {
-        return `${item.name.slice(0, -1)}.js'`;
-      });
-      for (let i = sortedNames.length; i < names.length; ++i) {
-        sortedNames.push(names[i].trim());
-      }
-
-      const sortedIdentifiers = requires.map(function (item) {
-        return item.identifier;
-      });
-      for (let i = sortedIdentifiers.length; i < identifiers.length; ++i) {
-        sortedIdentifiers.push(identifiers[i].trim());
-      }
-
-      contents = "";
-      if (sortedNames.length > 0) {
-        for (let q = 0; q < sortedNames.length; q++) {
-          let modulePath = sortedNames[q];
-          if (file.startsWith("Specs")) {
-            modulePath = modulePath.substring(1, modulePath.length - 1);
-            const sourceDir = path.dirname(file);
-
-            if (modulePath.startsWith("Specs") || modulePath.startsWith(".")) {
-              let importPath = modulePath;
-              if (modulePath.startsWith("Specs")) {
-                importPath = path.relative(sourceDir, modulePath);
-                if (importPath[0] !== ".") {
-                  importPath = `./${importPath}`;
-                }
-              }
-              modulePath = `'${importPath}'`;
-              contents += `import ${sortedIdentifiers[q]} from ${modulePath};${os.EOL}`;
-            } else {
-              modulePath =
-                `'${path.relative(sourceDir, "Source")}/Cesium.js` + `'`;
-              if (sortedIdentifiers[q] === "CesiumMath") {
-                contents += `import { Math as CesiumMath } from ${modulePath};${os.EOL}`;
-              } else {
-                contents += `import { ${sortedIdentifiers[q]} } from ${modulePath};${os.EOL}`;
-              }
-            }
-          } else {
-            contents += `import ${sortedIdentifiers[q]} from ${modulePath};${os.EOL}`;
-          }
-        }
-      }
-
-      let code;
-      const codeAndReturn = result[6];
-      if (file.endsWith("Spec.js")) {
-        const indi = codeAndReturn.lastIndexOf("});");
-        code = codeAndReturn.slice(0, indi);
-        code = code.trim().replace(`'use strict';${os.EOL}`, "");
-        contents += code + os.EOL;
-      } else {
-        const returnIndex = codeAndReturn.lastIndexOf("return");
-
-        code = codeAndReturn.slice(0, returnIndex);
-        code = code.trim().replace(`'use strict';${os.EOL}`, "");
-        contents += code + os.EOL;
-
-        const returnStatement = codeAndReturn.slice(returnIndex);
-        contents += `${returnStatement
-          .split(";")[0]
-          .replace("return ", "export default ")};${os.EOL}`;
-      }
-
-      return fsWriteFile(file, contents);
-    });
-  });
 });
 
 /**
