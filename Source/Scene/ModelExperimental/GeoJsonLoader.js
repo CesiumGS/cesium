@@ -60,7 +60,7 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GeoJsonLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, , or undefined if the resource has not yet started loading.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource has not yet started loading.
    *
    * @memberof GeoJsonLoader.prototype
    *

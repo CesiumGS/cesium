@@ -3,7 +3,6 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -73,7 +72,8 @@ function Vector3DTileGeometry(options) {
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._update = function (geometries, frameState) {};
+  this._readyPromise = initialize(this);
 
   this._verticesPromise = undefined;
 
@@ -144,7 +144,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -315,7 +315,7 @@ function createPrimitive(geometries) {
       return;
     }
 
-    verticesPromise.then(function (result) {
+    return verticesPromise.then(function (result) {
       const packedBuffer = new Float64Array(result.packedBuffer);
       const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
@@ -336,7 +336,9 @@ function createPrimitive(geometries) {
       geometries._ready = true;
     });
   }
+}
 
+function finishPrimitive(geometries) {
   if (geometries._ready && !defined(geometries._primitive)) {
     geometries._primitive = new Vector3DTilePrimitive({
       batchTable: geometries._batchTable,
@@ -382,8 +384,6 @@ function createPrimitive(geometries) {
     geometries._packedBuffer = undefined;
 
     geometries._verticesPromise = undefined;
-
-    geometries._readyPromise.resolve();
   }
 }
 
@@ -428,22 +428,42 @@ Vector3DTileGeometry.prototype.updateCommands = function (batchId, color) {
   this._primitive.updateCommands(batchId, color);
 };
 
+function initialize(geometries) {
+  return new Promise(function (resolve, reject) {
+    geometries._update = function (geometries, frameState) {
+      const promise = createPrimitive(geometries);
+
+      if (geometries._ready) {
+        geometries._primitive.debugWireframe = geometries.debugWireframe;
+        geometries._primitive.forceRebatch = geometries.forceRebatch;
+        geometries._primitive.classificationType =
+          geometries.classificationType;
+        geometries._primitive.update(frameState);
+      }
+
+      if (!defined(promise)) {
+        return;
+      }
+
+      promise
+        .then(function () {
+          finishPrimitive(geometries);
+          resolve(geometries);
+        })
+        .catch(function (e) {
+          reject(e);
+        });
+    };
+  });
+}
+
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileGeometry.prototype.update = function (frameState) {
-  createPrimitive(this);
-
-  if (!this._ready) {
-    return;
-  }
-
-  this._primitive.debugWireframe = this.debugWireframe;
-  this._primitive.forceRebatch = this.forceRebatch;
-  this._primitive.classificationType = this.classificationType;
-  this._primitive.update(frameState);
+  this._update(this, frameState);
 };
 
 /**
