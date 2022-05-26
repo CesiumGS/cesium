@@ -95,10 +95,10 @@ describe(
       });
 
       scene2D = createScene();
-      scene2D.morphTo2D();
+      scene2D.morphTo2D(0.0);
 
       sceneCV = createScene();
-      sceneCV.morphToColumbusView();
+      sceneCV.morphToColumbusView(0.0);
     });
 
     afterAll(function () {
@@ -120,11 +120,7 @@ describe(
       zoom = defaultValue(zoom, 4.0);
 
       const camera = scene.camera;
-      const center = Matrix4.multiplyByPoint(
-        model.modelMatrix,
-        model.boundingSphere.center,
-        new Cartesian3()
-      );
+      const center = model.boundingSphere.center;
       const r =
         zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
@@ -592,6 +588,7 @@ describe(
         sceneCV
       ).then(function (model) {
         expect(model.ready).toEqual(true);
+        sceneCV.camera.moveBackward(1.0);
         verifyRender(model, true, {
           zoomToModel: false,
           scene: sceneCV,
@@ -1016,8 +1013,8 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
         expect(model.boundingSphere.center).toEqual(translation);
+        verifyRender(model, true);
 
         expect(sceneGraph.computedModelMatrix).not.toBe(transform);
         expect(model.modelMatrix).not.toBe(transform);
@@ -1025,6 +1022,7 @@ describe(
     });
 
     it("changing model matrix works", function () {
+      const translation = new Cartesian3(10, 0, 0);
       const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
         "updateModelMatrix"
@@ -1036,8 +1034,7 @@ describe(
         verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
 
-        const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
-
+        const transform = Matrix4.fromTranslation(translation);
         Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
@@ -1049,7 +1046,10 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
+        // Keep the camera in-place to confirm that the model matrix moves the model out of view.
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
       });
     });
 
@@ -1070,7 +1070,6 @@ describe(
         scene.renderForSpecs();
 
         expect(model.boundingSphere.center).toEqual(translation);
-        verifyRender(model, false);
       });
     });
 
