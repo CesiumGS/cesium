@@ -434,6 +434,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {Promise<void>}
    * @readonly
+   *
+   * @private
    */
   texturesLoadedPromise: {
     get: function () {

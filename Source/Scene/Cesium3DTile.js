@@ -1101,11 +1101,12 @@ function requestMultipleContents(tile) {
       }
 
       if (tile.isDestroyed()) {
-        return multipleContentFailed(
+        multipleContentFailed(
           tile,
           tileset,
           "Tile was unloaded while content was loading"
         );
+        return;
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
@@ -1129,11 +1130,12 @@ function requestMultipleContents(tile) {
       }
 
       if (tile.isDestroyed()) {
-        return multipleContentFailed(
+        multipleContentFailed(
           tile,
           tileset,
           "Tile was unloaded while content was processing"
         );
+        return;
       }
 
       // Refresh style for expired content
@@ -1145,7 +1147,7 @@ function requestMultipleContents(tile) {
       return content;
     })
     .catch(function (error) {
-      return multipleContentFailed(tile, tileset, error);
+      multipleContentFailed(tile, tileset, error);
     });
 
   return 0;
