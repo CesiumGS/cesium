@@ -2,7 +2,6 @@ import arraySlice from "../Core/arraySlice.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -77,8 +76,8 @@ function Vector3DTilePolygons(options) {
   this._batchedIndices = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
-
+  this._update = function (polygons, frameState) {};
+  this._readyPromise = initialize(this);
   this._verticesPromise = undefined;
 
   this._primitive = undefined;
@@ -148,7 +147,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -304,7 +303,7 @@ function createPrimitive(polygons) {
       return;
     }
 
-    verticesPromise.then(function (result) {
+    return verticesPromise.then(function (result) {
       polygons._positions = undefined;
       polygons._counts = undefined;
       polygons._polygonMinimumHeights = undefined;
@@ -328,7 +327,9 @@ function createPrimitive(polygons) {
       polygons._ready = true;
     });
   }
+}
 
+function finishPrimitive(polygons) {
   if (polygons._ready && !defined(polygons._primitive)) {
     polygons._primitive = new Vector3DTilePrimitive({
       batchTable: polygons._batchTable,
@@ -367,8 +368,6 @@ function createPrimitive(polygons) {
     polygons._boundingVolumes = undefined;
     polygons._batchedIndices = undefined;
     polygons._verticesPromise = undefined;
-
-    polygons._readyPromise.resolve();
   }
 }
 
@@ -413,22 +412,41 @@ Vector3DTilePolygons.prototype.updateCommands = function (batchId, color) {
   this._primitive.updateCommands(batchId, color);
 };
 
+function initialize(polygons) {
+  return new Promise(function (resolve, reject) {
+    polygons._update = function (polygons, frameState) {
+      const promise = createPrimitive(polygons);
+
+      if (polygons._ready) {
+        polygons._primitive.debugWireframe = polygons.debugWireframe;
+        polygons._primitive.forceRebatch = polygons.forceRebatch;
+        polygons._primitive.classificationType = polygons.classificationType;
+        polygons._primitive.update(frameState);
+      }
+
+      if (!defined(promise)) {
+        return;
+      }
+
+      promise
+        .then(function () {
+          finishPrimitive(polygons);
+          resolve(polygons);
+        })
+        .catch(function (e) {
+          reject(e);
+        });
+    };
+  });
+}
+
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolygons.prototype.update = function (frameState) {
-  createPrimitive(this);
-
-  if (!this._ready) {
-    return;
-  }
-
-  this._primitive.debugWireframe = this.debugWireframe;
-  this._primitive.forceRebatch = this.forceRebatch;
-  this._primitive.classificationType = this.classificationType;
-  this._primitive.update(frameState);
+  this._update(this, frameState);
 };
 
 /**

@@ -1,5 +1,4 @@
 import {
-  defer,
   Resource,
   ResourceCache,
   ResourceLoaderState,
@@ -151,11 +150,15 @@ describe("Scene/MetadataSchemaLoader", function () {
     });
   });
 
-  function resolveJsonAfterDestroy(reject) {
-    const deferredPromise = defer();
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveJsonAfterDestroy(rejectPromise) {
+    const promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(schemaJson);
+      }
+    });
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
 
     const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
@@ -166,22 +169,17 @@ describe("Scene/MetadataSchemaLoader", function () {
     schemaLoader.load();
     expect(schemaLoader._state).toBe(ResourceLoaderState.LOADING);
     schemaLoader.destroy();
-
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(schemaJson);
-    }
-
-    expect(schemaLoader.schema).not.toBeDefined();
-    expect(schemaLoader.isDestroyed()).toBe(true);
+    return schemaLoader.promise.then(function () {
+      expect(schemaLoader.schema).not.toBeDefined();
+      expect(schemaLoader.isDestroyed()).toBe(true);
+    });
   }
 
   it("handles resolving json after destroy", function () {
-    resolveJsonAfterDestroy(false);
+    return resolveJsonAfterDestroy(false);
   });
 
   it("handles rejecting json after destroy", function () {
-    resolveJsonAfterDestroy(true);
+    return resolveJsonAfterDestroy(true);
   });
 });

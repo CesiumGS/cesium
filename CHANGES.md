@@ -19,12 +19,14 @@
 
 - Fixed the inaccurate computation of bounding spheres for models not centered at (0,0,0) in their local space. [#10395](https://github.com/CesiumGS/cesium/pull/10395)
 - Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
+- Fixed error when destroying a 3D tileset before it has finished loading. [#10363](Fixes https://github.com/CesiumGS/cesium/issues/10363)
 - Fixed race condition which can occur when updating `Cesium3DTileStyle` before its `readyPromise` has resolved. [#10345](https://github.com/CesiumGS/cesium/issues/10345)
 - Fixed label background rendering. [#10342](https://github.com/CesiumGS/cesium/issues/10342)
 - Enabled support for loading web assembly modules in Edge. [#6541](https://github.com/CesiumGS/cesium/pull/6541)
 - Fixed crash for zero-area `region` bounding volumes in a 3D Tileset. [#10351](https://github.com/CesiumGS/cesium/pull/10351)
 - Fixed `Cesium3DTileset.debugShowUrl` so that it works for implicit tiles too. [#10372](https://github.com/CesiumGS/cesium/issues/10372)
 - Fixed crash when loading a tileset without a metadata schema but has external tilesets with tile or content metadata. [#10387](https://github.com/CesiumGS/cesium/pull/10387)
+- Fixed winding order for negatively scaled models in `ModelExperimental`. [#10405](https://github.com/CesiumGS/cesium/pull/10405)
 
 ##### Deprecated :hourglass_flowing_sand:
 

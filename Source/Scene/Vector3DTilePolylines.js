@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -89,7 +88,8 @@ function Vector3DTilePolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._update = function (polylines, frameState) {};
+  this._readyPromise = initialize(this);
 
   this._verticesPromise = undefined;
 }
@@ -131,7 +131,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -228,38 +228,32 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    verticesPromise
-      .then(function (result) {
-        if (polylines._keepDecodedPositions) {
-          polylines._decodedPositions = new Float64Array(
-            result.decodedPositions
-          );
-          polylines._decodedPositionOffsets = new Uint32Array(
-            result.decodedPositionOffsets
-          );
-        }
-
-        polylines._currentPositions = new Float32Array(result.currentPositions);
-        polylines._previousPositions = new Float32Array(
-          result.previousPositions
+    return verticesPromise.then(function (result) {
+      if (polylines._keepDecodedPositions) {
+        polylines._decodedPositions = new Float64Array(result.decodedPositions);
+        polylines._decodedPositionOffsets = new Uint32Array(
+          result.decodedPositionOffsets
         );
-        polylines._nextPositions = new Float32Array(result.nextPositions);
-        polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
-        polylines._vertexBatchIds = new Uint16Array(result.batchIds);
+      }
 
-        const indexDatatype = result.indexDatatype;
-        polylines._indices =
-          indexDatatype === IndexDatatype.UNSIGNED_SHORT
-            ? new Uint16Array(result.indices)
-            : new Uint32Array(result.indices);
+      polylines._currentPositions = new Float32Array(result.currentPositions);
+      polylines._previousPositions = new Float32Array(result.previousPositions);
+      polylines._nextPositions = new Float32Array(result.nextPositions);
+      polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
+      polylines._vertexBatchIds = new Uint16Array(result.batchIds);
 
-        polylines._ready = true;
-      })
-      .catch(function (error) {
-        polylines._readyPromise.reject(error);
-      });
+      const indexDatatype = result.indexDatatype;
+      polylines._indices =
+        indexDatatype === IndexDatatype.UNSIGNED_SHORT
+          ? new Uint16Array(result.indices)
+          : new Uint32Array(result.indices);
+
+      polylines._ready = true;
+    });
   }
+}
 
+function finishVertexArray(polylines, context) {
   if (polylines._ready && !defined(polylines._va)) {
     const curPositions = polylines._currentPositions;
     const prevPositions = polylines._previousPositions;
@@ -372,8 +366,6 @@ function createVertexArray(polylines, context) {
     polylines._expandAndWidth = undefined;
     polylines._vertexBatchIds = undefined;
     polylines._indices = undefined;
-
-    polylines._readyPromise.resolve();
   }
 }
 
@@ -614,27 +606,45 @@ Vector3DTilePolylines.prototype.applyStyle = function (style, features) {
   }
 };
 
+function initialize(polylines) {
+  return new Promise(function (resolve, reject) {
+    polylines._update = function (polylines, frameState) {
+      const context = frameState.context;
+      const promise = createVertexArray(polylines, context);
+      createUniformMap(polylines, context);
+      createShaders(polylines, context);
+      createRenderStates(polylines);
+
+      if (polylines._ready) {
+        const passes = frameState.passes;
+        if (passes.render || passes.pick) {
+          queueCommands(polylines, frameState);
+        }
+      }
+
+      if (!defined(promise)) {
+        return;
+      }
+
+      promise
+        .then(function () {
+          finishVertexArray(polylines, context);
+          resolve();
+        })
+        .catch(function (e) {
+          reject(e);
+        });
+    };
+  });
+}
+
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolylines.prototype.update = function (frameState) {
-  const context = frameState.context;
-
-  createVertexArray(this, context);
-  createUniformMap(this, context);
-  createShaders(this, context);
-  createRenderStates(this);
-
-  if (!this._ready) {
-    return;
-  }
-
-  const passes = frameState.passes;
-  if (passes.render || passes.pick) {
-    queueCommands(this, frameState);
-  }
+  this._update(this, frameState);
 };
 
 /**
