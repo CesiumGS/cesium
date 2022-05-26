@@ -41,7 +41,7 @@ function createPolygonHierarchyProperty(value) {
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
  * @property {Property | ClassificationType} [classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
  * @property {ConstantProperty | number} [zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
- * @property {Property | PolygonHierarchy} [textureCoordinates] A Property specifying texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for extrusions, ground primitives, and sufficiently large polygons without per-position heights.
+ * @property {Property | PolygonHierarchy} [textureCoordinates] A Property specifying texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  */
 
 /**
@@ -102,6 +102,7 @@ function PolygonGraphics(options) {
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
   this._textureCoordinates = undefined;
+  this._textureCoordinatesSubscription = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -297,7 +298,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
   zIndex: createPropertyDescriptor("zIndex"),
 
   /**
-   *  A Property specifying texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for extrusions, ground primitives, and sufficiently large polygons without per-position heights.
+   *  A Property specifying texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
    * @memberof PolygonGraphics.prototype
    * @type {Property|undefined}
    */

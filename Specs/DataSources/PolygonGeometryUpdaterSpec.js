@@ -1,5 +1,6 @@
 import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
 import { ArcType } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
@@ -362,6 +363,14 @@ describe(
       polygon.perPositionHeight = createDynamicProperty(false);
       polygon.granularity = createDynamicProperty(2);
       polygon.stRotation = createDynamicProperty(1);
+      polygon.textureCoordinates = createDynamicProperty({
+        positions: [
+          new Cartesian2(0.5, 1),
+          new Cartesian2(0, 0.5),
+          new Cartesian2(0.5, 0),
+          new Cartesian2(1, 0.5),
+        ],
+      });
       polygon.closeTop = createDynamicProperty(false);
       polygon.closeBottom = createDynamicProperty(false);
       polygon.arcType = createDynamicProperty(ArcType.RHUMB);
@@ -386,6 +395,9 @@ describe(
       );
       expect(options.granularity).toEqual(polygon.granularity.getValue());
       expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+      expect(options.textureCoordinates).toEqual(
+        polygon.textureCoordinates.getValue()
+      );
       expect(options.closeTop).toEqual(polygon.closeTop.getValue());
       expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
       expect(options.arcType).toEqual(polygon.arcType.getValue());

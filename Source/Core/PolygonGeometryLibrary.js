@@ -170,6 +170,7 @@ const scratchCartographic0 = new Cartographic();
 const scratchCartographic1 = new Cartographic();
 const scratchCartographic2 = new Cartographic();
 const scratchCartesian0 = new Cartesian3();
+const scratchRhumbLine = new EllipsoidRhumbLine();
 PolygonGeometryLibrary.subdivideRhumbLineCount = function (
   ellipsoid,
   p0,
@@ -282,8 +283,8 @@ PolygonGeometryLibrary.subdivideTexcoordRhumbLine = function (
   // Compute the surface distance.
   const c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
-  const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
-  const n = rhumb.surfaceDistance / minDistance;
+  scratchRhumbLine.setEndPoints(c0, c1);
+  const n = scratchRhumbLine.surfaceDistance / minDistance;
 
   // Compute the number of subdivisions.
   const countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));

@@ -270,7 +270,7 @@ describe("DataSources/PolygonGraphics", function () {
   it("raises definitionChanged when a property is assigned or modified", function () {
     const property = new PolygonGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
-    testDefinitionChanged(property, "hierarchy", [], []);
+    testDefinitionChanged(property, "hierarchy", [0.0], [1.0]);
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(property, "height", 3, 4);
     testDefinitionChanged(property, "extrudedHeight", 4, 3);
@@ -303,7 +303,7 @@ describe("DataSources/PolygonGraphics", function () {
     );
     testDefinitionChanged(property, "arcType", ArcType.GEODESIC, ArcType.RHUMB);
     testDefinitionChanged(property, "zIndex", 54, 3);
-    testDefinitionChanged(property, "textureCoordinates", [], []);
+    testDefinitionChanged(property, "textureCoordinates", [0.0], [1.0]);
   });
 
   it("converts an array of positions to a PolygonHierarchy", function () {

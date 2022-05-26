@@ -713,7 +713,7 @@ function createGeometryFromPositionsExtruded(
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for extrusions, ground primitives, and sufficiently large polygons without per-position heights.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  *
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
@@ -887,8 +887,7 @@ function PolygonGeometry(options) {
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for extrusions, ground primitives, and sufficiently large polygons without per-position heights.
- * @returns {PolygonGeometry}
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  *
  *
  * @example

@@ -53,6 +53,7 @@ function PolygonGeometryOptions(entity) {
   this.stRotation = undefined;
   this.offsetAttribute = undefined;
   this.arcType = undefined;
+  this.textureCoordinates = undefined;
 }
 
 /**
@@ -300,6 +301,7 @@ PolygonGeometryUpdater.prototype._isDynamic = function (entity, polygon) {
     !Property.isConstant(polygon.extrudedHeight) || //
     !Property.isConstant(polygon.granularity) || //
     !Property.isConstant(polygon.stRotation) || //
+    !Property.isConstant(polygon.textureCoordinates) || //
     !Property.isConstant(polygon.outlineWidth) || //
     !Property.isConstant(polygon.perPositionHeight) || //
     !Property.isConstant(polygon.closeTop) || //
@@ -536,6 +538,10 @@ DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
 
   options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
   options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
+  options.textureCoordinates = Property.getValueOrUndefined(
+    polygon.textureCoordinates,
+    time
+  );
   options.perPositionHeight = Property.getValueOrUndefined(
     polygon.perPositionHeight,
     time
