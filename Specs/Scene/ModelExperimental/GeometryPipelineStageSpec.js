@@ -2,6 +2,7 @@ import {
   AttributeType,
   combine,
   ComponentDatatype,
+  defined,
   GeometryPipelineStage,
   ModelExperimentalStatistics,
   GltfLoader,
@@ -24,6 +25,7 @@ describe(
         {
           semantic: VertexAttributeSemantic.POSITION,
           buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
+          count: 2,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
           byteOffset: 0,
@@ -37,6 +39,7 @@ describe(
         {
           semantic: VertexAttributeSemantic.POSITION,
           buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
+          count: 2,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
           byteOffset: 0,
@@ -45,6 +48,7 @@ describe(
         {
           name: "_TEMPERATURE",
           buffer: new Uint32Array([0, 1, 2, 3, 4, 5]).buffer,
+          count: 3,
           type: AttributeType.VEC2,
           componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
           byteOffset: 0,
@@ -71,6 +75,12 @@ describe(
       "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
     const dracoBoxWithTangents =
       "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+    const triangleWithoutIndices =
+      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+    const triangleStrip =
+      "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+    const triangleFan =
+      "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
 
     let scene;
     let scene2D;
@@ -134,16 +144,26 @@ describe(
       return waitForLoaderProcess(gltfLoader, scene);
     }
 
-    it("processes POSITION attribute from primitive", function () {
-      const renderResources = {
+    function mockRenderResources(primitive) {
+      const count = defined(primitive.indices)
+        ? primitive.indices.count
+        : primitive.attributes[0].count;
+
+      return {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        count: count,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
           statistics: new ModelExperimentalStatistics(),
         },
+        runtimePrimitive: {},
       };
+    }
+
+    it("processes POSITION attribute from primitive", function () {
+      const renderResources = mockRenderResources(positionOnlyPrimitive);
 
       GeometryPipelineStage.process(
         renderResources,
@@ -211,19 +231,10 @@ describe(
     });
 
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(boxTextured).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -331,24 +342,14 @@ describe(
     });
 
     it("processes POSITION attribute from primitive for 2D", function () {
-      const runtimePrimitive = {
-        positionBuffer2D: {},
-      };
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-          _projectTo2D: true,
-        },
-        runtimePrimitive: runtimePrimitive,
-      };
-
       return loadGltf(boxTextured).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+        const runtimePrimitive = renderResources.runtimePrimitive;
+
+        renderResources.model._projectTo2D = true;
+        runtimePrimitive.positionBuffer2D = {};
 
         GeometryPipelineStage.process(
           renderResources,
@@ -429,19 +430,10 @@ describe(
     });
 
     it("processes POSITION, NORMAL, TEXCOORD and TANGENT attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -580,19 +572,10 @@ describe(
     });
 
     it("processes multiple TEXCOORD attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(microcosm).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -708,19 +691,10 @@ describe(
     });
 
     it("processes POSITION, NORMAL, TEXCOORD and COLOR attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[2].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -858,19 +832,10 @@ describe(
     });
 
     it("promotes vec3 vertex colors to vec4 in the shader", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(pointCloudRGB).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -965,15 +930,7 @@ describe(
     });
 
     it("processes custom vertex attribute from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
+      const renderResources = mockRenderResources(customAttributePrimitive);
 
       GeometryPipelineStage.process(
         renderResources,
@@ -1059,19 +1016,10 @@ describe(
     });
 
     it("processes POSITION, NORMAL and _FEATURE_ID_n attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1164,19 +1112,10 @@ describe(
     });
 
     it("sets PRIMITIVE_TYPE_POINTS for point primitive types", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(weather).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1253,19 +1192,10 @@ describe(
     });
 
     it("prepares Draco model for dequantization stage", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1355,19 +1285,10 @@ describe(
     // The tangents in this model aren't quantized, but they still should not
     // cause the model to crash.
     it("prepares Draco model with tangents for dequantization stage", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(dracoBoxWithTangents).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1482,24 +1403,13 @@ describe(
     });
 
     it("processes Draco model for 2D", function () {
-      const runtimePrimitive = {
-        positionBuffer2D: {},
-      };
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-          _projectTo2D: true,
-        },
-        runtimePrimitive: runtimePrimitive,
-      };
-
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        renderResources.model._projectTo2D = true;
+        renderResources.runtimePrimitive.positionBuffer2D = {};
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1605,21 +1515,12 @@ describe(
     });
 
     it("processes model with matrix attributes", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
-        },
-      };
-
       return loadGltf(boxTexturedWithPropertyAttributes).then(function (
         gltfLoader
       ) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
 
         GeometryPipelineStage.process(
           renderResources,
@@ -1778,6 +1679,195 @@ describe(
           ]
         );
         verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("Computes memory usage for a triangle mesh", function () {
+      return loadGltf(boxTextured).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(0);
+        // 6 faces * 2 triangles
+        expect(statistics.trianglesLength).toBe(12);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // Positions and normals share a buffer
+        expectedLength += attributes[0].buffer.sizeInBytes;
+
+        // Texture coordinates
+        expectedLength += attributes[2].buffer.sizeInBytes;
+
+        // Indices
+        expectedLength += primitive.indices.buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
+      });
+    });
+
+    it("Computes memory usage for triangle mesh without indices", function () {
+      return loadGltf(triangleWithoutIndices).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(0);
+        // 1 triangle
+        expect(statistics.trianglesLength).toBe(1);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // Positions
+        expectedLength += attributes[0].buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
+      });
+    });
+
+    it("Computes memory usage correctly for attributes with CPU copy", function () {
+      // This should create a copy of both the positions and indices on the
+      // CPU
+      const options = {
+        loadPositionsFor2D: true,
+        loadIndicesForWireframe: true,
+      };
+
+      return loadGltf(boxTextured, options).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(0);
+        // 6 faces * 2 triangles
+        expect(statistics.trianglesLength).toBe(12);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // A CPU copy of the positions is made
+        expectedLength += 2 * attributes[0].buffer.sizeInBytes;
+
+        // Normals are stored on the GPU only
+        expectedLength += attributes[1].buffer.sizeInBytes;
+
+        // Texture coordinates
+        expectedLength += attributes[2].buffer.sizeInBytes;
+
+        // indices
+        expectedLength += 2 * primitive.indices.buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
+      });
+    });
+
+    it("Computes memory usage for point cloud", function () {
+      return loadGltf(pointCloudRGB).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(2500);
+        expect(statistics.trianglesLength).toBe(0);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // Positions and colors share a buffer
+        expectedLength += attributes[0].buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
+      });
+    });
+
+    it("Computes memory usage for triangle strip", function () {
+      return loadGltf(triangleStrip).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(0);
+        // 1 face * 2 triangles
+        expect(statistics.trianglesLength).toBe(2);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // Positions
+        expectedLength += attributes[0].buffer.sizeInBytes;
+
+        // Indices
+        expectedLength += primitive.indices.buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
+      });
+    });
+
+    it("Computes memory usage for triangle fan", function () {
+      return loadGltf(triangleFan).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.pointsLength).toBe(0);
+        // 1 face * 2 triangles
+        expect(statistics.trianglesLength).toBe(2);
+
+        const attributes = primitive.attributes;
+        let expectedLength = 0;
+
+        // Positions
+        expectedLength += attributes[0].buffer.sizeInBytes;
+
+        // Indices
+        expectedLength += primitive.indices.buffer.sizeInBytes;
+
+        expect(statistics.geometryByteLength).toBe(expectedLength);
       });
     });
   },

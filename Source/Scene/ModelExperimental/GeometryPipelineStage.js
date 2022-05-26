@@ -548,12 +548,12 @@ function handleBitangents(shaderBuilder, attributes) {
 function updateStatistics(renderResources, primitive) {
   const statistics = renderResources.model.statistics;
   const indicesCount = renderResources.count;
-  const mode = primitive.mode;
+  const primitiveType = primitive.primitiveType;
 
-  if (mode === PrimitiveType.POINTS) {
+  if (primitiveType === PrimitiveType.POINTS) {
     statistics.pointsLength += indicesCount;
-  } else if (PrimitiveType.isTriangles(mode)) {
-    statistics.trianglesLength = countTriangles(mode, indicesCount);
+  } else if (PrimitiveType.isTriangles(primitiveType)) {
+    statistics.trianglesLength = countTriangles(primitiveType, indicesCount);
   }
 
   const attributes = primitive.attributes;
