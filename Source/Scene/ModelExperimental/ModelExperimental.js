@@ -1393,7 +1393,7 @@ function getScale(model, frameState) {
       );
     }
 
-    const radius = model.boundingSphere.radius;
+    const radius = model._boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
