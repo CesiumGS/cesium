@@ -9,7 +9,7 @@
         "//Sandcastle_Begin\n"
       }${addExtraLine ? "\n" : ""}${code}//Sandcastle_End\n` +
       `    Sandcastle.finishedLoading();\n` +
-      `}\n` +
+      `};\n` +
       `if (typeof Cesium !== 'undefined') {\n` +
       `    window.startupCalled = true;\n` +
       `    window.startup(Cesium);\n` +
