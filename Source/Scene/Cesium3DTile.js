@@ -68,6 +68,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       ? header.contents[0]
       : header.content;
 
+  this._contentHeader = contentHeader;
+
   /**
    * The local transform of this tile.
    * @type {Matrix4}
@@ -1314,9 +1316,7 @@ function makeContent(tile, arrayBuffer) {
     );
   }
 
-  const contentHeader = defined(tile._header.contents)
-    ? tile._header.contents[0]
-    : tile._header.content;
+  const contentHeader = tile._contentHeader;
 
   if (tile.hasImplicitContentMetadata) {
     const subtree = tile.implicitSubtree;
@@ -1738,7 +1738,7 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
 
   // Update the bounding volumes
   const header = this._header;
-  const content = this._header.content;
+  const contentHeader = this._contentHeader;
   this._boundingVolume = this.createBoundingVolume(
     header.boundingVolume,
     this.computedTransform,
@@ -1746,7 +1746,7 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   );
   if (defined(this._contentBoundingVolume)) {
     this._contentBoundingVolume = this.createBoundingVolume(
-      content.boundingVolume,
+      contentHeader.boundingVolume,
       this.computedTransform,
       this._contentBoundingVolume
     );
@@ -1783,8 +1783,7 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
   }
 
   const hasContentBoundingVolume =
-    defined(tile._header.content) &&
-    defined(tile._header.content.boundingVolume);
+    defined(tile._contentHeader) && defined(tile._contentHeader.boundingVolume);
   const empty =
     tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent;
 

@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -28,8 +29,8 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
- * @param {Boolean} [options.loadForWireframe=false] Load index buffer as a typed array in order to generate wireframes in WebGL1. This will be ignored if using WebGL2.
+ * @param {Boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
+ * @param {Boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
  * @private
  */
 export default function GltfIndexBufferLoader(options) {
@@ -42,8 +43,8 @@ export default function GltfIndexBufferLoader(options) {
   const draco = options.draco;
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
-  const loadForWireframe = defaultValue(options.loadForWireframe, false);
+  const loadBuffer = defaultValue(options.loadBuffer, false);
+  const loadTypedArray = defaultValue(options.loadTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -51,6 +52,11 @@ export default function GltfIndexBufferLoader(options) {
   Check.typeOf.number("options.accessorId", accessorId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true."
+    );
+  }
   //>>includeEnd('debug');
 
   const indexDatatype = gltf.accessors[accessorId].componentType;
@@ -64,8 +70,8 @@ export default function GltfIndexBufferLoader(options) {
   this._draco = draco;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
-  this._loadAsTypedArray = loadAsTypedArray;
-  this._loadForWireframe = loadForWireframe;
+  this._loadBuffer = loadBuffer;
+  this._loadTypedArray = loadTypedArray;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
@@ -110,8 +116,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
     },
   },
   /**
-   * The index buffer. This is only defined when <code>loadAsTypedArray</code> is false
-   * or when <code>loadForWireframe</code> is false while using WebGL1.
+   * The index buffer. This is only defined when <code>loadBuffer</code> is true.
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
@@ -125,8 +130,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
     },
   },
   /**
-   * The typed array containing indices. This is only defined when <code>loadAsTypedArray</code> is true
-   * or when <code>loadForWireframe</code> is true while using WebGL1.
+   * The typed array containing indices. This is only defined when <code>loadTypedArray</code> is true.
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
@@ -195,25 +199,8 @@ GltfIndexBufferLoader.prototype.load = function () {
         return;
       }
 
-      // WebGL1 has no way to retrieve the contents of buffers that are
-      // on the GPU. Therefore, the index buffer must be stored in CPU memory
-      // to generate wireframes for models.
-      const useWebgl2 = frameState.context.webgl2;
-      const loadTypedArrayForWireframe = !useWebgl2 && loader._loadForWireframe;
-      if (loader._loadAsTypedArray || loadTypedArrayForWireframe) {
-        // Unload everything except the typed array
-        loader.unload();
-
-        loader._typedArray = typedArray;
-        loader._state = ResourceLoaderState.READY;
-        resolve(loader);
-
-        return;
-      }
-
       let buffer;
-
-      if (loader._asynchronous) {
+      if (loader._loadBuffer && loader._asynchronous) {
         const indexBufferJob = scratchIndexBufferJob;
         indexBufferJob.set(typedArray, indexDatatype, frameState.context);
         const jobScheduler = frameState.jobScheduler;
@@ -222,7 +209,7 @@ GltfIndexBufferLoader.prototype.load = function () {
           return;
         }
         buffer = indexBufferJob.buffer;
-      } else {
+      } else if (loader._loadBuffer) {
         buffer = createIndexBuffer(
           typedArray,
           indexDatatype,
@@ -234,6 +221,7 @@ GltfIndexBufferLoader.prototype.load = function () {
       loader.unload();
 
       loader._buffer = buffer;
+      loader._typedArray = loader._loadTypedArray ? typedArray : undefined;
       loader._state = ResourceLoaderState.READY;
       resolve(loader);
     };

@@ -416,6 +416,6 @@ FeatureDetection.supportsWebWorkers = function () {
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAssembly}
  */
 FeatureDetection.supportsWebAssembly = function () {
-  return typeof WebAssembly !== "undefined" && !FeatureDetection.isEdge();
+  return typeof WebAssembly !== "undefined";
 };
 export default FeatureDetection;

@@ -35,7 +35,8 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
- * @param {Boolean} [options.loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
+ * @param {Boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {Boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -56,13 +57,19 @@ export default function GltfVertexBufferLoader(options) {
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
   const dequantize = defaultValue(options.dequantize, false);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadBuffer = defaultValue(options.loadBuffer, false);
+  const loadTypedArray = defaultValue(options.loadTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true."
+    );
+  }
 
   const hasBufferViewId = defined(bufferViewId);
   const hasDraco = defined(draco);
@@ -105,7 +112,8 @@ export default function GltfVertexBufferLoader(options) {
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._dequantize = dequantize;
-  this._loadAsTypedArray = loadAsTypedArray;
+  this._loadBuffer = loadBuffer;
+  this._loadTypedArray = loadTypedArray;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._quantization = undefined;
@@ -232,21 +240,10 @@ GltfVertexBufferLoader.prototype.load = function () {
         return;
       }
 
-      if (loader._loadAsTypedArray) {
-        // Unload everything except the typed array
-        loader.unload();
-
-        loader._typedArray = typedArray;
-        loader._state = ResourceLoaderState.READY;
-        resolve(loader);
-        return;
-      }
-
       const accessor = loader._gltf.accessors[loader._accessorId];
 
       let buffer;
-
-      if (loader._asynchronous) {
+      if (loader._loadBuffer && loader._asynchronous) {
         const vertexBufferJob = scratchVertexBufferJob;
         vertexBufferJob.set(
           typedArray,
@@ -262,7 +259,7 @@ GltfVertexBufferLoader.prototype.load = function () {
           return;
         }
         buffer = vertexBufferJob.buffer;
-      } else {
+      } else if (loader._loadBuffer) {
         buffer = createVertexBuffer(
           typedArray,
           dequantize,
@@ -277,6 +274,7 @@ GltfVertexBufferLoader.prototype.load = function () {
       loader.unload();
 
       loader._buffer = buffer;
+      loader._typedArray = loader._loadTypedArray ? typedArray : undefined;
       loader._state = ResourceLoaderState.READY;
       resolve(loader);
     };

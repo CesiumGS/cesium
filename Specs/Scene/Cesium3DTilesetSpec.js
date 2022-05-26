@@ -6,6 +6,8 @@ import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
+import { findTileMetadata } from "../../Source/Cesium.js";
+import { findContentMetadata } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
@@ -2533,9 +2535,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).notToRender(rgba);
           });
         }
@@ -2549,9 +2552,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).toRenderAndCall(function (rgba2) {
               expect(rgba2).not.toEqual(rgba);
               tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
@@ -5295,6 +5299,33 @@ describe(
           }
         );
       });
+
+      it("debugShowUrl works for implicit tiling", function () {
+        return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
+          function (tileset) {
+            tileset.debugShowUrl = true;
+            scene.renderForSpecs();
+
+            const expectedLabels = [
+              "Url: content/0/0/0.b3dm",
+              "Url: content/1/0/0.b3dm",
+              "Url: content/1/1/0.b3dm",
+              "Url: content/1/1/1.b3dm",
+              "Url: content/1/0/1.b3dm",
+              "Url: subtrees/0.0.0.subtree",
+            ];
+            const debugLabels = tileset._tileDebugLabels._labels;
+            const length = debugLabels.length;
+            expect(length).toBe(expectedLabels.length);
+            for (let i = 0; i < length; i++) {
+              expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+            }
+            tileset.debugShowUrl = false;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
+          }
+        );
+      });
     });
 
     describe("3DTILES_implicit_tiling", function () {
@@ -5374,6 +5405,34 @@ describe(
           expect(implicitTile.implicitCoordinates.level).toEqual(0);
           expect(implicitTile.implicitCoordinates.x).toEqual(0);
           expect(implicitTile.implicitCoordinates.y).toEqual(0);
+        });
+      });
+
+      it("debugShowUrl works for implicit tiling (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetLegacyUrl
+        ).then(function (tileset) {
+          tileset.debugShowUrl = true;
+          scene.renderForSpecs();
+
+          const expectedLabels = [
+            "Url: content/0/0/0.b3dm",
+            "Url: content/1/0/0.b3dm",
+            "Url: content/1/1/0.b3dm",
+            "Url: content/1/1/1.b3dm",
+            "Url: content/1/0/1.b3dm",
+            "Url: subtrees/0.0.0.subtree",
+          ];
+          const debugLabels = tileset._tileDebugLabels._labels;
+          const length = debugLabels.length;
+          expect(length).toBe(expectedLabels.length);
+          for (let i = 0; i < length; i++) {
+            expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+          }
+          tileset.debugShowUrl = false;
+          scene.renderForSpecs();
+          expect(tileset._tileDebugLabels).not.toBeDefined();
         });
       });
     });
@@ -6095,6 +6154,10 @@ describe(
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
       const tilesetWithImplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
+      const tilesetWithoutRootSchemaTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalTileMetadata.json";
+      const tilesetWithoutRootSchemaContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalContentMetadata.json";
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
@@ -6310,6 +6373,23 @@ describe(
         });
       });
 
+      it("gracefully handles external tileset with tile metadata but no root schema", function () {
+        spyOn(findTileMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaTileMetadataUrl
+        ).then(function (tileset) {
+          expect(findTileMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.metadata).not.toBeDefined();
+          });
+        });
+      });
+
       it("loads explicit tileset with content metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -6409,6 +6489,24 @@ describe(
               );
             }
           }
+        });
+      });
+
+      it("gracefully handles external tileset with content metadata but no root schema", function () {
+        spyOn(findContentMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaContentMetadataUrl
+        ).then(function (tileset) {
+          expect(findContentMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.content).toBeDefined();
+            expect(tile.content.metadata).not.toBeDefined();
+          });
         });
       });
 

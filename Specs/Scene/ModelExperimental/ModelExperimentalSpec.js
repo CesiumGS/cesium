@@ -1,27 +1,30 @@
 import {
+  Axis,
   Cartesian2,
+  Cartesian3,
   Cesium3DTileStyle,
   ClippingPlane,
   ClippingPlaneCollection,
+  Color,
+  defaultValue,
+  defined,
+  Ellipsoid,
   FeatureDetection,
+  HeadingPitchRange,
+  HeadingPitchRoll,
   ImageBasedLighting,
   JulianDate,
-  defaultValue,
-  Matrix4,
   Math as CesiumMath,
-  ResourceCache,
-  Resource,
+  Matrix4,
   ModelExperimental,
-  Cartesian3,
-  defined,
-  HeadingPitchRange,
-  ShaderProgram,
-  ModelFeature,
-  Axis,
-  Color,
-  StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
+  ModelFeature,
   PrimitiveType,
+  Resource,
+  ResourceCache,
+  ShaderProgram,
+  StyleCommandsNeeded,
+  Transforms,
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -67,24 +70,50 @@ describe(
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
 
+    const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
+      "north",
+      "west"
+    );
+
+    const modelMatrix2D = Transforms.headingPitchRollToFixedFrame(
+      Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
+      new HeadingPitchRoll(0, 0, 0),
+      Ellipsoid.WGS84,
+      fixedFrameTransform
+    );
+
     let scene;
     let sceneWithWebgl2;
+    let scene2D;
+    let sceneCV;
 
     beforeAll(function () {
       scene = createScene();
       sceneWithWebgl2 = createScene({
-        requestWebgl2: true,
+        contextOptions: {
+          requestWebgl2: true,
+        },
       });
+
+      scene2D = createScene();
+      scene2D.morphTo2D();
+
+      sceneCV = createScene();
+      sceneCV.morphToColumbusView();
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
       sceneWithWebgl2.destroyForSpecs();
+      scene2D.destroyForSpecs();
+      sceneCV.destroyForSpecs();
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
       sceneWithWebgl2.primitives.removeAll();
+      scene2D.primitives.removeAll();
+      sceneCV.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -117,7 +146,10 @@ describe(
         options.backgroundColor,
         Color.BLACK
       );
-      scene.backgroundColor = backgroundColor;
+
+      const targetScene = defaultValue(options.scene, scene);
+
+      targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
       const time = defaultValue(
@@ -126,7 +158,7 @@ describe(
       );
 
       expect({
-        scene: scene,
+        scene: targetScene,
         time: time,
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
@@ -136,7 +168,7 @@ describe(
         }
       });
 
-      scene.backgroundColor = Color.BLACK;
+      targetScene.backgroundColor = Color.BLACK;
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
@@ -544,6 +576,40 @@ describe(
           model.show = true;
           expect(model.show).toEqual(true);
           verifyRender(model, true);
+        });
+      });
+    });
+
+    it("projectTo2D works for 2D", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
+    it("projectTo2D works for CV", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
         });
       });
     });
@@ -1020,6 +1086,22 @@ describe(
 
         expect(model.boundingSphere.center).toEqual(translation);
         verifyRender(model, false);
+      });
+    });
+
+    it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(function () {
+          model.modelMatrix = Matrix4.IDENTITY;
+          scene2D.renderForSpecs();
+        }).toThrowDeveloperError();
       });
     });
 

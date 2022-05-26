@@ -130,6 +130,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
 
     verifyTransforms(transform, transformToRoot, node);
 
+    node.configurePipeline();
     expect(node.pipelineStages).toEqual([]);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
@@ -375,6 +376,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
 
     verifyTransforms(transform, transformToRoot, node);
 
+    node.configurePipeline();
     expect(node.pipelineStages.length).toBe(1);
     expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
