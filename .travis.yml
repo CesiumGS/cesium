@@ -11,7 +11,7 @@ script:
   - npm --silent run eslint
   - npm --silent run prettier-check
 
-  - npm --silent run build -- --node
+  - npm --silent run build
   - npm --silent run build-ts
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
