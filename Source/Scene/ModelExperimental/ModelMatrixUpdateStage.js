@@ -1,6 +1,9 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import SceneMode from "../SceneMode.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import clone from "../../Core/clone.js";
+import RenderState from "../../Renderer/RenderState.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -72,6 +75,18 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
         drawCommand.modelMatrix,
         drawCommand.boundingVolume
       );
+
+      const cullFace = ModelExperimentalUtility.getCullFace(
+        drawCommand.modelMatrix,
+        drawCommand.primitiveType
+      );
+      let renderState = drawCommand.renderState;
+      if (cullFace !== renderState.cull.face) {
+        renderState = clone(renderState, true);
+        renderState.cull.face = cullFace;
+        renderState = RenderState.fromCache(renderState);
+        drawCommand.renderState = renderState;
+      }
     }
   }
 

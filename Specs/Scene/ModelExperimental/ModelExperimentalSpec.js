@@ -1632,6 +1632,40 @@ describe(
       });
     });
 
+    it("reverses winding order for negatively scaled models", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Matrix4.fromUniformScale(-1.0),
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        // The model should look the same whether it has -1.0 scale or 1.0 scale.
+        // The initial scale is -1.0. Test switching this at runtime.
+        let initialRgba;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          initialRgba = rgba;
+        });
+
+        model.modelMatrix = Matrix4.IDENTITY;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
+        });
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1.0);
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
+        });
+      });
+    });
+
     it("throws when given clipping planes attached to another model", function () {
       const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
       const clippingPlanes = new ClippingPlaneCollection({
