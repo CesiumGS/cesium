@@ -1,6 +1,5 @@
 import {
   clone,
-  defer,
   GltfImageLoader,
   GltfTextureLoader,
   GltfLoaderUtil,
@@ -549,11 +548,15 @@ describe(
       });
     });
 
-    function resolveImageAfterDestroy(reject) {
-      const deferredPromise = defer();
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        deferredPromise.promise
-      );
+    function resolveImageAfterDestroy(rejectPromise) {
+      const promise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+        } else {
+          resolve(image);
+        }
+      });
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(promise);
 
       // Load a copy of the image into the cache so that the image
       // promise resolves even if the texture loader is destroyed
@@ -578,24 +581,20 @@ describe(
       textureLoader.load();
       textureLoader.destroy();
 
-      if (reject) {
-        deferredPromise.reject(new Error());
-      } else {
-        deferredPromise.resolve(image);
-      }
+      return textureLoader.promise.then(function () {
+        expect(textureLoader.texture).not.toBeDefined();
+        expect(textureLoader.isDestroyed()).toBe(true);
 
-      expect(textureLoader.texture).not.toBeDefined();
-      expect(textureLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(imageLoaderCopy);
+        ResourceCache.unload(imageLoaderCopy);
+      });
     }
 
     it("handles resolving image after destroy", function () {
-      resolveImageAfterDestroy(false);
+      return resolveImageAfterDestroy(false);
     });
 
     it("handles rejecting image after destroy", function () {
-      resolveImageAfterDestroy(true);
+      return resolveImageAfterDestroy(true);
     });
   },
   "WebGL"

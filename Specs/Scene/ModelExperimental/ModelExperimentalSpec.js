@@ -28,6 +28,7 @@ import {
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
@@ -309,32 +310,46 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when texture fails to load", function () {
+    it("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: gltf,
-            basePath: boxTexturedGltfUrl,
-            incrementallyLoadTextures: false,
-          },
-          scene
-        )
+        const model = ModelExperimental.fromGltf({
+          gltf: gltf,
+          basePath: boxTexturedGltfUrl,
+          incrementallyLoadTextures: false,
+        });
+        scene.primitives.add(model);
+        let finished = false;
+        model.readyPromise
           .then(function (model) {
+            finished = true;
             fail();
           })
           .catch(function (error) {
+            finished = true;
             expect(error).toBeDefined();
           });
+
+        let texturesFinished = false;
+        model.texturesLoadedPromise
+          .then(function () {
+            texturesFinished = true;
+            fail();
+          })
+          .catch(function (error) {
+            texturesFinished = true;
+            expect(error).toBeDefined();
+          });
+
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return finished && texturesFinished;
+        });
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when external buffer fails to load", function () {
+    it("rejects ready promise when external buffer fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";

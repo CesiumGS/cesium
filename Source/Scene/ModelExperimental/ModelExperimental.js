@@ -5,7 +5,6 @@ import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
-import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
@@ -163,7 +162,6 @@ export default function ModelExperimental(options) {
   this._drawCommandsBuilt = false;
 
   this._ready = false;
-  this._readyPromise = defer();
   this._customShader = options.customShader;
   this._content = options.content;
 
@@ -267,7 +265,9 @@ export default function ModelExperimental(options) {
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
 
-  initialize(this);
+  this._completeLoad = function (model, frameState) {};
+  this._texturesLoadedPromise = undefined;
+  this._readyPromise = initialize(this);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -337,36 +337,51 @@ function initialize(model) {
 
   loader.load();
 
-  loader.promise
-    .then(function (loader) {
-      const components = loader.components;
-      const structuralMetadata = components.structuralMetadata;
+  const loaderPromise = loader.promise.then(function (loader) {
+    const components = loader.components;
+    const structuralMetadata = components.structuralMetadata;
 
-      if (
-        defined(structuralMetadata) &&
-        structuralMetadata.propertyTableCount > 0
-      ) {
-        createModelFeatureTables(model, structuralMetadata);
-      }
+    if (
+      defined(structuralMetadata) &&
+      structuralMetadata.propertyTableCount > 0
+    ) {
+      createModelFeatureTables(model, structuralMetadata);
+    }
 
-      model._sceneGraph = new ModelExperimentalSceneGraph({
-        model: model,
-        modelComponents: components,
-      });
-      model._resourcesLoaded = true;
-    })
-    .catch(
-      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
-    );
+    model._sceneGraph = new ModelExperimentalSceneGraph({
+      model: model,
+      modelComponents: components,
+    });
+    model._resourcesLoaded = true;
+  });
 
   // Transcoded .pnts models do not have textures
   const texturesLoadedPromise = defaultValue(
     loader.texturesLoadedPromise,
     Promise.resolve()
   );
-  texturesLoadedPromise
+  model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
+    })
+    .catch(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
+
+  const promise = new Promise(function (resolve, reject) {
+    model._completeLoad = function (model, frameState) {
+      // Set the model as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the model may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        model._ready = true;
+        resolve(model);
+      });
+    };
+  });
+
+  return loaderPromise
+    .then(function () {
+      return promise;
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -406,7 +421,25 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
+    },
+  },
+
+  /**
+   * A promise that resolves when all textures are loaded.
+   * When <code>incrementallyLoadTextures</code> is true this may resolve after
+   * <code>promise</code> resolves.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Promise<void>}
+   * @readonly
+   *
+   * @private
+   */
+  texturesLoadedPromise: {
+    get: function () {
+      return this._texturesLoadedPromise;
     },
   },
 
@@ -1249,12 +1282,7 @@ ModelExperimental.prototype.update = function (frameState) {
     const model = this;
 
     if (!model._ready) {
-      // Set the model as ready after the first frame render since the user might set up events subscribed to
-      // the post render event, and the model may not be ready for those past the first frame.
-      frameState.afterRender.push(function () {
-        model._ready = true;
-        model._readyPromise.resolve(model);
-      });
+      model._completeLoad(model, frameState);
 
       // Don't render until the next frame after the ready promise is resolved
       return;
