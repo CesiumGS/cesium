@@ -5,7 +5,6 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import StructuralMetadata from "../StructuralMetadata.js";
@@ -59,7 +58,7 @@ const Instances = ModelComponents.Instances;
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  */
 function I3dmLoader(options) {
@@ -77,7 +76,10 @@ function I3dmLoader(options) {
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadAttributesAsTypedArray = defaultValue(
+    options.loadAttributesAsTypedArray,
+    false
+  );
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
@@ -99,11 +101,11 @@ function I3dmLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
-  this._loadAsTypedArray = loadAsTypedArray;
+  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = I3dmLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 
   this._gltfLoader = undefined;
 
@@ -120,17 +122,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(I3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof I3dmLoader.prototype
    *
-   * @type {Promise.<I3dmLoader>}
+   * @type {Promise.<I3dmLoader>|undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
 
@@ -184,6 +186,7 @@ Object.defineProperties(I3dmLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<I3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 I3dmLoader.prototype.load = function () {
@@ -234,7 +237,7 @@ I3dmLoader.prototype.load = function () {
     forwardAxis: this._forwardAxis,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
-    loadAsTypedArray: this._loadAsTypedArray,
+    loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
   };
 
@@ -262,7 +265,7 @@ I3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  gltfLoader.promise
+  this._promise = gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -275,14 +278,16 @@ I3dmLoader.prototype.load = function () {
       that._components = components;
 
       that._state = I3dmLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function handleError(i3dmLoader, error) {
@@ -290,7 +295,7 @@ function handleError(i3dmLoader, error) {
   i3dmLoader._state = I3dmLoaderState.FAILED;
   const errorMessage = "Failed to load i3dm";
   error = i3dmLoader.getError(errorMessage, error);
-  i3dmLoader._promise.reject(error);
+  return Promise.reject(error);
 }
 
 I3dmLoader.prototype.process = function (frameState) {

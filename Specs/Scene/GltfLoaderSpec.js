@@ -7,7 +7,6 @@ import {
   combine,
   ComponentDatatype,
   defaultValue,
-  defer,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
@@ -880,7 +879,6 @@ describe(
         );
 
         const cubicSplineRotation = animations[4];
-        console.log(cubicSplineRotation);
         expect(cubicSplineRotation.samplers.length).toEqual(1);
 
         sampler = cubicSplineRotation.samplers[0];
@@ -3033,55 +3031,6 @@ describe(
       });
     });
 
-    it("loads indices in typed array for wireframes in WebGL1", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
-      });
-    });
-
-    it("loads indices in buffer for wireframes in WebGL2", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-        scene: sceneWithWebgl2,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.buffer).toBeDefined();
-      });
-    });
-
     it("loads model from parsed JSON object", function () {
       return loadGltfFromJson(triangle).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -3190,22 +3139,22 @@ describe(
     it("resolves before textures are loaded when incrementallyLoadTextures is true", function () {
       const textureCreate = spyOn(Texture, "create").and.callThrough();
 
-      const deferredPromise = defer();
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        deferredPromise.promise
-      );
-
-      const image = new Image();
-      image.src =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
-
       const options = {
         incrementallyLoadTextures: true,
       };
+      const promise = loadGltf(boxTextured, options);
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(
+        promise.then(function () {
+          const image = new Image();
+          image.src =
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-      return loadGltf(boxTextured, options).then(function (gltfLoader) {
+          return image;
+        })
+      );
+
+      return promise.then(function (gltfLoader) {
         expect(textureCreate).not.toHaveBeenCalled();
-        deferredPromise.resolve(image);
 
         // Continue processing to load in textures
         return pollToPromise(function () {
@@ -3216,11 +3165,13 @@ describe(
               loader._state === ResourceLoaderState.FAILED
             );
           });
-        }).then(function () {
-          return gltfLoader.texturesLoadedPromise.then(function () {
+        })
+          .then(function () {
+            return gltfLoader.texturesLoadedPromise;
+          })
+          .then(function () {
             expect(textureCreate).toHaveBeenCalled();
           });
-        });
       });
     });
 
@@ -3266,9 +3217,7 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects promise if glTF JSON fails to load", function () {
+    it("rejects promise if glTF JSON fails to load", function () {
       const error = new Error("404 Not Found");
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
         Promise.reject(error)
@@ -3285,13 +3234,7 @@ describe(
 
       gltfLoader.load();
 
-      const textureLoaderPromise = gltfLoader.texturesLoadedPromise.catch(
-        function (runtimeError) {
-          // Because of how the error is handled, textureLoadedPromise also rejects which must be caught
-        }
-      );
-
-      const promise = gltfLoader.promise
+      return gltfLoader.promise
         .then(function () {
           fail();
         })
@@ -3300,13 +3243,9 @@ describe(
             "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found"
           );
         });
-
-      return Promise.all([promise, textureLoaderPromise]);
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects promise if resource fails to load", function () {
+    it("rejects promises if resource fails to load", function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -3335,16 +3274,19 @@ describe(
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      const texturePromise = gltfLoader.texturesLoadedPromise.catch(function (
-        runtimeError
-      ) {
-        expect(runtimeError.message).toBe(
-          "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
-        );
-      });
-
-      const promise = waitForLoaderProcess(gltfLoader, scene)
-        .then(function (gltfLoader) {
+      return waitForLoaderProcess(gltfLoader, scene)
+        .then(function () {
+          fail();
+        })
+        .catch(function (runtimeError) {
+          expect(runtimeError.message).toBe(
+            "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
+          );
+        })
+        .then(function () {
+          return gltfLoader.texturesLoadedPromise;
+        })
+        .then(function () {
           fail();
         })
         .catch(function (runtimeError) {
@@ -3355,11 +3297,9 @@ describe(
           expect(destroyIndexBufferLoader.calls.count()).toBe(1);
           expect(destroyTextureLoader.calls.count()).toBe(1);
         });
-
-      return Promise.all([texturePromise, promise]);
     });
 
-    function resolveGltfJsonAfterDestroy(reject) {
+    function resolveGltfJsonAfterDestroy(rejectPromise) {
       const gltf = {
         asset: {
           version: "2.0",
@@ -3367,9 +3307,15 @@ describe(
       };
       const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
-      const deferredPromise = defer();
+      const fetchPromise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+        } else {
+          resolve(arrayBuffer);
+        }
+      });
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        deferredPromise.promise
+        fetchPromise
       );
 
       const gltfUri = "https://example.com/model.glb";
@@ -3389,32 +3335,28 @@ describe(
 
       expect(gltfLoader.components).not.toBeDefined();
 
-      gltfLoader.load();
+      const promise = gltfLoader.load();
       gltfLoader.destroy();
 
-      if (reject) {
-        deferredPromise.reject(new Error());
-      } else {
-        deferredPromise.resolve(arrayBuffer);
-      }
+      return promise.then(function () {
+        expect(gltfLoader.components).not.toBeDefined();
+        expect(gltfLoader.isDestroyed()).toBe(true);
 
-      expect(gltfLoader.components).not.toBeDefined();
-      expect(gltfLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(gltfJsonLoaderCopy);
+        ResourceCache.unload(gltfJsonLoaderCopy);
+      });
     }
 
     it("handles resolving glTF JSON after destroy", function () {
-      resolveGltfJsonAfterDestroy(false);
+      return resolveGltfJsonAfterDestroy(false);
     });
 
     it("handles rejecting glTF JSON after destroy", function () {
-      resolveGltfJsonAfterDestroy(true);
+      return resolveGltfJsonAfterDestroy(true);
     });
 
     it("loads vertex attributes and indices as typed arrays", function () {
       const options = {
-        loadAsTypedArray: true,
+        loadAttributesAsTypedArray: true,
       };
 
       return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
@@ -3448,9 +3390,94 @@ describe(
       });
     });
 
+    it("loads position attribute as buffer and typed array for 2D projection", function () {
+      const options = {
+        loadPositionsFor2D: true,
+      };
+
+      return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.typedArray).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(12);
+        expect(positionAttribute.byteStride).toBe(24);
+
+        // Typed arrays of other attributes should not be defined
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(24);
+
+        expect(positionAttribute.typedArray.byteLength).toBe(576);
+      });
+    });
+
+    it("loads indices in typed array for wireframes in WebGL1", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.typedArray).toBeDefined();
+      });
+    });
+
+    it("loads indices in buffer for wireframes in WebGL2", function () {
+      return loadGltf(triangle, {
+        loadIndicesForWireframe: true,
+        scene: sceneWithWebgl2,
+      }).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.buffer).toBeDefined();
+      });
+    });
+
     it("loads instanced attributes as typed arrays", function () {
       const options = {
-        loadAsTypedArray: true,
+        loadAttributesAsTypedArray: true,
       };
 
       return loadGltf(boxInstancedTranslationMinMax, options).then(function (

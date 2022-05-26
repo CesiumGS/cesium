@@ -1,4 +1,4 @@
-import { Cartesian2, ImageBasedLighting } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
@@ -12,6 +12,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { FeatureDetection } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { ImageBasedLighting } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix3 } from "../../Source/Cesium.js";
@@ -1057,6 +1058,18 @@ describe(
       texturedBoxModel.modelMatrix = originalMatrix;
     });
 
+    it("boundingSphere transforms from z-forward to x-forward (glTF 2.0)", function () {
+      const boundingSphere = riggedFigureModel.boundingSphere;
+      expect(boundingSphere.center).toEqualEpsilon(
+        new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
+        CesiumMath.EPSILON3
+      );
+      expect(boundingSphere.radius).toEqualEpsilon(
+        0.9484635280120018,
+        CesiumMath.EPSILON3
+      );
+    });
+
     it("destroys", function () {
       return loadModel(boxUrl).then(function (m) {
         expect(m.isDestroyed()).toEqual(false);
@@ -1908,6 +1921,102 @@ describe(
       );
       expect(animations.remove(a)).toEqual(true);
       animBoxesModel.show = false;
+    });
+
+    it("animates with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = false;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      // triggers an update with localTime 0
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      // triggers an update with localTime 0.5
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+      // should not trigger an update because animationTime didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.5;
+      // should not trigger an update because the scene time didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.7;
+      // triggers an update with localTime 1.7
+      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("animates while paused with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:01 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = true;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      // update(0)
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      // update(0.5)
+      scene.renderForSpecs(time);
+      // no update, because animationTime didn't change
+      scene.renderForSpecs(time);
+      animationTime = 1.7;
+      // update(1.7)
+      scene.renderForSpecs(time);
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+      animations.animateWhilePaused = false;
     });
 
     it("animates with a multiplier", function () {
@@ -3778,9 +3887,10 @@ describe(
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
+        const ibl = model.imageBasedLighting;
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
-          model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+          ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
@@ -3792,9 +3902,10 @@ describe(
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
+        const ibl = model.imageBasedLighting;
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
-          model.luminanceAtZenith = 0.0;
+          ibl.luminanceAtZenith = 0.0;
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
@@ -3807,8 +3918,9 @@ describe(
         return;
       }
 
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+        const ibl = model.imageBasedLighting;
 
         const L00 = new Cartesian3(
           0.692622075009195,
@@ -3855,7 +3967,7 @@ describe(
           0.120896423762313,
           0.121102528320197
         ); // L22, irradiance, pre-scaled base
-        m.sphericalHarmonicCoefficients = [
+        ibl.sphericalHarmonicCoefficients = [
           L00,
           L1_1,
           L10,
@@ -3868,8 +3980,8 @@ describe(
         ];
 
         scene.highDynamicRange = true;
-        verifyRender(m);
-        primitives.remove(m);
+        verifyRender(model);
+        primitives.remove(model);
         scene.highDynamicRange = false;
       });
     });
@@ -3879,24 +3991,23 @@ describe(
         return;
       }
 
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+
+        const ibl = model.imageBasedLighting;
+        ibl.specularEnvironmentMaps =
           "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
 
-        const ibl = m.imageBasedLighting;
         return pollToPromise(function () {
-          scene.highDynamicRange = true;
           scene.render();
-          scene.highDynamicRange = false;
           return (
             defined(ibl.specularEnvironmentMapAtlas) &&
             ibl.specularEnvironmentMapAtlas.ready
           );
         }).then(function () {
           scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
+          verifyRender(model);
+          primitives.remove(model);
           scene.highDynamicRange = false;
         });
       });
@@ -3916,7 +4027,8 @@ describe(
           expect(rgba).toEqualEpsilon([131, 9, 9, 255], 5);
         });
 
-        model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+        const ibl = model.imageBasedLighting;
+        ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
         expect(sceneArgs).toRenderAndCall(function (rgba) {
           expect(rgba).toEqualEpsilon([102, 9, 9, 255], 5);
         });

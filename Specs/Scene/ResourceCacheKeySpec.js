@@ -497,10 +497,11 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       bufferViewId: 0,
+      loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-40"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer"
     );
   });
 
@@ -514,10 +515,11 @@ describe("ResourceCacheKey", function () {
       baseResource: baseResource,
       draco: draco,
       attributeSemantic: "POSITION",
+      loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION-buffer"
     );
   });
 
@@ -528,24 +530,40 @@ describe("ResourceCacheKey", function () {
       baseResource: baseResource,
       bufferViewId: 0,
       dequantize: true,
+      loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-dequantize"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-dequantize-buffer"
     );
   });
 
-  it("getVertexBufferCacheKey works with loadAsTypedArray", function () {
+  it("getVertexBufferCacheKey works with loadTypedArray", function () {
     const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
       gltf: gltfUncompressed,
       gltfResource: gltfResource,
       baseResource: baseResource,
       bufferViewId: 0,
-      loadAsTypedArray: true,
+      loadTypedArray: true,
     });
 
     expect(cacheKey).toBe(
       "vertex-buffer:https://example.com/resources/external.bin-range-0-40-typed-array"
+    );
+  });
+
+  it("getVertexBufferCacheKey works with loadBuffer and loadTypedArray", function () {
+    const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfUncompressed,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      bufferViewId: 0,
+      loadBuffer: true,
+      loadTypedArray: true,
+    });
+
+    expect(cacheKey).toBe(
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer-typed-array"
     );
   });
 
@@ -623,16 +641,30 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 
+  it("getIndexBufferCacheKey throws if both loadBuffer and loadTypedArray are false", function () {
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        bufferViewId: 0,
+        loadBuffer: false,
+        loadTypedArray: false,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("getIndexBufferCacheKey works from buffer view", function () {
     const cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
       gltf: gltfUncompressed,
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36"
+      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer"
     );
   });
 
@@ -646,24 +678,40 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       draco: draco,
+      loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-range-0-100-draco"
+      "index-buffer:https://example.com/resources/external.bin-range-0-100-draco-buffer"
     );
   });
 
-  it("getIndexBufferCacheKey works with loadAsTypedArray", function () {
+  it("getIndexBufferCacheKey works with loadTypedArray", function () {
     const cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
       gltf: gltfUncompressed,
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
-      loadAsTypedArray: true,
+      loadTypedArray: true,
     });
 
     expect(cacheKey).toBe(
       "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-typed-array"
+    );
+  });
+
+  it("getIndexBufferCacheKey works with loadBuffer and loadTypedArray", function () {
+    const cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+      gltf: gltfUncompressed,
+      accessorId: 2,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      loadBuffer: true,
+      loadTypedArray: true,
+    });
+
+    expect(cacheKey).toBe(
+      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer-typed-array"
     );
   });
 
@@ -674,6 +722,7 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        loadBuffer: true,
       });
     }).toThrowDeveloperError();
   });
@@ -685,6 +734,7 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: undefined,
         baseResource: baseResource,
+        loadBuffer: true,
       });
     }).toThrowDeveloperError();
   });
@@ -696,6 +746,20 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: undefined,
+        loadBuffer: true,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getIndexBufferCacheKey throws if both loadBuffer and loadTypedArray are false", function () {
+    expect(function () {
+      ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        loadBuffer: false,
+        loadTypedArray: false,
       });
     }).toThrowDeveloperError();
   });

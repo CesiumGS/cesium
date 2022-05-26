@@ -2,7 +2,6 @@ import {
   BufferLoader,
   clone,
   CompressedTextureBuffer,
-  defer,
   GltfBufferViewLoader,
   GltfImageLoader,
   FeatureDetection,
@@ -425,11 +424,15 @@ describe("Scene/GltfImageLoader", function () {
     });
   });
 
-  function resolveBufferViewAfterDestroy(reject) {
-    const deferredPromise = defer();
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveBufferViewAfterDestroy(rejectPromise) {
+    const promise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(pngBuffer);
+      }
+    });
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
 
     // Load a copy of the buffer view into the cache so that the buffer view
     // promise resolves even if the image loader is destroyed
@@ -452,25 +455,20 @@ describe("Scene/GltfImageLoader", function () {
 
     imageLoader.load();
     imageLoader.destroy();
+    return imageLoader.promise.finally(function () {
+      expect(imageLoader.image).not.toBeDefined();
+      expect(imageLoader.isDestroyed()).toBe(true);
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(pngBuffer);
-    }
-
-    expect(imageLoader.image).not.toBeDefined();
-    expect(imageLoader.isDestroyed()).toBe(true);
-
-    ResourceCache.unload(bufferViewLoaderCopy);
+      ResourceCache.unload(bufferViewLoaderCopy);
+    });
   }
 
   it("handles resolving buffer view after destroy", function () {
-    resolveBufferViewAfterDestroy(false);
+    return resolveBufferViewAfterDestroy(false);
   });
 
   it("handles rejecting buffer view after destroy", function () {
-    resolveBufferViewAfterDestroy(true);
+    return resolveBufferViewAfterDestroy(true);
   });
 
   function resolveImageFromTypedArrayAfterDestroy(rejectPromise) {
@@ -512,9 +510,8 @@ describe("Scene/GltfImageLoader", function () {
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
+    imageLoader.destroy();
     return promise.then(function () {
-      imageLoader.destroy();
-
       expect(imageLoader.image).not.toBeDefined();
       expect(imageLoader.isDestroyed()).toBe(true);
 
@@ -556,9 +553,8 @@ describe("Scene/GltfImageLoader", function () {
     expect(imageLoader.image).not.toBeDefined();
 
     imageLoader.load();
+    imageLoader.destroy();
     return promise.then(function () {
-      imageLoader.destroy();
-
       expect(imageLoader.image).not.toBeDefined();
       expect(imageLoader.isDestroyed()).toBe(true);
     });

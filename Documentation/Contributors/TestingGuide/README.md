@@ -2,7 +2,7 @@
 
 Our development culture is committed to testing. CesiumJS is used in diverse use cases on a wide array of platforms so it is important for it to be well tested.
 
-As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. CesiumJS has as much test code (126K lines) as engine code (126K). We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
+As of CesiumJS 1.93, CesiumJS has 13,500 tests with 90% code coverage. CesiumJS has more test code (263K lines) than engine code (218K). We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
 
 All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request. It's also important that the tests run quickly so we run them often.
 

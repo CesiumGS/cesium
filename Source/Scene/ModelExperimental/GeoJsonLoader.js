@@ -2,7 +2,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -49,7 +48,8 @@ export default function GeoJsonLoader(options) {
   //>>includeEnd('debug');
 
   this._geoJson = options.geoJson;
-  this._promise = defer();
+  this._promise = undefined;
+  this._process = function (loader, frameState) {};
   this._components = undefined;
 }
 
@@ -60,17 +60,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GeoJsonLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource has not yet started loading.
    *
    * @memberof GeoJsonLoader.prototype
    *
-   * @type {Promise.<GeoJsonLoader>}
+   * @type {Promise.<GeoJsonLoader>|Undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -105,10 +105,25 @@ Object.defineProperties(GeoJsonLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GeoJsonLoader.prototype.load = function () {
-  // Nothing to load
+  const loader = this;
+  const promise = new Promise(function (resolve) {
+    loader._process = function (loader, frameState) {
+      if (defined(loader._components)) {
+        return;
+      }
+
+      loader._components = parse(loader._geoJson, frameState);
+      loader._geoJson = undefined;
+      resolve(loader);
+    };
+  });
+
+  this._promise = promise;
+  return promise;
 };
 
 /**
@@ -122,13 +137,7 @@ GeoJsonLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  if (defined(this._components)) {
-    return;
-  }
-
-  this._components = parse(this._geoJson, frameState);
-  this._geoJson = undefined;
-  this._promise.resolve(this);
+  this._process(this, frameState);
 };
 
 function ParsedFeature() {
