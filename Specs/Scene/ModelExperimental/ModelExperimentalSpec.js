@@ -95,10 +95,10 @@ describe(
       });
 
       scene2D = createScene();
-      scene2D.morphTo2D();
+      scene2D.morphTo2D(0.0);
 
       sceneCV = createScene();
-      sceneCV.morphToColumbusView();
+      sceneCV.morphToColumbusView(0.0);
     });
 
     afterAll(function () {

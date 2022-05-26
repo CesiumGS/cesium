@@ -1,6 +1,7 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -18,8 +19,10 @@ import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
+import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
+import Transforms from "../../Core/Transforms.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -149,6 +152,7 @@ export default function ModelExperimentalSceneGraph(options) {
 
   this._boundingSphere = undefined;
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+  this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
   this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
     components.upAxis,
@@ -298,6 +302,37 @@ function computeModelMatrix(sceneGraph) {
     model.computedScale,
     sceneGraph._computedModelMatrix
   );
+}
+
+const scratchComputedTranslation = new Cartesian4();
+
+function computeModelMatrix2D(sceneGraph, frameState) {
+  const computedModelMatrix = sceneGraph._computedModelMatrix;
+  const translation = Matrix4.getColumn(
+    computedModelMatrix,
+    3,
+    scratchComputedTranslation
+  );
+
+  if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+    sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
+      frameState.mapProjection,
+      computedModelMatrix,
+      sceneGraph._computedModelMatrix2D
+    );
+  } else {
+    const center = sceneGraph.boundingSphere.center;
+    const to2D = Transforms.wgs84To2DModelMatrix(
+      frameState.mapProjection,
+      center,
+      sceneGraph._computedModelMatrix2D
+    );
+    sceneGraph.computedModelMatrix2D = Matrix4.multiply(
+      to2D,
+      computedModelMatrix,
+      sceneGraph._computedModelMatrix2D
+    );
+  }
 }
 
 /**
@@ -550,7 +585,9 @@ ModelExperimentalSceneGraph.prototype.update = function (
       nodeUpdateStage.update(runtimeNode, this, frameState);
     }
 
-    if (updateForAnimations) {
+    const disableAnimations =
+      frameState.mode !== SceneMode.SCENE3D && this._model._projectTo2D;
+    if (updateForAnimations && !disableAnimations) {
       this.updateJointMatrices();
     }
 
@@ -564,8 +601,13 @@ ModelExperimentalSceneGraph.prototype.update = function (
   }
 };
 
-ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (
+  frameState
+) {
   computeModelMatrix(this);
+  if (frameState.mode !== SceneMode.SCENE3D) {
+    computeModelMatrix2D(this, frameState);
+  }
 
   // Mark all root nodes as dirty. Any and all children will be
   // affected recursively in the update stage.

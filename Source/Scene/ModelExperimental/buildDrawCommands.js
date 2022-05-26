@@ -73,7 +73,11 @@ export default function buildDrawCommands(
   );
 
   let boundingSphere;
-  if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+  if (
+    frameState.mode !== SceneMode.SCENE3D &&
+    !frameState.scene3DOnly &&
+    model._projectTo2D
+  ) {
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
     boundingSphere = runtimePrimitive.boundingSphere2D;
   } else {
@@ -163,6 +167,16 @@ function deriveTranslucentCommand(command) {
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
   derivedCommand.renderState = RenderState.fromCache(rs);
+  return derivedCommand;
+}
+
+/**
+ * @private
+ */
+function deriveCommand2D(command) {
+  const derivedCommand = DrawCommand.shallowClone(command);
+  derivedCommand.boundingVolume = new BoundingSphere();
+  derivedCommand.modelMatrix = new BoundingSphere();
   return derivedCommand;
 }
 

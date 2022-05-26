@@ -1223,7 +1223,11 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (frameState.mode !== this._sceneMode) {
-    this.resetDrawCommands();
+    if (this._projectTo2D) {
+      this.resetDrawCommands();
+    } else {
+      this._updateModelMatrix = true;
+    }
     this._sceneMode = frameState.mode;
   }
 
@@ -1270,9 +1274,9 @@ ModelExperimental.prototype.update = function (frameState) {
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode !== SceneMode.SCENE3D) {
+    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
       throw new DeveloperError(
-        "ModelExperimental.modelMatrix is only supported in 3D mode."
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
       );
     }
     //>>includeEnd('debug');
@@ -1291,7 +1295,7 @@ ModelExperimental.prototype.update = function (frameState) {
       : this._scale;
     this._boundingSphere.radius = this._initialRadius * this._clampedScale;
     this._computedScale = getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix();
+    this._sceneGraph.updateModelMatrix(frameState);
     this._updateModelMatrix = false;
   }
 

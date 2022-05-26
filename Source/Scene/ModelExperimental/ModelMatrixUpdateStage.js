@@ -28,12 +28,22 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   // Skip the update stage if the model is being projected to 2D
-  if (frameState.mode !== SceneMode.SCENE3D && sceneGraph._model._projectTo2D) {
+  const use2D = frameState.mode !== SceneMode.SCENE3D;
+  if (use2D && sceneGraph._model._projectTo2D) {
     return;
   }
 
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transformToRoot);
+    const modelMatrix = use2D
+      ? sceneGraph._computedModelMatrix2D
+      : sceneGraph._computedModelMatrix;
+
+    updateRuntimeNode(
+      runtimeNode,
+      sceneGraph,
+      modelMatrix,
+      runtimeNode.transformToRoot
+    );
     runtimeNode._transformDirty = false;
   }
 };
@@ -43,7 +53,12 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
  *
  * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
+function updateRuntimeNode(
+  runtimeNode,
+  sceneGraph,
+  modelMatrix,
+  transformToRoot
+) {
   let i, j;
 
   // Apply the current node's transform to the end of the chain
@@ -63,7 +78,7 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
       drawCommand.modelMatrix = Matrix4.multiplyTransformation(
-        sceneGraph._computedModelMatrix,
+        modelMatrix,
         transformToRoot,
         drawCommand.modelMatrix
       );
@@ -85,7 +100,12 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
       childRuntimeNode._transformToRoot
     );
 
-    updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
+    updateRuntimeNode(
+      childRuntimeNode,
+      sceneGraph,
+      modelMatrix,
+      transformToRoot
+    );
     childRuntimeNode._transformDirty = false;
   }
 }
