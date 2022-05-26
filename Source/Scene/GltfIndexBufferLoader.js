@@ -88,11 +88,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfIndexBufferLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource has not yet started loading.
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
-   * @type {Promise.<GltfIndexBufferLoader>}
+   * @type {Promise.<GltfIndexBufferLoader>|undefined}
    * @readonly
    * @private
    */
