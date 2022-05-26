@@ -279,15 +279,24 @@ ModelExperimentalUtility.getAxisCorrectionMatrix = function (
 
 const scratchMatrix3 = new Matrix3();
 
+/**
+ * Get the cull face to use in the command's render state.
+ * <p>
+ * From the glTF spec section 3.7.4:
+ * When a mesh primitive uses any triangle-based topology (i.e., triangles,
+ * triangle strip, or triangle fan), the determinant of the node’s global
+ * transform defines the winding order of that primitive. If the determinant
+ * is a positive value, the winding order triangle faces is counterclockwise;
+ * in the opposite case, the winding order is clockwise.
+ * </p>
+ *
+ * @param {Matrix4} modelMatrix The model matrix
+ * @param {PrimitiveType} primitiveType The primitive type
+ * @return {CullFace} The cull face
+ *
+ * @private
+ */
 ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
-  // From the glTF spec section 3.7.4:
-  //
-  // When a mesh primitive uses any triangle-based topology (i.e., triangles,
-  // triangle strip, or triangle fan), the determinant of the node’s global
-  // transform defines the winding order of that primitive. If the determinant
-  // is a positive value, the winding order triangle faces is counterclockwise;
-  // in the opposite case, the winding order is clockwise.
-
   if (!PrimitiveType.isTriangles(primitiveType)) {
     return CullFace.BACK;
   }
