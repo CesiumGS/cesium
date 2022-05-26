@@ -553,7 +553,7 @@ function updateStatistics(renderResources, primitive) {
   if (primitiveType === PrimitiveType.POINTS) {
     statistics.pointsLength += indicesCount;
   } else if (PrimitiveType.isTriangles(primitiveType)) {
-    statistics.trianglesLength = countTriangles(primitiveType, indicesCount);
+    statistics.trianglesLength += countTriangles(primitiveType, indicesCount);
   }
 
   const attributes = primitive.attributes;
