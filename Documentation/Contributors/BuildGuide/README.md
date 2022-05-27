@@ -109,7 +109,7 @@ npm start -- --help
 Cesium can be used a few different ways. Cesium can be either a set of platform-generic ESM modules generic to browser, or bundled targeting the browser or NodeJS environment.
 
 - [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which are supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle and source map by importing `Build/Cesium/index.js`.
-- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and source mapoptimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`.
+- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and source map optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
 Read the complete list of build scripts and options below for more details.

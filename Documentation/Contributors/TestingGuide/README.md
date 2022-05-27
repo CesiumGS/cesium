@@ -105,9 +105,9 @@ These tests run quickly (for example, 15 seconds compared to 60) and are very re
 
 #### Run All Tests Against the Minified Release Version of CesiumJS
 
-Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+Most test options load CesiumJS with the unminified build plus a source map, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run minifyRelease`). This option runs the tests using this instead of individual CesiumJS source files. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options. When testing against built Cesium.js, the specs need to be built as well with `npm run build-specs`.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run release`). This option runs the tests using this instead of the unminified build. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 `npm run test-release`
 
@@ -187,11 +187,11 @@ These tests run quickly (for example, 15 seconds compared to 60) and are very re
 
 #### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
 
-Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+Most test options load CesiumJS with the unminified build plus a source map, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`). This option runs the tests using this instead of individual CesiumJS source files.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run release`). This option runs the tests using this instead of the unminified build.
 
-The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
+The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run release`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
 See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 

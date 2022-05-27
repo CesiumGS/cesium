@@ -281,14 +281,14 @@ const externalResolvePlugin = {
   setup: (build) => {
     build.onResolve({ filter: new RegExp(`Cesium\.js$`) }, () => {
       return {
-        path: "cesium",
+        path: "Cesium",
         namespace: "external-cesium",
       };
     });
 
     build.onLoad(
       {
-        filter: new RegExp(`^cesium$`),
+        filter: new RegExp(`^Cesium$`),
         namespace: "external-cesium",
       },
       () => {
@@ -1107,13 +1107,10 @@ gulp.task("coverage", function (done) {
         suppressSkipped: true,
       },
       preprocessors: {
-        "Source/Core/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/DataSources/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Renderer/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Scene/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Shaders/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Widgets/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Workers/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+        "**/*.js": ["sourcemap"],
+        "Build/CesiumUnminified/index.js": [
+          "karma-coverage-istanbul-instrumenter",
+        ],
       },
       coverageIstanbulInstrumenter: {
         esModules: true,
@@ -1181,29 +1178,24 @@ gulp.task("test", function (done) {
   }
 
   let files = [
-    { pattern: "Specs/karma-main.js", included: true, type: "module" },
-    { pattern: "Source/**", included: false, type: "module" },
-    { pattern: "Build/CesiumUnminified/**", included: false },
-    { pattern: "Specs/*.js", included: true, type: "module" },
-    { pattern: "Specs/Core/**", included: true, type: "module" },
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Specs/DataSources/**", included: true, type: "module" },
-    { pattern: "Specs/Renderer/**", included: true, type: "module" },
-    { pattern: "Specs/Scene/**", included: true, type: "module" },
-    { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
-    { pattern: "Specs/Widgets/**", included: true, type: "module" },
-    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Build/CesiumUnminified/index.js", included: true },
+    { pattern: "Build/CesiumUnminified/index.js.map", included: false },
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
+    { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
+    { pattern: "Build/Specs/TestWorkers/**", included: false },
   ];
 
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
-      { pattern: "Specs/TestWorkers/**", included: false },
-      { pattern: "Build/Cesium/Cesium.js", included: true },
+      { pattern: "Build/Cesium/index.js", included: true },
+      { pattern: "Build/Cesium/index.js.map", included: false },
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
-      { pattern: "Build/Specs/Specs.js", included: true },
+      { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
+      { pattern: "Build/Specs/TestWorkers/**", included: false },
     ];
   }
 
