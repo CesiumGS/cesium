@@ -11,8 +11,11 @@ script:
   - npm --silent run eslint
   - npm --silent run prettier-check
 
-  - npm --silent run build
+  - npm --silent run build -- --node
   - npm --silent run build-ts
+
+  # coverage needs more memory
+  - export NODE_OPTIONS=–max_old_space_size=4096
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
   - travis_wait 20 npm --silent run make-zip -- --concurrency 1
