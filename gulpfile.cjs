@@ -46,9 +46,6 @@ const travisDeployUrl =
 //per-task variables.  We use the command line argument here to detect which task is being run.
 const taskName = process.argv[2];
 const noDevelopmentGallery = taskName === "release" || taskName === "make-zip";
-const minifyShaders =
-  taskName === "release" || taskName === "make-zip" || taskName === "buildApps";
-
 const verbose = yargs.argv.verbose;
 
 let concurrency = yargs.argv.concurrency;
@@ -87,6 +84,10 @@ const workerSourceFiles = ["Source/WorkersES6/**"];
 const specFiles = ["Specs/**/*Spec.js"];
 const testWorkers = ["Specs/TestWorkers/*.js"];
 const cssFiles = "Source/**/*.css";
+const shaderFiles = [
+  "Source/Shaders/**/*.glsl",
+  "Source/ThirdParty/Shaders/*.glsl",
+];
 
 const copyrightHeader = fs.readFileSync(
   path.join("Source", "copyrightHeader.js"),
@@ -159,7 +160,10 @@ function printBuildWarning({ location, text }) {
 // Ignore `eval` warnings in third-party code we don't have control over
 function handleBuildWarnings(result) {
   for (const warning of result.warnings) {
-    if (!warning.location.file.includes("protobufjs.js")) {
+    if (
+      !warning.location.file.includes("protobufjs.js") &&
+      !warning.location.file.includes("Cesium.js")
+    ) {
       printBuildWarning(warning);
     }
   }
@@ -354,7 +358,7 @@ async function build(options) {
     "utf8"
   );
 
-  glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
+  glslToJavaScript(options.minify, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
@@ -428,6 +432,11 @@ gulp.task(
       removePragmas: removePragmas,
       sourcemap: sourcemap,
       incremental: true,
+    });
+
+    gulp.watch(shaderFiles, async () => {
+      glslToJavaScript(minify, "Build/minifyShaders.state");
+      sourceResult = await sourceResult.rebuild();
     });
 
     gulp.watch(sourceFiles, async () => {
@@ -656,6 +665,7 @@ gulp.task(
         "Build/CesiumUnminified/**",
         "Build/Documentation/**",
         "Build/package.json",
+        // TODO: Include built specs? Shouldn't be too big
       ],
       {
         base: ".",
@@ -1287,10 +1297,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
   const builtinConstants = [];
   const builtinStructs = [];
 
-  const glslFiles = globby.sync([
-    "Source/Shaders/**/*.glsl",
-    "Source/ThirdParty/Shaders/*.glsl",
-  ]);
+  const glslFiles = globby.sync(shaderFiles);
   glslFiles.forEach(function (glslFile) {
     glslFile = path.normalize(glslFile);
     const baseName = path.basename(glslFile, ".glsl");
@@ -1824,14 +1831,14 @@ function buildSandcastle() {
       "!Apps/Sandcastle/images/**",
       "!Apps/Sandcastle/gallery/**.jpg",
     ])
-    // Remove dev-only ES6 module loading for unbuilt Cesium
+    // Remove swap out ESM modules for the IIFE build
     .pipe(
       gulpReplace(
         '    <script type="module" src="../load-cesium-es6.js"></script>',
-        ""
+        '    <script src="../../../Build/CesiumUnminified/index.js"></script>\n' +
+          '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
       )
     )
-    .pipe(gulpReplace("nomodule", ""))
     // Fix relative paths for new location
     .pipe(gulpReplace("../../../Build", "../../.."))
     .pipe(gulpReplace("../../Source", "../../../Source"))
@@ -1852,10 +1859,10 @@ function buildSandcastle() {
     .pipe(
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
-        ""
+        '    <script src="../../Build/CesiumUnminified/index.js"></script>\n' +
+          '    <script>window.CESIUM_BASE_URL = "../../Build/CesiumUnminified/";</script>";'
       )
     )
-    .pipe(gulpReplace("nomodule", ""))
     .pipe(gulpReplace("../../Build", "../.."))
     .pipe(gulp.dest("Build/Apps/Sandcastle"));
 
@@ -1887,6 +1894,7 @@ async function buildCesiumViewer() {
     external: ["https", "http", "zlib"],
     plugins: [stripPragmaPlugin],
     outdir: cesiumViewerOutputDirectory,
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
 
   handleBuildWarnings(result);

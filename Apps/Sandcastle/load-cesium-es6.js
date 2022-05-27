@@ -1,7 +1,7 @@
 // This file loads the unbuilt ES6 version of Cesium
 // into the global scope during local developmnet
-window.CESIUM_BASE_URL = "../../../Source/";
-import * as Cesium from "../../Source/Cesium.js";
+window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";
+import * as Cesium from "../../Build/CesiumUnminified/Cesium.js";
 window.Cesium = Cesium;
 
 // Since ES6 modules have no guaranteed load order,
