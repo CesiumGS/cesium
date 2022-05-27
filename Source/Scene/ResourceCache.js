@@ -12,6 +12,7 @@ import GltfTextureLoader from "./GltfTextureLoader.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
+import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
 
 /**
  * Cache for resources shared across 3D Tiles and glTF.
@@ -25,10 +26,7 @@ function ResourceCache() {}
 ResourceCache.cacheEntries = {};
 
 // Global statistics about binary
-ResourceCache.statistics = {
-  geometryByteLength: 0,
-  texturesByteLength: 0,
-};
+ResourceCache.statistics = new ResourceCacheStatistics();
 
 /**
  * A reference-counted cache entry.
@@ -728,6 +726,7 @@ ResourceCache.loadTexture = function (options) {
   ResourceCache.load({
     resourceLoader: textureLoader,
   });
+  ResourceCache.statistics.addTextureLoader(textureLoader);
 
   return textureLoader;
 };

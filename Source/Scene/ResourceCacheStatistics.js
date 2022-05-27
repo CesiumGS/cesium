@@ -17,11 +17,13 @@ ResourceCacheStatistics.prototype.clear = function () {
 };
 
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
-  this._geometrySizes[loader.cacheKey] = 0;
+  const cacheKey = loader.cacheKey;
+  this._geometrySizes[cacheKey] = 0;
 
+  const that = this;
   loader.promise.then(function (loader) {
     // loader was unloaded before its promise resolved
-    if (!this._geometrySizes.hasOwnProperty(loader.cacheKey)) {
+    if (!that._geometrySizes.hasOwnProperty(cacheKey)) {
       return;
     }
 
@@ -38,24 +40,25 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
       totalSize += typedArray.byteLength;
     }
 
-    this.geometryByteLength += totalSize;
-    this._geometrySizes[loader.cacheKey] = totalSize;
+    that.geometryByteLength += totalSize;
+    that._geometrySizes[cacheKey] = totalSize;
   });
 };
 
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
-  this._textureSizes[loader.cacheKey] = 0;
+  const cacheKey = loader.cacheKey;
+  this._textureSizes[cacheKey] = 0;
 
+  const that = this;
   loader.promise.then(function (loader) {
     // loader was unloaded before its promise resolved
-    if (!this._textureSizes.hasOwnProperty(loader.cacheKey)) {
+    if (!that._textureSizes.hasOwnProperty(cacheKey)) {
       return;
     }
 
     const totalSize = loader.texture.sizeInBytes;
-
-    this.texturesByteLength += totalSize;
-    this._textureSizes[loader.cacheKey] = totalSize;
+    that.texturesByteLength += loader.texture.sizeInBytes;
+    that._textureSizes[cacheKey] = totalSize;
   });
 };
 
