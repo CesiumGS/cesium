@@ -181,7 +181,7 @@ async function buildCesiumJs(options) {
     bundle: true,
     format: "esm",
     minify: options.minify,
-    sourcemap: true,
+    sourcemap: options.sourcemap,
     target: "es6",
     external: ["https", "http", "url", "zlib"],
     treeShaking: false,
@@ -197,7 +197,7 @@ async function buildCesiumJs(options) {
     const result = await esbuild.build({
       entryPoints: ["Source/Cesium.js"],
       bundle: true,
-      sourcemap: true,
+      sourcemap: options.sourcemap,
       format: "iife",
       globalName: "Cesium",
       minify: options.minify,
@@ -235,7 +235,8 @@ async function buildCesiumJs(options) {
 /**
  * Bundles the workers and outputs to the Source/Workers directory
  * @param {Object} options
- * @param {boolean} options.minify true if the worker output should be minified
+ * @param {boolean} [options.minify=false] true if the worker output should be minified
+ * @param {boolean} [options.sourcemap=false] true if a sourcemap should be generated
  * @param {String} options.path true if the worker output should be minified
  * @returns {Promise.<Object>} esbuild result
  */
@@ -256,7 +257,7 @@ async function createWorkers(options) {
     banner: {
       js: copyrightHeader,
     },
-    sourcemap: true,
+    sourcemap: options.sourcemap,
     external: ["https", "http", "zlib"],
     outdir: path.join(options.path, "Workers"),
     plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
@@ -361,12 +362,14 @@ async function build(options) {
     buildCesiumJs({
       minify: options.minify,
       iife: true,
+      sourcemap: options.sourcemap,
       removePragmas: options.removePragmas,
       path: outputDirectory,
       node: options.node,
     }),
     createWorkers({
       minify: options.minify,
+      sourcemap: options.sourcemap,
       path: outputDirectory,
       removePragmas: options.removePragmas,
     }),
@@ -383,11 +386,13 @@ gulp.task("build", function () {
   const argv = yargs.argv;
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
+  const sourcemap = argv.sourcemap ? argv.sourcemap : true;
   const node = argv.node ? argv.node : false;
 
   return build({
     minify: minify,
     removePragmas: removePragmas,
+    sourcemap: sourcemap,
     node: node,
   });
 });
@@ -398,6 +403,7 @@ gulp.task(
     const argv = yargs.argv;
     const minify = argv.minify ? argv.minify : false;
     const removePragmas = argv.pragmas ? argv.pragmas : false;
+    const sourcemap = argv.sourcemap ? argv.sourcemap : true;
 
     const outputDirectory = path.join(
       "Build",
@@ -408,6 +414,7 @@ gulp.task(
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
+      sourcemap: sourcemap,
       incremental: true,
     });
 
@@ -419,6 +426,7 @@ gulp.task(
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
+      sourcemap: sourcemap,
       incremental: true,
     });
 
