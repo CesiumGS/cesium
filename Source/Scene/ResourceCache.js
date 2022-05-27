@@ -24,6 +24,12 @@ function ResourceCache() {}
 
 ResourceCache.cacheEntries = {};
 
+// Global statistics about binary
+ResourceCache.statistics = {
+  geometryByteLength: 0,
+  texturesByteLength: 0,
+};
+
 /**
  * A reference-counted cache entry.
  *
@@ -122,6 +128,7 @@ ResourceCache.unload = function (resourceLoader) {
   --cacheEntry.referenceCount;
 
   if (cacheEntry.referenceCount === 0) {
+    ResourceCache.statistics.removeLoader(resourceLoader);
     resourceLoader.destroy();
     delete ResourceCache.cacheEntries[cacheKey];
   }
@@ -531,6 +538,8 @@ ResourceCache.loadVertexBuffer = function (options) {
     resourceLoader: vertexBufferLoader,
   });
 
+  ResourceCache.statistics.addGeometryLoader(vertexBufferLoader);
+
   return vertexBufferLoader;
 };
 
@@ -603,6 +612,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   ResourceCache.load({
     resourceLoader: indexBufferLoader,
   });
+  ResourceCache.statistics.addGeometryLoader(indexBufferLoader);
 
   return indexBufferLoader;
 };
