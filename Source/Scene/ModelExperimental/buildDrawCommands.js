@@ -1,30 +1,31 @@
-import BlendingState from "../BlendingState.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalDrawCommands from "./ModelExperimentalDrawCommands.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import StencilConstants from "../StencilConstants.js";
-import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
-import VertexArray from "../../Renderer/VertexArray.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import ShadowMode from "../ShadowMode.js";
 import SceneMode from "../SceneMode.js";
+import ShadowMode from "../ShadowMode.js";
+import StencilConstants from "../StencilConstants.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+
+const scratchBoundingSphere = new BoundingSphere();
 
 /**
- * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
+ * Builds the {@link ModelExperimentalDrawCommands} for a {@link ModelExperimentalPrimitive}
+ * using its render resources.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {DrawCommand[]} The generated DrawCommands.
+ * @returns {ModelExperimentalDrawCommands} The generated ModelExperimentalDrawCommands.
  *
  * @private
  */
@@ -72,6 +73,11 @@ export default function buildDrawCommands(
     new Matrix4()
   );
 
+  const primitiveBoundingSphere = BoundingSphere.clone(
+    primitiveRenderResources.boundingSphere,
+    scratchBoundingSphere
+  );
+
   let boundingSphere;
   if (
     frameState.mode !== SceneMode.SCENE3D &&
@@ -108,76 +114,11 @@ export default function buildDrawCommands(
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
   });
 
-  const styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
-
-  const commandList = [];
-
-  if (defined(styleCommandsNeeded)) {
-    const derivedCommands = createDerivedCommands(command);
-
-    if (pass !== Pass.TRANSLUCENT) {
-      switch (styleCommandsNeeded) {
-        case StyleCommandsNeeded.ALL_OPAQUE:
-          commandList.push(command);
-          break;
-        case StyleCommandsNeeded.ALL_TRANSLUCENT:
-          commandList.push(derivedCommands.translucent);
-          break;
-        case StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT:
-          // Push both opaque and translucent commands. The rendering of features based on opacity is handled in the shaders.
-          commandList.push(command, derivedCommands.translucent);
-          break;
-        //>>includeStart('debug', pragmas.debug);
-        default:
-          throw new RuntimeError("styleCommandsNeeded is not a valid value.");
-        //>>includeEnd('debug');
-      }
-    } else {
-      // Command was originally translucent so no need to derive new commands;
-      // as of now, a style can't change an originally translucent feature to
-      // opaque since the style's alpha is modulated, not a replacement.  When
-      // this changes, we need to derive new opaque commands here.
-      commandList.push(command);
-    }
-  } else {
-    commandList.push(command);
-  }
-
-  return commandList;
-}
-
-/**
- * @private
- */
-function createDerivedCommands(command) {
-  const derivedCommands = {};
-  derivedCommands.translucent = deriveTranslucentCommand(command);
-  return derivedCommands;
-}
-
-/**
- * @private
- */
-function deriveTranslucentCommand(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
-  derivedCommand.pass = Pass.TRANSLUCENT;
-  const rs = clone(command.renderState, true);
-  rs.cull.enabled = false;
-  rs.depthTest.enabled = true;
-  rs.depthMask = false;
-  rs.blending = BlendingState.ALPHA_BLEND;
-  derivedCommand.renderState = RenderState.fromCache(rs);
-  return derivedCommand;
-}
-
-/**
- * @private
- */
-function deriveCommand2D(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
-  derivedCommand.boundingVolume = new BoundingSphere();
-  derivedCommand.modelMatrix = new BoundingSphere();
-  return derivedCommand;
+  return new ModelExperimentalDrawCommands({
+    primitiveRenderResources: primitiveRenderResources,
+    command: command,
+    primitiveBoundingSphere: primitiveBoundingSphere,
+  });
 }
 
 /**

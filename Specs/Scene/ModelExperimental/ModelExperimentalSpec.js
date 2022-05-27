@@ -30,7 +30,7 @@ import {
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
     const webglStub = !!window.webglStub;
@@ -74,7 +74,7 @@ describe(
       "west"
     );
 
-    const modelMatrix2D = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
       Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
       new HeadingPitchRoll(0, 0, 0),
       Ellipsoid.WGS84,
@@ -565,11 +565,44 @@ describe(
       });
     });
 
+    it("renders in 2D", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
+    it("renders in CV", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        scene.camera.moveBackward(1.0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+      });
+    });
+
     it("projectTo2D works for 2D", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         scene2D
@@ -586,7 +619,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         sceneCV
@@ -1074,11 +1107,32 @@ describe(
       });
     });
 
+    it("changing model matrix in 2D mode works if projectTo2D is false", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        scene2D
+      ).then(function (model) {
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+
+        model.modelMatrix = Matrix4.IDENTITY;
+        verifyRender(model, false, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
     it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         scene2D

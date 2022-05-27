@@ -1325,7 +1325,7 @@ ModelExperimental.prototype.update = function (frameState) {
       frameState.creditDisplay.addCredit(credit);
     }
 
-    const drawCommands = this._sceneGraph.getDrawCommands();
+    const drawCommands = this._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };

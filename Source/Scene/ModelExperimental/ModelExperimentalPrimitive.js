@@ -89,13 +89,13 @@ export default function ModelExperimentalPrimitive(options) {
   this.pipelineStages = [];
 
   /**
-   * The generated {@link DrawCommand}s associated with this primitive.
+   * The generated {@link ModelExperimentalDrawCommands} associated with this primitive.
    *
-   * @type {DrawCommand[]}
+   * @type {ModelExperimentalDrawCommands[]}
    *
    * @private
    */
-  this.drawCommands = [];
+  this.drawCommands = undefined;
 
   /**
    * The bounding sphere of this primitive in object-space.

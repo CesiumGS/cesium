@@ -1,4 +1,3 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import SceneMode from "../SceneMode.js";
 
@@ -48,6 +47,7 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   }
 };
 
+const scratchMatrix = new Matrix4();
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
@@ -59,7 +59,7 @@ function updateRuntimeNode(
   modelMatrix,
   transformToRoot
 ) {
-  let i, j;
+  let i;
 
   // Apply the current node's transform to the end of the chain
   transformToRoot = Matrix4.multiplyTransformation(
@@ -73,21 +73,12 @@ function updateRuntimeNode(
   const primitivesLength = runtimeNode.runtimePrimitives.length;
   for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    const drawCommandsLength = runtimePrimitive.drawCommands.length;
-    for (j = 0; j < drawCommandsLength; j++) {
-      const drawCommand = runtimePrimitive.drawCommands[j];
-
-      drawCommand.modelMatrix = Matrix4.multiplyTransformation(
-        modelMatrix,
-        transformToRoot,
-        drawCommand.modelMatrix
-      );
-      drawCommand.boundingVolume = BoundingSphere.transform(
-        runtimePrimitive.boundingSphere,
-        drawCommand.modelMatrix,
-        drawCommand.boundingVolume
-      );
-    }
+    const drawCommands = runtimePrimitive.drawCommands;
+    drawCommands.modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      transformToRoot,
+      scratchMatrix
+    );
   }
 
   const childrenLength = runtimeNode.children.length;

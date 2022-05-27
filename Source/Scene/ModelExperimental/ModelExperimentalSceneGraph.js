@@ -128,17 +128,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._runtimeSkins = [];
 
   /**
-   * Once computed, the {@link DrawCommand}s that are used to render this
-   * scene graph are stored here.
-   *
-   * @type {DrawCommand[]}
-   * @readonly
-   *
-   * @private
-   */
-  this._drawCommands = [];
-
-  /**
    * Pipeline stages to apply to this model. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -327,7 +316,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
       center,
       sceneGraph._computedModelMatrix2D
     );
-    sceneGraph.computedModelMatrix2D = Matrix4.multiply(
+    sceneGraph._computedModelMatrix2D = Matrix4.multiply(
       to2D,
       computedModelMatrix,
       sceneGraph._computedModelMatrix2D
@@ -404,7 +393,7 @@ const scratchModelPositionMax = new Cartesian3();
 const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
- * Generates the draw commands for each primitive in the model.
+ * Generates the {@link ModelExperimentalDrawCommands} for each primitive in the model.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -692,12 +681,18 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
  * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
  * the draw commands associated with each primitive.
  *
+ * @param {FrameState} frameState The frame state.
+ *
+ * @returns {DrawCommand[]} The draw commands of the primitives in the scene graph.
+ *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
+ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
   const drawCommands = [];
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+    const primitiveDrawCommands = runtimePrimitive.drawCommands;
+    const result = primitiveDrawCommands.getCommands(frameState);
+    drawCommands.push.apply(drawCommands, result);
   });
   return drawCommands;
 };
