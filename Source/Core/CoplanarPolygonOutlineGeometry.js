@@ -85,7 +85,10 @@ function CoplanarPolygonOutlineGeometry(options) {
    * @type {Number}
    */
   this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + 1;
+    PolygonGeometryLibrary.computeHierarchyPackedLength(
+      polygonHierarchy,
+      Cartesian3
+    ) + 1;
 }
 
 /**
@@ -130,7 +133,8 @@ CoplanarPolygonOutlineGeometry.pack = function (value, array, startingIndex) {
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
 
   array[startingIndex] = value.packedLength;
@@ -162,7 +166,8 @@ CoplanarPolygonOutlineGeometry.unpack = function (
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;

@@ -81,6 +81,10 @@ const subdivisionS0Scratch = new Cartesian3();
 const subdivisionS1Scratch = new Cartesian3();
 const subdivisionS2Scratch = new Cartesian3();
 const subdivisionMidScratch = new Cartesian3();
+const subdivisionT0Scratch = new Cartesian2();
+const subdivisionT1Scratch = new Cartesian2();
+const subdivisionT2Scratch = new Cartesian2();
+const subdivisionTexcoordMidScratch = new Cartesian2();
 
 /**
  * Subdivides positions and raises points to the surface of the ellipsoid.
@@ -88,6 +92,7 @@ const subdivisionMidScratch = new Cartesian3();
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
+ * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
  * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  *
  * @exception {DeveloperError} At least three indices are required.
@@ -98,9 +103,12 @@ PolygonPipeline.computeSubdivision = function (
   ellipsoid,
   positions,
   indices,
+  texcoords,
   granularity
 ) {
   granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+  const hasTexcoords = defined(texcoords);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("ellipsoid", ellipsoid);
@@ -118,12 +126,20 @@ PolygonPipeline.computeSubdivision = function (
   let i;
   const length = positions.length;
   const subdividedPositions = new Array(length * 3);
+  const subdividedTexcoords = new Array(length * 2);
   let q = 0;
+  let p = 0;
   for (i = 0; i < length; i++) {
     const item = positions[i];
     subdividedPositions[q++] = item.x;
     subdividedPositions[q++] = item.y;
     subdividedPositions[q++] = item.z;
+
+    if (hasTexcoords) {
+      const texcoordItem = texcoords[i];
+      subdividedTexcoords[p++] = texcoordItem.x;
+      subdividedTexcoords[p++] = texcoordItem.y;
+    }
   }
 
   const subdividedIndices = [];
@@ -156,6 +172,25 @@ PolygonPipeline.computeSubdivision = function (
       subdivisionV2Scratch
     );
 
+    let t0, t1, t2;
+    if (hasTexcoords) {
+      t0 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i0 * 2,
+        subdivisionT0Scratch
+      );
+      t1 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i1 * 2,
+        subdivisionT1Scratch
+      );
+      t2 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i2 * 2,
+        subdivisionT2Scratch
+      );
+    }
+
     const s0 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v0, subdivisionS0Scratch),
       radius,
@@ -185,6 +220,7 @@ PolygonPipeline.computeSubdivision = function (
     const max = Math.max(g0, g1, g2);
     let edge;
     let mid;
+    let midTexcoord;
 
     // if the max length squared of a triangle edge is greater than the chord length of squared
     // of the granularity, subdivide the triangle
@@ -199,6 +235,12 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t0, t1, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i0, i, i2);
@@ -213,6 +255,12 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t1, t2, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i1, i, i0);
@@ -227,6 +275,12 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t2, t0, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i2, i, i1);
@@ -239,7 +293,7 @@ PolygonPipeline.computeSubdivision = function (
     }
   }
 
-  return new Geometry({
+  const geometryOptions = {
     attributes: {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
@@ -249,7 +303,17 @@ PolygonPipeline.computeSubdivision = function (
     },
     indices: subdividedIndices,
     primitiveType: PrimitiveType.TRIANGLES,
-  });
+  };
+
+  if (hasTexcoords) {
+    geometryOptions.attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: subdividedTexcoords,
+    });
+  }
+
+  return new Geometry(geometryOptions);
 };
 
 const subdivisionC0Scratch = new Cartographic();
@@ -263,6 +327,7 @@ const subdivisionCartographicScratch = new Cartographic();
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
+ * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
  * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  *
  * @exception {DeveloperError} At least three indices are required.
@@ -273,9 +338,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   ellipsoid,
   positions,
   indices,
+  texcoords,
   granularity
 ) {
   granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+  const hasTexcoords = defined(texcoords);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("ellipsoid", ellipsoid);
@@ -293,12 +361,20 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   let i;
   const length = positions.length;
   const subdividedPositions = new Array(length * 3);
+  const subdividedTexcoords = new Array(length * 2);
   let q = 0;
+  let p = 0;
   for (i = 0; i < length; i++) {
     const item = positions[i];
     subdividedPositions[q++] = item.x;
     subdividedPositions[q++] = item.y;
     subdividedPositions[q++] = item.z;
+
+    if (hasTexcoords) {
+      const texcoordItem = texcoords[i];
+      subdividedTexcoords[p++] = texcoordItem.x;
+      subdividedTexcoords[p++] = texcoordItem.y;
+    }
   }
 
   const subdividedIndices = [];
@@ -334,6 +410,25 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
       subdivisionV2Scratch
     );
 
+    let t0, t1, t2;
+    if (hasTexcoords) {
+      t0 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i0 * 2,
+        subdivisionT0Scratch
+      );
+      t1 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i1 * 2,
+        subdivisionT1Scratch
+      );
+      t2 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i2 * 2,
+        subdivisionT2Scratch
+      );
+    }
+
     const c0 = ellipsoid.cartesianToCartographic(v0, subdivisionC0Scratch);
     const c1 = ellipsoid.cartesianToCartographic(v1, subdivisionC1Scratch);
     const c2 = ellipsoid.cartesianToCartographic(v2, subdivisionC2Scratch);
@@ -350,6 +445,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     let mid;
     let midHeight;
     let midCartesian3;
+    let midTexcoord;
 
     // if the max length squared of a triangle edge is greater than granularity, subdivide the triangle
     if (max > minDistance) {
@@ -377,6 +473,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t0, t1, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i0, i, i2);
@@ -405,6 +507,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t1, t2, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i1, i, i0);
@@ -433,6 +541,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t2, t0, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i2, i, i1);
@@ -445,7 +559,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     }
   }
 
-  return new Geometry({
+  const geometryOptions = {
     attributes: {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
@@ -455,7 +569,17 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     },
     indices: subdividedIndices,
     primitiveType: PrimitiveType.TRIANGLES,
-  });
+  };
+
+  if (hasTexcoords) {
+    geometryOptions.attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: subdividedTexcoords,
+    });
+  }
+
+  return new Geometry(geometryOptions);
 };
 
 /**
