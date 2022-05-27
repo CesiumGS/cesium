@@ -18,7 +18,7 @@ import {
   Viewer,
   viewerCesiumInspectorMixin,
   viewerDragDropMixin,
-} from "../../Build/CesiumUnminified/Cesium.js";
+} from "../../Build/CesiumUnminified/index.js";
 
 function main() {
   /*

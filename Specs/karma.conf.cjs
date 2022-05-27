@@ -28,8 +28,8 @@ module.exports = function (config) {
     // list of files / patterns to load in the browser
     files: [
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Build/CesiumUnminified/index.js", included: true },
-      { pattern: "Build/CesiumUnminified/index.js.map", included: false },
+      { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
+      { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
       { pattern: "Build/CesiumUnminified/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
       { pattern: "Build/Specs/TestWorkers/**", included: false },

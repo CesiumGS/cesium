@@ -162,7 +162,7 @@ function handleBuildWarnings(result) {
   for (const warning of result.warnings) {
     if (
       !warning.location.file.includes("protobufjs.js") &&
-      !warning.location.file.includes("Cesium.js")
+      !warning.location.file.includes("Build/Cesium")
     ) {
       printBuildWarning(warning);
     }
@@ -172,16 +172,9 @@ function handleBuildWarnings(result) {
 async function buildCesiumJs(options) {
   const css = globby.sync(cssFiles);
 
-  let result = await esbuild.build({
-    entryPoints: [
-      "Source/Cesium.js",
-      "Source/ThirdParty/google-earth-dbroot-parser.js",
-      ...css, // Load and optionally minify css
-    ],
-    loader: {
-      ".gif": "text",
-      ".png": "text",
-    },
+  // Build ESM
+  const result = await esbuild.build({
+    entryPoints: ["Source/Cesium.js"],
     bundle: true,
     format: "esm",
     minify: options.minify,
@@ -189,7 +182,7 @@ async function buildCesiumJs(options) {
     target: "es6",
     external: ["https", "http", "url", "zlib"],
     treeShaking: false,
-    outdir: options.path,
+    outfile: path.join(options.path, "index.js"),
     plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
     incremental: options.incremental,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
@@ -197,6 +190,26 @@ async function buildCesiumJs(options) {
 
   handleBuildWarnings(result);
 
+  const results = [result];
+
+  // Copy and minify CSS and third party
+  await esbuild.build({
+    entryPoints: [
+      "Source/ThirdParty/google-earth-dbroot-parser.js",
+      ...css, // Load and optionally minify css
+    ],
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    target: "es6",
+    treeShaking: false,
+    outdir: options.path,
+  });
+
+  // Build IIFE
   if (options.iife) {
     const result = await esbuild.build({
       entryPoints: ["Source/Cesium.js"],
@@ -208,17 +221,19 @@ async function buildCesiumJs(options) {
       target: "es6",
       external: ["https", "http", "url", "zlib"],
       treeShaking: false,
-      outfile: path.join(options.path, "index.js"),
+      outfile: path.join(options.path, "Cesium.js"),
       plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
       incremental: options.incremental,
       logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
     });
 
     handleBuildWarnings(result);
+
+    results.push(result);
   }
 
   if (options.node) {
-    result = await esbuild.build({
+    const result = await esbuild.build({
       entryPoints: ["Source/Cesium.js"],
       bundle: true,
       format: "cjs",
@@ -231,9 +246,10 @@ async function buildCesiumJs(options) {
     });
 
     handleBuildWarnings(result);
+    results.push(result);
   }
 
-  return result;
+  return results;
 }
 
 /**
@@ -391,7 +407,7 @@ gulp.task("build", function () {
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
-  const node = argv.node ? argv.node : false;
+  const node = argv.node ? argv.node : true;
 
   return build({
     minify: minify,
@@ -414,7 +430,7 @@ gulp.task(
       `Cesium${!minify ? "Unminified" : ""}`
     );
 
-    let sourceResult = await buildCesiumJs({
+    let [esmResult, iifeResult, cjsResult] = await buildCesiumJs({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
@@ -436,11 +452,27 @@ gulp.task(
 
     gulp.watch(shaderFiles, async () => {
       glslToJavaScript(minify, "Build/minifyShaders.state");
-      sourceResult = await sourceResult.rebuild();
+      esmResult = await esmResult.rebuild();
+
+      if (iifeResult) {
+        iifeResult = await iifeResult.rebuild();
+      }
+
+      if (cjsResult) {
+        cjsResult = await cjsResult.rebuild();
+      }
     });
 
     gulp.watch(sourceFiles, async () => {
-      sourceResult = await sourceResult.rebuild();
+      esmResult = await esmResult.rebuild();
+
+      if (iifeResult) {
+        iifeResult = await iifeResult.rebuild();
+      }
+
+      if (cjsResult) {
+        cjsResult = await cjsResult.rebuild();
+      }
     });
 
     gulp.watch(
@@ -470,7 +502,16 @@ gulp.task(
 
     process.on("SIGINT", () => {
       // Free up resources
-      sourceResult.rebuild.dispose();
+      esmResult.rebuild.dispose();
+
+      if (iifeResult) {
+        iifeResult.rebuild.dispose();
+      }
+
+      if (cjsResult) {
+        cjsResult.rebuild.dispose();
+      }
+
       specResult.rebuild.dispose();
       workerResult.rebuild.dispose();
       process.exit(0);
@@ -1197,8 +1238,8 @@ gulp.task("test", function (done) {
 
   let files = [
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Build/CesiumUnminified/index.js", included: true },
-    { pattern: "Build/CesiumUnminified/index.js.map", included: false },
+    { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
+    { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
@@ -1208,8 +1249,8 @@ gulp.task("test", function (done) {
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Build/Cesium/index.js", included: true },
-      { pattern: "Build/Cesium/index.js.map", included: false },
+      { pattern: "Build/Cesium/Cesium.js", included: true },
+      { pattern: "Build/Cesium/Cesium.js.map", included: false },
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
       { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
@@ -1835,7 +1876,7 @@ function buildSandcastle() {
     .pipe(
       gulpReplace(
         '    <script type="module" src="../load-cesium-es6.js"></script>',
-        '    <script src="../../../Build/CesiumUnminified/index.js"></script>\n' +
+        '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
           '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
       )
     )
@@ -1859,7 +1900,7 @@ function buildSandcastle() {
     .pipe(
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
-        '    <script src="../../Build/CesiumUnminified/index.js"></script>\n' +
+        '    <script src="../../Build/CesiumUnminified/Cesium.js"></script>\n' +
           '    <script>window.CESIUM_BASE_URL = "../../Build/CesiumUnminified/";</script>";'
       )
     )
@@ -1877,7 +1918,6 @@ async function buildCesiumViewer() {
     entryPoints: [
       "Apps/CesiumViewer/CesiumViewer.js",
       "Apps/CesiumViewer/CesiumViewer.css",
-      "Source/Widgets/InfoBox/InfoBoxDescription.css",
     ],
     bundle: true, // Tree-shaking is enabled automatically
     minify: true,
@@ -1894,10 +1934,23 @@ async function buildCesiumViewer() {
     external: ["https", "http", "zlib"],
     plugins: [stripPragmaPlugin],
     outdir: cesiumViewerOutputDirectory,
+    outbase: "Apps/CesiumViewer",
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
 
   handleBuildWarnings(result);
+
+  await esbuild.build({
+    entryPoints: ["Source/Widgets/InfoBox/InfoBoxDescription.css"],
+    minify: true,
+    bundle: true,
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    outdir: cesiumViewerOutputDirectory,
+    outbase: "Source",
+  });
 
   await createWorkers({
     minify: true,
