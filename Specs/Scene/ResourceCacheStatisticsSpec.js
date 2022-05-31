@@ -28,10 +28,10 @@ describe("Scene/ResourceCacheStatistics", function () {
       cacheKey: cacheKey,
     });
 
-    loader.promise = new Promise(function (resolve, reject) {
+    loader.promise = new Promise(function (resolve) {
       // Deferred so the unit test can decide when the cancellation happens
       // via loader.cancel();
-      loader.cancel = reject;
+      loader.cancel = resolve;
     });
 
     return loader;
@@ -68,6 +68,13 @@ describe("Scene/ResourceCacheStatistics", function () {
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
     });
+  });
+
+  it("addGeometryLoader throws for undefined loader", function () {
+    const statistics = new ResourceCacheStatistics();
+    expect(function () {
+      return statistics.addGeometryLoader(undefined);
+    }).toThrowDeveloperError();
   });
 
   it("addGeometryLoader counts geometry memory", function () {
@@ -157,6 +164,8 @@ describe("Scene/ResourceCacheStatistics", function () {
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics._geometrySizes).toEqual({ vertices: 0 });
 
+    // simulate removing the loader before the promise resolves
+    statistics.removeLoader(geometryLoader);
     geometryLoader.cancel();
 
     return promise.then(function () {
@@ -165,6 +174,13 @@ describe("Scene/ResourceCacheStatistics", function () {
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
     });
+  });
+
+  it("addTextureLoader throws for undefined loader", function () {
+    const statistics = new ResourceCacheStatistics();
+    expect(function () {
+      return statistics.addTextureLoader(undefined);
+    }).toThrowDeveloperError();
   });
 
   it("addTextureLoader counts texture memory", function () {
@@ -215,6 +231,8 @@ describe("Scene/ResourceCacheStatistics", function () {
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics._textureSizes).toEqual({ texture: 0 });
 
+    // simulate removing the loader before the promise resolves
+    statistics.removeLoader(textureLoader);
     textureLoader.cancel();
 
     return promise.then(function () {
@@ -242,6 +260,13 @@ describe("Scene/ResourceCacheStatistics", function () {
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({ texture: 100 });
     });
+  });
+
+  it("removeLoader throws for undefined loader", function () {
+    const statistics = new ResourceCacheStatistics();
+    expect(function () {
+      return statistics.removeLoader(undefined);
+    }).toThrowDeveloperError();
   });
 
   it("removeLoader correctly updates memory for buffers", function () {
@@ -334,5 +359,18 @@ describe("Scene/ResourceCacheStatistics", function () {
         expect(statistics._textureSizes).toEqual({ texture: 300 });
       }
     );
+  });
+
+  it("removeLoader gracefully handles loader without tracked resources", function () {
+    const statistics = new ResourceCacheStatistics();
+    const textureLoader = mockLoader("texture", true, {
+      texture: {
+        sizeInBytes: 300,
+      },
+    });
+
+    expect(function () {
+      return statistics.removeLoader(textureLoader);
+    }).not.toThrowDeveloperError();
   });
 });
