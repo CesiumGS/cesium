@@ -134,7 +134,7 @@
     "generateDocumentation-watch": "gulp generateDocumentation-watch",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
     "makeZipFile": "gulp makeZipFile",
-    "markdownlint": "markdownlint \"Documentation/**/*.md\"",
+    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
     "release": "gulp release",
