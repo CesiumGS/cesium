@@ -1266,7 +1266,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (this._debugShowBoundingVolumeDirty) {
-    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
+    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
     this._debugShowBoundingVolumeDirty = false;
   }
 
@@ -1708,13 +1708,6 @@ ModelExperimental.fromGeoJson = function (options) {
   const model = new ModelExperimental(modelOptions);
   return model;
 };
-
-function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
-  const drawCommands = sceneGraph._drawCommands;
-  for (let i = 0; i < drawCommands.length; i++) {
-    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
-  }
-}
 
 /**
  * @private

@@ -14,7 +14,7 @@ import {
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",
   function () {
     const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";

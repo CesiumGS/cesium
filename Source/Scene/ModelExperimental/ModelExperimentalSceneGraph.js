@@ -3,7 +3,6 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
@@ -18,9 +17,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
-import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 import Transforms from "../../Core/Transforms.js";
 
@@ -643,17 +640,9 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
   backFaceCulling
 ) {
-  const model = this._model;
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-      const drawCommand = runtimePrimitive.drawCommands[k];
-      const renderState = clone(drawCommand.renderState, true);
-      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
-      const translucent = defined(model.color) && model.color.alpha < 1.0;
-      renderState.cull.enabled =
-        backFaceCulling && !doubleSided && !translucent;
-      drawCommand.renderState = RenderState.fromCache(renderState);
-    }
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.backFaceCulling = backFaceCulling;
   });
 };
 
@@ -668,6 +657,22 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.shadows = shadowMode;
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes whether to show the debug bounding volume.
+ *
+ * @param {Boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
+  debugShowBoundingVolume
+) {
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
   });
 };
 
