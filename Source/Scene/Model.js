@@ -221,7 +221,7 @@ const uriToGuid = {};
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in Cesium 1.94, will be removed in Cesium 1.95.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -702,6 +702,8 @@ Object.defineProperties(Model.prototype, {
    * The object for the glTF JSON, including properties with default values omitted
    * from the JSON provided to this model.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {Object}
@@ -711,6 +713,11 @@ Object.defineProperties(Model.prototype, {
    */
   gltf: {
     get: function () {
+      deprecationWarning(
+        "Model.gltf",
+        "Model.gltf getter was deprecated in Cesium 1.94 and will be removed in 1.95"
+      );
+
       return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
     },
   },
@@ -766,6 +773,8 @@ Object.defineProperties(Model.prototype, {
    * in the same directory as the .gltf.  When this is <code>''</code>,
    * the app's base path is used.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {String}
@@ -775,6 +784,10 @@ Object.defineProperties(Model.prototype, {
    */
   basePath: {
     get: function () {
+      deprecationWarning(
+        "model.basePath",
+        "Model.basePath getter is deprecated in Cesium 1.94. It will be removed in Cesium 1.95"
+      );
       return this._resource.url;
     },
   },
@@ -798,6 +811,11 @@ Object.defineProperties(Model.prototype, {
    */
   boundingSphere: {
     get: function () {
+      deprecationWarning(
+        "model.boundingSphere",
+        "Model.boundingSphere currently returns results in model space. In Cesium 1.95, model.boundingSphere will be changed to return results in world space. The calling code will no longer need to multiply the bounding sphere by the model matrix"
+      );
+
       //>>includeStart('debug', pragmas.debug);
       if (this._state !== ModelState.LOADED) {
         throw new DeveloperError(
@@ -943,6 +961,8 @@ Object.defineProperties(Model.prototype, {
   /**
    * Return the number of pending texture loads.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {Number}
@@ -950,6 +970,11 @@ Object.defineProperties(Model.prototype, {
    */
   pendingTextureLoads: {
     get: function () {
+      deprecationWarning(
+        "Model.pendingTextureLoads",
+        "The Model.pendingTextureLoads getter was deprecated in Cesium 1.94 and will be removed in Cesium 1.95"
+      );
+
       return defined(this._loadResources)
         ? this._loadResources.pendingTextureLoads
         : 0;
@@ -1354,7 +1379,7 @@ function containsGltfMagic(uint8Array) {
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in Cesium 1.94, will be removed in Cesium 1.95.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
