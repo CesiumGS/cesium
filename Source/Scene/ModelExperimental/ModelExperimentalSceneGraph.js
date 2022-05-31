@@ -393,7 +393,7 @@ const scratchModelPositionMax = new Cartesian3();
 const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
- * Generates the {@link ModelExperimentalDrawCommands} for each primitive in the model.
+ * Generates the {@link ModelExperimentalDrawCommand} for each primitive in the model.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -497,12 +497,12 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         modelPositionMax
       );
 
-      const drawCommands = buildDrawCommands(
+      const drawCommand = buildDrawCommands(
         primitiveRenderResources,
         frameState
       );
 
-      runtimePrimitive.drawCommands = drawCommands;
+      runtimePrimitive.drawCommand = drawCommand;
     }
   }
 
@@ -665,15 +665,9 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
  * @private
  */
 ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
-  const model = this._model;
-  const castShadows = ShadowMode.castShadows(model.shadows);
-  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-      const drawCommand = runtimePrimitive.drawCommands[k];
-      drawCommand.castShadows = castShadows;
-      drawCommand.receiveShadows = receiveShadows;
-    }
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.shadows = shadowMode;
   });
 };
 
@@ -690,8 +684,8 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
   const drawCommands = [];
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    const primitiveDrawCommands = runtimePrimitive.drawCommands;
-    const result = primitiveDrawCommands.getCommands(frameState);
+    const primitiveDrawCommand = runtimePrimitive.drawCommand;
+    const result = primitiveDrawCommand.getCommands(frameState);
     drawCommands.push.apply(drawCommands, result);
   });
   return drawCommands;

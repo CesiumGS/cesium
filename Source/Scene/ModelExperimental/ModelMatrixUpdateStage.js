@@ -73,8 +73,8 @@ function updateRuntimeNode(
   const primitivesLength = runtimeNode.runtimePrimitives.length;
   for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    const drawCommands = runtimePrimitive.drawCommands;
-    drawCommands.modelMatrix = Matrix4.multiplyTransformation(
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.modelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
       transformToRoot,
       scratchMatrix

@@ -6,7 +6,7 @@ import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalDrawCommands from "./ModelExperimentalDrawCommands.js";
+import ModelExperimentalDrawCommand from "./ModelExperimentalDrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
@@ -19,13 +19,13 @@ import VertexArray from "../../Renderer/VertexArray.js";
 const scratchBoundingSphere = new BoundingSphere();
 
 /**
- * Builds the {@link ModelExperimentalDrawCommands} for a {@link ModelExperimentalPrimitive}
+ * Builds the {@link ModelExperimentalDrawCommand} for a {@link ModelExperimentalPrimitive}
  * using its render resources.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {ModelExperimentalDrawCommands} The generated ModelExperimentalDrawCommands.
+ * @returns {ModelExperimentalDrawCommand} The generated ModelExperimentalDrawCommand.
  *
  * @private
  */
@@ -73,11 +73,6 @@ export default function buildDrawCommands(
     new Matrix4()
   );
 
-  const primitiveBoundingSphere = BoundingSphere.clone(
-    primitiveRenderResources.boundingSphere,
-    scratchBoundingSphere
-  );
-
   let boundingSphere;
   if (
     frameState.mode !== SceneMode.SCENE3D &&
@@ -114,10 +109,9 @@ export default function buildDrawCommands(
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
   });
 
-  return new ModelExperimentalDrawCommands({
+  return new ModelExperimentalDrawCommand({
     primitiveRenderResources: primitiveRenderResources,
     command: command,
-    primitiveBoundingSphere: primitiveBoundingSphere,
   });
 }
 

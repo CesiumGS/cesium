@@ -1,12 +1,12 @@
 import {
   DrawCommand,
-  ModelExperimentalDrawCommands,
+  ModelExperimentalDrawCommand,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalDrawCommands", function () {
   it("throws for undefined primitiveRenderResources", function () {
     expect(function () {
-      return new ModelExperimentalDrawCommands({
+      return new ModelExperimentalDrawCommand({
         primitiveRenderResources: undefined,
         command: new DrawCommand(),
       });
@@ -15,7 +15,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommands", function () {
 
   it("throws for undefined command", function () {
     expect(function () {
-      return new ModelExperimentalDrawCommands({
+      return new ModelExperimentalDrawCommand({
         primitiveRenderResources: {},
         command: undefined,
       });
@@ -24,7 +24,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommands", function () {
 
   it("constructs", function () {
     const mockRenderResources = {};
-    const drawCommands = new ModelExperimentalDrawCommands({
+    const drawCommand = new ModelExperimentalDrawCommand({
       primitiveRenderResources: mockRenderResources,
       command: new DrawCommand(),
     });
