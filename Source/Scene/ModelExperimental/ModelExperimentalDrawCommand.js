@@ -126,10 +126,6 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       return this._modelMatrix;
     },
     set: function (value) {
-      if (Matrix4.equals(this._modelMatrix, value)) {
-        return;
-      }
-
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrixDirty = true;
     },
@@ -148,10 +144,6 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       return this._shadows;
     },
     set: function (value) {
-      if (this._shadows === value) {
-        return;
-      }
-
       this._shadows = value;
       updateShadows(this);
     },
@@ -178,10 +170,6 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
         defined(this._model.color) && this._model.color.alpha < 1.0;
 
       const backFaceCulling = value && !doubleSided && !translucent;
-      if (this._backFaceCulling === backFaceCulling) {
-        return;
-      }
-
       this._backFaceCulling = backFaceCulling;
       updateBackFaceCulling(this);
     },
@@ -200,10 +188,6 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       return this._debugShowBoundingVolume;
     },
     set: function (value) {
-      if (this._debugShowBoundingVolume === value) {
-        return;
-      }
-
       this._debugShowBoundingVolume = value;
       updateShowBoundingVolume(this);
     },

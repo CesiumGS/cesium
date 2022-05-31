@@ -47,7 +47,6 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   }
 };
 
-const scratchMatrix = new Matrix4();
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
@@ -77,7 +76,7 @@ function updateRuntimeNode(
     drawCommand.modelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
       transformToRoot,
-      scratchMatrix
+      drawCommand.modelMatrix
     );
   }
 

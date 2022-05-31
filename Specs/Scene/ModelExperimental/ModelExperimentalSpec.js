@@ -772,7 +772,7 @@ fdescribe(
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
+          { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
           const boundingSphere = model.boundingSphere;
@@ -1489,7 +1489,6 @@ fdescribe(
         return loadAndZoomToModelExperimental(
           {
             gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
             scale: 20,
             maximumScale: 10,
           },
@@ -1528,7 +1527,6 @@ fdescribe(
         return loadAndZoomToModelExperimental(
           {
             gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
             minimumPixelSize: 1,
             maximumScale: 10,
           },

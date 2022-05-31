@@ -1265,11 +1265,6 @@ ModelExperimental.prototype.update = function (frameState) {
     }
   }
 
-  if (this._debugShowBoundingVolumeDirty) {
-    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
@@ -1307,6 +1302,11 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._shadowsDirty) {
     this.sceneGraph.updateShadows(this._shadows);
     this._shadowsDirty = false;
+  }
+
+  if (this._debugShowBoundingVolumeDirty) {
+    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
+    this._debugShowBoundingVolumeDirty = false;
   }
 
   const updateForAnimations = this._activeAnimations.update(frameState);
@@ -1383,7 +1383,7 @@ function getScale(model, frameState) {
       );
       projection.project(cartographic, scratchPosition);
 
-      // In 2D / CV mode the map is a yz-plane in world space, so the coordinates
+      // In 2D / CV mode, the map is a yz-plane in world space, so the coordinates
       // need to be reordered accordingly.
       Cartesian3.fromElements(
         scratchPosition.z,
