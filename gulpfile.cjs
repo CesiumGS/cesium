@@ -1065,7 +1065,7 @@ gulp.task("test", function (done) {
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
+      { pattern: "Specs/ThirdParty/**", included: false, type: "module" },
       { pattern: "Specs/TestWorkers/**", included: false },
       { pattern: "Build/Cesium/Cesium.js", included: true },
       { pattern: "Build/Cesium/**", included: false },
