@@ -591,7 +591,7 @@ struct by property ID. For example, if the metadata class looked like this:
 
 This will show up in the shader as the struct field as follows:
 
-```
+```glsl
 struct Metadata {
   float temperature;
 }

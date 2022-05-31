@@ -16,18 +16,18 @@
 
 2. [Build](#build-the-code)
 
-   ```
+   ```bash
     npm install
     npm run build
    ```
 
 3. Start the server
 
-   ```
+   ```bash
    npm start
    ```
 
-4. Navigate to : [` http://localhost:8080/`](http://localhost:8080)
+4. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
 
 _NOTE: If you change branches, you might have to rebuild._
 
@@ -60,19 +60,19 @@ Prerequisites:
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
-```
+```bash
 npm install
 ```
 
 Once all modules have been installed, run `npm run build` to actually build the code:
 
-```
+```bash
 npm run build
 ```
 
 Cesium ships with a simple HTTP server for testing, run `npm start` after building to use it:
 
-```
+```bash
 npm start
 ```
 
@@ -93,13 +93,13 @@ Read the complete list of build scripts below for more details.
 By default, the server only allows connections from your local machine. To allow connections from other machines, pass
 the `--public` option to npm. Note the extra `--` is intentional and required by npm.
 
-```
+```bash
 npm start -- --public
 ```
 
 The development server has a few other options as well, which you can see by pasing the `--help` parameter:
 
-```
+```bash
 npm start -- --help
 ```
 
@@ -113,7 +113,7 @@ Cesium uses [gulp](http://gulpjs.com/) for build tasks, but they are all abstrac
 
 Specify the target(s) at the command line:
 
-```
+```bash
 npm run [target-name]
 ```
 
@@ -170,15 +170,16 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 
 - In `travis.yml`, edit the following line:
 
-```
+```bash
 - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
 ```
 
 - Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
 - In `gulpfile.cjs`, edit the following line:
 
-```
-const travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+```javascript
+const travisDeployUrl =
+  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in `travis.yml`
