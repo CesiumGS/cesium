@@ -3,7 +3,7 @@ import {
   ModelExperimentalDrawCommand,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalDrawCommands", function () {
+describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   it("throws for undefined primitiveRenderResources", function () {
     expect(function () {
       return new ModelExperimentalDrawCommand({

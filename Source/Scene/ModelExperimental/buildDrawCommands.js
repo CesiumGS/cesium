@@ -112,6 +112,7 @@ export default function buildDrawCommands(
   return new ModelExperimentalDrawCommand({
     primitiveRenderResources: primitiveRenderResources,
     command: command,
+    frameState: frameState,
   });
 }
 

@@ -10,7 +10,9 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
  * A wrapper around the draw commands used to render a {@link ModelExperimentalPrimitive}.
@@ -20,6 +22,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @param {Object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
+ * @param {FrameState} options.frameState
  *
  * @alias ModelExperimentalDrawCommand
  * @constructor
@@ -79,7 +82,7 @@ export default function ModelExperimentalDrawCommand(options) {
       //>>includeEnd('debug');
     }
   } else {
-    this._commandList.push(command);
+    // this._commandList.push(command);
   }
 
   const derive2DCommands = defaultValue(options.derive2DCommands, false);
@@ -90,6 +93,12 @@ export default function ModelExperimentalDrawCommand(options) {
       this._commands2D.push(command2D);
     }
   }
+
+  // need silhouette color and silhouette model commands
+  this._commandList.push(deriveSilhouetteModelCommand(command));
+  this._commandList.push(
+    deriveSilhouetteColorCommand(command, renderResources, options.frameState)
+  );
 }
 
 Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
@@ -202,4 +211,83 @@ function derive2DCommand(command) {
   derivedCommand.modelMatrix = new Matrix4();
   derivedCommand.boundingSphere = new BoundingSphere();
   return derivedCommand;
+}
+
+let silhouettesLength = 0;
+
+function deriveSilhouetteModelCommand(command) {
+  // Wrap around after exceeding the 8-bit stencil limit.
+  // The reference is unique to each model until this point.
+  const stencilReference = ++silhouettesLength % 255;
+  const silhouetteModelCommand = DrawCommand.shallowClone(command);
+  let renderState = clone(command.renderState);
+
+  // Write the reference value into the stencil buffer.
+  renderState.stencilTest = {
+    enabled: true,
+    frontFunction: WebGLConstants.ALWAYS,
+    backFunction: WebGLConstants.ALWAYS,
+    reference: stencilReference,
+    mask: ~0,
+    frontOperation: {
+      fail: WebGLConstants.KEEP,
+      zFail: WebGLConstants.KEEP,
+      zPass: WebGLConstants.REPLACE,
+    },
+    backOperation: {
+      fail: WebGLConstants.KEEP,
+      zFail: WebGLConstants.KEEP,
+      zPass: WebGLConstants.REPLACE,
+    },
+  };
+
+  renderState = RenderState.fromCache(renderState);
+  silhouetteModelCommand.renderState = renderState;
+
+  return silhouetteModelCommand;
+}
+
+function deriveSilhouetteColorCommand(command, renderResources, frameState) {
+  // Wrap around after exceeding the 8-bit stencil limit.
+  // The reference is unique to each model until this point.
+  const silhouetteColorCommand = DrawCommand.shallowClone(command);
+  let renderState = clone(command.renderState, true);
+  renderState.depthTest.enabled = true;
+  renderState.cull.enabled = false;
+
+  // Only render silhouette if the value in the stencil buffer equals the reference
+  renderState.stencilTest = {
+    enabled: true,
+    frontFunction: WebGLConstants.NOTEQUAL,
+    backFunction: WebGLConstants.NOTEQUAL,
+    reference: silhouettesLength,
+    mask: ~0,
+    frontOperation: {
+      fail: WebGLConstants.KEEP,
+      zFail: WebGLConstants.KEEP,
+      zPass: WebGLConstants.KEEP,
+    },
+    backOperation: {
+      fail: WebGLConstants.KEEP,
+      zFail: WebGLConstants.KEEP,
+      zPass: WebGLConstants.KEEP,
+    },
+  };
+  renderState = RenderState.fromCache(renderState);
+
+  silhouetteColorCommand.renderState = renderState;
+
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("HAS_SILHOUETTE", undefined, ShaderDestination.BOTH);
+
+  const silhouetteProgram = shaderBuilder.buildShaderProgram(
+    frameState.context
+  );
+  renderResources.model._resources.push(silhouetteProgram);
+
+  silhouetteColorCommand.shaderProgram = silhouetteProgram;
+  silhouetteColorCommand.castShadows = false;
+  silhouetteColorCommand.receiveShadows = false;
+
+  return silhouetteColorCommand;
 }

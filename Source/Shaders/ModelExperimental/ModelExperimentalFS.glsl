@@ -78,5 +78,9 @@ void main()
     modelClippingPlanesStage(color);
     #endif
 
+    #ifdef HAS_SILHOUETTE
+    silhouetteStage(color);
+    #endif
+
     gl_FragColor = color;
 }
