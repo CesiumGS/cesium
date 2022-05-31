@@ -11,6 +11,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -5237,13 +5238,30 @@ Model.prototype.update = function (frameState) {
         if (!defined(this.gltf.extras.sourceVersion)) {
           const gltf = this.gltf;
           // Add the original version so it remains cached
-          gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
-          gltf.extras.sourceKHRTechniquesWebGL = defined(
+          const sourceVersion = ModelUtility.getAssetVersion(gltf);
+          const sourceKHRTechniquesWebGL = defined(
             ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl
           );
 
-          this._sourceVersion = gltf.extras.sourceVersion;
-          this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
+          if (sourceVersion !== "2.0") {
+            deprecationWarning(
+              "gltf-1.0",
+              "glTF 1.0 assets were deprecated in Cesium 1.94. They will be removed in 1.95. Please convert any glTF 1.0 assets to glTF 2.0."
+            );
+          }
+
+          if (sourceKHRTechniquesWebGL) {
+            deprecationWarning(
+              "KHR_techniques_webgl",
+              "Support for glTF 1.0 techniques and the KHR_techniques_webgl glTF extension were deprecated in Cesium 1.94. It will be removed in 1.95. If custom GLSL shaders are needed, use CustomShader instead."
+            );
+          }
+
+          gltf.extras.sourceVersion = sourceVersion;
+          gltf.extras.sourceKHRTechniquesWebGL = sourceKHRTechniquesWebGL;
+
+          this._sourceVersion = sourceVersion;
+          this._sourceKHRTechniquesWebGL = sourceKHRTechniquesWebGL;
 
           updateVersion(gltf);
           addDefaults(gltf);
