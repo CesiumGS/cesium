@@ -41,6 +41,9 @@ ResourceCache.statistics = new ResourceCacheStatistics();
 function CacheEntry(resourceLoader) {
   this.referenceCount = 1;
   this.resourceLoader = resourceLoader;
+
+  // For unit testing only
+  this._statisticsPromise = undefined;
 }
 
 /**
@@ -536,7 +539,12 @@ ResourceCache.loadVertexBuffer = function (options) {
     resourceLoader: vertexBufferLoader,
   });
 
-  ResourceCache.statistics.addGeometryLoader(vertexBufferLoader);
+  const promise = ResourceCache.statistics.addGeometryLoader(
+    vertexBufferLoader
+  );
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
 
   return vertexBufferLoader;
 };
@@ -610,7 +618,10 @@ ResourceCache.loadIndexBuffer = function (options) {
   ResourceCache.load({
     resourceLoader: indexBufferLoader,
   });
-  ResourceCache.statistics.addGeometryLoader(indexBufferLoader);
+  const promise = ResourceCache.statistics.addGeometryLoader(indexBufferLoader);
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
 
   return indexBufferLoader;
 };
@@ -726,7 +737,10 @@ ResourceCache.loadTexture = function (options) {
   ResourceCache.load({
     resourceLoader: textureLoader,
   });
-  ResourceCache.statistics.addTextureLoader(textureLoader);
+  const promise = ResourceCache.statistics.addTextureLoader(textureLoader);
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
 
   return textureLoader;
 };
