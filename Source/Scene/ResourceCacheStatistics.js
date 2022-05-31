@@ -18,48 +18,69 @@ ResourceCacheStatistics.prototype.clear = function () {
 
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
   const cacheKey = loader.cacheKey;
+
+  // Don't double count the same resource.
+  if (this._geometrySizes.hasOwnProperty(cacheKey)) {
+    return;
+  }
+
   this._geometrySizes[cacheKey] = 0;
 
   const that = this;
-  loader.promise.then(function (loader) {
-    // loader was unloaded before its promise resolved
-    if (!that._geometrySizes.hasOwnProperty(cacheKey)) {
-      return;
-    }
+  return loader.promise
+    .then(function (loader) {
+      // loader was unloaded before its promise resolved
+      if (!that._geometrySizes.hasOwnProperty(cacheKey)) {
+        return;
+      }
 
-    const buffer = loader.buffer;
-    const typedArray = loader.typedArray;
+      const buffer = loader.buffer;
+      const typedArray = loader.typedArray;
 
-    let totalSize = 0;
+      let totalSize = 0;
 
-    if (defined(buffer)) {
-      totalSize += buffer.sizeInBytes;
-    }
+      if (defined(buffer)) {
+        totalSize += buffer.sizeInBytes;
+      }
 
-    if (defined(typedArray)) {
-      totalSize += typedArray.byteLength;
-    }
+      if (defined(typedArray)) {
+        totalSize += typedArray.byteLength;
+      }
 
-    that.geometryByteLength += totalSize;
-    that._geometrySizes[cacheKey] = totalSize;
-  });
+      that.geometryByteLength += totalSize;
+      that._geometrySizes[cacheKey] = totalSize;
+    })
+    .catch(function () {
+      // If the resource failed to load, remove it from the cache
+      delete that._geometrySizes[cacheKey];
+    });
 };
 
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
   const cacheKey = loader.cacheKey;
+
+  // Don't double count the same resource.
+  if (this._textureSizes.hasOwnProperty(cacheKey)) {
+    return;
+  }
+
   this._textureSizes[cacheKey] = 0;
 
   const that = this;
-  loader.promise.then(function (loader) {
-    // loader was unloaded before its promise resolved
-    if (!that._textureSizes.hasOwnProperty(cacheKey)) {
-      return;
-    }
+  return loader.promise
+    .then(function (loader) {
+      // loader was unloaded before its promise resolved
+      if (!that._textureSizes.hasOwnProperty(cacheKey)) {
+        return;
+      }
 
-    const totalSize = loader.texture.sizeInBytes;
-    that.texturesByteLength += loader.texture.sizeInBytes;
-    that._textureSizes[cacheKey] = totalSize;
-  });
+      const totalSize = loader.texture.sizeInBytes;
+      that.texturesByteLength += loader.texture.sizeInBytes;
+      that._textureSizes[cacheKey] = totalSize;
+    })
+    .catch(function () {
+      delete that._textureSizes[cacheKey];
+    });
 };
 
 ResourceCacheStatistics.prototype.removeLoader = function (loader) {
@@ -68,13 +89,13 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
   delete this._geometrySizes[cacheKey];
 
   if (defined(geometrySize)) {
-    this.geometrySize -= geometrySize;
+    this.geometryByteLength -= geometrySize;
   }
 
   const textureSize = this._textureSizes[cacheKey];
   delete this._textureSizes[cacheKey];
 
   if (defined(textureSize)) {
-    this.textureSizes -= textureSize;
+    this.texturesByteLength -= textureSize;
   }
 };

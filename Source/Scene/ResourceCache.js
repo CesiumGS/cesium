@@ -776,6 +776,8 @@ ResourceCache.clearForSpecs = function () {
       delete cacheEntries[cacheKey];
     }
   }
+
+  ResourceCache.statistics.clear();
 };
 
 export default ResourceCache;
