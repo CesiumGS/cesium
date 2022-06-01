@@ -718,6 +718,16 @@ Object.defineProperties(Model.prototype, {
         "Model.gltf getter was deprecated in CesiumJS 1.94 and will be removed in 1.95"
       );
 
+      return this.gltfInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  gltfInternal: {
+    get: function () {
       return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
     },
   },
@@ -788,6 +798,16 @@ Object.defineProperties(Model.prototype, {
         "model.basePath",
         "Model.basePath getter is deprecated in CesiumJS 1.94. It will be removed in CesiumJS 1.95"
       );
+      return this.basePathInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  basePathInternal: {
+    get: function () {
       return this._resource.url;
     },
   },
@@ -815,7 +835,16 @@ Object.defineProperties(Model.prototype, {
         "model.boundingSphere",
         "Model.boundingSphere currently returns results in model space. In CesiumJS 1.95, model.boundingSphere will be changed to return results in world space. The calling code will no longer need to multiply the bounding sphere by the model matrix"
       );
+      return this.boundingSphereInternal;
+    },
+  },
 
+  /*
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  boundingSphereInternal: {
+    get: function () {
       //>>includeStart('debug', pragmas.debug);
       if (this._state !== ModelState.LOADED) {
         throw new DeveloperError(
@@ -975,6 +1004,16 @@ Object.defineProperties(Model.prototype, {
         "The Model.pendingTextureLoads getter was deprecated in CesiumJS 1.94 and will be removed in CesiumJS 1.95"
       );
 
+      return this.pendingTextureLoadsInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  pendingTextureLoadsInternal: {
+    get: function () {
       return defined(this._loadResources)
         ? this._loadResources.pendingTextureLoads
         : 0;
