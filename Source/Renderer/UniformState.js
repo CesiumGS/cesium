@@ -6,7 +6,6 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import CesiumMath from "../Core/Math.js";
