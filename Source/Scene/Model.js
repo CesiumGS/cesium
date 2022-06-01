@@ -5589,10 +5589,13 @@ Model.prototype.update = function (frameState) {
           }
           commandList.push(command);
           boundingVolume = nc.command.boundingVolume;
+          const left = boundingVolume.center.y - boundingVolume.radius;
+          const right = boundingVolume.center.y + boundingVolume.radius;
+
           if (
             frameState.mode === SceneMode.SCENE2D &&
-            (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-              boundingVolume.center.y - boundingVolume.radius < idl2D)
+            left < idl2D &&
+            right > idl2D
           ) {
             let command2D = nc.command2D;
             if (silhouette) {
@@ -5614,10 +5617,12 @@ Model.prototype.update = function (frameState) {
           if (nc.show) {
             commandList.push(nc.silhouetteColorCommand);
             boundingVolume = nc.command.boundingVolume;
+            const left = boundingVolume.center.y - boundingVolume.radius;
+            const right = boundingVolume.center.y + boundingVolume.radius;
             if (
               frameState.mode === SceneMode.SCENE2D &&
-              (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-                boundingVolume.center.y - boundingVolume.radius < idl2D)
+              left < idl2D &&
+              right > idl2D
             ) {
               commandList.push(nc.silhouetteColorCommand2D);
             }

@@ -16,8 +16,6 @@ import ShadowMode from "../ShadowMode.js";
 import StencilConstants from "../StencilConstants.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
-const scratchBoundingSphere = new BoundingSphere();
-
 /**
  * Builds the {@link ModelExperimentalDrawCommand} for a {@link ModelExperimentalPrimitive}
  * using its render resources.

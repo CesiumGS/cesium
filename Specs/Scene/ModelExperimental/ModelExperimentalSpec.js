@@ -1120,7 +1120,7 @@ fdescribe(
           scene: scene2D,
         });
 
-        model.modelMatrix = Matrix4.IDENTITY;
+        model.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 10, 10));
         verifyRender(model, false, {
           zoomToModel: false,
           scene: scene2D,
