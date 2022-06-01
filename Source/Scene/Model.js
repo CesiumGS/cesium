@@ -656,6 +656,13 @@ function Model(options) {
   this._cachedRendererResources = undefined;
   this._loadRendererResourcesFromCache = false;
 
+  if (options.dequantizeInShader) {
+    deprecationWarning(
+      "Model.dequantizeInShader",
+      "The Model dequantizeInShader constructor parameter was deprecated in CesiumJS 1.94 and will be removed in 1.95"
+    );
+  }
+
   this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
   this._decodedData = {};
 
