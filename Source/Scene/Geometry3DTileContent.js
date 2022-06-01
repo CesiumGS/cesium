@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -32,9 +31,6 @@ function Geometry3DTileContent(
   this._resource = resource;
   this._geometries = undefined;
 
-  this._contentReadyPromise = undefined;
-  this._readyPromise = defer();
-
   this._metadata = undefined;
 
   this._batchTable = undefined;
@@ -46,7 +42,7 @@ function Geometry3DTileContent(
   this.featurePropertiesDirty = false;
   this._group = undefined;
 
-  initialize(this, arrayBuffer, byteOffset);
+  this._readyPromise = initialize(this, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Geometry3DTileContent.prototype, {
@@ -100,7 +96,7 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -452,7 +448,13 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
     });
+
+    return content._geometries.readyPromise.then(function () {
+      return content;
+    });
   }
+
+  return Promise.resolve(content);
 }
 
 function createFeatures(content) {
@@ -507,13 +509,6 @@ Geometry3DTileContent.prototype.update = function (tileset, frameState) {
   }
   if (defined(this._batchTable) && this._geometries._ready) {
     this._batchTable.update(tileset, frameState);
-  }
-
-  if (!defined(this._contentReadyPromise)) {
-    const that = this;
-    this._contentReadyPromise = this._geometries.readyPromise.then(function () {
-      that._readyPromise.resolve(that);
-    });
   }
 };
 

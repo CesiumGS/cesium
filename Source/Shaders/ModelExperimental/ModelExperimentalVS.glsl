@@ -24,6 +24,17 @@ void main()
     morphTargetsStage(attributes);
     #endif
 
+    #ifdef HAS_SKINNING
+    skinningStage(attributes);
+    #endif
+
+    // Compute the bitangent according to the formula in the glTF spec.
+    // Normal and tangents can be affected by morphing and skinning, so
+    // the bitangent should not be computed until their values are finalized.
+    #ifdef HAS_BITANGENTS
+    attributes.bitangentMC = normalize(cross(attributes.normalMC, attributes.tangentMC) * attributes.tangentSignMC);
+    #endif
+
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
 
@@ -33,13 +44,13 @@ void main()
     cpuStylingStage(attributes.positionMC, feature);
     #endif
 
-    mat4 modelView = czm_modelView;
-    mat3 normal = czm_normal;
+    mat4 modelView = czm_modelView3D;
+    mat3 normal = czm_normal3D;
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
 
-        // The legacy instance stage  is used when rendering I3DM models that 
+        // The legacy instance stage is used when rendering i3dm models that 
         // encode instances transforms in world space, as opposed to glTF models
         // that use EXT_mesh_gpu_instancing, where instance transforms are encoded
         // in object space.

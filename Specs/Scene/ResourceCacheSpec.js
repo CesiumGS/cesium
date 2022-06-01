@@ -851,6 +851,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        loadBuffer: true,
       });
       const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfUncompressed,
@@ -858,6 +859,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
+        loadBuffer: true,
       });
 
       const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -871,6 +873,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         })
       ).toBe(vertexBufferLoader);
 
@@ -898,6 +901,7 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
+        loadBuffer: true,
       });
       const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfDraco,
@@ -906,6 +910,7 @@ describe(
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
+        loadBuffer: true,
       });
 
       const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -921,6 +926,7 @@ describe(
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
+          loadBuffer: true,
         })
       ).toBe(vertexBufferLoader);
 
@@ -943,7 +949,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
-        loadAsTypedArray: true,
+        loadTypedArray: true,
       });
       const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfUncompressed,
@@ -951,7 +957,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         accessorId: 0,
-        loadAsTypedArray: true,
+        loadTypedArray: true,
       });
 
       expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
@@ -964,6 +970,39 @@ describe(
       });
     });
 
+    it("loads vertex buffer as buffer and typed array for 2D", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        loadBuffer: true,
+        loadTypedArray: true,
+      });
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadBuffer: true,
+        loadTypedArray: true,
+      });
+
+      expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.typedArray).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
+      });
+    });
+
     it("loadVertexBuffer throws if gltf is undefined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
@@ -971,6 +1010,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -982,6 +1022,7 @@ describe(
           gltfResource: undefined,
           baseResource: gltfResource,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -993,6 +1034,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: undefined,
           bufferViewId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1007,6 +1049,7 @@ describe(
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1017,6 +1060,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1030,6 +1074,7 @@ describe(
           draco: dracoExtension,
           attributeSemantic: undefined,
           accessorId: 0,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1043,11 +1088,25 @@ describe(
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: undefined,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
 
-    it("loads index buffer from accessor", function () {
+    it("loadVertexBuffer throws if both loadBuffer and loadTypedArray are false", function () {
+      expect(function () {
+        ResourceCache.loadVertexBuffer({
+          gltf: gltfUncompressed,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          bufferViewId: 0,
+          loadBuffer: false,
+          loadTypedArray: false,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loads index buffer from accessor as buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -1057,12 +1116,14 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        loadBuffer: true,
       });
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        loadBuffer: true,
       });
 
       const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -1076,6 +1137,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
         })
       ).toBe(indexBufferLoader);
 
@@ -1085,6 +1147,7 @@ describe(
         indexBufferLoader
       ) {
         expect(indexBufferLoader.buffer).toBeDefined();
+        expect(indexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -1103,6 +1166,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
+        loadBuffer: true,
       });
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfDraco,
@@ -1110,6 +1174,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
+        loadBuffer: true,
       });
 
       const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -1124,6 +1189,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
+          loadBuffer: true,
         })
       ).toBe(indexBufferLoader);
 
@@ -1146,14 +1212,14 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        loadAsTypedArray: true,
+        loadTypedArray: true,
       });
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        loadAsTypedArray: true,
+        loadTypedArray: true,
       });
 
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
@@ -1173,6 +1239,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1184,6 +1251,7 @@ describe(
           accessorId: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1195,6 +1263,7 @@ describe(
           accessorId: 2,
           gltfResource: undefined,
           baseResource: gltfResource,
+          loadBuffer: true,
         });
       }).toThrowDeveloperError();
     });
@@ -1206,6 +1275,20 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: undefined,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loadIndexBuffer throws if both loadBuffer and loadTypedArray are false", function () {
+      expect(function () {
+        ResourceCache.loadIndexBuffer({
+          gltf: gltfUncompressed,
+          accessorId: 2,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          loadBuffer: false,
+          loadTypedArray: false,
         });
       }).toThrowDeveloperError();
     });

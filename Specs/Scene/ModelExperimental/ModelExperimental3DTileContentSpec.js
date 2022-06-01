@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Cesium3DContentGroup,
   ContentMetadata,
+  defaultValue,
   defined,
   ExperimentalFeatures,
   GroupMetadata,
@@ -22,8 +23,23 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
   const noBatchIdsUrl =
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
-  const InstancedWithBatchTableUrl =
+  const instancedWithBatchTableUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
+  const geoJsonMultiPolygonUrl =
+    "./Data/Cesium3DTiles/GeoJson/MultiPolygon/tileset.json";
+  const geoJsonPolygonUrl = "./Data/Cesium3DTiles/GeoJson/Polygon/tileset.json";
+  const geoJsonPolygonHeightsUrl =
+    "./Data/Cesium3DTiles/GeoJson/PolygonHeights/tileset.json";
+  const geoJsonPolygonHoleUrl =
+    "./Data/Cesium3DTiles/GeoJson/PolygonHole/tileset.json";
+  const geoJsonPolygonNoPropertiesUrl =
+    "./Data/Cesium3DTiles/GeoJson/PolygonNoProperties/tileset.json";
+  const geoJsonLineStringUrl =
+    "./Data/Cesium3DTiles/GeoJson/LineString/tileset.json";
+  const geoJsonMultiLineStringUrl =
+    "./Data/Cesium3DTiles/GeoJson/MultiLineString/tileset.json";
+  const geoJsonMultipleFeaturesUrl =
+    "./Data/Cesium3DTiles/GeoJson/MultipleFeatures/tileset.json";
 
   let scene;
   const centerLongitude = -1.31968;
@@ -77,7 +93,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.resolvesReadyPromise(
       scene,
-      InstancedWithBatchTableUrl
+      instancedWithBatchTableUrl
     );
   });
 
@@ -115,7 +131,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     });
   });
 
-  it("renders I3DM content", function () {
+  it("renders i3dm content", function () {
     if (!scene.context.instancedArrays) {
       return;
     }
@@ -123,10 +139,49 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
-      InstancedWithBatchTableUrl
+      instancedWithBatchTableUrl
     ).then(function (tileset) {
       Cesium3DTilesTester.expectRender(scene, tileset);
     });
+  });
+
+  function rendersGeoJson(url) {
+    setCamera(centerLongitude, centerLatitude, 1.0);
+    return Cesium3DTilesTester.loadTileset(scene, url).then(function (tileset) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+  }
+
+  it("renders GeoJSON MultiPolygon", function () {
+    return rendersGeoJson(geoJsonMultiPolygonUrl);
+  });
+
+  it("renders GeoJSON Polygon", function () {
+    return rendersGeoJson(geoJsonPolygonUrl);
+  });
+
+  it("renders GeoJSON Polygon with heights", function () {
+    return rendersGeoJson(geoJsonPolygonHeightsUrl);
+  });
+
+  it("renders GeoJSON Polygon with hole", function () {
+    return rendersGeoJson(geoJsonPolygonHoleUrl);
+  });
+
+  it("renders GeoJSON Polygon with no properties", function () {
+    return rendersGeoJson(geoJsonPolygonNoPropertiesUrl);
+  });
+
+  it("renders GeoJSON LineString", function () {
+    return rendersGeoJson(geoJsonLineStringUrl);
+  });
+
+  it("renders GeoJSON MultiLineString", function () {
+    return rendersGeoJson(geoJsonMultiLineStringUrl);
+  });
+
+  it("renders GeoJSON with multiple features", function () {
+    return rendersGeoJson(geoJsonMultipleFeaturesUrl);
   });
 
   it("picks from glTF", function () {
@@ -220,7 +275,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
-      InstancedWithBatchTableUrl
+      instancedWithBatchTableUrl
     ).then(function (tileset) {
       const content = tileset.root.content;
       tileset.show = false;
@@ -236,6 +291,66 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
         expect(content.getFeature(featureId)).toBeDefined();
       });
     });
+  });
+
+  function picksGeoJson(url, hasProperties, expectedFeatureId) {
+    expectedFeatureId = defaultValue(expectedFeatureId, 0);
+    setCamera(centerLongitude, centerLatitude, 1.0);
+    return Cesium3DTilesTester.loadTileset(scene, url).then(function (tileset) {
+      const content = tileset.root.content;
+      tileset.show = false;
+      expect(scene).toPickPrimitive(undefined);
+      tileset.show = true;
+      expect(scene).toPickAndCall(function (result) {
+        expect(result).toBeDefined();
+        expect(result.primitive).toBe(tileset);
+        expect(result.content).toBe(content);
+        const featureId = result.featureId;
+        expect(featureId).toBe(expectedFeatureId);
+        const feature = content.getFeature(featureId);
+        expect(feature).toBeDefined();
+
+        if (hasProperties) {
+          expect(feature.getProperty("name")).toBe("UL");
+          expect(feature.getProperty("code")).toBe(12);
+        } else {
+          expect(feature.getProperty("name")).toBeUndefined();
+          expect(feature.getProperty("code")).toBeUndefined();
+        }
+      });
+    });
+  }
+
+  it("picks GeoJSON MultiPolygon", function () {
+    return picksGeoJson(geoJsonMultiPolygonUrl, true);
+  });
+
+  it("picks GeoJSON Polygon", function () {
+    return picksGeoJson(geoJsonPolygonUrl, true);
+  });
+
+  it("picks GeoJSON Polygon with heights", function () {
+    return picksGeoJson(geoJsonPolygonHeightsUrl, true);
+  });
+
+  it("picks GeoJSON Polygon with hole", function () {
+    return picksGeoJson(geoJsonPolygonHoleUrl, true);
+  });
+
+  it("picks GeoJSON Polygon with no properties", function () {
+    return picksGeoJson(geoJsonPolygonNoPropertiesUrl, false);
+  });
+
+  it("picks GeoJSON LineString", function () {
+    return picksGeoJson(geoJsonLineStringUrl, true);
+  });
+
+  it("picks GeoJSON MultiLineString", function () {
+    return picksGeoJson(geoJsonMultiLineStringUrl, true);
+  });
+
+  it("picks GeoJSON with multiple features", function () {
+    return picksGeoJson(geoJsonMultipleFeaturesUrl, true, 1);
   });
 
   it("destroys", function () {

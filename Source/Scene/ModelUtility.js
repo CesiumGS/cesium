@@ -28,11 +28,11 @@ const ModelUtility = {};
  * @param {Object} model The model to update.
  */
 ModelUtility.updateForwardAxis = function (model) {
-  const cachedSourceVersion = model.gltf.extras.sourceVersion;
+  const cachedSourceVersion = model.gltfInternal.extras.sourceVersion;
 
   if (
     (defined(cachedSourceVersion) && cachedSourceVersion !== "2.0") ||
-    ModelUtility.getAssetVersion(model.gltf) !== "2.0"
+    ModelUtility.getAssetVersion(model.gltfInternal) !== "2.0"
   ) {
     model._gltfForwardAxis = Axis.X;
   }
@@ -169,7 +169,8 @@ ModelUtility.getFailedLoadFunction = function (model, type, path) {
 
 ModelUtility.parseBuffers = function (model, bufferLoad) {
   const loadResources = model._loadResources;
-  ForEach.buffer(model.gltf, function (buffer, bufferViewId) {
+
+  ForEach.buffer(model.gltfInternal, function (buffer, bufferViewId) {
     if (defined(buffer.extras._pipeline.source)) {
       loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
     } else if (defined(bufferLoad)) {
@@ -195,7 +196,7 @@ const aMinScratch = new Cartesian3();
 const aMaxScratch = new Cartesian3();
 
 ModelUtility.computeBoundingSphere = function (model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const gltfNodes = gltf.nodes;
   const gltfMeshes = gltf.meshes;
   const rootNodes = gltf.scenes[gltf.scene].nodes;
@@ -267,7 +268,7 @@ ModelUtility.computeBoundingSphere = function (model) {
   }
 
   const boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-  if (model._forwardAxis === Axis.Z) {
+  if (model.forwardAxis === Axis.Z) {
     // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
     BoundingSphere.transformWithoutScale(
       boundingSphere,

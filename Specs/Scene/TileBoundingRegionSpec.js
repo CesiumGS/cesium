@@ -67,6 +67,18 @@ describe("Scene/TileBoundingRegion", function () {
     expect(tbr.maximumHeight).toBeDefined();
   });
 
+  it("can be instantiated from a zero-area rectangle", function () {
+    const zeroAreaRectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+
+    const tbr = new TileBoundingRegion({ rectangle: zeroAreaRectangle });
+    expect(tbr).toBeDefined();
+    expect(tbr.boundingVolume).toBeDefined();
+    expect(tbr.boundingSphere).toBeDefined();
+    expect(tbr.rectangle).toEqual(zeroAreaRectangle);
+    expect(tbr.minimumHeight).toBeDefined();
+    expect(tbr.maximumHeight).toBeDefined();
+  });
+
   it("distanceToCamera throws when frameState is undefined", function () {
     expect(function () {
       return tileBoundingRegion.distanceToCamera();

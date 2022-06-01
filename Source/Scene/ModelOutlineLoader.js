@@ -41,7 +41,7 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
     return;
   }
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
 
   // Assumption: A single bufferView contains a single zero-indexed range of vertices.
   // No trickery with using large accessor byteOffsets to store multiple zero-based
@@ -152,7 +152,7 @@ function addOutline(
   const extraVertices = vertexNumberingScope.extraVertices;
   const outlineCoordinates = vertexNumberingScope.outlineCoordinates;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const mesh = gltf.meshes[meshId];
   const primitive = mesh.primitives[primitiveId];
   const accessors = gltf.accessors;
@@ -544,7 +544,7 @@ function createTexture(size) {
 }
 
 function updateBufferViewsWithNewVertices(model, bufferViews) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const loadResources = model._loadResources;
 
   let i, j;
@@ -606,7 +606,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
       const outlineCoordinates = vertexNumberingScope.outlineCoordinates;
       const outlineCoordinateBuffer = new Float32Array(outlineCoordinates);
       const bufferIndex =
-        model.gltf.buffers.push({
+        model.gltfInternal.buffers.push({
           byteLength: outlineCoordinateBuffer.byteLength,
           extras: {
             _pipeline: {
@@ -621,7 +621,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
       );
 
       const bufferViewIndex =
-        model.gltf.bufferViews.push({
+        model.gltfInternal.bufferViews.push({
           buffer: bufferIndex,
           byteLength: outlineCoordinateBuffer.byteLength,
           byteOffset: 0,
@@ -630,7 +630,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
         }) - 1;
 
       const accessorIndex =
-        model.gltf.accessors.push({
+        model.gltfInternal.accessors.push({
           bufferView: bufferViewIndex,
           byteOffset: 0,
           componentType: 5126,
@@ -653,7 +653,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
 }
 
 function compactBuffers(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const loadResources = model._loadResources;
 
   let i;
@@ -700,7 +700,7 @@ function getVertexNumberingScope(model, primitive) {
     return undefined;
   }
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
 
   let vertexNumberingScope;
 

@@ -65,6 +65,10 @@ function computeAttributes(options) {
   const geometry = options.geometry;
   const shadowVolume = options.shadowVolume;
   const flatPositions = geometry.attributes.position.values;
+  const flatTexcoords = defined(geometry.attributes.st)
+    ? geometry.attributes.st.values
+    : undefined;
+
   let length = flatPositions.length;
   const wall = options.wall;
   const top = options.top || wall;
@@ -160,30 +164,32 @@ function computeAttributes(options) {
       );
 
       if (vertexFormat.st) {
-        let p = Matrix3.multiplyByVector(
-          textureMatrix,
-          position,
-          scratchPosition
-        );
-        p = ellipsoid.scaleToGeodeticSurface(p, p);
-        const st = tangentPlane.projectPointOntoPlane(
-          p,
-          appendTextureCoordinatesCartesian2
-        );
-        Cartesian2.subtract(st, origin, st);
+        if (!defined(flatTexcoords)) {
+          let p = Matrix3.multiplyByVector(
+            textureMatrix,
+            position,
+            scratchPosition
+          );
+          p = ellipsoid.scaleToGeodeticSurface(p, p);
+          const st = tangentPlane.projectPointOntoPlane(
+            p,
+            appendTextureCoordinatesCartesian2
+          );
+          Cartesian2.subtract(st, origin, st);
 
-        const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
-        const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
-        if (bottom) {
-          textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
-          textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
-        }
-        if (top) {
-          textureCoordinates[textureCoordIndex] = stx;
-          textureCoordinates[textureCoordIndex + 1] = sty;
-        }
+          const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
+          const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
+          if (bottom) {
+            textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
+            textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
+          }
+          if (top) {
+            textureCoordinates[textureCoordIndex] = stx;
+            textureCoordinates[textureCoordIndex + 1] = sty;
+          }
 
-        textureCoordIndex += 2;
+          textureCoordIndex += 2;
+        }
       }
 
       if (
@@ -353,7 +359,7 @@ function computeAttributes(options) {
       }
     }
 
-    if (vertexFormat.st) {
+    if (vertexFormat.st && !defined(flatTexcoords)) {
       geometry.attributes.st = new GeometryAttribute({
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 2,
@@ -542,6 +548,7 @@ const createGeometryFromPositionsExtrudedPositions = [];
 function createGeometryFromPositionsExtruded(
   ellipsoid,
   polygon,
+  textureCoordinates,
   granularity,
   hierarchy,
   perPositionHeight,
@@ -559,6 +566,7 @@ function createGeometryFromPositionsExtruded(
     const topGeo = PolygonGeometryLibrary.createGeometryFromPositions(
       ellipsoid,
       polygon,
+      textureCoordinates,
       granularity,
       perPositionHeight,
       vertexFormat,
@@ -602,6 +610,13 @@ function createGeometryFromPositionsExtruded(
         );
         topGeo.attributes.normal.values.set(normals);
       }
+
+      if (vertexFormat.st && defined(textureCoordinates)) {
+        const texcoords = topGeo.attributes.st.values;
+        topGeo.attributes.st.values = new Float32Array(numPositions * 2);
+        topGeo.attributes.st.values = texcoords.concat(texcoords);
+      }
+
       topGeo.indices = newIndices;
     } else if (closeBottom) {
       numPositions = edgePoints.length / 3;
@@ -635,6 +650,7 @@ function createGeometryFromPositionsExtruded(
 
   let wallGeo = PolygonGeometryLibrary.computeWallGeometry(
     outerRing,
+    textureCoordinates,
     ellipsoid,
     granularity,
     perPositionHeight,
@@ -663,6 +679,7 @@ function createGeometryFromPositionsExtruded(
 
     wallGeo = PolygonGeometryLibrary.computeWallGeometry(
       hole,
+      textureCoordinates,
       ellipsoid,
       granularity,
       perPositionHeight,
@@ -696,6 +713,7 @@ function createGeometryFromPositionsExtruded(
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  *
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
@@ -801,6 +819,7 @@ function PolygonGeometry(options) {
     CesiumMath.RADIANS_PER_DEGREE
   );
   const stRotation = defaultValue(options.stRotation, 0.0);
+  const textureCoordinates = options.textureCoordinates;
   const perPositionHeight = defaultValue(options.perPositionHeight, false);
   const perPositionHeightExtrude =
     perPositionHeight && defined(options.extrudedHeight);
@@ -831,15 +850,25 @@ function PolygonGeometry(options) {
 
   this._rectangle = undefined;
   this._textureCoordinateRotationPoints = undefined;
+  this._textureCoordinates = textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
    * @type {Number}
    */
   this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
+    PolygonGeometryLibrary.computeHierarchyPackedLength(
+      polygonHierarchy,
+      Cartesian3
+    ) +
     Ellipsoid.packedLength +
     VertexFormat.packedLength +
+    (textureCoordinates
+      ? PolygonGeometryLibrary.computeHierarchyPackedLength(
+          textureCoordinates,
+          Cartesian2
+        )
+      : 1) +
     12;
 }
 
@@ -858,8 +887,8 @@ function PolygonGeometry(options) {
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  * @returns {PolygonGeometry}
- *
  *
  * @example
  * // create a polygon from points
@@ -898,6 +927,7 @@ PolygonGeometry.fromPositions = function (options) {
     closeBottom: options.closeBottom,
     offsetAttribute: options.offsetAttribute,
     arcType: options.arcType,
+    textureCoordinates: options.textureCoordinates,
   };
   return new PolygonGeometry(newOptions);
 };
@@ -922,7 +952,8 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -942,8 +973,17 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
   array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
   array[startingIndex++] = value._arcType;
-  array[startingIndex] = value.packedLength;
-
+  if (defined(value._textureCoordinates)) {
+    startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
+      value._textureCoordinates,
+      array,
+      startingIndex,
+      Cartesian2
+    );
+  } else {
+    array[startingIndex++] = -1.0;
+  }
+  array[startingIndex++] = value.packedLength;
   return array;
 };
 
@@ -971,7 +1011,8 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -997,7 +1038,21 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const shadowVolume = array[startingIndex++] === 1.0;
   const offsetAttribute = array[startingIndex++];
   const arcType = array[startingIndex++];
-  const packedLength = array[startingIndex];
+  const textureCoordinates =
+    array[startingIndex] === -1.0
+      ? undefined
+      : PolygonGeometryLibrary.unpackPolygonHierarchy(
+          array,
+          startingIndex,
+          Cartesian2
+        );
+  if (defined(textureCoordinates)) {
+    startingIndex = textureCoordinates.startingIndex;
+    delete textureCoordinates.startingIndex;
+  } else {
+    startingIndex++;
+  }
+  const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
     result = new PolygonGeometry(dummyOptions);
@@ -1018,7 +1073,9 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   result._offsetAttribute =
     offsetAttribute === -1 ? undefined : offsetAttribute;
   result._arcType = arcType;
+  result._textureCoordinates = textureCoordinates;
   result.packedLength = packedLength;
+
   return result;
 };
 
@@ -1081,6 +1138,9 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const closeTop = polygonGeometry._closeTop;
   const closeBottom = polygonGeometry._closeBottom;
   const arcType = polygonGeometry._arcType;
+  const textureCoordinates = polygonGeometry._textureCoordinates;
+
+  const hasTextureCoordinates = defined(textureCoordinates);
 
   let outerPositions = polygonHierarchy.positions;
   if (outerPositions.length < 3) {
@@ -1094,6 +1154,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
+    hasTextureCoordinates,
     tangentPlane.projectPointsOntoPlane.bind(tangentPlane),
     !perPositionHeight,
     ellipsoid
@@ -1101,6 +1162,19 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
+
+  const dummyFunction = function (identity) {
+    return identity;
+  };
+
+  const textureCoordinatePolygons = hasTextureCoordinates
+    ? PolygonGeometryLibrary.polygonsFromHierarchy(
+        textureCoordinates,
+        true,
+        dummyFunction,
+        false
+      ).polygons
+    : undefined;
 
   if (hierarchy.length === 0) {
     return;
@@ -1131,6 +1205,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     boundingRectangle: boundingRectangle,
     ellipsoid: ellipsoid,
     stRotation: stRotation,
+    textureCoordinates: undefined,
     bottom: false,
     top: true,
     wall: false,
@@ -1150,6 +1225,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
       const splitGeometry = createGeometryFromPositionsExtruded(
         ellipsoid,
         polygons[i],
+        hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
         granularity,
         hierarchy[i],
         perPositionHeight,
@@ -1215,6 +1291,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         geometry: PolygonGeometryLibrary.createGeometryFromPositions(
           ellipsoid,
           polygons[i],
+          hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
           granularity,
           perPositionHeight,
           vertexFormat,
@@ -1228,6 +1305,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         !perPositionHeight
       );
       options.geometry = geometryInstance.geometry;
+
       geometryInstance.geometry = computeAttributes(options);
 
       if (defined(polygonGeometry._offsetAttribute)) {

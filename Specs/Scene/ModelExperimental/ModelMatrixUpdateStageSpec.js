@@ -1,6 +1,7 @@
 import {
   BoundingSphere,
   Cartesian3,
+  CullFace,
   Matrix4,
   Math as CesiumMath,
   ResourceCache,
@@ -117,11 +118,11 @@ describe(
         const sceneGraph = model._sceneGraph;
 
         // The root node is transformed.
-        const rootNode = sceneGraph._runtimeNodes[2];
+        const rootNode = sceneGraph._runtimeNodes[1];
         // The static child node is not transformed relative to the parent.
-        const staticChildNode = sceneGraph._runtimeNodes[0];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
         // The transformed child node is transformed relative to the parent.
-        const transformedChildNode = sceneGraph._runtimeNodes[1];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
 
         const childTransformation = Matrix4.fromTranslation(
           new Cartesian3(0, 5, 0)
@@ -198,9 +199,9 @@ describe(
           new Cartesian3(1, 1, 1)
         );
 
-        const rootNode = sceneGraph._runtimeNodes[2];
-        const staticChildNode = sceneGraph._runtimeNodes[0];
-        const transformedChildNode = sceneGraph._runtimeNodes[1];
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
 
         const rootPrimitive = rootNode.runtimePrimitives[0];
         const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
@@ -275,9 +276,9 @@ describe(
           new Matrix4()
         );
 
-        const rootNode = sceneGraph._runtimeNodes[2];
-        const staticChildNode = sceneGraph._runtimeNodes[0];
-        const transformedChildNode = sceneGraph._runtimeNodes[1];
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
 
         const rootPrimitive = rootNode.runtimePrimitives[0];
         const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
@@ -324,6 +325,35 @@ describe(
             expectedTransformedChildModelMatrix
           )
         ).toBe(true);
+      });
+    });
+
+    it("updates render state cull face when scale is negative", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const childNode = sceneGraph._runtimeNodes[0];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const childPrimitive = childNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const childDrawCommand = childPrimitive.drawCommands[0];
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1);
+        scene.renderForSpecs();
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
       });
     });
   },

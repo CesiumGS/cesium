@@ -49,7 +49,7 @@ Object.defineProperties(CallbackProperty.prototype, {
 /**
  * Gets the value of the property.
  *
- * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
+ * @param {JulianDate} time The time for which to retrieve the value.
  * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied or is unsupported.
  */
@@ -104,8 +104,8 @@ CallbackProperty.prototype.equals = function (other) {
  * A function that returns the value of the property.
  * @callback CallbackProperty.Callback
  *
- * @param {JulianDate} [time] The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied or is unsupported.
+ * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {Object} [result] The object to store the value into. If omitted, the function must create and return a new instance.
+ * @returns {Object} The modified result parameter, or a new instance if the result parameter was not supplied or is unsupported.
  */
 export default CallbackProperty;

@@ -5,7 +5,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -114,18 +113,9 @@ function Vector3DTileClampedPolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._readyPromise = defer();
-
+  this._update = function (polylines, frameState) {};
+  this._readyPromise = initialize(this);
   this._verticesPromise = undefined;
-
-  const that = this;
-  ApproximateTerrainHeights.initialize()
-    .then(function () {
-      updateMinimumMaximumHeights(that, that._rectangle, that._ellipsoid);
-    })
-    .catch(function (error) {
-      this._readyPromise.reject(error);
-    });
 }
 
 Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
@@ -165,7 +155,7 @@ Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -279,50 +269,46 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    Promise.resolve(verticesPromise)
-      .then(function (result) {
-        if (polylines._keepDecodedPositions) {
-          polylines._decodedPositions = new Float64Array(
-            result.decodedPositions
-          );
-          polylines._decodedPositionOffsets = new Uint32Array(
-            result.decodedPositionOffsets
-          );
-        }
+    return verticesPromise.then(function (result) {
+      if (polylines._keepDecodedPositions) {
+        polylines._decodedPositions = new Float64Array(result.decodedPositions);
+        polylines._decodedPositionOffsets = new Uint32Array(
+          result.decodedPositionOffsets
+        );
+      }
 
-        polylines._startEllipsoidNormals = new Float32Array(
-          result.startEllipsoidNormals
-        );
-        polylines._endEllipsoidNormals = new Float32Array(
-          result.endEllipsoidNormals
-        );
-        polylines._startPositionAndHeights = new Float32Array(
-          result.startPositionAndHeights
-        );
-        polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
-          result.startFaceNormalAndVertexCornerIds
-        );
-        polylines._endPositionAndHeights = new Float32Array(
-          result.endPositionAndHeights
-        );
-        polylines._endFaceNormalAndHalfWidths = new Float32Array(
-          result.endFaceNormalAndHalfWidths
-        );
-        polylines._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
+      polylines._startEllipsoidNormals = new Float32Array(
+        result.startEllipsoidNormals
+      );
+      polylines._endEllipsoidNormals = new Float32Array(
+        result.endEllipsoidNormals
+      );
+      polylines._startPositionAndHeights = new Float32Array(
+        result.startPositionAndHeights
+      );
+      polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
+        result.startFaceNormalAndVertexCornerIds
+      );
+      polylines._endPositionAndHeights = new Float32Array(
+        result.endPositionAndHeights
+      );
+      polylines._endFaceNormalAndHalfWidths = new Float32Array(
+        result.endFaceNormalAndHalfWidths
+      );
+      polylines._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
-        const indexDatatype = result.indexDatatype;
-        polylines._indices =
-          indexDatatype === IndexDatatype.UNSIGNED_SHORT
-            ? new Uint16Array(result.indices)
-            : new Uint32Array(result.indices);
+      const indexDatatype = result.indexDatatype;
+      polylines._indices =
+        indexDatatype === IndexDatatype.UNSIGNED_SHORT
+          ? new Uint16Array(result.indices)
+          : new Uint32Array(result.indices);
 
-        polylines._ready = true;
-      })
-      .catch(function (error) {
-        polylines._readyPromise.reject(error);
-      });
+      polylines._ready = true;
+    });
   }
+}
 
+function finishVertexArray(polylines, context) {
   if (polylines._ready && !defined(polylines._va)) {
     const startEllipsoidNormals = polylines._startEllipsoidNormals;
     const endEllipsoidNormals = polylines._endEllipsoidNormals;
@@ -465,8 +451,6 @@ function createVertexArray(polylines, context) {
     polylines._vertexBatchIds = undefined;
 
     polylines._indices = undefined;
-
-    polylines._readyPromise.resolve();
   }
 }
 
@@ -710,27 +694,53 @@ Vector3DTileClampedPolylines.prototype.applyStyle = function (style, features) {
   }
 };
 
+function initialize(polylines) {
+  return ApproximateTerrainHeights.initialize().then(function () {
+    updateMinimumMaximumHeights(
+      polylines,
+      polylines._rectangle,
+      polylines._ellipsoid
+    );
+
+    return new Promise(function (resolve, reject) {
+      polylines._update = function (polylines, frameState) {
+        const context = frameState.context;
+        const promise = createVertexArray(polylines, context);
+        createUniformMap(polylines, context);
+        createShaders(polylines, context);
+        createRenderStates(polylines);
+
+        if (polylines._ready) {
+          const passes = frameState.passes;
+          if (passes.render || passes.pick) {
+            queueCommands(polylines, frameState);
+          }
+        }
+
+        if (!defined(promise)) {
+          return;
+        }
+
+        promise
+          .then(function () {
+            finishVertexArray(polylines);
+            resolve(polylines);
+          })
+          .catch(function (e) {
+            reject(e);
+          });
+      };
+    });
+  });
+}
+
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileClampedPolylines.prototype.update = function (frameState) {
-  const context = frameState.context;
-
-  createVertexArray(this, context);
-  createUniformMap(this, context);
-  createShaders(this, context);
-  createRenderStates(this);
-
-  if (!this._ready) {
-    return;
-  }
-
-  const passes = frameState.passes;
-  if (passes.render || passes.pick) {
-    queueCommands(this, frameState);
-  }
+  this._update(this, frameState);
 };
 
 /**

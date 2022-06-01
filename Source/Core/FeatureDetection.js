@@ -160,6 +160,18 @@ function isWindows() {
   return isWindowsResult;
 }
 
+let isIPadOrIOSResult;
+function isIPadOrIOS() {
+  if (!defined(isIPadOrIOSResult)) {
+    isIPadOrIOSResult =
+      navigator.platform === "iPhone" ||
+      navigator.platform === "iPod" ||
+      navigator.platform === "iPad";
+  }
+
+  return isIPadOrIOSResult;
+}
+
 function firefoxVersion() {
   return isFirefox() && firefoxVersionResult;
 }
@@ -310,6 +322,7 @@ const FeatureDetection = {
   isFirefox: isFirefox,
   firefoxVersion: firefoxVersion,
   isWindows: isWindows,
+  isIPadOrIOS: isIPadOrIOS,
   hardwareConcurrency: defaultValue(theNavigator.hardwareConcurrency, 3),
   supportsPointerEvents: supportsPointerEvents,
   supportsImageRenderingPixelated: supportsImageRenderingPixelated,
@@ -403,6 +416,6 @@ FeatureDetection.supportsWebWorkers = function () {
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAssembly}
  */
 FeatureDetection.supportsWebAssembly = function () {
-  return typeof WebAssembly !== "undefined" && !FeatureDetection.isEdge();
+  return typeof WebAssembly !== "undefined";
 };
 export default FeatureDetection;

@@ -32,11 +32,13 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2021-11-09T20:27:37.016064475348684937Z"
@@ -126,7 +128,7 @@
           viewer.scene.primitives.removeAll();
           const model = viewer.scene.primitives.add(
             Cesium.ModelExperimental.fromGltf({
-              gltf: url,
+              url: url,
               modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
                 position,
                 hpr,
@@ -147,6 +149,10 @@
                 model.boundingSphere.radius * 5
               )
             );
+
+            model.activeAnimations.addAll({
+              loop: Cesium.ModelAnimationLoop.REPEAT,
+            });
           });
         }
 
@@ -154,10 +160,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

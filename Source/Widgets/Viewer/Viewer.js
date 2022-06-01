@@ -848,7 +848,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._trackedEntity = undefined;
   this._needTrackedEntityUpdate = false;
   this._selectedEntity = undefined;
-  this._clockTrackedDataSource = undefined;
   this._zoomIsFlight = false;
   this._zoomTarget = undefined;
   this._zoomPromise = undefined;

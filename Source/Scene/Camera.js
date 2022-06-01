@@ -30,6 +30,24 @@ import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
 
 /**
+ * @typedef {Object} DirectionUp
+ *
+ * An orientation given by a pair of unit vectors
+ *
+ * @property {Cartesian3} direction The unit "direction" vector
+ * @property {Cartesian3} up The unit "up" vector
+ **/
+/**
+ * @typedef {Object} HeadingPitchRollValues
+ *
+ * An orientation given by numeric heading, pitch, and roll
+ *
+ * @property {number} [heading=0.0] The heading in radians
+ * @property {number} [pitch=-CesiumMath.PI_OVER_TWO] The pitch in radians
+ * @property {number} [roll=0.0] The roll in meters
+ **/
+
+/**
  * The camera is defined by a position, orientation, and view frustum.
  * <br /><br />
  * The orientation forms an orthonormal basis with a view, up and right = view x up unit vectors.
@@ -1383,7 +1401,7 @@ const scratchHpr = new HeadingPitchRoll();
  *
  * @param {Object} options Object with the following properties:
  * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
- * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
+ * @param {HeadingPitchRollValues|DirectionUp} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.

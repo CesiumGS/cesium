@@ -36,7 +36,7 @@ const ApproximateTerrainHeights = {};
 
 /**
  * Initializes the minimum and maximum terrain heights
- * @return {Promise<void>}
+ * @return {Promise.<void>}
  */
 ApproximateTerrainHeights.initialize = function () {
   let initPromise = ApproximateTerrainHeights._initPromise;

@@ -356,10 +356,7 @@ describe(
         labelVerticalOrigin: `${VerticalOrigin.BOTTOM}`,
       });
 
-      return style.readyPromise
-        .then(function () {
-          return loadPoints(points);
-        })
+      return loadPoints(points)
         .then(function () {
           const features = [];
           points.createFeatures(mockTilesetClone, features);

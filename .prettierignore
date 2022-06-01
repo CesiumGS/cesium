@@ -26,6 +26,7 @@ Source/Scene/GltfPipeline/**
 Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/Workers/**/*
+Specs/jasmine/**
 Apps/Sandcastle/ThirdParty
 
 !Source/Workers/cesiumWorkerBootstrapper.js

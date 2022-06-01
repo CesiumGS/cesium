@@ -1,8 +1,8 @@
+import AlphaMode from "./AlphaMode.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import AlphaMode from "./AlphaMode.js";
 
 /**
  * Components for building models.
@@ -608,14 +608,6 @@ function Primitive() {
   this.morphTargets = [];
 
   /**
-   * An array of weights to be applied to morph targets.
-   *
-   * @type {Number[]}
-   * @private
-   */
-  this.morphWeights = [];
-
-  /**
    * The indices.
    *
    * @type {ModelComponents.Indices}
@@ -721,12 +713,21 @@ function Instances() {
  */
 function Skin() {
   /**
+   * The index of the skin in the glTF. This is useful for finding the skin
+   * that applies to a node after the skin is instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
+  /**
    * The joints.
    *
    * @type {ModelComponents.Node[]}
    * @private
    */
-  this.joints = undefined;
+  this.joints = [];
 
   /**
    * The inverse bind matrices of the joints.
@@ -734,7 +735,7 @@ function Skin() {
    * @type {Matrix4[]}
    * @private
    */
-  this.inverseBindMatrices = undefined;
+  this.inverseBindMatrices = [];
 }
 
 /**
@@ -746,6 +747,23 @@ function Skin() {
  * @private
  */
 function Node() {
+  /**
+   * The name of the node.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The index of the node in the glTF. This is useful for finding the nodes
+   * that belong to a skin after they have been instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
   /**
    * The children nodes.
    *
@@ -811,6 +829,15 @@ function Node() {
    * @private
    */
   this.scale = undefined;
+
+  /**
+   * An array of weights to be applied to the primitives' morph targets.
+   * These are supplied by either the node or its mesh.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.morphWeights = [];
 }
 
 /**
@@ -829,6 +856,143 @@ function Scene() {
    * @private
    */
   this.nodes = [];
+}
+
+/**
+ * The property of the node that is targeted by an animation. The values of
+ * this enum are used to look up the appropriate property on the runtime node.
+ *
+ * @alias {ModelComponents.AnimatedPropertyType}
+ * @enum {String}
+ *
+ * @private
+ */
+const AnimatedPropertyType = {
+  TRANSLATION: "translation",
+  ROTATION: "rotation",
+  SCALE: "scale",
+  WEIGHTS: "weights",
+};
+
+/**
+ * An animation sampler that describes the sources of animated keyframe data
+ * and their interpolation.
+ *
+ * @alias {ModelComponents.AnimationSampler}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationSampler() {
+  /**
+   * The timesteps of the animation.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.input = [];
+
+  /**
+   * The method used to interpolate between the animation's keyframe data.
+   *
+   * @type {InterpolationType}
+   * @private
+   */
+  this.interpolation = undefined;
+
+  /**
+   * The keyframe data of the animation.
+   *
+   * @type {Number[]|Cartesian3[]|Quaternion[]}
+   * @private
+   */
+  this.output = [];
+}
+
+/**
+ * An animation target, which specifies the node and property to animate.
+ *
+ * @alias {ModelComponents.AnimationTarget}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationTarget() {
+  /**
+   * The node that will be affected by the animation.
+   *
+   * @type {ModelComponents.Node}
+   * @private
+   */
+  this.node = undefined;
+
+  /**
+   * The property of the node to be animated.
+   *
+   * @type {ModelComponents.AnimatedPropertyType}
+   * @private
+   */
+  this.path = undefined;
+}
+
+/**
+ * An animation channel linking an animation sampler and the target it animates.
+ *
+ * @alias {ModelComponents.AnimationChannel}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationChannel() {
+  /**
+   * The sampler used as the source of the animation data.
+   *
+   * @type {ModelComponents.AnimationSampler}
+   * @private
+   */
+  this.sampler = undefined;
+
+  /**
+   * The target of the animation.
+   *
+   * @type {ModelComponents.AnimationTarget}
+   * @private
+   */
+  this.target = undefined;
+}
+
+/**
+ * An animation in the model.
+ *
+ * @alias {ModelComponents.Animation}
+ * @constructor
+ *
+ * @private
+ */
+function Animation() {
+  /**
+   * The name of the animation.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The samplers used in this animation.
+   *
+   * @type {ModelComponents.AnimationSampler[]}
+   * @private
+   */
+  this.samplers = [];
+
+  /**
+   * The channels used in this animation.
+   *
+   * @type {ModelComponents.AnimationChannel[]}
+   * @private
+   */
+  this.channels = [];
 }
 
 /**
@@ -879,7 +1043,21 @@ function Components() {
    *
    * @type {ModelComponents.Node[]}
    */
-  this.nodes = undefined;
+  this.nodes = [];
+
+  /**
+   * All skins in the model.
+   *
+   * @type {ModelComponents.Skin[]}
+   */
+  this.skins = [];
+
+  /**
+   * All animations in the model.
+   *
+   * @type {ModelComponents.Animation[]}
+   */
+  this.animations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1222,6 +1400,11 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
+ModelComponents.AnimatedPropertyType = Object.freeze(AnimatedPropertyType);
+ModelComponents.AnimationSampler = AnimationSampler;
+ModelComponents.AnimationTarget = AnimationTarget;
+ModelComponents.AnimationChannel = AnimationChannel;
+ModelComponents.Animation = Animation;
 ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;

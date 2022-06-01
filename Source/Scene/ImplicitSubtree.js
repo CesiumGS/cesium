@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
@@ -65,7 +64,6 @@ export default function ImplicitSubtree(
   this._subtreeLevels = implicitTileset.subtreeLevels;
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
-  this._readyPromise = defer();
 
   // properties for metadata
   this._metadata = undefined;
@@ -79,7 +77,7 @@ export default function ImplicitSubtree(
   this._tileJumpBuffer = undefined;
   this._contentJumpBuffers = [];
 
-  initialize(this, json, subtreeView, implicitTileset);
+  this._readyPromise = initialize(this, json, subtreeView, implicitTileset);
 }
 
 Object.defineProperties(ImplicitSubtree.prototype, {
@@ -93,7 +91,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -411,8 +409,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     markActiveMetadataBufferViews(contentPropertyTableJson, bufferViewHeaders);
   }
 
-  requestActiveBuffers(subtree, bufferHeaders, chunks.binary)
-    .then(function (buffersU8) {
+  return requestActiveBuffers(subtree, bufferHeaders, chunks.binary).then(
+    function (buffersU8) {
       const bufferViewsU8 = parseActiveBufferViews(
         bufferViewHeaders,
         buffersU8
@@ -427,11 +425,9 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
       parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
       makeContentJumpBuffers(subtree);
 
-      subtree._readyPromise.resolve(subtree);
-    })
-    .catch(function (error) {
-      subtree._readyPromise.reject(error);
-    });
+      return subtree;
+    }
+  );
 }
 
 /**

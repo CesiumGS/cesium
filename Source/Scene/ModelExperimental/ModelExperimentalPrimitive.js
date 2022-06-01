@@ -17,7 +17,11 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import SceneMode from "../SceneMode.js";
+import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
+import SkinningPipelineStage from "./SkinningPipelineStage.js";
+import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -25,6 +29,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {ModelComponents.Node} options.node The node that this primitive belongs to.
  * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
@@ -34,10 +39,14 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
  */
 export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const primitive = options.primitive;
+  const node = options.node;
+  const model = options.model;
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.primitive", options.primitive);
-  Check.typeOf.object("options.node", options.node);
-  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.node", node);
+  Check.typeOf.object("options.model", model);
   //>>includeEnd('debug');
 
   /**
@@ -47,7 +56,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.primitive = options.primitive;
+  this.primitive = primitive;
 
   /**
    * A reference to the node this primitive belongs to.
@@ -56,7 +65,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.node = options.node;
+  this.node = node;
 
   /**
    * A reference to the model
@@ -65,7 +74,7 @@ export default function ModelExperimentalPrimitive(options) {
    *
    * @private
    */
-  this.model = options.model;
+  this.model = model;
 
   /**
    * Pipeline stages to apply to this primitive. This
@@ -89,7 +98,7 @@ export default function ModelExperimentalPrimitive(options) {
   this.drawCommands = [];
 
   /**
-   * The bounding sphere of this primitive (in object-space).
+   * The bounding sphere of this primitive in object-space.
    *
    * @type {BoundingSphere}
    *
@@ -98,21 +107,44 @@ export default function ModelExperimentalPrimitive(options) {
   this.boundingSphere = undefined;
 
   /**
+   * The bounding sphere of this primitive in 2D world space.
+   *
+   * @type {BoundingSphere}
+   *
+   * @private
+   */
+  this.boundingSphere2D = undefined;
+
+  /**
+   * A buffer containing the primitive's positions projected to 2D world coordinates.
+   * Used for rendering in 2D / CV mode. The memory is managed by ModelExperimental;
+   * this is just a reference.
+   *
+   * @type {Buffer}
+   * @readonly
+   *
+   * @private
+   */
+  this.positionBuffer2D = undefined;
+
+  /**
    * Update stages to apply to this primitive.
+   *
+   * @private
    */
   this.updateStages = [];
-
-  this.configurePipeline();
 }
 
 /**
- * Configure the primitive pipeline stages. If the pipeline needs to be re-run, call
- * this method again to ensure the correct sequence of pipeline stages are
+ * Configure the primitive pipeline stages. If the pipeline needs to be re-run,
+ * call this method again to ensure the correct sequence of pipeline stages are
  * used.
+ *
+ * @param {FrameState} frameState The frame state.
  *
  * @private
  */
-ModelExperimentalPrimitive.prototype.configurePipeline = function () {
+ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
 
@@ -120,9 +152,14 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const node = this.node;
   const model = this.model;
   const customShader = model.customShader;
+  const useWebgl2 = frameState.context.webgl2;
+  const mode = frameState.mode;
 
+  const use2D =
+    mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
+  const hasSkinning = defined(node.skin);
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -132,6 +169,13 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
+  const generateWireframeIndices =
+    model.debugWireframe &&
+    PrimitiveType.isTriangles(primitive.primitiveType) &&
+    // Generating index buffers for wireframes is always possible in WebGL2.
+    // However, this will only work in WebGL1 if the model was constructed with
+    // enableDebugWireframe set to true.
+    (model._enableDebugWireframe || useWebgl2);
 
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
@@ -140,11 +184,22 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
   // Start of pipeline -----------------------------------------------------
+  if (use2D) {
+    pipelineStages.push(SceneMode2DPipelineStage);
+  }
 
   pipelineStages.push(GeometryPipelineStage);
 
+  if (generateWireframeIndices) {
+    pipelineStages.push(WireframePipelineStage);
+  }
+
   if (hasMorphTargets) {
     pipelineStages.push(MorphTargetsPipelineStage);
+  }
+
+  if (hasSkinning) {
+    pipelineStages.push(SkinningPipelineStage);
   }
 
   if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
