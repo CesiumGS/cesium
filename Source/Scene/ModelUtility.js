@@ -3,6 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import clone from "../Core/clone.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -169,7 +170,12 @@ ModelUtility.getFailedLoadFunction = function (model, type, path) {
 
 ModelUtility.parseBuffers = function (model, bufferLoad) {
   const loadResources = model._loadResources;
-  ForEach.buffer(model.gltfInternal, function (buffer, bufferViewId) {
+
+  // Model uses gltfInternal to avoid a deprecation warning,
+  // but ClassificationModel still uses gltf
+  const gltf = defaultValue(model.gltfInternal, model.gltf);
+
+  ForEach.buffer(gltf, function (buffer, bufferViewId) {
     if (defined(buffer.extras._pipeline.source)) {
       loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
     } else if (defined(bufferLoad)) {
@@ -195,7 +201,7 @@ const aMinScratch = new Cartesian3();
 const aMaxScratch = new Cartesian3();
 
 ModelUtility.computeBoundingSphere = function (model) {
-  const gltf = model.gltfInternal;
+  const gltf = defaultValue(model.gltfInternal, model.gltf);
   const gltfNodes = gltf.nodes;
   const gltfMeshes = gltf.meshes;
   const rootNodes = gltf.scenes[gltf.scene].nodes;
