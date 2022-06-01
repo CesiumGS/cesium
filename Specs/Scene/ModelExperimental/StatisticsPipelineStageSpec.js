@@ -17,8 +17,16 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
   const boxTextured =
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+  const boxTexturedBinary =
+    "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+  const buildingsMetadata =
+    "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
   const pointCloudRGB =
     "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+  const pointCloudWithPropertyAttributes =
+    "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+  const simplePropertyTexture =
+    "./Data/Models/GltfLoader/SimplePropertyTexture/SimplePropertyTexture.gltf";
   const triangleWithoutIndices =
     "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
   const triangleStrip =
@@ -66,6 +74,12 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     gltfLoader.load();
 
     return waitForLoaderProcess(gltfLoader, scene);
+  }
+
+  function mockModel(components) {
+    return {
+      structuralMetadata: components.structuralMetadata,
+    };
   }
 
   it("counts memory for a model", function () {});
@@ -301,6 +315,68 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
         specularGlossiness.specularGlossinessTexture.texture.sizeInBytes;
 
       expect(statistics.texturesByteLength).toBe(totalTextureSize);
+    });
+  });
+
+  it("_countBinaryMetadata does not update statistics for primitive without metadata", function () {
+    return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const model = mockModel(components);
+
+      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+
+      expect(statistics.geometryByteLength).toBe(0);
+    });
+  });
+
+  it("_countBinaryMetadata updates statistics for property tables", function () {
+    return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const model = mockModel(components);
+
+      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+
+      const structuralMetadata = model.structuralMetadata;
+      const propertyTable = structuralMetadata.getPropertyTable(0);
+
+      expect(statistics.propertyTablesByteLength).toBe(
+        propertyTable.byteLength
+      );
+    });
+  });
+
+  it("_countBinaryMetadata does not update statistics for property attributes", function () {
+    return loadGltf(pointCloudWithPropertyAttributes).then(function (
+      gltfLoader
+    ) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const model = mockModel(components);
+
+      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+
+      expect(statistics.geometryByteLength).toBe(0);
+    });
+  });
+
+  it("_countBinaryMetadata updates statistics for propertyTextures", function () {
+    return loadGltf(simplePropertyTexture).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const model = mockModel(components);
+
+      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+
+      // everything shares the same texture, so the memory is only counted
+      // once.
+      const structuralMetadata = model.structuralMetadata;
+      const propertyTexture1 = structuralMetadata.getPropertyTexture(0);
+      const property = propertyTexture1.getProperty("insideTemperature");
+      const textureSize = property.textureReader.texture.sizeInBytes;
+
+      expect(statistics.texturesByteLength).toBe(textureSize);
     });
   });
 });

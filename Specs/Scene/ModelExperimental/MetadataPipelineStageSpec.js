@@ -23,8 +23,6 @@ describe(
       "./Data/Models/GltfLoader/PropertyTextureWithVectorProperties/PropertyTextureWithVectorProperties.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -389,80 +387,6 @@ describe(
         expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
           new Cartesian2(2, 2)
         );
-      });
-    });
-
-    it("does not update statistics for primitive without metadata", function () {
-      return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[1];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
-        const renderResources = mockRenderResources(components);
-
-        MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.geometryByteLength).toBe(0);
-      });
-    });
-
-    it("updates statistics for property tables", function () {
-      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
-        const renderResources = mockRenderResources(components);
-
-        MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-        const structuralMetadata = renderResources.model.structuralMetadata;
-        const propertyTable = structuralMetadata.getPropertyTable(0);
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.propertyTablesByteLength).toBe(
-          propertyTable.byteLength
-        );
-      });
-    });
-
-    it("does not update statistics for property attributes", function () {
-      return loadGltf(pointCloudWithPropertyAttributes).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
-        const renderResources = mockRenderResources(components);
-
-        MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.geometryByteLength).toBe(0);
-      });
-    });
-
-    it("updates statistics for propertyTextures", function () {
-      return loadGltf(simplePropertyTexture).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
-        const renderResources = mockRenderResources(components);
-
-        MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-        // everything shares the same texture, so the memory is only counted
-        // once.
-        const structuralMetadata = renderResources.model.structuralMetadata;
-        const propertyTexture1 = structuralMetadata.getPropertyTexture(0);
-        const property = propertyTexture1.getProperty("insideTemperature");
-        const textureSize = property.textureReader.texture.sizeInBytes;
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.texturesByteLength).toBe(textureSize);
       });
     });
   },
