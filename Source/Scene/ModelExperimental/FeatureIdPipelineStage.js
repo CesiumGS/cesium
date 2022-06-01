@@ -129,8 +129,6 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
     const featureIds = featureIdsArray[i];
     const variableName = featureIds.positionalLabel;
 
-    updateStatistics(renderResources, featureIds);
-
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processInstanceAttribute(renderResources, featureIds, variableName);
     } else {
@@ -163,8 +161,6 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
     const variableName = featureIds.positionalLabel;
-
-    updateStatistics(renderResources, featureIds);
 
     let aliasDestination = ShaderDestination.BOTH;
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
@@ -508,25 +504,6 @@ function generateImplicitFeatureIdTypedArray(implicitFeatureIds, count) {
   }
 
   return typedArray;
-}
-
-function updateStatistics(renderResources, featureIds) {
-  const statistics = renderResources.model.statistics;
-
-  // If textures are loaded asynchronously, textures may not be available
-  // the first time the pipeline is run. When the textures are loaded, the
-  // pipeline will be re-built for a more accurate count.
-  if (featureIds instanceof ModelComponents.FeatureIdTexture) {
-    const textureReader = featureIds.textureReader;
-    if (defined(textureReader.texture)) {
-      statistics.addTexture(textureReader.texture);
-    }
-  }
-
-  // Feature ID attributes are handled by the geometry stage
-
-  // Feature ID implicit ranges are handled in generateImplicitFeatureIdRange()
-  // since a buffer is not always created.
 }
 
 export default FeatureIdPipelineStage;

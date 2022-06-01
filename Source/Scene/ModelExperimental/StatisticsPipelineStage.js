@@ -1,5 +1,6 @@
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import ModelComponents from "../ModelComponents.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -28,14 +29,16 @@ StatisticsPipelineStage.process = function (
   count2DPositions(statistics, renderResources.runtimePrimitive);
   countMorphTargetAttributes(statistics, primitive);
   countMaterialTextures(statistics, primitive.material);
-  // TODO: count feature ID textures
+  countFeatureIdTextures(statistics, primitive.featureIds);
   countBinaryMetadata(statistics, model);
 
-  // The following stages are not handled here since all the resources are
-  // generated each time draw commands are built:
+  // The following stages handle their own memory statistics since all their
+  // resources are generated each time draw commands are built:
+  //
   // - PickingPipelineStage
   // - WireframePipelineStage
   // - InstancingPipelineStage
+  // - FeatureIdPipelineStage (feature ID implicit ranges only)
 };
 
 function countGeometry(statistics, primitive) {
@@ -154,6 +157,24 @@ function getAllTextureReaders(material) {
   }
 
   return textureReaders;
+}
+
+function countFeatureIdTextures(statistics, featureIdSets) {
+  // Feature ID attributes are handled by countGeometry()
+
+  // Feature ID implicit ranges are handled in the FeatureIdPipelineStage,
+  // as they only are created as-needed.
+
+  const length = featureIdSets.length;
+  for (let i = 0; i < length; i++) {
+    const featureIds = featureIdSets[i];
+    if (featureIds instanceof ModelComponents.FeatureIdTexture) {
+      const textureReader = featureIds.textureReader;
+      if (defined(textureReader.texture)) {
+        statistics.addTexture(textureReader.texture);
+      }
+    }
+  }
 }
 
 function countBinaryMetadata(statistics, model) {
