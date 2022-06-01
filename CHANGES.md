@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.95 - 2022-07-01
+
+##### Additions :tada:
+
+- Added support for rendering individual models in 2D / CV using `ModelExperimental`. [#10419](https://github.com/CesiumGS/cesium/pull/10419)
+
 ### 1.94 - 2022-06-01
 
 ##### Breaking Changes :mega:

@@ -52,7 +52,7 @@ void main()
     mat4 modelView = czm_modelView3D;
     mat3 normal = czm_normal3D;
     #else
-    // These are used for individual model projectionb because they will
+    // These are used for individual model projection because they will
     // automatically change based on the scene mode.
     mat4 modelView = czm_modelView;
     mat3 normal = czm_normal;
