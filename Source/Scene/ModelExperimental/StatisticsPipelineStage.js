@@ -187,4 +187,10 @@ function countPropertyTextures(statistics, structuralMetadata) {
   }
 }
 
+// Exposed for testing
+StatisticsPipelineStage._countGeometry = countGeometry;
+StatisticsPipelineStage._countMorphTargetAttributes = countMorphTargetAttributes;
+StatisticsPipelineStage._countMaterialTextures = countMaterialTextures;
+StatisticsPipelineStage._countBinaryMetadata = countBinaryMetadata;
+
 export default StatisticsPipelineStage;
