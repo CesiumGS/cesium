@@ -61,7 +61,7 @@ MaterialPipelineStage.process = function (
   const defaultNormalTexture = frameState.context.defaultNormalTexture;
   const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
-  const statistics = renderResources.model.statistics;
+  updateStatistics(renderResources, primitive);
 
   processMaterialUniforms(
     material,
@@ -69,8 +69,7 @@ MaterialPipelineStage.process = function (
     shaderBuilder,
     defaultTexture,
     defaultNormalTexture,
-    defaultEmissiveTexture,
-    statistics
+    defaultEmissiveTexture
   );
 
   if (defined(material.specularGlossiness)) {
@@ -78,16 +77,14 @@ MaterialPipelineStage.process = function (
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   } else {
     processMetallicRoughnessUniforms(
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 
@@ -190,8 +187,7 @@ function processTexture(
   textureReader,
   uniformName,
   defineName,
-  defaultTexture,
-  statistics
+  defaultTexture
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -202,13 +198,6 @@ function processTexture(
   uniformMap[uniformName] = function () {
     return defaultValue(textureReader.texture, defaultTexture);
   };
-
-  // If textures were loaded asynchronously, the texture may not be available
-  // the first time the pipeline is run. ModelExperimental will re-run the
-  // pipeline in that case to make sure the statistics are accurate.
-  if (defined(textureReader.texture)) {
-    statistics.addTexture(textureReader.texture);
-  }
 
   // Add a #define directive to enable using the texture in the shader
   const textureDefine = `HAS_${defineName}_TEXTURE`;
@@ -247,8 +236,7 @@ function processMaterialUniforms(
   shaderBuilder,
   defaultTexture,
   defaultNormalTexture,
-  defaultEmissiveTexture,
-  statistics
+  defaultEmissiveTexture
 ) {
   const emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
@@ -258,8 +246,7 @@ function processMaterialUniforms(
       emissiveTexture,
       "u_emissiveTexture",
       "EMISSIVE",
-      defaultEmissiveTexture,
-      statistics
+      defaultEmissiveTexture
     );
   }
 
@@ -291,8 +278,7 @@ function processMaterialUniforms(
       normalTexture,
       "u_normalTexture",
       "NORMAL",
-      defaultNormalTexture,
-      statistics
+      defaultNormalTexture
     );
   }
 
@@ -304,8 +290,7 @@ function processMaterialUniforms(
       occlusionTexture,
       "u_occlusionTexture",
       "OCCLUSION",
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 }
@@ -314,8 +299,7 @@ function processSpecularGlossinessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture,
-  statistics
+  defaultTexture
 ) {
   const specularGlossiness = material.specularGlossiness;
   shaderBuilder.addDefine(
@@ -332,8 +316,7 @@ function processSpecularGlossinessUniforms(
       diffuseTexture,
       "u_diffuseTexture",
       "DIFFUSE",
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 
@@ -366,8 +349,7 @@ function processSpecularGlossinessUniforms(
       specularGlossinessTexture,
       "u_specularGlossinessTexture",
       "SPECULAR_GLOSSINESS",
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 
@@ -419,8 +401,7 @@ function processMetallicRoughnessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture,
-  statistics
+  defaultTexture
 ) {
   const metallicRoughness = material.metallicRoughness;
   shaderBuilder.addDefine(
@@ -437,8 +418,7 @@ function processMetallicRoughnessUniforms(
       baseColorTexture,
       "u_baseColorTexture",
       "BASE_COLOR",
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 
@@ -473,8 +453,7 @@ function processMetallicRoughnessUniforms(
       metallicRoughnessTexture,
       "u_metallicRoughnessTexture",
       "METALLIC_ROUGHNESS",
-      defaultTexture,
-      statistics
+      defaultTexture
     );
   }
 
@@ -517,6 +496,42 @@ function processMetallicRoughnessUniforms(
       ShaderDestination.FRAGMENT
     );
   }
+}
+
+function updateStatistics(renderResources, primitive) {
+  const statistics = renderResources.model.statistics;
+  const material = primitive.material;
+
+  const textureReaders = getAllTextureReaders(material);
+  const length = textureReaders.length;
+  for (let i = 0; i < length; i++) {
+    const textureReader = textureReaders[i];
+    // If textures were loaded asynchronously, the texture may not be available
+    // the first time the pipeline is run. ModelExperimental will re-run the
+    // pipeline in that case to make sure the statistics are accurate.
+    if (defined(textureReader) && defined(textureReader.texture)) {
+      statistics.addTexture(textureReader.texture);
+    }
+  }
+}
+
+function getAllTextureReaders(material) {
+  const metallicRoughness = material.metallicRoughness;
+  const textureReaders = [
+    material.emissiveTexture,
+    material.normalTexture,
+    material.occlusionTexture,
+    metallicRoughness.baseColorTexture,
+    metallicRoughness.metallicRoughnessTexture,
+  ];
+
+  const specularGlossiness = material.specularGlossiness;
+  if (defined(specularGlossiness)) {
+    textureReaders.push(specularGlossiness.diffuseTexture);
+    textureReaders.push(specularGlossiness.specularGlossinessTexture);
+  }
+
+  return textureReaders;
 }
 
 // Exposed for testing

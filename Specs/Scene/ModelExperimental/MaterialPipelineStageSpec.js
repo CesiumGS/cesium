@@ -883,30 +883,6 @@ describe(
         u_testTexture: mockTexture,
       });
     });
-
-    it("_processTexture updates statistics", function () {
-      const shaderBuilder = new ShaderBuilder();
-      const uniformMap = {};
-      const mockTexture = {
-        sizeInBytes: 100,
-      };
-      const textureReader = {
-        texture: mockTexture,
-        texCoord: 1,
-      };
-      const statistics = new ModelExperimentalStatistics();
-      MaterialPipelineStage._processTexture(
-        shaderBuilder,
-        uniformMap,
-        textureReader,
-        "u_testTexture",
-        "TEST",
-        mockFrameState.context.defaultTexture,
-        statistics
-      );
-
-      expect(statistics.texturesByteLength).toBe(mockTexture.sizeInBytes);
-    });
   },
   "WebGL"
 );
