@@ -42,7 +42,7 @@ WireframePipelineStage.process = function (
   model._resources.push(wireframeIndexBuffer);
   renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
 
-  // We only need to add this for the generated buffer. in WebGL 1, the CPU
+  // We only need to count memory for the generated buffer. in WebGL 1, the CPU
   // copy of the original indices is already counted in the geometry stage,
   // and in WebGL 2, the CPU copy of the original indices is discarded after
   // generating the wireframe indices.

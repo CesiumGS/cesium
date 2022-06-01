@@ -25,9 +25,17 @@ StatisticsPipelineStage.process = function (
   const statistics = model.statistics;
 
   countGeometry(statistics, primitive);
+  count2DPositions(statistics, renderResources.runtimePrimitive);
   countMorphTargetAttributes(statistics, primitive);
   countMaterialTextures(statistics, primitive.material);
+  // TODO: count feature ID textures
   countBinaryMetadata(statistics, model);
+
+  // The following stages are not handled here since all the resources are
+  // generated each time draw commands are built:
+  // - PickingPipelineStage
+  // - WireframePipelineStage
+  // - InstancingPipelineStage
 };
 
 function countGeometry(statistics, primitive) {
@@ -71,6 +79,26 @@ function countTriangles(primitiveType, indicesCount) {
       return Math.max(indicesCount - 2, 0);
     default:
       return 0;
+  }
+}
+
+function count2DPositions(statistics, runtimePrimitive) {
+  const buffer2D = runtimePrimitive.positionBuffer2D;
+
+  // The 2D buffer is only created the first time the scene switches to 2D mode.
+  // This means there's two main cases for accounting for 2D positions:
+  // 1. The scene was in 3D mode so positions were never generated from
+  //    positionAttribute.typedArray. In this case, countGeometry() will
+  //    detect the typed array and set hasCpuCopy = true. No memory is counted
+  //    here.
+  // 2. The scene was in 2D mode so positions were generated as a buffer and the
+  //    typed array was discarded. In this case, countGeometry() will set
+  //    hasCpuCopy = false when counting the original POSITION attribute. This
+  //    method will count it with hasCpuCopy = false since the typed array was
+  //    discarded.
+  if (defined(buffer2D)) {
+    const hasCpuCopy = false;
+    statistics.addBuffer(buffer2D, hasCpuCopy);
   }
 }
 
