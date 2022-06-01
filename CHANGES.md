@@ -6,6 +6,7 @@
 
 - Removed individual image-based lighting parameters from `Model` and `Cesium3DTileset`. [#10388](https://github.com/CesiumGS/cesium/pull/10388)
 - Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
+- Removed restriction on enabling `Scene.orderIndependentTranslucency` on iPad and iOS. [#10417](https://github.com/CesiumGS/cesium/pull/10417)
 
 ##### Additions :tada:
 
