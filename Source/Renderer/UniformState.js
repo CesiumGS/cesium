@@ -6,7 +6,6 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import CesiumMath from "../Core/Math.js";
@@ -961,22 +960,6 @@ Object.defineProperties(UniformState.prototype, {
   specularEnvironmentMapsMaximumLOD: {
     get: function () {
       return this._specularEnvironmentMapsMaximumLOD;
-    },
-  },
-
-  /**
-   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
-   * @deprecated Use splitPosition instead.
-   * @memberof UniformState.prototype
-   * @type {Number}
-   */
-  imagerySplitPosition: {
-    get: function () {
-      deprecationWarning(
-        "UniformState.imagerySplitPosition",
-        "czm_imagerySplitPosition has been deprecated in CesiumJS 1.92. It will be removed in CesiumJS 1.94. Use czm_splitPosition instead."
-      );
-      return this._splitPosition;
     },
   },
 
