@@ -1908,7 +1908,7 @@ describe(
           expected.center,
           CesiumMath.EPSILON8
         );
-        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
+        expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
       });
     });
 
@@ -2488,6 +2488,25 @@ describe(
 
         //Setting position to zero should clear the clamped position.
         b.position = Cartesian3.ZERO;
+        expect(b._clampedPosition).toBeUndefined();
+      });
+
+      it("disableDepthTest after another function", function () {
+        const b = billboardsWithHeight.add({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          position: Cartesian3.fromDegrees(-122, 46.0),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        });
+        scene.renderForSpecs();
+        expect(scene.globe.callback).toBeDefined();
+        expect(b._clampedPosition).toBeDefined();
+
+        //After changing disableDepthTestDistance and heightReference, the callback should be undefined
+        b.disableDepthTestDistance = undefined;
+        b.heightReference = HeightReference.NONE;
+
+        scene.renderForSpecs();
+        expect(scene.globe.callback).toBeUndefined();
         expect(b._clampedPosition).toBeUndefined();
       });
 

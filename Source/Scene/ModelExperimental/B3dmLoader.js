@@ -5,7 +5,6 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -44,12 +43,14 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
  * @param {Number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
  */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -66,7 +67,15 @@ function B3dmLoader(options) {
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const loadAttributesAsTypedArray = defaultValue(
+    options.loadAttributesAsTypedArray,
+    false
+  );
+  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
+  const loadIndicesForWireframe = defaultValue(
+    options.loadIndicesForWireframe,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -84,11 +93,13 @@ function B3dmLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
-  this._loadAsTypedArray = loadAsTypedArray;
+  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+  this._loadPositionsFor2D = loadPositionsFor2D;
+  this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = B3dmLoaderState.UNLOADED;
 
-  this._promise = defer();
+  this._promise = undefined;
 
   this._gltfLoader = undefined;
 
@@ -109,17 +120,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(B3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise.<B3dmLoader>}
+   * @type {Promise.<B3dmLoader>|undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
 
@@ -172,6 +183,7 @@ Object.defineProperties(B3dmLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<B3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 B3dmLoader.prototype.load = function () {
@@ -213,7 +225,9 @@ B3dmLoader.prototype.load = function () {
     baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
-    loadAsTypedArray: this._loadAsTypedArray,
+    loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
+    loadPositionsFor2D: this._loadPositionsFor2D,
+    loadIndicesForWireframe: this._loadIndicesForWireframe,
     renameBatchIdSemantic: true,
   });
 
@@ -222,7 +236,7 @@ B3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  gltfLoader.promise
+  this._promise = gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -234,14 +248,16 @@ B3dmLoader.prototype.load = function () {
       that._components = components;
 
       that._state = B3dmLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function handleError(b3dmLoader, error) {
@@ -249,7 +265,7 @@ function handleError(b3dmLoader, error) {
   b3dmLoader._state = B3dmLoaderState.FAILED;
   const errorMessage = "Failed to load b3dm";
   error = b3dmLoader.getError(errorMessage, error);
-  b3dmLoader._promise.reject(error);
+  return Promise.reject(error);
 }
 
 B3dmLoader.prototype.process = function (frameState) {
@@ -296,7 +312,8 @@ function createStructuralMetadata(loader, components) {
 
   // Add the feature ID attribute to the primitives.
   const nodes = components.scene.nodes;
-  for (let i = 0; i < nodes.length; i++) {
+  const length = nodes.length;
+  for (let i = 0; i < length; i++) {
     processNode(nodes[i]);
   }
   components.structuralMetadata = structuralMetadata;
@@ -304,32 +321,25 @@ function createStructuralMetadata(loader, components) {
 
 // Recursive function to add the feature ID attribute to all primitives that have a feature ID vertex attribute.
 function processNode(node) {
-  if (!defined(node.children) && !defined(node.primitives)) {
-    return;
+  const childrenLength = node.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    processNode(node.children[i]);
   }
 
-  let i;
-  if (defined(node.children)) {
-    for (i = 0; i < node.children.length; i++) {
-      processNode(node.children[i]);
-    }
-  }
-
-  if (defined(node.primitives)) {
-    for (i = 0; i < node.primitives.length; i++) {
-      const primitive = node.primitives[i];
-      const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.FEATURE_ID
-      );
-      if (defined(featureIdVertexAttribute)) {
-        featureIdVertexAttribute.setIndex = 0;
-        const featureIdAttribute = new FeatureIdAttribute();
-        featureIdAttribute.propertyTableId = 0;
-        featureIdAttribute.setIndex = 0;
-        featureIdAttribute.positionalLabel = "featureId_0";
-        primitive.featureIds.push(featureIdAttribute);
-      }
+  const primitivesLength = node.primitives.length;
+  for (let i = 0; i < primitivesLength; i++) {
+    const primitive = node.primitives[i];
+    const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.FEATURE_ID
+    );
+    if (defined(featureIdVertexAttribute)) {
+      featureIdVertexAttribute.setIndex = 0;
+      const featureIdAttribute = new FeatureIdAttribute();
+      featureIdAttribute.propertyTableId = 0;
+      featureIdAttribute.setIndex = 0;
+      featureIdAttribute.positionalLabel = "featureId_0";
+      primitive.featureIds.push(featureIdAttribute);
     }
   }
 }

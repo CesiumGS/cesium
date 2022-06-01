@@ -29,6 +29,29 @@
                 "description": "Integer point ID from [0, 20), stored as a float for easier use in shaders. The value increases around one of the circular rings (in the poloidal direction).",
                 "type": "SCALAR",
                 "componentType": "FLOAT32"
+              },
+              "toroidalNormalized": {
+                "description": "toroidal angle normalized in [0.0, 1.0]",
+                "type": "SCALAR",
+                "componentType": "FLOAT32",
+                "scale": 0.034482758620689655
+              },
+              "poloidalNormalized": {
+                "description": "toroidal angle normalized in [0.0, 1.0]",
+                "type": "SCALAR",
+                "componentType": "FLOAT32",
+                "scale": 0.05263157894736842
+              },
+              "toroidalAngle": {
+                "description": "toroidal angle in radians in [0, 2pi]. This is a test of offset/scale with property attribute override",
+                "type": "SCALAR",
+                "componentType": "FLOAT32",
+                "scale": 0.034482758620689655
+              },
+              "poloidalAngle": {
+                "description": "poloidal angle in radians in [-pi, pi]. This is a test of offset/scale with property attribute override",
+                "type": "SCALAR",
+                "scale": 0.05263157894736842
               }
             }
           }
@@ -46,6 +69,21 @@
             },
             "pointId": {
               "attribute": "_FEATURE_ID_1"
+            },
+            "toroidalNormalized": {
+              "attribute": "_FEATURE_ID_0"
+            },
+            "poloidalNormalized": {
+              "attribute": "_FEATURE_ID_1"
+            },
+            "toroidalAngle": {
+              "attribute": "_FEATURE_ID_0",
+              "scale": 0.21666156231653746
+            },
+            "poloidalAngle": {
+              "attribute": "_FEATURE_ID_1",
+              "offset": -3.141592653589793,
+              "scale": 0.3306939635357677
             }
           }
         }

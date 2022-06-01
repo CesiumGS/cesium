@@ -204,7 +204,7 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultClampAnimations
     );
-    model.imageBasedLightingFactor = Property.getValueOrDefault(
+    model.imageBasedLighting.imageBasedLightingFactor = Property.getValueOrDefault(
       modelGraphics._imageBasedLightingFactor,
       time,
       defaultImageBasedLightingFactor
@@ -365,13 +365,17 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   if (model.heightReference === HeightReference.NONE) {
-    BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+    BoundingSphere.transform(
+      model.boundingSphereInternal,
+      model.modelMatrix,
+      result
+    );
   } else {
     if (!defined(model._clampedModelMatrix)) {
       return BoundingSphereState.PENDING;
     }
     BoundingSphere.transform(
-      model.boundingSphere,
+      model.boundingSphereInternal,
       model._clampedModelMatrix,
       result
     );

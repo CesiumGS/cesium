@@ -55,7 +55,7 @@ function Instanced3DModel3DTileContent(
   this._features = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -157,12 +157,12 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -222,11 +222,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     forwardAxis: Axis.X,
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
     pickIdLoaded: getPickIdCallback(content),
-    imageBasedLightingFactor: tileset.imageBasedLightingFactor,
-    lightColor: tileset.lightColor,
-    luminanceAtZenith: tileset.luminanceAtZenith,
-    sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-    specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+    imageBasedLighting: tileset.imageBasedLighting,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
     showCreditsOnScreen: tileset.showCreditsOnScreen,
@@ -544,13 +540,11 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
   this._modelInstanceCollection.shadows = this._tileset.shadows;
   this._modelInstanceCollection.lightColor = this._tileset.lightColor;
-  this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
-  this._modelInstanceCollection.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
-  this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
-  this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._modelInstanceCollection.imageBasedLighting = this._tileset.imageBasedLighting;
   this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
   this._modelInstanceCollection.showCreditsOnScreen = this._tileset.showCreditsOnScreen;
+  this._modelInstanceCollection.splitDirection = this._tileset.splitDirection;
 
   const model = this._modelInstanceCollection._model;
 

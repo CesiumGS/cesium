@@ -259,8 +259,8 @@ describe("Scene/CameraEventAggregator", function () {
 
     const downTime = handler.getButtonPressTime(CameraEventType.LEFT_DRAG);
     expect(downTime).toBeDefined();
-    expect(downTime.getTime()).toBeGreaterThanOrEqualTo(before.getTime());
-    expect(downTime.getTime()).toBeLessThanOrEqualTo(after.getTime());
+    expect(downTime.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(downTime.getTime()).toBeLessThanOrEqual(after.getTime());
   });
 
   it("getButtonReleaseTime", function () {
@@ -280,8 +280,8 @@ describe("Scene/CameraEventAggregator", function () {
 
     const upTime = handler.getButtonReleaseTime(CameraEventType.LEFT_DRAG);
     expect(upTime).toBeDefined();
-    expect(upTime.getTime()).toBeGreaterThanOrEqualTo(before.getTime());
-    expect(upTime.getTime()).toBeLessThanOrEqualTo(after.getTime());
+    expect(upTime.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(upTime.getTime()).toBeLessThanOrEqual(after.getTime());
   });
 
   it("aggregates events", function () {

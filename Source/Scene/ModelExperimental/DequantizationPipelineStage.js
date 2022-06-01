@@ -29,10 +29,15 @@ DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS =
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive
+ * @param {FrameState} frameState The frame state.
  *
  * @private
  */
-DequantizationPipelineStage.process = function (renderResources, primitive) {
+DequantizationPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addFunction(
     DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
@@ -51,9 +56,10 @@ DequantizationPipelineStage.process = function (renderResources, primitive) {
     const attribute = attributes[i];
     const quantization = attribute.quantization;
     if (!defined(quantization)) {
-      // non-quantized attributes were already handled in GeometryPipelineStage
+      // Non-quantized attributes were already handled in GeometryPipelineStage
       continue;
     }
+
     const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
     updateDequantizationFunction(shaderBuilder, attributeInfo);
     addDequantizationUniforms(renderResources, attributeInfo);

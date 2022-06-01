@@ -1,7 +1,10 @@
 import BlendingState from "../BlendingState.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
@@ -13,6 +16,8 @@ import VertexArray from "../../Renderer/VertexArray.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ShadowMode from "../ShadowMode.js";
+import SceneMode from "../SceneMode.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -32,50 +37,65 @@ export default function buildDrawCommands(
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  const indexBuffer = defined(primitiveRenderResources.indices)
-    ? primitiveRenderResources.indices.buffer
-    : undefined;
+  const model = primitiveRenderResources.model;
+  const context = frameState.context;
+
+  const indexBuffer = getIndexBuffer(primitiveRenderResources, frameState);
 
   const vertexArray = new VertexArray({
-    context: frameState.context,
+    context: context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
 
-  const model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
-
-  let renderState = primitiveRenderResources.renderStateOptions;
-
-  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
-    // Set stencil values for classification on 3D Tiles
-    renderState = clone(renderState, true);
-    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  renderState = RenderState.fromCache(renderState);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
-
   const sceneGraph = model.sceneGraph;
-  const modelMatrix = Matrix4.multiply(
+
+  const modelMatrix = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
-    primitiveRenderResources.transform,
+    primitiveRenderResources.runtimeNode.computedTransform,
     new Matrix4()
   );
 
-  BoundingSphere.transform(
-    primitiveRenderResources.boundingSphere,
-    modelMatrix,
-    primitiveRenderResources.boundingSphere
+  let boundingSphere;
+  if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
+    boundingSphere = runtimePrimitive.boundingSphere2D;
+  } else {
+    boundingSphere = BoundingSphere.transform(
+      primitiveRenderResources.boundingSphere,
+      modelMatrix,
+      primitiveRenderResources.boundingSphere
+    );
+  }
+
+  // Initialize render state with default values
+  let renderState = clone(
+    RenderState.fromCache(primitiveRenderResources.renderStateOptions),
+    true
   );
 
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    // Set stencil values for classification on 3D Tiles
+    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  renderState.cull.face = ModelExperimentalUtility.getCullFace(
+    modelMatrix,
+    primitiveRenderResources.primitiveType
+  );
+  renderState = RenderState.fromCache(renderState);
+
+  const count = primitiveRenderResources.count;
+
   const command = new DrawCommand({
-    boundingVolume: primitiveRenderResources.boundingSphere,
+    boundingVolume: boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
@@ -83,7 +103,7 @@ export default function buildDrawCommands(
     shaderProgram: shaderProgram,
     cull: model.cull,
     pass: pass,
-    count: primitiveRenderResources.count,
+    count: count,
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
@@ -152,4 +172,35 @@ function deriveTranslucentCommand(command) {
   rs.blending = BlendingState.ALPHA_BLEND;
   derivedCommand.renderState = RenderState.fromCache(rs);
   return derivedCommand;
+}
+
+/**
+ * @private
+ */
+function getIndexBuffer(primitiveRenderResources, frameState) {
+  const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
+  if (defined(wireframeIndexBuffer)) {
+    return wireframeIndexBuffer;
+  }
+
+  const indices = primitiveRenderResources.indices;
+  if (!defined(indices)) {
+    return undefined;
+  }
+
+  if (defined(indices.buffer)) {
+    return indices.buffer;
+  }
+
+  const typedArray = indices.typedArray;
+  const indexDatatype = IndexDatatype.fromSizeInBytes(
+    typedArray.BYTES_PER_ELEMENT
+  );
+
+  return Buffer.createIndexBuffer({
+    context: frameState.context,
+    typedArray: typedArray,
+    usage: BufferUsage.STATIC_DRAW,
+    indexDatatype: indexDatatype,
+  });
 }

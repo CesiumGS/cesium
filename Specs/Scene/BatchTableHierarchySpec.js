@@ -1,4 +1,8 @@
-import { BatchTableHierarchy, Cartesian2 } from "../../Source/Cesium.js";
+import {
+  BatchTableHierarchy,
+  Cartesian2,
+  RuntimeError,
+} from "../../Source/Cesium.js";
 
 describe("Scene/BatchTableHierarchy", function () {
   const hierarchyExtension = {
@@ -102,7 +106,7 @@ describe("Scene/BatchTableHierarchy", function () {
         extension: missingType,
         binaryBody: binaryBody,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
 
     const missingComponentType = {
       classes: [
@@ -128,7 +132,7 @@ describe("Scene/BatchTableHierarchy", function () {
         extension: missingComponentType,
         binaryBody: binaryBody,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if binaryBody is needed and not provided", function () {
@@ -156,7 +160,7 @@ describe("Scene/BatchTableHierarchy", function () {
       return new BatchTableHierarchy({
         extension: hierarchyExtension,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("hasProperty returns true if the feature has this property", function () {

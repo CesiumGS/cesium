@@ -577,11 +577,13 @@ describe("Core/Matrix3", function () {
   });
 
   it("setScale works", function () {
-    const matrix = Matrix3.clone(Matrix3.IDENTITY);
-    const result = new Matrix3();
-    const newScale = new Cartesian3(2.0, 3.0, 4.0);
+    const oldScale = new Cartesian3(2.0, 3.0, 4.0);
+    const newScale = new Cartesian3(5.0, 6.0, 7.0);
 
-    expect(Matrix3.getScale(matrix, new Cartesian3())).toEqual(Cartesian3.ONE);
+    const matrix = Matrix3.fromScale(oldScale, new Matrix3());
+    const result = new Matrix3();
+
+    expect(Matrix3.getScale(matrix, new Cartesian3())).toEqual(oldScale);
 
     const returnedResult = Matrix3.setScale(matrix, newScale, result);
 
@@ -1640,7 +1642,7 @@ describe("Core/Matrix3", function () {
       1, 2, 3,
       4, 5, 6,
       7, 8, 9
-    ), 
+    ),
     [1, 4, 7, 2, 5, 8, 3, 6, 9,]
   );
 

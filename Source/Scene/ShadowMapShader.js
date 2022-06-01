@@ -63,6 +63,8 @@ ShadowMapShader.createShadowCastFragmentShader = function (
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
 
+  defines.push("SHADOW_MAP");
+
   let positionVaryingName = ShaderSource.findPositionVarying(fs);
   const hasPositionVarying = defined(positionVaryingName);
   if (!hasPositionVarying) {

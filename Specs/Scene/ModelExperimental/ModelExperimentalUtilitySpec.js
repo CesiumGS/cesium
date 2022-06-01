@@ -1,12 +1,13 @@
 import {
   AttributeType,
+  Axis,
   Cartesian3,
-  Math as CesiumMath,
+  CullFace,
   InstanceAttributeSemantic,
   Matrix4,
   ModelExperimentalUtility,
+  PrimitiveType,
   Quaternion,
-  TranslationRotationScale,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 
@@ -187,68 +188,87 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     });
   });
 
-  it("createBoundingSphere works", function () {
+  it("getPositionMinMax works", function () {
+    const attributes = [
+      {
+        semantic: "POSITION",
+        max: new Cartesian3(0.5, 0.5, 0.5),
+        min: new Cartesian3(-0.5, -0.5, -0.5),
+      },
+    ];
     const mockPrimitive = {
-      attributes: [
-        {
-          semantic: "POSITION",
-          max: new Cartesian3(0.5, 0.5, 0.5),
-          min: new Cartesian3(-0.5, -0.5, -0.5),
-        },
-      ],
+      attributes: attributes,
     };
-    const translation = new Cartesian3(50, 50, 50);
 
-    const modelMatrix = Matrix4.fromTranslationRotationScale(
-      new TranslationRotationScale(
-        translation,
-        Quaternion.IDENTITY,
-        new Cartesian3(1, 1, 1)
-      )
-    );
-    const boundingSphere = ModelExperimentalUtility.createBoundingSphere(
-      mockPrimitive,
-      modelMatrix
-    );
+    const minMax = ModelExperimentalUtility.getPositionMinMax(mockPrimitive);
 
-    expect(boundingSphere.center).toEqual(translation);
-    expect(boundingSphere.radius).toEqualEpsilon(
-      0.8660254037844386,
-      CesiumMath.EPSILON8
-    );
+    expect(minMax.min).toEqual(attributes[0].min);
+    expect(minMax.max).toEqual(attributes[0].max);
   });
 
-  it("createBoundingSphere works with instancing", function () {
+  it("getPositionMinMax works with instancing", function () {
+    const attributes = [
+      {
+        semantic: "POSITION",
+        max: new Cartesian3(0.5, 0.5, 0.5),
+        min: new Cartesian3(-0.5, -0.5, -0.5),
+      },
+    ];
     const mockPrimitive = {
-      attributes: [
-        {
-          semantic: "POSITION",
-          max: new Cartesian3(0.5, 0.5, 0.5),
-          min: new Cartesian3(-0.5, -0.5, -0.5),
-        },
-      ],
+      attributes: attributes,
     };
-    const translation = new Cartesian3(50, 50, 50);
 
-    const modelMatrix = Matrix4.fromTranslationRotationScale(
-      new TranslationRotationScale(
-        translation,
-        Quaternion.IDENTITY,
-        new Cartesian3(1, 1, 1)
-      )
-    );
-    const boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+    const minMax = ModelExperimentalUtility.getPositionMinMax(
       mockPrimitive,
-      modelMatrix,
-      new Cartesian3(5, 5, 5),
-      new Cartesian3(-5, -5, -5)
+      new Cartesian3(-5, -5, -5),
+      new Cartesian3(5, 5, 5)
     );
 
-    expect(boundingSphere.center).toEqual(translation);
-    expect(boundingSphere.radius).toEqualEpsilon(
-      9.526279441628825,
-      CesiumMath.EPSILON8
+    const expectedMin = new Cartesian3(-5.5, -5.5, -5.5);
+    const expectedMax = new Cartesian3(5.5, 5.5, 5.5);
+    expect(minMax.min).toEqual(expectedMin);
+    expect(minMax.max).toEqual(expectedMax);
+  });
+
+  it("getAxisCorrectionMatrix works", function () {
+    const expectedYToZMatrix = Axis.Y_UP_TO_Z_UP;
+    const expectedXToZMatrix = Axis.X_UP_TO_Z_UP;
+    const expectedCombinedMatrix = Matrix4.multiplyTransformation(
+      expectedYToZMatrix,
+      Axis.Z_UP_TO_X_UP,
+      new Matrix4()
     );
+
+    // If already in ECEF, this should return identity
+    let resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Z,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, Matrix4.IDENTITY)).toBe(true);
+
+    // This is the most common case, glTF uses y-up, z-forward
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Y,
+      Axis.Z,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
+
+    // Other cases
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.Y,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
+
+    resultMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+      Axis.X,
+      Axis.Y,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedXToZMatrix)).toBe(true);
   });
 
   it("getAttributeBySemantic works", function () {
@@ -373,5 +393,33 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expect(
       ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "other")
     ).not.toBeDefined();
+  });
+
+  function expectCullFace(matrix, primitiveType, cullFace) {
+    expect(ModelExperimentalUtility.getCullFace(matrix, primitiveType)).toBe(
+      cullFace
+    );
+  }
+
+  it("getCullFace returns CullFace.BACK when primitiveType is not triangles", function () {
+    const matrix = Matrix4.fromUniformScale(-1.0);
+    expectCullFace(matrix, PrimitiveType.POINTS, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINES, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINE_LOOP, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINE_STRIP, CullFace.BACK);
+  });
+
+  it("getCullFace return CullFace.BACK when determinant is greater than zero", function () {
+    const matrix = Matrix4.IDENTITY;
+    expectCullFace(matrix, PrimitiveType.TRIANGLES, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_STRIP, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_FAN, CullFace.BACK);
+  });
+
+  it("getCullFace return CullFace.FRONT when determinant is less than zero", function () {
+    const matrix = Matrix4.fromUniformScale(-1.0);
+    expectCullFace(matrix, PrimitiveType.TRIANGLES, CullFace.FRONT);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_STRIP, CullFace.FRONT);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_FAN, CullFace.FRONT);
   });
 });

@@ -1499,7 +1499,7 @@ Matrix4.setScale = function (matrix, scale, result) {
   const existingScale = Matrix4.getScale(matrix, scaleScratch1);
   const scaleRatioX = scale.x / existingScale.x;
   const scaleRatioY = scale.y / existingScale.y;
-  const scaleRatioZ = scale.z / existingScale.y;
+  const scaleRatioZ = scale.z / existingScale.z;
 
   result[0] = matrix[0] * scaleRatioX;
   result[1] = matrix[1] * scaleRatioX;

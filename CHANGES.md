@@ -1,24 +1,109 @@
 # Change Log
 
+### 1.94 - 2022-06-01
+
+##### Breaking Changes :mega:
+
+- Removed individual image-based lighting parameters from `Model` and `Cesium3DTileset`. [#10388](https://github.com/CesiumGS/cesium/pull/10388)
+- Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
+- Removed `ImagerySplitPosition` and `Scene.imagerySplitPosition`. Use `SplitDirection` and `Scene.splitPosition` instead.[#10418](https://github.com/CesiumGS/cesium/pull/10418)
+- Removed restriction on enabling `Scene.orderIndependentTranslucency` on iPad and iOS. [#10417](https://github.com/CesiumGS/cesium/pull/10417)
+
+##### Additions :tada:
+
+- Added `Cesium3DTileStyle.fromUrl` for loading a style from a url. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
+- Added `IndexDatatype.fromTypedArray`. [#10350](https://github.com/CesiumGS/cesium/pull/10350)
+- Added `ModelAnimationCollection.animateWhilePaused` and `ModelAnimation.animationTime` to allow explicit control over a model's animations. [#9339](https://github.com/CesiumGS/cesium/pull/9339)
+- Replaced `options.gltf` with `options.url` in `ModelExperimental.fromGltf`. [#10371](https://github.com/CesiumGS/cesium/pull/10371)
+- Added support for 2D / CV mode for non-instanced tilesets rendered with `ModelExperimental`. [#10384](https://github.com/CesiumGS/cesium/pull/10384)
+- Added `PolygonGraphics.textureCoordinates`, `PolygonGeometry.textureCoordinates`, `CoplanarPolygonGeometry.textureCoordinates`, which override the default `stRotation`-based texture coordinate calculation behaviour with the provided texture coordinates, specified in the form of a `PolygonHierarchy` of `Cartesian2` points. [#10109](https://github.com/CesiumGS/cesium/pull/10109)
+
+##### Fixes :wrench:
+
+- Fixed the rendering issues related to order-independent translucency on iOS devices. [#10417](https://github.com/CesiumGS/cesium/pull/10417)
+- Fixed the inaccurate computation of bounding spheres for models not centered at (0,0,0) in their local space. [#10395](https://github.com/CesiumGS/cesium/pull/10395)
+- Fixed the inaccurate computation of bounding spheres for `ModelExperimental`. [#10339](https://github.com/CesiumGS/cesium/pull/10339/)
+- Fixed error when destroying a 3D tileset before it has finished loading. [#10363](Fixes https://github.com/CesiumGS/cesium/issues/10363)
+- Fixed race condition which can occur when updating `Cesium3DTileStyle` before its `readyPromise` has resolved. [#10345](https://github.com/CesiumGS/cesium/issues/10345)
+- Fixed label background rendering. [#10342](https://github.com/CesiumGS/cesium/issues/10342)
+- Enabled support for loading web assembly modules in Edge. [#6541](https://github.com/CesiumGS/cesium/pull/6541)
+- Fixed crash for zero-area `region` bounding volumes in a 3D Tileset. [#10351](https://github.com/CesiumGS/cesium/pull/10351)
+- Fixed `Cesium3DTileset.debugShowUrl` so that it works for implicit tiles too. [#10372](https://github.com/CesiumGS/cesium/issues/10372)
+- Fixed crash when loading a tileset without a metadata schema but has external tilesets with tile or content metadata. [#10387](https://github.com/CesiumGS/cesium/pull/10387)
+- Fixed winding order for negatively scaled models in `ModelExperimental`. [#10405](https://github.com/CesiumGS/cesium/pull/10405)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- Support for glTF 1.0 assets has been deprecated and will be removed in CesiumJS 1.95. Please convert any glTF 1.0 assets to glTF 2.0. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- Support for the glTF extension `KHR_techniques_webgl` has been deprecated and will be removed in CesiumJS 1.95. If custom GLSL shaders are needed, use `CustomShader` instead. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) were deprecate in CesiumJS 1.94 and will be removed in CesiumJS 1.95. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
+- `Model.boundingSphere` currently returns results in the model's local coordinate system, but in CesiumJS 1.95 it will be changed to return results in ECEF coordinates. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
+- `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
+- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
+
+### 1.93 - 2022-05-02
+
+##### Breaking Changes :mega:
+
+- Temporarily disable `Scene.orderIndependentTranslucency` by default on iPad and iOS due to a WebGL regression, see [#9827](https://github.com/CesiumGS/cesium/issues/9827). The old default will be restored once the issue has been resolved.
+
+##### Additions :tada:
+
+- Improved rendering of ground and sky atmosphere. [#10063](https://github.com/CesiumGS/cesium/pull/10063)
+- Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
+- Added support for skins in `ModelExperimental`. [#10282](https://github.com/CesiumGS/cesium/pull/10282)
+- Added support for animations in `ModelExperimental`. [#10314](https://github.com/CesiumGS/cesium/pull/10314)
+- Added `debugWireframe` to `ModelExperimental`. [#10332](https://github.com/CesiumGS/cesium/pull/10332)
+- Added `GeoJsonSource.process` to support adding features without removing existing entities, similar to `CzmlDataSource.process`. [#9275](https://github.com/CesiumGS/cesium/issues/9275)
+- `KmlDataSource` now exposes the `camera` and `canvas` properties, which are used to provide information about the state of the `Viewer` when making network requests for a [`Link`](https://developers.google.com/kml/documentation/kmlreference#link). Passing these values in the constructor is now optional.
+- Prevent text selection in the Timeline widget. [#10325](https://github.com/CesiumGS/cesium/pull/10325)
+
+##### Fixes :wrench:
+
+- Fixed `GoogleEarthEnterpriseImageryProvider.requestImagery`, `GridImageryProvider.requestImagery`, and `TileCoordinateImageryProvider.requestImagery` return types to match interface. [#10265](https://github.com/CesiumGS/cesium/issues/10265)
+- Various property and return TypeScript definitions were corrected, and the `Event` class was made generic in order to support strongly typed event callbacks. [#10292](https://github.com/CesiumGS/cesium/pull/10292)
+- Fixed debug label rendering in `Cesium3dTilesInspector`. [#10246](https://github.com/CesiumGS/cesium/issues/10246)
+- Fixed a crash that occurred in `ModelExperimental` when loading a Draco-compressed model with tangents. [#10294](https://github.com/CesiumGS/cesium/pull/10294)
+- Fixed an incorrect model matrix computation for `i3dm` tilesets that are loaded using `ModelExperimental`. [#10302](https://github.com/CesiumGS/cesium/pull/10302)
+- Fixed race condition during billboard clamping when the height reference changes. [#10191](https://github.com/CesiumGS/cesium/issues/10191)
+- Fixed ability to run `test` and other support tasks from within the release zip file. [#10311](https://github.com/CesiumGS/cesium/pull/10311)
+
 ### 1.92 - 2022-04-01
 
 ##### Breaking Changes :mega:
 
-- Removed `Cesium.when`. Any `Promise`in the Cesium API has changed to the native `Promise` API. Code bases using cesium will likely need updates after this change. See the [upgrade guide](https://community.cesium.com/t/cesiumjs-is-switching-from-when-js-to-native-promises-which-will-be-a-breaking-change-in-1-92/17213) for instructions on how to update your code base to be compliant with native promises.
+- Removed `Cesium.when`. Any `Promise` in the Cesium API has changed to the native `Promise` API. Code bases using cesium will likely need updates after this change. See the [upgrade guide](https://community.cesium.com/t/cesiumjs-is-switching-from-when-js-to-native-promises-which-will-be-a-breaking-change-in-1-92/17213) for instructions on how to update your code base to be compliant with native promises.
 - `ArcGisMapServerImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
 - `SingleTileImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
 
 ##### Additions :tada:
 
+- Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). [#10189](https://github.com/CesiumGS/cesium/pull/10189)
+- Added support for `EXT_structural_metadata` property attributes in `CustomShader` [#10228](https://github.com/CesiumGS/cesium/pull/10228)
+- Added partial support for `EXT_structural_metadata` property textures in `CustomShader` [#10247](https://github.com/CesiumGS/cesium/pull/10247)
+- Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
+- `Cesium3DTileset` now has a `splitDirection` property, allowing the tileset to only be drawn on the left or right side of the screen. This is useful for visual comparison of tilesets. [#10193](https://github.com/CesiumGS/cesium/pull/10193)
+- Added `lightColor` to `ModelExperimental` [#10207](https://github.com/CesiumGS/cesium/pull/10207)
+- Added image-based lighting to `ModelExperimental`. [#10234](https://github.com/CesiumGS/cesium/pull/10234)
+- Added clipping planes to `ModelExperimental`. [#10250](https://github.com/CesiumGS/cesium/pull/10250)
 - Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
-- Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). #10189
+- Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance. [#10186](https://github.com/CesiumGS/cesium/pull/10186)
+- Refactored metadata API so `tileset.metadata` and `content.group.metadata` are more symmetric with `content.metadata` and `tile.metadata`. [#10224](https://github.com/CesiumGS/cesium/pull/10224)
 
 ##### Fixes :wrench:
 
+- Fixed `Scene` documentation for `msaaSamples` property. [#10205](https://github.com/CesiumGS/cesium/pull/10205)
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
-- Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9191](https://github.com/CesiumGS/cesium/pull/9191)
 - Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
+- Fixed evaluation of `minimumLevel` on metadataFailure for TileMapServiceImageryProvider. [#10198](https://github.com/CesiumGS/cesium/pull/10198)
+- Fixed a bug where models without normals would render as solid black. Now, such models will use unlit shading. [#10237](https://github.com/CesiumGS/cesium/pull/10237)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `ImagerySplitDirection` and `Scene.imagerySplitPosition` have been deprecated and will be removed in CesiumJS 1.94. Use `SplitDirection` and `Scene.splitPosition` instead.
+- Tilesets and models should now specify image-based lighting parameters in `ImageBasedLighting` instead of as individual options. The individual parameters are deprecated and will be removed in CesiumJS 1.94. [#10226](https://github.com/CesiumGS/cesium/pull/10226)
 
 ### 1.91 - 2022-03-01
 

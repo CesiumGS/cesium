@@ -1,7 +1,5 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -10,6 +8,7 @@ import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import ImageBasedLighting from "./ImageBasedLighting.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Resource from "../Core/Resource.js";
@@ -27,6 +26,7 @@ import ModelInstance from "./ModelInstance.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
 
 const LoadState = {
   NEEDS_LOAD: 0,
@@ -58,13 +58,11 @@ const LoadState = {
  * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from light sources.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this collection.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
  * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
@@ -144,6 +142,17 @@ function ModelInstanceCollection(options) {
 
   this._pickIdLoaded = options.pickIdLoaded;
 
+  /**
+   * The {@link SplitDirection} to apply to this collection.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
+
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
     false
@@ -153,15 +162,14 @@ function ModelInstanceCollection(options) {
   this.debugWireframe = defaultValue(options.debugWireframe, false);
   this._debugWireframe = false;
 
-  this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
-  Cartesian2.clone(
-    options.imageBasedLightingFactor,
-    this._imageBasedLightingFactor
-  );
-  this.lightColor = options.lightColor;
-  this.luminanceAtZenith = options.luminanceAtZenith;
-  this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
-  this.specularEnvironmentMaps = options.specularEnvironmentMaps;
+  if (defined(options.imageBasedLighting)) {
+    this._imageBasedLighting = options.imageBasedLighting;
+    this._shouldDestroyImageBasedLighting = false;
+  } else {
+    this._imageBasedLighting = new ImageBasedLighting();
+    this._shouldDestroyImageBasedLighting = true;
+  }
+
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCulling = this.backFaceCulling;
   this.showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
@@ -193,35 +201,21 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
       return this._readyPromise.promise;
     },
   },
-  imageBasedLightingFactor: {
+  imageBasedLighting: {
     get: function () {
-      return this._imageBasedLightingFactor;
+      return this._imageBasedLighting;
     },
     set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLightingFactor", value);
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        1.0
-      );
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        1.0
-      );
-      //>>includeEnd('debug');
-      Cartesian2.clone(value, this._imageBasedLightingFactor);
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+      }
     },
   },
 });
@@ -414,7 +408,7 @@ function getVertexShaderCallback(collection) {
       `    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n${globalVarsMain}    czm_instancing_main();\n${pickVarying}}\n`;
 
     if (usesBatchTable) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -434,7 +428,7 @@ function getFragmentShaderCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -495,7 +489,7 @@ function getUniformMapCallback(collection, context) {
 function getVertexShaderNonInstancedCallback(collection) {
   return function (vs, programId) {
     if (defined(collection._batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -516,7 +510,7 @@ function getFragmentShaderNonInstancedCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -675,11 +669,7 @@ function createModel(collection, context) {
     pickIdLoaded: collection._pickIdLoaded,
     ignoreCommands: true,
     opaquePass: collection._opaquePass,
-    imageBasedLightingFactor: collection.imageBasedLightingFactor,
-    lightColor: collection.lightColor,
-    luminanceAtZenith: collection.luminanceAtZenith,
-    sphericalHarmonicCoefficients: collection.sphericalHarmonicCoefficients,
-    specularEnvironmentMaps: collection.specularEnvironmentMaps,
+    imageBasedLighting: collection._imageBasedLighting,
     showOutline: collection.showOutline,
     showCreditsOnScreen: collection.showCreditsOnScreen,
   };
@@ -1042,12 +1032,9 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   const instancingSupported = this._instancingSupported;
   const model = this._model;
 
-  model.imageBasedLightingFactor = this.imageBasedLightingFactor;
-  model.lightColor = this.lightColor;
-  model.luminanceAtZenith = this.luminanceAtZenith;
-  model.sphericalHarmonicCoefficients = this.sphericalHarmonicCoefficients;
-  model.specularEnvironmentMaps = this.specularEnvironmentMaps;
+  model.imageBasedLighting = this._imageBasedLighting;
   model.showCreditsOnScreen = this.showCreditsOnScreen;
+  model.splitDirection = this.splitDirection;
 
   model.update(frameState);
 
@@ -1057,8 +1044,8 @@ ModelInstanceCollection.prototype.update = function (frameState) {
 
     // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
     const modelRadius =
-      model.boundingSphere.radius +
-      Cartesian3.magnitude(model.boundingSphere.center);
+      model.boundingSphereInternal.radius +
+      Cartesian3.magnitude(model.boundingSphereInternal.center);
     this._boundingSphere.radius += modelRadius;
     this._modelCommands = getModelCommands(model);
 
@@ -1152,6 +1139,14 @@ ModelInstanceCollection.prototype.destroy = function () {
       pickIds[i].destroy();
     }
   }
+
+  if (
+    this._shouldDestroyImageBasedLighting &&
+    !this._imageBasedLighting.isDestroyed()
+  ) {
+    this._imageBasedLighting.destroy();
+  }
+  this._imageBasedLighting = undefined;
 
   return destroyObject(this);
 };

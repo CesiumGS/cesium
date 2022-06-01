@@ -1,6 +1,5 @@
 import {
   clone,
-  defer,
   GltfBufferViewLoader,
   GltfStructuralMetadataLoader,
   GltfTextureLoader,
@@ -484,10 +483,20 @@ describe(
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
-      const deferredPromise = defer();
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        deferredPromise.promise
-      );
+
+      let promise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          const error = new Error("404 Not Found");
+          reject(error);
+          return;
+        }
+        resolve(schemaJson);
+      });
+      if (rejectPromise) {
+        // handle the error so Jasmine doesn't fail the test
+        promise = promise.catch(function () {});
+      }
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
 
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
@@ -519,6 +528,11 @@ describe(
         resource: schemaResource,
       });
 
+      if (rejectPromise) {
+        // handle the error so Jasmine doesn't fail the test
+        schemaCopy.promise.catch(function () {});
+      }
+
       structuralMetadataLoaderCopy.load();
 
       return waitForLoaderProcess(structuralMetadataLoaderCopy, scene).then(
@@ -536,12 +550,6 @@ describe(
           expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
           structuralMetadataLoader.load();
           structuralMetadataLoader.destroy();
-
-          if (rejectPromise) {
-            deferredPromise.reject(new Error());
-          } else {
-            deferredPromise.resolve(schemaJson);
-          }
 
           expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
           expect(structuralMetadataLoader.isDestroyed()).toBe(true);

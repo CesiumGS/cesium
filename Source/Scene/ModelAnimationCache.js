@@ -1,14 +1,15 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import ConstantSpline from "../Core/ConstantSpline.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import LinearSpline from "../Core/LinearSpline.js";
 import Matrix4 from "../Core/Matrix4.js";
+import MorphWeightSpline from "../Core/MorphWeightSpline.js";
 import Quaternion from "../Core/Quaternion.js";
 import QuaternionSpline from "../Core/QuaternionSpline.js";
 import Spline from "../Core/Spline.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
-import WeightSpline from "../Core/WeightSpline.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import AttributeType from "./AttributeType.js";
@@ -21,7 +22,7 @@ function ModelAnimationCache() {}
 const dataUriRegex = /^data\:/i;
 
 function getAccessorKey(model, accessor) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const buffers = gltf.buffers;
   const bufferViews = gltf.bufferViews;
 
@@ -43,7 +44,7 @@ ModelAnimationCache.getAnimationParameterValues = function (model, accessor) {
 
   if (!defined(values)) {
     // Cache miss
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
 
     const buffers = gltf.buffers;
     const bufferViews = gltf.bufferViews;
@@ -94,19 +95,6 @@ const cachedAnimationSplines = {};
 function getAnimationSplineKey(model, animationName, samplerName) {
   return `${model.cacheKey}//${animationName}/${samplerName}`;
 }
-
-function ConstantSpline(value) {
-  this._value = value;
-}
-ConstantSpline.prototype.evaluate = function (time, result) {
-  return this._value;
-};
-ConstantSpline.prototype.wrapTime = function (time) {
-  return 0.0;
-};
-ConstantSpline.prototype.clampTime = function (time) {
-  return 0.0;
-};
 
 function SteppedSpline(backingSpline) {
   this._spline = backingSpline;
@@ -170,7 +158,7 @@ ModelAnimationCache.getAnimationSpline = function (
           points: controlPoints,
         });
       } else if (path === "weights") {
-        spline = new WeightSpline({
+        spline = new MorphWeightSpline({
           times: times,
           weights: controlPoints,
         });
@@ -198,7 +186,7 @@ ModelAnimationCache.getSkinInverseBindMatrices = function (model, accessor) {
 
   if (!defined(matrices)) {
     // Cache miss
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
     const buffers = gltf.buffers;
     const bufferViews = gltf.bufferViews;
 

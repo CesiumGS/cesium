@@ -58,7 +58,7 @@
       Edge styling enabled
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Use clipping planes to selectively hide parts of the globe surface.
@@ -290,8 +290,6 @@
           });
           return tileset.readyPromise
             .then(function () {
-              tileset.pointCloudShading.attenuation = true;
-
               // Adjust height so tileset is in terrain
               const cartographic = Cesium.Cartographic.fromCartesian(
                 tileset.boundingSphere.center
@@ -405,10 +403,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

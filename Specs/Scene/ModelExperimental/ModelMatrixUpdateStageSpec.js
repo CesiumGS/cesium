@@ -1,9 +1,11 @@
 import {
   BoundingSphere,
   Cartesian3,
+  CullFace,
   Matrix4,
   Math as CesiumMath,
   ResourceCache,
+  Quaternion,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -28,7 +30,7 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("updates leaf nodes", function () {
+    it("updates leaf nodes using node transform setter", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: airplane,
@@ -40,8 +42,9 @@ describe(
         const primitive = node.runtimePrimitives[0];
         const drawCommand = primitive.drawCommands[0];
 
-        const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
+        const expectedOriginalTransform = Matrix4.clone(node.transform);
         expect(node._transformDirty).toEqual(false);
+
         const translation = new Cartesian3(0, 5, 0);
         node.transform = Matrix4.multiplyByTranslation(
           node.transform,
@@ -49,17 +52,15 @@ describe(
           new Matrix4()
         );
         expect(node._transformDirty).toEqual(true);
+        expect(
+          Matrix4.equals(node.originalTransform, expectedOriginalTransform)
+        ).toBe(true);
+
         const expectedComputedTransform = Matrix4.multiplyTransformation(
           sceneGraph.computedModelMatrix,
           node.transform,
           new Matrix4()
         );
-        expect(
-          Matrix4.equals(node.computedTransform, expectedComputedTransform)
-        ).toBe(true);
-        expect(
-          Matrix4.equals(node.originalTransform, expectedOriginalTransform)
-        ).toBe(true);
 
         const expectedModelMatrix = Matrix4.multiplyByTranslation(
           drawCommand.modelMatrix,
@@ -102,20 +103,12 @@ describe(
       );
       expect(node._transformDirty).toEqual(true);
 
-      const expectedComputedTransform = Matrix4.multiplyTransformation(
-        sceneGraph.computedModelMatrix,
-        node.transform,
-        new Matrix4()
-      );
-      expect(
-        Matrix4.equals(node.computedTransform, expectedComputedTransform)
-      ).toBe(true);
       expect(
         Matrix4.equals(node.originalTransform, expectedOriginalTransform)
       ).toBe(true);
     }
 
-    it("updates nodes with children", function () {
+    it("updates nodes with children using node transform setter", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: airplane,
@@ -125,11 +118,11 @@ describe(
         const sceneGraph = model._sceneGraph;
 
         // The root node is transformed.
-        const rootNode = sceneGraph._runtimeNodes[2];
+        const rootNode = sceneGraph._runtimeNodes[1];
         // The static child node is not transformed relative to the parent.
-        const staticChildNode = sceneGraph._runtimeNodes[0];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
         // The transformed child node is transformed relative to the parent.
-        const transformedChildNode = sceneGraph._runtimeNodes[1];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
 
         const childTransformation = Matrix4.fromTranslation(
           new Cartesian3(0, 5, 0)
@@ -184,6 +177,183 @@ describe(
             expectedTransformedChildModelMatrix
           )
         ).toBe(true);
+      });
+    });
+
+    it("updates with new model matrix", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rotation = Quaternion.fromAxisAngle(
+          Cartesian3.UNIT_Y,
+          CesiumMath.toRadians(180)
+        );
+        const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+          new Cartesian3(10, 0, 0),
+          rotation,
+          new Cartesian3(1, 1, 1)
+        );
+
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
+        const transformedChildPrimitive =
+          transformedChildNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const transformedChildDrawCommand =
+          transformedChildPrimitive.drawCommands[0];
+
+        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+          modelMatrix,
+          rootDrawCommand.modelMatrix,
+          new Matrix4()
+        );
+        const expectedStaticChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          staticChildNode.transform,
+          new Matrix4()
+        );
+        const expectedTransformedChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          transformedChildNode.transform,
+          new Matrix4()
+        );
+
+        model.modelMatrix = modelMatrix;
+        scene.renderForSpecs();
+
+        expect(
+          Matrix4.equals(rootDrawCommand.modelMatrix, expectedRootModelMatrix)
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            staticChildDrawCommand.modelMatrix,
+            expectedStaticChildModelMatrix
+          )
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            transformedChildDrawCommand.modelMatrix,
+            expectedTransformedChildModelMatrix
+          )
+        ).toBe(true);
+      });
+    });
+
+    it("updates with new model matrix and model scale", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rotation = Quaternion.fromAxisAngle(
+          Cartesian3.UNIT_Y,
+          CesiumMath.toRadians(180)
+        );
+        const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+          new Cartesian3(10, 0, 0),
+          rotation,
+          new Cartesian3(1, 1, 1)
+        );
+
+        const modelScale = 5.0;
+        const scaledModelMatrix = Matrix4.multiplyByUniformScale(
+          modelMatrix,
+          modelScale,
+          new Matrix4()
+        );
+
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const staticChildNode = sceneGraph._runtimeNodes[2];
+        const transformedChildNode = sceneGraph._runtimeNodes[0];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
+        const transformedChildPrimitive =
+          transformedChildNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const transformedChildDrawCommand =
+          transformedChildPrimitive.drawCommands[0];
+
+        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+          scaledModelMatrix,
+          rootDrawCommand.modelMatrix,
+          new Matrix4()
+        );
+        const expectedStaticChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          staticChildNode.transform,
+          new Matrix4()
+        );
+        const expectedTransformedChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          transformedChildNode.transform,
+          new Matrix4()
+        );
+
+        model.modelMatrix = modelMatrix;
+        model.scale = modelScale;
+        scene.renderForSpecs();
+
+        expect(
+          Matrix4.equals(rootDrawCommand.modelMatrix, expectedRootModelMatrix)
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            staticChildDrawCommand.modelMatrix,
+            expectedStaticChildModelMatrix
+          )
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            transformedChildDrawCommand.modelMatrix,
+            expectedTransformedChildModelMatrix
+          )
+        ).toBe(true);
+      });
+    });
+
+    it("updates render state cull face when scale is negative", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const childNode = sceneGraph._runtimeNodes[0];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const childPrimitive = childNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const childDrawCommand = childPrimitive.drawCommands[0];
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1);
+        scene.renderForSpecs();
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
       });
     });
   },

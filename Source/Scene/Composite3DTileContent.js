@@ -1,5 +1,4 @@
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
@@ -30,12 +29,11 @@ function Composite3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._contents = [];
-  this._readyPromise = defer();
 
   this._metadata = undefined;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
-  initialize(this, arrayBuffer, byteOffset, factory);
+  this._readyPromise = initialize(this, arrayBuffer, byteOffset, factory);
 }
 
 Object.defineProperties(Composite3DTileContent.prototype, {
@@ -134,7 +132,7 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -195,16 +193,16 @@ Object.defineProperties(Composite3DTileContent.prototype, {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
       const contents = this._contents;
       const length = contents.length;
       for (let i = 0; i < length; ++i) {
-        contents[i].groupMetadata = value;
+        contents[i].group = value;
       }
     },
   },
@@ -262,13 +260,9 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
     byteOffset += tileByteLength;
   }
 
-  Promise.all(contentPromises)
-    .then(function () {
-      content._readyPromise.resolve(content);
-    })
-    .catch(function (error) {
-      content._readyPromise.reject(error);
-    });
+  return Promise.all(contentPromises).then(function () {
+    return content;
+  });
 }
 
 /**

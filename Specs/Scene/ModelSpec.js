@@ -12,6 +12,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { FeatureDetection } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { ImageBasedLighting } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix3 } from "../../Source/Cesium.js";
@@ -33,6 +34,7 @@ import { HeightReference } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
 import { ModelAnimationLoop } from "../../Source/Cesium.js";
 import { DepthFunction } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
@@ -217,11 +219,12 @@ describe(
         const camera = scene.camera;
         const center = Matrix4.multiplyByPoint(
           model.modelMatrix,
-          model.boundingSphere.center,
+          model.boundingSphereInternal.center,
           new Cartesian3()
         );
         const r =
-          zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
+          zoom *
+          Math.max(model.boundingSphereInternal.radius, camera.frustum.near);
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
       };
     }
@@ -321,8 +324,8 @@ describe(
         Cartesian3.fromDegrees(0.0, 0.0, 100.0)
       );
 
-      expect(texturedBoxModel.gltf).toBeDefined();
-      expect(texturedBoxModel.basePath).toEqual(
+      expect(texturedBoxModel.gltfInternal).toBeDefined();
+      expect(texturedBoxModel.basePathInternal).toEqual(
         "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf"
       );
       expect(texturedBoxModel.show).toEqual(false);
@@ -358,7 +361,7 @@ describe(
       const model = Model.fromGltf({
         url: url,
       });
-      expect(model.basePath).toEndWith(params);
+      expect(model.basePathInternal).toEndWith(params);
     });
 
     it("fromGltf takes a base path", function () {
@@ -368,7 +371,7 @@ describe(
         url: url,
         basePath: basePath,
       });
-      expect(model.basePath).toEndWith(basePath);
+      expect(model.basePathInternal).toEndWith(basePath);
       expect(model._cacheKey).toEndWith(basePath);
     });
 
@@ -746,7 +749,9 @@ describe(
 
     it("renders from glTF", function () {
       // Simulate using procedural glTF as opposed to loading it from a file
-      return loadModelJson(texturedBoxModel.gltf).then(function (model) {
+      return loadModelJson(texturedBoxModel.gltfInternal).then(function (
+        model
+      ) {
         verifyRender(model);
         primitives.remove(model);
       });
@@ -756,7 +761,9 @@ describe(
       spyOn(RenderState, "fromCache").and.callThrough();
 
       // Simulate using procedural glTF as opposed to loading it from a file
-      return loadModelJson(texturedBoxModel.gltf).then(function (model) {
+      return loadModelJson(texturedBoxModel.gltfInternal).then(function (
+        model
+      ) {
         const rs = {
           cull: {
             enabled: true,
@@ -857,106 +864,7 @@ describe(
       texturedBoxModel.distanceDisplayCondition = undefined;
     });
 
-    it("renders with spherical harmonics", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-
-        const L00 = new Cartesian3(
-          0.692622075009195,
-          0.4543516001819,
-          0.36910172299235
-        ); // L00, irradiance, pre-scaled base
-        const L1_1 = new Cartesian3(
-          0.289407068366422,
-          0.16789310162658,
-          0.106174907004792
-        ); // L1-1, irradiance, pre-scaled base
-        const L10 = new Cartesian3(
-          -0.591502034778913,
-          -0.28152432317119,
-          0.124647554708491
-        ); // L10, irradiance, pre-scaled base
-        const L11 = new Cartesian3(
-          0.34945458117126,
-          0.163273486841657,
-          -0.03095643545207
-        ); // L11, irradiance, pre-scaled base
-        const L2_2 = new Cartesian3(
-          0.22171176447426,
-          0.11771991868122,
-          0.031381053430064
-        ); // L2-2, irradiance, pre-scaled base
-        const L2_1 = new Cartesian3(
-          -0.348955284677868,
-          -0.187256994042823,
-          -0.026299717727617
-        ); // L2-1, irradiance, pre-scaled base
-        const L20 = new Cartesian3(
-          0.119982671127227,
-          0.076784552175028,
-          0.055517838847755
-        ); // L20, irradiance, pre-scaled base
-        const L21 = new Cartesian3(
-          -0.545546043202299,
-          -0.279787444030397,
-          -0.086854000285261
-        ); // L21, irradiance, pre-scaled base
-        const L22 = new Cartesian3(
-          0.160417569726332,
-          0.120896423762313,
-          0.121102528320197
-        ); // L22, irradiance, pre-scaled base
-        m.sphericalHarmonicCoefficients = [
-          L00,
-          L1_1,
-          L10,
-          L11,
-          L2_2,
-          L2_1,
-          L20,
-          L21,
-          L22,
-        ];
-
-        scene.highDynamicRange = true;
-        verifyRender(m);
-        primitives.remove(m);
-        scene.highDynamicRange = false;
-      });
-    });
-
-    it("renders with specular environment map", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
-
-        return pollToPromise(function () {
-          scene.highDynamicRange = true;
-          scene.render();
-          scene.highDynamicRange = false;
-          return (
-            defined(m._specularEnvironmentMapAtlas) &&
-            m._specularEnvironmentMapAtlas.ready
-          );
-        }).then(function () {
-          scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
-          scene.highDynamicRange = false;
-        });
-      });
-    });
-
-    it("distanceDisplayCondition throws when ner >= far", function () {
+    it("distanceDisplayCondition throws when near >= far", function () {
       expect(function () {
         texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(
           100.0,
@@ -1093,12 +1001,12 @@ describe(
     it("boundingSphere throws when model is not loaded", function () {
       const m = new Model();
       expect(function () {
-        return m.boundingSphere;
+        return m.boundingSphereInternal;
       }).toThrowDeveloperError();
     });
 
     it("boundingSphere returns the bounding sphere", function () {
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1110,7 +1018,7 @@ describe(
       const originalScale = texturedBoxModel.scale;
       texturedBoxModel.scale = 10;
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1126,7 +1034,7 @@ describe(
       texturedBoxModel.scale = 20;
       texturedBoxModel.maximumScale = 10;
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1145,7 +1053,7 @@ describe(
         texturedBoxModel.modelMatrix
       );
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1153,6 +1061,18 @@ describe(
       expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
       texturedBoxModel.modelMatrix = originalMatrix;
+    });
+
+    it("boundingSphere transforms from z-forward to x-forward (glTF 2.0)", function () {
+      const boundingSphere = riggedFigureModel.boundingSphereInternal;
+      expect(boundingSphere.center).toEqualEpsilon(
+        new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
+        CesiumMath.EPSILON3
+      );
+      expect(boundingSphere.radius).toEqualEpsilon(
+        0.9484635280120018,
+        CesiumMath.EPSILON3
+      );
     });
 
     it("destroys", function () {
@@ -1341,11 +1261,11 @@ describe(
         minimumPixelSize: 1,
       }).then(function (m) {
         // Verify that the version has been updated
-        expect(m.gltf.asset.version).toEqual("2.0");
+        expect(m.gltfInternal.asset.version).toEqual("2.0");
 
         // Verify that rotation is converted from
         // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-        const rotation = m.gltf.nodes[2].rotation;
+        const rotation = m.gltfInternal.nodes[2].rotation;
         expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
         verifyRender(m);
@@ -1498,7 +1418,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("Throws because of an invalid Binary glTF header - version", function () {
@@ -1513,7 +1433,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("renders a model with the CESIUM_RTC extension", function () {
@@ -1521,7 +1441,7 @@ describe(
         modelMatrix: Matrix4.IDENTITY,
         minimumPixelSize: 1,
       }).then(function (m) {
-        const bs = m.boundingSphere;
+        const bs = m.boundingSphereInternal;
         expect(
           bs.center.equalsEpsilon(
             new Cartesian3(6378137.0, 0.0, 0.0),
@@ -2006,6 +1926,102 @@ describe(
       );
       expect(animations.remove(a)).toEqual(true);
       animBoxesModel.show = false;
+    });
+
+    it("animates with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = false;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      // triggers an update with localTime 0
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      // triggers an update with localTime 0.5
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+      // should not trigger an update because animationTime didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.5;
+      // should not trigger an update because the scene time didn't change
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.7;
+      // triggers an update with localTime 1.7
+      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("animates while paused with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:01 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      animations.animateWhilePaused = true;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      // update(0)
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      // update(0.5)
+      scene.renderForSpecs(time);
+      // no update, because animationTime didn't change
+      scene.renderForSpecs(time);
+      animationTime = 1.7;
+      // update(1.7)
+      scene.renderForSpecs(time);
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+      animations.animateWhilePaused = false;
     });
 
     it("animates with a multiplier", function () {
@@ -2547,7 +2563,7 @@ describe(
         releaseGltfJson: true,
       }).then(function (m) {
         expect(m.releaseGltfJson).toEqual(true);
-        expect(m.gltf).not.toBeDefined();
+        expect(m.gltfInternal).not.toBeDefined();
 
         verifyRender(m);
         primitives.remove(m);
@@ -2555,13 +2571,13 @@ describe(
     });
 
     it("releaseGltfJson releases glTF JSON when constructed with Model constructor function", function () {
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         releaseGltfJson: true,
         incrementallyLoadTextures: false,
         asynchronous: true,
       }).then(function (m) {
         expect(m.releaseGltfJson).toEqual(true);
-        expect(m.gltf).not.toBeDefined();
+        expect(m.gltfInternal).not.toBeDefined();
 
         verifyRender(m);
         primitives.remove(m);
@@ -2681,7 +2697,7 @@ describe(
 
       const m = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2734,7 +2750,7 @@ describe(
 
       const m = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2767,7 +2783,7 @@ describe(
       // Should be cache miss.
       const m3 = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2818,7 +2834,7 @@ describe(
 
     it("Loads with incrementallyLoadTextures set to true", function () {
       let model, loadedColor;
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         incrementallyLoadTextures: true,
         show: true,
       })
@@ -2841,7 +2857,7 @@ describe(
               // Render scene to progressively load textures
               scene.renderForSpecs();
               // Textures have finished loading
-              return model.pendingTextureLoads === 0;
+              return model.pendingTextureLoadsInternal === 0;
             },
             { timeout: 10000 }
           );
@@ -2854,7 +2870,7 @@ describe(
     });
 
     it("Loads with incrementallyLoadTextures set to false", function () {
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         incrementallyLoadTextures: false,
         show: true,
       }).then(function (m) {
@@ -2982,7 +2998,7 @@ describe(
     it("loads a glTF with WEB3D_quantized_attributes and accessor.normalized", function () {
       return loadModel(boxQuantizedUrl).then(function (m) {
         verifyRender(m);
-        const gltf = m.gltf;
+        const gltf = m.gltfInternal;
         const accessors = gltf.accessors;
         const normalAccessor = accessors[2];
         const positionAccessor = accessors[1];
@@ -3125,10 +3141,10 @@ describe(
       const camera = scene.camera;
       const center = Matrix4.multiplyByPoint(
         model.modelMatrix,
-        model.boundingSphere.center,
+        model.boundingSphereInternal.center,
         new Cartesian3()
       );
-      const range = 4.0 * model.boundingSphere.radius;
+      const range = 4.0 * model.boundingSphereInternal.radius;
 
       camera.lookAt(
         center,
@@ -3356,13 +3372,13 @@ describe(
         uniformMapLoaded: uniformMapLoaded,
       };
 
-      return loadModelJson(texturedBoxModel.gltf, options).then(function (
-        model
-      ) {
-        model.zoomTo();
-        expect(scene).toRender([255, 255, 255, 255]);
-        primitives.remove(model);
-      });
+      return loadModelJson(texturedBoxModel.gltfInternal, options).then(
+        function (model) {
+          model.zoomTo();
+          expect(scene).toRender([255, 255, 255, 255]);
+          primitives.remove(model);
+        }
+      );
     });
 
     it("loads a glTF with KHR_draco_mesh_compression extension", function () {
@@ -3845,16 +3861,159 @@ describe(
       });
     });
 
-    it("renders with imageBaseLightingFactor", function () {
+    it("renders with imageBasedLighting", function () {
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
+
+        const modelIBL = model.imageBasedLighting;
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
-          model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+
+          const ibl = new ImageBasedLighting({
+            imageBasedLightingFactor: new Cartesian2(0.0, 0.0),
+          });
+          model.imageBasedLighting = ibl;
+          expect(model.imageBasedLighting !== modelIBL);
+          expect(modelIBL.isDestroyed()).toBe(true);
+
+          expect(scene).notToRender(rgba);
+
+          ibl.imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+          expect(scene).toRender(rgba);
+
+          ibl.destroy();
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with imageBasedLightingFactor", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+        const ibl = model.imageBasedLighting;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with luminanceAtZenith", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+        const ibl = model.imageBasedLighting;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          ibl.luminanceAtZenith = 0.0;
+          expect(scene).notToRender(rgba);
+
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with spherical harmonic coefficients", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+        const ibl = model.imageBasedLighting;
+
+        const L00 = new Cartesian3(
+          0.692622075009195,
+          0.4543516001819,
+          0.36910172299235
+        ); // L00, irradiance, pre-scaled base
+        const L1_1 = new Cartesian3(
+          0.289407068366422,
+          0.16789310162658,
+          0.106174907004792
+        ); // L1-1, irradiance, pre-scaled base
+        const L10 = new Cartesian3(
+          -0.591502034778913,
+          -0.28152432317119,
+          0.124647554708491
+        ); // L10, irradiance, pre-scaled base
+        const L11 = new Cartesian3(
+          0.34945458117126,
+          0.163273486841657,
+          -0.03095643545207
+        ); // L11, irradiance, pre-scaled base
+        const L2_2 = new Cartesian3(
+          0.22171176447426,
+          0.11771991868122,
+          0.031381053430064
+        ); // L2-2, irradiance, pre-scaled base
+        const L2_1 = new Cartesian3(
+          -0.348955284677868,
+          -0.187256994042823,
+          -0.026299717727617
+        ); // L2-1, irradiance, pre-scaled base
+        const L20 = new Cartesian3(
+          0.119982671127227,
+          0.076784552175028,
+          0.055517838847755
+        ); // L20, irradiance, pre-scaled base
+        const L21 = new Cartesian3(
+          -0.545546043202299,
+          -0.279787444030397,
+          -0.086854000285261
+        ); // L21, irradiance, pre-scaled base
+        const L22 = new Cartesian3(
+          0.160417569726332,
+          0.120896423762313,
+          0.121102528320197
+        ); // L22, irradiance, pre-scaled base
+        ibl.sphericalHarmonicCoefficients = [
+          L00,
+          L1_1,
+          L10,
+          L11,
+          L2_2,
+          L2_1,
+          L20,
+          L21,
+          L22,
+        ];
+
+        scene.highDynamicRange = true;
+        verifyRender(model);
+        primitives.remove(model);
+        scene.highDynamicRange = false;
+      });
+    });
+
+    it("renders with specular environment map", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (model) {
+        model.scale = 20.0; // Source model is very small, so scale up a bit
+
+        const ibl = model.imageBasedLighting;
+        ibl.specularEnvironmentMaps =
+          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
+
+        return pollToPromise(function () {
+          scene.render();
+          return (
+            defined(ibl.specularEnvironmentMapAtlas) &&
+            ibl.specularEnvironmentMapAtlas.ready
+          );
+        }).then(function () {
+          scene.highDynamicRange = true;
+          verifyRender(model);
+          primitives.remove(model);
+          scene.highDynamicRange = false;
         });
       });
     });
@@ -3873,7 +4032,8 @@ describe(
           expect(rgba).toEqualEpsilon([131, 9, 9, 255], 5);
         });
 
-        model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+        const ibl = model.imageBasedLighting;
+        ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
         expect(sceneArgs).toRenderAndCall(function (rgba) {
           expect(rgba).toEqualEpsilon([102, 9, 9, 255], 5);
         });
@@ -4121,7 +4281,7 @@ describe(
 
       it("explicitly constructs a model with height reference", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           scene: scene,
         }).then(function (model) {
@@ -4134,7 +4294,7 @@ describe(
 
       it("set model height reference property", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           scene: scene,
         }).then(function (model) {
           model.heightReference = HeightReference.CLAMP_TO_GROUND;
@@ -4147,7 +4307,7 @@ describe(
 
       it("creating with a height reference creates a height update callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4159,7 +4319,7 @@ describe(
 
       it("set height reference property creates a height update callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
           show: true,
@@ -4176,7 +4336,7 @@ describe(
 
       it("updates the callback when the height reference changes", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4201,7 +4361,7 @@ describe(
 
       it("changing the position updates the callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4227,7 +4387,7 @@ describe(
 
       it("callback updates the position", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4257,7 +4417,7 @@ describe(
 
       it("removes the callback on destroy", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4274,7 +4434,7 @@ describe(
 
       it("changing the terrain provider", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4294,7 +4454,7 @@ describe(
 
       it("height reference without a scene rejects", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
@@ -4307,7 +4467,7 @@ describe(
 
       it("changing height reference without a scene throws DeveloperError", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
         }).then(function (model) {
@@ -4323,7 +4483,7 @@ describe(
 
       it("height reference without a globe rejects", function () {
         scene.globe = undefined;
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4337,7 +4497,7 @@ describe(
 
       it("changing height reference without a globe throws DeveloperError", function () {
         scene.globe = undefined;
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
         }).then(function (model) {

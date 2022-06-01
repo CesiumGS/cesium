@@ -134,6 +134,35 @@ AttributeType.getNumberOfComponents = function (attributeType) {
 };
 
 /**
+ * Get the number of attribute locations needed to fit this attribute. Most
+ * types require one, but matrices require multiple attribute locations.
+ *
+ * @param {AttributeType} attributeType The attribute type.
+ * @returns {Number} The number of attribute locations needed in the shader
+ *
+ * @private
+ */
+AttributeType.getAttributeLocationCount = function (attributeType) {
+  switch (attributeType) {
+    case AttributeType.SCALAR:
+    case AttributeType.VEC2:
+    case AttributeType.VEC3:
+    case AttributeType.VEC4:
+      return 1;
+    case AttributeType.MAT2:
+      return 2;
+    case AttributeType.MAT3:
+      return 3;
+    case AttributeType.MAT4:
+      return 4;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
+  }
+};
+
+/**
  * Gets the GLSL type for the attribute type.
  *
  * @param {AttributeType} attributeType The attribute type.

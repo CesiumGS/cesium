@@ -1,4 +1,3 @@
-import defer from "../Core/defer.js";
 import destroyObject from "../Core/destroyObject.js";
 
 /**
@@ -18,14 +17,13 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._readyPromise = defer();
 
   this.featurePropertiesDirty = false;
 
   this._metadata = undefined;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
-  initialize(this, json);
+  this._readyPromise = initialize(this, json);
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
@@ -73,7 +71,7 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -110,19 +108,19 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
 
 function initialize(content, json) {
   content._tileset.loadTileset(content._resource, json, content._tile);
-  content._readyPromise.resolve(content);
+  return Promise.resolve(content);
 }
 
 /**

@@ -160,7 +160,7 @@ function UniformState() {
 
   this._invertClassificationColor = undefined;
 
-  this._imagerySplitPosition = 0.0;
+  this._splitPosition = 0.0;
   this._pixelSizePerMeter = undefined;
   this._geometricToleranceOverMeter = undefined;
 
@@ -964,12 +964,13 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The splitter position to use when rendering with a splitter. This will be in pixel coordinates relative to the canvas.
    * @memberof UniformState.prototype
    * @type {Number}
    */
-  imagerySplitPosition: {
+  splitPosition: {
     get: function () {
-      return this._imagerySplitPosition;
+      return this._splitPosition;
     },
   },
 
@@ -1300,9 +1301,9 @@ UniformState.prototype.update = function (frameState) {
     this._temeToPseudoFixed
   );
 
-  // Convert the relative imagerySplitPosition to absolute pixel coordinates
-  this._imagerySplitPosition =
-    frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
+  // Convert the relative splitPosition to absolute pixel coordinates
+  this._splitPosition =
+    frameState.splitPosition * frameState.context.drawingBufferWidth;
   const fov = camera.frustum.fov;
   const viewport = this._viewport;
   let pixelSizePerMeter;

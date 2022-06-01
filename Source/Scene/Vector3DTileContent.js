@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -41,9 +40,6 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._polylines = undefined;
   this._points = undefined;
 
-  this._contentReadyPromise = undefined;
-  this._readyPromise = defer();
-
   this._metadata = undefined;
 
   this._batchTable = undefined;
@@ -53,7 +49,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -123,7 +119,22 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      const pointsPromise = defined(this._points)
+        ? this._points.readyPromise
+        : undefined;
+      const polygonPromise = defined(this._polygons)
+        ? this._polygons.readyPromise
+        : undefined;
+      const polylinePromise = defined(this._polylines)
+        ? this._polylines.readyPromise
+        : undefined;
+
+      const that = this;
+      return Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(
+        function () {
+          return that;
+        }
+      );
     },
   },
 
@@ -160,12 +171,12 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -298,8 +309,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    content._readyPromise.resolve(content);
-    return;
+    return Promise.resolve(content);
   }
 
   const featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -623,6 +633,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
     });
   }
+
+  return Promise.resolve(content);
 }
 
 function createFeatures(content) {
@@ -706,31 +718,6 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
   }
   if (defined(this._batchTable) && ready) {
     this._batchTable.update(tileset, frameState);
-  }
-
-  if (!defined(this._contentReadyPromise)) {
-    const pointsPromise = defined(this._points)
-      ? this._points.readyPromise
-      : undefined;
-    const polygonPromise = defined(this._polygons)
-      ? this._polygons.readyPromise
-      : undefined;
-    const polylinePromise = defined(this._polylines)
-      ? this._polylines.readyPromise
-      : undefined;
-
-    const that = this;
-    this._contentReadyPromise = Promise.all([
-      pointsPromise,
-      polygonPromise,
-      polylinePromise,
-    ])
-      .then(function () {
-        that._readyPromise.resolve(that);
-      })
-      .catch(function (error) {
-        that._readyPromise.reject(error);
-      });
   }
 };
 

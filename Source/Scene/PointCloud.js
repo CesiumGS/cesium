@@ -7,7 +7,6 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -33,6 +32,8 @@ import getClippingFunction from "./getClippingFunction.js";
 import PntsParser from "./PntsParser.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
+import Splitter from "./Splitter.js";
 import StencilConstants from "./StencilConstants.js";
 
 const DecodingState = {
@@ -106,7 +107,6 @@ function PointCloud(options) {
   this._mode = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
   this._pointsLength = 0;
   this._geometryByteLength = 0;
 
@@ -145,7 +145,21 @@ function PointCloud(options) {
   this.geometricErrorScale = 1.0;
   this.maximumAttenuation = this._pointSize;
 
-  initialize(this, options);
+  /**
+   * The {@link SplitDirection} to apply to this point cloud.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
+  this._splittingEnabled = false;
+
+  this._resolveReadyPromise = undefined;
+  this._rejectReadyPromise = undefined;
+  this._readyPromise = initialize(this, options);
 }
 
 Object.defineProperties(PointCloud.prototype, {
@@ -169,7 +183,7 @@ Object.defineProperties(PointCloud.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -270,6 +284,14 @@ function initialize(pointCloud, options) {
   }
 
   pointCloud._pointsLength = parsedContent.pointsLength;
+
+  return new Promise(function (resolve, reject) {
+    pointCloud._resolveReadyPromise = function () {
+      pointCloud._ready = true;
+      resolve(pointCloud);
+    };
+    pointCloud._rejectReadyPromise = reject;
+  });
 }
 
 const scratchMin = new Cartesian3();
@@ -353,7 +375,7 @@ function createResources(pointCloud, frameState) {
   const positions = parsedContent.positions;
   const colors = parsedContent.colors;
   const normals = parsedContent.normals;
-  let batchIds = parsedContent.batchIds;
+  const batchIds = parsedContent.batchIds;
   const styleableProperties = parsedContent.styleableProperties;
   const hasStyleableProperties = defined(styleableProperties);
   const isQuantized = pointCloud._isQuantized;
@@ -442,7 +464,10 @@ function createResources(pointCloud, frameState) {
 
   let batchIdsVertexBuffer;
   if (hasBatchIds) {
-    batchIds = prepareVertexAttribute(batchIds, "batchIds");
+    batchIds.typedArray = prepareVertexAttribute(
+      batchIds.typedArray,
+      "batchIds"
+    );
     batchIdsVertexBuffer = Buffer.createVertexBuffer({
       context: context,
       typedArray: batchIds.typedArray,
@@ -689,6 +714,8 @@ function createUniformMap(pointCloud, frameState) {
       );
     },
   };
+
+  Splitter.addUniforms(pointCloud, uniformMap);
 
   if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
     uniformMap = combine(uniformMap, {
@@ -1119,6 +1146,10 @@ function createShaders(pointCloud, frameState, style) {
 
   fs += "} \n";
 
+  if (pointCloud.splitDirection !== SplitDirection.NONE) {
+    fs = Splitter.modifyFragmentShader(fs);
+  }
+
   if (defined(pointCloud._vertexShaderLoaded)) {
     vs = pointCloud._vertexShaderLoaded(vs);
   }
@@ -1247,7 +1278,7 @@ function decodeDraco(pointCloud, context) {
         })
         .catch(function (error) {
           pointCloud._decodingState = DecodingState.FAILED;
-          pointCloud._readyPromise.reject(error);
+          pointCloud._rejectReadyPromise(error);
         });
     }
   }
@@ -1276,8 +1307,7 @@ PointCloud.prototype.update = function (frameState) {
     createResources(this, frameState);
     modelMatrixDirty = true;
     shadersDirty = true;
-    this._ready = true;
-    this._readyPromise.resolve(this);
+    this._resolveReadyPromise();
     this._parsedContent = undefined; // Unload
   }
 
@@ -1343,6 +1373,12 @@ PointCloud.prototype.update = function (frameState) {
   if (this._style !== this.style || this.styleDirty) {
     this._style = this.style;
     this.styleDirty = false;
+    shadersDirty = true;
+  }
+
+  const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
+  if (this._splittingEnabled !== splittingEnabled) {
+    this._splittingEnabled = splittingEnabled;
     shadersDirty = true;
   }
 

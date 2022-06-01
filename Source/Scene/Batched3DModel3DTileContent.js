@@ -59,7 +59,7 @@ function Batched3DModel3DTileContent(
   this._contentModelMatrix = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -149,12 +149,12 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -184,7 +184,7 @@ function getVertexShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._batchIdAttributeName = getBatchIdAttributeName(gltf);
       content._diffuseAttributeOrUniformName[
@@ -206,7 +206,7 @@ function getFragmentShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._diffuseAttributeOrUniformName[
         programId
@@ -324,11 +324,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       pickIdLoaded: getPickIdCallback(content),
       addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
       pickObject: pickObject,
-      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
       lightColor: tileset.lightColor,
-      luminanceAtZenith: tileset.luminanceAtZenith,
-      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      imageBasedLighting: tileset.imageBasedLighting,
       backFaceCulling: tileset.backFaceCulling,
       showOutline: tileset.showOutline,
       showCreditsOnScreen: tileset.showCreditsOnScreen,
@@ -438,14 +435,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.modelMatrix = this._contentModelMatrix;
 
   model.shadows = tileset.shadows;
-  model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
   model.lightColor = tileset.lightColor;
-  model.luminanceAtZenith = tileset.luminanceAtZenith;
-  model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
-  model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
+  model.imageBasedLighting = tileset.imageBasedLighting;
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
+  model.splitDirection = tileset.splitDirection;
 
   // Update clipping planes
   const tilesetClippingPlanes = tileset.clippingPlanes;

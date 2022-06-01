@@ -20,7 +20,6 @@
   },
   "groups": [
     {
-      "id": "ground",
       "class": "layer",
       "properties": {
         "color": [120, 68, 32],
@@ -28,7 +27,6 @@
       }
     },
     {
-      "id": "sky",
       "class": "layer",
       "properties": {
         "color": [206, 237, 242],

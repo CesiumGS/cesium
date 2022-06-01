@@ -24,11 +24,9 @@ describe("Scene/findContentMetadata", function () {
       },
     });
     mockTileset = {
-      metadata: {
-        schema: {
-          classes: {
-            content: contentClass,
-          },
+      schema: {
+        classes: {
+          content: contentClass,
         },
       },
     };
@@ -40,6 +38,25 @@ describe("Scene/findContentMetadata", function () {
     };
     const metadata = findContentMetadata(mockTileset, contentHeader);
     expect(metadata).not.toBeDefined();
+  });
+
+  it("logs a warning and returns undefined if the tileset is missing a schema", function () {
+    const contentHeader = {
+      uri: "https://example.com/model.b3dm",
+      metadata: {
+        class: "content",
+        properties: {
+          name: "Sample Content",
+          color: [255, 255, 0],
+        },
+      },
+    };
+
+    spyOn(findContentMetadata, "_oneTimeWarning");
+    const tilesetWithoutSchema = {};
+    const metadata = findContentMetadata(tilesetWithoutSchema, contentHeader);
+    expect(metadata).not.toBeDefined();
+    expect(findContentMetadata._oneTimeWarning).toHaveBeenCalled();
   });
 
   it("returns metadata if there is metadata", function () {

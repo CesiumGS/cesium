@@ -1,6 +1,7 @@
 import { ContextLimits } from "../../Source/Cesium.js";
 import { ShaderProgram } from "../../Source/Cesium.js";
 import { ShaderSource } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 
 describe(
@@ -501,7 +502,7 @@ describe(
 
       expect(function () {
         sp._bind();
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("fails fragment shader compile", function () {
@@ -519,7 +520,7 @@ describe(
 
       expect(function () {
         sp._bind();
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("fails to link", function () {
@@ -537,7 +538,7 @@ describe(
 
       expect(function () {
         sp._bind();
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("fails with built-in function circular dependency", function () {

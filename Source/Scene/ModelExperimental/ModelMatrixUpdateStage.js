@@ -1,6 +1,9 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import SceneMode from "../SceneMode.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import clone from "../../Core/clone.js";
+import RenderState from "../../Renderer/RenderState.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -27,54 +30,78 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  * @private
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
+  // Skip the update stage if the model is being projected to 2D
+  if (frameState.mode !== SceneMode.SCENE3D && sceneGraph._model._projectTo2D) {
+    return;
+  }
+
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transform);
+    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transformToRoot);
     runtimeNode._transformDirty = false;
   }
 };
-
-const transformScratch = new Matrix4();
 
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
  * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
+function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
   let i, j;
 
-  for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
+  // Apply the current node's transform to the end of the chain
+  transformToRoot = Matrix4.multiplyTransformation(
+    transformToRoot,
+    runtimeNode.transform,
+    new Matrix4()
+  );
+
+  runtimeNode.updateComputedTransform();
+
+  const primitivesLength = runtimeNode.runtimePrimitives.length;
+  for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
+    const drawCommandsLength = runtimePrimitive.drawCommands.length;
+    for (j = 0; j < drawCommandsLength; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
-      Matrix4.multiplyTransformation(
+      drawCommand.modelMatrix = Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
-        transform,
+        transformToRoot,
         drawCommand.modelMatrix
       );
-
-      BoundingSphere.transform(
+      drawCommand.boundingVolume = BoundingSphere.transform(
         runtimePrimitive.boundingSphere,
         drawCommand.modelMatrix,
         drawCommand.boundingVolume
       );
+
+      const cullFace = ModelExperimentalUtility.getCullFace(
+        drawCommand.modelMatrix,
+        drawCommand.primitiveType
+      );
+      let renderState = drawCommand.renderState;
+      if (cullFace !== renderState.cull.face) {
+        renderState = clone(renderState, true);
+        renderState.cull.face = cullFace;
+        renderState = RenderState.fromCache(renderState);
+        drawCommand.renderState = renderState;
+      }
     }
   }
 
-  if (defined(runtimeNode.children)) {
-    for (i = 0; i < runtimeNode.children.length; i++) {
-      const childRuntimeNode =
-        sceneGraph._runtimeNodes[runtimeNode.children[i]];
+  const childrenLength = runtimeNode.children.length;
+  for (i = 0; i < childrenLength; i++) {
+    const childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      Matrix4.multiplyTransformation(
-        runtimeNode.transform,
-        childRuntimeNode.transform,
-        transformScratch
-      );
+    // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+    childRuntimeNode._transformToRoot = Matrix4.clone(
+      transformToRoot,
+      childRuntimeNode._transformToRoot
+    );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph, transformScratch);
-    }
+    updateRuntimeNode(childRuntimeNode, sceneGraph, transformToRoot);
+    childRuntimeNode._transformDirty = false;
   }
 }
 

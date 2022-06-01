@@ -8,7 +8,7 @@
  *
  * @param {float|vec2|vec3|vec4} packed The packed value. For vectors, the components are listed in little-endian order.
  *
- * @param {int} The unpacked value.
+ * @return {int} The unpacked value.
  */
  int czm_unpackUint(float packedValue) {
    float rounded = czm_round(packedValue * 255.0);

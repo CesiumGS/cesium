@@ -38,15 +38,15 @@ describe("Scene/Empty3DTileContent", function () {
       const mockTileset = {};
       const mockTile = {};
       const content = new Empty3DTileContent(mockTileset, mockTile);
-      expect(content.groupMetadata).not.toBeDefined();
+      expect(content.group).not.toBeDefined();
     });
 
-    it("assigning groupMetadata throws", function () {
+    it("assigning group throws", function () {
       expect(function () {
         const mockTileset = {};
         const mockTile = {};
         const content = new Empty3DTileContent(mockTileset, mockTile);
-        content.groupMetadata = {};
+        content.group = {};
       }).toThrowDeveloperError();
     });
 

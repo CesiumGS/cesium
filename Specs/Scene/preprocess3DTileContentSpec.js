@@ -1,6 +1,7 @@
 import {
   Cesium3DTileContentType,
   preprocess3DTileContent,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/preprocess3DTileContent", function () {
@@ -74,10 +75,39 @@ describe("Scene/preprocess3DTileContent", function () {
     });
   });
 
+  it("detects GeoJSON content", function () {
+    const geoJson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-45.0, -34.98261613683529, -6.162892770953476],
+                [-45.0, -35.264389681864863, -6.091842861846089],
+                [-44.700613777413345, -35.404907941900547, -6.194363857619464],
+                [-44.700613777413345, -35.122642334455918, -6.294969339855015],
+                [-45.0, -34.98261613683529, -6.162892770953476],
+              ],
+            ],
+          },
+        },
+      ],
+    };
+    const payload = makeJsonFile(geoJson);
+    const results = preprocess3DTileContent(payload.buffer);
+    expect(results).toEqual({
+      contentType: Cesium3DTileContentType.GEOJSON,
+      jsonPayload: geoJson,
+    });
+  });
+
   it("throws for invalid content", function () {
     expect(function () {
       const payload = makeBinaryFile("fake");
       preprocess3DTileContent(payload.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

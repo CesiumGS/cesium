@@ -54,10 +54,8 @@ function Cesium3DTilesetMetadata(options) {
     const length = groupsJson.length;
     for (let i = 0; i < length; i++) {
       const group = groupsJson[i];
-      groupIds.push(group.id);
       groups.push(
         new GroupMetadata({
-          id: group.id,
           group: group,
           class: schema.classes[group.class],
         })
@@ -123,7 +121,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   },
 
   /**
-   * The IDs of the group metadata in the corresponding groups array.
+   * The IDs of the group metadata in the corresponding groups dictionary.
+   * Only populated if using the legacy schema.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {String[]}

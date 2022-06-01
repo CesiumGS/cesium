@@ -1,6 +1,7 @@
 import {
   B3dmParser,
   Cartesian3,
+  Cesium3DContentGroup,
   ContentMetadata,
   Color,
   HeadingPitchRange,
@@ -527,8 +528,8 @@ describe(
           withoutBatchTableUrl
         ).then(function (tileset) {
           const content = tileset.root.content;
-          content.groupMetadata = groupMetadata;
-          expect(content.groupMetadata).toBe(groupMetadata);
+          content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
+          expect(content.group.metadata).toBe(groupMetadata);
         });
       });
 

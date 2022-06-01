@@ -23,10 +23,10 @@ describe("Core/requestAnimationFrame", function () {
       if (callbackTimestamps.length < 3) {
         requestAnimationFrame(callback);
       } else {
-        expect(callbackTimestamps[0]).toBeLessThanOrEqualTo(
+        expect(callbackTimestamps[0]).toBeLessThanOrEqual(
           callbackTimestamps[1]
         );
-        expect(callbackTimestamps[1]).toBeLessThanOrEqualTo(
+        expect(callbackTimestamps[1]).toBeLessThanOrEqual(
           callbackTimestamps[2]
         );
         deferred.resolve();

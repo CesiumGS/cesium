@@ -28,6 +28,12 @@ describe("Core/ComponentDatatype", function () {
     );
   });
 
+  it("fromTypedArray throws if array is not a valid typed array", function () {
+    expect(function () {
+      ComponentDatatype.fromTypedArray([]);
+    }).toThrowDeveloperError();
+  });
+
   it("validate works", function () {
     expect(ComponentDatatype.validate(ComponentDatatype.BYTE)).toBe(true);
     expect(ComponentDatatype.validate(ComponentDatatype.UNSIGNED_BYTE)).toBe(

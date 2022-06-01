@@ -1539,18 +1539,18 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
+   * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
    * This will be in pixel coordinates relative to the canvas.
    *
    * @example
    * // GLSL declaration
-   * uniform float czm_imagerySplitPosition;
+   * uniform float czm_splitPosition;
    */
-  czm_imagerySplitPosition: new AutomaticUniform({
+  czm_splitPosition: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
-      return uniformState.imagerySplitPosition;
+      return uniformState.splitPosition;
     },
   }),
 

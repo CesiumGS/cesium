@@ -1,4 +1,3 @@
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -7,6 +6,7 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import findContentMetadata from "./findContentMetadata.js";
@@ -77,7 +77,6 @@ export default function Multiple3DTileContent(
 
   // undefined until the first time requests are scheduled
   this._contentsFetchedPromise = undefined;
-  this._readyPromise = defer();
 }
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
@@ -190,7 +189,14 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      const readyPromises = this._contents.map(function (content) {
+        return content.readyPromise;
+      });
+
+      const that = this;
+      return Promise.all(readyPromises).then(function () {
+        return that;
+      });
     },
   },
 
@@ -253,11 +259,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
-   * always returns <code>undefined</code>.  Instead call <code>groupMetadata</code> for a specific inner content.
+   * always returns <code>undefined</code>.  Instead call <code>group</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
    */
-  groupMetadata: {
+  group: {
     get: function () {
       return undefined;
     },
@@ -299,11 +305,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    */
   contentsFetchedPromise: {
     get: function () {
-      if (defined(this._contentsFetchedPromise)) {
-        return this._contentsFetchedPromise.promise;
-      }
-
-      return undefined;
+      return this._contentsFetchedPromise;
     },
   },
 });
@@ -363,13 +365,8 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
     );
   }
 
-  // set up the deferred promise the first time requestInnerContent()
-  // is called.
-  if (!defined(this._contentsFetchedPromise)) {
-    this._contentsFetchedPromise = defer();
-  }
+  this._contentsFetchedPromise = createInnerContents(this);
 
-  createInnerContents(this);
   return 0;
 };
 
@@ -454,66 +451,41 @@ function requestInnerContent(
 
       updatePendingRequests(multipleContents, -1);
       handleInnerContentFailed(multipleContents, index, error);
-      return undefined;
     });
 }
 
 function createInnerContents(multipleContents) {
   const originalCancelCount = multipleContents._cancelCount;
-  Promise.all(multipleContents._arrayFetchPromises)
-    .then(function (arrayBuffers) {
-      if (originalCancelCount < multipleContents._cancelCount) {
+  return Promise.all(multipleContents._arrayFetchPromises).then(function (
+    arrayBuffers
+  ) {
+    if (originalCancelCount < multipleContents._cancelCount) {
+      return undefined;
+    }
+
+    const contents = arrayBuffers.map(function (arrayBuffer, i) {
+      if (!defined(arrayBuffer)) {
+        // Content was not fetched. The error was handled in
+        // the fetch promise
         return undefined;
       }
 
-      return arrayBuffers.map(function (arrayBuffer, i) {
-        if (!defined(arrayBuffer)) {
-          // Content was not fetched. The error was handled in
-          // the fetch promise
-          return undefined;
-        }
-
-        try {
-          return createInnerContent(multipleContents, arrayBuffer, i);
-        } catch (error) {
-          handleInnerContentFailed(multipleContents, i, error);
-          return undefined;
-        }
-      });
-    })
-    .then(function (contents) {
-      if (!defined(contents)) {
-        // request was canceled. resolve the promise (Cesium3DTile will
-        // detect that the the content was canceled), then discard the promise
-        // so a new one can be created
-        if (defined(multipleContents._contentsFetchedPromise)) {
-          multipleContents._contentsFetchedPromise.resolve();
-          multipleContents._contentsFetchedPromise = undefined;
-        }
-        return;
-      }
-
-      multipleContents._contents = contents.filter(defined);
-      awaitReadyPromises(multipleContents);
-
-      if (defined(multipleContents._contentsFetchedPromise)) {
-        multipleContents._contentsFetchedPromise.resolve();
-      }
-    })
-    .catch(function (error) {
-      if (defined(multipleContents._contentsFetchedPromise)) {
-        multipleContents._contentsFetchedPromise.reject(error);
-      }
+      return createInnerContent(multipleContents, arrayBuffer, i);
     });
+
+    multipleContents._contents = contents.filter(defined);
+  });
 }
 
 function createInnerContent(multipleContents, arrayBuffer, index) {
   const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-    throw new RuntimeError(
+    const error = new RuntimeError(
       "External tilesets are disallowed inside multiple contents"
     );
+
+    return handleInnerContentFailed(multipleContents, index, error);
   }
 
   multipleContents._disableSkipLevelOfDetail =
@@ -550,22 +522,13 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
     content.metadata = findContentMetadata(tileset, contentHeader);
   }
 
-  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
-  return content;
-}
-
-function awaitReadyPromises(multipleContents) {
-  const readyPromises = multipleContents._contents.map(function (content) {
-    return content.readyPromise;
-  });
-
-  Promise.all(readyPromises)
-    .then(function () {
-      multipleContents._readyPromise.resolve(multipleContents);
-    })
-    .catch(function (error) {
-      multipleContents._readyPromise.reject(error);
+  const groupMetadata = findGroupMetadata(tileset, contentHeader);
+  if (defined(groupMetadata)) {
+    content.group = new Cesium3DContentGroup({
+      metadata: groupMetadata,
     });
+  }
+  return content;
 }
 
 function handleInnerContentFailed(multipleContents, index, error) {

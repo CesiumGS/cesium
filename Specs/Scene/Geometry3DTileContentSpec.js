@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTileStyle,
   ClassificationType,
   Color,
@@ -330,26 +331,20 @@ describe(
       tileset.style = new Cesium3DTileStyle({
         show: "false",
       });
-      return tileset.style.readyPromise
-        .then(function () {
-          expectRender(scene, [255, 0, 0, 255]);
-          tileset.style = new Cesium3DTileStyle({
-            show: "true",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expectRender(scene, [255, 255, 255, 255]);
 
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgba(0, 0, 255, 1.0)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expectRender(scene, [0, 0, 255, 255]);
-          return tileset;
-        });
+      expectRender(scene, [255, 0, 0, 255]);
+      tileset.style = new Cesium3DTileStyle({
+        show: "true",
+      });
+
+      expectRender(scene, [255, 255, 255, 255]);
+
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgba(0, 0, 255, 1.0)",
+      });
+
+      expectRender(scene, [0, 0, 255, 255]);
+      return tileset;
     }
 
     it("renders on 3D Tiles", function () {
@@ -929,12 +924,14 @@ describe(
         });
       });
 
-      it("assigns groupMetadata", function () {
+      it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, geometryAll).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
           }
         );
       });

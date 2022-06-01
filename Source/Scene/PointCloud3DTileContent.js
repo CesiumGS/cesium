@@ -44,7 +44,7 @@ function PointCloud3DTileContent(
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -147,12 +147,12 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -355,6 +355,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
   pointCloud.normalShading = pointCloudShading.normalShading;
   pointCloud.geometricError = getGeometricError(this);
   pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+  pointCloud.splitDirection = tileset.splitDirection;
   if (
     defined(pointCloudShading) &&
     defined(pointCloudShading.maximumAttenuation)

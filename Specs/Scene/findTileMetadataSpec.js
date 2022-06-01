@@ -25,11 +25,9 @@ describe("Scene/findTileMetadata", function () {
     });
 
     mockTileset = {
-      metadata: {
-        schema: {
-          classes: {
-            tile: tileClass,
-          },
+      schema: {
+        classes: {
+          tile: tileClass,
         },
       },
     };
@@ -44,6 +42,26 @@ describe("Scene/findTileMetadata", function () {
     };
     const metadata = findTileMetadata(mockTileset, tileHeader);
     expect(metadata).not.toBeDefined();
+  });
+
+  it("logs a warning and returns undefined if the tileset is missing a schema", function () {
+    const tileHeader = {
+      boundingVolume: mockBoundingVolume,
+      geometricError: 64,
+      metadata: {
+        class: "tile",
+        properties: {
+          height: 250.5,
+          color: [255, 255, 0],
+        },
+      },
+    };
+
+    spyOn(findTileMetadata, "_oneTimeWarning");
+    const tilesetWithoutSchema = {};
+    const metadata = findTileMetadata(tilesetWithoutSchema, tileHeader);
+    expect(metadata).not.toBeDefined();
+    expect(findTileMetadata._oneTimeWarning).toHaveBeenCalled();
   });
 
   it("returns metadata if there is metadata", function () {

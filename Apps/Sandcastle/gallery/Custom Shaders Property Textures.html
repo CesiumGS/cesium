@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create 3D models using glTF." />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+        const scene = viewer.scene;
+
+        scene.globe.depthTestAgainstTerrain = false;
+
+        // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
+        // containing horizontal and vertical uncertainty
+        const tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(905848),
+          })
+        );
+
+        viewer.zoomTo(tileset);
+
+        const shaders = {
+          NO_TEXTURE: undefined,
+          UNCERTAINTY_CE90: new Cesium.CustomShader({
+            fragmentShaderText: `
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+              {
+                int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
+                material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
+              }
+            `,
+          }),
+          UNCERTAINTY_LE90: new Cesium.CustomShader({
+            fragmentShaderText: `
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+              {
+                int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
+                material.diffuse = vec3(float(verticalUncertainty) / 255.0);
+              }
+            `,
+          }),
+          // combined uncertainty
+          UNCERTAINTY: new Cesium.CustomShader({
+            fragmentShaderText: `
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+              {
+                int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
+                material.diffuse = vec3(float(uncertainty) / 255.0);
+              }
+            `,
+          }),
+        };
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Default View",
+            onselect: function () {
+              tileset.customShader = shaders.NO_TEXTURE;
+            },
+          },
+          {
+            text: "Horizontal Uncertainty",
+            onselect: function () {
+              tileset.customShader = shaders.UNCERTAINTY_CE90;
+            },
+          },
+          {
+            text: "Vertical Uncertainty",
+            onselect: function () {
+              tileset.customShader = shaders.UNCERTAINTY_LE90;
+            },
+          },
+          {
+            text: "Combined Uncertainty",
+            onselect: function () {
+              tileset.customShader = shaders.UNCERTAINTY;
+            },
+          },
+        ]);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

@@ -618,7 +618,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined}
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

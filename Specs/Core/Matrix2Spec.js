@@ -249,11 +249,13 @@ describe("Core/Matrix2", function () {
   });
 
   it("setScale works", function () {
-    const matrix = Matrix2.clone(Matrix2.IDENTITY);
-    const result = new Matrix2();
-    const newScale = new Cartesian2(2.0, 3.0);
+    const oldScale = new Cartesian2(2.0, 3.0);
+    const newScale = new Cartesian2(4.0, 5.0);
 
-    expect(Matrix2.getScale(matrix, new Cartesian2())).toEqual(Cartesian2.ONE);
+    const matrix = Matrix2.fromScale(oldScale, new Matrix2());
+    const result = new Matrix2();
+
+    expect(Matrix2.getScale(matrix, new Cartesian2())).toEqual(oldScale);
 
     const returnedResult = Matrix2.setScale(matrix, newScale, result);
 

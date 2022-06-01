@@ -1473,17 +1473,17 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+   * Gets or sets the position of the splitter within the viewport.  Valid values are between 0.0 and 1.0.
    * @memberof Scene.prototype
    *
    * @type {Number}
    */
-  imagerySplitPosition: {
+  splitPosition: {
     get: function () {
-      return this._frameState.imagerySplitPosition;
+      return this._frameState.splitPosition;
     },
     set: function (value) {
-      this._frameState.imagerySplitPosition = value;
+      this._frameState.splitPosition = value;
     },
   },
 
@@ -1601,7 +1601,6 @@ Object.defineProperties(Scene.prototype, {
    * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
    * @memberof Scene.prototype
    * @type {Number}
-   * @readonly
    * @default 1
    */
   msaaSamples: {

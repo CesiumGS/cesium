@@ -70,7 +70,6 @@ describe(
           0
         );
         return (
-          points._labelCollection._backgroundImageReady &&
           (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
           points._labelCollection._labelsToUpdate.length === 0 &&
           (!defined(points._billboardCollection.get(0)) ||
@@ -357,10 +356,7 @@ describe(
         labelVerticalOrigin: `${VerticalOrigin.BOTTOM}`,
       });
 
-      return style.readyPromise
-        .then(function () {
-          return loadPoints(points);
-        })
+      return loadPoints(points)
         .then(function () {
           const features = [];
           points.createFeatures(mockTilesetClone, features);

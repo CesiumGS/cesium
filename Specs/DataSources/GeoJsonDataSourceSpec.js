@@ -418,6 +418,16 @@ describe("DataSources/GeoJsonDataSource", function () {
     });
   });
 
+  it("Adds a feature without removing existing entities", function () {
+    const dataSource = new GeoJsonDataSource();
+    return dataSource.load(feature).then(function () {
+      return dataSource.process(mixedGeometries).then(function () {
+        // `feature` has one Entity, `mixedGeometries` has 3
+        expect(dataSource.entities.values.length).toBe(4);
+      });
+    });
+  });
+
   it("Creates default description from properties", function () {
     const featureWithProperties = {
       type: "Feature",
@@ -1470,7 +1480,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       .catch(function () {});
   });
 
-  it("Fails with undefined geomeetry", function () {
+  it("Fails with undefined geometry", function () {
     const dataSource = new GeoJsonDataSource();
     return dataSource
       .load(featureUndefinedGeometry)

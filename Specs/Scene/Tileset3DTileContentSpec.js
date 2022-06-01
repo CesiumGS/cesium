@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   HeadingPitchRange,
   MetadataClass,
   ContentMetadata,
@@ -127,14 +128,14 @@ describe(
         });
       });
 
-      it("assigns groupMetadata", function () {
+      it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           tilesetOfTilesetsUrl
         ).then(function (tileset) {
           const content = tileset.root.content;
-          content.groupMetadata = groupMetadata;
-          expect(content.groupMetadata).toBe(groupMetadata);
+          content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
+          expect(content.group.metadata).toBe(groupMetadata);
         });
       });
 

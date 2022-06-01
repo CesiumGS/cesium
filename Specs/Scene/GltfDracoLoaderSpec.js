@@ -1,6 +1,5 @@
 import {
   ComponentDatatype,
-  defer,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
@@ -263,15 +262,11 @@ describe("Scene/GltfDracoLoader", function () {
     );
 
     // Simulate decodeBufferView not being ready for a few frames
-    // Then simulate the promise not resolving for another few frames
-    const deferredPromise = defer();
     const decodeBufferViewCallsTotal = 3;
     let decodeBufferViewCallsCount = 0;
-    const processCallsTotal = 6;
-    let processCallsCount = 0;
     spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
       if (decodeBufferViewCallsCount++ === decodeBufferViewCallsTotal) {
-        return deferredPromise.promise;
+        return Promise.resolve(decodeDracoResults);
       }
       return undefined;
     });
@@ -288,15 +283,15 @@ describe("Scene/GltfDracoLoader", function () {
 
     return pollToPromise(function () {
       loaderProcess(dracoLoader, scene);
-      if (processCallsCount++ === processCallsTotal) {
-        deferredPromise.resolve(decodeDracoResults);
-      }
       return (
         dracoLoader._state === ResourceLoaderState.READY ||
         dracoLoader._state === ResourceLoaderState.FAILED
       );
-    }).then(function () {
-      return dracoLoader.promise.then(function (dracoLoader) {
+    })
+      .then(function () {
+        return dracoLoader.promise;
+      })
+      .then(function (dracoLoader) {
         loaderProcess(dracoLoader, scene); // Check that calling process after load doesn't break anything
         expect(dracoLoader.decodedData.indices).toBe(
           decodeDracoResults.indexArray
@@ -305,7 +300,6 @@ describe("Scene/GltfDracoLoader", function () {
           decodeDracoResults.attributeData
         );
       });
-    });
   });
 
   it("destroys draco loader", function () {
@@ -378,13 +372,14 @@ describe("Scene/GltfDracoLoader", function () {
 
     expect(dracoLoader.decodedData).not.toBeDefined();
 
-    dracoLoader.load();
+    const promise = dracoLoader.load();
     dracoLoader.destroy();
+    return promise.finally(function () {
+      expect(dracoLoader.decodedData).not.toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(true);
 
-    expect(dracoLoader.decodedData).not.toBeDefined();
-    expect(dracoLoader.isDestroyed()).toBe(true);
-
-    ResourceCache.unload(bufferViewLoaderCopy);
+      ResourceCache.unload(bufferViewLoaderCopy);
+    });
   }
 
   it("handles resolving buffer view after destroy", function () {
@@ -396,10 +391,6 @@ describe("Scene/GltfDracoLoader", function () {
   });
 
   function resolveDracoAfterDestroy(rejectPromise) {
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
-    );
-
     const dracoLoader = new GltfDracoLoader({
       resourceCache: ResourceCache,
       gltf: gltfDraco,
@@ -408,38 +399,34 @@ describe("Scene/GltfDracoLoader", function () {
       baseResource: gltfResource,
     });
 
-    let promise = new Promise(function (resolve, reject) {
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      // After we resolve, process again, then destroy
       setTimeout(function () {
         loaderProcess(dracoLoader, scene);
-        if (rejectPromise) {
-          reject(new Error());
-          return;
-        }
-
-        resolve(decodeDracoResults);
+        dracoLoader.destroy();
       }, 1);
+      return Promise.resolve(bufferArrayBuffer);
     });
-    if (rejectPromise) {
-      promise = promise.catch(function (e) {
-        // swallow that error we just threw
-      });
-    }
 
     const decodeBufferView = spyOn(
       DracoLoader,
       "decodeBufferView"
     ).and.callFake(function () {
-      return promise;
+      return new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error("Draco decode failed"));
+        } else {
+          resolve(decodeDracoResults);
+        }
+      });
     });
 
     expect(dracoLoader.decodedData).not.toBeDefined();
 
     dracoLoader.load();
     loaderProcess(dracoLoader, scene);
-    return promise.finally(function () {
+    return dracoLoader.promise.finally(function () {
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
-
-      dracoLoader.destroy();
 
       expect(dracoLoader.decodedData).not.toBeDefined();
       expect(dracoLoader.isDestroyed()).toBe(true);

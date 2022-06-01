@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -68,12 +67,11 @@ export default function Implicit3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._readyPromise = defer();
 
   this._metadata = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   const templateValues = implicitCoordinates.getTemplateValues();
   const subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource(
@@ -83,7 +81,7 @@ export default function Implicit3DTileContent(
   );
   this._url = subtreeResource.getUrlComponent(true);
 
-  initialize(this, json, arrayBuffer, byteOffset);
+  this._readyPromise = initialize(this, json, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -131,7 +129,7 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -176,12 +174,12 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -212,14 +210,10 @@ function initialize(content, json, arrayBuffer, byteOffset) {
   );
 
   content._implicitSubtree = subtree;
-  subtree.readyPromise
-    .then(function () {
-      expandSubtree(content, subtree);
-      content._readyPromise.resolve();
-    })
-    .catch(function (error) {
-      content._readyPromise.reject(error);
-    });
+  return subtree.readyPromise.then(function () {
+    expandSubtree(content, subtree);
+    return content;
+  });
 }
 
 /**

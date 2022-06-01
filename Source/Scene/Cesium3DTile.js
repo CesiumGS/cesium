@@ -4,7 +4,6 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -23,6 +22,7 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
@@ -67,6 +67,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     hasContentsArray && !hasMultipleContents
       ? header.contents[0]
       : header.content;
+
+  this._contentHeader = contentHeader;
 
   /**
    * The local transform of this tile.
@@ -709,10 +711,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   contentReadyToProcessPromise: {
     get: function () {
-      if (defined(this._contentReadyToProcessPromise)) {
-        return this._contentReadyToProcessPromise.promise;
-      }
-      return undefined;
+      return this._contentReadyToProcessPromise;
     },
   },
 
@@ -729,10 +728,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   contentReadyPromise: {
     get: function () {
-      if (defined(this._contentReadyPromise)) {
-        return this._contentReadyPromise.promise;
-      }
-      return undefined;
+      return this._contentReadyPromise;
     },
   },
 
@@ -1097,11 +1093,8 @@ function requestMultipleContents(tile) {
   }
 
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = defer();
-  tile._contentReadyPromise = defer();
-
-  multipleContents.contentsFetchedPromise
-    .then(function () {
+  const contentReadyToProcessPromise = multipleContents.contentsFetchedPromise.then(
+    function () {
       if (tile._contentState !== Cesium3DTileContentState.LOADING) {
         // tile was canceled, short circuit.
         return;
@@ -1117,26 +1110,41 @@ function requestMultipleContents(tile) {
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
-      tile._contentReadyToProcessPromise.resolve(multipleContents);
+      return multipleContents;
+    }
+  );
+  tile._contentReadyToProcessPromise = contentReadyToProcessPromise;
+  tile._contentReadyPromise = contentReadyToProcessPromise
+    .then(function (content) {
+      if (!defined(content)) {
+        // request was canceled, short circuit.
+        return;
+      }
 
-      return multipleContents.readyPromise.then(function (content) {
-        if (tile.isDestroyed()) {
-          multipleContentFailed(
-            tile,
-            tileset,
-            "Tile was unloaded while content was processing"
-          );
-          return;
-        }
+      return multipleContents.readyPromise;
+    })
+    .then(function (content) {
+      if (!defined(content)) {
+        // tile was canceled, short circuit.
+        return;
+      }
 
-        // Refresh style for expired content
-        tile._selectedFrame = 0;
-        tile.lastStyleTime = 0.0;
+      if (tile.isDestroyed()) {
+        multipleContentFailed(
+          tile,
+          tileset,
+          "Tile was unloaded while content was processing"
+        );
+        return;
+      }
 
-        JulianDate.now(tile._loadTimestamp);
-        tile._contentState = Cesium3DTileContentState.READY;
-        tile._contentReadyPromise.resolve(content);
-      });
+      // Refresh style for expired content
+      tile._selectedFrame = 0;
+      tile.lastStyleTime = 0.0;
+
+      JulianDate.now(tile._loadTimestamp);
+      tile._contentState = Cesium3DTileContentState.READY;
+      return content;
     })
     .catch(function (error) {
       multipleContentFailed(tile, tileset, error);
@@ -1153,8 +1161,6 @@ function multipleContentFailed(tile, tileset, error) {
   }
 
   tile._contentState = Cesium3DTileContentState.FAILED;
-  tile._contentReadyPromise.reject(error);
-  tile._contentReadyToProcessPromise.reject(error);
 }
 
 function requestSingleContent(tile) {
@@ -1188,45 +1194,53 @@ function requestSingleContent(tile) {
   const previousState = tile._contentState;
   const tileset = tile._tileset;
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = defer();
-  tile._contentReadyPromise = defer();
   ++tileset.statistics.numberOfPendingRequests;
+  const contentReadyToProcessPromise = promise.then(function (arrayBuffer) {
+    if (tile.isDestroyed()) {
+      // Tile is unloaded before the content finishes loading
+      singleContentFailed(tile, tileset);
+      return;
+    }
 
-  promise
-    .then(function (arrayBuffer) {
-      if (tile.isDestroyed()) {
-        // Tile is unloaded before the content finishes loading
-        singleContentFailed(tile, tileset);
+    const content = makeContent(tile, arrayBuffer);
+
+    if (expired) {
+      tile.expireDate = undefined;
+    }
+
+    tile._content = content;
+    tile._contentState = Cesium3DTileContentState.PROCESSING;
+    return content;
+  });
+  tile._contentReadyToProcessPromise = contentReadyToProcessPromise;
+  tile._contentReadyPromise = contentReadyToProcessPromise
+    .then(function (content) {
+      if (!defined(content)) {
         return;
       }
 
-      const content = makeContent(tile, arrayBuffer);
-
-      if (expired) {
-        tile.expireDate = undefined;
+      --tileset.statistics.numberOfPendingRequests;
+      return content.readyPromise;
+    })
+    .then(function (content) {
+      if (!defined(content)) {
+        return;
       }
 
-      tile._content = content;
-      tile._contentState = Cesium3DTileContentState.PROCESSING;
-      tile._contentReadyToProcessPromise.resolve(content);
-      --tileset.statistics.numberOfPendingRequests;
+      if (tile.isDestroyed()) {
+        // Tile is unloaded before the content finishes processing
+        singleContentFailed(tile, tileset);
+        return;
+      }
+      updateExpireDate(tile);
 
-      return content.readyPromise.then(function (content) {
-        if (tile.isDestroyed()) {
-          // Tile is unloaded before the content finishes processing
-          singleContentFailed(tile, tileset);
-          return;
-        }
-        updateExpireDate(tile);
+      // Refresh style for expired content
+      tile._selectedFrame = 0;
+      tile.lastStyleTime = 0.0;
 
-        // Refresh style for expired content
-        tile._selectedFrame = 0;
-        tile.lastStyleTime = 0.0;
-
-        JulianDate.now(tile._loadTimestamp);
-        tile._contentState = Cesium3DTileContentState.READY;
-        tile._contentReadyPromise.resolve(content);
-      });
+      JulianDate.now(tile._loadTimestamp);
+      tile._contentState = Cesium3DTileContentState.READY;
+      return content;
     })
     .catch(function (error) {
       if (request.state === RequestState.CANCELLED) {
@@ -1234,23 +1248,22 @@ function requestSingleContent(tile) {
         tile._contentState = previousState;
         --tileset.statistics.numberOfPendingRequests;
         ++tileset.statistics.numberOfAttemptedRequests;
-        return;
+        return Promise.reject("Cancelled");
       }
-      singleContentFailed(tile, tileset, error);
+      singleContentFailed(tile, tileset);
+      return Promise.reject(error);
     });
 
   return 0;
 }
 
-function singleContentFailed(tile, tileset, error) {
+function singleContentFailed(tile, tileset) {
   if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
     --tileset.statistics.numberOfTilesProcessing;
   } else {
     --tileset.statistics.numberOfPendingRequests;
   }
   tile._contentState = Cesium3DTileContentState.FAILED;
-  tile._contentReadyPromise.reject(error);
-  tile._contentReadyToProcessPromise.reject(error);
 }
 
 /**
@@ -1305,9 +1318,7 @@ function makeContent(tile, arrayBuffer) {
     );
   }
 
-  const contentHeader = defined(tile._header.contents)
-    ? tile._header.contents[0]
-    : tile._header.content;
+  const contentHeader = tile._contentHeader;
 
   if (tile.hasImplicitContentMetadata) {
     const subtree = tile.implicitSubtree;
@@ -1317,7 +1328,13 @@ function makeContent(tile, arrayBuffer) {
     content.metadata = findContentMetadata(tileset, contentHeader);
   }
 
-  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
+  const groupMetadata = findGroupMetadata(tileset, contentHeader);
+  if (defined(groupMetadata)) {
+    content.group = new Cesium3DContentGroup({
+      metadata: groupMetadata,
+    });
+  }
+
   return content;
 }
 
@@ -1723,7 +1740,7 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
 
   // Update the bounding volumes
   const header = this._header;
-  const content = this._header.content;
+  const contentHeader = this._contentHeader;
   this._boundingVolume = this.createBoundingVolume(
     header.boundingVolume,
     this.computedTransform,
@@ -1731,7 +1748,7 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   );
   if (defined(this._contentBoundingVolume)) {
     this._contentBoundingVolume = this.createBoundingVolume(
-      content.boundingVolume,
+      contentHeader.boundingVolume,
       this.computedTransform,
       this._contentBoundingVolume
     );
@@ -1768,8 +1785,7 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
   }
 
   const hasContentBoundingVolume =
-    defined(tile._header.content) &&
-    defined(tile._header.content.boundingVolume);
+    defined(tile._contentHeader) && defined(tile._contentHeader.boundingVolume);
   const empty =
     tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent;
 

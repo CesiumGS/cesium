@@ -176,7 +176,7 @@ describe(
       expect(primitive.clippingPlanes._planes[0].distance).toEqual(
         clippingPlanes._planes[0].distance
       );
-      expect(primitive.imageBasedLightingFactor).toEqual(
+      expect(primitive.imageBasedLighting.imageBasedLightingFactor).toEqual(
         new Cartesian2(0.5, 0.5)
       );
       expect(primitive.lightColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
@@ -372,7 +372,7 @@ describe(
       }).then(function () {
         expect(state).toBe(BoundingSphereState.DONE);
         const expected = BoundingSphere.transform(
-          modelPrimitive.boundingSphere,
+          modelPrimitive.boundingSphereInternal,
           modelPrimitive.modelMatrix,
           new BoundingSphere()
         );

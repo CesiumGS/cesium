@@ -6,6 +6,8 @@ import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
+import { findTileMetadata } from "../../Source/Cesium.js";
+import { findContentMetadata } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
@@ -257,9 +259,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    // Throws several unhandled 404 errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects readyPromise with invalid tileset JSON file", function () {
+    it("rejects readyPromise with invalid tileset JSON file", function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
         url,
         responseType,
@@ -587,9 +587,7 @@ describe(
       return tileset.readyPromise;
     });
 
-    // Throws several unhandled errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("requests tile with invalid magic", function () {
+    it("requests tile with invalid magic", function () {
       const invalidMagicBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
         magic: [120, 120, 120, 120],
       });
@@ -621,9 +619,7 @@ describe(
       });
     });
 
-    // Throws several unhandled 404 errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("handles failed tile requests", function () {
+    it("handles failed tile requests", function () {
       viewRootOnly();
       options.url = tilesetUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -638,7 +634,7 @@ describe(
           deferred,
           overrideMimeType
         ) {
-          deferred.reject();
+          deferred.reject(new Error());
         });
         scene.renderForSpecs(); // Request root
         const root = tileset.root;
@@ -657,9 +653,7 @@ describe(
       });
     });
 
-    // Throws several unhandled errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("handles failed tile processing", function () {
+    it("handles failed tile processing", function () {
       viewRootOnly();
       options.url = tilesetUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -2002,9 +1996,9 @@ describe(
     });
 
     it("debugWireframe", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enableDebugWireframe: true,
+      }).then(function (tileset) {
         viewRootOnly();
         tileset.debugWireframe = true;
         scene.renderForSpecs();
@@ -2444,9 +2438,7 @@ describe(
       });
     });
 
-    // Throws several unhandled 404 errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("tile failed event is raised", function () {
+    it("tile failed event is raised", function () {
       viewNothing();
       const spyUpdate = jasmine.createSpy("listener");
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl)
@@ -2510,21 +2502,17 @@ describe(
           expect(statistics.numberOfPendingRequests).toEqual(1);
           scene.primitives.remove(tileset);
 
-          return root.contentReadyPromise
-            .then(function (root) {
-              fail("should not resolve");
-            })
-            .catch(function (error) {
-              // Expect the root to not have added any children from the external tileset JSON file
-              expect(root.children.length).toEqual(0);
-            });
+          return root.contentReadyPromise.then(function (content) {
+            expect(content).toBeUndefined();
+
+            // Expect the root to not have added any children from the external tileset JSON file
+            expect(root.children.length).toEqual(0);
+          });
         }
       );
     });
 
-    // Throws error in release tests
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("destroys before tile finishes loading", function () {
+    it("destroys before tile finishes loading", function () {
       viewRootOnly();
       options.url = tilesetUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -2533,13 +2521,10 @@ describe(
         scene.renderForSpecs(); // Request root
         scene.primitives.remove(tileset);
 
-        return root.contentReadyPromise
-          .then(function (content) {
-            fail("should not resolve");
-          })
-          .catch(function (error) {
-            expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
-          });
+        return root.contentReadyPromise.then(function (content) {
+          expect(content).toBeUndefined();
+          expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
+        });
       });
     });
 
@@ -2550,9 +2535,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).notToRender(rgba);
           });
         }
@@ -2566,9 +2552,10 @@ describe(
       };
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
+          const ibl = tileset.imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
-            tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(renderOptions).toRenderAndCall(function (rgba2) {
               expect(rgba2).not.toEqual(rgba);
               tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
@@ -2680,131 +2667,101 @@ describe(
 
     it("applies show style to a tileset", function () {
       let tileset, hideStyle;
-      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
+        function (t) {
           tileset = t;
           hideStyle = new Cesium3DTileStyle({ show: "false" });
           tileset.style = hideStyle;
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(tileset.style).toBe(hideStyle);
           expect(scene).toRender([0, 0, 0, 255]);
           tileset.style = new Cesium3DTileStyle({ show: "true" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies show style to a tileset without features", function () {
       let tileset;
       let hideStyle;
-      return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(
+        function (t) {
           tileset = t;
           hideStyle = new Cesium3DTileStyle({ show: "false" });
           tileset.style = hideStyle;
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(tileset.style).toBe(hideStyle);
           expect(scene).toRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({ show: "true" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies style with complex show expression to a tileset", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           // Each feature in the b3dm file has an id property from 0 to 9
           // ${id} >= 10 will always evaluate to false
           tileset.style = new Cesium3DTileStyle({ show: "${id} >= 50 * 2" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRender([0, 0, 0, 255]);
 
           // ${id} < 10 will always evaluate to true
           tileset.style = new Cesium3DTileStyle({ show: "${id} < 200 / 2" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies show style to a tileset with a composite tile", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, compositeUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
+        function (t) {
           tileset = t;
           tileset.style = new Cesium3DTileStyle({ show: "false" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({ show: "true" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies show style to a tileset with glTF content", function () {
       let tileset;
       let hideStyle;
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (t) {
           tileset = t;
           viewGltfContent();
           hideStyle = new Cesium3DTileStyle({ show: "false" });
           tileset.style = hideStyle;
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(tileset.style).toBe(hideStyle);
           expect(scene).toRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({ show: "true" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies show style to a tileset with glb content", function () {
       let tileset;
       let hideStyle;
-      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
+        function (t) {
           tileset = t;
           viewGltfContent();
           hideStyle = new Cesium3DTileStyle({ show: "false" });
           tileset.style = hideStyle;
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(tileset.style).toBe(hideStyle);
           expect(scene).toRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({ show: "true" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     function expectColorStyle(tileset) {
@@ -2814,39 +2771,30 @@ describe(
       });
 
       tileset.style = new Cesium3DTileStyle({ color: 'color("blue")' });
-      return tileset.style.readyPromise
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toBeGreaterThan(0);
-            expect(rgba[3]).toEqual(255);
-          });
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toEqual(0);
+        expect(rgba[2]).toBeGreaterThan(0);
+        expect(rgba[3]).toEqual(255);
+      });
 
-          // set color to transparent
-          tileset.style = new Cesium3DTileStyle({
-            color: 'color("blue", 0.0)',
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(scene).toRender([0, 0, 0, 255]);
+      // set color to transparent
+      tileset.style = new Cesium3DTileStyle({
+        color: 'color("blue", 0.0)',
+      });
+      expect(scene).toRender([0, 0, 0, 255]);
 
-          tileset.style = new Cesium3DTileStyle({ color: 'color("cyan")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toEqual(0);
-            expect(rgba[1]).toBeGreaterThan(0);
-            expect(rgba[2]).toBeGreaterThan(0);
-            expect(rgba[3]).toEqual(255);
-          });
+      tileset.style = new Cesium3DTileStyle({ color: 'color("cyan")' });
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toBeGreaterThan(0);
+        expect(rgba[2]).toBeGreaterThan(0);
+        expect(rgba[3]).toEqual(255);
+      });
 
-          // Remove style
-          tileset.style = undefined;
-          expect(scene).toRender(color);
-        });
+      // Remove style
+      tileset.style = undefined;
+      expect(scene).toRender(color);
     }
 
     it("applies color style to a tileset", function () {
@@ -2902,14 +2850,11 @@ describe(
 
     it("applies style when feature properties change", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           // Initially, all feature ids are less than 10
           tileset.style = new Cesium3DTileStyle({ show: "${id} < 10" });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).notToRender([0, 0, 0, 255]);
 
           // Change feature ids so the show expression will evaluate to false
@@ -2929,35 +2874,27 @@ describe(
             feature.setProperty("id", feature.getProperty("id") - 10);
           }
           expect(scene).notToRender([0, 0, 0, 255]);
-        });
+        }
+      );
     });
 
     it("applies style when tile is selected after new style is applied", function () {
       let tileset;
       let feature;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           feature = tileset.root.content.getFeature(0);
           tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(feature.color).toEqual(Color.RED);
 
           tileset.style = new Cesium3DTileStyle({ color: 'color("blue")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(feature.color).toEqual(Color.BLUE);
 
           viewNothing();
           tileset.style = new Cesium3DTileStyle({ color: 'color("lime")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(feature.color).toEqual(Color.BLUE); // Hasn't been selected yet
 
@@ -2974,18 +2911,16 @@ describe(
           expect(feature.show).toBe(false);
           viewAllTiles();
           expect(feature.show).toBe(false);
-        });
+        }
+      );
     });
 
     it("does not reapply style during pick pass", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(
             tileset._statisticsPerPass[Cesium3DTilePass.RENDER]
@@ -2996,22 +2931,20 @@ describe(
             tileset._statisticsPerPass[Cesium3DTilePass.PICK]
               .numberOfTilesStyled
           ).toBe(0);
-        });
+        }
+      );
     });
 
     it("applies style with complex color expression to a tileset", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           // Each feature in the b3dm file has an id property from 0 to 9
           // ${id} >= 10 will always evaluate to false
           tileset.style = new Cesium3DTileStyle({
             color: '(${id} >= 50 * 2) ? color("red") : color("blue")',
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -3023,22 +2956,20 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             color: '(${id} < 50 * 2) ? color("red") : color("blue")',
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(0);
             expect(rgba[3]).toEqual(255);
           });
-        });
+        }
+      );
     });
 
     it("applies conditional color style to a tileset", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           // ${id} < 10 will always evaluate to true
           tileset.style = new Cesium3DTileStyle({
@@ -3049,9 +2980,6 @@ describe(
               ],
             },
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(0);
@@ -3068,50 +2996,43 @@ describe(
               ],
             },
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toBeGreaterThan(0);
             expect(rgba[3]).toEqual(255);
           });
-        });
+        }
+      );
     });
 
     it("handle else case when applying conditional color style to a tileset", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           tileset.style = new Cesium3DTileStyle({
             color: {
               conditions: [["${id} > 0", 'color("black")']],
             },
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).color).toEqual(Color.WHITE);
           expect(tileset.root.content.getFeature(1).color).toEqual(Color.BLACK);
-        });
+        }
+      );
     });
 
     it("handle else case when applying conditional show to a tileset", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           tileset.style = new Cesium3DTileStyle({
             show: {
               conditions: [["${id} > 0", "true"]],
             },
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(true);
@@ -3121,32 +3042,26 @@ describe(
               conditions: [["${id} > 0", "false"]],
             },
           });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
           scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(false);
-        });
+        }
+      );
     });
 
     it("loads style from uri", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
           // ${id} < 10 will always evaluate to true
-          tileset.style = new Cesium3DTileStyle(styleUrl);
-          return tileset.style.readyPromise
-            .then(function (style) {
-              expect(scene).toRenderAndCall(function (rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toEqual(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-              });
-            })
-            .catch(function (error) {
-              expect(error).not.toBeDefined();
+          return Cesium3DTileStyle.fromUrl(styleUrl).then(function (style) {
+            tileset.style = style;
+            expect(scene).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeGreaterThan(0);
+              expect(rgba[1]).toEqual(0);
+              expect(rgba[2]).toEqual(0);
+              expect(rgba[3]).toEqual(255);
             });
+          });
         }
       );
     });
@@ -3180,15 +3095,13 @@ describe(
 
     it("doesn't re-evaluate style during the next update", function () {
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           tileset.show = false;
           tileset.preloadWhenHidden = true;
           tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
+
           scene.renderForSpecs();
 
           const statistics =
@@ -3197,20 +3110,19 @@ describe(
 
           scene.renderForSpecs();
           expect(statistics.numberOfTilesStyled).toBe(0);
-        });
+        }
+      );
     });
 
     it("doesn't re-evaluate style if the style being set is the same as the active style", function () {
       let tileset;
       let style;
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl)
-        .then(function (t) {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
           tileset = t;
           style = new Cesium3DTileStyle({ color: 'color("red")' });
           tileset.style = style;
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
+
           scene.renderForSpecs();
 
           const statistics =
@@ -3220,7 +3132,8 @@ describe(
           tileset.style = style;
           scene.renderForSpecs();
           expect(statistics.numberOfTilesStyled).toBe(0);
-        });
+        }
+      );
     });
 
     function testColorBlendMode(url) {
@@ -3234,161 +3147,148 @@ describe(
         time: new JulianDate(2457522.154792),
       };
       let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, url)
-        .then(function (t) {
-          tileset = t;
-          tileset.luminanceAtZenith = undefined;
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (t) {
+        tileset = t;
+        tileset.luminanceAtZenith = undefined;
 
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            sourceRed = rgba[0];
-            sourceGreen = rgba[1];
-          });
-
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(200);
-            expect(rgba[1]).toBeLessThan(25);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Use HIGHLIGHT blending
-          tileset.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
-
-          // Style with dark yellow. Expect the red channel to be darker than before.
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgb(128, 128, 0)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(100);
-            expect(rgba[0]).toBeLessThan(sourceRed);
-            expect(rgba[1]).toBeLessThan(25);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Style with yellow + alpha. Expect the red channel to be darker than before.
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgba(255, 255, 0, 0.5)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(100);
-            expect(rgba[0]).toBeLessThan(sourceRed);
-            expect(rgba[1]).toBeLessThan(25);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Use REPLACE blending
-          tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
-
-          // Style with dark yellow. Expect the red and green channels to be roughly dark yellow.
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgb(128, 128, 0)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            replaceRed = rgba[0];
-            replaceGreen = rgba[1];
-            expect(rgba[0]).toBeGreaterThan(100);
-            expect(rgba[0]).toBeLessThan(255);
-            expect(rgba[1]).toBeGreaterThan(100);
-            expect(rgba[1]).toBeLessThan(255);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgba(255, 255, 0, 0.5)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(100);
-            expect(rgba[0]).toBeLessThan(255);
-            expect(rgba[1]).toBeGreaterThan(100);
-            expect(rgba[1]).toBeLessThan(255);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Use MIX blending
-          tileset.colorBlendMode = Cesium3DTileColorBlendMode.MIX;
-          tileset.colorBlendAmount = 0.5;
-
-          // Style with dark yellow. Expect color to be a mix of the source and style colors.
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgb(128, 128, 0)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          let mixRed;
-          let mixGreen;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            mixRed = rgba[0];
-            mixGreen = rgba[1];
-            expect(rgba[0]).toBeGreaterThan(replaceRed);
-            expect(rgba[0]).toBeLessThan(sourceRed);
-            expect(rgba[1]).toBeGreaterThan(sourceGreen);
-            expect(rgba[1]).toBeLessThan(replaceGreen);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
-          tileset.colorBlendAmount = 0.25;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(mixRed);
-            expect(rgba[0]).toBeLessThan(sourceRed);
-            expect(rgba[1]).toBeGreaterThan(0);
-            expect(rgba[1]).toBeLessThan(mixGreen);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Set colorBlendAmount to 0.0. Expect color to equal the source color
-          tileset.colorBlendAmount = 0.0;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toEqual(sourceRed);
-            expect(rgba[1]).toBeLessThan(25);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Set colorBlendAmount to 1.0. Expect color to equal the style color
-          tileset.colorBlendAmount = 1.0;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toEqual(replaceRed);
-            expect(rgba[1]).toEqual(replaceGreen);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
-
-          // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
-          tileset.colorBlendAmount = 0.5;
-          tileset.style = new Cesium3DTileStyle({
-            color: "rgba(255, 255, 0, 0.5)",
-          });
-          return tileset.style.readyPromise;
-        })
-        .then(function () {
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[1]).toBeGreaterThan(0);
-            expect(rgba[2]).toBeLessThan(25);
-            expect(rgba[3]).toEqual(255);
-          });
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          sourceRed = rgba[0];
+          sourceGreen = rgba[1];
         });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(200);
+          expect(rgba[1]).toBeLessThan(25);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Use HIGHLIGHT blending
+        tileset.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+
+        // Style with dark yellow. Expect the red channel to be darker than before.
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgb(128, 128, 0)",
+        });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(100);
+          expect(rgba[0]).toBeLessThan(sourceRed);
+          expect(rgba[1]).toBeLessThan(25);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Style with yellow + alpha. Expect the red channel to be darker than before.
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgba(255, 255, 0, 0.5)",
+        });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(100);
+          expect(rgba[0]).toBeLessThan(sourceRed);
+          expect(rgba[1]).toBeLessThan(25);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Use REPLACE blending
+        tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
+
+        // Style with dark yellow. Expect the red and green channels to be roughly dark yellow.
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgb(128, 128, 0)",
+        });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          replaceRed = rgba[0];
+          replaceGreen = rgba[1];
+          expect(rgba[0]).toBeGreaterThan(100);
+          expect(rgba[0]).toBeLessThan(255);
+          expect(rgba[1]).toBeGreaterThan(100);
+          expect(rgba[1]).toBeLessThan(255);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgba(255, 255, 0, 0.5)",
+        });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(100);
+          expect(rgba[0]).toBeLessThan(255);
+          expect(rgba[1]).toBeGreaterThan(100);
+          expect(rgba[1]).toBeLessThan(255);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Use MIX blending
+        tileset.colorBlendMode = Cesium3DTileColorBlendMode.MIX;
+        tileset.colorBlendAmount = 0.5;
+
+        // Style with dark yellow. Expect color to be a mix of the source and style colors.
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgb(128, 128, 0)",
+        });
+
+        let mixRed;
+        let mixGreen;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          mixRed = rgba[0];
+          mixGreen = rgba[1];
+          expect(rgba[0]).toBeGreaterThan(replaceRed);
+          expect(rgba[0]).toBeLessThan(sourceRed);
+          expect(rgba[1]).toBeGreaterThan(sourceGreen);
+          expect(rgba[1]).toBeLessThan(replaceGreen);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
+        tileset.colorBlendAmount = 0.25;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(mixRed);
+          expect(rgba[0]).toBeLessThan(sourceRed);
+          expect(rgba[1]).toBeGreaterThan(0);
+          expect(rgba[1]).toBeLessThan(mixGreen);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Set colorBlendAmount to 0.0. Expect color to equal the source color
+        tileset.colorBlendAmount = 0.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toEqual(sourceRed);
+          expect(rgba[1]).toBeLessThan(25);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Set colorBlendAmount to 1.0. Expect color to equal the style color
+        tileset.colorBlendAmount = 1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toEqual(replaceRed);
+          expect(rgba[1]).toEqual(replaceGreen);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
+        tileset.colorBlendAmount = 0.5;
+        tileset.style = new Cesium3DTileStyle({
+          color: "rgba(255, 255, 0, 0.5)",
+        });
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[1]).toBeGreaterThan(0);
+          expect(rgba[2]).toBeLessThan(25);
+          expect(rgba[3]).toEqual(255);
+        });
+      });
     }
 
     it("sets colorBlendMode", function () {
@@ -4236,9 +4136,7 @@ describe(
       });
     });
 
-    // Throws several unhandled 404 errors
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("tile expires and request fails", function () {
+    it("tile expires and request fails", function () {
       return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(
         function (tileset) {
           spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
@@ -4817,7 +4715,7 @@ describe(
               expect(statistics.numberOfCommands).toBe(3); // One for each level of the tree
               expect(
                 statistics.numberOfTilesWithContentReady
-              ).toBeGreaterThanOrEqualTo(3);
+              ).toBeGreaterThanOrEqual(3);
               expect(statistics.selected).toBe(3);
               expect(statistics.visited).toBeGreaterThan(3);
               expect(statistics.numberOfTilesTotal).toBe(21);
@@ -4931,9 +4829,7 @@ describe(
       });
     });
 
-    // Cancelling a request throws an unhandled 404
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("cancels out-of-view tiles", function () {
+    it("cancels out-of-view tiles", function () {
       viewNothing();
 
       return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(
@@ -5403,6 +5299,33 @@ describe(
           }
         );
       });
+
+      it("debugShowUrl works for implicit tiling", function () {
+        return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
+          function (tileset) {
+            tileset.debugShowUrl = true;
+            scene.renderForSpecs();
+
+            const expectedLabels = [
+              "Url: content/0/0/0.b3dm",
+              "Url: content/1/0/0.b3dm",
+              "Url: content/1/1/0.b3dm",
+              "Url: content/1/1/1.b3dm",
+              "Url: content/1/0/1.b3dm",
+              "Url: subtrees/0.0.0.subtree",
+            ];
+            const debugLabels = tileset._tileDebugLabels._labels;
+            const length = debugLabels.length;
+            expect(length).toBe(expectedLabels.length);
+            for (let i = 0; i < length; i++) {
+              expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+            }
+            tileset.debugShowUrl = false;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
+          }
+        );
+      });
     });
 
     describe("3DTILES_implicit_tiling", function () {
@@ -5484,6 +5407,34 @@ describe(
           expect(implicitTile.implicitCoordinates.y).toEqual(0);
         });
       });
+
+      it("debugShowUrl works for implicit tiling (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetLegacyUrl
+        ).then(function (tileset) {
+          tileset.debugShowUrl = true;
+          scene.renderForSpecs();
+
+          const expectedLabels = [
+            "Url: content/0/0/0.b3dm",
+            "Url: content/1/0/0.b3dm",
+            "Url: content/1/1/0.b3dm",
+            "Url: content/1/1/1.b3dm",
+            "Url: content/1/0/1.b3dm",
+            "Url: subtrees/0.0.0.subtree",
+          ];
+          const debugLabels = tileset._tileDebugLabels._labels;
+          const length = debugLabels.length;
+          expect(length).toBe(expectedLabels.length);
+          for (let i = 0; i < length; i++) {
+            expect(debugLabels[i].text).toEqual(expectedLabels[i]);
+          }
+          tileset.debugShowUrl = false;
+          scene.renderForSpecs();
+          expect(tileset._tileDebugLabels).not.toBeDefined();
+        });
+      });
     });
 
     describe("multiple contents", function () {
@@ -5519,25 +5470,31 @@ describe(
         });
 
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
+        let statistics;
+
+        const tileset = scene.primitives.add(
+          new Cesium3DTileset({
+            url: multipleContentsUrl,
+          })
+        );
+        return tileset.readyPromise
+          .then(function (tileset) {
             viewAllTiles();
             scene.renderForSpecs();
 
-            const statistics = tileset.statistics;
+            statistics = tileset.statistics;
             expect(statistics.numberOfAttemptedRequests).toBe(0);
             expect(statistics.numberOfPendingRequests).toBe(3);
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-            tileset.root.contentReadyToProcessPromise
-              .then(function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
-                expect(statistics.numberOfPendingRequests).toBe(0);
-                expect(statistics.numberOfTilesProcessing).toBe(1);
-                expect(statistics.numberOfTilesWithContentReady).toBe(0);
-              })
-              .catch(fail);
+            return tileset.root.contentReadyToProcessPromise;
+          })
+          .then(function () {
+            expect(statistics.numberOfAttemptedRequests).toBe(0);
+            expect(statistics.numberOfPendingRequests).toBe(0);
+            expect(statistics.numberOfTilesProcessing).toBe(1);
+            expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
               function () {
@@ -5547,8 +5504,7 @@ describe(
                 expect(statistics.numberOfTilesWithContentReady).toBe(1);
               }
             );
-          }
-        );
+          });
       });
 
       it("request statistics are updated correctly if requests are not scheduled", function () {
@@ -5705,27 +5661,29 @@ describe(
         });
 
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            let errorCount = 0;
-            tileset.tileFailed.addEventListener(function (event) {
-              errorCount++;
-              expect(endsWith(event.url, ".json")).toBe(true);
-              expect(event.message).toEqual(
-                "External tilesets are disallowed inside multiple contents"
-              );
-            });
-
-            viewAllTiles();
-            scene.renderForSpecs();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-              function () {
-                expect(errorCount).toBe(2);
-              }
-            );
-          }
+        let errorCount = 0;
+        const tileset = scene.primitives.add(
+          new Cesium3DTileset({
+            url: multipleContentsUrl,
+          })
         );
+        tileset.tileFailed.addEventListener(function (event) {
+          errorCount++;
+          expect(endsWith(event.url, ".json")).toBe(true);
+          expect(event.message).toEqual(
+            "External tilesets are disallowed inside multiple contents"
+          );
+        });
+        return tileset.readyPromise.then(function (tileset) {
+          viewAllTiles();
+          scene.renderForSpecs();
+
+          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+            function () {
+              expect(errorCount).toBe(2);
+            }
+          );
+        });
       });
 
       it("debugColorizeTiles for multiple contents", function () {
@@ -6196,14 +6154,15 @@ describe(
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
       const tilesetWithImplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
+      const tilesetWithoutRootSchemaTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalTileMetadata.json";
+      const tilesetWithoutRootSchemaContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetNoRootSchema/ExternalContentMetadata.json";
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            const metadata = tileset.metadata;
-            expect(metadata).toBeDefined();
-
-            const tilesetMetadata = metadata.tileset;
+            const tilesetMetadata = tileset.metadata;
             expect(function () {
               return tilesetMetadata.getProperty("name");
             }).toThrowDeveloperError();
@@ -6228,16 +6187,11 @@ describe(
           scene,
           tilesetWithGroupMetadataUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
-          const groupIds = metadata.groupIds;
           expect(groups).toBeDefined();
-          expect(groupIds).toEqual([
-            "residentialDistrict",
-            "commercialDistrict",
-          ]);
 
           let group = groups[1];
           expect(group).toBeDefined();
@@ -6259,14 +6213,14 @@ describe(
           scene,
           tilesetWithGroupMetadataUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           const commercialDistrict = metadata.groups[1];
           const residentialDistrict = metadata.groups[0];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6279,7 +6233,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });
@@ -6287,7 +6241,7 @@ describe(
       it("loads metadata with embedded schema", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            const schema = tileset.metadata.schema;
+            const schema = tileset.schema;
             expect(schema).toBeDefined();
 
             const classes = schema.classes;
@@ -6301,7 +6255,7 @@ describe(
           scene,
           tilesetWithExternalSchemaUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;
@@ -6419,6 +6373,23 @@ describe(
         });
       });
 
+      it("gracefully handles external tileset with tile metadata but no root schema", function () {
+        spyOn(findTileMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaTileMetadataUrl
+        ).then(function (tileset) {
+          expect(findTileMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.metadata).not.toBeDefined();
+          });
+        });
+      });
+
       it("loads explicit tileset with content metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -6518,6 +6489,24 @@ describe(
               );
             }
           }
+        });
+      });
+
+      it("gracefully handles external tileset with content metadata but no root schema", function () {
+        spyOn(findContentMetadata, "_oneTimeWarning");
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithoutRootSchemaContentMetadataUrl
+        ).then(function (tileset) {
+          expect(findContentMetadata._oneTimeWarning).toHaveBeenCalledTimes(5);
+
+          // Account for the external tileset's root tile.
+          const parent = tileset.root.children[0];
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            expect(tile.content).toBeDefined();
+            expect(tile.content.metadata).not.toBeDefined();
+          });
         });
       });
 
@@ -6658,7 +6647,7 @@ describe(
           scene,
           tilesetMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const tilesetMetadata = metadata.tileset;
@@ -6685,7 +6674,7 @@ describe(
           scene,
           tilesetWithGroupMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
@@ -6716,14 +6705,14 @@ describe(
           scene,
           tilesetWithGroupMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           const commercialDistrict = metadata.groups[0];
           const residentialDistrict = metadata.groups[1];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6736,7 +6725,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });
@@ -6746,7 +6735,7 @@ describe(
           scene,
           tilesetMetadataLegacyUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;
@@ -6759,7 +6748,7 @@ describe(
           scene,
           tilesetWithExternalSchemaLegacyUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;
