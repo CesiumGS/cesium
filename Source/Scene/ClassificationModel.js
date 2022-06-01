@@ -249,6 +249,18 @@ Object.defineProperties(ClassificationModel.prototype, {
   },
 
   /**
+   * For compatibility with Model which now uses gltfInternal to avoid
+   * deprecation noise.
+   *
+   * @private
+   */
+  gltfInternal: {
+    get: function () {
+      return this._gltf;
+    },
+  },
+
+  /**
    * The model's bounding sphere in its local coordinate system.
    *
    * @memberof ClassificationModel.prototype
