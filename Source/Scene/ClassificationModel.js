@@ -993,7 +993,7 @@ function updateNodeModelMatrix(
       );
       model._rtcCenter = model._rtcCenter3D;
     } else {
-      const center = model.boundingSphere.center;
+      const center = model.boundingSphereInternal.center;
       const to2D = Transforms.wgs84To2DModelMatrix(
         projection,
         center,

@@ -1044,8 +1044,8 @@ ModelInstanceCollection.prototype.update = function (frameState) {
 
     // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
     const modelRadius =
-      model.boundingSphere.radius +
-      Cartesian3.magnitude(model.boundingSphere.center);
+      model.boundingSphereInternal.radius +
+      Cartesian3.magnitude(model.boundingSphereInternal.center);
     this._boundingSphere.radius += modelRadius;
     this._modelCommands = getModelCommands(model);
 

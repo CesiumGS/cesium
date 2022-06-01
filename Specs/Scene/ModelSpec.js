@@ -219,11 +219,12 @@ describe(
         const camera = scene.camera;
         const center = Matrix4.multiplyByPoint(
           model.modelMatrix,
-          model.boundingSphere.center,
+          model.boundingSphereInternal.center,
           new Cartesian3()
         );
         const r =
-          zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
+          zoom *
+          Math.max(model.boundingSphereInternal.radius, camera.frustum.near);
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
       };
     }
@@ -996,12 +997,12 @@ describe(
     it("boundingSphere throws when model is not loaded", function () {
       const m = new Model();
       expect(function () {
-        return m.boundingSphere;
+        return m.boundingSphereInternal;
       }).toThrowDeveloperError();
     });
 
     it("boundingSphere returns the bounding sphere", function () {
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1013,7 +1014,7 @@ describe(
       const originalScale = texturedBoxModel.scale;
       texturedBoxModel.scale = 10;
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1029,7 +1030,7 @@ describe(
       texturedBoxModel.scale = 20;
       texturedBoxModel.maximumScale = 10;
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1048,7 +1049,7 @@ describe(
         texturedBoxModel.modelMatrix
       );
 
-      const boundingSphere = texturedBoxModel.boundingSphere;
+      const boundingSphere = texturedBoxModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0, 0.0, 0.0),
         CesiumMath.EPSILON3
@@ -1059,7 +1060,7 @@ describe(
     });
 
     it("boundingSphere transforms from z-forward to x-forward (glTF 2.0)", function () {
-      const boundingSphere = riggedFigureModel.boundingSphere;
+      const boundingSphere = riggedFigureModel.boundingSphereInternal;
       expect(boundingSphere.center).toEqualEpsilon(
         new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
         CesiumMath.EPSILON3
@@ -1436,7 +1437,7 @@ describe(
         modelMatrix: Matrix4.IDENTITY,
         minimumPixelSize: 1,
       }).then(function (m) {
-        const bs = m.boundingSphere;
+        const bs = m.boundingSphereInternal;
         expect(
           bs.center.equalsEpsilon(
             new Cartesian3(6378137.0, 0.0, 0.0),
@@ -3136,10 +3137,10 @@ describe(
       const camera = scene.camera;
       const center = Matrix4.multiplyByPoint(
         model.modelMatrix,
-        model.boundingSphere.center,
+        model.boundingSphereInternal.center,
         new Cartesian3()
       );
-      const range = 4.0 * model.boundingSphere.radius;
+      const range = 4.0 * model.boundingSphereInternal.radius;
 
       camera.lookAt(
         center,

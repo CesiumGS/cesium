@@ -248,11 +248,12 @@ describe(
         const camera = scene.camera;
         const center = Matrix4.multiplyByPoint(
           model.modelMatrix,
-          model.boundingSphere.center,
+          model.boundingSphereInternal.center,
           new Cartesian3()
         );
         const r =
-          4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+          4.0 *
+          Math.max(model.boundingSphereInternal.radius, camera.frustum.near);
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
       };
 

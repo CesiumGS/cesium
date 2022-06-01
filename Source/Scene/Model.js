@@ -4278,7 +4278,7 @@ function updateNodeHierarchyModelMatrix(
       );
       model._rtcCenter = model._rtcCenter3D;
     } else {
-      const center = model.boundingSphere.center;
+      const center = model.boundingSphereInternal.center;
       const to2D = Transforms.wgs84To2DModelMatrix(
         projection,
         center,
@@ -4974,7 +4974,7 @@ function getScale(model, frameState) {
       );
     }
 
-    const radius = model.boundingSphere.radius;
+    const radius = model.boundingSphereInternal.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
