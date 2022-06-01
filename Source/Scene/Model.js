@@ -1074,7 +1074,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       if (!defined(this._extensionsRequired)) {
         this._extensionsRequired = ModelUtility.getRequiredExtensions(
-          this.gltf
+          this.gltfInternal
         );
       }
       return this._extensionsRequired;
