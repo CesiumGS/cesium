@@ -3031,7 +3031,7 @@ describe(
       });
     });
 
-    it("loads indices in typed array for wireframes in WebGL1", function () {
+    it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
       return loadGltf(triangle, {
         loadIndicesForWireframe: true,
       }).then(function (gltfLoader) {
@@ -3056,7 +3056,7 @@ describe(
       });
     });
 
-    it("loads indices in buffer for wireframes in WebGL2", function () {
+    it("loads indices in buffer only for wireframes in WebGL2", function () {
       return loadGltf(triangle, {
         loadIndicesForWireframe: true,
         scene: sceneWithWebgl2,

@@ -68,8 +68,6 @@ FeatureIdPipelineStage.process = function (
   }
   processPrimitiveFeatureIds(renderResources, primitive, frameState);
 
-  updateStatistics(renderResources, primitive);
-
   shaderBuilder.addVertexLines([FeatureIdStageVS]);
   shaderBuilder.addFragmentLines([FeatureIdStageFS]);
 };

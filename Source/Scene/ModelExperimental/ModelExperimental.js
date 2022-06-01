@@ -462,9 +462,14 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * @private
+   * Get the estimated memory usage statistics for this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {ModelExperimentalStatistics}
    * @readonly
+   *
+   * @private
    */
   statistics: {
     get: function () {
@@ -476,6 +481,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The currently playing glTF animations.
    *
    * @memberof ModelExperimental.prototype
+   *
    * @type {ModelExperimentalAnimationCollection}
    * @readonly
    */
@@ -519,6 +525,8 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Pass}
    * @readonly
@@ -660,6 +668,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Boolean}
    * @readonly
    *
@@ -673,6 +683,8 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Cesium3DTileStyle}
    */

@@ -197,7 +197,6 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        // Alter PBR parameters so that defaults are not used.
         const metallicRoughness = primitive.material.metallicRoughness;
         metallicRoughness.baseColorFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
         metallicRoughness.metallicFactor = 0.5;
@@ -301,7 +300,6 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
 
-        // Alter PBR parameters so that defaults are not used.
         const specularGlossiness = primitive.material.specularGlossiness;
         specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
         specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5);

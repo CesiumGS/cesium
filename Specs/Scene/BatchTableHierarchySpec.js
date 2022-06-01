@@ -387,7 +387,7 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.getProperty(2, "coordinates")).toEqual(position);
   });
 
-  it("setProperty works with binary values", function () {
+  it("setProperty works with binary values and ids", function () {
     const deep = true;
     const hierarchy = new BatchTableHierarchy({
       extension: clone(binaryHierarchyWithBinaryIds, deep),

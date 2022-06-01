@@ -476,8 +476,8 @@ function createPickTexture(batchTexture, context) {
 
     batchTexture._pickTexture = createTexture(batchTexture, context, bytes);
 
-    // Make sure the tileset statistics are updated the frame when the picture
-    // is created.
+    // Make sure the tileset statistics are updated the frame when the pick
+    // texture is created.
     if (defined(statistics)) {
       statistics.batchTableByteLength += batchTexture._pickTexture.sizeInBytes;
     }

@@ -150,10 +150,7 @@ GeometryPipelineStage.process = function (
       attribute.semantic === VertexAttributeSemantic.POSITION;
 
     //>>includeStart('debug', pragmas.debug);
-    if (
-      !defined(attribute.buffer) &&
-      (defined(attribute.typedArray) || defined(attribute.packedTypedArray))
-    ) {
+    if (!defined(attribute.buffer) && !defined(attribute.constant)) {
       throw new DeveloperError(
         "Attributes must be provided as a Buffer or constant value"
       );
@@ -567,12 +564,10 @@ function updateStatistics(renderResources, primitive) {
   }
 
   const indices = primitive.indices;
-  if (defined(indices)) {
-    if (defined(indices.buffer)) {
-      // Wireframe mode will have both GPU and CPU copies
-      const hasCpuCopy = defined(indices.typedArray);
-      statistics.addBuffer(indices.buffer, hasCpuCopy);
-    }
+  if (defined(indices) && defined(indices.buffer)) {
+    // Wireframe mode will have both GPU and CPU copies
+    const hasCpuCopy = defined(indices.typedArray);
+    statistics.addBuffer(indices.buffer, hasCpuCopy);
   }
 }
 
