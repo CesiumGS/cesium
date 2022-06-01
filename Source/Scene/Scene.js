@@ -1492,30 +1492,6 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
-   * @memberof Scene.prototype
-   *
-   * @deprecated Use splitPosition instead.
-   * @type {Number}
-   */
-  imagerySplitPosition: {
-    get: function () {
-      deprecationWarning(
-        "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
-      );
-      return this._frameState.splitPosition;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
-      );
-      this._frameState.splitPosition = value;
-    },
-  },
-
-  /**
    * The distance from the camera at which to disable the depth test of billboards, labels and points
    * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
    * be applied. When less than zero, the depth test should never be applied. Setting the disableDepthTestDistance
