@@ -5,6 +5,7 @@ import {
   Cartesian4,
   clone,
   Color,
+  CullFace,
   DrawCommand,
   defaultValue,
   GeographicProjection,
@@ -19,7 +20,7 @@ import {
   Transforms,
 } from "../../../Source/Cesium.js";
 
-fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
+describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   const scratchModelMatrix = new Matrix4();
   const scratchExpectedMatrix = new Matrix4();
 
@@ -29,6 +30,16 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   const scratchProjection = new GeographicProjection();
 
+  const mockFrameState = {
+    mode: SceneMode.SCENE3D,
+    mapProjection: scratchProjection,
+  };
+
+  const mockFrameState2D = {
+    mode: SceneMode.SCENE2D,
+    mapProjection: scratchProjection,
+  };
+
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
     return {
@@ -37,6 +48,11 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
         _projectTo2D: false,
       },
       runtimePrimitive: {
+        primitive: {
+          material: {
+            doubleSided: false,
+          },
+        },
         boundingSphere: new BoundingSphere(Cartesian3.ZERO, 1.0),
       },
       styleCommandsNeeded: options.styleCommandsNeeded,
@@ -67,14 +83,6 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     return new DrawCommand(options);
   }
 
-  function mockFrameState(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-    return {
-      mode: defaultValue(options.mode, SceneMode.SCENE3D),
-      mapProjection: scratchProjection,
-    };
-  }
-
   function computeExpected2DMatrix(modelMatrix, frameState) {
     const result = Matrix4.clone(modelMatrix, scratchExpectedMatrix);
 
@@ -85,6 +93,37 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       frameState.mapProjection.ellipsoid.maximumRadius;
 
     return result;
+  }
+
+  // Creates a ModelExperimentalDrawCommand with all possible derived
+  // draw commands.
+  function createDrawCommandWithAllDerivedCommands() {
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+    });
+
+    const modelMatrix = Matrix4.fromTranslation(
+      Cartesian3.fromDegrees(180, 0),
+      scratchModelMatrix
+    );
+    const modelMatrix2D = Transforms.basisTo2D(
+      mockFrameState2D.mapProjection,
+      modelMatrix,
+      modelMatrix
+    );
+
+    const command = createDrawCommand({
+      modelMatrix: modelMatrix2D,
+    });
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+    });
+
+    // Derive the 2D commands
+    drawCommand.getCommands(mockFrameState2D);
+
+    return drawCommand;
   }
 
   it("throws for undefined command", function () {
@@ -219,7 +258,6 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getCommands works for original command", function () {
-    const frameState = mockFrameState();
     const renderResources = mockRenderResources();
     const command = createDrawCommand();
     const drawCommand = new ModelExperimentalDrawCommand({
@@ -230,13 +268,12 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList.length).toEqual(1);
     expect(drawCommand._commandList[0]).toBe(command);
 
-    const result = drawCommand.getCommands(frameState);
+    const result = drawCommand.getCommands(mockFrameState);
     expect(result.length).toEqual(1);
     expect(result[0]).toBe(command);
   });
 
   it("getCommands works for multiple commands", function () {
-    const frameState = mockFrameState();
     const renderResources = mockRenderResources({
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
@@ -251,16 +288,13 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const translucentCommand = drawCommand._commandList[1];
     expect(translucentCommand.pass).toBe(Pass.TRANSLUCENT);
 
-    const result = drawCommand.getCommands(frameState);
+    const result = drawCommand.getCommands(mockFrameState);
     expect(result.length).toEqual(2);
     expect(result[0]).toBe(command);
     expect(result[1]).toBe(translucentCommand);
   });
 
   it("getCommands derives 2D commands if primitive is near IDL", function () {
-    const frameState = mockFrameState({
-      mode: SceneMode.SCENE2D,
-    });
     const renderResources = mockRenderResources({
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
@@ -270,7 +304,7 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       scratchModelMatrix
     );
     const modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
+      mockFrameState2D.mapProjection,
       modelMatrix,
       modelMatrix
     );
@@ -286,15 +320,12 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
 
-    const result = drawCommand.getCommands(frameState);
+    const result = drawCommand.getCommands(mockFrameState2D);
     expect(result.length).toEqual(4);
     expect(drawCommand._commandList2D.length).toEqual(2);
   });
 
   it("getCommands doesn't derive 2D commands if primitive is not near IDL", function () {
-    const frameState = mockFrameState({
-      mode: SceneMode.SCENE2D,
-    });
     const renderResources = mockRenderResources({
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
@@ -304,7 +335,7 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       scratchModelMatrix
     );
     const modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
+      mockFrameState2D.mapProjection,
       modelMatrix,
       modelMatrix
     );
@@ -320,15 +351,12 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
 
-    const result = drawCommand.getCommands(frameState);
+    const result = drawCommand.getCommands(mockFrameState2D);
     expect(result.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
   });
 
   it("getCommands updates model matrix for 2D commands", function () {
-    const frameState = mockFrameState({
-      mode: SceneMode.SCENE2D,
-    });
     const renderResources = mockRenderResources({
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
@@ -338,7 +366,7 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       scratchModelMatrix
     );
     const modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
+      mockFrameState2D.mapProjection,
       modelMatrix,
       modelMatrix
     );
@@ -363,7 +391,7 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(commandList.length).toEqual(2);
     expect(commandList2D.length).toEqual(0);
 
-    const result = drawCommand.getCommands(frameState);
+    const result = drawCommand.getCommands(mockFrameState2D);
     expect(result.length).toEqual(4);
 
     const length = commandList2D.length;
@@ -371,7 +399,7 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
     const expectedModelMatrix = computeExpected2DMatrix(
       modelMatrix2D,
-      frameState
+      mockFrameState2D
     );
 
     column = Matrix4.getColumn(expectedModelMatrix, 3, scratchCartesian4);
@@ -437,46 +465,35 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates model matrix for 2D commands", function () {
-    const frameState = mockFrameState({
-      mode: SceneMode.SCENE2D,
-    });
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
-
-    const idl = Cartesian3.fromDegrees(180, 0);
-    let modelMatrix2D = Matrix4.fromTranslation(idl, scratchModelMatrix);
-    modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
-      modelMatrix2D,
-      modelMatrix2D
-    );
-
-    const command = createDrawCommand({
-      modelMatrix: modelMatrix2D,
-    });
-    const drawCommand = new ModelExperimentalDrawCommand({
-      primitiveRenderResources: renderResources,
-      command: command,
-    });
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
 
     const commandList = drawCommand._commandList;
     const length = commandList.length;
     expect(length).toEqual(2);
 
     // Derive the 2D commands
-    drawCommand.getCommands(frameState);
+    drawCommand.getCommands(mockFrameState2D);
 
     const commandList2D = drawCommand._commandList2D;
     const length2D = commandList2D.length;
     expect(length2D).toEqual(2);
 
-    const translation = Cartesian3.fromDegrees(100, 25);
-    modelMatrix2D = Matrix4.fromTranslation(translation, scratchModelMatrix);
+    let modelMatrix2D = Matrix4.fromTranslation(
+      Cartesian3.fromDegrees(100, 25),
+      scratchModelMatrix
+    );
     modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
+      mockFrameState2D.mapProjection,
       modelMatrix2D,
       modelMatrix2D
+    );
+
+    const column = Matrix4.getColumn(modelMatrix2D, 3, scratchCartesian4);
+    const translation = Cartesian3.fromElements(
+      column.x,
+      column.y,
+      column.z,
+      scratchTranslation
     );
 
     drawCommand.modelMatrix = modelMatrix2D;
@@ -489,16 +506,16 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     // Update the model matrix for the 2D commands
-    drawCommand.getCommands(frameState);
+    drawCommand.getCommands(mockFrameState2D);
 
     const expectedModelMatrix = computeExpected2DMatrix(
       modelMatrix2D,
-      frameState
+      mockFrameState2D
     );
     const expectedTranslation = Matrix4.getColumn(
       expectedModelMatrix,
       3,
-      scratchTranslation
+      scratchExpectedTranslation
     );
 
     for (let i = 0; i < length2D; i++) {
@@ -509,54 +526,88 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates shadows", function () {
-    const frameState = mockFrameState({
-      mode: SceneMode.SCENE2D,
-    });
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
+    let result = drawCommand.getCommands(mockFrameState2D);
+    const length = result.length;
+    expect(length).toEqual(4);
 
-    const modelMatrix = Matrix4.fromTranslation(
-      Cartesian3.fromDegrees(180, 0),
-      scratchModelMatrix
-    );
-    const modelMatrix2D = Transforms.basisTo2D(
-      frameState.mapProjection,
-      modelMatrix,
-      modelMatrix
-    );
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.castShadows).toBe(false);
+      expect(command.receiveShadows).toBe(false);
+    }
 
-    const command = createDrawCommand({
-      modelMatrix: modelMatrix2D,
-    });
-    const drawCommand = new ModelExperimentalDrawCommand({
-      primitiveRenderResources: renderResources,
-      command: command,
-    });
+    drawCommand.shadows = ShadowMode.ENABLED;
+    result = drawCommand.getCommands(mockFrameState2D);
 
-    // Derive the 2D commands
-    const result = drawCommand.getCommands(frameState);
-    expect(result.length).toEqual(4);
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.castShadows).toBe(true);
+      expect(command.receiveShadows).toBe(true);
+    }
+  });
 
-    const commandList2D = drawCommand._commandList2D;
-    const length2D = commandList2D.length;
-    expect(length2D).toEqual(2);
+  it("updates back face culling", function () {
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
+    let result = drawCommand.getCommands(mockFrameState2D);
+    const length = result.length;
+    expect(length).toEqual(4);
 
-    const expectedModelMatrix = computeExpected2DMatrix(
-      modelMatrix2D,
-      frameState
-    );
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.renderState.cull.enabled).toBe(false);
+    }
 
-    const translation = Matrix4.getColumn(
-      expectedModelMatrix,
-      3,
-      scratchTranslation
-    );
+    drawCommand.backFaceCulling = true;
+    result = drawCommand.getCommands(mockFrameState2D);
 
-    for (let i = 0; i < length2D; i++) {
-      const command = commandList2D[i];
-      expect(command.modelMatrix.toEqual(expectedModelMatrix));
-      expect(command.boundingVolume.center).toEqual(translation);
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      if (command.pass === Pass.TRANSLUCENT) {
+        expect(command.renderState.cull.enabled).toBe(false);
+      } else {
+        expect(command.renderState.cull.enabled).toBe(true);
+      }
+    }
+  });
+
+  it("updates cull face", function () {
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
+    let result = drawCommand.getCommands(mockFrameState2D);
+    const length = result.length;
+    expect(length).toEqual(4);
+
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.renderState.cull.face).toBe(CullFace.BACK);
+    }
+
+    drawCommand.cullFace = CullFace.FRONT;
+    result = drawCommand.getCommands(mockFrameState2D);
+
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.renderState.cull.face).toBe(CullFace.FRONT);
+    }
+  });
+
+  it("updates debugShowBoundingVolume", function () {
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
+    let result = drawCommand.getCommands(mockFrameState2D);
+    const length = result.length;
+    expect(length).toEqual(4);
+
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.debugShowBoundingVolume).toBe(false);
+    }
+
+    drawCommand.debugShowBoundingVolume = true;
+    result = drawCommand.getCommands(mockFrameState2D);
+
+    for (let i = 0; i < length; i++) {
+      const command = result[i];
+      expect(command.debugShowBoundingVolume).toBe(true);
     }
   });
 });

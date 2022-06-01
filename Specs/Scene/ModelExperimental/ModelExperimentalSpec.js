@@ -31,7 +31,7 @@ import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
-fdescribe(
+describe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
     const webglStub = !!window.webglStub;
@@ -592,6 +592,24 @@ fdescribe(
       });
     });
 
+    it("renders in 2D over the IDL", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(180.0, 0.0)
+          ),
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
     it("renders in CV", function () {
       return loadAndZoomToModelExperimental(
         {
@@ -641,6 +659,32 @@ fdescribe(
           zoomToModel: false,
           scene: sceneCV,
         });
+      });
+    });
+
+    it("does not render during morph", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+          projectTo2D: true,
+        },
+        scene
+      ).then(function (model) {
+        const commandList = scene.frameState.commandList;
+        expect(model.ready).toEqual(true);
+
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBe(0);
+
+        scene.completeMorph();
+        scene.morphTo3D(0.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
       });
     });
 

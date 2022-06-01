@@ -48,6 +48,7 @@ function ModelExperimentalDrawCommand(options) {
 
   this._styleCommandsNeeded = renderResources.styleCommandsNeeded;
   this._backFaceCulling = command.renderState.cull.enabled;
+  this._cullFace = command.renderState.cull.face;
   this._shadows = renderResources.model.shadows;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
 
@@ -140,6 +141,21 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   },
 
   /**
+   * The primitive type of the main draw command.
+   *
+   * @memberof ModelExperimentalDrawCommand.prototype
+   * @type {PrimitiveType}
+   *
+   * @readonly
+   * @private
+   */
+  primitiveType: {
+    get: function () {
+      return this._command.primitiveType;
+    },
+  },
+
+  /**
    * The current model matrix applied to the draw commands. If there are
    * 2D draw commands, their model matrix will be derived from the 3D one.
    *
@@ -157,6 +173,23 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
       updateModelMatrix(this);
+    },
+  },
+
+  /**
+   * The bounding volume of the main draw command. This is equivalent
+   * to the the primitive's bounding sphere transformed by the draw
+   * command's model matrix.
+   *
+   * @memberof ModelExperimentalDrawCommand.prototype
+   * @type {BoundingSphere}
+   *
+   * @readonly
+   * @private
+   */
+  boundingVolume: {
+    get: function () {
+      return this._command.boundingVolume;
     },
   },
 
@@ -197,10 +230,36 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       const doubleSided = this.runtimePrimitive.primitive.material.doubleSided;
       const translucent =
         defined(this._model.color) && this._model.color.alpha < 1.0;
-
       const backFaceCulling = value && !doubleSided && !translucent;
+
+      if (this._backFaceCulling === backFaceCulling) {
+        return;
+      }
+
       this._backFaceCulling = backFaceCulling;
       updateBackFaceCulling(this);
+    },
+  },
+
+  /**
+   * Determines which faces to cull, if culling is enabled.
+   *
+   * @memberof ModelExperimentalDrawCommand.prototype
+   * @type {CullFace}
+   *
+   * @private
+   */
+  cullFace: {
+    get: function () {
+      return this._cullFace;
+    },
+    set: function (value) {
+      if (this._cullFace === value) {
+        return;
+      }
+
+      this._cullFace = value;
+      updateCullFace(this);
     },
   },
 
@@ -306,6 +365,19 @@ function updateBackFaceCulling(drawCommand) {
 
     const renderState = clone(command.renderState, true);
     renderState.cull.enabled = backFaceCulling;
+    command.renderState = RenderState.fromCache(renderState);
+  }
+}
+
+function updateCullFace(drawCommand) {
+  const cullFace = drawCommand.cullFace;
+  const commandList = getAllCommands(drawCommand);
+  const commandLength = commandList.length;
+
+  for (let i = 0; i < commandLength; i++) {
+    const command = commandList[i];
+    const renderState = clone(command.renderState, true);
+    renderState.cull.face = cullFace;
     command.renderState = RenderState.fromCache(renderState);
   }
 }
