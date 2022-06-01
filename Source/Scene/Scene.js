@@ -1502,14 +1502,14 @@ Object.defineProperties(Scene.prototype, {
     get: function () {
       deprecationWarning(
         "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+        "Scene.imagerySplitPosition has been deprecated in CesiumJS 1.92. It will be removed in CesiumJS 1.94. Use splitPosition instead."
       );
       return this._frameState.splitPosition;
     },
     set: function (value) {
       deprecationWarning(
         "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+        "Scene.imagerySplitPosition has been deprecated in CesiumJS 1.92. It will be removed in CesiumJS 1.94. Use splitPosition instead."
       );
       this._frameState.splitPosition = value;
     },

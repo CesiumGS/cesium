@@ -13,7 +13,7 @@ const ImagerySplitDirection = {};
 function warnDeprecated() {
   deprecationWarning(
     "ImagerySplitDirection",
-    "ImagerySplitDirection was deprecated in Cesium 1.92. It will be removed in 1.94. Use SplitDirection instead."
+    "ImagerySplitDirection was deprecated in CesiumJS 1.92. It will be removed in 1.94. Use SplitDirection instead."
   );
 }
 
