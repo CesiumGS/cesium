@@ -9,23 +9,20 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
  * created every time the pipeline is run, the individual pipeline stages are
  * responsible for keeping track of additional memory they allocate.
  *
- * @namespace StatisticsUpdateStage
+ * @namespace StatisticsPipelineStage
  *
  * @private
  */
-const StatisticsUpdateStage = {};
-StatisticsUpdateStage.name = "StatisticsUpdateStage"; // Helps with debugging
+const StatisticsPipelineStage = {};
+StatisticsPipelineStage.name = "StatisticsPipelineStage"; // Helps with debugging
 
-StatisticsUpdateStage.update = function (runtimePrimitive, sceneGraph) {
-  const model = sceneGraph._model;
+StatisticsPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
+  const model = renderResources.model;
   const statistics = model.statistics;
-
-  // We only need to update statistics when dirty
-  if (!statistics.dirty) {
-    return;
-  }
-
-  const primitive = runtimePrimitive.primitive;
 
   countGeometry(statistics, primitive);
   countMorphTargetAttributes(statistics, primitive);
@@ -192,4 +189,4 @@ function countPropertyTextures(statistics, structuralMetadata) {
   }
 }
 
-export default StatisticsUpdateStage;
+export default StatisticsPipelineStage;

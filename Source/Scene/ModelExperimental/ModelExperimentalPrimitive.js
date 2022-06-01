@@ -21,7 +21,7 @@ import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
-import StatisticsUpdateStage from "./StatisticsUpdateStage.js";
+import StatisticsPipelineStage from "./StatisticsPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
@@ -147,7 +147,6 @@ export default function ModelExperimentalPrimitive(options) {
  */
 ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const pipelineStages = this.pipelineStages;
-  const updateStages = this.updateStages;
   pipelineStages.length = 0;
 
   const primitive = this.primitive;
@@ -239,9 +238,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
 
   pipelineStages.push(AlphaPipelineStage);
 
-  // Configure update stages -----------------------
-
-  updateStages.push(StatisticsUpdateStage);
+  pipelineStages.push(StatisticsPipelineStage);
 
   return;
 };
