@@ -5281,9 +5281,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(entity.model.maximumScale.getValue(time)).toEqual(
         packet.model.maximumScale
       );
-      expect(entity.model.uri.getValue(time).url).toEqual(
-        packet.model.gltfInternal
-      );
+      expect(entity.model.uri.getValue(time).url).toEqual(packet.model.gltf);
       expect(entity.model.incrementallyLoadTextures.getValue(time)).toEqual(
         packet.model.incrementallyLoadTextures
       );
