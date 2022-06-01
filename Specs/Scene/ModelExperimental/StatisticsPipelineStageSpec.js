@@ -10,6 +10,8 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
+  const animatedMorphCubeUrl =
+    "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
   const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
   const boomBoxSpecularGlossiness =
     "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
@@ -223,6 +225,32 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       expectedLength += primitive.indices.buffer.sizeInBytes;
 
       expect(statistics.geometryByteLength).toBe(expectedLength);
+    });
+  });
+
+  it("_countMorphTargetAttributes updates memory statistics", function () {
+    return loadGltf(animatedMorphCubeUrl).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const primitive = components.nodes[0].primitives[0];
+
+      StatisticsPipelineStage._countMorphTargetAttributes(
+        statistics,
+        primitive
+      );
+
+      let totalSize = 0;
+      const morphTargets = primitive.morphTargets;
+      const morphTargetsLength = morphTargets.length;
+      for (let i = 0; i < morphTargetsLength; i++) {
+        const attributes = morphTargets[i].attributes;
+        const attributesLength = attributes.length;
+        for (let j = 0; j < attributesLength; j++) {
+          totalSize += attributes[j].buffer.sizeInBytes;
+        }
+      }
+
+      expect(statistics.geometryByteLength).toBe(totalSize);
     });
   });
 
