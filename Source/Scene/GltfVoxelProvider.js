@@ -199,7 +199,7 @@ function GltfVoxelProvider(options) {
     const loader = new GltfLoader({
       gltfResource: gltfResource,
       releaseGltfJson: true,
-      loadAsTypedArray: true,
+      loadAttributesAsTypedArray: true,
     });
     loader.load();
     promise = loader.promise;

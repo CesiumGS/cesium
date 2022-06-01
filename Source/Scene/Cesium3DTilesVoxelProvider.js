@@ -563,7 +563,7 @@ function getGltfLoader(implicitTileset, tileCoord) {
   const gltfLoader = new GltfLoader({
     gltfResource: gltfResource,
     releaseGltfJson: false,
-    loadAsTypedArray: true,
+    loadAttributesAsTypedArray: true,
   });
 
   gltfLoader.load();
