@@ -28,8 +28,6 @@ StatisticsPipelineStage.process = function (
   countMorphTargetAttributes(statistics, primitive);
   countMaterialTextures(statistics, primitive.material);
   countBinaryMetadata(statistics, model);
-
-  statistics.dirty = false;
 };
 
 function countGeometry(statistics, primitive) {
