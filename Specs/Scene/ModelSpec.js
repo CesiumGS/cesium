@@ -324,8 +324,8 @@ describe(
         Cartesian3.fromDegrees(0.0, 0.0, 100.0)
       );
 
-      expect(texturedBoxModel.gltf).toBeDefined();
-      expect(texturedBoxModel.basePath).toEqual(
+      expect(texturedBoxModel.gltfInternal).toBeDefined();
+      expect(texturedBoxModel.basePathInternal).toEqual(
         "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf"
       );
       expect(texturedBoxModel.show).toEqual(false);
@@ -361,7 +361,7 @@ describe(
       const model = Model.fromGltf({
         url: url,
       });
-      expect(model.basePath).toEndWith(params);
+      expect(model.basePathInternal).toEndWith(params);
     });
 
     it("fromGltf takes a base path", function () {
@@ -371,7 +371,7 @@ describe(
         url: url,
         basePath: basePath,
       });
-      expect(model.basePath).toEndWith(basePath);
+      expect(model.basePathInternal).toEndWith(basePath);
       expect(model._cacheKey).toEndWith(basePath);
     });
 
@@ -749,7 +749,9 @@ describe(
 
     it("renders from glTF", function () {
       // Simulate using procedural glTF as opposed to loading it from a file
-      return loadModelJson(texturedBoxModel.gltf).then(function (model) {
+      return loadModelJson(texturedBoxModel.gltfInternal).then(function (
+        model
+      ) {
         verifyRender(model);
         primitives.remove(model);
       });
@@ -759,7 +761,9 @@ describe(
       spyOn(RenderState, "fromCache").and.callThrough();
 
       // Simulate using procedural glTF as opposed to loading it from a file
-      return loadModelJson(texturedBoxModel.gltf).then(function (model) {
+      return loadModelJson(texturedBoxModel.gltfInternal).then(function (
+        model
+      ) {
         const rs = {
           cull: {
             enabled: true,
@@ -1257,11 +1261,11 @@ describe(
         minimumPixelSize: 1,
       }).then(function (m) {
         // Verify that the version has been updated
-        expect(m.gltf.asset.version).toEqual("2.0");
+        expect(m.gltfInternal.asset.version).toEqual("2.0");
 
         // Verify that rotation is converted from
         // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-        const rotation = m.gltf.nodes[2].rotation;
+        const rotation = m.gltfInternal.nodes[2].rotation;
         expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
         verifyRender(m);
@@ -2559,7 +2563,7 @@ describe(
         releaseGltfJson: true,
       }).then(function (m) {
         expect(m.releaseGltfJson).toEqual(true);
-        expect(m.gltf).not.toBeDefined();
+        expect(m.gltfInternal).not.toBeDefined();
 
         verifyRender(m);
         primitives.remove(m);
@@ -2567,13 +2571,13 @@ describe(
     });
 
     it("releaseGltfJson releases glTF JSON when constructed with Model constructor function", function () {
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         releaseGltfJson: true,
         incrementallyLoadTextures: false,
         asynchronous: true,
       }).then(function (m) {
         expect(m.releaseGltfJson).toEqual(true);
-        expect(m.gltf).not.toBeDefined();
+        expect(m.gltfInternal).not.toBeDefined();
 
         verifyRender(m);
         primitives.remove(m);
@@ -2693,7 +2697,7 @@ describe(
 
       const m = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2746,7 +2750,7 @@ describe(
 
       const m = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2779,7 +2783,7 @@ describe(
       // Should be cache miss.
       const m3 = primitives.add(
         new Model({
-          gltf: texturedBoxModel.gltf,
+          gltf: texturedBoxModel.gltfInternal,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0)
           ),
@@ -2830,7 +2834,7 @@ describe(
 
     it("Loads with incrementallyLoadTextures set to true", function () {
       let model, loadedColor;
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         incrementallyLoadTextures: true,
         show: true,
       })
@@ -2853,7 +2857,7 @@ describe(
               // Render scene to progressively load textures
               scene.renderForSpecs();
               // Textures have finished loading
-              return model.pendingTextureLoads === 0;
+              return model.pendingTextureLoadsInternal === 0;
             },
             { timeout: 10000 }
           );
@@ -2866,7 +2870,7 @@ describe(
     });
 
     it("Loads with incrementallyLoadTextures set to false", function () {
-      return loadModelJson(texturedBoxModel.gltf, {
+      return loadModelJson(texturedBoxModel.gltfInternal, {
         incrementallyLoadTextures: false,
         show: true,
       }).then(function (m) {
@@ -2994,7 +2998,7 @@ describe(
     it("loads a glTF with WEB3D_quantized_attributes and accessor.normalized", function () {
       return loadModel(boxQuantizedUrl).then(function (m) {
         verifyRender(m);
-        const gltf = m.gltf;
+        const gltf = m.gltfInternal;
         const accessors = gltf.accessors;
         const normalAccessor = accessors[2];
         const positionAccessor = accessors[1];
@@ -3368,13 +3372,13 @@ describe(
         uniformMapLoaded: uniformMapLoaded,
       };
 
-      return loadModelJson(texturedBoxModel.gltf, options).then(function (
-        model
-      ) {
-        model.zoomTo();
-        expect(scene).toRender([255, 255, 255, 255]);
-        primitives.remove(model);
-      });
+      return loadModelJson(texturedBoxModel.gltfInternal, options).then(
+        function (model) {
+          model.zoomTo();
+          expect(scene).toRender([255, 255, 255, 255]);
+          primitives.remove(model);
+        }
+      );
     });
 
     it("loads a glTF with KHR_draco_mesh_compression extension", function () {
@@ -4277,7 +4281,7 @@ describe(
 
       it("explicitly constructs a model with height reference", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           scene: scene,
         }).then(function (model) {
@@ -4290,7 +4294,7 @@ describe(
 
       it("set model height reference property", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           scene: scene,
         }).then(function (model) {
           model.heightReference = HeightReference.CLAMP_TO_GROUND;
@@ -4303,7 +4307,7 @@ describe(
 
       it("creating with a height reference creates a height update callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4315,7 +4319,7 @@ describe(
 
       it("set height reference property creates a height update callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
           show: true,
@@ -4332,7 +4336,7 @@ describe(
 
       it("updates the callback when the height reference changes", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4357,7 +4361,7 @@ describe(
 
       it("changing the position updates the callback", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4383,7 +4387,7 @@ describe(
 
       it("callback updates the position", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4413,7 +4417,7 @@ describe(
 
       it("removes the callback on destroy", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4430,7 +4434,7 @@ describe(
 
       it("changing the terrain provider", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4450,7 +4454,7 @@ describe(
 
       it("height reference without a scene rejects", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
@@ -4463,7 +4467,7 @@ describe(
 
       it("changing height reference without a scene throws DeveloperError", function () {
         scene.globe = createMockGlobe();
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
         }).then(function (model) {
@@ -4479,7 +4483,7 @@ describe(
 
       it("height reference without a globe rejects", function () {
         scene.globe = undefined;
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
@@ -4493,7 +4497,7 @@ describe(
 
       it("changing height reference without a globe throws DeveloperError", function () {
         scene.globe = undefined;
-        return loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltfInternal, {
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
         }).then(function (model) {

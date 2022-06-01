@@ -1062,7 +1062,9 @@ Object.defineProperties(Model.prototype, {
   extensionsUsed: {
     get: function () {
       if (!defined(this._extensionsUsed)) {
-        this._extensionsUsed = ModelUtility.getUsedExtensions(this.gltf);
+        this._extensionsUsed = ModelUtility.getUsedExtensions(
+          this.gltfInternal
+        );
       }
       return this._extensionsUsed;
     },
@@ -1772,7 +1774,7 @@ Model.prototype.applyArticulations = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 function addBuffersToLoadResources(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const loadResources = model._loadResources;
   ForEach.buffer(gltf, function (buffer, id) {
     loadResources.buffers[id] = buffer.extras._pipeline.source;
@@ -1784,16 +1786,16 @@ function bufferLoad(model, id) {
     const loadResources = model._loadResources;
     const buffer = new Uint8Array(arrayBuffer);
     --loadResources.pendingBufferLoads;
-    model.gltf.buffers[id].extras._pipeline.source = buffer;
+    model.gltfInternal.buffers[id].extras._pipeline.source = buffer;
   };
 }
 
 function parseBufferViews(model) {
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   const vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
   // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-  ForEach.bufferView(model.gltf, function (bufferView, id) {
+  ForEach.bufferView(model.gltfInternal, function (bufferView, id) {
     if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
       vertexBuffersToCreate.enqueue(id);
     }
@@ -1805,7 +1807,7 @@ function parseBufferViews(model) {
   // The Cesium Renderer requires knowing the datatype for an index buffer
   // at creation type, which is not part of the glTF bufferview so loop
   // through glTF accessors to create the bufferview's index buffer.
-  ForEach.accessor(model.gltf, function (accessor) {
+  ForEach.accessor(model.gltfInternal, function (accessor) {
     const bufferViewId = accessor.bufferView;
     if (!defined(bufferViewId)) {
       return;
@@ -1827,7 +1829,7 @@ function parseBufferViews(model) {
 
 function parseTechniques(model) {
   // retain references to gltf techniques
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   if (!usesExtension(gltf, "KHR_techniques_webgl")) {
     return;
   }
@@ -1860,7 +1862,7 @@ function shaderLoad(model, type, id) {
 }
 
 function parseShaders(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const buffers = gltf.buffers;
   const bufferViews = gltf.bufferViews;
   const sourceShaders = model._rendererResources.sourceShaders;
@@ -1922,7 +1924,7 @@ function parseArticulations(model) {
   model._runtime.articulationsByStageKey = articulationsByStageKey;
   model._runtime.stagesByKey = runtimeStagesByKey;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   if (
     !usesExtension(gltf, "AGI_articulations") ||
     !defined(gltf.extensions) ||
@@ -1986,7 +1988,7 @@ function imageLoad(model, textureId) {
 const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function parseTextures(model, context, supportsWebP) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const images = gltf.images;
   let uri;
   ForEach.texture(gltf, function (texture, id) {
@@ -2055,7 +2057,7 @@ function parseNodes(model) {
   const skinnedNodesIds = model._loadResources.skinnedNodesIds;
   const articulationsByName = model._runtime.articulationsByName;
 
-  ForEach.node(model.gltf, function (node, id) {
+  ForEach.node(model.gltfInternal, function (node, id) {
     const runtimeNode = {
       // Animation targets
       matrix: undefined,
@@ -2138,7 +2140,7 @@ function parseNodes(model) {
 }
 
 function parseMaterials(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const techniques = model._sourceTechniques;
 
   const runtimeMaterialsByName = {};
@@ -2185,7 +2187,7 @@ function parseMeshes(model) {
   const runtimeMeshesByName = {};
   const runtimeMaterialsById = model._runtime.materialsById;
 
-  ForEach.mesh(model.gltf, function (mesh, meshId) {
+  ForEach.mesh(model.gltfInternal, function (mesh, meshId) {
     runtimeMeshesByName[mesh.name] = new ModelMesh(
       mesh,
       runtimeMaterialsById,
@@ -2212,7 +2214,7 @@ function parseMeshes(model) {
 }
 
 function parseCredits(model) {
-  const asset = model.gltf.asset;
+  const asset = model.gltfInternal.asset;
   const copyright = asset.copyright;
   if (!defined(copyright)) {
     return;
@@ -2248,7 +2250,7 @@ CreateVertexBufferJob.prototype.execute = function () {
 
 function createVertexBuffer(bufferViewId, model, context) {
   const loadResources = model._loadResources;
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   let bufferView = bufferViews[bufferViewId];
 
   // Use bufferView created at runtime
@@ -2295,7 +2297,7 @@ CreateIndexBufferJob.prototype.execute = function () {
 
 function createIndexBuffer(bufferViewId, componentType, model, context) {
   const loadResources = model._loadResources;
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   let bufferView = bufferViews[bufferViewId];
 
   // Use bufferView created at runtime
@@ -2396,7 +2398,7 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
   let result;
   if (model.extensionsUsed.WEB3D_quantized_attributes) {
     result = ModelUtility.modifyShaderForQuantizedAttributes(
-      model.gltf,
+      model.gltfInternal,
       primitive,
       shader
     );
@@ -2405,7 +2407,7 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
     const decodedData = model._decodedData[primitiveId];
     if (defined(decodedData)) {
       result = ModelUtility.modifyShaderForDracoQuantizedAttributes(
-        model.gltf,
+        model.gltfInternal,
         primitive,
         shader,
         decodedData.attributes
@@ -2759,7 +2761,7 @@ function loadTexturesFromBufferViews(model) {
   while (loadResources.texturesToCreateFromBufferView.length > 0) {
     const gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
 
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
     const bufferView = gltf.bufferViews[gltfTexture.bufferView];
     const imageId = gltf.textures[gltfTexture.id].source;
 
@@ -2803,7 +2805,7 @@ function createSamplers(model) {
     loadResources.createSamplers = false;
 
     const rendererSamplers = model._rendererResources.samplers;
-    ForEach.sampler(model.gltf, function (sampler, samplerId) {
+    ForEach.sampler(model.gltfInternal, function (sampler, samplerId) {
       rendererSamplers[samplerId] = new Sampler({
         wrapS: sampler.wrapS,
         wrapT: sampler.wrapT,
@@ -2835,7 +2837,7 @@ CreateTextureJob.prototype.execute = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 function createTexture(gltfTexture, model, context) {
-  const textures = model.gltf.textures;
+  const textures = model.gltfInternal.textures;
   const texture = textures[gltfTexture.id];
 
   const rendererSamplers = model._rendererResources.samplers;
@@ -2848,7 +2850,7 @@ function createTexture(gltfTexture, model, context) {
   }
 
   let usesTextureTransform = false;
-  const materials = model.gltf.materials;
+  const materials = model.gltfInternal.materials;
   const materialsLength = materials.length;
   for (let i = 0; i < materialsLength; ++i) {
     const material = materials[i];
@@ -3092,7 +3094,7 @@ function getAttributeLocations(model, primitive) {
 }
 
 function createJoints(model, runtimeSkins) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const skins = gltf.skins;
   const nodes = gltf.nodes;
   const runtimeNodes = model._runtime.nodes;
@@ -3130,7 +3132,7 @@ function createSkins(model) {
   }
   loadResources.createSkins = false;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   const runtimeSkins = {};
 
@@ -3184,9 +3186,9 @@ function createRuntimeAnimations(model) {
   model._runtime.animations = [];
 
   const runtimeNodes = model._runtime.nodes;
-  const accessors = model.gltf.accessors;
+  const accessors = model.gltfInternal.accessors;
 
-  ForEach.animation(model.gltf, function (animation, i) {
+  ForEach.animation(model.gltfInternal, function (animation, i) {
     const channels = animation.channels;
     const samplers = animation.samplers;
 
@@ -3255,7 +3257,7 @@ function createVertexArrays(model, context) {
 
   const rendererBuffers = model._rendererResources.buffers;
   const rendererVertexArrays = model._rendererResources.vertexArrays;
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   ForEach.mesh(gltf, function (mesh, meshId) {
     ForEach.meshPrimitive(mesh, function (primitive, primitiveId) {
@@ -3350,7 +3352,7 @@ function createRenderStates(model) {
   if (loadResources.createRenderStates) {
     loadResources.createRenderStates = false;
 
-    ForEach.material(model.gltf, function (material, materialId) {
+    ForEach.material(model.gltfInternal, function (material, materialId) {
       createRenderStateForMaterial(model, material, materialId);
     });
   }
@@ -3629,7 +3631,7 @@ function createUniformMaps(model, context) {
   }
   loadResources.createUniformMaps = false;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const techniques = model._sourceTechniques;
   const uniformMaps = model._uniformMaps;
 
@@ -3676,7 +3678,7 @@ function createUniformsForQuantizedAttributes(model, primitive) {
   const programId = getProgramForPrimitive(model, primitive);
   const quantizedUniforms = model._quantizedUniforms[programId];
   return ModelUtility.createUniformsForQuantizedAttributes(
-    model.gltf,
+    model.gltfInternal,
     primitive,
     quantizedUniforms
   );
@@ -3829,7 +3831,7 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
   const rendererRenderStates = resources.renderStates;
   const uniformMaps = model._uniformMaps;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   const gltfMeshes = gltf.meshes;
 
@@ -4047,7 +4049,7 @@ function createRuntimeNodes(model, context, scene3DOnly) {
   const rootNodes = [];
   const runtimeNodes = model._runtime.nodes;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const nodes = gltf.nodes;
 
   const scene = gltf.scenes[gltf.scene];
@@ -5206,7 +5208,7 @@ Model.prototype.update = function (frameState) {
 
   const supportsWebP = FeatureDetection.supportsWebP();
 
-  if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
+  if (this._state === ModelState.NEEDS_LOAD && defined(this.gltfInternal)) {
     // Use renderer resources from cache instead of loading/creating them?
     let cachedRendererResources;
     const cacheKey = this.cacheKey;
@@ -5246,7 +5248,7 @@ Model.prototype.update = function (frameState) {
 
     this._state = ModelState.LOADING;
     if (this._state !== ModelState.FAILED) {
-      const extensions = this.gltf.extensions;
+      const extensions = this.gltfInternal.extensions;
       if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
         const center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
         if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
@@ -5271,7 +5273,7 @@ Model.prototype.update = function (frameState) {
         }
       }
 
-      addPipelineExtras(this.gltf);
+      addPipelineExtras(this.gltfInternal);
 
       this._loadResources = new ModelLoadResources();
       if (!this._loadRendererResourcesFromCache) {
@@ -5299,8 +5301,8 @@ Model.prototype.update = function (frameState) {
         ModelUtility.updateForwardAxis(this);
 
         // glTF pipeline updates, not needed if loading from cache
-        if (!defined(this.gltf.extras.sourceVersion)) {
-          const gltf = this.gltf;
+        if (!defined(this.gltfInternal.extras.sourceVersion)) {
+          const gltf = this.gltfInternal;
           // Add the original version so it remains cached
           const sourceVersion = ModelUtility.getAssetVersion(gltf);
           const sourceKHRTechniquesWebGL = defined(
@@ -5338,8 +5340,8 @@ Model.prototype.update = function (frameState) {
           processPbrMaterials(gltf, options);
         }
 
-        this._sourceVersion = this.gltf.extras.sourceVersion;
-        this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
+        this._sourceVersion = this.gltfInternal.extras.sourceVersion;
+        this._sourceKHRTechniquesWebGL = this.gltfInternal.extras.sourceKHRTechniquesWebGL;
 
         // Skip dequantizing in the shader if not encoded
         this._dequantizeInShader =
@@ -5368,7 +5370,11 @@ Model.prototype.update = function (frameState) {
 
       if (!loadResources.finishedDecoding()) {
         DracoLoader.decodeModel(this, context).catch(
-          ModelUtility.getFailedLoadFunction(this, "model", this.basePath)
+          ModelUtility.getFailedLoadFunction(
+            this,
+            "model",
+            this.basePathInternal
+          )
         );
       }
 
@@ -5426,7 +5432,7 @@ Model.prototype.update = function (frameState) {
 
       // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
       this._normalAttributeName = ModelUtility.getAttributeOrUniformBySemantic(
-        this.gltf,
+        this.gltfInternal,
         "NORMAL"
       );
 

@@ -194,7 +194,7 @@ describe(
         expect(function () {
           return new ModelInstanceCollection({
             url: boxUrl,
-            gltf: model.gltf,
+            gltf: model.gltfInternal,
           });
         }).toThrowDeveloperError();
       });

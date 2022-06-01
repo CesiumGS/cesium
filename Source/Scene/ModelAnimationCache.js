@@ -22,7 +22,7 @@ function ModelAnimationCache() {}
 const dataUriRegex = /^data\:/i;
 
 function getAccessorKey(model, accessor) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const buffers = gltf.buffers;
   const bufferViews = gltf.bufferViews;
 
@@ -44,7 +44,7 @@ ModelAnimationCache.getAnimationParameterValues = function (model, accessor) {
 
   if (!defined(values)) {
     // Cache miss
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
 
     const buffers = gltf.buffers;
     const bufferViews = gltf.bufferViews;
@@ -186,7 +186,7 @@ ModelAnimationCache.getSkinInverseBindMatrices = function (model, accessor) {
 
   if (!defined(matrices)) {
     // Cache miss
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
     const buffers = gltf.buffers;
     const bufferViews = gltf.bufferViews;
 

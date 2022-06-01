@@ -408,7 +408,7 @@ function getVertexShaderCallback(collection) {
       `    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n${globalVarsMain}    czm_instancing_main();\n${pickVarying}}\n`;
 
     if (usesBatchTable) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -428,7 +428,7 @@ function getFragmentShaderCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -489,7 +489,7 @@ function getUniformMapCallback(collection, context) {
 function getVertexShaderNonInstancedCallback(collection) {
   return function (vs, programId) {
     if (defined(collection._batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -510,7 +510,7 @@ function getFragmentShaderNonInstancedCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
