@@ -34,8 +34,10 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- glTF 1.0 assets have been deprecated and will be removed in CesiumJS 1.95. Please convert any glTF 1.0 assets to glTF 2.0.
-- Support for the glTF extension `KHR_techniques_webgl` have been deprecated and will be removed in CesiumJS 1.95. If custom GLSL shaders are needed, use `CustomShader` instead.
+- Support for glTF 1.0 assets has been deprecated and will be removed in CesiumJS 1.95. Please convert any glTF 1.0 assets to glTF 2.0. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- Support for the glTF extension `KHR_techniques_webgl` has been deprecated and will be removed in CesiumJS 1.95. If custom GLSL shaders are needed, use `CustomShader` instead. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) were deprecate in CesiumJS 1.94 and will be removed in CesiumJS 1.95. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
+- `Model.boundingSphere` currently returns results in the model's local coordinate system, but in CesiumJS 1.95 it will be changed to return results in ECEF coordinates. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
 - `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
 - `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
 
