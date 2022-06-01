@@ -1,5 +1,6 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -363,6 +364,10 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
+const scratchModelPositionMin = new Cartesian3();
+const scratchModelPositionMax = new Cartesian3();
+const scratchPrimitivePositionMin = new Cartesian3();
+const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the draw commands for each primitive in the model.
  *
@@ -386,7 +391,19 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
-  const boundingSpheres = [];
+  const modelPositionMin = Cartesian3.fromElements(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    scratchModelPositionMin
+  );
+  const modelPositionMax = Cartesian3.fromElements(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    scratchModelPositionMax
+  );
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -407,10 +424,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
     }
 
+    const nodeTransform = runtimeNode.computedTransform;
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      runtimePrimitive.configurePipeline();
+      runtimePrimitive.configurePipeline(frameState);
       const primitivePipelineStages = runtimePrimitive.pipelineStages;
 
       const primitiveRenderResources = new PrimitiveRenderResources(
@@ -429,10 +447,31 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       }
 
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
-        primitiveRenderResources.boundingSphere
+        primitiveRenderResources.boundingSphere,
+        new BoundingSphere()
       );
 
-      boundingSpheres.push(runtimePrimitive.boundingSphere);
+      const primitivePositionMin = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMin,
+        scratchPrimitivePositionMin
+      );
+      const primitivePositionMax = Matrix4.multiplyByPoint(
+        nodeTransform,
+        primitiveRenderResources.positionMax,
+        scratchPrimitivePositionMax
+      );
+
+      Cartesian3.minimumByComponent(
+        modelPositionMin,
+        primitivePositionMin,
+        modelPositionMin
+      );
+      Cartesian3.maximumByComponent(
+        modelPositionMax,
+        primitivePositionMax,
+        modelPositionMax
+      );
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -443,14 +482,23 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+  this._boundingSphere = BoundingSphere.fromCornerPoints(
+    modelPositionMin,
+    modelPositionMax,
+    new BoundingSphere()
+  );
+
+  this._boundingSphere = BoundingSphere.transformWithoutScale(
+    this._boundingSphere,
+    this._axisCorrectionMatrix,
+    this._boundingSphere
+  );
 
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
   );
-
   model._initialRadius = model._boundingSphere.radius;
   model._boundingSphere.radius *= model._clampedScale;
 };

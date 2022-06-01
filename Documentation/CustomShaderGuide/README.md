@@ -76,7 +76,7 @@ const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 
 // Applying to a model directly
 const model = Cesium.ModelExperimental.fromGltf({,
-  gltf: "http://example.com/model.gltf",
+  url: "http://example.com/model.gltf",
   customShader: customShader
 });
 ```

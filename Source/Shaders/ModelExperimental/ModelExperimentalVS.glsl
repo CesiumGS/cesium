@@ -44,13 +44,13 @@ void main()
     cpuStylingStage(attributes.positionMC, feature);
     #endif
 
-    mat4 modelView = czm_modelView;
-    mat3 normal = czm_normal;
+    mat4 modelView = czm_modelView3D;
+    mat3 normal = czm_normal3D;
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
 
-        // The legacy instance stage  is used when rendering I3DM models that 
+        // The legacy instance stage is used when rendering i3dm models that 
         // encode instances transforms in world space, as opposed to glTF models
         // that use EXT_mesh_gpu_instancing, where instance transforms are encoded
         // in object space.

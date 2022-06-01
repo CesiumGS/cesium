@@ -121,8 +121,9 @@ Cesium3DTilesTester.loadTileset = function (scene, url, options) {
   );
   // Load all visible tiles
   const tileset = scene.primitives.add(new Cesium3DTileset(options));
-
-  return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  return tileset.readyPromise.then(function () {
+    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  });
 };
 
 Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {

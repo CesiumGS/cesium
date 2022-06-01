@@ -4,15 +4,15 @@
   window.embedInSandcastleTemplate = function (code, addExtraLine) {
     return (
       `${
-        "function startup(Cesium) {\n" +
+        "window.startup = function (Cesium) {\n" +
         "    'use strict';\n" +
         "//Sandcastle_Begin\n"
       }${addExtraLine ? "\n" : ""}${code}//Sandcastle_End\n` +
       `    Sandcastle.finishedLoading();\n` +
-      `}\n` +
+      `};\n` +
       `if (typeof Cesium !== 'undefined') {\n` +
       `    window.startupCalled = true;\n` +
-      `    startup(Cesium);\n` +
+      `    window.startup(Cesium);\n` +
       `}\n`
     );
   };

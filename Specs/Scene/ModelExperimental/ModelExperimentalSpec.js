@@ -1,30 +1,34 @@
 import {
+  Axis,
   Cartesian2,
+  Cartesian3,
   Cesium3DTileStyle,
   ClippingPlane,
   ClippingPlaneCollection,
+  Color,
+  defaultValue,
+  defined,
+  Ellipsoid,
   FeatureDetection,
+  HeadingPitchRange,
+  HeadingPitchRoll,
   ImageBasedLighting,
   JulianDate,
-  defaultValue,
-  Matrix4,
   Math as CesiumMath,
-  ResourceCache,
-  Resource,
+  Matrix4,
   ModelExperimental,
-  Cartesian3,
-  defined,
-  HeadingPitchRange,
-  ShaderProgram,
-  ModelFeature,
-  Axis,
-  Color,
-  StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
+  ModelFeature,
   PrimitiveType,
+  Resource,
+  ResourceCache,
+  ShaderProgram,
+  StyleCommandsNeeded,
+  Transforms,
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
@@ -58,26 +62,58 @@ describe(
       "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
     const animatedTriangleUrl =
       "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
-
+    const animatedTriangleOffset = new HeadingPitchRange(
+      CesiumMath.PI / 2.0,
+      0,
+      2.0
+    );
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
 
+    const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
+      "north",
+      "west"
+    );
+
+    const modelMatrix2D = Transforms.headingPitchRollToFixedFrame(
+      Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
+      new HeadingPitchRoll(0, 0, 0),
+      Ellipsoid.WGS84,
+      fixedFrameTransform
+    );
+
     let scene;
     let sceneWithWebgl2;
+    let scene2D;
+    let sceneCV;
 
     beforeAll(function () {
       scene = createScene();
       sceneWithWebgl2 = createScene({
-        requestWebgl2: true,
+        contextOptions: {
+          requestWebgl2: true,
+        },
       });
+
+      scene2D = createScene();
+      scene2D.morphTo2D(0.0);
+
+      sceneCV = createScene();
+      sceneCV.morphToColumbusView(0.0);
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
+      scene2D.destroyForSpecs();
+      sceneCV.destroyForSpecs();
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
+      sceneWithWebgl2.primitives.removeAll();
+      scene2D.primitives.removeAll();
+      sceneCV.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -85,11 +121,7 @@ describe(
       zoom = defaultValue(zoom, 4.0);
 
       const camera = scene.camera;
-      const center = Matrix4.multiplyByPoint(
-        model.modelMatrix,
-        model.boundingSphere.center,
-        new Cartesian3()
-      );
+      const center = model.boundingSphere.center;
       const r =
         zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
@@ -110,7 +142,10 @@ describe(
         options.backgroundColor,
         Color.BLACK
       );
-      scene.backgroundColor = backgroundColor;
+
+      const targetScene = defaultValue(options.scene, scene);
+
+      targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
       const time = defaultValue(
@@ -119,7 +154,7 @@ describe(
       );
 
       expect({
-        scene: scene,
+        scene: targetScene,
         time: time,
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
@@ -129,7 +164,7 @@ describe(
         }
       });
 
-      scene.backgroundColor = Color.BLACK;
+      targetScene.backgroundColor = Color.BLACK;
     }
 
     function verifyDebugWireframe(model, primitiveType, options) {
@@ -137,7 +172,7 @@ describe(
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
 
-      const commandList = scene.frameState;
+      const commandList = targetScene.frameState;
       const commandCounts = [];
       let i, command;
 
@@ -261,32 +296,60 @@ describe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when texture fails to load", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
-      return resource.fetchJson().then(function (gltf) {
-        gltf.images[0].uri = "non-existent-path.png";
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: gltf,
-            basePath: boxTexturedGltfUrl,
-            incrementallyLoadTextures: false,
-          },
-          scene
-        )
-          .then(function (model) {
-            fail();
-          })
-          .catch(function (error) {
-            expect(error).toBeDefined();
-          });
+    it("initializes and renders with url", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          url: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        verifyRender(model, true);
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when external buffer fails to load", function () {
+    it("rejects ready promise when texture fails to load", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        gltf.images[0].uri = "non-existent-path.png";
+        const model = ModelExperimental.fromGltf({
+          gltf: gltf,
+          basePath: boxTexturedGltfUrl,
+          incrementallyLoadTextures: false,
+        });
+        scene.primitives.add(model);
+        let finished = false;
+        model.readyPromise
+          .then(function (model) {
+            finished = true;
+            fail();
+          })
+          .catch(function (error) {
+            finished = true;
+            expect(error).toBeDefined();
+          });
+
+        let texturesFinished = false;
+        model.texturesLoadedPromise
+          .then(function () {
+            texturesFinished = true;
+            fail();
+          })
+          .catch(function (error) {
+            texturesFinished = true;
+            expect(error).toBeDefined();
+          });
+
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return finished && texturesFinished;
+        });
+      });
+    });
+
+    it("rejects ready promise when external buffer fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";
@@ -333,12 +396,16 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
         },
         scene
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         expect(animationCollection).toBeDefined();
         expect(animationCollection.length).toBe(0);
+
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
         verifyRender(model, true, {
           zoomToModel: false,
         });
@@ -349,9 +416,13 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
         },
         scene
       ).then(function (model) {
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
+
         // The model rotates such that it leaves the view of the camera
         // halfway into its animation.
         const startTime = JulianDate.fromDate(
@@ -505,15 +576,81 @@ describe(
       });
     });
 
-    it("debugWireframe works", function () {
+    it("projectTo2D works for 2D", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
+    it("projectTo2D works for CV", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        sceneCV.camera.moveBackward(1.0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+      });
+    });
+
+    it("debugWireframe works for WebGL1 if enableDebugWireframe is true", function () {
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer) },
+          { gltf: new Uint8Array(buffer), enableDebugWireframe: true },
           scene
         ).then(function (model) {
           verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
+        });
+      });
+    });
+
+    it("debugWireframe does nothing in WebGL1 if enableDebugWireframe is false", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
+          scene
+        ).then(function (model) {
+          const commandList = scene.frameState;
+          const commandCounts = [];
+          let i, command;
+          scene.renderForSpecs();
+          for (i = 0; i < commandList.length; i++) {
+            command = commandList[i];
+            expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+            commandCounts.push(command.count);
+          }
+
+          model.debugWireframe = true;
+          expect(model._drawCommandsBuilt).toBe(false);
+
+          scene.renderForSpecs();
+          for (i = 0; i < commandList.length; i++) {
+            command = commandList[i];
+            expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
+            expect(command.count).toEqual(commandCounts[i]);
+          }
         });
       });
     });
@@ -538,7 +675,7 @@ describe(
 
     it("debugWireframe works for model without indices", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleWithoutIndicesUrl },
+        { gltf: triangleWithoutIndicesUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
@@ -549,7 +686,7 @@ describe(
 
     it("debugWireframe works for model with triangle strip", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleStripUrl },
+        { gltf: triangleStripUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_STRIP);
@@ -558,7 +695,7 @@ describe(
 
     it("debugWireframe works for model with triangle fan", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: triangleFanUrl },
+        { gltf: triangleFanUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         verifyDebugWireframe(model, PrimitiveType.TRIANGLE_FAN);
@@ -567,7 +704,7 @@ describe(
 
     it("debugWireframe ignores points", function () {
       return loadAndZoomToModelExperimental(
-        { gltf: pointCloudUrl },
+        { gltf: pointCloudUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
         const commandList = scene.frameState;
@@ -628,56 +765,61 @@ describe(
       });
     });
 
-    // see https://github.com/CesiumGS/cesium/pull/10115
-    xit("renders model with style", function () {
+    it("renders model with style", function () {
       let model;
       let style;
-      return loadAndZoomToModelExperimental({ gltf: buildingsMetadata }, scene)
-        .then(function (result) {
-          model = result;
-          // Renders without style.
-          verifyRender(model, true);
-
-          // Renders with opaque style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          });
-          return style.readyPromise;
-        })
-        .then(function () {
-          model.style = style;
-          verifyRender(model, true);
-
-          // Renders with translucent style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.5)"]],
-            },
-          });
-          return style.readyPromise;
-        })
-        .then(function () {
-          model.style = style;
-          verifyRender(model, true);
-
-          // Does not render when style disables show.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.0)"]],
-            },
-          });
-          return style.readyPromise;
-        })
-        .then(function () {
-          model.style = style;
-          verifyRender(model, false);
-
-          // Render when style is removed.
-          model.style = undefined;
-          verifyRender(model, true);
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (result) {
+        model = result;
+        // Renders without style.
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
+
+        // Renders with opaque style.
+        style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red')"]],
+          },
+        });
+
+        model.style = style;
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+
+        // Renders with translucent style.
+        style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.5)"]],
+          },
+        });
+
+        model.style = style;
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+
+        // Does not render when style disables show.
+        style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.0)"]],
+          },
+        });
+
+        model.style = style;
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
+
+        // Render when style is removed.
+        model.style = undefined;
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+      });
     });
 
     it("fromGltf throws with undefined options", function () {
@@ -886,8 +1028,8 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
         expect(model.boundingSphere.center).toEqual(translation);
+        verifyRender(model, true);
 
         expect(sceneGraph.computedModelMatrix).not.toBe(transform);
         expect(model.modelMatrix).not.toBe(transform);
@@ -895,6 +1037,7 @@ describe(
     });
 
     it("changing model matrix works", function () {
+      const translation = new Cartesian3(10, 0, 0);
       const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
         "updateModelMatrix"
@@ -906,8 +1049,7 @@ describe(
         verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
 
-        const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
-
+        const transform = Matrix4.fromTranslation(translation);
         Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
@@ -919,7 +1061,10 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
+        // Keep the camera in-place to confirm that the model matrix moves the model out of view.
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
       });
     });
 
@@ -940,7 +1085,22 @@ describe(
         scene.renderForSpecs();
 
         expect(model.boundingSphere.center).toEqual(translation);
-        verifyRender(model, false);
+      });
+    });
+
+    it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix2D,
+          projectTo2D: true,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(function () {
+          model.modelMatrix = Matrix4.IDENTITY;
+          scene2D.renderForSpecs();
+        }).toThrowDeveloperError();
       });
     });
 
@@ -1482,6 +1642,40 @@ describe(
 
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("reverses winding order for negatively scaled models", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Matrix4.fromUniformScale(-1.0),
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        // The model should look the same whether it has -1.0 scale or 1.0 scale.
+        // The initial scale is -1.0. Test switching this at runtime.
+        let initialRgba;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          initialRgba = rgba;
+        });
+
+        model.modelMatrix = Matrix4.IDENTITY;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
+        });
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1.0);
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
         });
       });
     });

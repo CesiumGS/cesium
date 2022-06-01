@@ -1,6 +1,7 @@
 import {
   BoundingSphere,
   Cartesian3,
+  CullFace,
   Matrix4,
   Math as CesiumMath,
   ResourceCache,
@@ -324,6 +325,35 @@ describe(
             expectedTransformedChildModelMatrix
           )
         ).toBe(true);
+      });
+    });
+
+    it("updates render state cull face when scale is negative", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rootNode = sceneGraph._runtimeNodes[1];
+        const childNode = sceneGraph._runtimeNodes[0];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const childPrimitive = childNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const childDrawCommand = childPrimitive.drawCommands[0];
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1);
+        scene.renderForSpecs();
+
+        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
+        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
       });
     });
   },

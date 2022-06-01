@@ -39,7 +39,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
@@ -397,7 +397,7 @@
           viewer.scene.primitives.removeAll();
           const model = viewer.scene.primitives.add(
             Cesium.ModelExperimental.fromGltf({
-              gltf: url,
+              url: url,
               customShader: customShader,
               modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
                 position,
@@ -477,10 +477,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

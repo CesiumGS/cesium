@@ -1,6 +1,5 @@
 import {
   BufferLoader,
-  defer,
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
@@ -300,11 +299,15 @@ describe("Scene/GltfBufferViewLoader", function () {
       });
   });
 
-  function resolveAfterDestroy(reject) {
-    const deferredPromise = defer();
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveAfterDestroy(rejectPromise) {
+    const fetchPromise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(bufferArrayBuffer);
+      }
+    });
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(fetchPromise);
 
     // Load a copy of the buffer into the cache so that the buffer promise
     // resolves even if the buffer view loader is destroyed
@@ -322,26 +325,22 @@ describe("Scene/GltfBufferViewLoader", function () {
 
     expect(bufferViewLoader.typedArray).not.toBeDefined();
 
-    bufferViewLoader.load();
+    const loadPromise = bufferViewLoader.load();
     bufferViewLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(bufferArrayBuffer);
-    }
+    return loadPromise.finally(function () {
+      expect(bufferViewLoader.typedArray).not.toBeDefined();
+      expect(bufferViewLoader.isDestroyed()).toBe(true);
 
-    expect(bufferViewLoader.typedArray).not.toBeDefined();
-    expect(bufferViewLoader.isDestroyed()).toBe(true);
-
-    ResourceCache.unload(bufferLoaderCopy);
+      ResourceCache.unload(bufferLoaderCopy);
+    });
   }
 
   it("handles resolving buffer after destroy", function () {
-    resolveAfterDestroy(false);
+    return resolveAfterDestroy(false);
   });
 
   it("handles rejecting buffer after destroy", function () {
-    resolveAfterDestroy(true);
+    return resolveAfterDestroy(true);
   });
 });

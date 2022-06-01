@@ -9,6 +9,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         content: options.content,
         color: options.color,
         gltf: options.gltf,
+        url: options.url,
         show: options.show,
         customShader: options.customShader,
         basePath: options.basePath,
@@ -20,6 +21,8 @@ function loadAndZoomToModelExperimental(options, scene) {
         upAxis: options.upAxis,
         forwardAxis: options.forwardAxis,
         debugShowBoundingVolume: options.debugShowBoundingVolume,
+        enableDebugWireframe: options.enableDebugWireframe,
+        debugWireframe: options.debugWireframe,
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
         incrementallyLoadTextures: options.incrementallyLoadTextures,
@@ -28,6 +31,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         imageBasedLighting: options.imageBasedLighting,
         backFaceCulling: options.backFaceCulling,
         showCreditsOnScreen: options.showCreditsOnScreen,
+        projectTo2D: options.projectTo2D,
       });
     } catch (error) {
       reject(error);

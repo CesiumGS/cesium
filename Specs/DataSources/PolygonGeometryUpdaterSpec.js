@@ -1,5 +1,6 @@
 import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
 import { ArcType } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
@@ -227,6 +228,7 @@ describe(
         closeTop: true,
         closeBottom: false,
         arcType: ArcType.GEODESIC,
+        textureCoordinates: [[0.5, 0.3]],
       };
 
       const entity = createBasicPolygon();
@@ -243,6 +245,9 @@ describe(
       polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
       polygon.granularity = new ConstantProperty(options.granularity);
       polygon.arcType = new ConstantProperty(options.arcType);
+      polygon.textureCoordinates = new ConstantProperty(
+        options.textureCoordinates
+      );
 
       const updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -258,6 +263,7 @@ describe(
       expect(geometry._closeTop).toEqual(options.closeTop);
       expect(geometry._closeBottom).toEqual(options.closeBottom);
       expect(geometry._arcType).toEqual(options.arcType);
+      expect(geometry._textureCoordinates).toEqual(options.textureCoordinates);
       expect(geometry._offsetAttribute).toBeUndefined();
 
       instance = updater.createOutlineGeometryInstance(time);
@@ -272,12 +278,14 @@ describe(
 
     it("Creates coplanar polygon", function () {
       const stRotation = 12;
+      const textureCoordinates = [0.3, 0.4];
 
       const entity = createVerticalPolygon();
 
       const polygon = entity.polygon;
       polygon.outline = true;
       polygon.stRotation = new ConstantProperty(stRotation);
+      polygon.textureCoordinates = new ConstantProperty(textureCoordinates);
 
       const updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -287,6 +295,7 @@ describe(
       geometry = instance.geometry;
       expect(geometry).toBeInstanceOf(CoplanarPolygonGeometry);
       expect(geometry._stRotation).toEqual(stRotation);
+      expect(geometry._textureCoordinates).toEqual(textureCoordinates);
 
       instance = updater.createOutlineGeometryInstance(time);
       geometry = instance.geometry;
@@ -354,6 +363,14 @@ describe(
       polygon.perPositionHeight = createDynamicProperty(false);
       polygon.granularity = createDynamicProperty(2);
       polygon.stRotation = createDynamicProperty(1);
+      polygon.textureCoordinates = createDynamicProperty({
+        positions: [
+          new Cartesian2(0.5, 1),
+          new Cartesian2(0, 0.5),
+          new Cartesian2(0.5, 0),
+          new Cartesian2(1, 0.5),
+        ],
+      });
       polygon.closeTop = createDynamicProperty(false);
       polygon.closeBottom = createDynamicProperty(false);
       polygon.arcType = createDynamicProperty(ArcType.RHUMB);
@@ -378,6 +395,9 @@ describe(
       );
       expect(options.granularity).toEqual(polygon.granularity.getValue());
       expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+      expect(options.textureCoordinates).toEqual(
+        polygon.textureCoordinates.getValue()
+      );
       expect(options.closeTop).toEqual(polygon.closeTop.getValue());
       expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
       expect(options.arcType).toEqual(polygon.arcType.getValue());

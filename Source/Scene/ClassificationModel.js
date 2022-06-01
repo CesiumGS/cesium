@@ -249,6 +249,18 @@ Object.defineProperties(ClassificationModel.prototype, {
   },
 
   /**
+   * For compatibility with Model which now uses gltfInternal to avoid
+   * deprecation noise.
+   *
+   * @private
+   */
+  gltfInternal: {
+    get: function () {
+      return this._gltf;
+    },
+  },
+
+  /**
    * The model's bounding sphere in its local coordinate system.
    *
    * @memberof ClassificationModel.prototype
@@ -993,7 +1005,7 @@ function updateNodeModelMatrix(
       );
       model._rtcCenter = model._rtcCenter3D;
     } else {
-      const center = model.boundingSphere.center;
+      const center = model.boundingSphereInternal.center;
       const to2D = Transforms.wgs84To2DModelMatrix(
         projection,
         center,
