@@ -226,9 +226,7 @@ function Scene(options) {
   this._computeCommandList = [];
   this._overlayCommandList = [];
 
-  // OIT is temporally disabled by default on iPad and iOS mobile due to https://github.com/CesiumGS/cesium/issues/9827
-  const defaultOIT = !FeatureDetection.isIPadOrIOS();
-  this._useOIT = defaultValue(options.orderIndependentTranslucency, defaultOIT);
+  this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
   this._executeOITFunction = undefined;
 
   this._depthPlane = new DepthPlane(options.depthPlaneEllipsoidOffset);
