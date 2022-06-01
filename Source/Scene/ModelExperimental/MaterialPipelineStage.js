@@ -61,8 +61,6 @@ MaterialPipelineStage.process = function (
   const defaultNormalTexture = frameState.context.defaultNormalTexture;
   const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
-  updateStatistics(renderResources, primitive);
-
   processMaterialUniforms(
     material,
     uniformMap,
@@ -496,42 +494,6 @@ function processMetallicRoughnessUniforms(
       ShaderDestination.FRAGMENT
     );
   }
-}
-
-function updateStatistics(renderResources, primitive) {
-  const statistics = renderResources.model.statistics;
-  const material = primitive.material;
-
-  const textureReaders = getAllTextureReaders(material);
-  const length = textureReaders.length;
-  for (let i = 0; i < length; i++) {
-    const textureReader = textureReaders[i];
-    // If textures were loaded asynchronously, the texture may not be available
-    // the first time the pipeline is run. ModelExperimental will re-run the
-    // pipeline in that case to make sure the statistics are accurate.
-    if (defined(textureReader) && defined(textureReader.texture)) {
-      statistics.addTexture(textureReader.texture);
-    }
-  }
-}
-
-function getAllTextureReaders(material) {
-  const metallicRoughness = material.metallicRoughness;
-  const textureReaders = [
-    material.emissiveTexture,
-    material.normalTexture,
-    material.occlusionTexture,
-    metallicRoughness.baseColorTexture,
-    metallicRoughness.metallicRoughnessTexture,
-  ];
-
-  const specularGlossiness = material.specularGlossiness;
-  if (defined(specularGlossiness)) {
-    textureReaders.push(specularGlossiness.diffuseTexture);
-    textureReaders.push(specularGlossiness.specularGlossinessTexture);
-  }
-
-  return textureReaders;
 }
 
 // Exposed for testing

@@ -57,8 +57,6 @@ MetadataPipelineStage.process = function (
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
 
-  updateStatistics(renderResources);
-
   const structuralMetadata = renderResources.model.structuralMetadata;
   if (!defined(structuralMetadata)) {
     return;
@@ -322,68 +320,6 @@ function sanitizeGlslIdentifier(identifier) {
   // for use in the shader, the property ID must be a valid GLSL identifier,
   // so replace invalid characters with _
   return identifier.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
-}
-
-function updateStatistics(renderResources) {
-  const model = renderResources.model;
-  const statistics = model.statistics;
-
-  // Add metadata memory to the statistics. Note that feature ID memory is
-  // handled by the Feature ID pipeline stage.
-  const structuralMetadata = model.structuralMetadata;
-  if (defined(structuralMetadata)) {
-    // Property textures are added to the texture memory count. If textures
-    // are loaded asynchronously, this may add 0 to the total. The pipeline
-    // will be re-run when textures are loaded for an accurate count.
-    countPropertyTextures(statistics, structuralMetadata);
-
-    // Property tables are accounted for here
-    statistics.propertyTablesByteLength +=
-      structuralMetadata.propertyTablesByteLength;
-
-    // Intentionally skip property attributes since those are handled in the
-    // geometry pipeline stage
-  }
-
-  // Model feature tables also have batch and pick textures that need to be
-  // counted.
-  const featureTables = model.featureTables;
-  if (!defined(featureTables)) {
-    return;
-  }
-
-  const length = featureTables.length;
-  for (let i = 0; i < length; i++) {
-    const featureTable = featureTables[i];
-
-    // This does not include the property table memory, as that is already
-    // counted through the structuralMetadata above.
-    statistics.propertyTablesByteLength += featureTable.batchTextureByteLength;
-  }
-}
-
-function countPropertyTextures(statistics, structuralMetadata) {
-  const propertyTextures = structuralMetadata.propertyTextures;
-  if (!defined(propertyTextures)) {
-    return;
-  }
-
-  // Loop over the property textures from here so we can use
-  // statistics.addTexture() which avoids double-counting shared textures.
-  const texturesLength = propertyTextures.length;
-  for (let i = 0; i < texturesLength; i++) {
-    const propertyTexture = propertyTextures[i];
-    const properties = propertyTexture.properties;
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = properties[propertyId];
-        const textureReader = property.textureReader;
-        if (defined(textureReader.texture)) {
-          statistics.addTexture(textureReader.texture);
-        }
-      }
-    }
-  }
 }
 
 export default MetadataPipelineStage;

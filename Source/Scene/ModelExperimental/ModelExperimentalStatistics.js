@@ -61,6 +61,10 @@ export default function ModelExperimentalStatistics() {
   // double-count cached assets.
   this.bufferIdSet = {};
   this.textureIdSet = {};
+
+  // Statistics do not need to be updated every frame, only
+  // when the pipeline is rebuilt.
+  this.dirty = true;
 }
 
 /**
@@ -78,6 +82,7 @@ ModelExperimentalStatistics.prototype.clear = function () {
 
   this.bufferIdSet = {};
   this.textureIdSet = {};
+  this.dirty = {};
 };
 
 ModelExperimentalStatistics.prototype.addBuffer = function (

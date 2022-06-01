@@ -184,8 +184,6 @@ GeometryPipelineStage.process = function (
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  updateStatistics(renderResources, primitive);
-
   shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addFragmentLines([GeometryStageFS]);
 };
@@ -540,47 +538,6 @@ function handleBitangents(shaderBuilder, attributes) {
     "vec3",
     "bitangentEC"
   );
-}
-
-function updateStatistics(renderResources, primitive) {
-  const statistics = renderResources.model.statistics;
-  const indicesCount = renderResources.count;
-  const primitiveType = primitive.primitiveType;
-
-  if (primitiveType === PrimitiveType.POINTS) {
-    statistics.pointsLength += indicesCount;
-  } else if (PrimitiveType.isTriangles(primitiveType)) {
-    statistics.trianglesLength += countTriangles(primitiveType, indicesCount);
-  }
-
-  const attributes = primitive.attributes;
-  const length = attributes.length;
-  for (let i = 0; i < length; i++) {
-    const attribute = attributes[i];
-    if (defined(attribute.buffer)) {
-      const hasCpuCopy = defined(attribute.typedArray);
-      statistics.addBuffer(attribute.buffer, hasCpuCopy);
-    }
-  }
-
-  const indices = primitive.indices;
-  if (defined(indices) && defined(indices.buffer)) {
-    // Wireframe mode will have both GPU and CPU copies
-    const hasCpuCopy = defined(indices.typedArray);
-    statistics.addBuffer(indices.buffer, hasCpuCopy);
-  }
-}
-
-function countTriangles(primitiveType, indicesCount) {
-  switch (primitiveType) {
-    case PrimitiveType.TRIANGLES:
-      return indicesCount / 3;
-    case PrimitiveType.TRIANGLE_STRIP:
-    case PrimitiveType.TRIANGLE_FAN:
-      return Math.max(indicesCount - 2, 0);
-    default:
-      return 0;
-  }
 }
 
 export default GeometryPipelineStage;

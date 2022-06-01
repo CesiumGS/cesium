@@ -561,7 +561,7 @@ ModelExperimentalSceneGraph.prototype.update = function (
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
         const stage = runtimePrimitive.updateStages[k];
-        stage.update(runtimePrimitive);
+        stage.update(runtimePrimitive, this);
       }
     }
   }
