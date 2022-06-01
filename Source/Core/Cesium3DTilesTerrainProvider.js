@@ -365,10 +365,10 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
           cache.addSubtree(rootId, subtree);
         }
 
-        return subtree;
+        return subtree.readyPromise;
       });
   } else {
-    subtreePromise = Promise.resolve(subtree);
+    subtreePromise = subtree.readyPromise;
   }
 
   // Note: only one content for terrain
