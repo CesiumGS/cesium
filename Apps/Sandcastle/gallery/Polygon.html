@@ -74,6 +74,107 @@
           },
         });
 
+        const texturedPolygon = viewer.entities.add({
+          name:
+            "Extruded textured polygon with per-position heights and custom texture coordinates",
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
+              -118.4,
+              40.4,
+              50000,
+              -118.4,
+              37,
+              30000,
+              -114.2,
+              38.0,
+              35000,
+              -108.0,
+              37,
+              30000,
+              -108.0,
+              40.4,
+              50000,
+            ]),
+            textureCoordinates: {
+              positions: [
+                new Cesium.Cartesian2(0, 1),
+                new Cesium.Cartesian2(0, 0),
+                new Cesium.Cartesian2(0.5, 0),
+                new Cesium.Cartesian2(1, 0),
+                new Cesium.Cartesian2(1, 1),
+              ],
+            },
+            perPositionHeight: true,
+            extrudedHeight: 0,
+            material: "../images/Cesium_Logo_Color.jpg",
+          },
+        });
+
+        const texturedPolygonWithHoles = viewer.entities.add({
+          name:
+            "Textured polygon with per-position heights, holes and custom texture coordinates",
+          polygon: {
+            hierarchy: {
+              positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -130,
+                40.0,
+                50000,
+                -130,
+                36.0,
+                30000,
+                -125,
+                37,
+                35000,
+                -120,
+                36.0,
+                30000,
+                -120,
+                40.0,
+                50000,
+              ]),
+              holes: [
+                {
+                  positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                    -128,
+                    39.2,
+                    46000,
+                    -128,
+                    38.6,
+                    42000,
+                    -127,
+                    38.6,
+                    42000,
+                    -127,
+                    39.2,
+                    46000,
+                  ]),
+                },
+              ],
+            },
+            textureCoordinates: {
+              positions: [
+                new Cesium.Cartesian2(0, 1),
+                new Cesium.Cartesian2(0, 0),
+                new Cesium.Cartesian2(0.5, 0),
+                new Cesium.Cartesian2(1, 0),
+                new Cesium.Cartesian2(1, 1),
+              ],
+              holes: [
+                {
+                  positions: [
+                    new Cesium.Cartesian2(0.2, 0.8),
+                    new Cesium.Cartesian2(0.2, 0.6),
+                    new Cesium.Cartesian2(0.4, 0.6),
+                    new Cesium.Cartesian2(0.4, 0.8),
+                  ],
+                },
+              ],
+            },
+            perPositionHeight: true,
+            material: "../images/Cesium_Logo_Color.jpg",
+          },
+        });
+
         const orangePolygon = viewer.entities.add({
           name: "Orange polygon with per-position heights and outline",
           polygon: {

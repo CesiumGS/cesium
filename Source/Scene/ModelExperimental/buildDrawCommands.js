@@ -9,6 +9,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalDrawCommand from "./ModelExperimentalDrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
@@ -48,17 +49,6 @@ export default function buildDrawCommands(
 
   model._resources.push(vertexArray);
 
-  let renderState = primitiveRenderResources.renderStateOptions;
-
-  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
-    // Set stencil values for classification on 3D Tiles
-    renderState = clone(renderState, true);
-    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  renderState = RenderState.fromCache(renderState);
-
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
 
@@ -86,6 +76,24 @@ export default function buildDrawCommands(
       primitiveRenderResources.boundingSphere
     );
   }
+
+  // Initialize render state with default values
+  let renderState = clone(
+    RenderState.fromCache(primitiveRenderResources.renderStateOptions),
+    true
+  );
+
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    // Set stencil values for classification on 3D Tiles
+    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  renderState.cull.face = ModelExperimentalUtility.getCullFace(
+    modelMatrix,
+    primitiveRenderResources.primitiveType
+  );
+  renderState = RenderState.fromCache(renderState);
 
   const count = primitiveRenderResources.count;
 

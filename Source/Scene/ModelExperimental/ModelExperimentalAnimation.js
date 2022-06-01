@@ -330,6 +330,8 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
    * If this is defined, it will be used to compute the local animation time
    * instead of the scene's time.
    *
+   * @memberof ModelExperimentalAnimation.prototype
+   *
    * @type {ModelExperimentalAnimation.AnimationTimeCallback}
    * @default undefined
    */
@@ -411,8 +413,7 @@ ModelExperimentalAnimation.prototype.animate = function (time) {
  * }
  *
  * @example
- * // Offset the phase of the animation, so it starts halfway
- * // through its cycle.
+ * // Offset the phase of the animation, so it starts halfway through its cycle.
  * function animationTime(duration, seconds) {
  *     return seconds / duration + 0.5;
  * }

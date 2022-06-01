@@ -56,7 +56,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(4);
         expect(gltf.accessors[0].count).toBe(9);
@@ -117,7 +117,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         const primitive = gltf.meshes[0].primitives[0];
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
@@ -269,7 +269,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(5);
         expect(gltf.accessors[0].count).toBe(9);
@@ -323,7 +323,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(4);
         expect(gltf.accessors[0].count).toBe(9);
@@ -400,7 +400,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
         expect(gltf.accessors[1].count).toBeGreaterThan(9);
@@ -478,7 +478,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
         expect(gltf.accessors[1].count).toBeGreaterThan(9);
@@ -558,7 +558,7 @@ describe(
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        const gltf = model.gltf;
+        const gltf = model.gltfInternal;
         const primitive = gltf.meshes[0].primitives[0];
         const triangleIndexAccessor = gltf.accessors[primitive.indices];
 

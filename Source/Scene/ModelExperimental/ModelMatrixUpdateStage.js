@@ -1,4 +1,5 @@
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import SceneMode from "../SceneMode.js";
 
 /**
@@ -78,6 +79,19 @@ function updateRuntimeNode(
       transformToRoot,
       drawCommand.modelMatrix
     );
+
+    // TODO
+    const cullFace = ModelExperimentalUtility.getCullFace(
+      drawCommand.modelMatrix,
+      drawCommand.primitiveType
+    );
+    /*let renderState = drawCommand.renderState;
+    if (cullFace !== renderState.cull.face) {
+      renderState = clone(renderState, true);
+      renderState.cull.face = cullFace;
+      renderState = RenderState.fromCache(renderState);
+      drawCommand.renderState = renderState;
+    }*/
   }
 
   const childrenLength = runtimeNode.children.length;

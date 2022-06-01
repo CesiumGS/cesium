@@ -31,7 +31,7 @@ describe(
       scene = createScene();
 
       return loadModel(boxUrl).then(function (model) {
-        boxRadius = model.boundingSphere.radius;
+        boxRadius = model.boundingSphereInternal.radius;
         scene.primitives.remove(model);
       });
     });
@@ -194,7 +194,7 @@ describe(
         expect(function () {
           return new ModelInstanceCollection({
             url: boxUrl,
-            gltf: model.gltf,
+            gltf: model.gltfInternal,
           });
         }).toThrowDeveloperError();
       });

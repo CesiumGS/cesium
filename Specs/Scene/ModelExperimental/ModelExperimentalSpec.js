@@ -28,6 +28,7 @@ import {
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 fdescribe(
@@ -120,11 +121,7 @@ fdescribe(
       zoom = defaultValue(zoom, 4.0);
 
       const camera = scene.camera;
-      const center = Matrix4.multiplyByPoint(
-        model.modelMatrix,
-        model.boundingSphere.center,
-        new Cartesian3()
-      );
+      const center = model.boundingSphere.center;
       const r =
         zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
@@ -313,32 +310,46 @@ fdescribe(
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when texture fails to load", function () {
+    it("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: gltf,
-            basePath: boxTexturedGltfUrl,
-            incrementallyLoadTextures: false,
-          },
-          scene
-        )
+        const model = ModelExperimental.fromGltf({
+          gltf: gltf,
+          basePath: boxTexturedGltfUrl,
+          incrementallyLoadTextures: false,
+        });
+        scene.primitives.add(model);
+        let finished = false;
+        model.readyPromise
           .then(function (model) {
+            finished = true;
             fail();
           })
           .catch(function (error) {
+            finished = true;
             expect(error).toBeDefined();
           });
+
+        let texturesFinished = false;
+        model.texturesLoadedPromise
+          .then(function () {
+            texturesFinished = true;
+            fail();
+          })
+          .catch(function (error) {
+            texturesFinished = true;
+            expect(error).toBeDefined();
+          });
+
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return finished && texturesFinished;
+        });
       });
     });
 
-    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
-    // https://github.com/CesiumGS/cesium/issues/10178
-    xit("rejects ready promise when external buffer fails to load", function () {
+    it("rejects ready promise when external buffer fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";
@@ -625,6 +636,7 @@ fdescribe(
         sceneCV
       ).then(function (model) {
         expect(model.ready).toEqual(true);
+        sceneCV.camera.moveBackward(1.0);
         verifyRender(model, true, {
           zoomToModel: false,
           scene: sceneCV,
@@ -1049,8 +1061,8 @@ fdescribe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
         expect(model.boundingSphere.center).toEqual(translation);
+        verifyRender(model, true);
 
         expect(sceneGraph.computedModelMatrix).not.toBe(transform);
         expect(model.modelMatrix).not.toBe(transform);
@@ -1058,6 +1070,7 @@ fdescribe(
     });
 
     it("changing model matrix works", function () {
+      const translation = new Cartesian3(10, 0, 0);
       const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
         "updateModelMatrix"
@@ -1069,8 +1082,7 @@ fdescribe(
         verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
 
-        const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
-
+        const transform = Matrix4.fromTranslation(translation);
         Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
@@ -1082,7 +1094,10 @@ fdescribe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
-        verifyRender(model, false);
+        // Keep the camera in-place to confirm that the model matrix moves the model out of view.
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
       });
     });
 
@@ -1103,7 +1118,6 @@ fdescribe(
         scene.renderForSpecs();
 
         expect(model.boundingSphere.center).toEqual(translation);
-        verifyRender(model, false);
       });
     });
 
@@ -1680,6 +1694,40 @@ fdescribe(
 
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("reverses winding order for negatively scaled models", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Matrix4.fromUniformScale(-1.0),
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        // The model should look the same whether it has -1.0 scale or 1.0 scale.
+        // The initial scale is -1.0. Test switching this at runtime.
+        let initialRgba;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          initialRgba = rgba;
+        });
+
+        model.modelMatrix = Matrix4.IDENTITY;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
+        });
+
+        model.modelMatrix = Matrix4.fromUniformScale(-1.0);
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(initialRgba);
         });
       });
     });

@@ -6,7 +6,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -278,8 +277,6 @@ function Cesium3DTileset(options) {
   this._initialTilesLoaded = false;
 
   this._tileDebugLabels = undefined;
-
-  this._readyPromise = defer();
 
   this._classificationType = options.classificationType;
 
@@ -966,7 +963,7 @@ function Cesium3DTileset(options) {
 
   const that = this;
   let resource;
-  Promise.resolve(options.url)
+  this._readyPromise = Promise.resolve(options.url)
     .then(function (url) {
       let basePath;
       resource = Resource.createIfNeeded(url);
@@ -987,11 +984,19 @@ function Cesium3DTileset(options) {
       return Cesium3DTileset.loadJson(resource);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       that._root = that.loadTileset(resource, tilesetJson);
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
         ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
@@ -1050,10 +1055,7 @@ function Cesium3DTileset(options) {
         that._initialClippingPlanesOriginMatrix
       );
 
-      that._readyPromise.resolve(that);
-    })
-    .catch(function (error) {
-      that._readyPromise.reject(error);
+      return that;
     });
 }
 
@@ -1214,7 +1216,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -2284,7 +2286,11 @@ function requestContent(tileset, tile) {
 
   tileset._requestedTilesInFlight.push(tile);
 
-  tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
+  tile.contentReadyToProcessPromise
+    .then(addToProcessingQueue(tileset, tile))
+    .catch(function (e) {
+      // Any error will propagate through contentReadyPromise and will be handled below
+    });
   tile.contentReadyPromise
     .then(handleTileSuccess(tileset, tile))
     .catch(handleTileFailure(tileset, tile));
@@ -2399,6 +2405,11 @@ function addToProcessingQueue(tileset, tile) {
 
 function handleTileFailure(tileset, tile) {
   return function (error) {
+    if (tile._contentState !== Cesium3DTileContentState.FAILED) {
+      // If the tile has not failed, the request has been rejected this frame, but will be retried. Do not bubble up the error.
+      return;
+    }
+
     const url = tile._contentResource.url;
     const message = defined(error.message) ? error.message : error.toString();
     if (tileset.tileFailed.numberOfListeners > 0) {
@@ -2414,8 +2425,13 @@ function handleTileFailure(tileset, tile) {
 }
 
 function handleTileSuccess(tileset, tile) {
-  return function () {
+  return function (content) {
     --tileset._statistics.numberOfTilesProcessing;
+
+    if (!defined(content)) {
+      // A request was cancelled. Do not update successful statistics. The request will be retried.
+      return;
+    }
 
     if (!tile.hasTilesetContent && !tile.hasImplicitContent) {
       // RESEARCH_IDEA: ability to unload tiles (without content) for an

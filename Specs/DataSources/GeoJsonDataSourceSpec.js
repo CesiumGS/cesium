@@ -1480,7 +1480,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       .catch(function () {});
   });
 
-  it("Fails with undefined geomeetry", function () {
+  it("Fails with undefined geometry", function () {
     const dataSource = new GeoJsonDataSource();
     return dataSource
       .load(featureUndefinedGeometry)

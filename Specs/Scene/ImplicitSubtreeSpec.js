@@ -96,9 +96,7 @@ describe("Scene/ImplicitSubtree", function () {
       const fakeCacheResource = {
         typedArray: arrayBuffer,
       };
-      options.resourceLoader._promise = {
-        promise: Promise.resolve(fakeCacheResource),
-      };
+      options.resourceLoader._promise = Promise.resolve(fakeCacheResource);
     };
   }
 

@@ -3,7 +3,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
-import defer from "../Core/defer.js";
 import destroyObject from "../Core/destroyObject.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -53,8 +52,8 @@ function Vector3DTilePoints(options) {
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
-  this._resolvedPromise = false;
+  this._update = function (points, frameState) {};
+  this._readyPromise = initialize(this);
 }
 
 Object.defineProperties(Vector3DTilePoints.prototype, {
@@ -97,7 +96,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -161,7 +160,7 @@ function createPoints(points, ellipsoid) {
       return;
     }
 
-    verticesPromise.then(function (result) {
+    return verticesPromise.then(function (result) {
       points._positions = new Float64Array(result.positions);
       points._ready = true;
     });
@@ -471,24 +470,37 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
   }
 };
 
+function initialize(points) {
+  return new Promise(function (resolve, reject) {
+    points._update = function (points, frameState) {
+      const promise = createPoints(points, frameState.mapProjection.ellipsoid);
+
+      if (points._ready) {
+        points._polylineCollection.update(frameState);
+        points._billboardCollection.update(frameState);
+        points._labelCollection.update(frameState);
+      }
+
+      if (!defined(promise)) {
+        return;
+      }
+
+      promise
+        .then(function () {
+          resolve();
+        })
+        .catch(function (e) {
+          reject(e);
+        });
+    };
+  });
+}
+
 /**
  * @private
  */
 Vector3DTilePoints.prototype.update = function (frameState) {
-  createPoints(this, frameState.mapProjection.ellipsoid);
-
-  if (!this._ready) {
-    return;
-  }
-
-  this._polylineCollection.update(frameState);
-  this._billboardCollection.update(frameState);
-  this._labelCollection.update(frameState);
-
-  if (!this._resolvedPromise) {
-    this._readyPromise.resolve();
-    this._resolvedPromise = true;
-  }
+  this._update(this, frameState);
 };
 
 /**
