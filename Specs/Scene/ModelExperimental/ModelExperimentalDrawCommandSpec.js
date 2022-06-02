@@ -2,7 +2,6 @@ import {
   BlendingState,
   BoundingSphere,
   Cartesian3,
-  Cartesian4,
   clone,
   Color,
   CullFace,
@@ -26,7 +25,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   const scratchTranslation = new Cartesian3();
   const scratchExpectedTranslation = new Cartesian3();
-  const scratchCartesian4 = new Cartesian4();
 
   const scratchProjection = new GeographicProjection();
 
@@ -86,6 +84,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   function computeExpected2DMatrix(modelMatrix, frameState) {
     const result = Matrix4.clone(modelMatrix, scratchExpectedMatrix);
 
+    // Change the translation's y-component so it appears on the opposite side
+    // of the map.
     result[13] -=
       CesiumMath.sign(modelMatrix[13]) *
       2.0 *
@@ -163,7 +163,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList2D.length).toEqual(0);
   });
 
-  it("derives translucent command, draws opaque only", function () {
+  it("uses opaque command only", function () {
     const renderResources = mockRenderResources({
       styleCommandsNeeded: StyleCommandsNeeded.ALL_OPAQUE,
     });
@@ -370,11 +370,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix,
       modelMatrix
     );
-    let column = Matrix4.getColumn(modelMatrix2D, 3, scratchCartesian4);
-    const translation = Cartesian3.fromElements(
-      column.x,
-      column.y,
-      column.z,
+    const translation = Matrix4.getTranslation(
+      modelMatrix2D,
       scratchTranslation
     );
 
@@ -402,11 +399,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       mockFrameState2D
     );
 
-    column = Matrix4.getColumn(expectedModelMatrix, 3, scratchCartesian4);
-    const expectedTranslation = Cartesian3.fromElements(
-      column.x,
-      column.y,
-      column.z,
+    const expectedTranslation = Matrix4.getTranslation(
+      expectedModelMatrix,
       scratchExpectedTranslation
     );
 
@@ -488,11 +482,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix2D
     );
 
-    const column = Matrix4.getColumn(modelMatrix2D, 3, scratchCartesian4);
-    const translation = Cartesian3.fromElements(
-      column.x,
-      column.y,
-      column.z,
+    const translation = Matrix4.getTranslation(
+      modelMatrix2D,
       scratchTranslation
     );
 
@@ -512,9 +503,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix2D,
       mockFrameState2D
     );
-    const expectedTranslation = Matrix4.getColumn(
+    const expectedTranslation = Matrix4.getTranslation(
       expectedModelMatrix,
-      3,
       scratchExpectedTranslation
     );
 

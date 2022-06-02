@@ -1,7 +1,6 @@
 import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -290,17 +289,16 @@ function computeModelMatrix(sceneGraph) {
   );
 }
 
-const scratchComputedTranslation = new Cartesian4();
+const scratchComputedTranslation = new Cartesian3();
 
 function computeModelMatrix2D(sceneGraph, frameState) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
-  const translation = Matrix4.getColumn(
+  const translation = Matrix4.getTranslation(
     computedModelMatrix,
-    3,
     scratchComputedTranslation
   );
 
-  if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,

@@ -318,6 +318,9 @@ function updateModelMatrix2D(drawCommand, frameState) {
   }
 
   const modelMatrix2D = Matrix4.clone(modelMatrix, scratchMatrix2D);
+
+  // Change the translation's y-component so it appears on the opposite side
+  // of the map.
   modelMatrix2D[13] -=
     CesiumMath.sign(modelMatrix[13]) *
     2.0 *
