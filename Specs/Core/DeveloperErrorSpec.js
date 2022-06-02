@@ -20,7 +20,7 @@ describe("Core/DeveloperError", function () {
   it("has a stack property", function () {
     if (!window.specsUsingRelease) {
       // Since source maps are used, there will not be exact filenames
-      expect(e.stack).toContain("new DeveloperError");
+      expect(e.stack).toContain("DeveloperError");
     }
   });
 
@@ -31,7 +31,9 @@ describe("Core/DeveloperError", function () {
 
     if (!window.specsUsingRelease) {
       // Since source maps are used, there will not be exact filenames
-      expect(str).toContain("new DeveloperError");
+      expect(str).toContain(`DeveloperError: ${testMessage}`);
+    } else {
+      expect(str).toContain(testMessage);
     }
   });
 });

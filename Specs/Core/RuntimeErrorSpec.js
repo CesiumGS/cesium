@@ -22,8 +22,6 @@ describe("Core/RuntimeError", function () {
     // However, we should know the class if not minified
     if (!window.specsUsingRelease) {
       expect(e.stack).toContain("RuntimeError");
-
-      // TODO: Is there an alternative for minified code?
     }
   });
 
@@ -33,7 +31,9 @@ describe("Core/RuntimeError", function () {
     expect(str).toContain(`${name}: ${testMessage}`);
 
     if (!window.specsUsingRelease) {
-      expect(e.stack).toContain("RuntimeError");
+      expect(e.stack).toContain(`RuntimeError: ${testMessage}`);
+    } else {
+      expect(str).toContain(testMessage);
     }
   });
 });

@@ -28,6 +28,7 @@ module.exports = function (config) {
     // list of files / patterns to load in the browser
     files: [
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
       { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
       { pattern: "Build/CesiumUnminified/**", included: false },
@@ -38,6 +39,7 @@ module.exports = function (config) {
 
     proxies: {
       "/Data": "/base/Specs/Data",
+      "/Specs/TestWorkers": "/base/Specs/TestWorkers",
       "/Build/Specs/TestWorkers": "/base/Build/Specs/TestWorkers",
     },
 

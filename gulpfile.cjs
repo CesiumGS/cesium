@@ -182,7 +182,6 @@ async function buildCesiumJs(options) {
     sourcemap: options.sourcemap,
     target: "es6",
     external: ["https", "http", "url", "zlib"],
-    treeShaking: false,
     outfile: path.join(options.path, "index.js"),
     plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
     incremental: options.incremental,
@@ -206,7 +205,6 @@ async function buildCesiumJs(options) {
     minify: options.minify,
     sourcemap: options.sourcemap,
     target: "es6",
-    treeShaking: false,
     outdir: options.path,
   });
 
@@ -221,7 +219,6 @@ async function buildCesiumJs(options) {
       minify: options.minify,
       target: "es6",
       external: ["https", "http", "url", "zlib"],
-      treeShaking: false,
       outfile: path.join(options.path, "Cesium.js"),
       plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
       incremental: options.incremental,
@@ -1201,7 +1198,6 @@ gulp.task("coverage", async function () {
     globalName: "Cesium",
     target: "es6",
     external: ["https", "http", "url", "zlib"],
-    treeShaking: false,
     outfile: path.join(outputDirectory, "Cesium.js"),
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
@@ -1230,12 +1226,12 @@ gulp.task("coverage", async function () {
             included: true,
             type: "module",
           },
+          { pattern: "Build/Specs/TestWorkers/**", included: false },
           {
             pattern: "Build/Specs/SpecList.js",
             included: true,
             type: "module",
           },
-          { pattern: "Build/Specs/TestWorkers/**", included: false },
         ],
         reporters: ["spec", "coverage"],
         coverageReporter: {
@@ -1308,6 +1304,7 @@ gulp.task("test", function (done) {
 
   let files = [
     { pattern: "Specs/Data/**", included: false },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
     { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
     { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
     { pattern: "Build/CesiumUnminified/**", included: false },
@@ -1319,6 +1316,7 @@ gulp.task("test", function (done) {
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "Build/Cesium/Cesium.js", included: true },
       { pattern: "Build/Cesium/Cesium.js.map", included: false },
       { pattern: "Build/Cesium/**", included: false },
