@@ -31,6 +31,7 @@ const mime = require("mime");
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 const esbuild = require("esbuild");
+const istanbul = require("istanbul-lib-instrument");
 
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -1143,7 +1144,7 @@ function setStatus(state, targetUrl, description, context) {
   });
 }
 
-gulp.task("coverage", function (done) {
+gulp.task("coverage", async function () {
   const argv = yargs.argv;
   const webglStub = argv.webglStub ? argv.webglStub : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -1155,66 +1156,135 @@ gulp.task("coverage", function (done) {
     browsers = argv.browsers.split(",");
   }
 
-  const karma = new Karma.Server(
-    {
-      configFile: karmaConfigFile,
-      browsers: browsers,
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      preprocessors: {
-        "**/*.js": ["sourcemap"],
-        "Build/CesiumUnminified/index.js": [
-          "karma-coverage-istanbul-instrumenter",
-        ],
-      },
-      coverageIstanbulInstrumenter: {
-        esModules: true,
-      },
-      reporters: ["spec", "coverage"],
-      coverageReporter: {
-        dir: "Build/Coverage",
-        subdir: function (browserName) {
-          folders.push(browserName);
-          return browserName;
-        },
-        includeAllSources: true,
-      },
-      client: {
-        captureConsole: verbose,
-        args: [
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          webglStub,
-          undefined,
-        ],
-      },
-    },
-    function (e) {
-      let html = "<!doctype html><html><body><ul>";
-      folders.forEach(function (folder) {
-        html += `<li><a href="${encodeURIComponent(
-          folder
-        )}/index.html">${folder}</a></li>`;
-      });
-      html += "</ul></body></html>";
-      fs.writeFileSync("Build/Coverage/index.html", html);
+  const instrumenter = new istanbul.createInstrumenter({
+    esModules: true,
+    produceSourceMap: true,
+  });
 
-      if (!process.env.TRAVIS) {
-        folders.forEach(function (dir) {
-          open(`Build/Coverage/${dir}/index.html`);
+  const instrumentPlugin = {
+    name: "strip-pragmas",
+    setup: (build) => {
+      const readFile = Promise.promisify(fs.readFile);
+      build.onLoad(
+        {
+          filter: /Source\/(Core|DataSources|Renderer|Scene|Shaders|Widgets)(\/\w+)+\.js$/,
+        },
+        async (args) => {
+          const source = await readFile(args.path, "utf8");
+
+          try {
+            const generatedCode = instrumenter.instrumentSync(
+              source,
+              args.path
+            );
+
+            return { contents: generatedCode };
+          } catch (e) {
+            return {
+              errors: {
+                text: e.message,
+              },
+            };
+          }
+        }
+      );
+    },
+  };
+
+  const outputDirectory = path.join("Build", "Instrumented");
+
+  const result = await esbuild.build({
+    entryPoints: ["Source/Cesium.js"],
+    bundle: true,
+    sourcemap: true,
+    format: "iife",
+    globalName: "Cesium",
+    target: "es6",
+    external: ["https", "http", "url", "zlib"],
+    treeShaking: false,
+    outfile: path.join(outputDirectory, "Cesium.js"),
+    plugins: [instrumentPlugin],
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
+
+  handleBuildWarnings(result);
+
+  return new Promise((resolve, reject) => {
+    const karma = new Karma.Server(
+      {
+        configFile: karmaConfigFile,
+        browsers: browsers,
+        specReporter: {
+          suppressErrorSummary: false,
+          suppressFailed: false,
+          suppressPassed: suppressPassed,
+          suppressSkipped: true,
+        },
+        files: [
+          { pattern: "Specs/Data/**", included: false },
+          { pattern: "Build/Instrumented/Cesium.js", included: true },
+          { pattern: "Build/Instrumented/Cesium.js.map", included: false },
+          { pattern: "Build/CesiumUnminified/**", included: false },
+          {
+            pattern: "Build/Specs/karma-main.js",
+            included: true,
+            type: "module",
+          },
+          {
+            pattern: "Build/Specs/SpecList.js",
+            included: true,
+            type: "module",
+          },
+          { pattern: "Build/Specs/TestWorkers/**", included: false },
+        ],
+        reporters: ["spec", "coverage"],
+        coverageReporter: {
+          dir: "Build/Coverage",
+          subdir: function (browserName) {
+            folders.push(browserName);
+            return browserName;
+          },
+          includeAllSources: true,
+        },
+        client: {
+          captureConsole: verbose,
+          args: [
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            webglStub,
+            undefined,
+          ],
+        },
+      },
+      function (e) {
+        let html = "<!doctype html><html><body><ul>";
+        folders.forEach(function (folder) {
+          html += `<li><a href="${encodeURIComponent(
+            folder
+          )}/index.html">${folder}</a></li>`;
         });
+        html += "</ul></body></html>";
+        fs.writeFileSync("Build/Coverage/index.html", html);
+
+        if (!process.env.TRAVIS) {
+          folders.forEach(function (dir) {
+            open(`Build/Coverage/${dir}/index.html`);
+          });
+        }
+
+        if (failTaskOnError && e) {
+          reject(e);
+          return;
+        }
+
+        resolve();
       }
-      return done(failTaskOnError ? e : undefined);
-    }
-  );
-  karma.start();
+    );
+    karma.start();
+  });
 });
 
 gulp.task("test", function (done) {
