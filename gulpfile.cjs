@@ -1218,6 +1218,7 @@ gulp.task("coverage", async function () {
         },
         files: [
           { pattern: "Specs/Data/**", included: false },
+          { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
           { pattern: "Build/Instrumented/Cesium.js", included: true },
           { pattern: "Build/Instrumented/Cesium.js.map", included: false },
           { pattern: "Build/CesiumUnminified/**", included: false },

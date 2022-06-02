@@ -20,19 +20,17 @@ describe("Core/DeveloperError", function () {
   it("has a stack property", function () {
     if (!window.specsUsingRelease) {
       // Since source maps are used, there will not be exact filenames
-      expect(e.stack).toContain("DeveloperError");
+      expect(e.stack).toContain(name);
     }
   });
 
   it("has a working toString", function () {
     const str = new DeveloperError(testMessage).toString();
 
-    expect(str).toContain(`${name}: ${testMessage}`);
-
     if (!window.specsUsingRelease) {
-      // Since source maps are used, there will not be exact filenames
-      expect(str).toContain(`DeveloperError: ${testMessage}`);
+      expect(str).toContain(`${name}: ${testMessage}`);
     } else {
+      // Since source maps are used, there will not be exact filenames
       expect(str).toContain(testMessage);
     }
   });
