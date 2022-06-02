@@ -108,8 +108,8 @@ npm start -- --help
 
 Cesium can be used a few different ways. Cesium can be either a set of platform-generic ESM modules generic to browser, or bundled targeting the browser or NodeJS environment.
 
-- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which are supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle and source map by importing `Build/Cesium/index.js`.
-- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and source map optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`.
+- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which are supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
+- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
 Read the complete list of build scripts and options below for more details.
@@ -131,7 +131,7 @@ npm run [target-name]
 Here's the full set of scripts and what they do.
 
 - **Build scripts** -- build and package the source code and documentation
-  - `build` - A fast, developer-oriented build that pre-processes ESM modules, suitable for running tests and most examples. Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. The output will default to `Build/CesiumUnminified`.
+  - `build` - A fast, developer-oriented build that pre-processes ESM modules, suitable for running tests and most examples. Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. The build output, including an external sourcemap, will default to `Build/CesiumUnminified`.
     - `--minify` - [Minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) the output for optimized loading. Specifying this option will output to `Build/Cesium`.
     - `--removePragmas` - Optimizes the output by removing debugging code that validates function input and throws `DeveloperError`s. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
