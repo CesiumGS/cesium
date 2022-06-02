@@ -1,4 +1,4 @@
-import buildDrawCommands from "./buildDrawCommands.js";
+import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
@@ -494,7 +494,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         modelPositionMax
       );
 
-      const drawCommand = buildDrawCommands(
+      const drawCommand = buildDrawCommand(
         primitiveRenderResources,
         frameState
       );

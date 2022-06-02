@@ -28,10 +28,7 @@ import VertexArray from "../../Renderer/VertexArray.js";
  *
  * @private
  */
-export default function buildDrawCommands(
-  primitiveRenderResources,
-  frameState
-) {
+export default function buildDrawCommand(primitiveRenderResources, frameState) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);

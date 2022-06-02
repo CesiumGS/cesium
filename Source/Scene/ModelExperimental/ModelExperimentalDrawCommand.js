@@ -406,7 +406,7 @@ ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
   const commandList = this._commandList;
   const commandList2D = this._commandList2D;
 
-  const use2D = use2DCommands(this, frameState);
+  const use2D = shouldUse2DCommands(this, frameState);
 
   if (use2D && commandList2D.length === 0) {
     const length = commandList.length;
@@ -471,19 +471,18 @@ function derive2DCommand(command) {
   return derivedCommand;
 }
 
-function use2DCommands(drawCommand, frameState) {
+function shouldUse2DCommands(drawCommand, frameState) {
+  if (frameState.mode !== SceneMode.SCENE2D || drawCommand.model._projectTo2D) {
+    return;
+  }
+
   const idl2D =
     frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
   const boundingSphere = drawCommand.command.boundingVolume;
   const left = boundingSphere.center.y - boundingSphere.radius;
   const right = boundingSphere.center.y + boundingSphere.radius;
 
-  return (
-    frameState.mode === SceneMode.SCENE2D &&
-    !drawCommand.model._projectTo2D &&
-    left < idl2D &&
-    right > idl2D
-  );
+  return (left < idl2D && right > idl2D) || (left < -idl2D && right > -idl2D);
 }
 
 export default ModelExperimentalDrawCommand;
