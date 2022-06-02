@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.95 - 2022-07-01
+
+##### Fixes :wrench:
+
+- Fixed `Cesium3DTileColorBlendMode.REPLACE` for certain tilesets. [#10424](https://github.com/CesiumGS/cesium/pull/10424)
+
 ### 1.94 - 2022-06-01
 
 ##### Breaking Changes :mega:
