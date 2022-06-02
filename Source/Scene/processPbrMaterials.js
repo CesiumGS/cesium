@@ -164,19 +164,26 @@ function generateTechnique(
   let uniformName;
   let parameterName;
   let value;
-  const pbrMetallicRoughness = material.pbrMetallicRoughness;
-  if (defined(pbrMetallicRoughness) && !useSpecGloss) {
-    for (parameterName in pbrMetallicRoughness) {
-      if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
-        value = pbrMetallicRoughness[parameterName];
-        uniformName = `u_${parameterName}`;
-        generatedMaterialValues[uniformName] = value;
-        handleKHRTextureTransform(
-          parameterName,
-          value,
-          generatedMaterialValues
-        );
+  if (!useSpecGloss) {
+    const pbrMetallicRoughness = material.pbrMetallicRoughness;
+    if (defined(pbrMetallicRoughness)) {
+      for (parameterName in pbrMetallicRoughness) {
+        if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
+          value = pbrMetallicRoughness[parameterName];
+          uniformName = `u_${parameterName}`;
+          generatedMaterialValues[uniformName] = value;
+          handleKHRTextureTransform(
+            parameterName,
+            value,
+            generatedMaterialValues
+          );
+        }
       }
+    } else {
+      // Add a uniform for baseColorFactor and set the default value. Otherwise
+      // glTFs without a pbrMetallicRoughness object will not be styled correctly
+      // when using Cesium3DTileColorBlendMode.REPLACE.
+      generatedMaterialValues["u_baseColorFactor"] = [1.0, 1.0, 1.0, 1.0];
     }
   }
 
