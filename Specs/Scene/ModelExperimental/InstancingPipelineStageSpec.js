@@ -139,7 +139,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const components = gltfLoader.components;
       const node = components.nodes[0];
 
-      InstancingPipelineStage.process(renderResources, node);
+      InstancingPipelineStage.process(renderResources, node, scene.frameState);
 
       expect(renderResources.instancingTranslationMax).toEqual(
         new Cartesian3(2, 2, 0)
@@ -318,10 +318,13 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         0.3897113800048828,
         0,
       ]);
-      const transformsTypedArray = InstancingPipelineStage._getInstanceTransformsTypedArray(
+      const transforms = InstancingPipelineStage._getInstanceTransformMatrices(
         node.instances,
         node.instances.attributes[0].count,
         renderResources
+      );
+      const transformsTypedArray = InstancingPipelineStage._transformsToTypedArray(
+        transforms
       );
 
       expect(transformsTypedArray.length).toEqual(

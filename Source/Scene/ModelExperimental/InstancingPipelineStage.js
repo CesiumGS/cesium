@@ -11,6 +11,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
+import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 const modelViewScratch = new Matrix4();
@@ -39,85 +40,25 @@ InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debuggin
 InstancingPipelineStage.process = function (renderResources, node, frameState) {
   const instances = node.instances;
   const count = instances.attributes[0].count;
-  let instancingVertexAttributes = [];
-  const sceneGraph = renderResources.model.sceneGraph;
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
   shaderBuilder.addVertexLines([InstancingStageCommon]);
 
-  const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const model = renderResources.model;
+  const sceneGraph = model.sceneGraph;
+  const use2D =
+    frameState.mode !== SceneMode.SCENE3D &&
+    !frameState.scene3DOnly &&
+    model._projectTo2D;
+  const instancingVertexAttributes = [];
+
+  processTransformAttributes(
+    renderResources,
+    frameState,
     instances,
-    InstanceAttributeSemantic.TRANSLATION
+    instancingVertexAttributes
   );
-
-  let translationMax;
-  let translationMin;
-  if (defined(translationAttribute)) {
-    translationMax = translationAttribute.max;
-    translationMin = translationAttribute.min;
-  }
-
-  const rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-    instances,
-    InstanceAttributeSemantic.ROTATION
-  );
-  if (
-    defined(rotationAttribute) ||
-    !defined(translationMax) ||
-    !defined(translationMin)
-  ) {
-    instancingVertexAttributes = processMatrixAttributes(
-      node,
-      count,
-      renderResources,
-      frameState
-    );
-  } else {
-    if (defined(translationAttribute)) {
-      instancingVertexAttributes.push({
-        index: renderResources.attributeIndex++,
-        vertexBuffer: translationAttribute.buffer,
-        componentsPerAttribute: AttributeType.getNumberOfComponents(
-          translationAttribute.type
-        ),
-        componentDatatype: translationAttribute.componentDatatype,
-        normalize: false,
-        offsetInBytes: translationAttribute.byteOffset,
-        strideInBytes: translationAttribute.byteStride,
-        instanceDivisor: 1,
-      });
-
-      renderResources.instancingTranslationMax = translationMax;
-      renderResources.instancingTranslationMin = translationMin;
-
-      shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
-      shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
-    }
-
-    const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-      instances,
-      InstanceAttributeSemantic.SCALE
-    );
-
-    if (defined(scaleAttribute)) {
-      instancingVertexAttributes.push({
-        index: renderResources.attributeIndex++,
-        vertexBuffer: scaleAttribute.buffer,
-        componentsPerAttribute: AttributeType.getNumberOfComponents(
-          scaleAttribute.type
-        ),
-        componentDatatype: scaleAttribute.componentDatatype,
-        normalize: false,
-        offsetInBytes: scaleAttribute.byteOffset,
-        strideInBytes: scaleAttribute.byteStride,
-        instanceDivisor: 1,
-      });
-
-      shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
-      shaderBuilder.addAttribute("vec3", "a_instanceScale");
-    }
-  }
 
   processFeatureIdAttributes(
     renderResources,
@@ -160,7 +101,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         // For 3D Tiles, model.modelMatrix is the computed tile
         // transform (which includes tileset.modelMatrix). This always applies
         // for i3dm, since such models are always part of a tileset.
-        renderResources.model.modelMatrix,
+        model.modelMatrix,
         // For i3dm models, components.transform contains the RTC_CENTER
         // translation.
         sceneGraph.components.transform,
@@ -202,11 +143,35 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 const translationScratch = new Cartesian3();
 const rotationScratch = new Quaternion();
 const scaleScratch = new Cartesian3();
-const transformScratch = new Matrix4();
 
-function getInstanceTransformsTypedArray(instances, count, renderResources) {
+function transformsToTypedArray(transforms) {
   const elements = 12;
+  const count = transforms.length;
   const transformsTypedArray = new Float32Array(count * elements);
+
+  for (let i = 0; i < count; i++) {
+    const transform = transforms[i];
+    const offset = elements * i;
+
+    transformsTypedArray[offset + 0] = transform[0];
+    transformsTypedArray[offset + 1] = transform[4];
+    transformsTypedArray[offset + 2] = transform[8];
+    transformsTypedArray[offset + 3] = transform[12];
+    transformsTypedArray[offset + 4] = transform[1];
+    transformsTypedArray[offset + 5] = transform[5];
+    transformsTypedArray[offset + 6] = transform[9];
+    transformsTypedArray[offset + 7] = transform[13];
+    transformsTypedArray[offset + 8] = transform[2];
+    transformsTypedArray[offset + 9] = transform[6];
+    transformsTypedArray[offset + 10] = transform[10];
+    transformsTypedArray[offset + 11] = transform[14];
+  }
+
+  return transformsTypedArray;
+}
+
+function getInstanceTransformMatrices(instances, count, renderResources) {
+  const transforms = new Array(count);
 
   const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     instances,
@@ -291,29 +256,16 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
       translation,
       rotation,
       scale,
-      transformScratch
+      new Matrix4()
     );
 
-    const offset = elements * i;
-
-    transformsTypedArray[offset + 0] = transform[0];
-    transformsTypedArray[offset + 1] = transform[4];
-    transformsTypedArray[offset + 2] = transform[8];
-    transformsTypedArray[offset + 3] = transform[12];
-    transformsTypedArray[offset + 4] = transform[1];
-    transformsTypedArray[offset + 5] = transform[5];
-    transformsTypedArray[offset + 6] = transform[9];
-    transformsTypedArray[offset + 7] = transform[13];
-    transformsTypedArray[offset + 8] = transform[2];
-    transformsTypedArray[offset + 9] = transform[6];
-    transformsTypedArray[offset + 10] = transform[10];
-    transformsTypedArray[offset + 11] = transform[14];
-
-    renderResources.instancingTranslationMax = instancingTranslationMax;
-    renderResources.instancingTranslationMin = instancingTranslationMin;
+    transforms[i] = transform;
   }
 
-  return transformsTypedArray;
+  renderResources.instancingTranslationMax = instancingTranslationMax;
+  renderResources.instancingTranslationMin = instancingTranslationMin;
+
+  return transforms;
 }
 
 function processFeatureIdAttributes(
@@ -368,12 +320,121 @@ function processFeatureIdAttributes(
   }
 }
 
-function processMatrixAttributes(node, count, renderResources, frameState) {
-  const transformsTypedArray = getInstanceTransformsTypedArray(
-    node.instances,
-    count,
-    renderResources
+function processTransformAttributes(
+  renderResources,
+  frameState,
+  instances,
+  instancingVertexAttributes
+) {
+  const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION
   );
+
+  let translationMax;
+  let translationMin;
+  if (defined(translationAttribute)) {
+    translationMax = translationAttribute.max;
+    translationMin = translationAttribute.min;
+  }
+
+  const rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.ROTATION
+  );
+
+  if (
+    defined(rotationAttribute) ||
+    !defined(translationMax) ||
+    !defined(translationMin)
+  ) {
+    const count = instances.attributes[0].count;
+    const transforms = getInstanceTransformMatrices(
+      instances,
+      count,
+      renderResources
+    );
+
+    processMatrixAttributes(
+      renderResources,
+      transforms,
+      frameState,
+      instancingVertexAttributes
+    );
+  } else {
+    const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      instances,
+      InstanceAttributeSemantic.SCALE
+    );
+    processTranslationScaleAttributes(
+      renderResources,
+      translationAttribute,
+      scaleAttribute,
+      instancingVertexAttributes
+    );
+    // also turn these into matrices
+  }
+
+  // Handle 2D here
+}
+
+function processTranslationScaleAttributes(
+  renderResources,
+  translationAttribute,
+  scaleAttribute,
+  instancingVertexAttributes
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  if (defined(translationAttribute)) {
+    const translationMax = translationAttribute.max;
+    const translationMin = translationAttribute.min;
+
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: translationAttribute.buffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        translationAttribute.type
+      ),
+      componentDatatype: translationAttribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: translationAttribute.byteOffset,
+      strideInBytes: translationAttribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    renderResources.instancingTranslationMax = translationMax;
+    renderResources.instancingTranslationMin = translationMin;
+
+    shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
+    shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
+  }
+
+  if (defined(scaleAttribute)) {
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: scaleAttribute.buffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        scaleAttribute.type
+      ),
+      componentDatatype: scaleAttribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: scaleAttribute.byteOffset,
+      strideInBytes: scaleAttribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
+    shaderBuilder.addAttribute("vec3", "a_instanceScale");
+  }
+}
+
+function processMatrixAttributes(
+  renderResources,
+  transforms,
+  frameState,
+  instancingVertexAttributes
+) {
+  const transformsTypedArray = transformsToTypedArray(transforms);
   const transformsVertexBuffer = Buffer.createVertexBuffer({
     context: frameState.context,
     typedArray: transformsTypedArray,
@@ -389,7 +450,7 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
   );
   const strideInBytes = componentByteSize * vertexSizeInFloats;
 
-  const instancingVertexAttributes = [
+  const matrixAttributes = [
     {
       index: renderResources.attributeIndex++,
       vertexBuffer: transformsVertexBuffer,
@@ -428,10 +489,14 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
   shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
   shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
 
-  return instancingVertexAttributes;
+  instancingVertexAttributes.push.apply(
+    instancingVertexAttributes,
+    matrixAttributes
+  );
 }
 
 // Exposed for testing
-InstancingPipelineStage._getInstanceTransformsTypedArray = getInstanceTransformsTypedArray;
+InstancingPipelineStage._getInstanceTransformMatrices = getInstanceTransformMatrices;
+InstancingPipelineStage._transformsToTypedArray = transformsToTypedArray;
 
 export default InstancingPipelineStage;
