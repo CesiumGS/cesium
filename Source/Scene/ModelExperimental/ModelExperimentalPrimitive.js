@@ -91,7 +91,7 @@ export default function ModelExperimentalPrimitive(options) {
   /**
    * The generated {@link ModelExperimentalDrawCommand} associated with this primitive.
    *
-   * @type {ModelExperimentalDrawCommand[]}
+   * @type {ModelExperimentalDrawCommand}
    *
    * @private
    */
