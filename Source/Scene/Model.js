@@ -5684,11 +5684,12 @@ Model.prototype.update = function (frameState) {
           }
           commandList.push(command);
           boundingVolume = nc.command.boundingVolume;
-          if (
-            frameState.mode === SceneMode.SCENE2D &&
-            (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-              boundingVolume.center.y - boundingVolume.radius < idl2D)
-          ) {
+          const left = boundingVolume.center.y - boundingVolume.radius;
+          const right = boundingVolume.center.y + boundingVolume.radius;
+          const overIdl =
+            (left < idl2D && right > idl2D) ||
+            (left < -idl2D && right > -idl2D);
+          if (frameState.mode === SceneMode.SCENE2D && overIdl) {
             let command2D = nc.command2D;
             if (silhouette) {
               command2D = nc.silhouetteModelCommand2D;
@@ -5709,11 +5710,12 @@ Model.prototype.update = function (frameState) {
           if (nc.show) {
             commandList.push(nc.silhouetteColorCommand);
             boundingVolume = nc.command.boundingVolume;
-            if (
-              frameState.mode === SceneMode.SCENE2D &&
-              (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-                boundingVolume.center.y - boundingVolume.radius < idl2D)
-            ) {
+            const left = boundingVolume.center.y - boundingVolume.radius;
+            const right = boundingVolume.center.y + boundingVolume.radius;
+            const overIdl =
+              (left < idl2D && right > idl2D) ||
+              (left < -idl2D && right > -idl2D);
+            if (frameState.mode === SceneMode.SCENE2D && overIdl) {
               commandList.push(nc.silhouetteColorCommand2D);
             }
           }
