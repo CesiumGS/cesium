@@ -78,7 +78,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
- * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
@@ -100,7 +100,7 @@ export default function GltfLoader(options) {
     options.loadAttributesAsTypedArray,
     false
   );
-  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
+  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
@@ -126,7 +126,7 @@ export default function GltfLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadPositionsFor2D = loadPositionsFor2D;
+  this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
@@ -684,7 +684,7 @@ function loadAttribute(
 
   const loadFor2D =
     modelSemantic === VertexAttributeSemantic.POSITION &&
-    loader._loadPositionsFor2D &&
+    loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
   const vertexBufferLoader = loadVertexBuffer(
@@ -1380,7 +1380,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
       defined(gltf.accessors[attributes.TRANSLATION].max);
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
-        // Load the attributes as typed arrays if:
+        // In addition to the loader options, load the attributes as typed arrays if:
         // - the instances have rotations, so that instance matrices are computed on the CPU.
         //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
         // - the translation accessor does not have a min and max, so the values can be used
@@ -1394,6 +1394,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
           semantic === InstanceAttributeSemantic.SCALE;
         const loadAsTypedArrayPacked =
           loader._loadAttributesAsTypedArray ||
+          loader._loadAttributesFor2D ||
           ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
           semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0 ||
           !frameState.context.instancedArrays;

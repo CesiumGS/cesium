@@ -135,7 +135,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise maximum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
@@ -145,9 +144,17 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise minimum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
   this.instancingTranslationMin = undefined;
+
+  /**
+   * The bounding sphere of the instances in the node, in 2D world space.
+   *
+   * @type {BoundingSphere}
+   *
+   * @private
+   */
+  this.instancedBoundingSphere2D = undefined;
 }

@@ -77,18 +77,23 @@ SceneMode2DPipelineStage.process = function (
     VertexAttributeSemantic.POSITION
   );
 
+  const instanced = defined(renderResources.runtimeNode.node.instances);
+
   // If the typed array of the position attribute exists, then
   // the positions haven't been projected to 2D yet.
   if (defined(positionAttribute.typedArray)) {
-    const buffer2D = createPositionBufferFor2D(
-      positionAttribute,
-      computedModelMatrix,
-      boundingSphere2D,
-      frameState
-    );
+    // Only project the positions if the model is not instanced.
+    if (!instanced) {
+      const buffer2D = createPositionBufferFor2D(
+        positionAttribute,
+        computedModelMatrix,
+        boundingSphere2D,
+        frameState
+      );
 
-    runtimePrimitive.positionBuffer2D = buffer2D;
-    model._modelResources.push(buffer2D);
+      runtimePrimitive.positionBuffer2D = buffer2D;
+      model._modelResources.push(buffer2D);
+    }
 
     // Unload the typed array. This is just a pointer to the array in
     // the vertex buffer loader, so if the typed array is shared by

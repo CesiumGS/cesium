@@ -1,17 +1,19 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import AttributeType from "../AttributeType.js";
-import Quaternion from "../../Core/Quaternion.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
+import clone from "../../Core/clone.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defined from "../../Core/defined.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import Quaternion from "../../Core/Quaternion.js";
 import SceneMode from "../SceneMode.js";
+import SceneTransforms from "../SceneTransforms.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 const modelViewScratch = new Matrix4();
@@ -51,13 +53,15 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     frameState.mode !== SceneMode.SCENE3D &&
     !frameState.scene3DOnly &&
     model._projectTo2D;
+
   const instancingVertexAttributes = [];
 
   processTransformAttributes(
     renderResources,
     frameState,
     instances,
-    instancingVertexAttributes
+    instancingVertexAttributes,
+    use2D
   );
 
   processFeatureIdAttributes(
@@ -144,6 +148,58 @@ const translationScratch = new Cartesian3();
 const rotationScratch = new Quaternion();
 const scaleScratch = new Cartesian3();
 
+const modelMatrixScratch = new Matrix4();
+const nodeTransformScratch = new Matrix4();
+
+function projectTransformsTo2D(
+  transforms,
+  instances,
+  renderResources,
+  frameState
+) {
+  /*
+  const referencePoint = Cartesian3.lerp(
+    renderResources.instancingTranslationMin,
+    renderResources.instancingTranslationMax,
+    0.5,
+    new Cartesian3()
+  );*/
+
+  // Force the scene mode to be CV. In 2D, projected positions will have
+  // an x-coordinate of 0, which eliminates the height data that is
+  // necessary for rendering in CV mode.
+  const frameStateCV = clone(frameState);
+  frameStateCV.mode = SceneMode.COLUMBUS_VIEW;
+
+  if (instances.transformInWorldSpace) {
+    const model = renderResources.model;
+    const modelMatrix = Matrix4.multiplyTransformation(
+      model.modelMatrix,
+      model.sceneGraph.components.transform,
+      modelMatrixScratch
+    );
+  }
+
+  const count = transforms.length;
+  for (let i = 0; i < count; i++) {
+    const transform = transforms[i];
+
+    const translation = Matrix4.getTranslation(transform, translationScratch);
+    const transformedPosition = Matrix4.multiplyByPoint(
+      modelMatrix,
+      translation,
+      translation
+    );
+    const projectedPosition = SceneTransforms.computeActualWgs84Position(
+      frameState,
+      transformedPosition,
+      transformedPosition
+    );
+
+    Matrix4.setTranslation(transform, projectedPosition, transform);
+  }
+}
+
 function transformsToTypedArray(transforms) {
   const elements = 12;
   const count = transforms.length;
@@ -170,7 +226,7 @@ function transformsToTypedArray(transforms) {
   return transformsTypedArray;
 }
 
-function getInstanceTransformMatrices(instances, count, renderResources) {
+function getInstanceTransformsFromMatrices(instances, count, renderResources) {
   const transforms = new Array(count);
 
   const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
@@ -268,63 +324,12 @@ function getInstanceTransformMatrices(instances, count, renderResources) {
   return transforms;
 }
 
-function processFeatureIdAttributes(
-  renderResources,
-  frameState,
-  instances,
-  instancingVertexAttributes
-) {
-  const attributes = instances.attributes;
-  const model = renderResources.model;
-  const shaderBuilder = renderResources.shaderBuilder;
-
-  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
-  // because we want to expose the instance feature ID when picking.
-  for (let i = 0; i < attributes.length; i++) {
-    const attribute = attributes[i];
-    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
-      continue;
-    }
-
-    if (
-      attribute.setIndex >= renderResources.featureIdVertexAttributeSetIndex
-    ) {
-      renderResources.featureIdVertexAttributeSetIndex = attribute.setIndex + 1;
-    }
-
-    const vertexBuffer = Buffer.createVertexBuffer({
-      context: frameState.context,
-      typedArray: attribute.packedTypedArray,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-    vertexBuffer.vertexArrayDestroyable = false;
-    model._resources.push(vertexBuffer);
-
-    instancingVertexAttributes.push({
-      index: renderResources.attributeIndex++,
-      vertexBuffer: vertexBuffer,
-      componentsPerAttribute: AttributeType.getNumberOfComponents(
-        attribute.type
-      ),
-      componentDatatype: attribute.componentDatatype,
-      normalize: false,
-      offsetInBytes: attribute.byteOffset,
-      strideInBytes: attribute.byteStride,
-      instanceDivisor: 1,
-    });
-
-    shaderBuilder.addAttribute(
-      "float",
-      `a_instanceFeatureId_${attribute.setIndex}`
-    );
-  }
-}
-
 function processTransformAttributes(
   renderResources,
   frameState,
   instances,
-  instancingVertexAttributes
+  instancingVertexAttributes,
+  use2D
 ) {
   const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     instances,
@@ -343,16 +348,17 @@ function processTransformAttributes(
     InstanceAttributeSemantic.ROTATION
   );
 
+  const count = instances.attributes[0].count;
   if (
     defined(rotationAttribute) ||
     !defined(translationMax) ||
     !defined(translationMin)
   ) {
-    const count = instances.attributes[0].count;
-    const transforms = getInstanceTransformMatrices(
+    const transforms = getInstanceTransformsFromMatrices(
       instances,
       count,
-      renderResources
+      renderResources,
+      use2D
     );
 
     processMatrixAttributes(
@@ -361,70 +367,33 @@ function processTransformAttributes(
       frameState,
       instancingVertexAttributes
     );
+
+    if (use2D) {
+    }
   } else {
     const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
       instances,
       InstanceAttributeSemantic.SCALE
     );
+
     processTranslationScaleAttributes(
       renderResources,
       translationAttribute,
       scaleAttribute,
-      instancingVertexAttributes
+      instancingVertexAttributes,
+      use2D
     );
-    // also turn these into matrices
-  }
 
-  // Handle 2D here
-}
-
-function processTranslationScaleAttributes(
-  renderResources,
-  translationAttribute,
-  scaleAttribute,
-  instancingVertexAttributes
-) {
-  const shaderBuilder = renderResources.shaderBuilder;
-  if (defined(translationAttribute)) {
-    const translationMax = translationAttribute.max;
-    const translationMin = translationAttribute.min;
-
-    instancingVertexAttributes.push({
-      index: renderResources.attributeIndex++,
-      vertexBuffer: translationAttribute.buffer,
-      componentsPerAttribute: AttributeType.getNumberOfComponents(
-        translationAttribute.type
-      ),
-      componentDatatype: translationAttribute.componentDatatype,
-      normalize: false,
-      offsetInBytes: translationAttribute.byteOffset,
-      strideInBytes: translationAttribute.byteStride,
-      instanceDivisor: 1,
-    });
-
-    renderResources.instancingTranslationMax = translationMax;
-    renderResources.instancingTranslationMin = translationMin;
-
-    shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
-    shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
-  }
-
-  if (defined(scaleAttribute)) {
-    instancingVertexAttributes.push({
-      index: renderResources.attributeIndex++,
-      vertexBuffer: scaleAttribute.buffer,
-      componentsPerAttribute: AttributeType.getNumberOfComponents(
-        scaleAttribute.type
-      ),
-      componentDatatype: scaleAttribute.componentDatatype,
-      normalize: false,
-      offsetInBytes: scaleAttribute.byteOffset,
-      strideInBytes: scaleAttribute.byteStride,
-      instanceDivisor: 1,
-    });
-
-    shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
-    shaderBuilder.addAttribute("vec3", "a_instanceScale");
+    // Translation and scale will only load in as packed typed arrays
+    // if the model was constructed with projectTo2D set to true, so
+    // this can't be done outside of the if statement
+    if (use2D) {
+      transforms = getInstanceTransformsFromMatrices(
+        instances,
+        count,
+        renderResources
+      );
+    }
   }
 }
 
@@ -495,8 +464,111 @@ function processMatrixAttributes(
   );
 }
 
+function processTranslationScaleAttributes(
+  renderResources,
+  translationAttribute,
+  scaleAttribute,
+  instancingVertexAttributes
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  if (defined(translationAttribute)) {
+    const translationMax = translationAttribute.max;
+    const translationMin = translationAttribute.min;
+
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: translationAttribute.buffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        translationAttribute.type
+      ),
+      componentDatatype: translationAttribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: translationAttribute.byteOffset,
+      strideInBytes: translationAttribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    renderResources.instancingTranslationMax = translationMax;
+    renderResources.instancingTranslationMin = translationMin;
+
+    shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
+    shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
+  }
+
+  if (defined(scaleAttribute)) {
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: scaleAttribute.buffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        scaleAttribute.type
+      ),
+      componentDatatype: scaleAttribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: scaleAttribute.byteOffset,
+      strideInBytes: scaleAttribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
+    shaderBuilder.addAttribute("vec3", "a_instanceScale");
+  }
+}
+
+function processFeatureIdAttributes(
+  renderResources,
+  frameState,
+  instances,
+  instancingVertexAttributes,
+  transformMatrices
+) {
+  const attributes = instances.attributes;
+  const model = renderResources.model;
+  const shaderBuilder = renderResources.shaderBuilder;
+
+  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
+  // because we want to expose the instance feature ID when picking.
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
+    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
+      continue;
+    }
+
+    if (
+      attribute.setIndex >= renderResources.featureIdVertexAttributeSetIndex
+    ) {
+      renderResources.featureIdVertexAttributeSetIndex = attribute.setIndex + 1;
+    }
+
+    const vertexBuffer = Buffer.createVertexBuffer({
+      context: frameState.context,
+      typedArray: attribute.packedTypedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    vertexBuffer.vertexArrayDestroyable = false;
+    model._resources.push(vertexBuffer);
+
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: vertexBuffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        attribute.type
+      ),
+      componentDatatype: attribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: attribute.byteOffset,
+      strideInBytes: attribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    shaderBuilder.addAttribute(
+      "float",
+      `a_instanceFeatureId_${attribute.setIndex}`
+    );
+  }
+}
+
 // Exposed for testing
-InstancingPipelineStage._getInstanceTransformMatrices = getInstanceTransformMatrices;
+InstancingPipelineStage._getInstanceTransformsFromMatrices = getInstanceTransformsFromMatrices;
 InstancingPipelineStage._transformsToTypedArray = transformsToTypedArray;
 
 export default InstancingPipelineStage;

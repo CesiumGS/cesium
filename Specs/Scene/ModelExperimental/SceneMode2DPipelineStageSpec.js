@@ -92,7 +92,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     const renderResources = mockRenderResources();
 
     return loadGltf(boxTexturedUrl, {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
       const primitive = components.nodes[1].primitives[0];
@@ -137,7 +137,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     const renderResources = mockRenderResources();
 
     return loadGltf(dracoBoxWithTangentsUrl, {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];

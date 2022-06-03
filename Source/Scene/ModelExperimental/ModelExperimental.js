@@ -1615,7 +1615,7 @@ ModelExperimental.fromGltf = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
-    loadPositionsFor2D: options.projectTo2D,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
@@ -1661,7 +1661,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
-    loadPositionsFor2D: options.projectTo2D,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 

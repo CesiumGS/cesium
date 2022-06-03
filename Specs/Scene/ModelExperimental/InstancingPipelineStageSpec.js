@@ -318,7 +318,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         0.3897113800048828,
         0,
       ]);
-      const transforms = InstancingPipelineStage._getInstanceTransformMatrices(
+      const transforms = InstancingPipelineStage._getInstanceTransformsFromMatrices(
         node.instances,
         node.instances.attributes[0].count,
         renderResources
