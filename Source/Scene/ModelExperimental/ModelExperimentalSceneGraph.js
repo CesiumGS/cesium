@@ -135,7 +135,16 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this.modelPipelineStages = [];
 
+  // The scene graph's bounding sphere is model space, so that
+  // the model's bounding sphere can be recomputed when given a
+  // new model matrix.
   this._boundingSphere = undefined;
+
+  // The 2D bounding sphere is in world space. This is checked
+  // by the draw commands to see if the model is over the IDL,
+  // and if so, renders the primitives using extra commands.
+  this._boundingSphere2D = undefined;
+
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -193,7 +202,8 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
   },
 
   /**
-   * The bounding sphere containing all the primitives in the scene graph.
+   * The bounding sphere containing all the primitives in the scene graph
+   * in model space.
    *
    * @type {BoundingSphere}
    * @readonly
@@ -317,6 +327,12 @@ function computeModelMatrix2D(sceneGraph, frameState) {
       sceneGraph._computedModelMatrix2D
     );
   }
+
+  sceneGraph._boundingSphere2D = BoundingSphere.transform(
+    sceneGraph._boundingSphere,
+    sceneGraph._computedModelMatrix2D,
+    sceneGraph._boundingSphere2D
+  );
 }
 
 /**

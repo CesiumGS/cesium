@@ -40,9 +40,12 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-    return {
+    const resources = {
       model: {
         shadows: ShadowMode.ENABLED,
+        sceneGraph: {
+          _boundingSphere2D: new BoundingSphere(Cartesian3.ZERO, 1.0),
+        },
         _projectTo2D: false,
       },
       runtimePrimitive: {
@@ -55,6 +58,20 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       },
       styleCommandsNeeded: options.styleCommandsNeeded,
     };
+
+    const boundingSphere2DTransform = defaultValue(
+      options.boundingSphere2DTransform,
+      Matrix4.IDENTITY
+    );
+
+    const sceneGraph = resources.model.sceneGraph;
+    sceneGraph._boundingSphere2D = BoundingSphere.transform(
+      sceneGraph._boundingSphere2D,
+      boundingSphere2DTransform,
+      sceneGraph._boundingSphere2D
+    );
+
+    return resources;
   }
 
   function createDrawCommand(options) {
@@ -98,10 +115,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   // Creates a ModelExperimentalDrawCommand with all possible derived
   // draw commands.
   function createDrawCommandWithAllDerivedCommands() {
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
-
     const modelMatrix = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(180, 0),
       scratchModelMatrix
@@ -111,7 +124,10 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix,
       modelMatrix
     );
-
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+      boundingSphere2DTransform: modelMatrix2D,
+    });
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
@@ -295,10 +311,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getCommands derives 2D commands if primitive is near IDL", function () {
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
-
     const modelMatrix = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(180, 0),
       scratchModelMatrix
@@ -308,7 +320,10 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix,
       modelMatrix
     );
-
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+      boundingSphere2DTransform: modelMatrix2D,
+    });
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
@@ -317,6 +332,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       command: command,
     });
 
+    // 2D commands aren't derived until getCommands is called
     expect(drawCommand._commandList.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
 
@@ -326,12 +342,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getCommands doesn't derive 2D commands if primitive is not near IDL", function () {
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
-
     const modelMatrix = Matrix4.fromTranslation(
-      Cartesian3.fromDegrees(100, 0),
+      Cartesian3.fromDegrees(100, 250),
       scratchModelMatrix
     );
     const modelMatrix2D = Transforms.basisTo2D(
@@ -339,7 +351,10 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       modelMatrix,
       modelMatrix
     );
-
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+      boundingSphere2DTransform: modelMatrix2D,
+    });
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
@@ -357,42 +372,21 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getCommands updates model matrix for 2D commands", function () {
-    const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-    });
+    const drawCommand = createDrawCommandWithAllDerivedCommands();
+    const modelMatrix2D = drawCommand.modelMatrix;
 
-    const modelMatrix = Matrix4.fromTranslation(
-      Cartesian3.fromDegrees(180, 0),
-      scratchModelMatrix
-    );
-    const modelMatrix2D = Transforms.basisTo2D(
-      mockFrameState2D.mapProjection,
-      modelMatrix,
-      modelMatrix
-    );
     const translation = Matrix4.getTranslation(
       modelMatrix2D,
       scratchTranslation
     );
 
-    const command = createDrawCommand({
-      modelMatrix: modelMatrix2D,
-    });
-    const drawCommand = new ModelExperimentalDrawCommand({
-      primitiveRenderResources: renderResources,
-      command: command,
-    });
-
     const commandList = drawCommand._commandList;
     const commandList2D = drawCommand._commandList2D;
     expect(commandList.length).toEqual(2);
-    expect(commandList2D.length).toEqual(0);
+    expect(commandList2D.length).toEqual(2);
 
     const result = drawCommand.getCommands(mockFrameState2D);
     expect(result.length).toEqual(4);
-
-    const length = commandList2D.length;
-    expect(length).toEqual(2);
 
     const expectedModelMatrix = computeExpected2DMatrix(
       modelMatrix2D,

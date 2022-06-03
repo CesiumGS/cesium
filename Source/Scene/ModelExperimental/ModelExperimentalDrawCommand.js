@@ -481,7 +481,11 @@ function shouldUse2DCommands(drawCommand, frameState) {
 
   const idl2D =
     frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
-  const boundingSphere = drawCommand.command.boundingVolume;
+
+  // Using the draw command's bounding sphere might cause primitives to not render
+  // over the IDL, even if they are part of the same model.
+  const model = drawCommand.model;
+  const boundingSphere = model.sceneGraph._boundingSphere2D;
   const left = boundingSphere.center.y - boundingSphere.radius;
   const right = boundingSphere.center.y + boundingSphere.radius;
 
