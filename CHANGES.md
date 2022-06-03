@@ -6,6 +6,10 @@
 
 - Added support for rendering individual models in 2D / CV using `ModelExperimental`. [#10419](https://github.com/CesiumGS/cesium/pull/10419)
 
+##### Fixes :wrench:
+
+- Fixed `Cesium3DTileColorBlendMode.REPLACE` for certain tilesets. [#10424](https://github.com/CesiumGS/cesium/pull/10424)
+
 ### 1.94 - 2022-06-01
 
 ##### Breaking Changes :mega:

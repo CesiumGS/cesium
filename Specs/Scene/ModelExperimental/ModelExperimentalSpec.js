@@ -607,6 +607,14 @@ describe(
           zoomToModel: false,
           scene: scene2D,
         });
+
+        model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+          Cartesian3.fromDegrees(-180.0, 0.0)
+        );
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
       });
     });
 
