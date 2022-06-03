@@ -166,42 +166,35 @@ function createPoints(points, ellipsoid) {
 
     return verticesPromise.then(function (result) {
       points._positions = new Float64Array(result.positions);
+      const billboardCollection = points._billboardCollection;
+      const labelCollection = points._labelCollection;
+      const polylineCollection = points._polylineCollection;
+      positions = points._positions;
+      const batchIds = points._batchIds;
+      const numberOfPoints = positions.length / 3;
+
+      for (let i = 0; i < numberOfPoints; ++i) {
+        const id = batchIds[i];
+
+        const position = Cartesian3.unpack(positions, i * 3, scratchPosition);
+
+        const b = billboardCollection.add();
+        b.position = position;
+        b._batchIndex = id;
+
+        const l = labelCollection.add();
+        l.text = " ";
+        l.position = position;
+        l._batchIndex = id;
+
+        const p = polylineCollection.add();
+        p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
+      }
+
+      points._positions = undefined;
+      points._packedBuffer = undefined;
       points._ready = true;
     });
-  }
-
-  const billboardCollection = points._billboardCollection;
-  const labelCollection = points._labelCollection;
-  const polylineCollection = points._polylineCollection;
-  if (points._ready && defined(points._positions)) {
-    positions = points._positions;
-    const batchIds = points._batchIds;
-    const numberOfPoints = positions.length / 3;
-
-    if (billboardCollection.length === numberOfPoints) {
-      return;
-    }
-
-    for (let i = 0; i < numberOfPoints; ++i) {
-      const id = batchIds[i];
-
-      const position = Cartesian3.unpack(positions, i * 3, scratchPosition);
-
-      const b = billboardCollection.add();
-      b.position = position;
-      b._batchIndex = id;
-
-      const l = labelCollection.add();
-      l.text = " ";
-      l.position = position;
-      l._batchIndex = id;
-
-      const p = polylineCollection.add();
-      p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
-    }
-
-    points._positions = undefined;
-    points._packedBuffer = undefined;
   }
 }
 
