@@ -44,9 +44,6 @@ function Vector3DTilePoints(options) {
   this._minHeight = options.minimumHeight;
   this._maxHeight = options.maximumHeight;
 
-  this._billboardCollection = undefined;
-  this._labelCollection = undefined;
-  this._polylineCollection = undefined;
   this._billboardCollection = new BillboardCollection({
     batchTable: options.batchTable,
   });

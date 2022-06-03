@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed `Cesium3DTileColorBlendMode.REPLACE` for certain tilesets. [#10424](https://github.com/CesiumGS/cesium/pull/10424)
+- Fixed a crash when applying a style to a vector tileset with point features. [#10427](https://github.com/CesiumGS/cesium/pull/10427)
 
 ### 1.94 - 2022-06-01
 
