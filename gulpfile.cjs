@@ -964,68 +964,68 @@ gulp.task("coverage", function (done) {
     browsers = argv.browsers.split(",");
   }
 
-  const karma = new Karma.Server(
-    {
-      configFile: karmaConfigFile,
-      browsers: browsers,
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      preprocessors: {
-        "Source/Core/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/DataSources/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Renderer/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Scene/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Shaders/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Widgets/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-        "Source/Workers/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      },
-      coverageIstanbulInstrumenter: {
-        esModules: true,
-      },
-      reporters: ["spec", "coverage"],
-      coverageReporter: {
-        dir: "Build/Coverage",
-        subdir: function (browserName) {
-          folders.push(browserName);
-          return browserName;
-        },
-        includeAllSources: true,
-      },
-      client: {
-        captureConsole: verbose,
-        args: [
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          webglStub,
-          undefined,
-        ],
-      },
+  const karmaConfig = Karma.config.parseConfig(karmaConfigFile, {
+    port: 9876,
+    browsers: browsers,
+    specReporter: {
+      suppressErrorSummary: false,
+      suppressFailed: false,
+      suppressPassed: suppressPassed,
+      suppressSkipped: true,
     },
-    function (e) {
-      let html = "<!doctype html><html><body><ul>";
-      folders.forEach(function (folder) {
-        html += `<li><a href="${encodeURIComponent(
-          folder
-        )}/index.html">${folder}</a></li>`;
-      });
-      html += "</ul></body></html>";
-      fs.writeFileSync("Build/Coverage/index.html", html);
+    preprocessors: {
+      "Source/Core/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/DataSources/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/Renderer/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/Scene/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/Shaders/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/Widgets/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+      "Source/Workers/**/*.js": ["karma-coverage-istanbul-instrumenter"],
+    },
+    coverageIstanbulInstrumenter: {
+      esModules: true,
+    },
+    reporters: ["spec", "coverage"],
+    coverageReporter: {
+      dir: "Build/Coverage",
+      subdir: function (browserName) {
+        folders.push(browserName);
+        return browserName;
+      },
+      includeAllSources: true,
+    },
+    client: {
+      captureConsole: verbose,
+      args: [
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        webglStub,
+        undefined,
+      ],
+    },
+  });
 
-      if (!process.env.TRAVIS) {
-        folders.forEach(function (dir) {
-          open(`Build/Coverage/${dir}/index.html`);
-        });
-      }
-      return done(failTaskOnError ? e : undefined);
+  const karma = new Karma.Server(karmaConfig, function doneCallback(exitCode) {
+    let html = "<!doctype html><html><body><ul>";
+    folders.forEach(function (folder) {
+      html += `<li><a href="${encodeURIComponent(
+        folder
+      )}/index.html">${folder}</a></li>`;
+    });
+    html += "</ul></body></html>";
+    fs.writeFileSync("Build/Coverage/index.html", html);
+
+    if (!process.env.TRAVIS) {
+      folders.forEach(function (dir) {
+        open(`Build/Coverage/${dir}/index.html`);
+      });
     }
-  );
+    return done(failTaskOnError ? exitCode : undefined);
+  });
+
   karma.start();
 });
 
@@ -1065,7 +1065,7 @@ gulp.task("test", function (done) {
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
+      { pattern: "Specs/ThirdParty/**", included: false, type: "module" },
       { pattern: "Specs/TestWorkers/**", included: false },
       { pattern: "Build/Cesium/Cesium.js", included: true },
       { pattern: "Build/Cesium/**", included: false },
@@ -1074,39 +1074,37 @@ gulp.task("test", function (done) {
     ];
   }
 
-  const karma = new Karma.Server(
-    {
-      configFile: karmaConfigFile,
-      singleRun: debug,
-      browsers: browsers,
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      detectBrowsers: {
-        enabled: enableAllBrowsers,
-      },
-      logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
-      files: files,
-      client: {
-        captureConsole: verbose,
-        args: [
-          includeCategory,
-          excludeCategory,
-          "--grep",
-          includeName,
-          webglValidation,
-          webglStub,
-          release,
-        ],
-      },
+  const karmaConfig = Karma.config.parseConfig(karmaConfigFile, {
+    port: 9876,
+    singleRun: debug,
+    browsers: browsers,
+    specReporter: {
+      suppressErrorSummary: false,
+      suppressFailed: false,
+      suppressPassed: suppressPassed,
+      suppressSkipped: true,
     },
-    function (e) {
-      return done(failTaskOnError ? e : undefined);
-    }
-  );
+    detectBrowsers: {
+      enabled: enableAllBrowsers,
+    },
+    logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
+    files: files,
+    client: {
+      captureConsole: verbose,
+      args: [
+        includeCategory,
+        excludeCategory,
+        "--grep",
+        includeName,
+        webglValidation,
+        webglStub,
+        release,
+      ],
+    },
+  });
+  const karma = new Karma.Server(karmaConfig, function doneCallback(exitCode) {
+    return done(failTaskOnError ? exitCode : undefined);
+  });
   karma.start();
 });
 
