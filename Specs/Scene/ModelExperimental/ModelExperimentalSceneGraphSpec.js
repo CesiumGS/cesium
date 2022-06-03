@@ -79,7 +79,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -107,7 +107,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
@@ -139,7 +139,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
         expect(drawCommands.length).toEqual(2);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
         expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
