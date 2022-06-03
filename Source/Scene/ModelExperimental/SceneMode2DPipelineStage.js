@@ -52,6 +52,19 @@ SceneMode2DPipelineStage.process = function (
   primitive,
   frameState
 ) {
+  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION
+  );
+
+  // If the model is instanced, 2D projection will be handled in the
+  // InstancingPipelineStage. Unload the typed array and return early.
+  const instanced = defined(renderResources.runtimeNode.node.instances);
+  if (instanced) {
+    positionAttribute.typedArray = undefined;
+    return;
+  }
+
   const shaderBuilder = renderResources.shaderBuilder;
   const runtimePrimitive = renderResources.runtimePrimitive;
 
@@ -72,28 +85,18 @@ SceneMode2DPipelineStage.process = function (
 
   runtimePrimitive.boundingSphere2D = boundingSphere2D;
 
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION
-  );
-
-  const instanced = defined(renderResources.runtimeNode.node.instances);
-
   // If the typed array of the position attribute exists, then
   // the positions haven't been projected to 2D yet.
   if (defined(positionAttribute.typedArray)) {
-    // Only project the positions if the model is not instanced.
-    if (!instanced) {
-      const buffer2D = createPositionBufferFor2D(
-        positionAttribute,
-        computedModelMatrix,
-        boundingSphere2D,
-        frameState
-      );
+    const buffer2D = createPositionBufferFor2D(
+      positionAttribute,
+      computedModelMatrix,
+      boundingSphere2D,
+      frameState
+    );
 
-      runtimePrimitive.positionBuffer2D = buffer2D;
-      model._modelResources.push(buffer2D);
-    }
+    runtimePrimitive.positionBuffer2D = buffer2D;
+    model._modelResources.push(buffer2D);
 
     // Unload the typed array. This is just a pointer to the array in
     // the vertex buffer loader, so if the typed array is shared by

@@ -22,6 +22,8 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
   const dracoBoxWithTangentsUrl =
     "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+  const boxInstancedTranslationUrl =
+    "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
 
   let scene;
   const gltfLoaders = [];
@@ -95,7 +97,9 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
-      const primitive = components.nodes[1].primitives[0];
+      const node = components.nodes[1];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
 
       SceneMode2DPipelineStage.process(
         renderResources,
@@ -140,7 +144,9 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
-      const primitive = components.nodes[0].primitives[0];
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
 
       SceneMode2DPipelineStage.process(
         renderResources,
@@ -174,6 +180,41 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         translationMatrix
       );
       expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
+    });
+  });
+
+  it("doesn't modify resources for instanced model in 2D", function () {
+    const renderResources = mockRenderResources();
+
+    return loadGltf(boxInstancedTranslationUrl, {
+      loadAttributesFor2D: true,
+    }).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
+
+      SceneMode2DPipelineStage.process(
+        renderResources,
+        primitive,
+        scene.frameState
+      );
+
+      const runtimePrimitive = renderResources.runtimePrimitive;
+      expect(runtimePrimitive.boundingSphere2D).toBeUndefined();
+      expect(runtimePrimitive.positionBuffer2D).toBeUndefined();
+
+      // Check that the position attribute's typed array has been unloaded.
+      const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION
+      );
+      expect(positionAttribute.typedArray).toBeUndefined();
+
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+
+      expect(renderResources.uniformMap).toBeUndefined();
     });
   });
 });

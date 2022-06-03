@@ -71,8 +71,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     instancingVertexAttributes
   );
 
+  const uniformMap = renderResources.uniformMap;
   if (instances.transformInWorldSpace) {
-    const uniformMap = renderResources.uniformMap;
     shaderBuilder.addDefine(
       "USE_LEGACY_INSTANCING",
       undefined,
@@ -137,67 +137,130 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     shaderBuilder.addVertexLines([InstancingStageVS]);
   }
 
+  if (use2D) {
+    shaderBuilder.addDefine("USE_2D_INSTANCING");
+
+    uniformMap.u_modelView2D = function () {
+      // add modelView2D uniform here. same gimmick as in scenemode2dpipelinestage
+    };
+  }
+
   renderResources.instanceCount = count;
   renderResources.attributes.push.apply(
     renderResources.attributes,
     instancingVertexAttributes
   );
 };
-
-const translationScratch = new Cartesian3();
-const rotationScratch = new Quaternion();
-const scaleScratch = new Cartesian3();
-
 const modelMatrixScratch = new Matrix4();
-const nodeTransformScratch = new Matrix4();
+const nodeComputedTransformScratch = new Matrix4();
+
+const translationMatrixScratch = new Matrix4();
+const projectedPositionScratch = new Cartesian3();
+
+function projectPositionTo2D(
+  position,
+  modelMatrix,
+  nodeTransform,
+  frameState,
+  result
+) {
+  const translationMatrix = Matrix4.fromTranslation(
+    position,
+    translationMatrixScratch
+  );
+  const modelMatrixAndTranslation = Matrix4.multiplyTransformation(
+    modelMatrix,
+    translationMatrix,
+    result
+  );
+  const finalTransform = Matrix4.multiplyTransformation(
+    modelMatrixAndTranslation,
+    nodeTransform,
+    result
+  );
+  const finalPosition = Matrix4.getTranslation(
+    finalTransform,
+    projectedPositionScratch
+  );
+
+  result = SceneTransforms.computeActualWgs84Position(
+    frameState,
+    finalPosition,
+    result
+  );
+
+  return result;
+}
+
+const positionScratch = new Cartesian3();
 
 function projectTransformsTo2D(
   transforms,
-  instances,
   renderResources,
-  frameState
+  frameState,
+  referencePoint,
+  result
 ) {
-  /*
-  const referencePoint = Cartesian3.lerp(
-    renderResources.instancingTranslationMin,
-    renderResources.instancingTranslationMax,
-    0.5,
-    new Cartesian3()
-  );*/
+  const model = renderResources.model;
+  const sceneGraph = model.sceneGraph;
+  let modelMatrix = modelMatrixScratch;
+  let nodeComputedTransform = nodeComputedTransformScratch;
 
-  // Force the scene mode to be CV. In 2D, projected positions will have
-  // an x-coordinate of 0, which eliminates the height data that is
-  // necessary for rendering in CV mode.
-  const frameStateCV = clone(frameState);
-  frameStateCV.mode = SceneMode.COLUMBUS_VIEW;
-
+  const instances = renderResources.runtimeNode.node.instances;
   if (instances.transformInWorldSpace) {
-    const model = renderResources.model;
-    const modelMatrix = Matrix4.multiplyTransformation(
-      model.modelMatrix,
-      model.sceneGraph.components.transform,
-      modelMatrixScratch
+    // Replicate the multiplication order in LegacyInstancingStageVS.
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix.modelMatrix,
+      sceneGraph.components.transform,
+      modelMatrix
+    );
+
+    nodeComputedTransform = Matrix4.multiplyByUniformScale(
+      sceneGraph.axisCorrectionMatrix,
+      model.computedScale,
+      nodeComputedTransform
+    );
+    nodeComputedTransform = Matrix4.multiplyTransformation(
+      nodeComputedTransform,
+      renderResources.runtimeNode.computedTransform,
+      nodeComputedTransform
+    );
+  } else {
+    // The node transform should be pre-multiplied with the instancing transform.
+    modelMatrix = Matrix4.clone(sceneGraph.computedModelMatrix, modelMatrix);
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      renderResources.runtimeNode.computedTransform,
+      modelMatrix
+    );
+
+    nodeComputedTransform = Matrix4.clone(
+      Matrix4.IDENTITY,
+      nodeComputedTransform
     );
   }
 
   const count = transforms.length;
   for (let i = 0; i < count; i++) {
     const transform = transforms[i];
-
-    const translation = Matrix4.getTranslation(transform, translationScratch);
-    const transformedPosition = Matrix4.multiplyByPoint(
+    const position = Matrix4.getTranslation(transform, positionScratch);
+    const projectedPosition = projectPositionTo2D(
+      position,
       modelMatrix,
-      translation,
-      translation
-    );
-    const projectedPosition = SceneTransforms.computeActualWgs84Position(
+      nodeComputedTransform,
       frameState,
-      transformedPosition,
-      transformedPosition
+      position
+    );
+    const finalTranslation = Cartesian3.subtract(
+      projectedPosition,
+      referencePoint,
+      projectedPosition
     );
 
-    Matrix4.setTranslation(transform, projectedPosition, transform);
+    result[i] = Matrix4.setTranslation(transform, finalTranslation, result[i]);
   }
+
+  return result;
 }
 
 function transformsToTypedArray(transforms) {
@@ -226,7 +289,11 @@ function transformsToTypedArray(transforms) {
   return transformsTypedArray;
 }
 
-function getInstanceTransformsFromMatrices(instances, count, renderResources) {
+const translationScratch = new Cartesian3();
+const rotationScratch = new Quaternion();
+const scaleScratch = new Cartesian3();
+
+function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const transforms = new Array(count);
 
   const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
@@ -348,13 +415,18 @@ function processTransformAttributes(
     InstanceAttributeSemantic.ROTATION
   );
 
+  const shaderBuilder = renderResources.shaderBuilder;
   const count = instances.attributes[0].count;
-  if (
+  const useMatrices =
     defined(rotationAttribute) ||
     !defined(translationMax) ||
-    !defined(translationMin)
-  ) {
-    const transforms = getInstanceTransformsFromMatrices(
+    !defined(translationMin);
+
+  let transforms;
+  if (useMatrices) {
+    shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
+    const attributeString = "instancingTransform";
+    transforms = getInstanceTransformsAsMatrices(
       instances,
       count,
       renderResources,
@@ -365,11 +437,9 @@ function processTransformAttributes(
       renderResources,
       transforms,
       frameState,
-      instancingVertexAttributes
+      instancingVertexAttributes,
+      attributeString
     );
-
-    if (use2D) {
-    }
   } else {
     const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
       instances,
@@ -380,20 +450,49 @@ function processTransformAttributes(
       renderResources,
       translationAttribute,
       scaleAttribute,
-      instancingVertexAttributes,
-      use2D
+      instancingVertexAttributes
     );
+  }
 
-    // Translation and scale will only load in as packed typed arrays
-    // if the model was constructed with projectTo2D set to true, so
-    // this can't be done outside of the if statement
-    if (use2D) {
-      transforms = getInstanceTransformsFromMatrices(
-        instances,
-        count,
-        renderResources
-      );
-    }
+  if (!use2D) {
+    return;
+  }
+
+  // Force the scene mode to be CV. In 2D, projected positions will have
+  // an x-coordinate of 0, which eliminates the height data that is
+  // necessary for rendering in CV mode.
+  const frameStateCV = clone(frameState);
+  frameStateCV.mode = SceneMode.COLUMBUS_VIEW;
+
+  // To prevent jitter, the positions are defined relative to a common
+  // reference point. For convenience, this is the center of the instanced
+  // translation bounds.
+  const referencePoint = Cartesian3.lerp(
+    renderResources.instancingTranslationMin,
+    renderResources.instancingTranslationMax,
+    0.5,
+    new Cartesian3()
+  );
+
+  if (useMatrices) {
+    const projectedTransforms = projectTransformsTo2D(
+      transforms,
+      renderResources,
+      frameState,
+      referencePoint,
+      transforms
+    );
+    const attributeString2D = "instancingTransform2D";
+
+    processMatrixAttributes(
+      renderResources,
+      projectedTransforms,
+      frameState,
+      instancingVertexAttributes,
+      attributeString2D
+    );
+  } else {
+    // TODO
   }
 }
 
@@ -401,7 +500,8 @@ function processMatrixAttributes(
   renderResources,
   transforms,
   frameState,
-  instancingVertexAttributes
+  instancingVertexAttributes,
+  attributeInfo
 ) {
   const transformsTypedArray = transformsToTypedArray(transforms);
   const transformsVertexBuffer = Buffer.createVertexBuffer({
@@ -453,10 +553,12 @@ function processMatrixAttributes(
   ];
 
   const shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
-  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow0");
-  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
-  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
+  shaderBuilder.addDefine(attributeInfo.defineString);
+
+  const attributeString = attributeInfo.attributeString;
+  shaderBuilder.addAttribute("vec4", `a_${attributeString}Row0`);
+  shaderBuilder.addAttribute("vec4", `a_${attributeString}Row1`);
+  shaderBuilder.addAttribute("vec4", `a_${attributeString}Row2`);
 
   instancingVertexAttributes.push.apply(
     instancingVertexAttributes,
@@ -568,7 +670,7 @@ function processFeatureIdAttributes(
 }
 
 // Exposed for testing
-InstancingPipelineStage._getInstanceTransformsFromMatrices = getInstanceTransformsFromMatrices;
+InstancingPipelineStage._getInstanceTransformsAsMatrices = getInstanceTransformsAsMatrices;
 InstancingPipelineStage._transformsToTypedArray = transformsToTypedArray;
 
 export default InstancingPipelineStage;

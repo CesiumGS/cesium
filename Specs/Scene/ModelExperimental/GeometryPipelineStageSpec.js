@@ -15,7 +15,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
     const positionOnlyPrimitive = {
@@ -70,6 +70,8 @@ describe(
       "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
     const dracoBoxWithTangents =
       "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+    const boxInstancedTranslationUrl =
+      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
 
     let scene;
     let scene2D;
@@ -98,6 +100,20 @@ describe(
       gltfLoaders.length = 0;
       ResourceCache.clearForSpecs();
     });
+
+    function mockRenderResources() {
+      return {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
+        runtimeNode: {
+          node: {},
+        },
+      };
+    }
 
     function verifyFeatureStruct(shaderBuilder) {
       ShaderBuilderTester.expectHasVertexStruct(
@@ -134,14 +150,7 @@ describe(
     }
 
     it("processes POSITION attribute from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       GeometryPipelineStage.process(
         renderResources,
@@ -209,14 +218,7 @@ describe(
     });
 
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -328,19 +330,13 @@ describe(
     });
 
     it("processes POSITION attribute from primitive for 2D", function () {
+      const renderResources = mockRenderResources();
+      renderResources.model._projectTo2D = true;
+
       const runtimePrimitive = {
         positionBuffer2D: {},
       };
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          _projectTo2D: true,
-        },
-        runtimePrimitive: runtimePrimitive,
-      };
+      renderResources.runtimePrimitive = runtimePrimitive;
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -425,14 +421,7 @@ describe(
     });
 
     it("processes POSITION, NORMAL, TEXCOORD and TANGENT attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -575,14 +564,7 @@ describe(
     });
 
     it("processes multiple TEXCOORD attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(microcosm).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -702,14 +684,7 @@ describe(
     });
 
     it("processes POSITION, NORMAL, TEXCOORD and COLOR attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -851,14 +826,7 @@ describe(
     });
 
     it("promotes vec3 vertex colors to vec4 in the shader", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(pointCloudRGB).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -957,14 +925,7 @@ describe(
     });
 
     it("processes custom vertex attribute from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       GeometryPipelineStage.process(
         renderResources,
@@ -1050,14 +1011,7 @@ describe(
     });
 
     it("processes POSITION, NORMAL and _FEATURE_ID_n attributes from primitive", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1154,14 +1108,7 @@ describe(
     });
 
     it("sets PRIMITIVE_TYPE_POINTS for point primitive types", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(weather).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1242,14 +1189,7 @@ describe(
     });
 
     it("prepares Draco model for dequantization stage", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1343,14 +1283,7 @@ describe(
     // The tangents in this model aren't quantized, but they still should not
     // cause the model to crash.
     it("prepares Draco model with tangents for dequantization stage", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(dracoBoxWithTangents).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1469,19 +1402,13 @@ describe(
     });
 
     it("processes Draco model for 2D", function () {
+      const renderResources = mockRenderResources();
+      renderResources.model._projectTo2D = true;
+
       const runtimePrimitive = {
         positionBuffer2D: {},
       };
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          _projectTo2D: true,
-        },
-        runtimePrimitive: runtimePrimitive,
-      };
+      renderResources.runtimePrimitive = runtimePrimitive;
 
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1591,14 +1518,7 @@ describe(
     });
 
     it("processes model with matrix attributes", function () {
-      const renderResources = {
-        attributes: [],
-        shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 1,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-        },
-      };
+      const renderResources = mockRenderResources();
 
       return loadGltf(boxTexturedWithPropertyAttributes).then(function (
         gltfLoader
@@ -1761,6 +1681,69 @@ describe(
             "attribute mat2 a_warp_matrix;",
             "attribute vec2 a_temperatures;",
           ]
+        );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("processes POSITION attribute for instanced model for 2D", function () {
+      const renderResources = mockRenderResources();
+      renderResources.model._projectTo2D = true;
+
+      return loadGltf(boxInstancedTranslationUrl).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        renderResources.runtimeNode.node = node;
+        const primitive = node.primitives[0];
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene2D.frameState
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(2);
+
+        const normalAttribute = attributes[1];
+        expect(normalAttribute.index).toEqual(1);
+
+        const positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
+
+        // Only the attributes struct should be modified for 2D.
+        // Everything else should remain the same.
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec3 position2D;", "    vec3 normalMC;"]
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec3 a_normalMC;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });

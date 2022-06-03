@@ -70,12 +70,12 @@ void main()
         mat4 instanceModelView;
         mat3 instanceModelViewInverseTranspose;
         
-        legacyInstancingStage(attributes.positionMC, instanceModelView, instanceModelViewInverseTranspose);
+        legacyInstancingStage(attributes, instanceModelView, instanceModelViewInverseTranspose);
 
         modelView = instanceModelView;
         normal = instanceModelViewInverseTranspose;
         #else
-        instancingStage(attributes.positionMC);
+        instancingStage(attributes);
         #endif
 
         #ifdef USE_PICKING
