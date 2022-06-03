@@ -10,12 +10,10 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import Event from "../Core/Event.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
@@ -226,9 +224,7 @@ function Scene(options) {
   this._computeCommandList = [];
   this._overlayCommandList = [];
 
-  // OIT is temporally disabled by default on iPad and iOS mobile due to https://github.com/CesiumGS/cesium/issues/9827
-  const defaultOIT = !FeatureDetection.isIPadOrIOS();
-  this._useOIT = defaultValue(options.orderIndependentTranslucency, defaultOIT);
+  this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
   this._executeOITFunction = undefined;
 
   this._depthPlane = new DepthPlane(options.depthPlaneEllipsoidOffset);
@@ -1487,30 +1483,6 @@ Object.defineProperties(Scene.prototype, {
       return this._frameState.splitPosition;
     },
     set: function (value) {
-      this._frameState.splitPosition = value;
-    },
-  },
-
-  /**
-   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
-   * @memberof Scene.prototype
-   *
-   * @deprecated Use splitPosition instead.
-   * @type {Number}
-   */
-  imagerySplitPosition: {
-    get: function () {
-      deprecationWarning(
-        "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
-      );
-      return this._frameState.splitPosition;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "Scene.imagerySplitPosition",
-        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
-      );
       this._frameState.splitPosition = value;
     },
   },

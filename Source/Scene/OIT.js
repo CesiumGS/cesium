@@ -25,7 +25,8 @@ function OIT(context) {
   this._translucentMultipassSupport = false;
   this._translucentMRTSupport = false;
 
-  const extensionsSupported = context.colorBufferFloat && context.depthTexture;
+  const extensionsSupported =
+    context.colorBufferFloat && context.depthTexture && context.floatBlend;
   this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
   this._translucentMultipassSupport =
     !this._translucentMRTSupport && extensionsSupported;
