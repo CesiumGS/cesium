@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.95 - 2022-07-01
+
+##### Fixes :wrench:
+
+- Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
+
 ### 1.94.1 - 2022-06-03
 
 ##### Additions :tada:
