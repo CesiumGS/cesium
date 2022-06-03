@@ -325,7 +325,7 @@
               );
               return;
             }
-            const terrainSamplePositions = createGrid(0.0005);
+            const terrainSamplePositions = createGrid(0.005);
             Promise.resolve(
               Cesium.sampleTerrainMostDetailed(
                 viewer.terrainProvider,

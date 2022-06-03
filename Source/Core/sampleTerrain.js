@@ -48,6 +48,78 @@ function sampleTerrain(terrainProvider, level, positions) {
   });
 }
 
+const ACTION__CONTINUE = "continue";
+const ACTION__DELAY = "delay";
+
+function consumeQueueItem(tileRequests, inflightRequests) {
+  const tileRequest = tileRequests[0];
+  const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
+    tileRequest.x,
+    tileRequest.y,
+    tileRequest.level
+  );
+
+  if (!requestPromise) {
+    // Uh, we probably got throttled client side?
+    //  let's wait 100ms, then try again
+    // This will turn into an infinite loop if we don't eventually
+    //  get allowed through...
+    return Promise.resolve(ACTION__DELAY);
+  }
+
+  const promise = requestPromise
+    .then(createInterpolateFunction(tileRequest))
+    .catch(createMarkFailedFunction(tileRequest));
+
+  // remove the request we've just done from the queue
+  //  and add its promise result to the inflight request list
+  tileRequests.shift();
+  inflightRequests.push(promise);
+
+  // our next action is to do the next item in the queue
+  return Promise.resolve(ACTION__CONTINUE);
+}
+
+function delay(ms) {
+  return new Promise(function (res) {
+    window.setTimeout(res, ms);
+  });
+}
+
+function log(msg) {
+  console.log(msg);
+}
+
+function drainTileRequestQueue(tileRequests, results) {
+  log(
+    `draining request queue, there are ${tileRequests.length} to go and ${results.length} in flight or complete`
+  );
+  // nothing to do, return
+  if (!tileRequests.length) {
+    return Promise.resolve(null);
+  }
+
+  // consume an item from the queue, which will
+  //  mutate the request and result lists, and return the next action to take.
+  return consumeQueueItem(tileRequests, results).then(function (action) {
+    if (action === ACTION__CONTINUE) {
+      // next please
+      log(`next requested`);
+      return drainTileRequestQueue(tileRequests, results);
+    } else if (action === ACTION__DELAY) {
+      // we probably got throttled, so delay for a while
+      //  and then
+      log("delay requested");
+      return delay(100).then(() => {
+        log("after delay, requesting next");
+        return drainTileRequestQueue(tileRequests, results);
+      });
+    }
+
+    throw new Error(`Invalid action from consumeQueueItem: ${action}`);
+  });
+}
+
 function doSampling(terrainProvider, level, positions) {
   const tilingScheme = terrainProvider.tilingScheme;
 
@@ -78,23 +150,14 @@ function doSampling(terrainProvider, level, positions) {
     tileRequestSet[key].positions.push(positions[i]);
   }
 
-  // Send request for each required tile
   const tilePromises = [];
-  for (i = 0; i < tileRequests.length; ++i) {
-    const tileRequest = tileRequests[i];
-    const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
-      tileRequest.x,
-      tileRequest.y,
-      tileRequest.level
-    );
-    const tilePromise = requestPromise
-      .then(createInterpolateFunction(tileRequest))
-      .catch(createMarkFailedFunction(tileRequest));
-    tilePromises.push(tilePromise);
-  }
-
-  return Promise.all(tilePromises).then(function () {
-    return positions;
+  log("starting to drain request queue");
+  return drainTileRequestQueue(tileRequests, tilePromises).then(function () {
+    log("all requests made, waiting for all responses");
+    return Promise.all(tilePromises).then(function () {
+      log("all inflight requests are complete, sampling done");
+      return positions;
+    });
   });
 }
 
