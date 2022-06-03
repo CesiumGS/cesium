@@ -135,6 +135,7 @@ Here's the full set of scripts and what they do.
   - `coverage` - Runs coverage and opens the default browser with the results.
   - `eslint` - Runs [ESLint](http://eslint.org/), a static code analysis tool, on the entire source tree.
   - `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.
+  - `markdownlint` - Runs [markdownlint](https://github.com/DavidAnson/markdownlint) on the Markdown files used for documentation.
   - `clean` - Removes all generated build artifacts.
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
 - **Testing scripts** -- build and run the unit tests
