@@ -8,7 +8,5 @@
   "ol-prefix": {
     "style": "ordered"
   },
-  "no-inline-html": {
-    "allowed_elements": ["dl", "dt", "dd", "sup", "details", "summary"]
-  }
+  "no-inline-html": true
 }
