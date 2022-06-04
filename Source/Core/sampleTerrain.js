@@ -48,10 +48,15 @@ function sampleTerrain(terrainProvider, level, positions) {
   });
 }
 
-const ACTION__CONTINUE = "continue";
-const ACTION__DELAY = "delay";
-
-function consumeQueueItem(tileRequests, inflightRequests) {
+/**
+ * @param {Array.<*>} tileRequests The mutated list of requests, the first one will be attempted
+ * @param {Array.<Promise<*>>} results The list to put the result promises into
+ * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
+ *  or false if we were throttled and should wait awhile before retrying.
+ *
+ * @private
+ */
+function attemptConsumeNextQueueItem(tileRequests, results) {
   const tileRequest = tileRequests[0];
   const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
     tileRequest.x,
@@ -60,11 +65,8 @@ function consumeQueueItem(tileRequests, inflightRequests) {
   );
 
   if (!requestPromise) {
-    // Uh, we probably got throttled client side?
-    //  let's wait 100ms, then try again
-    // This will turn into an infinite loop if we don't eventually
-    //  get allowed through...
-    return Promise.resolve(ACTION__DELAY);
+    // getting back undefined instead of a promise indicates we should retry a bit later
+    return false;
   }
 
   const promise = requestPromise
@@ -72,51 +74,50 @@ function consumeQueueItem(tileRequests, inflightRequests) {
     .catch(createMarkFailedFunction(tileRequest));
 
   // remove the request we've just done from the queue
-  //  and add its promise result to the inflight request list
+  //  and add its promise result to the result list
   tileRequests.shift();
-  inflightRequests.push(promise);
+  results.push(promise);
 
-  // our next action is to do the next item in the queue
-  return Promise.resolve(ACTION__CONTINUE);
+  // indicate we should synchronously attempt the next request as well
+  return true;
 }
 
+/**
+ * Wrap window.setTimeout in a Promise
+ * @private
+ */
 function delay(ms) {
   return new Promise(function (res) {
-    window.setTimeout(res, ms);
+    setTimeout(res, ms);
   });
 }
 
-function log(msg) {
-  console.log(msg);
-}
-
+/**
+ * Recursively consumes all the tileRequests until the list has been emptied
+ *  and a Promise of each result has been put into the results list
+ * @param {Array.<*>} tileRequests The list of requests desired to be made
+ * @param {Array.<Promise<*>>} results The list to put all the result promises into
+ * @returns {Promise<undefined>} A promise which resolves once all requests have been started
+ *
+ * @private
+ */
 function drainTileRequestQueue(tileRequests, results) {
-  log(
-    `draining request queue, there are ${tileRequests.length} to go and ${results.length} in flight or complete`
-  );
-  // nothing to do, return
+  // nothing left to do
   if (!tileRequests.length) {
-    return Promise.resolve(null);
+    return Promise.resolve();
   }
 
   // consume an item from the queue, which will
-  //  mutate the request and result lists, and return the next action to take.
-  return consumeQueueItem(tileRequests, results).then(function (action) {
-    if (action === ACTION__CONTINUE) {
-      // next please
-      log(`next requested`);
-      return drainTileRequestQueue(tileRequests, results);
-    } else if (action === ACTION__DELAY) {
-      // we probably got throttled, so delay for a while
-      //  and then
-      log("delay requested");
-      return delay(100).then(() => {
-        log("after delay, requesting next");
-        return drainTileRequestQueue(tileRequests, results);
-      });
-    }
+  //  mutate the request and result lists, and return true if we should
+  //  immediately attempt to consume the next item as well
+  const success = attemptConsumeNextQueueItem(tileRequests, results);
+  if (success) {
+    return drainTileRequestQueue(tileRequests, results);
+  }
 
-    throw new Error(`Invalid action from consumeQueueItem: ${action}`);
+  // wait a small fixed amount of time first, before retrying the same request again
+  return delay(100).then(() => {
+    return drainTileRequestQueue(tileRequests, results);
   });
 }
 
@@ -150,12 +151,12 @@ function doSampling(terrainProvider, level, positions) {
     tileRequestSet[key].positions.push(positions[i]);
   }
 
+  // create our list of result promises to be filled
   const tilePromises = [];
-  log("starting to drain request queue");
   return drainTileRequestQueue(tileRequests, tilePromises).then(function () {
-    log("all requests made, waiting for all responses");
+    // now all the required requests have been started
+    //  we just wait for them all to finish
     return Promise.all(tilePromises).then(function () {
-      log("all inflight requests are complete, sampling done");
       return positions;
     });
   });
