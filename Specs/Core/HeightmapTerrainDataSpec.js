@@ -1,3 +1,4 @@
+import { defined } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapEncoding } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
@@ -41,7 +42,7 @@ describe("Core/HeightmapTerrainData", function () {
     });
 
     it("non-LERC encoded buffers sets correct buffer type", function () {
-      var data = new HeightmapTerrainData({
+      const data = new HeightmapTerrainData({
         buffer: new Uint16Array(25),
         width: 5,
         height: 5,
@@ -52,7 +53,7 @@ describe("Core/HeightmapTerrainData", function () {
     });
 
     it("LERC encoded buffers sets correct buffer type", function () {
-      var data = new HeightmapTerrainData({
+      const data = new HeightmapTerrainData({
         buffer: new Uint16Array(25),
         width: 5,
         height: 5,
@@ -65,46 +66,107 @@ describe("Core/HeightmapTerrainData", function () {
   });
 
   describe("createMesh", function () {
-    var data;
-    var tilingScheme;
+    let data;
+    let tilingScheme;
 
-    beforeEach(function () {
-      tilingScheme = new GeographicTilingScheme();
-      data = new HeightmapTerrainData({
+    function createSampleTerrainData() {
+      return new HeightmapTerrainData({
         buffer: new Float32Array(25),
         width: 5,
         height: 5,
       });
+    }
+
+    beforeEach(function () {
+      tilingScheme = new GeographicTilingScheme();
+      data = createSampleTerrainData();
     });
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0);
+        data.createMesh({ tilingScheme: undefined, x: 0, y: 0, level: 0 });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+        });
       }).toThrowDeveloperError();
+    });
+
+    it("enables throttling for asynchronous tasks", function () {
+      const options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: true,
+      };
+      const taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      const promises = new Array();
+      for (let i = 0; i < taskCount; i++) {
+        const tempData = createSampleTerrainData();
+        const promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
+      return Promise.all(promises);
+    });
+
+    it("disables throttling for asynchronous tasks", function () {
+      const options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: false,
+      };
+      const taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      const promises = new Array();
+      for (let i = 0; i < taskCount; i++) {
+        const tempData = createSampleTerrainData();
+        const promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(taskCount);
+      return Promise.all(promises);
     });
   });
 
   describe("upsample", function () {
-    var data;
-    var tilingScheme;
+    let data;
+    let tilingScheme;
 
     beforeEach(function () {
       tilingScheme = new GeographicTilingScheme();
@@ -188,7 +250,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -278,7 +340,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -401,7 +463,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -487,7 +549,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
         })
@@ -577,7 +639,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
         })
@@ -669,7 +731,7 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, 1)
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -700,7 +762,7 @@ describe("Core/HeightmapTerrainData", function () {
   });
 
   describe("isChildAvailable", function () {
-    var data;
+    let data;
 
     beforeEach(function () {
       data = new HeightmapTerrainData({

@@ -3,22 +3,37 @@ import { FeatureDetection } from "../../Source/Cesium.js";
 describe("Core/FeatureDetection", function () {
   //generally, these tests just make sure the function runs, the test can't expect a value of true or false
   it("detects fullscreen support", function () {
-    var supportsFullscreen = FeatureDetection.supportsFullscreen();
+    const supportsFullscreen = FeatureDetection.supportsFullscreen();
     expect(typeof supportsFullscreen).toEqual("boolean");
   });
 
   it("detects web worker support", function () {
-    var supportsWebWorkers = FeatureDetection.supportsWebWorkers();
+    const supportsWebWorkers = FeatureDetection.supportsWebWorkers();
     expect(typeof supportsWebWorkers).toEqual("boolean");
   });
 
   it("detects typed array support", function () {
-    var supportsTypedArrays = FeatureDetection.supportsTypedArrays();
+    const supportsTypedArrays = FeatureDetection.supportsTypedArrays();
     expect(typeof supportsTypedArrays).toEqual("boolean");
   });
 
+  it("detects BigInt64Array support", function () {
+    const supportsBigInt64Array = FeatureDetection.supportsBigInt64Array();
+    expect(typeof supportsBigInt64Array).toEqual("boolean");
+  });
+
+  it("detects BigUint64Array support", function () {
+    const supportsBigUint64Array = FeatureDetection.supportsBigUint64Array();
+    expect(typeof supportsBigUint64Array).toEqual("boolean");
+  });
+
+  it("detects BigInt support", function () {
+    const supportsBigInt = FeatureDetection.supportsBigInt();
+    expect(typeof supportsBigInt).toEqual("boolean");
+  });
+
   it("detects web assembly support", function () {
-    var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
+    const supportsWebAssembly = FeatureDetection.supportsWebAssembly();
     expect(typeof supportsWebAssembly).toEqual("boolean");
   });
 
@@ -30,87 +45,92 @@ describe("Core/FeatureDetection", function () {
   }
 
   it("detects Chrome", function () {
-    var isChrome = FeatureDetection.isChrome();
+    const isChrome = FeatureDetection.isChrome();
     expect(typeof isChrome).toEqual("boolean");
 
     if (isChrome) {
-      var chromeVersion = FeatureDetection.chromeVersion();
+      const chromeVersion = FeatureDetection.chromeVersion();
       checkVersionArray(chromeVersion);
 
-      console.log("detected Chrome " + chromeVersion.join("."));
+      console.log(`detected Chrome ${chromeVersion.join(".")}`);
     }
   });
 
   it("detects Safari", function () {
-    var isSafari = FeatureDetection.isSafari();
+    const isSafari = FeatureDetection.isSafari();
     expect(typeof isSafari).toEqual("boolean");
 
     if (isSafari) {
-      var safariVersion = FeatureDetection.safariVersion();
+      const safariVersion = FeatureDetection.safariVersion();
       checkVersionArray(safariVersion);
 
-      console.log("detected Safari " + safariVersion.join("."));
+      console.log(`detected Safari ${safariVersion.join(".")}`);
     }
   });
 
   it("detects Webkit", function () {
-    var isWebkit = FeatureDetection.isWebkit();
+    const isWebkit = FeatureDetection.isWebkit();
     expect(typeof isWebkit).toEqual("boolean");
 
     if (isWebkit) {
-      var webkitVersion = FeatureDetection.webkitVersion();
+      const webkitVersion = FeatureDetection.webkitVersion();
       checkVersionArray(webkitVersion);
       expect(typeof webkitVersion.isNightly).toEqual("boolean");
 
       console.log(
-        "detected Webkit " +
-          webkitVersion.join(".") +
-          (webkitVersion.isNightly ? " (Nightly)" : "")
+        `detected Webkit ${webkitVersion.join(".")}${
+          webkitVersion.isNightly ? " (Nightly)" : ""
+        }`
       );
     }
   });
 
   it("detects Internet Explorer", function () {
-    var isInternetExplorer = FeatureDetection.isInternetExplorer();
+    const isInternetExplorer = FeatureDetection.isInternetExplorer();
     expect(typeof isInternetExplorer).toEqual("boolean");
 
     if (isInternetExplorer) {
-      var internetExplorerVersion = FeatureDetection.internetExplorerVersion();
+      const internetExplorerVersion = FeatureDetection.internetExplorerVersion();
       checkVersionArray(internetExplorerVersion);
 
       console.log(
-        "detected Internet Explorer " + internetExplorerVersion.join(".")
+        `detected Internet Explorer ${internetExplorerVersion.join(".")}`
       );
     }
   });
 
   it("detects Edge", function () {
-    var isEdge = FeatureDetection.isEdge();
+    const isEdge = FeatureDetection.isEdge();
     expect(typeof isEdge).toEqual("boolean");
 
     if (isEdge) {
-      var edgeVersion = FeatureDetection.edgeVersion();
+      const edgeVersion = FeatureDetection.edgeVersion();
       checkVersionArray(edgeVersion);
 
-      console.log("detected Edge " + edgeVersion.join("."));
+      console.log(`detected Edge ${edgeVersion.join(".")}`);
     }
   });
 
   it("detects Firefox", function () {
-    var isFirefox = FeatureDetection.isFirefox();
+    const isFirefox = FeatureDetection.isFirefox();
     expect(typeof isFirefox).toEqual("boolean");
 
     if (isFirefox) {
-      var firefoxVersion = FeatureDetection.firefoxVersion();
+      const firefoxVersion = FeatureDetection.firefoxVersion();
 
       checkVersionArray(firefoxVersion);
 
-      console.log("detected Firefox " + firefoxVersion.join("."));
+      console.log(`detected Firefox ${firefoxVersion.join(".")}`);
     }
   });
 
+  it("detects iPad or iOS", function () {
+    const iPadOrIOS = FeatureDetection.isIPadOrIOS();
+    expect(typeof iPadOrIOS).toEqual("boolean");
+  });
+
   it("detects imageRendering support", function () {
-    var supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+    const supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
     expect(typeof supportsImageRenderingPixelated).toEqual("boolean");
     if (supportsImageRenderingPixelated) {
       expect(FeatureDetection.imageRenderingValue()).toBeDefined();

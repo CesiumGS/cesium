@@ -33,14 +33,14 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var geocoder = viewer.geocoder.viewModel;
+        const geocoder = viewer.geocoder.viewModel;
         geocoder.searchText = "Vienna";
         geocoder.flightDuration = 0.0;
         geocoder.search();
@@ -48,7 +48,7 @@
         // Vector 3D Tiles are experimental and the format is subject to change in the future.
         // For more details, see:
         //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(5737),
         });
         viewer.scene.primitives.add(tileset);
@@ -58,7 +58,7 @@
         });
 
         // Information about the currently highlighted feature
-        var highlighted = {
+        const highlighted = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
@@ -74,7 +74,7 @@
           }
 
           // Pick a new feature
-          var pickedFeature = viewer.scene.pick(movement.endPosition);
+          const pickedFeature = viewer.scene.pick(movement.endPosition);
           if (!Cesium.defined(pickedFeature)) {
             return;
           }
@@ -87,10 +87,10 @@
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

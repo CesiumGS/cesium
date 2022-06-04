@@ -29,28 +29,28 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
-        var scene = viewer.scene;
-        var ellipsoid = scene.globe.ellipsoid;
+        const scene = viewer.scene;
+        const ellipsoid = scene.globe.ellipsoid;
 
-        var id1 = "1";
-        var id2 = "2";
-        var id3 = "3";
+        const id1 = "1";
+        const id2 = "2";
+        const id3 = "3";
 
-        var rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -99.0, 31.0);
-        var center1 = Cesium.Rectangle.center(rectangle);
+        let rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -99.0, 31.0);
+        let center1 = Cesium.Rectangle.center(rectangle);
         center1 = ellipsoid.cartographicToCartesian(center1);
-        var offset = Cesium.Cartesian3.multiplyByScalar(
+        let offset = Cesium.Cartesian3.multiplyByScalar(
           ellipsoid.geodeticSurfaceNormal(center1),
           100000,
           new Cesium.Cartesian3()
         );
 
-        var i1 = new Cesium.GeometryInstance({
+        const i1 = new Cesium.GeometryInstance({
           id: id1,
           geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
@@ -68,7 +68,7 @@
             ),
           },
         });
-        var o1 = new Cesium.GeometryInstance({
+        const o1 = new Cesium.GeometryInstance({
           id: id1,
           geometry: new Cesium.RectangleOutlineGeometry({
             rectangle: rectangle,
@@ -87,10 +87,10 @@
         });
 
         rectangle = Cesium.Rectangle.fromDegrees(-99.0, 30.0, -98.0, 31.0);
-        var center2 = Cesium.Rectangle.center(rectangle);
+        let center2 = Cesium.Rectangle.center(rectangle);
         center2 = ellipsoid.cartographicToCartesian(center2);
 
-        var i2 = new Cesium.GeometryInstance({
+        const i2 = new Cesium.GeometryInstance({
           id: id2,
           geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
@@ -108,7 +108,7 @@
             ),
           },
         });
-        var o2 = new Cesium.GeometryInstance({
+        const o2 = new Cesium.GeometryInstance({
           id: id2,
           geometry: new Cesium.RectangleOutlineGeometry({
             rectangle: rectangle,
@@ -127,14 +127,14 @@
         });
 
         rectangle = Cesium.Rectangle.fromDegrees(-98.0, 30.0, -97.0, 31.0);
-        var center3 = Cesium.Rectangle.center(rectangle);
+        let center3 = Cesium.Rectangle.center(rectangle);
         center3 = ellipsoid.cartographicToCartesian(center3);
         offset = Cesium.Cartesian3.multiplyByScalar(
           ellipsoid.geodeticSurfaceNormal(center3),
           100000,
           new Cesium.Cartesian3()
         );
-        var i3 = new Cesium.GeometryInstance({
+        const i3 = new Cesium.GeometryInstance({
           id: id3,
           geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
@@ -152,7 +152,7 @@
             ),
           },
         });
-        var o3 = new Cesium.GeometryInstance({
+        const o3 = new Cesium.GeometryInstance({
           id: id3,
           geometry: new Cesium.RectangleOutlineGeometry({
             rectangle: rectangle,
@@ -170,7 +170,7 @@
           },
         });
 
-        var p = scene.primitives.add(
+        const p = scene.primitives.add(
           new Cesium.Primitive({
             geometryInstances: [i1, i2, i3],
             appearance: new Cesium.PerInstanceColorAppearance({
@@ -179,7 +179,7 @@
             asynchronous: false,
           })
         );
-        var o = scene.primitives.add(
+        const o = scene.primitives.add(
           new Cesium.Primitive({
             geometryInstances: [o1, o2, o3],
             appearance: new Cesium.PerInstanceColorAppearance({
@@ -193,7 +193,7 @@
         );
 
         Sandcastle.addToolbarButton("1", function () {
-          var attributes = p.getGeometryInstanceAttributes(id1);
+          let attributes = p.getGeometryInstanceAttributes(id1);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center1),
             150000,
@@ -216,7 +216,7 @@
           );
         });
         Sandcastle.addToolbarButton("2", function () {
-          var attributes = p.getGeometryInstanceAttributes(id2);
+          let attributes = p.getGeometryInstanceAttributes(id2);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center2),
             100000,
@@ -239,7 +239,7 @@
           );
         });
         Sandcastle.addToolbarButton("3", function () {
-          var attributes = p.getGeometryInstanceAttributes(id3);
+          let attributes = p.getGeometryInstanceAttributes(id3);
           offset = Cesium.Cartesian3.multiplyByScalar(
             ellipsoid.geodeticSurfaceNormal(center3),
             150000,
@@ -264,10 +264,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

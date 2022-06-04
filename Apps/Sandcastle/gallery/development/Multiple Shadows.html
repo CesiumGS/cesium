@@ -38,11 +38,11 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           scene3DOnly: true,
           infoBox: false,
           selectionIndicator: false,
@@ -50,21 +50,21 @@
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var camera = scene.camera;
+        const scene = viewer.scene;
+        const camera = scene.camera;
 
         scene.debugShowFramesPerSecond = true;
 
         function addPrimitive(lon, lat, height, heading) {
-          var center = Cesium.Cartesian3.fromRadians(lon, lat, height);
+          const center = Cesium.Cartesian3.fromRadians(lon, lat, height);
 
-          var pointLightCamera = new Cesium.Camera(scene);
+          const pointLightCamera = new Cesium.Camera(scene);
           pointLightCamera.position = center;
 
           camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
           camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-          var shadowMap = new Cesium.ShadowMap({
+          const shadowMap = new Cesium.ShadowMap({
             context: scene.context,
             lightCamera: pointLightCamera,
             isPointLight: true,
@@ -73,7 +73,7 @@
 
           shadowMap.enabled = true;
 
-          var model = scene.primitives.add(
+          const model = scene.primitives.add(
             Cesium.Model.fromGltf({
               url:
                 "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
@@ -92,24 +92,24 @@
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               window.alert(error);
             });
 
           return shadowMap;
         }
 
-        var longitude = -1.3324415110874286;
-        var latitude = 0.6954224325279967;
-        var height = 200.0;
+        const longitude = -1.3324415110874286;
+        const latitude = 0.6954224325279967;
+        const height = 200.0;
 
-        var shadowMap1 = addPrimitive(
+        const shadowMap1 = addPrimitive(
           longitude + 0.00005,
           latitude,
           height,
           0.0
         );
-        var shadowMap2 = addPrimitive(
+        const shadowMap2 = addPrimitive(
           longitude - 0.00005,
           latitude,
           height,
@@ -127,7 +127,7 @@
         scene.shadowMap = shadowMap1;
 
         // TODO : workaround until Cesium supports multiple light sources
-        var CustomPrimitive = function (shadowMap) {
+        const CustomPrimitive = function (shadowMap) {
           this.shadowMap = shadowMap;
         };
 
@@ -139,10 +139,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

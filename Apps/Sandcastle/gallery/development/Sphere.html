@@ -29,33 +29,33 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Draw a red sphere and position it on the globe surface.
 
-        var radius = 300000.0;
+        const radius = 300000.0;
         // Sphere geometries are initially centered on the origin.
         // We can use a model matrix to position the sphere on the
         // globe surface.
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
+        const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radius),
           new Cesium.Matrix4()
         );
         // Create a sphere geometry.
-        var sphereGeometry = new Cesium.SphereGeometry({
+        const sphereGeometry = new Cesium.SphereGeometry({
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           radius: radius,
         });
         // Create a geometry instance using the geometry
         // and model matrix created above.
-        var sphereInstance = new Cesium.GeometryInstance({
+        const sphereInstance = new Cesium.GeometryInstance({
           geometry: sphereGeometry,
           modelMatrix: modelMatrix,
           attributes: {
@@ -76,10 +76,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

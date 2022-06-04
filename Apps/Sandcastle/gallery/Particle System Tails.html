@@ -35,28 +35,28 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
-        var planePosition = Cesium.Cartesian3.fromDegrees(
+        const planePosition = Cesium.Cartesian3.fromDegrees(
           -75.59777,
           40.03883,
           800.0
         );
-        var particlesOffset = new Cesium.Cartesian3(
+        const particlesOffset = new Cesium.Cartesian3(
           -8.950115473940969,
           34.852766731753945,
           -30.235411095432937
         );
-        var cameraLocation = Cesium.Cartesian3.add(
+        const cameraLocation = Cesium.Cartesian3.add(
           planePosition,
           particlesOffset,
           new Cesium.Cartesian3()
         );
-        var resetCamera = function () {
+        const resetCamera = function () {
           viewer.camera.lookAt(
             cameraLocation,
             new Cesium.Cartesian3(-450, -300, 200)
@@ -65,13 +65,13 @@
         resetCamera();
 
         // Draw particle image to a canvas
-        var particleCanvas;
+        let particleCanvas;
         function getImage() {
           if (!Cesium.defined(particleCanvas)) {
             particleCanvas = document.createElement("canvas");
             particleCanvas.width = 20;
             particleCanvas.height = 20;
-            var context2D = particleCanvas.getContext("2d");
+            const context2D = particleCanvas.getContext("2d");
             context2D.beginPath();
             context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
             context2D.closePath();
@@ -82,16 +82,16 @@
         }
 
         // Add plane to scene
-        var hpr = new Cesium.HeadingPitchRoll(
+        const hpr = new Cesium.HeadingPitchRoll(
           0.0,
           Cesium.Math.PI_OVER_TWO,
           0.0
         );
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           planePosition,
           hpr
         );
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           model: {
             uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
             scale: 3.5,
@@ -101,22 +101,22 @@
         });
 
         // creating particles model matrix
-        var translationOffset = Cesium.Matrix4.fromTranslation(
+        const translationOffset = Cesium.Matrix4.fromTranslation(
           particlesOffset,
           new Cesium.Matrix4()
         );
-        var translationOfPlane = Cesium.Matrix4.fromTranslation(
+        const translationOfPlane = Cesium.Matrix4.fromTranslation(
           planePosition,
           new Cesium.Matrix4()
         );
-        var particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(
+        const particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(
           translationOfPlane,
           translationOffset,
           new Cesium.Matrix4()
         );
 
         // creating the particle systems
-        var rocketOptions = {
+        const rocketOptions = {
           numberOfSystems: 50.0,
           iterationOffset: 0.1,
           cartographicStep: 0.000001,
@@ -150,7 +150,7 @@
           ],
         };
 
-        var cometOptions = {
+        const cometOptions = {
           numberOfSystems: 100.0,
           iterationOffset: 0.003,
           cartographicStep: 0.0000001,
@@ -178,9 +178,9 @@
           ],
         };
 
-        var scratchCartesian3 = new Cesium.Cartesian3();
-        var scratchCartographic = new Cesium.Cartographic();
-        var forceFunction = function (options, iteration) {
+        let scratchCartesian3 = new Cesium.Cartesian3();
+        let scratchCartographic = new Cesium.Cartographic();
+        const forceFunction = function (options, iteration) {
           return function (particle, dt) {
             dt = Cesium.Math.clamp(dt, 0.0, 0.05);
 
@@ -206,7 +206,7 @@
               scratchCartographic
             );
 
-            var angle =
+            const angle =
               (Cesium.Math.PI * 2.0 * iteration) / options.numberOfSystems;
             iteration += options.iterationOffset;
             scratchCartographic.longitude +=
@@ -220,13 +220,13 @@
           };
         };
 
-        var matrix4Scratch = new Cesium.Matrix4();
-        var scratchAngleForOffset = 0.0;
-        var scratchOffset = new Cesium.Cartesian3();
-        var imageSize = new Cesium.Cartesian2(15.0, 15.0);
+        const matrix4Scratch = new Cesium.Matrix4();
+        let scratchAngleForOffset = 0.0;
+        const scratchOffset = new Cesium.Cartesian3();
+        const imageSize = new Cesium.Cartesian2(15.0, 15.0);
         function createParticleSystems(options, systemsArray) {
-          var length = options.numberOfSystems;
-          for (var i = 0; i < length; ++i) {
+          const length = options.numberOfSystems;
+          for (let i = 0; i < length; ++i) {
             scratchAngleForOffset =
               (Math.PI * 2.0 * i) / options.numberOfSystems;
             scratchOffset.x +=
@@ -234,16 +234,16 @@
             scratchOffset.y +=
               options.baseRadius * Math.sin(scratchAngleForOffset);
 
-            var emitterModelMatrix = Cesium.Matrix4.fromTranslation(
+            const emitterModelMatrix = Cesium.Matrix4.fromTranslation(
               scratchOffset,
               matrix4Scratch
             );
-            var color = Cesium.Color.fromRandom(
+            const color = Cesium.Color.fromRandom(
               options.colorOptions[i % options.colorOptions.length]
             );
-            var force = forceFunction(options, i);
+            const force = forceFunction(options, i);
 
-            var item = viewer.scene.primitives.add(
+            const item = viewer.scene.primitives.add(
               new Cesium.ParticleSystem({
                 image: getImage(),
                 startColor: color,
@@ -263,20 +263,20 @@
           }
         }
 
-        var rocketSystems = [];
-        var cometSystems = [];
+        const rocketSystems = [];
+        const cometSystems = [];
         createParticleSystems(rocketOptions, rocketSystems);
         createParticleSystems(cometOptions, cometSystems);
 
         // toolbar elements
         function showAll(systemsArray, show) {
-          var length = systemsArray.length;
-          for (var i = 0; i < length; ++i) {
+          const length = systemsArray.length;
+          for (let i = 0; i < length; ++i) {
             systemsArray[i].show = show;
           }
         }
 
-        var options = [
+        const options = [
           {
             text: "Comet Tail",
             onselect: function () {
@@ -297,11 +297,11 @@
         Sandcastle.addToolbarMenu(options);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
 
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -12,7 +12,7 @@ import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
-  var supportsImageBitmapOptions;
+  let supportsImageBitmapOptions;
   beforeAll(function () {
     // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
     // We run it here to avoid interfering with the tests.
@@ -55,9 +55,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var path = "";
-    var url = "http://example.invalid";
-    var channel = 1234;
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
 
     Resource._Implementations.loadWithXhr = function (
       url,
@@ -78,7 +78,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: channel,
       path: path,
@@ -91,9 +91,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var path = "";
-    var url = "http://example.invalid";
-    var channel = 1234;
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
 
     Resource._Implementations.loadWithXhr = function (
       url,
@@ -114,11 +114,11 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var resource = new Resource({
+    const resource = new Resource({
       url: url,
     });
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: resource,
       channel: channel,
       path: path,
@@ -131,8 +131,8 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("rejects readyPromise on error", function () {
-    var url = "http://invalid.localhost";
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const url = "http://invalid.localhost";
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: 1234,
     });
@@ -141,16 +141,16 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(provider.ready).toBe(false);
         expect(e.message).toContain(url);
       });
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var path = "";
-    var url = "http://example.invalid";
-    var channel = 1234;
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
 
     Resource._Implementations.loadWithXhr = function (
       url,
@@ -171,7 +171,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: channel,
       path: path,
@@ -185,10 +185,10 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("can provide a root tile", function () {
-    var path = "";
-    var url = "http://example.invalid";
-    var channel = 1234;
-    var version = 1;
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
+    const version = 1;
 
     Resource._Implementations.loadWithXhr = function (
       url,
@@ -209,7 +209,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: channel,
       path: path,
@@ -239,7 +239,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var url = request.url;
+        const url = request.url;
         if (/^blob:/.test(url) || supportsImageBitmapOptions) {
           // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
           Resource._DefaultImplementations.createImage(
@@ -247,6 +247,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {
@@ -294,10 +295,10 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("handles malformed JSON data returned by the server", function () {
-    var path = "/default_map";
-    var url = "http://example.invalid";
-    var version = 1;
-    var channel = 1234;
+    const path = "/default_map";
+    const url = "http://example.invalid";
+    const version = 1;
+    const channel = 1234;
 
     Resource._Implementations.loadWithXhr = function (
       url,
@@ -336,40 +337,40 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: channel,
     });
 
-    expect(provider.url).toEqual(url);
-    expect(provider.path).toEqual(path);
-    expect(provider.version).toEqual(version);
-    expect(provider.channel).toEqual(channel);
-
-    return pollToPromise(function () {
-      return provider.ready;
+    return provider.readyPromise.then(function () {
+      expect(provider.url).toEqual(url);
+      expect(provider.path).toEqual(path);
+      expect(provider.version).toEqual(version);
+      expect(provider.channel).toEqual(channel);
     });
   });
 
   it("raises error on invalid url", function () {
-    var url = "http://invalid.localhost";
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const url = "http://invalid.localhost";
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: url,
       channel: 1234,
     });
 
-    var errorEventRaised = false;
+    let errorEventRaised = false;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.message.indexOf(url) >= 0).toEqual(true);
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -392,14 +393,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "example.invalid",
       channel: 1234,
     });
 
-    var layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-    var tries = 0;
+    let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -416,7 +417,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       crossOrigin,
       deferred
     ) {
-      var url = request.url;
+      const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
         Resource._DefaultImplementations.createImage(
@@ -424,6 +425,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else if (tries === 2) {
@@ -468,10 +470,8 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+    return provider.readyPromise.then(function () {
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -515,7 +515,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://example.invalid",
       channel: 1234,
     });
@@ -560,7 +560,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://example.invalid",
       channel: 1234,
     });
@@ -605,7 +605,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://example.invalid",
       channel: 1234,
     });
@@ -640,12 +640,12 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://invalid.localhost",
       channel: 1235,
     });
 
-    var errorEventRaised = false;
+    let errorEventRaised = false;
     provider.errorEvent.addEventListener(function (error) {
       expect(
         error.message.indexOf("Could not find layer with channel") >= 0
@@ -653,12 +653,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error when channel version cannot be found", function () {
@@ -681,12 +683,12 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://invalid.localhost",
       channel: 1234,
     });
 
-    var errorEventRaised = false;
+    let errorEventRaised = false;
     provider.errorEvent.addEventListener(function (error) {
       expect(
         error.message.indexOf("Could not find a version in channel") >= 0
@@ -694,12 +696,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error when unsupported projection is specified", function () {
@@ -722,12 +726,12 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
     };
 
-    var provider = new GoogleEarthEnterpriseMapsProvider({
+    const provider = new GoogleEarthEnterpriseMapsProvider({
       url: "http://invalid.localhost",
       channel: 1234,
     });
 
-    var errorEventRaised = false;
+    let errorEventRaised = false;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.message.indexOf("Unsupported projection") >= 0).toEqual(
         true
@@ -735,11 +739,13 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 });

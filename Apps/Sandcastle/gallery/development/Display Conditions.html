@@ -29,16 +29,16 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         function addBillboardAndPrimitive() {
           Sandcastle.declare(addBillboardAndPrimitive);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -81,9 +81,9 @@
         function addPointAndModel() {
           Sandcastle.declare(addPointAndModel);
 
-          var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -130,10 +130,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

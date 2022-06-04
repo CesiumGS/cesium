@@ -3,7 +3,7 @@ import { CircleEmitter } from "../../Source/Cesium.js";
 import { Particle } from "../../Source/Cesium.js";
 
 describe("Scene/CircleEmitter", function () {
-  var emitter;
+  let emitter;
 
   it("default constructor", function () {
     emitter = new CircleEmitter();
@@ -45,11 +45,11 @@ describe("Scene/CircleEmitter", function () {
 
   it("emits", function () {
     emitter = new CircleEmitter(5.0);
-    var particle = new Particle();
+    const particle = new Particle();
 
-    for (var i = 0; i < 1000; ++i) {
+    for (let i = 0; i < 1000; ++i) {
       emitter.emit(particle);
-      expect(Cartesian3.magnitude(particle.position)).toBeLessThanOrEqualTo(
+      expect(Cartesian3.magnitude(particle.position)).toBeLessThanOrEqual(
         emitter.radius
       );
       expect(particle.position.z).toEqual(0.0);

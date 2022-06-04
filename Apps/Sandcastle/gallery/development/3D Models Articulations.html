@@ -74,13 +74,13 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // this can be changed to any glTF model
-        var modelUrl = "https://assets.agi.com/models/launchvehicle.glb";
+        const modelUrl = "https://assets.agi.com/models/launchvehicle.glb";
 
-        var viewModel = {
+        const viewModel = {
           articulations: [],
           stages: [],
           selectedArticulation: undefined,
@@ -94,20 +94,20 @@
             viewModel.stages = newArticulation.stages;
           });
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
-        var height = 220000.0;
-        var origin = Cesium.Cartesian3.fromDegrees(-74.693, 28.243, height);
-        var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        const height = 220000.0;
+        const origin = Cesium.Cartesian3.fromDegrees(-74.693, 28.243, height);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
           new Cesium.HeadingPitchRoll()
         );
 
-        var model = scene.primitives.add(
+        const model = scene.primitives.add(
           Cesium.Model.fromGltf({
             url: modelUrl,
             modelMatrix: modelMatrix,
@@ -117,21 +117,21 @@
 
         model.readyPromise
           .then(function (model) {
-            var camera = viewer.camera;
+            const camera = viewer.camera;
 
             // Zoom to model
-            var controller = scene.screenSpaceCameraController;
-            var r =
+            const controller = scene.screenSpaceCameraController;
+            const r =
               2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.2;
 
-            var center = Cesium.Matrix4.multiplyByPoint(
+            const center = Cesium.Matrix4.multiplyByPoint(
               model.modelMatrix,
               Cesium.Cartesian3.ZERO,
               new Cesium.Cartesian3()
             );
-            var heading = Cesium.Math.toRadians(0.0);
-            var pitch = Cesium.Math.toRadians(-10.0);
+            const heading = Cesium.Math.toRadians(0.0);
+            const pitch = Cesium.Math.toRadians(-10.0);
             camera.lookAt(
               center,
               new Cesium.HeadingPitchRange(heading, pitch, r * 0.8)
@@ -145,7 +145,7 @@
                 stages: model._runtime.articulationsByName[
                   articulationName
                 ].stages.map(function (stage) {
-                  var stageModel = {
+                  const stageModel = {
                     name: stage.name,
                     minimum: stage.minimumValue,
                     maximum: stage.maximumValue,
@@ -165,7 +165,7 @@
                     .getObservable(stageModel, "current")
                     .subscribe(function (newValue) {
                       model.setArticulationStage(
-                        articulationName + " " + stage.name,
+                        `${articulationName} ${stage.name}`,
                         +stageModel.current
                       );
                       model.applyArticulations();
@@ -176,16 +176,16 @@
             });
             viewModel.selectedArticulation = viewModel.articulations[0];
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             console.error(error);
           });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

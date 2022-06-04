@@ -6,13 +6,11 @@ import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppea
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-var defaultVertexShaderSource =
-  PolylineCommon + "\n" + PolylineColorAppearanceVS;
-var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
+let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
+const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource =
-    "#define CLIP_POLYLINE \n" + defaultVertexShaderSource;
+  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 }
 
 /**
@@ -32,7 +30,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  *
  * @example
  * // A solid white line segment
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -54,9 +52,9 @@ if (!FeatureDetection.isInternetExplorer()) {
 function PolylineColorAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = false;
-  var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
+  const translucent = defaultValue(options.translucent, true);
+  const closed = false;
+  const vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
 
   /**
    * This property is part of the {@link Appearance} interface, but is not

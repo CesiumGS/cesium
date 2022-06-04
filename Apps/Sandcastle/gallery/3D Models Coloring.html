@@ -133,29 +133,29 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           selectionIndicator: false,
           shadows: true,
           shouldAnimate: true,
         });
 
-        var entity;
+        let entity;
 
         function getColorBlendMode(colorBlendMode) {
           return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
         }
 
         function getColor(colorName, alpha) {
-          var color = Cesium.Color[colorName.toUpperCase()];
+          const color = Cesium.Color[colorName.toUpperCase()];
           return Cesium.Color.fromAlpha(color, parseFloat(alpha));
         }
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           color: "Red",
           colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"],
           alpha: 1.0,
@@ -173,7 +173,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
@@ -191,7 +191,7 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendMode")
           .subscribe(function (newValue) {
-            var colorBlendMode = getColorBlendMode(newValue);
+            const colorBlendMode = getColorBlendMode(newValue);
             entity.model.colorBlendMode = colorBlendMode;
             viewModel.colorBlendAmountEnabled =
               colorBlendMode === Cesium.ColorBlendMode.MIX;
@@ -230,16 +230,16 @@
         function createModel(url, height) {
           viewer.entities.removeAll();
 
-          var position = Cesium.Cartesian3.fromDegrees(
+          const position = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
             height
           );
-          var heading = Cesium.Math.toRadians(135);
-          var pitch = 0;
-          var roll = 0;
-          var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          const heading = Cesium.Math.toRadians(135);
+          const pitch = 0;
+          const roll = 0;
+          const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
             position,
             hpr
           );
@@ -265,7 +265,7 @@
           viewer.trackedEntity = entity;
         }
 
-        var options = [
+        const options = [
           {
             text: "Aircraft",
             onselect: function () {
@@ -323,10 +323,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

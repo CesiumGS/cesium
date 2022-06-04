@@ -32,11 +32,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         function createPrimitives(scene) {
-          var e = scene.primitives.add(
+          const e = scene.primitives.add(
             new Cesium.EllipsoidPrimitive({
               center: Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
               radii: new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
@@ -47,7 +47,7 @@
           );
           Sandcastle.declare(e); // For Sandcastle highlighting.
 
-          var e2 = scene.primitives.add(
+          const e2 = scene.primitives.add(
             new Cesium.EllipsoidPrimitive({
               modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
                 Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)
@@ -59,19 +59,19 @@
           Sandcastle.declare(e2); // For Sandcastle highlighting.
         }
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.screenSpaceEventHandler.setInputAction(function (movement) {
-          var pickedPrimitive = viewer.scene.pick(movement.endPosition);
+          const pickedPrimitive = viewer.scene.pick(movement.endPosition);
           Sandcastle.highlight(pickedPrimitive);
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
         createPrimitives(viewer.scene);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

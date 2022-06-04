@@ -31,7 +31,7 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
    */
   this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 
-  //If center was not defined, compute it.
+  // If center was not defined, compute it.
   if (!defined(center)) {
     center = Cartesian3.midpoint(this.minimum, this.maximum, new Cartesian3());
   } else {
@@ -46,6 +46,35 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
 }
 
 /**
+ * Creates an instance of an AxisAlignedBoundingBox from its corners.
+ *
+ * @param {Cartesian3} minimum The minimum point along the x, y, and z axes.
+ * @param {Cartesian3} maximum The maximum point along the x, y, and z axes.
+ * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
+ * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
+ *
+ * @example
+ * // Compute an axis aligned bounding box from the two corners.
+ * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
+ */
+AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("minimum", minimum);
+  Check.defined("maximum", maximum);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new AxisAlignedBoundingBox();
+  }
+
+  result.minimum = Cartesian3.clone(minimum, result.minimum);
+  result.maximum = Cartesian3.clone(maximum, result.maximum);
+  result.center = Cartesian3.midpoint(minimum, maximum, result.center);
+
+  return result;
+};
+
+/**
  * Computes an instance of an AxisAlignedBoundingBox. The box is determined by
  * finding the points spaced the farthest apart on the x, y, and z axes.
  *
@@ -55,7 +84,7 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
  *
  * @example
  * // Compute an axis aligned bounding box enclosing two points.
- * var box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+ * const box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
  */
 AxisAlignedBoundingBox.fromPoints = function (positions, result) {
   if (!defined(result)) {
@@ -69,20 +98,20 @@ AxisAlignedBoundingBox.fromPoints = function (positions, result) {
     return result;
   }
 
-  var minimumX = positions[0].x;
-  var minimumY = positions[0].y;
-  var minimumZ = positions[0].z;
+  let minimumX = positions[0].x;
+  let minimumY = positions[0].y;
+  let minimumZ = positions[0].z;
 
-  var maximumX = positions[0].x;
-  var maximumY = positions[0].y;
-  var maximumZ = positions[0].z;
+  let maximumX = positions[0].x;
+  let maximumY = positions[0].y;
+  let maximumZ = positions[0].z;
 
-  var length = positions.length;
-  for (var i = 1; i < length; i++) {
-    var p = positions[i];
-    var x = p.x;
-    var y = p.y;
-    var z = p.z;
+  const length = positions.length;
+  for (let i = 1; i < length; i++) {
+    const p = positions[i];
+    const x = p.x;
+    const y = p.y;
+    const z = p.z;
 
     minimumX = Math.min(x, minimumX);
     maximumX = Math.max(x, maximumX);
@@ -92,12 +121,12 @@ AxisAlignedBoundingBox.fromPoints = function (positions, result) {
     maximumZ = Math.max(z, maximumZ);
   }
 
-  var minimum = result.minimum;
+  const minimum = result.minimum;
   minimum.x = minimumX;
   minimum.y = minimumY;
   minimum.z = minimumZ;
 
-  var maximum = result.maximum;
+  const maximum = result.maximum;
   maximum.x = maximumX;
   maximum.y = maximumY;
   maximum.z = maximumZ;
@@ -148,7 +177,7 @@ AxisAlignedBoundingBox.equals = function (left, right) {
   );
 };
 
-var intersectScratch = new Cartesian3();
+let intersectScratch = new Cartesian3();
 /**
  * Determines which side of a plane a box is located.
  *
@@ -170,13 +199,17 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
     box.minimum,
     intersectScratch
   );
-  var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
-  var normal = plane.normal;
-  var e =
+  const h = Cartesian3.multiplyByScalar(
+    intersectScratch,
+    0.5,
+    intersectScratch
+  ); //The positive half diagonal
+  const normal = plane.normal;
+  const e =
     h.x * Math.abs(normal.x) +
     h.y * Math.abs(normal.y) +
     h.z * Math.abs(normal.z);
-  var s = Cartesian3.dot(box.center, normal) + plane.distance; //signed distance from center
+  const s = Cartesian3.dot(box.center, normal) + plane.distance; //signed distance from center
 
   if (s - e > 0) {
     return Intersect.INSIDE;

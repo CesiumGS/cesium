@@ -17,10 +17,11 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "DataSources/Cesium3DTilesetVisualizer",
   function () {
-    var tilesetUrl = "./Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
+    const tilesetUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
 
-    var scene;
-    var visualizer;
+    let scene;
+    let visualizer;
 
     beforeAll(function () {
       scene = createScene();
@@ -31,10 +32,22 @@ describe(
       scene.destroyForSpecs();
     });
 
-    afterEach(function () {
-      if (defined(visualizer)) {
-        visualizer = visualizer.destroy();
+    function allPrimitivesReady() {
+      const promises = [];
+      for (let i = 0; i < scene.primitives.length; ++i) {
+        promises.push(scene.primitives.get(i).readyPromise);
       }
+      return Promise.all(promises).catch(function (e) {
+        // 404 errors
+      });
+    }
+
+    afterEach(function () {
+      return allPrimitivesReady().then(function () {
+        if (defined(visualizer)) {
+          visualizer = visualizer.destroy();
+        }
+      });
     });
 
     it("constructor throws if no scene is passed.", function () {
@@ -44,7 +57,7 @@ describe(
     });
 
     it("update throws if no time specified.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
       expect(function () {
         visualizer.update();
@@ -52,7 +65,7 @@ describe(
     });
 
     it("isDestroy returns false until destroyed.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
       expect(visualizer.isDestroyed()).toEqual(false);
       visualizer.destroy();
@@ -61,7 +74,7 @@ describe(
     });
 
     it("removes the listener from the entity collection when destroyed", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
       visualizer.destroy();
@@ -70,10 +83,10 @@ describe(
     });
 
     it("object with no model does not create one.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -82,30 +95,30 @@ describe(
     });
 
     it("object with no position does not set modelMatrix.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var tileset = (testObject.tileset = new Cesium3DTilesetGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const tileset = (testObject.tileset = new Cesium3DTilesetGraphics());
       tileset.uri = new ConstantProperty(tilesetUrl);
 
       visualizer.update(JulianDate.now());
 
-      var tilesetPrimitive = scene.primitives.get(0);
+      const tilesetPrimitive = scene.primitives.get(0);
       expect(tilesetPrimitive.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 
     it("A Cesium3DTilesetGraphics causes a primitive to be created and updated.", function () {
-      var time = JulianDate.now();
-      var entityCollection = new EntityCollection();
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var tileset = new Cesium3DTilesetGraphics();
+      const tileset = new Cesium3DTilesetGraphics();
       tileset.show = new ConstantProperty(true);
       tileset.maximumScreenSpaceError = new ConstantProperty(24.0);
       tileset.uri = new ConstantProperty(tilesetUrl);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
         Cartesian3.fromDegrees(1, 2, 3)
       );
@@ -115,18 +128,18 @@ describe(
 
       expect(scene.primitives.length).toEqual(1);
 
-      var primitive = scene.primitives.get(0);
+      const primitive = scene.primitives.get(0);
       visualizer.update(time);
       expect(primitive.show).toEqual(true);
       expect(primitive.maximumScreenSpaceError).toEqual(24.0);
     });
 
     it("A Cesium3DTilesetGraphics with a Resource causes a primitive to be created.", function () {
-      var time = JulianDate.now();
-      var entityCollection = new EntityCollection();
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var tileset = new Cesium3DTilesetGraphics();
+      const tileset = new Cesium3DTilesetGraphics();
       tileset.show = new ConstantProperty(true);
       tileset.uri = new ConstantProperty(
         new Resource({
@@ -134,7 +147,7 @@ describe(
         })
       );
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
         Cartesian3.fromDegrees(1, 2, 3)
       );
@@ -146,34 +159,35 @@ describe(
     });
 
     it("removing removes primitives.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var tileset = new Cesium3DTilesetGraphics();
+      const tileset = new Cesium3DTilesetGraphics();
       tileset.uri = new ConstantProperty(tilesetUrl);
 
-      var time = JulianDate.now();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(5678, 1234, 1101112)
       );
       testObject.tileset = tileset;
       visualizer.update(time);
-
-      expect(scene.primitives.length).toEqual(1);
-      visualizer.update(time);
-      entityCollection.removeAll();
-      visualizer.update(time);
-      expect(scene.primitives.length).toEqual(0);
+      return allPrimitivesReady().then(function () {
+        expect(scene.primitives.length).toEqual(1);
+        visualizer.update(time);
+        entityCollection.removeAll();
+        visualizer.update(time);
+        expect(scene.primitives.length).toEqual(0);
+      });
     });
 
     it("Visualizer sets id property.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var time = JulianDate.now();
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var tileset = new Cesium3DTilesetGraphics();
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const tileset = new Cesium3DTilesetGraphics();
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
@@ -182,17 +196,17 @@ describe(
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
 
-      var tilesetPrimitive = scene.primitives.get(0);
+      const tilesetPrimitive = scene.primitives.get(0);
       expect(tilesetPrimitive.id).toEqual(testObject);
     });
 
     it("Computes bounding sphere.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var time = JulianDate.now();
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var tileset = new Cesium3DTilesetGraphics();
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const tileset = new Cesium3DTilesetGraphics();
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
@@ -201,9 +215,9 @@ describe(
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
 
-      var tilesetPrimitive = scene.primitives.get(0);
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const tilesetPrimitive = scene.primitives.get(0);
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
       return pollToPromise(function () {
@@ -217,22 +231,22 @@ describe(
     });
 
     it("Fails bounding sphere for entity without tileset.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
       visualizer.update(JulianDate.now());
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      const state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.FAILED);
     });
 
     it("Fails bounding sphere when model fails to load.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
-      var time = JulianDate.now();
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var tileset = new Cesium3DTilesetGraphics();
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const tileset = new Cesium3DTilesetGraphics();
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
@@ -241,30 +255,31 @@ describe(
       tileset.uri = new ConstantProperty("/path/to/incorrect/file");
       visualizer.update(time);
 
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
-      return pollToPromise(function () {
-        scene.render();
-        state = visualizer.getBoundingSphere(testObject, result);
-        return state !== BoundingSphereState.PENDING;
-      }).then(function () {
-        expect(state).toBe(BoundingSphereState.FAILED);
-      });
+      return allPrimitivesReady()
+        .catch(function (e) {
+          // 404 error
+        })
+        .finally(function () {
+          state = visualizer.getBoundingSphere(testObject, result);
+          expect(state).toBe(BoundingSphereState.FAILED);
+        });
     });
 
     it("Compute bounding sphere throws without entity.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
-      var result = new BoundingSphere();
+      const result = new BoundingSphere();
       expect(function () {
         visualizer.getBoundingSphere(undefined, result);
       }).toThrowDeveloperError();
     });
 
     it("Compute bounding sphere throws without result.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
       expect(function () {
         visualizer.getBoundingSphere(testObject, undefined);

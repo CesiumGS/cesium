@@ -15,8 +15,8 @@ import SceneMode from "./SceneMode.js";
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -36,11 +36,15 @@ function PointCloud3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
+
+  this._metadata = undefined;
+
   this._pickId = undefined; // Only defined when batchTable is undefined
   this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
+  this._group = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -128,9 +132,27 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  group: {
+    get: function () {
+      return this._group;
+    },
+    set: function (value) {
+      this._group = value;
     },
   },
 });
@@ -153,10 +175,11 @@ function getFragmentShaderLoaded(content) {
     if (defined(content._batchTable)) {
       return content._batchTable.getFragmentShaderCallback(
         false,
-        undefined
+        undefined,
+        false
       )(fs);
     }
-    return "uniform vec4 czm_pickColor;\n" + fs;
+    return `uniform vec4 czm_pickColor;\n${fs}`;
   };
 }
 
@@ -193,13 +216,13 @@ function getPickIdLoaded(content) {
 }
 
 function getGeometricError(content) {
-  var pointCloudShading = content._tileset.pointCloudShading;
-  var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
-  var baseResolutionApproximation = CesiumMath.cbrt(
+  const pointCloudShading = content._tileset.pointCloudShading;
+  const sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
+  const baseResolutionApproximation = CesiumMath.cbrt(
     sphereVolume / content.pointsLength
   );
 
-  var geometricError = content._tile.geometricError;
+  let geometricError = content._tile.geometricError;
   if (geometricError === 0) {
     if (
       defined(pointCloudShading) &&
@@ -214,10 +237,10 @@ function getGeometricError(content) {
 }
 
 function createFeatures(content) {
-  var featuresLength = content.featuresLength;
+  const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
-    var features = new Array(featuresLength);
-    for (var i = 0; i < featuresLength; ++i) {
+    const features = new Array(featuresLength);
+    for (let i = 0; i < featuresLength; ++i) {
       features[i] = new Cesium3DTileFeature(content, i);
     }
     content._features = features;
@@ -247,13 +270,13 @@ PointCloud3DTileContent.prototype.getFeature = function (batchId) {
   if (!defined(this._batchTable)) {
     return undefined;
   }
-  var featuresLength = this.featuresLength;
+  const featuresLength = this.featuresLength;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');
@@ -276,18 +299,18 @@ PointCloud3DTileContent.prototype.applyStyle = function (style) {
   }
 };
 
-var defaultShading = new PointCloudShading();
+const defaultShading = new PointCloudShading();
 
 PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
-  var pointCloud = this._pointCloud;
-  var pointCloudShading = defaultValue(
+  const pointCloud = this._pointCloud;
+  const pointCloudShading = defaultValue(
     tileset.pointCloudShading,
     defaultShading
   );
-  var tile = this._tile;
-  var batchTable = this._batchTable;
-  var mode = frameState.mode;
-  var clippingPlanes = tileset.clippingPlanes;
+  const tile = this._tile;
+  const batchTable = this._batchTable;
+  const mode = frameState.mode;
+  const clippingPlanes = tileset.clippingPlanes;
 
   if (!defined(this._pickId) && !defined(batchTable)) {
     this._pickId = frameState.context.createPickId({
@@ -300,7 +323,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
     batchTable.update(tileset, frameState);
   }
 
-  var boundingSphere;
+  let boundingSphere;
   if (defined(tile._contentBoundingVolume)) {
     boundingSphere =
       mode === SceneMode.SCENE3D
@@ -313,7 +336,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
         : tile._boundingVolume2D.boundingSphere;
   }
 
-  var styleDirty = this._styleDirty;
+  const styleDirty = this._styleDirty;
   this._styleDirty = false;
 
   pointCloud.clippingPlanesOriginMatrix = tileset.clippingPlanesOriginMatrix;
@@ -332,6 +355,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
   pointCloud.normalShading = pointCloudShading.normalShading;
   pointCloud.geometricError = getGeometricError(this);
   pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+  pointCloud.splitDirection = tileset.splitDirection;
   if (
     defined(pointCloudShading) &&
     defined(pointCloudShading.maximumAttenuation)

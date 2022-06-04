@@ -36,24 +36,24 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var statusDisplay = document.createElement("div");
-        var fuelDisplay = document.createElement("div");
-        var czmlPath = "../../SampleData/";
-        var vehicleEntity;
+        const statusDisplay = document.createElement("div");
+        const fuelDisplay = document.createElement("div");
+        const czmlPath = "../../SampleData/";
+        let vehicleEntity;
 
         // Add a blank CzmlDataSource to hold our multi-part entity/entities.
-        var dataSource = new Cesium.CzmlDataSource();
+        const dataSource = new Cesium.CzmlDataSource();
         viewer.dataSources.add(dataSource);
 
         // This demo shows how a single path can be broken up into several CZML streams.
-        var partsToLoad = [
+        const partsToLoad = [
           {
             url: "MultipartVehicle_part1.czml",
             range: [0, 1500],
@@ -75,9 +75,9 @@
         ];
 
         function updateStatusDisplay() {
-          var msg = "";
+          let msg = "";
           partsToLoad.forEach(function (part) {
-            msg += part.url + " - ";
+            msg += `${part.url} - `;
             if (part.loaded) {
               msg += "Loaded.<br/>";
             } else if (part.requested) {
@@ -111,11 +111,11 @@
 
         // Load a new section before the clock naturally gets there.
         // Note this can't predict when a user may fast-forward to it.
-        var preloadTimeInSeconds = 100;
+        const preloadTimeInSeconds = 100;
 
         viewer.clock.onTick.addEventListener(function (clock) {
           // This example uses time offsets from the start to identify which parts need loading.
-          var timeOffset = Cesium.JulianDate.secondsDifference(
+          const timeOffset = Cesium.JulianDate.secondsDifference(
             clock.currentTime,
             clock.startTime
           );
@@ -135,11 +135,11 @@
             });
 
           if (vehicleEntity) {
-            var fuel = vehicleEntity.properties.fuel_remaining.getValue(
+            const fuel = vehicleEntity.properties.fuel_remaining.getValue(
               clock.currentTime
             );
             if (Cesium.defined(fuel)) {
-              fuelDisplay.textContent = "Fuel: " + fuel.toFixed(2) + " gal";
+              fuelDisplay.textContent = `Fuel: ${fuel.toFixed(2)} gal`;
             }
           }
         });
@@ -171,10 +171,10 @@
         document.getElementById("toolbar").appendChild(fuelDisplay);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

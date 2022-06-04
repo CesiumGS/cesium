@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import CubeMap from "./CubeMap.js";
 
 /**
@@ -13,6 +12,7 @@ import CubeMap from "./CubeMap.js";
  *
  * @param {Context} context The context to use to create the cube map.
  * @param {Object} urls The source URL of each image.  See the example below.
+ * @param {Boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
  * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
  *
  * @exception {DeveloperError} context is required.
@@ -29,7 +29,7 @@ import CubeMap from "./CubeMap.js";
  *     negativeZ : 'skybox_nz.png'
  * }).then(function(cubeMap) {
  *     // use the cubemap
- * }).otherwise(function(error) {
+ * }).catch(function(error) {
  *     // an error occurred
  * });
  *
@@ -38,7 +38,7 @@ import CubeMap from "./CubeMap.js";
  *
  * @private
  */
-function loadCubeMap(context, urls) {
+function loadCubeMap(context, urls, skipColorSpaceConversion) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("context", context);
   if (
@@ -61,12 +61,13 @@ function loadCubeMap(context, urls) {
   //
   // Also, it is perhaps acceptable to use the context here in the callbacks, but
   // ideally, we would do it in the primitive's update function.
-  var flipOptions = {
+  const flipOptions = {
     flipY: true,
+    skipColorSpaceConversion: skipColorSpaceConversion,
     preferImageBitmap: true,
   };
 
-  var facePromises = [
+  const facePromises = [
     Resource.createIfNeeded(urls.positiveX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.negativeX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.positiveY).fetchImage(flipOptions),
@@ -75,7 +76,7 @@ function loadCubeMap(context, urls) {
     Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions),
   ];
 
-  return when.all(facePromises, function (images) {
+  return Promise.all(facePromises).then(function (images) {
     return new CubeMap({
       context: context,
       source: {

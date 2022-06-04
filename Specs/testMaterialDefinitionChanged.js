@@ -1,10 +1,10 @@
 import { ColorMaterialProperty } from "../Source/Cesium.js";
 
 function testMaterialDefinitionChanged(property, name, value1, value2) {
-  var listener = jasmine.createSpy("listener");
+  const listener = jasmine.createSpy("listener");
   property.definitionChanged.addEventListener(listener);
 
-  var oldValue = property[name];
+  const oldValue = property[name];
   property[name] = new ColorMaterialProperty(value1);
   expect(listener).toHaveBeenCalledWith(
     property,

@@ -2,8 +2,8 @@ import { queryToObject } from "../../Source/Cesium.js";
 
 describe("Core/queryToObject", function () {
   it("can decode data", function () {
-    var str = "key1=some%20value&key2=a%2Fb";
-    var obj = queryToObject(str);
+    let str = "key1=some%20value&key2=a%2Fb";
+    let obj = queryToObject(str);
 
     expect(obj).toEqual({
       key1: "some value",
@@ -28,8 +28,8 @@ describe("Core/queryToObject", function () {
   });
 
   it("can decode arrays of data", function () {
-    var str = "key=a&key=b";
-    var obj = queryToObject(str);
+    const str = "key=a&key=b";
+    const obj = queryToObject(str);
 
     expect(obj).toEqual({
       key: ["a", "b"],
@@ -37,8 +37,8 @@ describe("Core/queryToObject", function () {
   });
 
   it("can use ; instead of &", function () {
-    var str = "key=a;key=b;key2=c";
-    var obj = queryToObject(str);
+    const str = "key=a;key=b;key2=c";
+    const obj = queryToObject(str);
 
     expect(obj).toEqual({
       key: ["a", "b"],

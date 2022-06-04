@@ -6,32 +6,33 @@ This guide describes best practices for writing reference doc.
 
 Always include doc for new identifiers (classes, functions, properties, constants) in the public CesiumJS API.
 
-Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/CesiumGS/cesium/blob/master/Source/Scene/Model.js).
+Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/CesiumGS/cesium/blob/main/Source/Scene/Model.js).
 
-- [Building the Doc](#building-the-doc)
-- [Basics](#basics)
-- [Parameters](#parameters)
-- [`options` Parameters](#options-parameters)
-- [Exceptions](#exceptions)
-- [Examples](#examples)
-- [References](#references)
-- [Classes](#classes)
-- [Properties and Constants](#properties-and-constants)
-- [Functions and Callbacks](#functions-and-callbacks)
-- [Private](#private)
-- [Layout Reference](#layout-reference)
-  - [Constructor Function](#constructor-function)
-  - [Member Function](#member-function)
-  - [Property](#property)
-  - [Property Getter/Setter](#property-gettersetter)
-  - [Standalone Function](#standalone-function)
-- [TypeScript type definitions](#typescript)
+- [Documentation Guide](#documentation-guide)
+  - [Building the Doc](#building-the-doc)
+  - [Basics](#basics)
+  - [Parameters](#parameters)
+  - [`options` Parameters](#options-parameters)
+  - [Exceptions](#exceptions)
+  - [Examples](#examples)
+  - [References](#references)
+  - [Classes](#classes)
+  - [Properties and Constants](#properties-and-constants)
+  - [Functions and Callbacks](#functions-and-callbacks)
+  - [Private](#private)
+  - [Layout Reference](#layout-reference)
+    - [Constructor Function](#constructor-function)
+    - [Member Function](#member-function)
+    - [Property](#property)
+    - [Property Getter/Setter](#property-gettersetter)
+    - [Standalone Function](#standalone-function)
+  - [TypeScript](#typescript)
 
 ## Building the Doc
 
 The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags. At the command line, build the doc from the root CesiumJS directory by running the following:
 
-```
+```bash
 npm run generateDocumentation
 ```
 
@@ -41,11 +42,11 @@ This creates a `Build/Documentation` directory with the built HTML files.
 
 There is a link to the doc from CesiumJS's main `index.html` when running
 
-```
+```bash
 npm start
 ```
 
-![](toc.jpg)
+![Documentation](toc.jpg)
 
 ## Basics
 
@@ -77,7 +78,7 @@ function defined(value) {
 
 The above reference doc is built into the following:
 
-![](defined.jpg)
+![Documentation for defined](defined.jpg)
 
 This guide describes best practices for writing doc. For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
 
@@ -86,20 +87,20 @@ This guide describes best practices for writing doc. For complete details on JSD
 - Document all function parameters.
 - Use `[]` for optional parameters and include the default value, e.g.,
 
-```
+```javascript
 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
 
 ```
 
 - Omit the default value if it is `undefined`, e.g.,
 
-```
+```javascript
 * @param {Cartesian3} [result] The object on which to store the result.
 ```
 
 - If a parameter can be more than one type, use `|` to separate the types, e.g.,
 
-```
+```javascript
 * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
 ```
 
@@ -121,14 +122,14 @@ Matrix4.fromRotationTranslation = function(rotation, translation, result) {
 
 generates
 
-![](fromRotationTranslation.jpg)
+![Function Documentation](fromRotationTranslation.jpg)
 The CesiumJS classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 
-Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/master/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
+Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/main/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
 
-```
+```javascript
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.length=10000000.0] The length of the axes in meters.
  * @param {Number} [options.width=2.0] The width of the axes in pixels.
@@ -139,7 +140,7 @@ Each property of an `options` parameter (see the [Coding Guide](https://github.c
 
 generates
 
-![](DebugModelMatrixPrimitive.jpg)
+![Constructor Documentation](DebugModelMatrixPrimitive.jpg)
 
 If all `options` properties are optional, also mark the `options` object optional.
 
@@ -193,7 +194,7 @@ Useful examples:
  * ...
  *
  * @example
- * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+ * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
  */
 CesiumMath.lerp = function(p, q, time) {
     // ...
@@ -205,7 +206,7 @@ CesiumMath.lerp = function(p, q, time) {
  *
  * @example
  * // Apply non-uniform scale to node LOD3sp
- * var node = model.getNode('LOD3sp');
+ * const node = model.getNode('LOD3sp');
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 Model.prototype.getNode = function(name) {
@@ -219,7 +220,7 @@ Unnecessary example:
  * ..
  *
  * @example
- * var f = Cesium.Math.EPSILON1;
+ * const f = Cesium.Math.EPSILON1;
  */
 CesiumMath.EPSILON1 = 0.1;
 ```
@@ -250,7 +251,7 @@ function TerrainProvider() {
 
 - Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
 
-```
+```javascript
 @see Class
 @see Class#instanceMember
 @see Class.staticMember
@@ -364,12 +365,12 @@ Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
  *
  * @example
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
- * var v = [1.0, 2.0, 3.0, 4.0];
- * var p = Cesium.Cartesian4.fromArray(v);
+ * const v = [1.0, 2.0, 3.0, 4.0];
+ * const p = Cesium.Cartesian4.fromArray(v);
  *
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
- * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+ * const p2 = Cesium.Cartesian4.fromArray(v2, 2);
  */
 Cartesian4.fromArray = Cartesian4.unpack;
 ```
@@ -411,7 +412,7 @@ Queue.prototype.sort = function (compareFunction) {
 
 ## Private
 
-Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/master/Documentation/Contributors/CodingGuide/README.md#design)).
+Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide/README.md#design)).
 
 If a member or function doesn't start with `_`, but is intended to be private, use the `@private` tag at the bottom of the documentation, e.g.,
 
@@ -441,13 +442,19 @@ function appendForwardSlash(url) {
 }
 ```
 
+Documentation for private elements can be generated by running the following:
+
+```bash
+npm run generateDocumentation -- --private
+```
+
 ## Layout Reference
 
 There's a general flow to each documentation block that makes it easy to read. Tags are always in the same order with the same spacing.
 
 ### Constructor Function
 
-```
+```javascript
 DESCRIPTION.
 
 @alias NAME
@@ -470,7 +477,7 @@ DESCRIPTION.
 
 ### Member Function
 
-```
+```javascript
 DESCRIPTION.
 
 @param {TYPE} NAME DESCRIPTION.
@@ -491,7 +498,7 @@ DESCRIPTION.
 
 ### Property
 
-```
+```javascript
 DESCRIPTION.
 
 @type {TYPE}
@@ -512,7 +519,7 @@ DESCRIPTION.
 
 ### Property Getter/Setter
 
-```
+```javascript
 DESCRIPTION.
 
 @memberof CLASS_NAME.prototype
@@ -533,7 +540,7 @@ DESCRIPTION.
 
 ### Standalone Function
 
-```
+```javascript
 DESCRIPTION.
 
 @function
@@ -554,11 +561,11 @@ DESCRIPTION.
 [@private]
 ```
 
-# TypeScript
+## TypeScript
 
 We also use JSDoc to build official TypeScript type definitions. Normally this behavior is transparent to the developer and happens as part of CI, however incorrect or non-standard JSDoc can lead to failures. If CI is failing because of the `build-ts` step, you can debug it locally by running:
 
-```
+```bash
 npm run build-ts
 ```
 

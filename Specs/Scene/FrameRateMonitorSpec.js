@@ -6,7 +6,7 @@ import createScene from "../createScene.js";
 describe(
   "Scene/FrameRateMonitor",
   function () {
-    var scene;
+    let scene;
     beforeAll(function () {
       scene = createScene();
     });
@@ -15,7 +15,7 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var monitor;
+    let monitor;
     afterEach(function () {
       if (defined(monitor)) {
         monitor.destroy();
@@ -24,7 +24,7 @@ describe(
     });
 
     function spinWait(milliseconds) {
-      var endTime = getTimestamp() + milliseconds;
+      const endTime = getTimestamp() + milliseconds;
       /*eslint-disable no-empty*/
       while (getTimestamp() < endTime) {}
       /*eslint-enable no-empty*/
@@ -83,7 +83,7 @@ describe(
         minimumFrameRateAfterWarmup: 1000,
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       monitor.lowFrameRate.addEventListener(spyListener);
 
       // Rendering once starts the quiet period
@@ -115,7 +115,7 @@ describe(
         minimumFrameRateAfterWarmup: 1000,
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       monitor.lowFrameRate.addEventListener(spyListener);
 
       // Rendering once starts the quiet period
@@ -153,7 +153,7 @@ describe(
         minimumFrameRateAfterWarmup: 1000,
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       monitor.lowFrameRate.addEventListener(spyListener);
 
       monitor.pause();
@@ -193,7 +193,7 @@ describe(
         minimumFrameRateAfterWarmup: 1000,
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       monitor.lowFrameRate.addEventListener(spyListener);
 
       // Rendering once starts the quiet period
@@ -218,10 +218,10 @@ describe(
         minimumFrameRateAfterWarmup: 10,
       });
 
-      var lowListener = jasmine.createSpy("lowFrameRate");
+      const lowListener = jasmine.createSpy("lowFrameRate");
       monitor.lowFrameRate.addEventListener(lowListener);
 
-      var nominalListener = jasmine.createSpy("nominalFrameRate");
+      const nominalListener = jasmine.createSpy("nominalFrameRate");
       monitor.nominalFrameRate.addEventListener(nominalListener);
 
       // Rendering once starts the quiet period
@@ -243,13 +243,13 @@ describe(
       expect(lowListener).toHaveBeenCalled();
 
       // Render as fast as possible for a samplingWindow, quietPeriod, and warmupPeriod.
-      var endTime = getTimestamp() + 50;
+      const endTime = getTimestamp() + 50;
       while (getTimestamp() < endTime) {
         scene.render();
       }
 
       // The nominalFrameRate event should have been raised.
-      expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqualTo(10);
+      expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqual(10);
       expect(nominalListener).toHaveBeenCalled();
     });
   },

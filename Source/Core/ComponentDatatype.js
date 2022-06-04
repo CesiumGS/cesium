@@ -9,7 +9,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var ComponentDatatype = {
+const ComponentDatatype = {
   /**
    * 8-bit signed byte corresponding to <code>gl.BYTE</code> and the type
    * of an element in <code>Int8Array</code>.
@@ -101,7 +101,7 @@ var ComponentDatatype = {
  *
  * @example
  * // Returns Int8Array.BYTES_PER_ELEMENT
- * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
+ * const size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
  */
 ComponentDatatype.getSizeInBytes = function (componentDatatype) {
   //>>includeStart('debug', pragmas.debug);
@@ -165,6 +165,12 @@ ComponentDatatype.fromTypedArray = function (array) {
   if (array instanceof Float64Array) {
     return ComponentDatatype.DOUBLE;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array."
+  );
+  //>>includeEnd('debug');
 };
 
 /**
@@ -203,7 +209,7 @@ ComponentDatatype.validate = function (componentDatatype) {
  *
  * @example
  * // creates a Float32Array with length of 100
- * var typedArray = Cesium.ComponentDatatype.createTypedArray(Cesium.ComponentDatatype.FLOAT, 100);
+ * const typedArray = Cesium.ComponentDatatype.createTypedArray(Cesium.ComponentDatatype.FLOAT, 100);
  */
 ComponentDatatype.createTypedArray = function (
   componentDatatype,

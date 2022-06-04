@@ -32,10 +32,10 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var clock = new Cesium.Clock({
+        const clock = new Cesium.Clock({
           startTime: Cesium.JulianDate.fromIso8601("2017-07-11T00:00:00Z"),
           stopTime: Cesium.JulianDate.fromIso8601("2017-07-11T24:00:00Z"),
           currentTime: Cesium.JulianDate.fromIso8601("2017-07-11T10:00:00Z"),
@@ -45,7 +45,7 @@
           shouldAnimate: true,
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           clockViewModel: new Cesium.ClockViewModel(clock),
           selectionIndicator: false,
           terrainProvider: Cesium.createWorldTerrain(),
@@ -60,21 +60,21 @@
         viewer.scene.globe.enableLighting = true;
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
-        var position = new Cesium.Cartesian3(
+        const position = new Cesium.Cartesian3(
           -1371108.6511167218,
           -5508684.080096612,
           2901825.449865087
         );
-        var heading = Cesium.Math.toRadians(180);
-        var pitch = Cesium.Math.toRadians(2);
-        var roll = Cesium.Math.toRadians(-6);
-        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+        const heading = Cesium.Math.toRadians(180);
+        const pitch = Cesium.Math.toRadians(2);
+        const roll = Cesium.Math.toRadians(-6);
+        const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           position,
           hpr
         );
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           name: "truck",
           position: position,
           orientation: orientation,
@@ -88,7 +88,7 @@
           },
         });
 
-        var threeQuartersView = {
+        const threeQuartersView = {
           destination: new Cesium.Cartesian3(
             -1371203.1456494154,
             -5508700.033950869,
@@ -102,7 +102,7 @@
           maximumHeight: 100,
         };
 
-        var frontView = {
+        const frontView = {
           destination: new Cesium.Cartesian3(
             -1371214.9554156072,
             -5508700.8494476415,
@@ -116,7 +116,7 @@
           maximumHeight: 100,
         };
 
-        var topView = {
+        const topView = {
           destination: new Cesium.Cartesian3(
             -1371190.7755780201,
             -5508732.668834588,
@@ -130,7 +130,7 @@
           maximumHeight: 100,
         };
 
-        var upwardsView = {
+        const upwardsView = {
           destination: new Cesium.Cartesian3(
             -1371052.4616855076,
             -5508691.745389906,
@@ -193,10 +193,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -1,9 +1,11 @@
-import { clone } from "../Source/Cesium.js";
-import { Texture } from "../Source/Cesium.js";
-import { GlobeSurfaceTile } from "../Source/Cesium.js";
-import { ImageryLayer } from "../Source/Cesium.js";
-import { TerrainState } from "../Source/Cesium.js";
-import { when } from "../Source/Cesium.js";
+import {
+  clone,
+  defer,
+  ImageryLayer,
+  GlobeSurfaceTile,
+  TerrainState,
+  Texture,
+} from "../Source/Cesium.js";
 
 function TerrainTileProcessor(
   frameState,
@@ -17,9 +19,9 @@ function TerrainTileProcessor(
 
 // Processes the given list of tiles until all terrain and imagery states stop changing.
 TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
-  var that = this;
+  const that = this;
 
-  var deferred = when.defer();
+  const deferred = defer();
 
   function getState(tile) {
     return [
@@ -41,8 +43,8 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
       return false;
     }
 
-    var same = true;
-    for (var i = 0; i < a.length; ++i) {
+    let same = true;
+    for (let i = 0; i < a.length; ++i) {
       if (Array.isArray(a[i]) && Array.isArray(b[i])) {
         same = same && statesAreSame(a[i], b[i]);
       } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
@@ -55,30 +57,30 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
     return same;
   }
 
-  var iterations = 0;
+  let iterations = 0;
 
   function next() {
     ++iterations;
     ++that.frameState.frameNumber;
 
     // Keep going until all terrain and imagery provider are ready and states are no longer changing.
-    var changed = !that.terrainProvider.ready;
+    let changed = !that.terrainProvider.ready;
 
-    for (var i = 0; i < that.imageryLayerCollection.length; ++i) {
+    for (let i = 0; i < that.imageryLayerCollection.length; ++i) {
       changed =
         changed || !that.imageryLayerCollection.get(i).imageryProvider.ready;
     }
 
     if (that.terrainProvider.ready) {
       tiles.forEach(function (tile) {
-        var beforeState = getState(tile);
+        const beforeState = getState(tile);
         GlobeSurfaceTile.processStateMachine(
           tile,
           that.frameState,
           that.terrainProvider,
           that.imageryLayerCollection
         );
-        var afterState = getState(tile);
+        const afterState = getState(tile);
         changed =
           changed ||
           tile.data.terrainState === TerrainState.RECEIVING ||
@@ -102,7 +104,10 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
 TerrainTileProcessor.prototype.mockWebGL = function () {
   spyOn(GlobeSurfaceTile, "_createVertexArrayForMesh").and.callFake(
     function () {
-      var vertexArray = jasmine.createSpyObj("VertexArray", ["destroy"]);
+      const vertexArray = jasmine.createSpyObj("VertexArray", [
+        "destroy",
+        "isDestroyed",
+      ]);
       return vertexArray;
     }
   );
@@ -111,7 +116,7 @@ TerrainTileProcessor.prototype.mockWebGL = function () {
     context,
     imagery
   ) {
-    var texture = jasmine.createSpyObj("Texture", ["destroy"]);
+    const texture = jasmine.createSpyObj("Texture", ["destroy"]);
     texture.width = imagery.image.width;
     texture.height = imagery.image.height;
     return texture;
@@ -120,7 +125,7 @@ TerrainTileProcessor.prototype.mockWebGL = function () {
   spyOn(ImageryLayer.prototype, "_finalizeReprojectTexture");
 
   spyOn(Texture, "create").and.callFake(function (options) {
-    var result = clone(options);
+    const result = clone(options);
     result.destroy = function () {};
     return result;
   });

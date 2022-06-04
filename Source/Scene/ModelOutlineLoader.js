@@ -6,11 +6,11 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import ForEach from "./GltfPipeline/ForEach.js";
 
 // glTF does not allow an index value of 65535 because this is the primitive
 // restart value in some APIs.
-var MAX_GLTF_UINT16_INDEX = 65534;
+const MAX_GLTF_UINT16_INDEX = 65534;
 
 /**
  * Creates face outlines for glTF primitives with the `CESIUM_primitive_outline` extension.
@@ -41,7 +41,7 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
     return;
   }
 
-  var gltf = model.gltf;
+  const gltf = model.gltfInternal;
 
   // Assumption: A single bufferView contains a single zero-indexed range of vertices.
   // No trickery with using large accessor byteOffsets to store multiple zero-based
@@ -51,7 +51,7 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
   // position1, normal1, uv1, ...) _are_ supported and should not be confused with
   // the above.
 
-  var vertexNumberingScopes = [];
+  const vertexNumberingScopes = [];
 
   ForEach.mesh(gltf, function (mesh, meshId) {
     ForEach.meshPrimitive(mesh, function (primitive, primitiveId) {
@@ -59,12 +59,12 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
         return;
       }
 
-      var outlineData = primitive.extensions.CESIUM_primitive_outline;
+      const outlineData = primitive.extensions.CESIUM_primitive_outline;
       if (!defined(outlineData)) {
         return;
       }
 
-      var vertexNumberingScope = getVertexNumberingScope(model, primitive);
+      const vertexNumberingScope = getVertexNumberingScope(model, primitive);
       if (vertexNumberingScope === undefined) {
         return;
       }
@@ -86,7 +86,7 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
 
   // Update all relevant bufferViews to include the duplicate vertices that are
   // needed for outlining.
-  for (var i = 0; i < vertexNumberingScopes.length; ++i) {
+  for (let i = 0; i < vertexNumberingScopes.length; ++i) {
     updateBufferViewsWithNewVertices(
       model,
       vertexNumberingScopes[i].bufferViews
@@ -98,7 +98,7 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
 };
 
 ModelOutlineLoader.createTexture = function (model, context) {
-  var cache = context.cache.modelOutliningCache;
+  let cache = context.cache.modelOutliningCache;
   if (!defined(cache)) {
     cache = context.cache.modelOutliningCache = {};
   }
@@ -107,19 +107,19 @@ ModelOutlineLoader.createTexture = function (model, context) {
     return cache.outlineTexture;
   }
 
-  var maxSize = Math.min(4096, ContextLimits.maximumTextureSize);
+  const maxSize = Math.min(4096, ContextLimits.maximumTextureSize);
 
-  var size = maxSize;
-  var levelZero = createTexture(size);
+  let size = maxSize;
+  const levelZero = createTexture(size);
 
-  var mipLevels = [];
+  const mipLevels = [];
 
   while (size > 1) {
     size >>= 1;
     mipLevels.push(createTexture(size));
   }
 
-  var texture = new Texture({
+  const texture = new Texture({
     context: context,
     source: {
       arrayBufferView: levelZero,
@@ -148,23 +148,23 @@ function addOutline(
   edgeIndicesAccessorId,
   vertexNumberingScope
 ) {
-  var vertexCopies = vertexNumberingScope.vertexCopies;
-  var extraVertices = vertexNumberingScope.extraVertices;
-  var outlineCoordinates = vertexNumberingScope.outlineCoordinates;
+  const vertexCopies = vertexNumberingScope.vertexCopies;
+  const extraVertices = vertexNumberingScope.extraVertices;
+  const outlineCoordinates = vertexNumberingScope.outlineCoordinates;
 
-  var gltf = model.gltf;
-  var mesh = gltf.meshes[meshId];
-  var primitive = mesh.primitives[primitiveId];
-  var accessors = gltf.accessors;
-  var bufferViews = gltf.bufferViews;
+  const gltf = model.gltfInternal;
+  const mesh = gltf.meshes[meshId];
+  const primitive = mesh.primitives[primitiveId];
+  const accessors = gltf.accessors;
+  const bufferViews = gltf.bufferViews;
 
   // Find the number of vertices in this primitive by looking at
   // the first attribute. Others are required to be the same.
-  var numVertices;
-  for (var semantic in primitive.attributes) {
+  let numVertices;
+  for (const semantic in primitive.attributes) {
     if (primitive.attributes.hasOwnProperty(semantic)) {
-      var attributeId = primitive.attributes[semantic];
-      var accessor = accessors[attributeId];
+      const attributeId = primitive.attributes[semantic];
+      const accessor = accessors[attributeId];
       if (defined(accessor)) {
         numVertices = accessor.count;
         break;
@@ -176,19 +176,19 @@ function addOutline(
     return undefined;
   }
 
-  var triangleIndexAccessorGltf = accessors[primitive.indices];
-  var triangleIndexBufferViewGltf =
+  const triangleIndexAccessorGltf = accessors[primitive.indices];
+  const triangleIndexBufferViewGltf =
     bufferViews[triangleIndexAccessorGltf.bufferView];
-  var edgeIndexAccessorGltf = accessors[edgeIndicesAccessorId];
-  var edgeIndexBufferViewGltf = bufferViews[edgeIndexAccessorGltf.bufferView];
+  const edgeIndexAccessorGltf = accessors[edgeIndicesAccessorId];
+  const edgeIndexBufferViewGltf = bufferViews[edgeIndexAccessorGltf.bufferView];
 
-  var loadResources = model._loadResources;
-  var triangleIndexBufferView = loadResources.getBuffer(
+  const loadResources = model._loadResources;
+  const triangleIndexBufferView = loadResources.getBuffer(
     triangleIndexBufferViewGltf
   );
-  var edgeIndexBufferView = loadResources.getBuffer(edgeIndexBufferViewGltf);
+  const edgeIndexBufferView = loadResources.getBuffer(edgeIndexBufferViewGltf);
 
-  var triangleIndices =
+  let triangleIndices =
     triangleIndexAccessorGltf.componentType === 5123
       ? new Uint16Array(
           triangleIndexBufferView.buffer,
@@ -202,7 +202,7 @@ function addOutline(
             triangleIndexAccessorGltf.byteOffset,
           triangleIndexAccessorGltf.count
         );
-  var edgeIndices =
+  const edgeIndices =
     edgeIndexAccessorGltf.componentType === 5123
       ? new Uint16Array(
           edgeIndexBufferView.buffer,
@@ -223,30 +223,30 @@ function addOutline(
   // `edgeSmallMultipler` - that is, the number of vertices in the equation
   // above - at index 0 for easy access to it later.
 
-  var edgeSmallMultiplier = numVertices;
+  const edgeSmallMultiplier = numVertices;
 
-  var edges = [edgeSmallMultiplier];
-  var i;
+  const edges = [edgeSmallMultiplier];
+  let i;
   for (i = 0; i < edgeIndices.length; i += 2) {
-    var a = edgeIndices[i];
-    var b = edgeIndices[i + 1];
-    var small = Math.min(a, b);
-    var big = Math.max(a, b);
+    const a = edgeIndices[i];
+    const b = edgeIndices[i + 1];
+    const small = Math.min(a, b);
+    const big = Math.max(a, b);
     edges[small * edgeSmallMultiplier + big] = 1;
   }
 
   // For each triangle, adjust vertex data so that the correct edges are outlined.
   for (i = 0; i < triangleIndices.length; i += 3) {
-    var i0 = triangleIndices[i];
-    var i1 = triangleIndices[i + 1];
-    var i2 = triangleIndices[i + 2];
+    let i0 = triangleIndices[i];
+    let i1 = triangleIndices[i + 1];
+    let i2 = triangleIndices[i + 2];
 
-    var all = false; // set this to true to draw a full wireframe.
-    var has01 = all || isHighlighted(edges, i0, i1);
-    var has12 = all || isHighlighted(edges, i1, i2);
-    var has20 = all || isHighlighted(edges, i2, i0);
+    const all = false; // set this to true to draw a full wireframe.
+    const has01 = all || isHighlighted(edges, i0, i1);
+    const has12 = all || isHighlighted(edges, i1, i2);
+    const has20 = all || isHighlighted(edges, i2, i0);
 
-    var unmatchableVertexIndex = matchAndStoreCoordinates(
+    let unmatchableVertexIndex = matchAndStoreCoordinates(
       outlineCoordinates,
       i0,
       i1,
@@ -257,7 +257,7 @@ function addOutline(
     );
     while (unmatchableVertexIndex >= 0) {
       // Copy the unmatchable index and try again.
-      var copy;
+      let copy;
       if (unmatchableVertexIndex === i0) {
         copy = vertexCopies[i0];
       } else if (unmatchableVertexIndex === i1) {
@@ -269,7 +269,7 @@ function addOutline(
       if (copy === undefined) {
         copy = numVertices + extraVertices.length;
 
-        var original = unmatchableVertexIndex;
+        let original = unmatchableVertexIndex;
         while (original >= numVertices) {
           original = extraVertices[original - numVertices];
         }
@@ -379,10 +379,10 @@ function addOutline(
 // bitwise AND.
 
 function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
-  var startIndex = vertexIndex * 3;
-  var first = outlineCoordinates[startIndex];
-  var second = outlineCoordinates[startIndex + 1];
-  var third = outlineCoordinates[startIndex + 2];
+  const startIndex = vertexIndex * 3;
+  const first = outlineCoordinates[startIndex];
+  const second = outlineCoordinates[startIndex + 1];
+  const third = outlineCoordinates[startIndex + 2];
 
   if (first === undefined) {
     // If one coordinate is undefined, they all are, and all orderings are fine.
@@ -421,36 +421,36 @@ function matchAndStoreCoordinates(
   has12,
   has20
 ) {
-  var a0 = has20 ? 1.0 : 0.0;
-  var b0 = has01 ? 1.0 : 0.0;
-  var c0 = 0.0;
+  const a0 = has20 ? 1.0 : 0.0;
+  const b0 = has01 ? 1.0 : 0.0;
+  const c0 = 0.0;
 
-  var i0Mask = computeOrderMask(outlineCoordinates, i0, a0, b0, c0);
+  const i0Mask = computeOrderMask(outlineCoordinates, i0, a0, b0, c0);
   if (i0Mask === 0) {
     return i0;
   }
 
-  var a1 = 0.0;
-  var b1 = has01 ? 1.0 : 0.0;
-  var c1 = has12 ? 1.0 : 0.0;
+  const a1 = 0.0;
+  const b1 = has01 ? 1.0 : 0.0;
+  const c1 = has12 ? 1.0 : 0.0;
 
-  var i1Mask = computeOrderMask(outlineCoordinates, i1, a1, b1, c1);
+  const i1Mask = computeOrderMask(outlineCoordinates, i1, a1, b1, c1);
   if (i1Mask === 0) {
     return i1;
   }
 
-  var a2 = has20 ? 1.0 : 0.0;
-  var b2 = 0.0;
-  var c2 = has12 ? 1.0 : 0.0;
+  const a2 = has20 ? 1.0 : 0.0;
+  const b2 = 0.0;
+  const c2 = has12 ? 1.0 : 0.0;
 
-  var i2Mask = computeOrderMask(outlineCoordinates, i2, a2, b2, c2);
+  const i2Mask = computeOrderMask(outlineCoordinates, i2, a2, b2, c2);
   if (i2Mask === 0) {
     return i2;
   }
 
-  var workingOrders = i0Mask & i1Mask & i2Mask;
+  const workingOrders = i0Mask & i1Mask & i2Mask;
 
-  var a, b, c;
+  let a, b, c;
 
   if (workingOrders & (1 << 0)) {
     // 0 - abc
@@ -485,9 +485,9 @@ function matchAndStoreCoordinates(
   } else {
     // No ordering works.
     // Report the most constrained vertex as unmatched so we copy that one.
-    var i0Popcount = popcount0to63(i0Mask);
-    var i1Popcount = popcount0to63(i1Mask);
-    var i2Popcount = popcount0to63(i2Mask);
+    const i0Popcount = popcount0to63(i0Mask);
+    const i1Popcount = popcount0to63(i1Mask);
+    const i2Popcount = popcount0to63(i2Mask);
     if (i0Popcount < i1Popcount && i0Popcount < i2Popcount) {
       return i0;
     } else if (i1Popcount < i2Popcount) {
@@ -496,17 +496,17 @@ function matchAndStoreCoordinates(
     return i2;
   }
 
-  var i0Start = i0 * 3;
+  const i0Start = i0 * 3;
   outlineCoordinates[i0Start + a] = a0;
   outlineCoordinates[i0Start + b] = b0;
   outlineCoordinates[i0Start + c] = c0;
 
-  var i1Start = i1 * 3;
+  const i1Start = i1 * 3;
   outlineCoordinates[i1Start + a] = a1;
   outlineCoordinates[i1Start + b] = b1;
   outlineCoordinates[i1Start + c] = c1;
 
-  var i2Start = i2 * 3;
+  const i2Start = i2 * 3;
   outlineCoordinates[i2Start + a] = a2;
   outlineCoordinates[i2Start + b] = b2;
   outlineCoordinates[i2Start + c] = c2;
@@ -515,8 +515,8 @@ function matchAndStoreCoordinates(
 }
 
 function isHighlighted(edges, i0, i1) {
-  var edgeSmallMultiplier = edges[0];
-  var index = Math.min(i0, i1) * edgeSmallMultiplier + Math.max(i0, i1);
+  const edgeSmallMultiplier = edges[0];
+  const index = Math.min(i0, i1) * edgeSmallMultiplier + Math.max(i0, i1);
 
   // If i0 and i1 are both 0, then our index will be 0 and we'll end up
   // accessing the edgeSmallMultiplier that we've sneakily squirreled away
@@ -529,7 +529,7 @@ function isHighlighted(edges, i0, i1) {
 }
 
 function createTexture(size) {
-  var texture = new Uint8Array(size);
+  const texture = new Uint8Array(size);
   texture[size - 1] = 192;
   if (size === 8) {
     texture[size - 1] = 96;
@@ -544,23 +544,24 @@ function createTexture(size) {
 }
 
 function updateBufferViewsWithNewVertices(model, bufferViews) {
-  var gltf = model.gltf;
-  var loadResources = model._loadResources;
+  const gltf = model.gltfInternal;
+  const loadResources = model._loadResources;
 
-  var i, j;
+  let i, j;
   for (i = 0; i < bufferViews.length; ++i) {
-    var bufferView = bufferViews[i];
-    var vertexNumberingScope = bufferView.extras._pipeline.vertexNumberingScope;
+    const bufferView = bufferViews[i];
+    const vertexNumberingScope =
+      bufferView.extras._pipeline.vertexNumberingScope;
 
     // Let the temporary data be garbage collected.
     bufferView.extras._pipeline.vertexNumberingScope = undefined;
 
-    var newVertices = vertexNumberingScope.extraVertices;
+    const newVertices = vertexNumberingScope.extraVertices;
 
-    var sourceData = loadResources.getBuffer(bufferView);
-    var byteStride = bufferView.byteStride || 4;
-    var newVerticesLength = newVertices.length;
-    var destData = new Uint8Array(
+    const sourceData = loadResources.getBuffer(bufferView);
+    const byteStride = bufferView.byteStride || 4;
+    const newVerticesLength = newVertices.length;
+    const destData = new Uint8Array(
       sourceData.byteLength + newVerticesLength * byteStride
     );
 
@@ -569,9 +570,9 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
 
     // Copy the vertices added for outlining
     for (j = 0; j < newVerticesLength; ++j) {
-      var sourceIndex = newVertices[j] * byteStride;
-      var destIndex = sourceData.length + j * byteStride;
-      for (var k = 0; k < byteStride; ++k) {
+      const sourceIndex = newVertices[j] * byteStride;
+      const destIndex = sourceData.length + j * byteStride;
+      for (let k = 0; k < byteStride; ++k) {
         destData[destIndex + k] = destData[sourceIndex + k];
       }
     }
@@ -580,7 +581,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
     bufferView.byteOffset = 0;
     bufferView.byteLength = destData.byteLength;
 
-    var bufferId =
+    const bufferId =
       gltf.buffers.push({
         byteLength: destData.byteLength,
         extras: {
@@ -594,18 +595,18 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
     loadResources.buffers[bufferId] = destData;
 
     // Update the accessors to reflect the added vertices.
-    var accessors = vertexNumberingScope.accessors;
+    const accessors = vertexNumberingScope.accessors;
     for (j = 0; j < accessors.length; ++j) {
-      var accessorId = accessors[j];
+      const accessorId = accessors[j];
       gltf.accessors[accessorId].count += newVerticesLength;
     }
 
     if (!vertexNumberingScope.createdOutlines) {
       // Create the buffers, views, and accessors for the outline texture coordinates.
-      var outlineCoordinates = vertexNumberingScope.outlineCoordinates;
-      var outlineCoordinateBuffer = new Float32Array(outlineCoordinates);
-      var bufferIndex =
-        model.gltf.buffers.push({
+      const outlineCoordinates = vertexNumberingScope.outlineCoordinates;
+      const outlineCoordinateBuffer = new Float32Array(outlineCoordinates);
+      const bufferIndex =
+        model.gltfInternal.buffers.push({
           byteLength: outlineCoordinateBuffer.byteLength,
           extras: {
             _pipeline: {
@@ -619,8 +620,8 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
         outlineCoordinateBuffer.byteLength
       );
 
-      var bufferViewIndex =
-        model.gltf.bufferViews.push({
+      const bufferViewIndex =
+        model.gltfInternal.bufferViews.push({
           buffer: bufferIndex,
           byteLength: outlineCoordinateBuffer.byteLength,
           byteOffset: 0,
@@ -628,8 +629,8 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
           target: 34962,
         }) - 1;
 
-      var accessorIndex =
-        model.gltf.accessors.push({
+      const accessorIndex =
+        model.gltfInternal.accessors.push({
           bufferView: bufferViewIndex,
           byteOffset: 0,
           componentType: 5126,
@@ -639,7 +640,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
           max: [1.0, 1.0, 1.0],
         }) - 1;
 
-      var primitives = vertexNumberingScope.primitives;
+      const primitives = vertexNumberingScope.primitives;
       for (j = 0; j < primitives.length; ++j) {
         primitives[j].attributes._OUTLINE_COORDINATES = accessorIndex;
       }
@@ -652,16 +653,16 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
 }
 
 function compactBuffers(model) {
-  var gltf = model.gltf;
-  var loadResources = model._loadResources;
+  const gltf = model.gltfInternal;
+  const loadResources = model._loadResources;
 
-  var i;
+  let i;
   for (i = 0; i < gltf.buffers.length; ++i) {
-    var buffer = gltf.buffers[i];
-    var bufferViewsUsingThisBuffer = gltf.bufferViews.filter(
+    const buffer = gltf.buffers[i];
+    const bufferViewsUsingThisBuffer = gltf.bufferViews.filter(
       usesBuffer.bind(undefined, i)
     );
-    var newLength = bufferViewsUsingThisBuffer.reduce(function (
+    const newLength = bufferViewsUsingThisBuffer.reduce(function (
       previous,
       current
     ) {
@@ -672,11 +673,11 @@ function compactBuffers(model) {
       continue;
     }
 
-    var newBuffer = new Uint8Array(newLength);
-    var offset = 0;
-    for (var j = 0; j < bufferViewsUsingThisBuffer.length; ++j) {
-      var bufferView = bufferViewsUsingThisBuffer[j];
-      var sourceData = loadResources.getBuffer(bufferView);
+    const newBuffer = new Uint8Array(newLength);
+    let offset = 0;
+    for (let j = 0; j < bufferViewsUsingThisBuffer.length; ++j) {
+      const bufferView = bufferViewsUsingThisBuffer[j];
+      const sourceData = loadResources.getBuffer(bufferView);
       newBuffer.set(sourceData, offset);
 
       bufferView.byteOffset = offset;
@@ -694,26 +695,26 @@ function usesBuffer(bufferId, bufferView) {
 }
 
 function getVertexNumberingScope(model, primitive) {
-  var attributes = primitive.attributes;
+  const attributes = primitive.attributes;
   if (attributes === undefined) {
     return undefined;
   }
 
-  var gltf = model.gltf;
+  const gltf = model.gltfInternal;
 
-  var vertexNumberingScope;
+  let vertexNumberingScope;
 
   // Initialize common details for all bufferViews used by this primitive's vertices.
   // All bufferViews used by this primitive must use a common vertex numbering scheme.
-  for (var semantic in attributes) {
+  for (const semantic in attributes) {
     if (!attributes.hasOwnProperty(semantic)) {
       continue;
     }
 
-    var accessorId = attributes[semantic];
-    var accessor = gltf.accessors[accessorId];
-    var bufferViewId = accessor.bufferView;
-    var bufferView = gltf.bufferViews[bufferViewId];
+    const accessorId = attributes[semantic];
+    const accessor = gltf.accessors[accessorId];
+    const bufferViewId = accessor.bufferView;
+    const bufferView = gltf.bufferViews[bufferViewId];
 
     if (!defined(bufferView.extras)) {
       bufferView.extras = {};

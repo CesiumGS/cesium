@@ -10,8 +10,8 @@ import Property from "./Property.js";
  * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.
  *
  * @alias PropertyBag
+ * @implements Record<string, any>
  * @constructor
- * @implements {DictionaryLike}
  *
  * @param {Object} [value] An object, containing key-value mapping of property names to properties.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
@@ -46,8 +46,8 @@ Object.defineProperties(PropertyBag.prototype, {
    */
   isConstant: {
     get: function () {
-      var propertyNames = this._propertyNames;
-      for (var i = 0, len = propertyNames.length; i < len; i++) {
+      const propertyNames = this._propertyNames;
+      for (let i = 0, len = propertyNames.length; i < len; i++) {
         if (!Property.isConstant(this[propertyNames[i]])) {
           return false;
         }
@@ -100,7 +100,7 @@ PropertyBag.prototype.addProperty = function (
   value,
   createPropertyCallback
 ) {
-  var propertyNames = this._propertyNames;
+  const propertyNames = this._propertyNames;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(propertyName)) {
@@ -108,7 +108,7 @@ PropertyBag.prototype.addProperty = function (
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      propertyName + " is already a registered property."
+      `${propertyName} is already a registered property.`
     );
   }
   //>>includeEnd('debug');
@@ -139,15 +139,15 @@ PropertyBag.prototype.addProperty = function (
  * @exception {DeveloperError} "propertyName" is not a registered property.
  */
 PropertyBag.prototype.removeProperty = function (propertyName) {
-  var propertyNames = this._propertyNames;
-  var index = propertyNames.indexOf(propertyName);
+  const propertyNames = this._propertyNames;
+  const index = propertyNames.indexOf(propertyName);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(propertyName)) {
     throw new DeveloperError("propertyName is required.");
   }
   if (index === -1) {
-    throw new DeveloperError(propertyName + " is not a registered property.");
+    throw new DeveloperError(`${propertyName} is not a registered property.`);
   }
   //>>includeEnd('debug');
 
@@ -177,9 +177,9 @@ PropertyBag.prototype.getValue = function (time, result) {
     result = {};
   }
 
-  var propertyNames = this._propertyNames;
-  for (var i = 0, len = propertyNames.length; i < len; i++) {
-    var propertyName = propertyNames[i];
+  const propertyNames = this._propertyNames;
+  for (let i = 0, len = propertyNames.length; i < len; i++) {
+    const propertyName = propertyNames[i];
     result[propertyName] = Property.getValueOrUndefined(
       this[propertyName],
       time,
@@ -203,15 +203,15 @@ PropertyBag.prototype.merge = function (source, createPropertyCallback) {
   }
   //>>includeEnd('debug');
 
-  var propertyNames = this._propertyNames;
-  var sourcePropertyNames = defined(source._propertyNames)
+  const propertyNames = this._propertyNames;
+  const sourcePropertyNames = defined(source._propertyNames)
     ? source._propertyNames
     : Object.keys(source);
-  for (var i = 0, len = sourcePropertyNames.length; i < len; i++) {
-    var name = sourcePropertyNames[i];
+  for (let i = 0, len = sourcePropertyNames.length; i < len; i++) {
+    const name = sourcePropertyNames[i];
 
-    var targetProperty = this[name];
-    var sourceProperty = source[name];
+    const targetProperty = this[name];
+    const sourceProperty = source[name];
 
     //Custom properties that are registered on the source must also be added to this.
     if (targetProperty === undefined && propertyNames.indexOf(name) === -1) {
@@ -237,17 +237,17 @@ PropertyBag.prototype.merge = function (source, createPropertyCallback) {
 };
 
 function propertiesEqual(a, b) {
-  var aPropertyNames = a._propertyNames;
-  var bPropertyNames = b._propertyNames;
+  const aPropertyNames = a._propertyNames;
+  const bPropertyNames = b._propertyNames;
 
-  var len = aPropertyNames.length;
+  const len = aPropertyNames.length;
   if (len !== bPropertyNames.length) {
     return false;
   }
 
-  for (var aIndex = 0; aIndex < len; ++aIndex) {
-    var name = aPropertyNames[aIndex];
-    var bIndex = bPropertyNames.indexOf(name);
+  for (let aIndex = 0; aIndex < len; ++aIndex) {
+    const name = aPropertyNames[aIndex];
+    const bIndex = bPropertyNames.indexOf(name);
     if (bIndex === -1) {
       return false;
     }

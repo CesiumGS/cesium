@@ -21,9 +21,9 @@ The default setting will be copied to your user settings. The default for
 Windows is `"C:\\Windows\\system32\\cmd.exe"`. Change this to point to your
 git bash install. For example:
 
-```
+```json
 {
-    "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
+  "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
 }
 ```
 
@@ -76,3 +76,7 @@ you save them.
 
 Keep in mind that `build-watch` will quietly terminate when
 you quit VSCode, so should be restarted manually on next launch.
+
+## Debugging CesiumJS
+
+To debug CesiumJS using the VSCode Chrome debugger, run the `"Launch Server"` configuration. If the server was already started in the terminal using `npm start`, use the `"Launch in Chrome"` configuration.

@@ -4,7 +4,7 @@ import { JulianDate } from "../../Source/Cesium.js";
 import { TimeStandard } from "../../Source/Cesium.js";
 
 describe("Core/EarthOrientationParameters", function () {
-  var officialLeapSeconds;
+  let officialLeapSeconds;
 
   beforeAll(function () {
     officialLeapSeconds = JulianDate.leapSeconds.slice(0);
@@ -15,7 +15,7 @@ describe("Core/EarthOrientationParameters", function () {
   });
 
   it("adds leap seconds found in the data by default", function () {
-    var eop = new EarthOrientationParameters({
+    const eop = new EarthOrientationParameters({
       data: {
         columnNames: [
           "dateIso8601",
@@ -70,15 +70,15 @@ describe("Core/EarthOrientationParameters", function () {
     });
     expect(eop).not.toBeNull();
 
-    var leapSeconds = JulianDate.leapSeconds;
+    const leapSeconds = JulianDate.leapSeconds;
     expect(leapSeconds.length).toBe(officialLeapSeconds.length + 1);
 
-    var newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
-    var foundNew = false;
-    var previousDate;
+    const newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
+    let foundNew = false;
+    let previousDate;
 
-    for (var i = 0, len = leapSeconds.length; i < len; ++i) {
-      var leapSecond = leapSeconds[i];
+    for (let i = 0, len = leapSeconds.length; i < len; ++i) {
+      const leapSecond = leapSeconds[i];
       if (leapSecond.julianDate.equals(newDate)) {
         foundNew = true;
       }
@@ -96,7 +96,7 @@ describe("Core/EarthOrientationParameters", function () {
   });
 
   it("does not add leap seconds if told not to do so", function () {
-    var eop = new EarthOrientationParameters({
+    const eop = new EarthOrientationParameters({
       addNewLeapSeconds: false,
       data: {
         columnNames: [
@@ -152,7 +152,7 @@ describe("Core/EarthOrientationParameters", function () {
     });
     expect(eop).not.toBeNull();
 
-    var leapSeconds = JulianDate.leapSeconds;
+    const leapSeconds = JulianDate.leapSeconds;
     expect(leapSeconds.length).toBe(officialLeapSeconds.length);
   });
 
@@ -162,7 +162,7 @@ describe("Core/EarthOrientationParameters", function () {
     }
 
     it("interpolates data correctly under normal circumstances", function () {
-      var eopDescription = {
+      const eopDescription = {
         url: undefined,
         data: {
           columnNames: [
@@ -217,19 +217,19 @@ describe("Core/EarthOrientationParameters", function () {
         },
       };
 
-      var eop = new EarthOrientationParameters(eopDescription);
+      const eop = new EarthOrientationParameters(eopDescription);
 
-      var date = JulianDate.fromIso8601("2011-07-02T12:34:56Z");
-      var result = eop.compute(date);
-      var nColumns = eopDescription.data.columnNames.length;
-      var x0 = eopDescription.data.samples[1 * nColumns + 2];
-      var x1 = eopDescription.data.samples[2 * nColumns + 2];
-      var dt =
+      const date = JulianDate.fromIso8601("2011-07-02T12:34:56Z");
+      const result = eop.compute(date);
+      const nColumns = eopDescription.data.columnNames.length;
+      let x0 = eopDescription.data.samples[1 * nColumns + 2];
+      let x1 = eopDescription.data.samples[2 * nColumns + 2];
+      const dt =
         JulianDate.secondsDifference(
           date,
           JulianDate.fromIso8601(eopDescription.data.samples[nColumns])
         ) / 86400.0;
-      var expected = linearInterp(dt, x0, x1);
+      let expected = linearInterp(dt, x0, x1);
       expect(result.xPoleWander).toEqualEpsilon(expected, 1e-22);
       x0 = eopDescription.data.samples[1 * nColumns + 3];
       x1 = eopDescription.data.samples[2 * nColumns + 3];
@@ -250,7 +250,7 @@ describe("Core/EarthOrientationParameters", function () {
     });
 
     it("interpolates UT1 correctly over a leap second", function () {
-      var eopDescription = {
+      const eopDescription = {
         url: undefined,
         data: {
           columnNames: [
@@ -314,38 +314,38 @@ describe("Core/EarthOrientationParameters", function () {
         },
       };
 
-      var eop = new EarthOrientationParameters(eopDescription);
-      var dateAtLeapSecond = JulianDate.fromIso8601("2009-01-01T00:00:00Z");
-      var dateSlightlyBefore = JulianDate.addSeconds(
+      const eop = new EarthOrientationParameters(eopDescription);
+      const dateAtLeapSecond = JulianDate.fromIso8601("2009-01-01T00:00:00Z");
+      const dateSlightlyBefore = JulianDate.addSeconds(
         dateAtLeapSecond,
         -1.0,
         new JulianDate()
       );
-      var dateSlightlyAfter = JulianDate.addSeconds(
+      const dateSlightlyAfter = JulianDate.addSeconds(
         dateAtLeapSecond,
         1.0,
         new JulianDate()
       );
-      var nColumns = eopDescription.data.columnNames.length;
-      var x0 = eopDescription.data.samples[1 * nColumns + 6];
-      var x1 = eopDescription.data.samples[2 * nColumns + 6];
-      var x2 = eopDescription.data.samples[3 * nColumns + 6];
-      var t0 = JulianDate.fromIso8601(eopDescription.data.samples[nColumns]);
-      var t1 = JulianDate.fromIso8601(
+      const nColumns = eopDescription.data.columnNames.length;
+      const x0 = eopDescription.data.samples[1 * nColumns + 6];
+      const x1 = eopDescription.data.samples[2 * nColumns + 6];
+      const x2 = eopDescription.data.samples[3 * nColumns + 6];
+      const t0 = JulianDate.fromIso8601(eopDescription.data.samples[nColumns]);
+      const t1 = JulianDate.fromIso8601(
         eopDescription.data.samples[2 * nColumns]
       );
-      var dt =
+      let dt =
         JulianDate.secondsDifference(dateSlightlyBefore, t0) / (86400.0 + 1);
       // Adjust for leap second when interpolating
-      var expectedBefore = linearInterp(dt, x0, x1 - 1);
-      var resultBefore = eop.compute(dateSlightlyBefore);
+      const expectedBefore = linearInterp(dt, x0, x1 - 1);
+      const resultBefore = eop.compute(dateSlightlyBefore);
       expect(resultBefore.ut1MinusUtc).toEqualEpsilon(expectedBefore, 1.0e-15);
-      var expectedAt = eopDescription.data.samples[2 * nColumns + 6];
-      var resultAt = eop.compute(dateAtLeapSecond);
+      const expectedAt = eopDescription.data.samples[2 * nColumns + 6];
+      const resultAt = eop.compute(dateAtLeapSecond);
       expect(resultAt.ut1MinusUtc).toEqualEpsilon(expectedAt, 1.0e-15);
       dt = JulianDate.secondsDifference(dateSlightlyAfter, t1) / 86400.0;
-      var expectedAfter = linearInterp(dt, x1, x2);
-      var resultAfter = eop.compute(dateSlightlyAfter);
+      const expectedAfter = linearInterp(dt, x1, x2);
+      const resultAfter = eop.compute(dateSlightlyAfter);
       expect(resultAfter.ut1MinusUtc).toEqualEpsilon(expectedAfter, 1.0e-15);
       // Check to make sure the values are (correctly) discontinuous
       expect(

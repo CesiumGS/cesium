@@ -1,4 +1,3 @@
-import { when } from "../Source/Cesium.js";
 import addDefaultMatchers from "./addDefaultMatchers.js";
 import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
 
@@ -15,110 +14,27 @@ function customizeJasmine(
 
   window.specsUsingRelease = release;
 
-  var originalDescribe = window.describe;
+  const originalDescribe = window.describe;
 
-  window.describe = function (name, suite, categories) {
+  window.describe = function (name, suite, category) {
     // exclude this spec if we're filtering by category and it's not the selected category
     // otherwise if we have an excluded category, exclude this test if the category of this spec matches
-    if (includedCategory && categories !== includedCategory) {
-      return;
-    } else if (excludedCategory && categories === excludedCategory) {
-      return;
+    if (
+      includedCategory &&
+      includedCategory !== "" &&
+      includedCategory !== "none" &&
+      category !== includedCategory
+    ) {
+      window.xdescribe(name, suite);
+    } else if (
+      excludedCategory &&
+      excludedCategory !== "" &&
+      category === excludedCategory
+    ) {
+      window.xdescribe(name, suite);
+    } else {
+      originalDescribe(name, suite);
     }
-
-    originalDescribe(name, suite, categories);
-  };
-
-  // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
-  // call done() when a returned promise resolves.
-  var originalIt = window.it;
-
-  window.it = function (description, f, timeout, categories) {
-    originalIt(
-      description,
-      function (done) {
-        var result = f();
-        when(
-          result,
-          function () {
-            done();
-          },
-          function (e) {
-            done.fail("promise rejected: " + e.toString());
-          }
-        );
-      },
-      timeout,
-      categories
-    );
-  };
-
-  var originalBeforeEach = window.beforeEach;
-
-  window.beforeEach = function (f) {
-    originalBeforeEach(function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    });
-  };
-
-  var originalAfterEach = window.afterEach;
-
-  window.afterEach = function (f) {
-    originalAfterEach(function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    });
-  };
-
-  var originalBeforeAll = window.beforeAll;
-
-  window.beforeAll = function (f) {
-    originalBeforeAll(function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    });
-  };
-
-  var originalAfterAll = window.afterAll;
-
-  window.afterAll = function (f) {
-    originalAfterAll(function (done) {
-      var result = f();
-      when(
-        result,
-        function () {
-          done();
-        },
-        function (e) {
-          done.fail("promise rejected: " + e.toString());
-        }
-      );
-    });
   };
 
   if (webglValidation) {
@@ -128,8 +44,6 @@ function customizeJasmine(
   if (webglStub) {
     window.webglStub = true;
   }
-
-  //env.catchExceptions(true);
 
   env.beforeEach(function () {
     addDefaultMatchers(!release).call(env);

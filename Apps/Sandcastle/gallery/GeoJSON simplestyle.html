@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         //Load a GeoJSON file containing simplestyle information.
@@ -41,23 +41,23 @@
         //In this particular example, the name of each entity is set to its maki icon identifier.
         //Clicking on each billboard will show it's identifier in the InfoBox.
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           sceneMode: Cesium.SceneMode.SCENE2D,
           timeline: false,
           animation: false,
         });
 
-        var dataSource = Cesium.GeoJsonDataSource.load(
+        const dataSource = Cesium.GeoJsonDataSource.load(
           "../../SampleData/simplestyles.geojson"
         );
         viewer.dataSources.add(dataSource);
         viewer.zoomTo(dataSource);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

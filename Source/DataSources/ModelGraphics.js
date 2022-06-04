@@ -59,7 +59,6 @@ function createArticulationStagePropertyBag(value) {
  *
  * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
  */
 function ModelGraphics(options) {
@@ -410,9 +409,9 @@ ModelGraphics.prototype.merge = function (source) {
     source.clippingPlanes
   );
 
-  var sourceNodeTransformations = source.nodeTransformations;
+  const sourceNodeTransformations = source.nodeTransformations;
   if (defined(sourceNodeTransformations)) {
-    var targetNodeTransformations = this.nodeTransformations;
+    const targetNodeTransformations = this.nodeTransformations;
     if (defined(targetNodeTransformations)) {
       targetNodeTransformations.merge(sourceNodeTransformations);
     } else {
@@ -423,9 +422,9 @@ ModelGraphics.prototype.merge = function (source) {
     }
   }
 
-  var sourceArticulations = source.articulations;
+  const sourceArticulations = source.articulations;
   if (defined(sourceArticulations)) {
-    var targetArticulations = this.articulations;
+    const targetArticulations = this.articulations;
     if (defined(targetArticulations)) {
       targetArticulations.merge(sourceArticulations);
     } else {

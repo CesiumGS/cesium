@@ -22,11 +22,11 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
 
   container = getElement(container);
 
-  var that = this;
+  const that = this;
 
-  var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
-  var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
-  var ownerDocument = container.ownerDocument;
+  const tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
+  const tmpIsEnabled = knockout.observable(Fullscreen.enabled);
+  const ownerDocument = container.ownerDocument;
 
   /**
    * Gets whether or not fullscreen mode is active.  This property is observable.

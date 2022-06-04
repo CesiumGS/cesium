@@ -81,15 +81,15 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const globe = scene.globe;
 
         scene.screenSpaceCameraController.enableCollisionDetection = false;
         globe.translucency.frontFaceAlphaByDistance = new Cesium.NearFarScalar(
@@ -99,17 +99,17 @@
           1.0
         );
 
-        var longitude = -3.82518;
-        var latitude = 53.11728;
-        var height = 72.8;
-        var position = Cesium.Cartesian3.fromDegrees(
+        const longitude = -3.82518;
+        const latitude = 53.11728;
+        const height = 72.8;
+        const position = Cesium.Cartesian3.fromDegrees(
           longitude,
           latitude,
           height
         );
-        var url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
+        const url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           name: url,
           position: position,
           model: {
@@ -117,7 +117,7 @@
           },
         });
 
-        var polygon = viewer.entities.add({
+        const polygon = viewer.entities.add({
           polygon: {
             hierarchy: new Cesium.PolygonHierarchy(
               Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -164,7 +164,7 @@
           },
         });
 
-        var polyline = viewer.entities.add({
+        const polyline = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
               -3.8098444201746373,
@@ -241,7 +241,7 @@
           },
         });
 
-        var viewModel = {
+        const viewModel = {
           translucencyEnabled: true,
           fadeByDistance: true,
           showVectorData: false,
@@ -249,9 +249,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout.getObservable(viewModel, name).subscribe(update);
           }
@@ -260,7 +260,7 @@
         function update() {
           globe.translucency.enabled = viewModel.translucencyEnabled;
 
-          var alpha = Number(viewModel.alpha);
+          let alpha = Number(viewModel.alpha);
           alpha = !isNaN(alpha) ? alpha : 1.0;
           alpha = Cesium.Math.clamp(alpha, 0.0, 1.0);
 
@@ -303,10 +303,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

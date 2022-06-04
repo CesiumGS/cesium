@@ -15,14 +15,14 @@ function createProperty(
       return this[privateName];
     },
     set: function (value) {
-      var oldValue = this[privateName];
-      var subscription = this[subscriptionName];
+      const oldValue = this[privateName];
+      const subscription = this[subscriptionName];
       if (defined(subscription)) {
         subscription();
         this[subscriptionName] = undefined;
       }
 
-      var hasValue = value !== undefined;
+      const hasValue = value !== undefined;
       if (
         hasValue &&
         (!defined(value) || !defined(value.getValue)) &&
@@ -63,8 +63,8 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
   //The two extra toString calls work around the issue.
   return createProperty(
     name,
-    "_" + name.toString(),
-    "_" + name.toString() + "Subscription",
+    `_${name.toString()}`,
+    `_${name.toString()}Subscription`,
     defaultValue(configurable, false),
     defaultValue(createPropertyCallback, createConstantProperty)
   );

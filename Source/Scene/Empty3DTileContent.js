@@ -1,8 +1,9 @@
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Represents empty content for tiles in a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset that
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset that
  * do not have content, e.g., because they are used to optimize hierarchical culling.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
@@ -87,9 +88,33 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(
+        "Empty3DTileContent cannot have content metadata"
+      );
+      //>>includeEnd('debug');
+    },
+  },
+
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  group: {
+    get: function () {
+      return undefined;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Empty3DTileContent cannot have group metadata");
+      //>>includeEnd('debug');
     },
   },
 });

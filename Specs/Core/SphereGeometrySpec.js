@@ -22,7 +22,7 @@ describe("Core/SphereGeometry", function () {
   });
 
   it("computes positions", function () {
-    var m = SphereGeometry.createGeometry(
+    const m = SphereGeometry.createGeometry(
       new SphereGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         radius: 1,
@@ -33,15 +33,15 @@ describe("Core/SphereGeometry", function () {
 
     // The vertices are 6x6 because an additional slice and stack are added
     // and the first and last clock and cone angles are duplicated (3 + 1 + 2 = 6)
-    var numVertices = 36; // 6 rows * 6 positions
-    var numTriangles = 18; // 6 top + 6 bottom + 6 around the sides
+    const numVertices = 36; // 6 rows * 6 positions
+    const numTriangles = 18; // 6 top + 6 bottom + 6 around the sides
     expect(m.attributes.position.values.length).toEqual(numVertices * 3); // 4 positions * 4 rows
     expect(m.indices.length).toEqual(numTriangles * 3); //3 top + 3 bottom + 2 triangles * 3 sides
     expect(m.boundingSphere.radius).toEqual(1);
   });
 
   it("compute all vertex attributes", function () {
-    var m = SphereGeometry.createGeometry(
+    const m = SphereGeometry.createGeometry(
       new SphereGeometry({
         vertexFormat: VertexFormat.ALL,
         radius: 1,
@@ -50,8 +50,8 @@ describe("Core/SphereGeometry", function () {
       })
     );
 
-    var numVertices = 36;
-    var numTriangles = 18;
+    const numVertices = 36;
+    const numTriangles = 18;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.st.values.length).toEqual(numVertices * 2);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -61,7 +61,7 @@ describe("Core/SphereGeometry", function () {
   });
 
   it("computes attributes for a unit sphere", function () {
-    var m = SphereGeometry.createGeometry(
+    const m = SphereGeometry.createGeometry(
       new SphereGeometry({
         vertexFormat: VertexFormat.ALL,
         radius: 1,
@@ -70,16 +70,16 @@ describe("Core/SphereGeometry", function () {
       })
     );
 
-    var positions = m.attributes.position.values;
-    var normals = m.attributes.normal.values;
-    var tangents = m.attributes.tangent.values;
-    var bitangents = m.attributes.bitangent.values;
+    const positions = m.attributes.position.values;
+    const normals = m.attributes.normal.values;
+    const tangents = m.attributes.tangent.values;
+    const bitangents = m.attributes.bitangent.values;
 
-    for (var i = 0; i < positions.length; i += 3) {
-      var position = Cartesian3.fromArray(positions, i);
-      var normal = Cartesian3.fromArray(normals, i);
-      var tangent = Cartesian3.fromArray(tangents, i);
-      var bitangent = Cartesian3.fromArray(bitangents, i);
+    for (let i = 0; i < positions.length; i += 3) {
+      const position = Cartesian3.fromArray(positions, i);
+      const normal = Cartesian3.fromArray(normals, i);
+      const tangent = Cartesian3.fromArray(tangents, i);
+      const bitangent = Cartesian3.fromArray(bitangents, i);
 
       expect(Cartesian3.magnitude(position)).toEqualEpsilon(
         1.0,
@@ -98,24 +98,24 @@ describe("Core/SphereGeometry", function () {
   });
 
   it("undefined is returned if radius is equals to zero", function () {
-    var sphere = new SphereGeometry({
+    const sphere = new SphereGeometry({
       radius: 0.0,
       vertexFormat: VertexFormat.POSITION_ONLY,
     });
 
-    var geometry = SphereGeometry.createGeometry(sphere);
+    const geometry = SphereGeometry.createGeometry(sphere);
 
     expect(geometry).toBeUndefined();
   });
 
-  var sphere = new SphereGeometry({
+  const sphere = new SphereGeometry({
     vertexFormat: VertexFormat.POSITION_ONLY,
     radius: 1,
     stackPartitions: 3,
     slicePartitions: 3,
   });
   // Adding TWO_PI and PI here for maximum clock/cone and other options from partial ellipsoids
-  var packedInstance = [
+  const packedInstance = [
     1.0,
     1.0,
     1.0,

@@ -16,15 +16,16 @@ function Renderbuffer(options) {
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
-  var context = options.context;
-  var gl = context._gl;
-  var maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
+  const context = options.context;
+  const gl = context._gl;
+  const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
-  var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
-  var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
-  var height = defined(options.height)
+  const format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+  const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
+  const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
+  const numSamples = defaultValue(options.numSamples, 1);
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {
@@ -35,9 +36,7 @@ function Renderbuffer(options) {
 
   if (width > maximumRenderbufferSize) {
     throw new DeveloperError(
-      "Width must be less than or equal to the maximum renderbuffer size (" +
-        maximumRenderbufferSize +
-        ").  Check maximumRenderbufferSize."
+      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
     );
   }
 
@@ -45,9 +44,7 @@ function Renderbuffer(options) {
 
   if (height > maximumRenderbufferSize) {
     throw new DeveloperError(
-      "Height must be less than or equal to the maximum renderbuffer size (" +
-        maximumRenderbufferSize +
-        ").  Check maximumRenderbufferSize."
+      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
     );
   }
   //>>includeEnd('debug');
@@ -59,7 +56,17 @@ function Renderbuffer(options) {
   this._renderbuffer = this._gl.createRenderbuffer();
 
   gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
-  gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  if (numSamples > 1) {
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
+      numSamples,
+      format,
+      width,
+      height
+    );
+  } else {
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  }
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 

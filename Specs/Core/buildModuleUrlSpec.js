@@ -4,17 +4,19 @@ import { Uri } from "../../Source/Cesium.js";
 
 describe("Core/buildModuleUrl", function () {
   it("produces an absolute URL for a module", function () {
-    var url = buildModuleUrl("Workers/transferTypedArrayTest.js");
+    const url = buildModuleUrl("Workers/transferTypedArrayTest.js");
 
     expect(url).toMatch(/Workers\/transferTypedArrayTest.js$/);
-    expect(new Uri(url).isAbsolute()).toBe(true);
+    const uri = new Uri(url);
+    expect(uri.scheme().length).toBeGreaterThan(0);
+    expect(uri.fragment().length).toEqual(0);
 
     // make sure it actually exists at that URL
     return Resource.fetchText(url);
   });
 
   it("matches the expected forms of URLs to Cesium.js", function () {
-    var r = buildModuleUrl._cesiumScriptRegex;
+    const r = buildModuleUrl._cesiumScriptRegex;
 
     expect(r.exec("Cesium.js")[1]).toEqual("");
     expect(r.exec("Cesium.js?v=1.7")[1]).toEqual("");
@@ -40,12 +42,12 @@ describe("Core/buildModuleUrl", function () {
 
   it("CESIUM_BASE_URL works with trailing slash", function () {
     // Set new variables
-    var oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
+    const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
     window.CESIUM_BASE_URL = "http://test.com/source/";
     buildModuleUrl._clearBaseResource();
 
     // Verify we use CESIUM_BASE_URL
-    var url = buildModuleUrl._buildModuleUrlFromBaseUrl("Core/Cartesian3.js");
+    const url = buildModuleUrl._buildModuleUrlFromBaseUrl("Core/Cartesian3.js");
     expect(url).toEqual("http://test.com/source/Core/Cartesian3.js");
 
     // Reset old values
@@ -55,12 +57,12 @@ describe("Core/buildModuleUrl", function () {
 
   it("CESIUM_BASE_URL works without trailing slash", function () {
     // Set new variables
-    var oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
+    const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
     window.CESIUM_BASE_URL = "http://test.com/source";
     buildModuleUrl._clearBaseResource();
 
     // Verify we use CESIUM_BASE_URL
-    var url = buildModuleUrl._buildModuleUrlFromBaseUrl("Core/Cartesian3.js");
+    const url = buildModuleUrl._buildModuleUrlFromBaseUrl("Core/Cartesian3.js");
     expect(url).toEqual("http://test.com/source/Core/Cartesian3.js");
 
     // Reset old values

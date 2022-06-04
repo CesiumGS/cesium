@@ -32,14 +32,14 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dates = [
+        const dates = [
           "2018-07-19T15:18:00Z",
           "2018-07-19T15:18:00.5Z",
           "2018-07-19T15:18:01Z",
@@ -48,7 +48,7 @@
           "2018-07-19T15:18:02.5Z",
         ];
 
-        var uris = [
+        const uris = [
           "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/0.pnts",
           "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/1.pnts",
           "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/2.pnts",
@@ -62,14 +62,14 @@
           };
         }
 
-        var timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray(
+        const timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray(
           {
             iso8601Dates: dates,
             dataCallback: dataCallback,
           }
         );
 
-        var pointCloud = new Cesium.TimeDynamicPointCloud({
+        const pointCloud = new Cesium.TimeDynamicPointCloud({
           intervals: timeIntervalCollection,
           clock: viewer.clock,
           style: new Cesium.Cesium3DTileStyle({
@@ -78,12 +78,12 @@
         });
         viewer.scene.primitives.add(pointCloud);
 
-        var start = Cesium.JulianDate.fromIso8601(dates[0]);
-        var stop = Cesium.JulianDate.fromIso8601(dates[dates.length - 1]);
+        const start = Cesium.JulianDate.fromIso8601(dates[0]);
+        const stop = Cesium.JulianDate.fromIso8601(dates[dates.length - 1]);
 
         viewer.timeline.zoomTo(start, stop);
 
-        var clock = viewer.clock;
+        const clock = viewer.clock;
         clock.startTime = start;
         clock.currentTime = start;
         clock.stopTime = stop;
@@ -95,10 +95,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

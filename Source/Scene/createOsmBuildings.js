@@ -21,13 +21,15 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *        specified, a default style is used which gives each building or building part a
  *        color inferred from its OpenStreetMap <code>tags</code>. If no color can be inferred,
  *        <code>options.defaultColor</code> is used.
+ * @param {Boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
+ *        outlines are displayed. When false, outlines are not displayed.
  * @returns {Cesium3DTileset}
  *
  * @see Ion
  *
  * @example
  * // Create Cesium OSM Buildings with default styling
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.scene.primitives.add(Cesium.createOsmBuildings());
  *
  * @example
@@ -50,19 +52,17 @@ function createOsmBuildings(options) {
     url: IonResource.fromAssetId(96188),
   });
 
-  var tileset = new Cesium3DTileset(options);
+  const tileset = new Cesium3DTileset(options);
 
-  var style = options.style;
+  let style = options.style;
 
   if (!defined(style)) {
-    var color = defaultValue(
+    const color = defaultValue(
       options.defaultColor,
       Color.WHITE
     ).toCssColorString();
     style = new Cesium3DTileStyle({
-      color:
-        "Boolean(${feature['cesium#color']}) ? color(${feature['cesium#color']}) : " +
-        color,
+      color: `Boolean(\${feature['cesium#color']}) ? color(\${feature['cesium#color']}) : ${color}`,
     });
   }
 

@@ -35,10 +35,10 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         //Example 1: Load with default styling.
         Sandcastle.addDefaultToolbarButton("Default styling", function () {
@@ -68,7 +68,7 @@
           //Seed the random number generator for repeatable results.
           Cesium.Math.setRandomNumberSeed(0);
 
-          var promise = Cesium.GeoJsonDataSource.load(
+          const promise = Cesium.GeoJsonDataSource.load(
             "../../SampleData/ne_10m_us_states.topojson"
           );
           promise
@@ -76,16 +76,16 @@
               viewer.dataSources.add(dataSource);
 
               //Get the array of entities
-              var entities = dataSource.entities.values;
+              const entities = dataSource.entities.values;
 
-              var colorHash = {};
-              for (var i = 0; i < entities.length; i++) {
+              const colorHash = {};
+              for (let i = 0; i < entities.length; i++) {
                 //For each entity, create a random color based on the state name.
                 //Some states have multiple entities, so we store the color in a
                 //hash so that we use the same color for the entire state.
-                var entity = entities[i];
-                var name = entity.name;
-                var color = colorHash[name];
+                const entity = entities[i];
+                const name = entity.name;
+                let color = colorHash[name];
                 if (!color) {
                   color = Cesium.Color.fromRandom({
                     alpha: 1.0,
@@ -105,7 +105,7 @@
                   entity.properties.Population / 50.0;
               }
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               //Display any errrors encountered while loading.
               window.alert(error);
             });
@@ -124,10 +124,10 @@
         };
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

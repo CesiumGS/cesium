@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -43,7 +42,7 @@ function EllipsoidTerrainProvider(options) {
   );
 
   this._errorEvent = new Event();
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -53,6 +52,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * are passed an instance of {@link TileProviderError}.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Event}
+   * @readonly
    */
   errorEvent: {
     get: function () {
@@ -65,6 +65,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Credit}
+   * @readonly
    */
   credit: {
     get: function () {
@@ -77,6 +78,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {GeographicTilingScheme}
+   * @readonly
    */
   tilingScheme: {
     get: function () {
@@ -88,6 +90,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   ready: {
     get: function () {
@@ -114,6 +117,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -126,6 +130,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -139,6 +144,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * information is not available.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {TileAvailability}
+   * @readonly
    */
   availability: {
     get: function () {
@@ -167,9 +173,9 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  var width = 16;
-  var height = 16;
-  return when.resolve(
+  const width = 16;
+  const height = 16;
+  return Promise.resolve(
     new HeightmapTerrainData({
       buffer: new Uint8Array(width * height),
       width: width,
@@ -196,7 +202,7 @@ EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean} Undefined if not supported, otherwise true or false.
+ * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -212,7 +218,7 @@ EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined} This provider does not support loading availability.
  */
 EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

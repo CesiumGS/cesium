@@ -2,6 +2,17 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 
+const Flags = {
+  CULL: 1,
+  OCCLUDE: 2,
+  EXECUTE_IN_CLOSEST_FRUSTUM: 4,
+  DEBUG_SHOW_BOUNDING_VOLUME: 8,
+  CAST_SHADOWS: 16,
+  RECEIVE_SHADOWS: 32,
+  PICK_ONLY: 64,
+  DEPTH_FOR_TRANSLUCENT_CLASSIFICATION: 128,
+};
+
 /**
  * Represents a command to the renderer for drawing.
  *
@@ -12,8 +23,6 @@ function DrawCommand(options) {
 
   this._boundingVolume = options.boundingVolume;
   this._orientedBoundingBox = options.orientedBoundingBox;
-  this._cull = defaultValue(options.cull, true);
-  this._occlude = defaultValue(options.occlude, true);
   this._modelMatrix = options.modelMatrix;
   this._primitiveType = defaultValue(
     options.primitiveType,
@@ -28,20 +37,29 @@ function DrawCommand(options) {
   this._renderState = options.renderState;
   this._framebuffer = options.framebuffer;
   this._pass = options.pass;
-  this._executeInClosestFrustum = defaultValue(
+  this._owner = options.owner;
+  this._debugOverlappingFrustums = 0;
+  this._pickId = options.pickId;
+
+  // Set initial flags.
+  this._flags = 0;
+  this.cull = defaultValue(options.cull, true);
+  this.occlude = defaultValue(options.occlude, true);
+  this.executeInClosestFrustum = defaultValue(
     options.executeInClosestFrustum,
     false
   );
-  this._owner = options.owner;
-  this._debugShowBoundingVolume = defaultValue(
+  this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
     false
   );
-  this._debugOverlappingFrustums = 0;
-  this._castShadows = defaultValue(options.castShadows, false);
-  this._receiveShadows = defaultValue(options.receiveShadows, false);
-  this._pickId = options.pickId;
-  this._pickOnly = defaultValue(options.pickOnly, false);
+  this.castShadows = defaultValue(options.castShadows, false);
+  this.receiveShadows = defaultValue(options.receiveShadows, false);
+  this.pickOnly = defaultValue(options.pickOnly, false);
+  this.depthForTranslucentClassification = defaultValue(
+    options.depthForTranslucentClassification,
+    false
+  );
 
   this.dirty = true;
   this.lastDirtyTime = 0;
@@ -50,6 +68,18 @@ function DrawCommand(options) {
    * @private
    */
   this.derivedCommands = {};
+}
+
+function hasFlag(command, flag) {
+  return (command._flags & flag) === flag;
+}
+
+function setFlag(command, flag, value) {
+  if (value) {
+    command._flags |= flag;
+  } else {
+    command._flags &= ~flag;
+  }
 }
 
 Object.defineProperties(DrawCommand.prototype, {
@@ -112,11 +142,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   cull: {
     get: function () {
-      return this._cull;
+      return hasFlag(this, Flags.CULL);
     },
     set: function (value) {
-      if (this._cull !== value) {
-        this._cull = value;
+      if (hasFlag(this, Flags.CULL) !== value) {
+        setFlag(this, Flags.CULL, value);
         this.dirty = true;
       }
     },
@@ -132,11 +162,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   occlude: {
     get: function () {
-      return this._occlude;
+      return hasFlag(this, Flags.OCCLUDE);
     },
     set: function (value) {
-      if (this._occlude !== value) {
-        this._occlude = value;
+      if (hasFlag(this, Flags.OCCLUDE) !== value) {
+        setFlag(this, Flags.OCCLUDE, value);
         this.dirty = true;
       }
     },
@@ -287,11 +317,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   castShadows: {
     get: function () {
-      return this._castShadows;
+      return hasFlag(this, Flags.CAST_SHADOWS);
     },
     set: function (value) {
-      if (this._castShadows !== value) {
-        this._castShadows = value;
+      if (hasFlag(this, Flags.CAST_SHADOWS) !== value) {
+        setFlag(this, Flags.CAST_SHADOWS, value);
         this.dirty = true;
       }
     },
@@ -306,11 +336,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   receiveShadows: {
     get: function () {
-      return this._receiveShadows;
+      return hasFlag(this, Flags.RECEIVE_SHADOWS);
     },
     set: function (value) {
-      if (this._receiveShadows !== value) {
-        this._receiveShadows = value;
+      if (hasFlag(this, Flags.RECEIVE_SHADOWS) !== value) {
+        setFlag(this, Flags.RECEIVE_SHADOWS, value);
         this.dirty = true;
       }
     },
@@ -403,11 +433,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   executeInClosestFrustum: {
     get: function () {
-      return this._executeInClosestFrustum;
+      return hasFlag(this, Flags.EXECUTE_IN_CLOSEST_FRUSTUM);
     },
     set: function (value) {
-      if (this._executeInClosestFrustum !== value) {
-        this._executeInClosestFrustum = value;
+      if (hasFlag(this, Flags.EXECUTE_IN_CLOSEST_FRUSTUM) !== value) {
+        setFlag(this, Flags.EXECUTE_IN_CLOSEST_FRUSTUM, value);
         this.dirty = true;
       }
     },
@@ -451,11 +481,11 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   debugShowBoundingVolume: {
     get: function () {
-      return this._debugShowBoundingVolume;
+      return hasFlag(this, Flags.DEBUG_SHOW_BOUNDING_VOLUME);
     },
     set: function (value) {
-      if (this._debugShowBoundingVolume !== value) {
-        this._debugShowBoundingVolume = value;
+      if (hasFlag(this, Flags.DEBUG_SHOW_BOUNDING_VOLUME) !== value) {
+        setFlag(this, Flags.DEBUG_SHOW_BOUNDING_VOLUME, value);
         this.dirty = true;
       }
     },
@@ -504,11 +534,29 @@ Object.defineProperties(DrawCommand.prototype, {
    */
   pickOnly: {
     get: function () {
-      return this._pickOnly;
+      return hasFlag(this, Flags.PICK_ONLY);
     },
     set: function (value) {
-      if (this._pickOnly !== value) {
-        this._pickOnly = value;
+      if (hasFlag(this, Flags.PICK_ONLY) !== value) {
+        setFlag(this, Flags.PICK_ONLY, value);
+        this.dirty = true;
+      }
+    },
+  },
+  /**
+   * Whether this command should be derived to draw depth for classification of translucent primitives.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {Boolean}
+   * @default false
+   */
+  depthForTranslucentClassification: {
+    get: function () {
+      return hasFlag(this, Flags.DEPTH_FOR_TRANSLUCENT_CLASSIFICATION);
+    },
+    set: function (value) {
+      if (hasFlag(this, Flags.DEPTH_FOR_TRANSLUCENT_CLASSIFICATION) !== value) {
+        setFlag(this, Flags.DEPTH_FOR_TRANSLUCENT_CLASSIFICATION, value);
         this.dirty = true;
       }
     },
@@ -528,8 +576,6 @@ DrawCommand.shallowClone = function (command, result) {
 
   result._boundingVolume = command._boundingVolume;
   result._orientedBoundingBox = command._orientedBoundingBox;
-  result._cull = command._cull;
-  result._occlude = command._occlude;
   result._modelMatrix = command._modelMatrix;
   result._primitiveType = command._primitiveType;
   result._vertexArray = command._vertexArray;
@@ -541,14 +587,10 @@ DrawCommand.shallowClone = function (command, result) {
   result._renderState = command._renderState;
   result._framebuffer = command._framebuffer;
   result._pass = command._pass;
-  result._executeInClosestFrustum = command._executeInClosestFrustum;
   result._owner = command._owner;
-  result._debugShowBoundingVolume = command._debugShowBoundingVolume;
   result._debugOverlappingFrustums = command._debugOverlappingFrustums;
-  result._castShadows = command._castShadows;
-  result._receiveShadows = command._receiveShadows;
   result._pickId = command._pickId;
-  result._pickOnly = command._pickOnly;
+  result._flags = command._flags;
 
   result.dirty = true;
   result.lastDirtyTime = 0;

@@ -36,15 +36,15 @@
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var worldTerrain = Cesium.createWorldTerrain({
+        const worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
 
@@ -52,12 +52,46 @@
         viewer.scene.globe.enableLighting = true;
 
         // setup alternative terrain providers
-        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+        const ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
-        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+        const vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
           url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
           credit: "Terrain data courtesy VT MÄK",
         });
+
+        const arcGisProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+        });
+
+        // Sine wave
+        const customHeightmapWidth = 32;
+        const customHeightmapHeight = 32;
+        const customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider(
+          {
+            width: customHeightmapWidth,
+            height: customHeightmapHeight,
+            callback: function (x, y, level) {
+              const width = customHeightmapWidth;
+              const height = customHeightmapHeight;
+              const buffer = new Float32Array(width * height);
+
+              for (let yy = 0; yy < height; yy++) {
+                for (let xx = 0; xx < width; xx++) {
+                  const u = (x + xx / (width - 1)) / Math.pow(2, level);
+                  const v = (y + yy / (height - 1)) / Math.pow(2, level);
+
+                  const heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
+
+                  const index = yy * width + xx;
+                  buffer[index] = heightValue;
+                }
+              }
+
+              return buffer;
+            },
+          }
+        );
 
         Sandcastle.addToolbarMenu(
           [
@@ -98,9 +132,21 @@
               },
             },
             {
+              text: "CustomHeightmapTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = customHeightmapProvider;
+              },
+            },
+            {
               text: "VRTheWorldTerrainProvider",
               onselect: function () {
                 viewer.terrainProvider = vrTheWorldProvider;
+              },
+            },
+            {
+              text: "ArcGISTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = arcGisProvider;
               },
             },
           ],
@@ -118,12 +164,12 @@
             {
               text: "Half Dome",
               onselect: function () {
-                var target = new Cesium.Cartesian3(
+                const target = new Cesium.Cartesian3(
                   -2489625.0836225147,
                   -4393941.44443024,
                   3882535.9454173897
                 );
-                var offset = new Cesium.Cartesian3(
+                const offset = new Cesium.Cartesian3(
                   -6857.40902037546,
                   412.3284835694358,
                   2147.5545426812023
@@ -135,12 +181,12 @@
             {
               text: "San Francisco Bay",
               onselect: function () {
-                var target = new Cesium.Cartesian3(
+                const target = new Cesium.Cartesian3(
                   -2708814.85583248,
                   -4254159.450845907,
                   3891403.9457429945
                 );
-                var offset = new Cesium.Cartesian3(
+                const offset = new Cesium.Cartesian3(
                   70642.66030209465,
                   -31661.517948317807,
                   35505.179997143336
@@ -153,15 +199,15 @@
           "zoomButtons"
         );
 
-        var terrainSamplePositions;
+        let terrainSamplePositions;
 
         function lookAtMtEverest() {
-          var target = new Cesium.Cartesian3(
+          const target = new Cesium.Cartesian3(
             300770.50872389384,
             5634912.131394585,
             2978152.2865545116
           );
-          var offset = new Cesium.Cartesian3(
+          const offset = new Cesium.Cartesian3(
             6344.974098678562,
             -793.3419798081741,
             2499.9508860763162
@@ -171,7 +217,7 @@
         }
 
         function sampleTerrainSuccess(terrainSamplePositions) {
-          var ellipsoid = Cesium.Ellipsoid.WGS84;
+          const ellipsoid = Cesium.Ellipsoid.WGS84;
 
           //By default, Cesium does not obsure geometry
           //behind terrain. Setting this flag enables that.
@@ -180,8 +226,8 @@
           viewer.entities.suspendEvents();
           viewer.entities.removeAll();
 
-          for (var i = 0; i < terrainSamplePositions.length; ++i) {
-            var position = terrainSamplePositions[i];
+          for (let i = 0; i < terrainSamplePositions.length; ++i) {
+            const position = terrainSamplePositions[i];
 
             viewer.entities.add({
               name: position.height.toFixed(1),
@@ -208,30 +254,30 @@
         }
 
         function createGrid(rectangleHalfSize) {
-          var gridWidth = 41;
-          var gridHeight = 41;
-          var everestLatitude = Cesium.Math.toRadians(27.988257);
-          var everestLongitude = Cesium.Math.toRadians(86.925145);
-          var e = new Cesium.Rectangle(
+          const gridWidth = 41;
+          const gridHeight = 41;
+          const everestLatitude = Cesium.Math.toRadians(27.988257);
+          const everestLongitude = Cesium.Math.toRadians(86.925145);
+          const e = new Cesium.Rectangle(
             everestLongitude - rectangleHalfSize,
             everestLatitude - rectangleHalfSize,
             everestLongitude + rectangleHalfSize,
             everestLatitude + rectangleHalfSize
           );
-          var terrainSamplePositions = [];
-          for (var y = 0; y < gridHeight; ++y) {
-            for (var x = 0; x < gridWidth; ++x) {
-              var longitude = Cesium.Math.lerp(
+          const terrainSamplePositions = [];
+          for (let y = 0; y < gridHeight; ++y) {
+            for (let x = 0; x < gridWidth; ++x) {
+              const longitude = Cesium.Math.lerp(
                 e.west,
                 e.east,
                 x / (gridWidth - 1)
               );
-              var latitude = Cesium.Math.lerp(
+              const latitude = Cesium.Math.lerp(
                 e.south,
                 e.north,
                 y / (gridHeight - 1)
               );
-              var position = new Cesium.Cartographic(longitude, latitude);
+              const position = new Cesium.Cartographic(longitude, latitude);
               terrainSamplePositions.push(position);
             }
           }
@@ -257,15 +303,14 @@
         Sandcastle.addToolbarButton(
           "Sample Everest Terrain at Level 9",
           function () {
-            var terrainSamplePositions = createGrid(0.005);
-            Cesium.when(
+            const terrainSamplePositions = createGrid(0.005);
+            Promise.resolve(
               Cesium.sampleTerrain(
                 viewer.terrainProvider,
                 9,
                 terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
+              )
+            ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
           "sampleButtons"
@@ -280,14 +325,13 @@
               );
               return;
             }
-            var terrainSamplePositions = createGrid(0.0005);
-            Cesium.when(
+            const terrainSamplePositions = createGrid(0.0005);
+            Promise.resolve(
               Cesium.sampleTerrainMostDetailed(
                 viewer.terrainProvider,
                 terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
+              )
+            ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
           "sampleButtons"
@@ -295,10 +339,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -53,24 +53,24 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.camera.flyTo({
           destination: new Cesium.Rectangle.fromDegrees(-84, 43, -80, 47),
         });
 
-        var layers = viewer.imageryLayers;
+        const layers = viewer.imageryLayers;
         layers.removeAll();
 
-        var layerLinear = layers.addImageryProvider(
+        const layerLinear = layers.addImageryProvider(
           new Cesium.TileMapServiceImageryProvider({
             url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
           })
         );
 
-        var layerNearest = layers.addImageryProvider(
+        const layerNearest = layers.addImageryProvider(
           new Cesium.TileMapServiceImageryProvider({
             url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
           })
@@ -84,13 +84,13 @@
 
         // The remaining code installs a split layer so the effect of the texture filters becomes apparent.
 
-        layerNearest.splitDirection = Cesium.ImagerySplitDirection.RIGHT;
+        layerNearest.splitDirection = Cesium.SplitDirection.RIGHT;
 
-        var slider = document.getElementById("slider");
-        viewer.scene.imagerySplitPosition =
+        const slider = document.getElementById("slider");
+        viewer.scene.splitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
 
-        var dragStartX = 0;
+        let dragStartX = 0;
 
         document
           .getElementById("slider")
@@ -102,25 +102,25 @@
         }
 
         function mouseDown(e) {
-          var slider = document.getElementById("slider");
+          const slider = document.getElementById("slider");
           dragStartX = e.clientX - slider.offsetLeft;
           window.addEventListener("mousemove", sliderMove, true);
         }
 
         function sliderMove(e) {
-          var slider = document.getElementById("slider");
-          var splitPosition =
+          const slider = document.getElementById("slider");
+          const splitPosition =
             (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
-          slider.style.left = 100.0 * splitPosition + "%";
-          viewer.scene.imagerySplitPosition = splitPosition;
+          slider.style.left = `${100.0 * splitPosition}%`;
+          viewer.scene.splitPosition = splitPosition;
         }
         //Sandcastle_End
 
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

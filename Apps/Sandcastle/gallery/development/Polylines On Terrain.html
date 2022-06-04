@@ -50,15 +50,15 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var worldTerrain = Cesium.createWorldTerrain({
+        const worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
 
@@ -68,20 +68,20 @@
           );
         }
 
-        var polylineIds = ["polyline1", "polyline2"];
-        var groundPrimitiveId = "ground primitive";
-        var selectedId = polylineIds[0];
-        var polylineOnTerrainPrimitive;
-        var groundPrimitiveOnTop = false;
+        const polylineIds = ["polyline1", "polyline2"];
+        const groundPrimitiveId = "ground primitive";
+        let selectedId = polylineIds[0];
+        let polylineOnTerrainPrimitive;
+        let groundPrimitiveOnTop = false;
 
-        var lineWidth = 4.0;
-        var viewModel = {
+        let lineWidth = 4.0;
+        const viewModel = {
           lineWidth: lineWidth,
         };
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
@@ -89,7 +89,7 @@
           .subscribe(function (newValue) {
             lineWidth = parseFloat(viewModel.lineWidth);
             if (Cesium.defined(selectedId)) {
-              var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
+              const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
                 selectedId
               );
               lineWidth = parseFloat(viewModel.lineWidth);
@@ -97,10 +97,10 @@
             }
           });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
         // Add a Rectangle GroundPrimitive to demonstrate Z-indexing with GroundPrimitives
-        var rectangleGroundPrimitive = scene.groundPrimitives.add(
+        const rectangleGroundPrimitive = scene.groundPrimitives.add(
           new Cesium.GroundPrimitive({
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.RectangleGeometry({
@@ -122,9 +122,9 @@
           })
         );
 
-        var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        const leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         leftHandler.setInputAction(function (movement) {
-          var pickedObject = viewer.scene.pick(movement.position);
+          const pickedObject = viewer.scene.pick(movement.position);
           if (Cesium.defined(pickedObject)) {
             console.log(pickedObject.id);
             // If picked the ground primitive, don't do anything
@@ -132,7 +132,7 @@
               selectedId = pickedObject.id;
 
               // Sync line width in toolbar with selected
-              var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
+              const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
                 selectedId
               );
               viewModel.lineWidth = attributes.width[0];
@@ -142,7 +142,7 @@
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        var polylinePositions = Cesium.Cartesian3.fromDegreesArray([
+        const polylinePositions = Cesium.Cartesian3.fromDegreesArray([
           -112.1340164450331,
           36.05494287836128,
           -112.08821010582645,
@@ -163,7 +163,7 @@
           36.19475754001766,
         ]);
 
-        var loopPositions = Cesium.Cartesian3.fromDegreesArray([
+        const loopPositions = Cesium.Cartesian3.fromDegreesArray([
           -111.94500779274114,
           36.27638678884143,
           -111.90983004392696,
@@ -177,7 +177,7 @@
         ]);
 
         function createPolylines(debugShowShadowVolume) {
-          var instance1 = new Cesium.GeometryInstance({
+          const instance1 = new Cesium.GeometryInstance({
             geometry: new Cesium.GroundPolylineGeometry({
               positions: polylinePositions,
               loop: false,
@@ -192,7 +192,7 @@
             },
           });
 
-          var instance2 = new Cesium.GeometryInstance({
+          const instance2 = new Cesium.GeometryInstance({
             geometry: new Cesium.GroundPolylineGeometry({
               positions: loopPositions,
               loop: true,
@@ -261,7 +261,7 @@
 
         Sandcastle.addToolbarButton("Toggle instance show", function () {
           if (Cesium.defined(selectedId)) {
-            var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
+            const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
               selectedId
             );
             attributes.show = [attributes.show[0] ? 0 : 1];
@@ -270,7 +270,7 @@
 
         Sandcastle.addToolbarButton("Show all", function () {
           if (Cesium.defined(selectedId)) {
-            var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
+            let attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
               "polyline1"
             );
             attributes.show = [1];
@@ -284,8 +284,8 @@
         Sandcastle.addToolbarButton(
           "Toggle debugShowShadowVolume",
           function () {
-            var debugShowShadowVolume = !polylineOnTerrainPrimitive.debugShowShadowVolume;
-            var appearance = polylineOnTerrainPrimitive.appearance;
+            const debugShowShadowVolume = !polylineOnTerrainPrimitive.debugShowShadowVolume;
+            const appearance = polylineOnTerrainPrimitive.appearance;
             scene.groundPrimitives.remove(polylineOnTerrainPrimitive);
             createPolylines(debugShowShadowVolume);
             polylineOnTerrainPrimitive.appearance = appearance;
@@ -365,10 +365,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

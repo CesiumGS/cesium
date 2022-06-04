@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         /**
@@ -45,7 +45,7 @@
          *                        will be derived from the url.
          *
          * @example
-         * var dataSource = new Cesium.WebGLGlobeDataSource();
+         * const dataSource = new Cesium.WebGLGlobeDataSource();
          * dataSource.loadUrl('sample.json');
          * viewer.dataSources.add(dataSource);
          */
@@ -167,11 +167,11 @@
 
               //Iterate over all entities and set their show property
               //to true only if they are part of the current series.
-              var collection = this._entityCollection;
-              var entities = collection.values;
+              const collection = this._entityCollection;
+              const entities = collection.values;
               collection.suspendEvents();
-              for (var i = 0; i < entities.length; i++) {
-                var entity = entities[i];
+              for (let i = 0; i < entities.length; i++) {
+                const entity = entities[i];
                 entity.show = value === entity.seriesName;
               }
               collection.resumeEvents();
@@ -235,7 +235,7 @@
           }
 
           //Create a name based on the url
-          var name = Cesium.getFilenameFromUri(url);
+          const name = Cesium.getFilenameFromUri(url);
 
           //Set the name if it is different than the current name.
           if (this._name !== name) {
@@ -243,20 +243,20 @@
             this._changed.raiseEvent(this);
           }
 
-          //Use 'when' to load the URL into a json object
+          //Load the URL into a json object
           //and then process is with the `load` function.
-          var that = this;
+          const that = this;
           return Cesium.Resource.fetchJson(url)
             .then(function (json) {
               return that.load(json, url);
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               //Otherwise will catch any errors or exceptions that occur
               //during the promise processing. When this happens,
               //we raise the error event and reject the promise.
               this._setLoading(false);
               that._error.raiseEvent(that, error);
-              return Cesium.when.reject(error);
+              return Promise.reject(error);
             });
         };
 
@@ -276,8 +276,8 @@
           this._seriesNames.length = 0;
           this._seriesToDisplay = undefined;
 
-          var heightScale = this.heightScale;
-          var entities = this._entityCollection;
+          const heightScale = this.heightScale;
+          const entities = this._entityCollection;
 
           //It's a good idea to suspend events when making changes to a
           //large amount of entities.  This will cause events to be batched up
@@ -295,46 +295,46 @@
           // ["series2",[latitude, longitude, height, ... ]]
 
           // Loop over each series
-          for (var x = 0; x < data.length; x++) {
-            var series = data[x];
-            var seriesName = series[0];
-            var coordinates = series[1];
+          for (let x = 0; x < data.length; x++) {
+            const series = data[x];
+            const seriesName = series[0];
+            const coordinates = series[1];
 
             //Add the name of the series to our list of possible values.
             this._seriesNames.push(seriesName);
 
             //Make the first series the visible one by default
-            var show = x === 0;
+            const show = x === 0;
             if (show) {
               this._seriesToDisplay = seriesName;
             }
 
             //Now loop over each coordinate in the series and create
             // our entities from the data.
-            for (var i = 0; i < coordinates.length; i += 3) {
-              var latitude = coordinates[i];
-              var longitude = coordinates[i + 1];
-              var height = coordinates[i + 2];
+            for (let i = 0; i < coordinates.length; i += 3) {
+              const latitude = coordinates[i];
+              const longitude = coordinates[i + 1];
+              const height = coordinates[i + 2];
 
               //Ignore lines of zero height.
               if (height === 0) {
                 continue;
               }
 
-              var color = Cesium.Color.fromHsl(0.6 - height * 0.5, 1.0, 0.5);
-              var surfacePosition = Cesium.Cartesian3.fromDegrees(
+              const color = Cesium.Color.fromHsl(0.6 - height * 0.5, 1.0, 0.5);
+              const surfacePosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
                 0
               );
-              var heightPosition = Cesium.Cartesian3.fromDegrees(
+              const heightPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
                 height * heightScale
               );
 
               //WebGL Globe only contains lines, so that's the only graphics we create.
-              var polyline = new Cesium.PolylineGraphics();
+              const polyline = new Cesium.PolylineGraphics();
               polyline.material = new Cesium.ColorMaterialProperty(color);
               polyline.width = new Cesium.ConstantProperty(2);
               polyline.arcType = new Cesium.ConstantProperty(
@@ -346,8 +346,8 @@
               ]);
 
               //The polyline instance itself needs to be on an entity.
-              var entity = new Cesium.Entity({
-                id: seriesName + " index " + i.toString(),
+              const entity = new Cesium.Entity({
+                id: `${seriesName} index ${i.toString()}`,
                 show: show,
                 polyline: polyline,
                 seriesName: seriesName, //Custom property to indicate series name
@@ -373,7 +373,7 @@
 
         //Now that we've defined our own DataSource, we can use it to load
         //any JSON data formatted for WebGL Globe.
-        var dataSource = new WebGLGlobeDataSource();
+        const dataSource = new WebGLGlobeDataSource();
         dataSource
           .loadUrl("../../SampleData/population909500.json")
           .then(function () {
@@ -384,8 +384,8 @@
               };
             }
 
-            for (var i = 0; i < dataSource.seriesNames.length; i++) {
-              var seriesName = dataSource.seriesNames[i];
+            for (let i = 0; i < dataSource.seriesNames.length; i++) {
+              const seriesName = dataSource.seriesNames[i];
               Sandcastle.addToolbarButton(
                 seriesName,
                 createSeriesSetter(seriesName)
@@ -394,7 +394,7 @@
           });
 
         //Create a Viewer instances and add the DataSource.
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           animation: false,
           timeline: false,
         });
@@ -403,10 +403,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

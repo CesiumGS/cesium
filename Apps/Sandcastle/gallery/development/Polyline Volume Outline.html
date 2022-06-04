@@ -29,12 +29,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw the outline of an extruded square.
 
@@ -50,7 +50,7 @@
         // Create the polyline volume geometry instance.  The shape defined by the
         // shapePositions option will be extruded along the polylinePosition
         // The corderType option can be set to draw rounded, beveled or mitered corners.
-        var boxOutline = new Cesium.GeometryInstance({
+        const boxOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
               -89.0,
@@ -74,11 +74,11 @@
 
         // Create a 2D star shape
         function starPositions(arms, rOuter, rInner) {
-          var angle = Math.PI / arms;
-          var pos = [];
-          for (var i = 0; i < 2 * arms; i++) {
-            var r = i % 2 === 0 ? rOuter : rInner;
-            var p = new Cesium.Cartesian2(
+          const angle = Math.PI / arms;
+          const pos = [];
+          for (let i = 0; i < 2 * arms; i++) {
+            const r = i % 2 === 0 ? rOuter : rInner;
+            const p = new Cesium.Cartesian2(
               Math.cos(i * angle) * r,
               Math.sin(i * angle) * r
             );
@@ -87,7 +87,7 @@
           return pos;
         }
         // Create the polyline volume geometry instance.
-        var starOutline = new Cesium.GeometryInstance({
+        const starOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
               -95.0,
@@ -119,10 +119,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

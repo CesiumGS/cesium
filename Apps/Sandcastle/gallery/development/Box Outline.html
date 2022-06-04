@@ -29,35 +29,35 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Draw the outline of a box.
 
-        var dimensions = new Cesium.Cartesian3(400000.0, 400000.0, 400000.0);
+        const dimensions = new Cesium.Cartesian3(400000.0, 400000.0, 400000.0);
 
         // Box geometries are initially centered on the origin.
         // We can use a model matrix to position the box on the
         // globe surface.
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-106.0, 45.0);
-        var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-106.0, 45.0);
+        const boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5),
           new Cesium.Matrix4()
         );
 
         // Create a box outline geometry.
-        var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
+        const boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
           dimensions: dimensions,
         });
 
         // Create a geometry instance using the geometry
         // and model matrix created above.
-        var boxOutlineInstance = new Cesium.GeometryInstance({
+        const boxOutlineInstance = new Cesium.GeometryInstance({
           geometry: boxOutlineGeometry,
           modelMatrix: boxModelMatrix,
           attributes: {
@@ -81,10 +81,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

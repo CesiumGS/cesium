@@ -32,10 +32,10 @@
     </div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
+        const czml = [
           {
             id: "document",
             name: "CZML Custom Properties",
@@ -118,11 +118,12 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dataSource = new Cesium.CzmlDataSource();
+        const dataSource = new Cesium.CzmlDataSource();
+        const loadedPromise = dataSource.load(czml);
 
         function scaleProperty(property, scalingFactor) {
           // returns a property that scales another property by a constant factor.
@@ -134,18 +135,20 @@
         }
 
         function setExtrudedHeight(propertyName) {
-          var customPropertyObject = dataSource.entities.getById(
-            "custom_property_object"
-          );
-          var property = customPropertyObject.properties[propertyName];
-          var colorado = dataSource.entities.getById("colorado");
+          loadedPromise.then(function () {
+            const customPropertyObject = dataSource.entities.getById(
+              "custom_property_object"
+            );
+            const property = customPropertyObject.properties[propertyName];
+            const colorado = dataSource.entities.getById("colorado");
 
-          // Because the population values are so large, we scale them down
-          // by 50 so they fit on the screen.
-          // If we didn't need to scale, we could directly assign the property
-          // to extrudedHeight.
-          // colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
-          colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
+            // Because the population values are so large, we scale them down
+            // by 50 so they fit on the screen.
+            // If we didn't need to scale, we could directly assign the property
+            // to extrudedHeight.
+            // colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
+            colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
+          });
         }
 
         // Custom properties can be used as the value of graphical properties:
@@ -167,14 +170,13 @@
           "propertiesMenu"
         );
 
-        dataSource.load(czml);
         viewer.dataSources.add(dataSource);
         viewer.zoomTo(dataSource); //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

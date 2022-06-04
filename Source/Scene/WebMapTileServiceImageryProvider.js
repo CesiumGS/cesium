@@ -7,11 +7,10 @@ import Event from "../Core/Event.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 
-var defaultParameters = Object.freeze({
+const defaultParameters = Object.freeze({
   service: "WMTS",
   version: "1.0.0",
   request: "GetTile",
@@ -57,7 +56,7 @@ var defaultParameters = Object.freeze({
  *
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)
- * var shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -71,7 +70,7 @@ var defaultParameters = Object.freeze({
  *
  * @example
  * // Example 2. USGS shaded relief tiles (RESTful)
- * var shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -84,7 +83,7 @@ var defaultParameters = Object.freeze({
  *
  * @example
  * // Example 3. NASA time dynamic weather data (RESTful)
- * var times = Cesium.TimeIntervalCollection.fromIso8601({
+ * const times = Cesium.TimeIntervalCollection.fromIso8601({
  *     iso8601: '2015-07-30/2017-06-16/P1D',
  *     dataCallback: function dataCallback(interval, index) {
  *         return {
@@ -92,7 +91,7 @@ var defaultParameters = Object.freeze({
  *         };
  *     }
  * });
- * var weather = new Cesium.WebMapTileServiceImageryProvider({
+ * const weather = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
  *     layer : 'AMSR2_Snow_Water_Equivalent',
  *     style : 'default',
@@ -223,13 +222,21 @@ function WebMapTileServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(options.url);
 
-  var style = options.style;
-  var tileMatrixSetID = options.tileMatrixSetID;
-  var url = resource.url;
-  if (url.indexOf("{") >= 0) {
-    var templateValues = {
+  const style = options.style;
+  const tileMatrixSetID = options.tileMatrixSetID;
+  const url = resource.url;
+
+  const bracketMatch = url.match(/{/g);
+  if (
+    !defined(bracketMatch) ||
+    (bracketMatch.length === 1 && /{s}/.test(url))
+  ) {
+    resource.setQueryParameters(defaultParameters);
+    this._useKvp = true;
+  } else {
+    const templateValues = {
       style: style,
       Style: style,
       TileMatrixSet: tileMatrixSetID,
@@ -237,9 +244,6 @@ function WebMapTileServiceImageryProvider(options) {
 
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
-  } else {
-    resource.setQueryParameters(defaultParameters);
-    this._useKvp = true;
   }
 
   this._resource = resource;
@@ -265,7 +269,7 @@ function WebMapTileServiceImageryProvider(options) {
   );
   this._dimensions = options.dimensions;
 
-  var that = this;
+  const that = this;
   this._reload = undefined;
   if (defined(options.times)) {
     this._timeDynamicImagery = new TimeDynamicImagery({
@@ -282,34 +286,32 @@ function WebMapTileServiceImageryProvider(options) {
     });
   }
 
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
-  var swTile = this._tilingScheme.positionToTileXY(
+  const swTile = this._tilingScheme.positionToTileXY(
     Rectangle.southwest(this._rectangle),
     this._minimumLevel
   );
-  var neTile = this._tilingScheme.positionToTileXY(
+  const neTile = this._tilingScheme.positionToTileXY(
     Rectangle.northeast(this._rectangle),
     this._minimumLevel
   );
-  var tileCount =
+  const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      "The imagery provider's rectangle and minimumLevel indicate that there are " +
-        tileCount +
-        " tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported."
+      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
     );
   }
   //>>includeEnd('debug');
 
   this._errorEvent = new Event();
 
-  var credit = options.credit;
+  const credit = options.credit;
   this._credit = typeof credit === "string" ? new Credit(credit) : credit;
 
   this._subdomains = options.subdomains;
@@ -323,15 +325,16 @@ function WebMapTileServiceImageryProvider(options) {
 }
 
 function requestImage(imageryProvider, col, row, level, request, interval) {
-  var labels = imageryProvider._tileMatrixLabels;
-  var tileMatrix = defined(labels) ? labels[level] : level.toString();
-  var subdomains = imageryProvider._subdomains;
-  var staticDimensions = imageryProvider._dimensions;
-  var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const labels = imageryProvider._tileMatrixLabels;
+  const tileMatrix = defined(labels) ? labels[level] : level.toString();
+  const subdomains = imageryProvider._subdomains;
+  const staticDimensions = imageryProvider._dimensions;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
-  var resource;
+  let resource;
+  let templateValues;
   if (!imageryProvider._useKvp) {
-    var templateValues = {
+    templateValues = {
       TileMatrix: tileMatrix,
       TileRow: row.toString(),
       TileCol: col.toString(),
@@ -352,7 +355,7 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
     }
   } else {
     // build KVP request
-    var query = {};
+    let query = {};
     query.tilematrix = tileMatrix;
     query.layer = imageryProvider._layer;
     query.style = imageryProvider._style;
@@ -368,10 +371,16 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
     if (defined(dynamicIntervalData)) {
       query = combine(query, dynamicIntervalData);
     }
+
+    templateValues = {
+      s: subdomains[(col + row + level) % subdomains.length],
+    };
+
     resource = imageryProvider._resource.getDerivedResource({
       queryParameters: query,
       request: request,
     });
+    resource.setTemplateValues(templateValues);
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);
@@ -645,10 +654,8 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
@@ -658,9 +665,9 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var result;
-  var timeDynamicImagery = this._timeDynamicImagery;
-  var currentInterval;
+  let result;
+  const timeDynamicImagery = this._timeDynamicImagery;
+  let currentInterval;
 
   // Try and load from cache
   if (defined(timeDynamicImagery)) {
@@ -690,10 +697,7 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- *                   It may also be undefined if picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   x,

@@ -4,7 +4,6 @@ import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
 import { GridImageryProvider } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/GridImageryProvider", function () {
   it("conforms to ImageryProvider interface", function () {
@@ -12,7 +11,7 @@ describe("Scene/GridImageryProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new GridImageryProvider();
+    const provider = new GridImageryProvider();
 
     return provider.readyPromise.then(function (result) {
       expect(result).toBe(true);
@@ -21,7 +20,7 @@ describe("Scene/GridImageryProvider", function () {
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var provider = new GridImageryProvider();
+    const provider = new GridImageryProvider();
 
     return pollToPromise(function () {
       return provider.ready;
@@ -31,8 +30,8 @@ describe("Scene/GridImageryProvider", function () {
   });
 
   it("can use a custom ellipsoid", function () {
-    var ellipsoid = new Ellipsoid(1, 2, 3);
-    var provider = new GridImageryProvider({
+    const ellipsoid = new Ellipsoid(1, 2, 3);
+    const provider = new GridImageryProvider({
       ellipsoid: ellipsoid,
     });
 
@@ -44,7 +43,7 @@ describe("Scene/GridImageryProvider", function () {
   });
 
   it("can provide a root tile", function () {
-    var provider = new GridImageryProvider();
+    const provider = new GridImageryProvider();
 
     return pollToPromise(function () {
       return provider.ready;
@@ -58,15 +57,17 @@ describe("Scene/GridImageryProvider", function () {
         new GeographicTilingScheme().rectangle
       );
 
-      return when(provider.requestImage(0, 0, 0), function (image) {
+      return Promise.resolve(provider.requestImage(0, 0, 0)).then(function (
+        image
+      ) {
         expect(image).toBeDefined();
       });
     });
   });
 
   it("uses alternate tiling scheme if provided", function () {
-    var tilingScheme = new WebMercatorTilingScheme();
-    var provider = new GridImageryProvider({
+    const tilingScheme = new WebMercatorTilingScheme();
+    const provider = new GridImageryProvider({
       tilingScheme: tilingScheme,
     });
 
@@ -78,7 +79,7 @@ describe("Scene/GridImageryProvider", function () {
   });
 
   it("uses tile width and height if provided", function () {
-    var provider = new GridImageryProvider({
+    const provider = new GridImageryProvider({
       tileWidth: 123,
       tileHeight: 456,
     });

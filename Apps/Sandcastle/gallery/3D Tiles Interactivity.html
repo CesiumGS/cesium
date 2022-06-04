@@ -71,39 +71,39 @@
       </div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         if (!scene.pickPositionSupported) {
           window.alert("This browser does not support pickPosition.");
         }
 
         scene.globe.depthTestAgainstTerrain = true;
 
-        var viewModel = {
+        const viewModel = {
           rightClickAction: "annotate",
           middleClickAction: "hide",
         };
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        var annotations = scene.primitives.add(new Cesium.LabelCollection());
+        const annotations = scene.primitives.add(new Cesium.LabelCollection());
 
         // Set the initial camera view to look at Manhattan
-        var initialPosition = Cesium.Cartesian3.fromDegrees(
+        const initialPosition = Cesium.Cartesian3.fromDegrees(
           -74.01881302800248,
           40.69114333714821,
           753
         );
-        var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+        const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           21.27879878293835,
           -21.34390550872461,
           0.0716951918898415
@@ -115,7 +115,7 @@
         });
 
         // Load the NYC buildings tileset.
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(75343),
         });
         scene.primitives.add(tileset);
@@ -125,15 +125,15 @@
           },
         });
 
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         handler.setInputAction(function (movement) {
-          var feature = scene.pick(movement.position);
+          const feature = scene.pick(movement.position);
           if (!Cesium.defined(feature)) {
             return;
           }
 
-          var action = viewModel.rightClickAction;
+          const action = viewModel.rightClickAction;
           if (action === "annotate") {
             annotate(movement, feature);
           } else if (action === "properties") {
@@ -144,12 +144,12 @@
         }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
         handler.setInputAction(function (movement) {
-          var feature = scene.pick(movement.position);
+          const feature = scene.pick(movement.position);
           if (!Cesium.defined(feature)) {
             return;
           }
 
-          var action = viewModel.middleClickAction;
+          const action = viewModel.middleClickAction;
           if (action === "hide") {
             feature.show = false;
           }
@@ -157,10 +157,10 @@
 
         function annotate(movement, feature) {
           if (scene.pickPositionSupported) {
-            var cartesian = scene.pickPosition(movement.position);
+            const cartesian = scene.pickPosition(movement.position);
             if (Cesium.defined(cartesian)) {
-              var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-              var height = cartographic.height.toFixed(2) + " m";
+              const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+              const height = `${cartographic.height.toFixed(2)} m`;
 
               annotations.add({
                 position: cartesian,
@@ -177,48 +177,50 @@
 
         function printProperties(movement, feature) {
           console.log("Properties:");
-          var propertyNames = feature.getPropertyNames();
-          var length = propertyNames.length;
-          for (var i = 0; i < length; ++i) {
-            var propertyName = propertyNames[i];
+          const propertyNames = feature.getPropertyNames();
+          const length = propertyNames.length;
+          for (let i = 0; i < length; ++i) {
+            const propertyName = propertyNames[i];
             console.log(
-              "  " + propertyName + ": " + feature.getProperty(propertyName)
+              `  ${propertyName}: ${feature.getProperty(propertyName)}`
             );
           }
 
           // Evaluate feature description
           console.log(
-            "Description : " + tileset.style.meta.description.evaluate(feature)
+            `Description : ${tileset.style.meta.description.evaluate(feature)}`
           );
         }
 
         function zoom(movement, feature) {
-          var longitude = Cesium.Math.toRadians(
+          const longitude = Cesium.Math.toRadians(
             feature.getProperty("Longitude")
           );
-          var latitude = Cesium.Math.toRadians(feature.getProperty("Latitude"));
-          var height = feature.getProperty("Height");
+          const latitude = Cesium.Math.toRadians(
+            feature.getProperty("Latitude")
+          );
+          const height = feature.getProperty("Height");
 
-          var positionCartographic = new Cesium.Cartographic(
+          const positionCartographic = new Cesium.Cartographic(
             longitude,
             latitude,
             height * 0.5
           );
-          var position = scene.globe.ellipsoid.cartographicToCartesian(
+          const position = scene.globe.ellipsoid.cartographicToCartesian(
             positionCartographic
           );
 
-          var camera = scene.camera;
-          var heading = camera.heading;
-          var pitch = camera.pitch;
+          const camera = scene.camera;
+          const heading = camera.heading;
+          const pitch = camera.pitch;
 
-          var offset = offsetFromHeadingPitchRange(
+          const offset = offsetFromHeadingPitchRange(
             heading,
             pitch,
             height * 2.0
           );
 
-          var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+          const transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
           Cesium.Matrix4.multiplyByPoint(transform, offset, position);
 
           camera.flyTo({
@@ -239,22 +241,22 @@
           );
           heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
 
-          var pitchQuat = Cesium.Quaternion.fromAxisAngle(
+          const pitchQuat = Cesium.Quaternion.fromAxisAngle(
             Cesium.Cartesian3.UNIT_Y,
             -pitch
           );
-          var headingQuat = Cesium.Quaternion.fromAxisAngle(
+          const headingQuat = Cesium.Quaternion.fromAxisAngle(
             Cesium.Cartesian3.UNIT_Z,
             -heading
           );
-          var rotQuat = Cesium.Quaternion.multiply(
+          const rotQuat = Cesium.Quaternion.multiply(
             headingQuat,
             pitchQuat,
             headingQuat
           );
-          var rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
+          const rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
 
-          var offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
+          const offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
           Cesium.Matrix3.multiplyByVector(rotMatrix, offset, offset);
           Cesium.Cartesian3.negate(offset, offset);
           Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
@@ -263,10 +265,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

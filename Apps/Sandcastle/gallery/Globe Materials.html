@@ -119,10 +119,10 @@
       </div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain({
             requestVertexNormals: true, //Needed to visualize slope
           }),
@@ -199,16 +199,16 @@
           });
         }
 
-        var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
-        var slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2) / 2, 0.87, 0.91, 1.0];
-        var aspectRamp = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0];
+        const elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
+        const slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2) / 2, 0.87, 0.91, 1.0];
+        const aspectRamp = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0];
         function getColorRamp(selectedShading) {
-          var ramp = document.createElement("canvas");
+          const ramp = document.createElement("canvas");
           ramp.width = 100;
           ramp.height = 1;
-          var ctx = ramp.getContext("2d");
+          const ctx = ramp.getContext("2d");
 
-          var values;
+          let values;
           if (selectedShading === "elevation") {
             values = elevationRamp;
           } else if (selectedShading === "slope") {
@@ -217,7 +217,7 @@
             values = aspectRamp;
           }
 
-          var grd = ctx.createLinearGradient(0, 0, 100, 0);
+          const grd = ctx.createLinearGradient(0, 0, 100, 0);
           grd.addColorStop(values[0], "#000000"); //black
           grd.addColorStop(values[1], "#2747E0"); //blue
           grd.addColorStop(values[2], "#D33B7D"); //pink
@@ -232,14 +232,14 @@
           return ramp;
         }
 
-        var minHeight = -414.0; // approximate dead sea elevation
-        var maxHeight = 8777.0; // approximate everest elevation
-        var contourColor = Cesium.Color.RED.clone();
-        var contourUniforms = {};
-        var shadingUniforms = {};
+        const minHeight = -414.0; // approximate dead sea elevation
+        const maxHeight = 8777.0; // approximate everest elevation
+        const contourColor = Cesium.Color.RED.clone();
+        let contourUniforms = {};
+        let shadingUniforms = {};
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           enableContour: false,
           contourSpacing: 150.0,
           contourWidth: 2.0,
@@ -256,14 +256,14 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         function updateMaterial() {
-          var hasContour = viewModel.enableContour;
-          var selectedShading = viewModel.selectedShading;
-          var globe = viewer.scene.globe;
-          var material;
+          const hasContour = viewModel.enableContour;
+          const selectedShading = viewModel.selectedShading;
+          const globe = viewer.scene.globe;
+          let material;
           if (hasContour) {
             if (selectedShading === "elevation") {
               material = getElevationContourMaterial();
@@ -420,10 +420,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

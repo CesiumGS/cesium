@@ -127,7 +127,7 @@ Object.defineProperties(Appearance.prototype, {
  * @returns {String} The full GLSL fragment shader source.
  */
 Appearance.prototype.getFragmentShaderSource = function () {
-  var parts = [];
+  const parts = [];
   if (this.flat) {
     parts.push("#define FLAT");
   }
@@ -162,8 +162,8 @@ Appearance.prototype.isTranslucent = function () {
  * @returns {Object} The render state.
  */
 Appearance.prototype.getRenderState = function () {
-  var translucent = this.isTranslucent();
-  var rs = clone(this.renderState, false);
+  const translucent = this.isTranslucent();
+  const rs = clone(this.renderState, false);
   if (translucent) {
     rs.depthMask = false;
     rs.blending = BlendingState.ALPHA_BLEND;
@@ -177,7 +177,7 @@ Appearance.prototype.getRenderState = function () {
  * @private
  */
 Appearance.getDefaultRenderState = function (translucent, closed, existing) {
-  var rs = {
+  let rs = {
     depthTest: {
       enabled: true,
     },

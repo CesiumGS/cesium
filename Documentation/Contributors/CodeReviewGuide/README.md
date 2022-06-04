@@ -1,3 +1,5 @@
+# Code Review Guide
+
 All code in CesiumJS is publicly peer reviewed. We review code to share knowledge, foster shared ownership, and improve code quality and consistency.
 
 This guide describes best practices for code reviewers.
@@ -26,7 +28,7 @@ This guide describes best practices for code reviewers.
 - Provide motivation when it isn't obvious. Suggest why a change should be made.
 - Point contributors to a relevant part of the [Coding Guide](../CodingGuide/README.md) when useful.
 - _Be concise_. Make every word tell.
-- _Be responsive_. The contributor should expect prompt feedback from reviewers, and reviewers should expect the same. If not, politely ask for it. We all want pull requests to get into master. Strive to respond to mentions and requests within 24 hours.
+- _Be responsive_. The contributor should expect prompt feedback from reviewers, and reviewers should expect the same. If not, politely ask for it. We all want pull requests to get into main. Strive to respond to mentions and requests within 24 hours.
 - _Limit the scope_. As a reviewer, it is easy to want to increase the scope, e.g., "why don't we do this everywhere?". These are often fair questions but can be better served by submitting a separate issue to allow more incremental pull requests.
 - Bring others into the conversation sparingly. If someone has expertise with a particular language feature or problem domain under review, invite them to comment with an `@mention`.
 - If an experienced contributor makes a occasional whitespace or trivial mistake, just fix it to save on noise and speedup the review.
@@ -69,7 +71,7 @@ The tips below will use the following keywords:
 If you are new to git, it may be useful to create a backup of your branch in case something goes wrong.
 To do that, use:
 
-```
+```bash
 git branch # This should show that you are currently on "mybranch", otherwise use "git checkout mybranch"
 git checkout -b mybranch-backup # This should change your current branch to "mybranch-backup", which should be identical to "mybranch"
 # if you wish to be even more conservative, you can push this to remote
@@ -81,7 +83,7 @@ git checkout mybranch
 
 ### You want to squash all the commits in your pull request into a single commit
 
-```
+```bash
 git fetch --all # Ensures remote data is up to date
 git merge origin/target # Merge the remote origin target with the local branch
 git reset origin/target # This will reset your branch the same as origin/target, with your changes unstaged.
@@ -106,7 +108,7 @@ Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-
 
 With merge, your commits will become interleaved with other target branch commits based on timestamp.
 
-```
+```bash
 git fetch --all # Fetch updates from all remotes
 git merge upstream/target
 git push origin mybranch # Does not require force push as it does not change history
@@ -116,13 +118,15 @@ git push origin mybranch # Does not require force push as it does not change his
 
 With rebase, your commits will be added on top of the target branch and will look sequential.
 
-```
+```bash
 git fetch --all # Fetch updates from all remotes
 git rebase -i upstream/target
 git push -f origin mybranch # Requires force push as it is changing existing history on remote
 ```
 
 ### You want to checkout a pull-request for review
+
+#### Using hub
 
 GitHub's [hub](https://hub.github.com) makes checking-out PR's simple. For example, run:
 
@@ -135,6 +139,26 @@ forks with:
 
 which will automatically add these repos as remotes and fetch them. See the hub [open-source maintainer section](https://hub.github.com/#maintainer)
 for more info.
+
+#### Using Github CLI
+
+[GitHub CLI](https://cli.github.com/) allows you to checkout a PR using either its ID number, its URL, or its branch name. For instance,
+
+`gh pr checkout 3941`
+
+will checkout pull request [#3941](https://github.com/CesiumGS/cesium/pull/3941).
+
+More details can be found [here](https://cli.github.com/manual/gh_pr_checkout).
+
+#### Using git
+
+You can also use regular git commands to checkout a PR. First, fetch the pull request using its ID number and create a new branch for it.
+
+`git fetch origin pull/ID/head:BRANCHNAME`
+
+Then, you can switch to the newly created branch.
+
+`git checkout BRANCHNAME`
 
 ## Resources
 

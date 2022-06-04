@@ -6,6 +6,14 @@ attribute vec4 position3DAndHeight;
 attribute vec4 textureCoordAndEncodedNormals;
 #endif
 
+#ifdef GEODETIC_SURFACE_NORMALS
+attribute vec3 geodeticSurfaceNormal;
+#endif
+
+#ifdef EXAGGERATION
+uniform vec2 u_terrainExaggerationAndRelativeHeight;
+#endif
+
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
 uniform mat4 u_modifiedModelViewProjection;
@@ -33,8 +41,9 @@ varying float v_distance;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-varying vec3 v_fogMieColor;
-varying vec3 v_fogRayleighColor;
+varying vec3 v_atmosphereRayleighColor;
+varying vec3 v_atmosphereMieColor;
+varying float v_atmosphereOpacity;
 #endif
 
 // These functions are generated at runtime.
@@ -156,25 +165,71 @@ void main()
 #endif
 
     vec3 position3DWC = position + u_center3D;
+
+#ifdef GEODETIC_SURFACE_NORMALS
+    vec3 ellipsoidNormal = geodeticSurfaceNormal;
+#else
+    vec3 ellipsoidNormal = normalize(position3DWC);
+#endif
+
+#if defined(EXAGGERATION) && defined(GEODETIC_SURFACE_NORMALS)
+    float exaggeration = u_terrainExaggerationAndRelativeHeight.x;
+    float relativeHeight = u_terrainExaggerationAndRelativeHeight.y;
+    float newHeight = (height - relativeHeight) * exaggeration + relativeHeight;
+
+    // stop from going through center of earth
+    float minRadius = min(min(czm_ellipsoidRadii.x, czm_ellipsoidRadii.y), czm_ellipsoidRadii.z);
+    newHeight = max(newHeight, -minRadius);
+
+    vec3 offset = ellipsoidNormal * (newHeight - height);
+    position += offset;
+    position3DWC += offset;
+    height = newHeight;
+#endif
+
     gl_Position = getPosition(position, height, textureCoordinates);
+
+    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
+    v_positionMC = position3DWC;  // position in model coordinates
 
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
-    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
-    v_positionMC = position3DWC;  // position in model coordinates
     vec3 normalMC = czm_octDecode(encodedNormal);
-    v_normalMC = normalMC;
-    v_normalEC = czm_normal3D * v_normalMC;
-#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION) || defined(HDR)
-    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
-    v_positionMC = position3DWC;  // position in model coordinates
+
+#if defined(EXAGGERATION) && defined(GEODETIC_SURFACE_NORMALS)
+    vec3 projection = dot(normalMC, ellipsoidNormal) * ellipsoidNormal;
+    vec3 rejection = normalMC - projection;
+    normalMC = normalize(projection + rejection * exaggeration);
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
-    AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false, vec3(0.0));
-    v_fogMieColor = atmosFogColor.mie;
-    v_fogRayleighColor = atmosFogColor.rayleigh;
+    v_normalMC = normalMC;
+    v_normalEC = czm_normal3D * v_normalMC;
+#endif
+
+#if defined(FOG) || (defined(GROUND_ATMOSPHERE) && !defined(PER_FRAGMENT_GROUND_ATMOSPHERE))
+
+    bool dynamicLighting = false;
+
+    #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+        dynamicLighting = true;
+    #endif
+
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
+#endif
+
+    vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(position3DWC));
+
+    computeAtmosphereScattering(
+        position3DWC,
+        lightDirection,
+        v_atmosphereRayleighColor,
+        v_atmosphereMieColor,
+        v_atmosphereOpacity
+    );
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
@@ -184,7 +239,6 @@ void main()
 #ifdef APPLY_MATERIAL
     float northPoleZ = czm_ellipsoidRadii.z;
     vec3 northPolePositionMC = vec3(0.0, 0.0, northPoleZ);
-    vec3 ellipsoidNormal = normalize(v_positionMC); // For a sphere this is correct, but not generally for an ellipsoid.
     vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal));
     float dotProd = abs(dot(ellipsoidNormal, v_normalMC));
     v_slope = acos(dotProd);

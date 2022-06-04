@@ -89,33 +89,36 @@ function validateStencilOperation(stencilOperation) {
  * @private
  */
 function RenderState(renderState) {
-  var rs = defaultValue(renderState, defaultValue.EMPTY_OBJECT);
-  var cull = defaultValue(rs.cull, defaultValue.EMPTY_OBJECT);
-  var polygonOffset = defaultValue(rs.polygonOffset, defaultValue.EMPTY_OBJECT);
-  var scissorTest = defaultValue(rs.scissorTest, defaultValue.EMPTY_OBJECT);
-  var scissorTestRectangle = defaultValue(
+  const rs = defaultValue(renderState, defaultValue.EMPTY_OBJECT);
+  const cull = defaultValue(rs.cull, defaultValue.EMPTY_OBJECT);
+  const polygonOffset = defaultValue(
+    rs.polygonOffset,
+    defaultValue.EMPTY_OBJECT
+  );
+  const scissorTest = defaultValue(rs.scissorTest, defaultValue.EMPTY_OBJECT);
+  const scissorTestRectangle = defaultValue(
     scissorTest.rectangle,
     defaultValue.EMPTY_OBJECT
   );
-  var depthRange = defaultValue(rs.depthRange, defaultValue.EMPTY_OBJECT);
-  var depthTest = defaultValue(rs.depthTest, defaultValue.EMPTY_OBJECT);
-  var colorMask = defaultValue(rs.colorMask, defaultValue.EMPTY_OBJECT);
-  var blending = defaultValue(rs.blending, defaultValue.EMPTY_OBJECT);
-  var blendingColor = defaultValue(blending.color, defaultValue.EMPTY_OBJECT);
-  var stencilTest = defaultValue(rs.stencilTest, defaultValue.EMPTY_OBJECT);
-  var stencilTestFrontOperation = defaultValue(
+  const depthRange = defaultValue(rs.depthRange, defaultValue.EMPTY_OBJECT);
+  const depthTest = defaultValue(rs.depthTest, defaultValue.EMPTY_OBJECT);
+  const colorMask = defaultValue(rs.colorMask, defaultValue.EMPTY_OBJECT);
+  const blending = defaultValue(rs.blending, defaultValue.EMPTY_OBJECT);
+  const blendingColor = defaultValue(blending.color, defaultValue.EMPTY_OBJECT);
+  const stencilTest = defaultValue(rs.stencilTest, defaultValue.EMPTY_OBJECT);
+  const stencilTestFrontOperation = defaultValue(
     stencilTest.frontOperation,
     defaultValue.EMPTY_OBJECT
   );
-  var stencilTestBackOperation = defaultValue(
+  const stencilTestBackOperation = defaultValue(
     stencilTest.backOperation,
     defaultValue.EMPTY_OBJECT
   );
-  var sampleCoverage = defaultValue(
+  const sampleCoverage = defaultValue(
     rs.sampleCoverage,
     defaultValue.EMPTY_OBJECT
   );
-  var viewport = rs.viewport;
+  const viewport = rs.viewport;
 
   this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
   this.cull = {
@@ -346,16 +349,12 @@ function RenderState(renderState) {
 
     if (this.viewport.width > ContextLimits.maximumViewportWidth) {
       throw new DeveloperError(
-        "renderState.viewport.width must be less than or equal to the maximum viewport width (" +
-          ContextLimits.maximumViewportWidth.toString() +
-          ").  Check maximumViewportWidth."
+        `renderState.viewport.width must be less than or equal to the maximum viewport width (${ContextLimits.maximumViewportWidth.toString()}).  Check maximumViewportWidth.`
       );
     }
     if (this.viewport.height > ContextLimits.maximumViewportHeight) {
       throw new DeveloperError(
-        "renderState.viewport.height must be less than or equal to the maximum viewport height (" +
-          ContextLimits.maximumViewportHeight.toString() +
-          ").  Check maximumViewportHeight."
+        `renderState.viewport.height must be less than or equal to the maximum viewport height (${ContextLimits.maximumViewportHeight.toString()}).  Check maximumViewportHeight.`
       );
     }
   }
@@ -365,8 +364,8 @@ function RenderState(renderState) {
   this._applyFunctions = [];
 }
 
-var nextRenderStateId = 0;
-var renderStateCache = {};
+let nextRenderStateId = 0;
+let renderStateCache = {};
 
 /**
  * Validates and then finds or creates an immutable render state, which defines the pipeline
@@ -405,7 +404,7 @@ var renderStateCache = {};
  *
  *
  * @example
- * var defaults = {
+ * const defaults = {
  *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
  *     cull : {
  *         enabled : false,
@@ -481,7 +480,7 @@ var renderStateCache = {};
  *      }
  * };
  *
- * var rs = RenderState.fromCache(defaults);
+ * const rs = RenderState.fromCache(defaults);
  *
  * @see DrawCommand
  * @see ClearCommand
@@ -489,16 +488,16 @@ var renderStateCache = {};
  * @private
  */
 RenderState.fromCache = function (renderState) {
-  var partialKey = JSON.stringify(renderState);
-  var cachedState = renderStateCache[partialKey];
+  const partialKey = JSON.stringify(renderState);
+  let cachedState = renderStateCache[partialKey];
   if (defined(cachedState)) {
     ++cachedState.referenceCount;
     return cachedState.state;
   }
 
   // Cache miss.  Fully define render state and try again.
-  var states = new RenderState(renderState);
-  var fullKey = JSON.stringify(states);
+  let states = new RenderState(renderState);
+  const fullKey = JSON.stringify(states);
   cachedState = renderStateCache[fullKey];
   if (!defined(cachedState)) {
     states.id = nextRenderStateId++;
@@ -529,13 +528,13 @@ RenderState.fromCache = function (renderState) {
  * @private
  */
 RenderState.removeFromCache = function (renderState) {
-  var states = new RenderState(renderState);
-  var fullKey = JSON.stringify(states);
-  var fullCachedState = renderStateCache[fullKey];
+  const states = new RenderState(renderState);
+  const fullKey = JSON.stringify(states);
+  const fullCachedState = renderStateCache[fullKey];
 
   // decrement partial key reference count
-  var partialKey = JSON.stringify(renderState);
-  var cachedState = renderStateCache[partialKey];
+  const partialKey = JSON.stringify(renderState);
+  const cachedState = renderStateCache[partialKey];
   if (defined(cachedState)) {
     --cachedState.referenceCount;
 
@@ -585,8 +584,8 @@ function applyFrontFace(gl, renderState) {
 }
 
 function applyCull(gl, renderState) {
-  var cull = renderState.cull;
-  var enabled = cull.enabled;
+  const cull = renderState.cull;
+  const enabled = cull.enabled;
 
   enableOrDisable(gl, gl.CULL_FACE, enabled);
 
@@ -600,8 +599,8 @@ function applyLineWidth(gl, renderState) {
 }
 
 function applyPolygonOffset(gl, renderState) {
-  var polygonOffset = renderState.polygonOffset;
-  var enabled = polygonOffset.enabled;
+  const polygonOffset = renderState.polygonOffset;
+  const enabled = polygonOffset.enabled;
 
   enableOrDisable(gl, gl.POLYGON_OFFSET_FILL, enabled);
 
@@ -611,15 +610,15 @@ function applyPolygonOffset(gl, renderState) {
 }
 
 function applyScissorTest(gl, renderState, passState) {
-  var scissorTest = renderState.scissorTest;
-  var enabled = defined(passState.scissorTest)
+  const scissorTest = renderState.scissorTest;
+  const enabled = defined(passState.scissorTest)
     ? passState.scissorTest.enabled
     : scissorTest.enabled;
 
   enableOrDisable(gl, gl.SCISSOR_TEST, enabled);
 
   if (enabled) {
-    var rectangle = defined(passState.scissorTest)
+    const rectangle = defined(passState.scissorTest)
       ? passState.scissorTest.rectangle
       : scissorTest.rectangle;
     gl.scissor(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
@@ -627,13 +626,13 @@ function applyScissorTest(gl, renderState, passState) {
 }
 
 function applyDepthRange(gl, renderState) {
-  var depthRange = renderState.depthRange;
+  const depthRange = renderState.depthRange;
   gl.depthRange(depthRange.near, depthRange.far);
 }
 
 function applyDepthTest(gl, renderState) {
-  var depthTest = renderState.depthTest;
-  var enabled = depthTest.enabled;
+  const depthTest = renderState.depthTest;
+  const enabled = depthTest.enabled;
 
   enableOrDisable(gl, gl.DEPTH_TEST, enabled);
 
@@ -643,7 +642,7 @@ function applyDepthTest(gl, renderState) {
 }
 
 function applyColorMask(gl, renderState) {
-  var colorMask = renderState.colorMask;
+  const colorMask = renderState.colorMask;
   gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
 }
 
@@ -660,8 +659,8 @@ function applyBlendingColor(gl, color) {
 }
 
 function applyBlending(gl, renderState, passState) {
-  var blending = renderState.blending;
-  var enabled = defined(passState.blendingEnabled)
+  const blending = renderState.blending;
+  const enabled = defined(passState.blendingEnabled)
     ? passState.blendingEnabled
     : blending.enabled;
 
@@ -680,16 +679,16 @@ function applyBlending(gl, renderState, passState) {
 }
 
 function applyStencilTest(gl, renderState) {
-  var stencilTest = renderState.stencilTest;
-  var enabled = stencilTest.enabled;
+  const stencilTest = renderState.stencilTest;
+  const enabled = stencilTest.enabled;
 
   enableOrDisable(gl, gl.STENCIL_TEST, enabled);
 
   if (enabled) {
-    var frontFunction = stencilTest.frontFunction;
-    var backFunction = stencilTest.backFunction;
-    var reference = stencilTest.reference;
-    var mask = stencilTest.mask;
+    const frontFunction = stencilTest.frontFunction;
+    const backFunction = stencilTest.backFunction;
+    const reference = stencilTest.reference;
+    const mask = stencilTest.mask;
 
     // Section 6.8 of the WebGL spec requires the reference and masks to be the same for
     // front- and back-face tests.  This call prevents invalid operation errors when calling
@@ -698,10 +697,10 @@ function applyStencilTest(gl, renderState) {
     gl.stencilFuncSeparate(gl.BACK, backFunction, reference, mask);
     gl.stencilFuncSeparate(gl.FRONT, frontFunction, reference, mask);
 
-    var frontOperation = stencilTest.frontOperation;
-    var frontOperationFail = frontOperation.fail;
-    var frontOperationZFail = frontOperation.zFail;
-    var frontOperationZPass = frontOperation.zPass;
+    const frontOperation = stencilTest.frontOperation;
+    const frontOperationFail = frontOperation.fail;
+    const frontOperationZFail = frontOperation.zFail;
+    const frontOperationZPass = frontOperation.zPass;
 
     gl.stencilOpSeparate(
       gl.FRONT,
@@ -710,10 +709,10 @@ function applyStencilTest(gl, renderState) {
       frontOperationZPass
     );
 
-    var backOperation = stencilTest.backOperation;
-    var backOperationFail = backOperation.fail;
-    var backOperationZFail = backOperation.zFail;
-    var backOperationZPass = backOperation.zPass;
+    const backOperation = stencilTest.backOperation;
+    const backOperationFail = backOperation.fail;
+    const backOperationZFail = backOperation.zFail;
+    const backOperationZPass = backOperation.zPass;
 
     gl.stencilOpSeparate(
       gl.BACK,
@@ -725,8 +724,8 @@ function applyStencilTest(gl, renderState) {
 }
 
 function applySampleCoverage(gl, renderState) {
-  var sampleCoverage = renderState.sampleCoverage;
-  var enabled = sampleCoverage.enabled;
+  const sampleCoverage = renderState.sampleCoverage;
+  const enabled = sampleCoverage.enabled;
 
   enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
 
@@ -735,10 +734,10 @@ function applySampleCoverage(gl, renderState) {
   }
 }
 
-var scratchViewport = new BoundingRectangle();
+const scratchViewport = new BoundingRectangle();
 
 function applyViewport(gl, renderState, passState) {
-  var viewport = defaultValue(renderState.viewport, passState.viewport);
+  let viewport = defaultValue(renderState.viewport, passState.viewport);
   if (!defined(viewport)) {
     viewport = scratchViewport;
     viewport.width = passState.context.drawingBufferWidth;
@@ -767,7 +766,7 @@ RenderState.apply = function (gl, renderState, passState) {
 };
 
 function createFuncs(previousState, nextState) {
-  var funcs = [];
+  const funcs = [];
 
   if (previousState.frontFace !== nextState.frontFace) {
     funcs.push(applyFrontFace);
@@ -871,22 +870,22 @@ RenderState.partialApply = function (
     // containing functions that make the minimum number of WebGL calls when transitioning from one state
     // to the other.  In practice, this works well since state-to-state transitions generally only require a
     // few WebGL calls, especially if commands are stored by state.
-    var funcs = renderState._applyFunctions[previousRenderState.id];
+    let funcs = renderState._applyFunctions[previousRenderState.id];
     if (!defined(funcs)) {
       funcs = createFuncs(previousRenderState, renderState);
       renderState._applyFunctions[previousRenderState.id] = funcs;
     }
 
-    var len = funcs.length;
-    for (var i = 0; i < len; ++i) {
+    const len = funcs.length;
+    for (let i = 0; i < len; ++i) {
       funcs[i](gl, renderState);
     }
   }
 
-  var previousScissorTest = defined(previousPassState.scissorTest)
+  const previousScissorTest = defined(previousPassState.scissorTest)
     ? previousPassState.scissorTest
     : previousRenderState.scissorTest;
-  var scissorTest = defined(passState.scissorTest)
+  const scissorTest = defined(passState.scissorTest)
     ? passState.scissorTest
     : renderState.scissorTest;
 
@@ -896,10 +895,10 @@ RenderState.partialApply = function (
     applyScissorTest(gl, renderState, passState);
   }
 
-  var previousBlendingEnabled = defined(previousPassState.blendingEnabled)
+  const previousBlendingEnabled = defined(previousPassState.blendingEnabled)
     ? previousPassState.blendingEnabled
     : previousRenderState.blending.enabled;
-  var blendingEnabled = defined(passState.blendingEnabled)
+  const blendingEnabled = defined(passState.blendingEnabled)
     ? passState.blendingEnabled
     : renderState.blending.enabled;
   if (

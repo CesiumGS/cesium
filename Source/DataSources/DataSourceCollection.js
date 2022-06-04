@@ -4,7 +4,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * A collection of {@link DataSource} instances.
@@ -86,9 +85,9 @@ DataSourceCollection.prototype.add = function (dataSource) {
   }
   //>>includeEnd('debug');
 
-  var that = this;
-  var dataSources = this._dataSources;
-  return when(dataSource, function (value) {
+  const that = this;
+  const dataSources = this._dataSources;
+  return Promise.resolve(dataSource).then(function (value) {
     //Only add the data source if removeAll has not been called
     //Since it was added.
     if (dataSources === that._dataSources) {
@@ -110,7 +109,7 @@ DataSourceCollection.prototype.add = function (dataSource) {
 DataSourceCollection.prototype.remove = function (dataSource, destroy) {
   destroy = defaultValue(destroy, false);
 
-  var index = this._dataSources.indexOf(dataSource);
+  const index = this._dataSources.indexOf(dataSource);
   if (index !== -1) {
     this._dataSources.splice(index, 1);
     this._dataSourceRemoved.raiseEvent(this, dataSource);
@@ -133,9 +132,9 @@ DataSourceCollection.prototype.remove = function (dataSource, destroy) {
 DataSourceCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, false);
 
-  var dataSources = this._dataSources;
-  for (var i = 0, len = dataSources.length; i < len; ++i) {
-    var dataSource = dataSources[i];
+  const dataSources = this._dataSources;
+  for (let i = 0, len = dataSources.length; i < len; ++i) {
+    const dataSource = dataSources[i];
     this._dataSourceRemoved.raiseEvent(this, dataSource);
 
     if (destroy && typeof dataSource.destroy === "function") {
@@ -206,7 +205,7 @@ function getIndex(dataSources, dataSource) {
   }
   //>>includeEnd('debug');
 
-  var index = dataSources.indexOf(dataSource);
+  const index = dataSources.indexOf(dataSource);
 
   //>>includeStart('debug', pragmas.debug);
   if (index === -1) {
@@ -218,8 +217,8 @@ function getIndex(dataSources, dataSource) {
 }
 
 function swapDataSources(collection, i, j) {
-  var arr = collection._dataSources;
-  var length = arr.length - 1;
+  const arr = collection._dataSources;
+  const length = arr.length - 1;
   i = CesiumMath.clamp(i, 0, length);
   j = CesiumMath.clamp(j, 0, length);
 
@@ -227,7 +226,7 @@ function swapDataSources(collection, i, j) {
     return;
   }
 
-  var temp = arr[i];
+  const temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 
@@ -243,7 +242,7 @@ function swapDataSources(collection, i, j) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.raise = function (dataSource) {
-  var index = getIndex(this._dataSources, dataSource);
+  const index = getIndex(this._dataSources, dataSource);
   swapDataSources(this, index, index + 1);
 };
 
@@ -256,7 +255,7 @@ DataSourceCollection.prototype.raise = function (dataSource) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.lower = function (dataSource) {
-  var index = getIndex(this._dataSources, dataSource);
+  const index = getIndex(this._dataSources, dataSource);
   swapDataSources(this, index, index - 1);
 };
 
@@ -269,7 +268,7 @@ DataSourceCollection.prototype.lower = function (dataSource) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.raiseToTop = function (dataSource) {
-  var index = getIndex(this._dataSources, dataSource);
+  const index = getIndex(this._dataSources, dataSource);
   if (index === this._dataSources.length - 1) {
     return;
   }
@@ -292,7 +291,7 @@ DataSourceCollection.prototype.raiseToTop = function (dataSource) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.lowerToBottom = function (dataSource) {
-  var index = getIndex(this._dataSources, dataSource);
+  const index = getIndex(this._dataSources, dataSource);
   if (index === 0) {
     return;
   }

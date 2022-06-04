@@ -11,7 +11,7 @@ import BlendFunction from "./BlendFunction.js";
  *
  * @namespace
  */
-var BlendingState = {
+const BlendingState = {
   /**
    * Blending is disabled.
    *

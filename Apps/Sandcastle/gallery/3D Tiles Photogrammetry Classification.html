@@ -33,25 +33,25 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // An example of using a b3dm tilset to classify another b3dm tileset.
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
         // A normal b3dm tileset of photogrammetry
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(40866),
         });
         viewer.scene.primitives.add(tileset);
         viewer.zoomTo(tileset);
 
-        var classifcationTilesetUrl =
+        const classifcationTilesetUrl =
           "../../SampleData/Cesium3DTiles/Classification/Photogrammetry/tileset.json";
         // A b3dm tileset used to classify the photogrammetry tileset
-        var classificationTileset = new Cesium.Cesium3DTileset({
+        const classificationTileset = new Cesium.Cesium3DTileset({
           url: classifcationTilesetUrl,
           classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
         });
@@ -61,7 +61,7 @@
         viewer.scene.primitives.add(classificationTileset);
 
         // The same b3dm tileset used for classification, but rendered normally for comparison.
-        var nonClassificationTileset = new Cesium.Cesium3DTileset({
+        const nonClassificationTileset = new Cesium.Cesium3DTileset({
           url: classifcationTilesetUrl,
           show: false,
         });
@@ -78,10 +78,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

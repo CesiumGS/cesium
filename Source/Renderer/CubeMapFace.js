@@ -54,11 +54,12 @@ Object.defineProperties(CubeMapFace.prototype, {
 
 /**
  * Copies texels from the source to the cubemap's face.
- *
- * @param {Object} source The source ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, or an object with a width, height, and typed array as shown in the example.
- * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
- * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
- *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, {@link HTMLVideoElement},
+ *                              or an object with a width, height, and arrayBufferView properties.
+ * @param {Number} [options.xOffset=0] An offset in the x direction in the cubemap where copying begins.
+ * @param {Number} [options.yOffset=0] An offset in the y direction in the cubemap where copying begins.
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
  * @exception {DeveloperError} xOffset must be greater than or equal to zero.
  * @exception {DeveloperError} yOffset must be greater than or equal to zero.
  * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
@@ -67,57 +68,69 @@ Object.defineProperties(CubeMapFace.prototype, {
  *
  * @example
  * // Create a cubemap with 1x1 faces, and make the +x face red.
- * var cubeMap = new CubeMap({
+ * const cubeMap = new CubeMap({
  *   context : context
  *   width : 1,
  *   height : 1
  * });
  * cubeMap.positiveX.copyFrom({
- *   width : 1,
- *   height : 1,
- *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
+ *   source: {
+ *     width : 1,
+ *     height : 1,
+ *     arrayBufferView : new Uint8Array([255, 0, 0, 255])
+ *   }
  * });
  */
-CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
+CubeMapFace.prototype.copyFrom = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options", options);
+  //>>includeEnd('debug');
+
+  const xOffset = defaultValue(options.xOffset, 0);
+  const yOffset = defaultValue(options.yOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("source", source);
+  Check.defined("options.source", options.source);
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
-  if (xOffset + source.width > this._size) {
+  if (xOffset + options.source.width > this._size) {
     throw new DeveloperError(
-      "xOffset + source.width must be less than or equal to width."
+      "xOffset + options.source.width must be less than or equal to width."
     );
   }
-  if (yOffset + source.height > this._size) {
+  if (yOffset + options.source.height > this._size) {
     throw new DeveloperError(
-      "yOffset + source.height must be less than or equal to height."
+      "yOffset + options.source.height must be less than or equal to height."
     );
   }
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
-  var targetFace = this._targetFace;
+  const source = options.source;
+
+  const gl = this._context._gl;
+  const target = this._textureTarget;
+  const targetFace = this._targetFace;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
 
-  var width = source.width;
-  var height = source.height;
-  var arrayBufferView = source.arrayBufferView;
+  const width = source.width;
+  const height = source.height;
+  let arrayBufferView = source.arrayBufferView;
 
-  var size = this._size;
-  var pixelFormat = this._pixelFormat;
-  var internalFormat = this._internalFormat;
-  var pixelDatatype = this._pixelDatatype;
+  const size = this._size;
+  const pixelFormat = this._pixelFormat;
+  const internalFormat = this._internalFormat;
+  const pixelDatatype = this._pixelDatatype;
 
-  var preMultiplyAlpha = this._preMultiplyAlpha;
-  var flipY = this._flipY;
+  const preMultiplyAlpha = this._preMultiplyAlpha;
+  const flipY = this._flipY;
+  const skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
-  var unpackAlignment = 4;
+  let unpackAlignment = 4;
   if (defined(arrayBufferView)) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
@@ -128,7 +141,16 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
-  var uploaded = false;
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
+
+  let uploaded = false;
   if (!this._initialized) {
     if (xOffset === 0 && yOffset === 0 && width === size && height === size) {
       // initialize the entire texture
@@ -176,7 +198,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
       // initialize the entire texture to zero
-      var bufferView = PixelFormat.createTypedArray(
+      const bufferView = PixelFormat.createTypedArray(
         pixelFormat,
         pixelDatatype,
         size,
@@ -318,8 +340,8 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   }
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
+  const gl = this._context._gl;
+  const target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);

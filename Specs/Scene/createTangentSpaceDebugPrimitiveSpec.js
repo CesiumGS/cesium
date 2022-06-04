@@ -7,17 +7,17 @@ import { createTangentSpaceDebugPrimitive } from "../../Source/Cesium.js";
 
 describe("Scene/createTangentSpaceDebugPrimitive", function () {
   it("computes all attributes", function () {
-    var geometry = new EllipsoidGeometry({
+    const geometry = new EllipsoidGeometry({
       vertexFormat: VertexFormat.ALL,
       radii: new Cartesian3(500000.0, 500000.0, 1000000.0),
     });
-    var modelMatrix = Matrix4.multiplyByTranslation(
+    const modelMatrix = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(0.0, 0.0, 11000000.0),
       new Matrix4()
     );
 
-    var primitive = createTangentSpaceDebugPrimitive({
+    const primitive = createTangentSpaceDebugPrimitive({
       geometry: geometry,
       modelMatrix: modelMatrix,
       length: 1000.0,
@@ -27,7 +27,7 @@ describe("Scene/createTangentSpaceDebugPrimitive", function () {
     expect(primitive.appearance).toBeDefined();
     expect(primitive.asynchronous).toBe(false);
 
-    var instances = primitive.geometryInstances;
+    const instances = primitive.geometryInstances;
     expect(instances.length).toEqual(3);
 
     expect(instances[0].modelMatrix).toEqual(modelMatrix);

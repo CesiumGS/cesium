@@ -1,24 +1,24 @@
 import { Heap } from "../../Source/Cesium.js";
 
 describe("Core/Heap", function () {
-  var length = 100;
+  const length = 100;
 
   function expectTrailingReferenceToBeRemoved(heap) {
-    var array = heap._array;
-    var length = heap._length;
-    var reservedLength = array.length;
-    for (var i = length; i < reservedLength; ++i) {
+    const array = heap._array;
+    const length = heap._length;
+    const reservedLength = array.length;
+    for (let i = length; i < reservedLength; ++i) {
       expect(array[i]).toBeUndefined();
     }
   }
 
   function checkHeap(heap, comparator) {
-    var array = heap.internalArray;
-    var pass = true;
-    var length = heap.length;
-    for (var i = 0; i < length; ++i) {
-      var left = 2 * (i + 1) - 1;
-      var right = 2 * (i + 1);
+    const array = heap.internalArray;
+    let pass = true;
+    const length = heap.length;
+    for (let i = 0; i < length; ++i) {
+      const left = 2 * (i + 1) - 1;
+      const right = 2 * (i + 1);
       if (left < heap.length) {
         pass = pass && comparator(array[i], array[left]) <= 0;
       }
@@ -35,11 +35,11 @@ describe("Core/Heap", function () {
   }
 
   it("maintains heap property on insert", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
-    var pass = true;
-    for (var i = 0; i < length; ++i) {
+    let pass = true;
+    for (let i = 0; i < length; ++i) {
       heap.insert(Math.random());
       pass = pass && checkHeap(heap, comparator);
     }
@@ -48,14 +48,14 @@ describe("Core/Heap", function () {
   });
 
   it("maintains heap property on pop", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
-    var i;
+    let i;
     for (i = 0; i < length; ++i) {
       heap.insert(Math.random());
     }
-    var pass = true;
+    let pass = true;
     for (i = 0; i < length; ++i) {
       heap.pop();
       pass = pass && checkHeap(heap, comparator);
@@ -64,35 +64,35 @@ describe("Core/Heap", function () {
   });
 
   it("limited by maximum length", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
     heap.maximumLength = length / 2;
-    var pass = true;
-    for (var i = 0; i < length; ++i) {
+    let pass = true;
+    for (let i = 0; i < length; ++i) {
       heap.insert(Math.random());
       pass = pass && checkHeap(heap, comparator);
     }
     expect(pass).toBe(true);
-    expect(heap.length).toBeLessThanOrEqualTo(heap.maximumLength);
+    expect(heap.length).toBeLessThanOrEqual(heap.maximumLength);
     // allowed one extra slot for swapping
-    expect(heap.internalArray.length).toBeLessThanOrEqualTo(
+    expect(heap.internalArray.length).toBeLessThanOrEqual(
       heap.maximumLength + 1
     );
   });
 
   it("pops in sorted order", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
-    var i;
+    let i;
     for (i = 0; i < length; ++i) {
       heap.insert(Math.random());
     }
-    var curr = heap.pop();
-    var pass = true;
+    let curr = heap.pop();
+    let pass = true;
     for (i = 0; i < length - 1; ++i) {
-      var next = heap.pop();
+      const next = heap.pop();
       pass = pass && comparator(curr, next) <= 0;
       curr = next;
     }
@@ -100,11 +100,11 @@ describe("Core/Heap", function () {
   });
 
   it("pop removes trailing references", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
 
-    for (var i = 0; i < 10; ++i) {
+    for (let i = 0; i < 10; ++i) {
       heap.insert(Math.random());
     }
 
@@ -115,11 +115,11 @@ describe("Core/Heap", function () {
   });
 
   it("setting maximum length less than current length removes trailing references", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
 
-    for (var i = 0; i < 10; ++i) {
+    for (let i = 0; i < 10; ++i) {
       heap.insert(Math.random());
     }
 
@@ -128,17 +128,17 @@ describe("Core/Heap", function () {
   });
 
   it("insert returns the removed element when maximumLength is set", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
     heap.maximumLength = length;
 
-    var i;
-    var max = 0.0;
-    var min = 1.0;
-    var values = new Array(length);
+    let i;
+    let max = 0.0;
+    let min = 1.0;
+    const values = new Array(length);
     for (i = 0; i < length; ++i) {
-      var value = Math.random();
+      const value = Math.random();
       max = Math.max(max, value);
       min = Math.min(min, value);
       values[i] = value;
@@ -150,7 +150,7 @@ describe("Core/Heap", function () {
     }
 
     // Push 100th, nothing is removed so it returns undefined
-    var removed = heap.insert(values[length - 1]);
+    let removed = heap.insert(values[length - 1]);
     expect(removed).toBeUndefined();
 
     // Insert value, an element is removed
@@ -167,8 +167,8 @@ describe("Core/Heap", function () {
       return a.distance - b.distance;
     }
 
-    var i;
-    var heap = new Heap({
+    let i;
+    const heap = new Heap({
       comparator: comparator,
     });
     for (i = 0; i < length; ++i) {
@@ -179,13 +179,13 @@ describe("Core/Heap", function () {
     }
 
     // Check that elements are initially sorted
-    var element;
-    var elements = [];
-    var currentId = 0;
+    let element;
+    const elements = [];
+    let currentId = 0;
     while (heap.length > 0) {
       element = heap.pop();
       elements.push(element);
-      expect(element.id).toBeGreaterThanOrEqualTo(currentId);
+      expect(element.id).toBeGreaterThanOrEqual(currentId);
       currentId = element.id;
     }
 
@@ -203,13 +203,13 @@ describe("Core/Heap", function () {
     heap.resort();
     while (heap.length > 0) {
       element = heap.pop();
-      expect(element.id).toBeLessThanOrEqualTo(currentId);
+      expect(element.id).toBeLessThanOrEqual(currentId);
       currentId = element.id;
     }
   });
 
   it("maximumLength setter throws if length is less than 0", function () {
-    var heap = new Heap({
+    const heap = new Heap({
       comparator: comparator,
     });
     expect(function () {

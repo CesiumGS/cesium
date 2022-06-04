@@ -9,9 +9,9 @@ import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
 function getKey(type, modifier) {
-  var key = type;
+  let key = type;
   if (defined(modifier)) {
-    key += "+" + modifier;
+    key += `+${modifier}`;
   }
   return key;
 }
@@ -37,19 +37,19 @@ function clonePinchMovement(pinchMovement, result) {
 }
 
 function listenToPinch(aggregator, modifier, canvas) {
-  var key = getKey(CameraEventType.PINCH, modifier);
+  const key = getKey(CameraEventType.PINCH, modifier);
 
-  var update = aggregator._update;
-  var isDown = aggregator._isDown;
-  var eventStartPosition = aggregator._eventStartPosition;
-  var pressTime = aggregator._pressTime;
-  var releaseTime = aggregator._releaseTime;
+  const update = aggregator._update;
+  const isDown = aggregator._isDown;
+  const eventStartPosition = aggregator._eventStartPosition;
+  const pressTime = aggregator._pressTime;
+  const releaseTime = aggregator._releaseTime;
 
   update[key] = true;
   isDown[key] = false;
   eventStartPosition[key] = new Cartesian2();
 
-  var movement = aggregator._movement[key];
+  let movement = aggregator._movement[key];
   if (!defined(movement)) {
     movement = aggregator._movement[key] = {};
   }
@@ -110,9 +110,9 @@ function listenToPinch(aggregator, modifier, canvas) {
           movement.prevAngle = movement.angleAndHeight.startPosition.x;
         }
         // Make sure our aggregation of angles does not "flip" over 360 degrees.
-        var angle = movement.angleAndHeight.endPosition.x;
-        var prevAngle = movement.prevAngle;
-        var TwoPI = Math.PI * 2;
+        let angle = movement.angleAndHeight.endPosition.x;
+        const prevAngle = movement.prevAngle;
+        const TwoPI = Math.PI * 2;
         while (angle >= prevAngle + Math.PI) {
           angle -= TwoPI;
         }
@@ -131,12 +131,12 @@ function listenToPinch(aggregator, modifier, canvas) {
 }
 
 function listenToWheel(aggregator, modifier) {
-  var key = getKey(CameraEventType.WHEEL, modifier);
+  const key = getKey(CameraEventType.WHEEL, modifier);
 
-  var update = aggregator._update;
+  const update = aggregator._update;
   update[key] = true;
 
-  var movement = aggregator._movement[key];
+  let movement = aggregator._movement[key];
   if (!defined(movement)) {
     movement = aggregator._movement[key] = {};
   }
@@ -147,7 +147,7 @@ function listenToWheel(aggregator, modifier) {
   aggregator._eventHandler.setInputAction(
     function (delta) {
       // TODO: magic numbers
-      var arcLength = 15.0 * CesiumMath.toRadians(delta);
+      const arcLength = 15.0 * CesiumMath.toRadians(delta);
       if (!update[key]) {
         movement.endPosition.y = movement.endPosition.y + arcLength;
       } else {
@@ -163,17 +163,17 @@ function listenToWheel(aggregator, modifier) {
 }
 
 function listenMouseButtonDownUp(aggregator, modifier, type) {
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
 
-  var isDown = aggregator._isDown;
-  var eventStartPosition = aggregator._eventStartPosition;
-  var pressTime = aggregator._pressTime;
-  var releaseTime = aggregator._releaseTime;
+  const isDown = aggregator._isDown;
+  const eventStartPosition = aggregator._eventStartPosition;
+  const pressTime = aggregator._pressTime;
+  const releaseTime = aggregator._releaseTime;
 
   isDown[key] = false;
   eventStartPosition[key] = new Cartesian2();
 
-  var lastMovement = aggregator._lastMovement[key];
+  let lastMovement = aggregator._lastMovement[key];
   if (!defined(lastMovement)) {
     lastMovement = aggregator._lastMovement[key] = {
       startPosition: new Cartesian2(),
@@ -182,8 +182,8 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
     };
   }
 
-  var down;
-  var up;
+  let down;
+  let up;
   if (type === CameraEventType.LEFT_DRAG) {
     down = ScreenSpaceEventType.LEFT_DOWN;
     up = ScreenSpaceEventType.LEFT_UP;
@@ -224,16 +224,16 @@ function cloneMouseMovement(mouseMovement, result) {
 }
 
 function listenMouseMove(aggregator, modifier) {
-  var update = aggregator._update;
-  var movement = aggregator._movement;
-  var lastMovement = aggregator._lastMovement;
-  var isDown = aggregator._isDown;
+  const update = aggregator._update;
+  const movement = aggregator._movement;
+  const lastMovement = aggregator._lastMovement;
+  const isDown = aggregator._isDown;
 
-  for (var typeName in CameraEventType) {
+  for (const typeName in CameraEventType) {
     if (CameraEventType.hasOwnProperty(typeName)) {
-      var type = CameraEventType[typeName];
+      const type = CameraEventType[typeName];
       if (defined(type)) {
-        var key = getKey(type, modifier);
+        const key = getKey(type, modifier);
         update[key] = true;
 
         if (!defined(aggregator._lastMovement[key])) {
@@ -256,11 +256,11 @@ function listenMouseMove(aggregator, modifier) {
 
   aggregator._eventHandler.setInputAction(
     function (mouseMovement) {
-      for (var typeName in CameraEventType) {
+      for (const typeName in CameraEventType) {
         if (CameraEventType.hasOwnProperty(typeName)) {
-          var type = CameraEventType[typeName];
+          const type = CameraEventType[typeName];
           if (defined(type)) {
-            var key = getKey(type, modifier);
+            const key = getKey(type, modifier);
             if (isDown[key]) {
               if (!update[key]) {
                 Cartesian2.clone(
@@ -328,9 +328,9 @@ function CameraEventAggregator(canvas) {
   listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
   listenMouseMove(this, undefined);
 
-  for (var modifierName in KeyboardEventModifier) {
+  for (const modifierName in KeyboardEventModifier) {
     if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
-      var modifier = KeyboardEventModifier[modifierName];
+      const modifier = KeyboardEventModifier[modifierName];
       if (defined(modifier)) {
         listenToWheel(this, modifier);
         listenToPinch(this, modifier, canvas);
@@ -362,7 +362,7 @@ Object.defineProperties(CameraEventAggregator.prototype, {
    */
   anyButtonDown: {
     get: function () {
-      var wheelMoved =
+      const wheelMoved =
         !this._update[getKey(CameraEventType.WHEEL)] ||
         !this._update[
           getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)
@@ -390,7 +390,7 @@ CameraEventAggregator.prototype.isMoving = function (type, modifier) {
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
   return !this._update[key];
 };
 
@@ -408,8 +408,8 @@ CameraEventAggregator.prototype.getMovement = function (type, modifier) {
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
-  var movement = this._movement[key];
+  const key = getKey(type, modifier);
+  const movement = this._movement[key];
   return movement;
 };
 
@@ -427,8 +427,8 @@ CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
-  var lastMovement = this._lastMovement[key];
+  const key = getKey(type, modifier);
+  const lastMovement = this._lastMovement[key];
   if (lastMovement.valid) {
     return lastMovement;
   }
@@ -450,7 +450,7 @@ CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
   return this._isDown[key];
 };
 
@@ -475,7 +475,7 @@ CameraEventAggregator.prototype.getStartMousePosition = function (
     return this._currentMousePosition;
   }
 
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
   return this._eventStartPosition[key];
 };
 
@@ -493,7 +493,7 @@ CameraEventAggregator.prototype.getButtonPressTime = function (type, modifier) {
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
   return this._pressTime[key];
 };
 
@@ -514,7 +514,7 @@ CameraEventAggregator.prototype.getButtonReleaseTime = function (
   }
   //>>includeEnd('debug');
 
-  var key = getKey(type, modifier);
+  const key = getKey(type, modifier);
   return this._releaseTime[key];
 };
 
@@ -522,7 +522,7 @@ CameraEventAggregator.prototype.getButtonReleaseTime = function (
  * Signals that all of the events have been handled and the aggregator should be reset to handle new events.
  */
 CameraEventAggregator.prototype.reset = function () {
-  for (var name in this._update) {
+  for (const name in this._update) {
     if (this._update.hasOwnProperty(name)) {
       this._update[name] = true;
     }

@@ -29,23 +29,23 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           selectionIndicator: false,
           infoBox: false,
         });
 
-        var scene = viewer.scene;
-        var camera = scene.camera;
+        const scene = viewer.scene;
+        const camera = scene.camera;
 
-        var handler;
-        var primitive;
-        var polylines;
-        var tileset;
+        let handler;
+        let primitive;
+        let polylines;
+        let tileset;
 
-        var highlighted = {
+        const highlighted = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
@@ -54,7 +54,7 @@
           {
             text: "Billboard",
             onselect: function () {
-              var entity = viewer.entities.add({
+              const entity = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 billboard: {
                   image: "../images/Cesium_Logo_overlay.png",
@@ -63,7 +63,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (
                   Cesium.defined(pickedObject) &&
                   pickedObject.id === entity
@@ -78,7 +78,7 @@
           {
             text: "Label",
             onselect: function () {
-              var entity = viewer.entities.add({
+              const entity = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 label: {
                   text: "Label",
@@ -87,7 +87,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (
                   Cesium.defined(pickedObject) &&
                   pickedObject.id === entity
@@ -102,7 +102,7 @@
           {
             text: "Point",
             onselect: function () {
-              var entity = viewer.entities.add({
+              const entity = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 point: {
                   color: Cesium.Color.WHITE,
@@ -112,7 +112,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (
                   Cesium.defined(pickedObject) &&
                   pickedObject.id === entity
@@ -128,8 +128,8 @@
             text: "Polyline collection",
             onselect: function () {
               polylines = scene.primitives.add(new Cesium.PolylineCollection());
-              var id = "line";
-              var line = polylines.add({
+              const id = "line";
+              const line = polylines.add({
                 positions: Cesium.Cartesian3.fromDegreesArrayHeights([
                   -84.0,
                   50.0,
@@ -144,7 +144,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && pickedObject.id === id) {
                   line.material.uniforms.color = Cesium.Color.YELLOW;
                 } else {
@@ -156,7 +156,7 @@
           {
             text: "Polyline geometry",
             onselect: function () {
-              var id = "line";
+              const id = "line";
               primitive = scene.primitives.add(
                 new Cesium.Primitive({
                   geometryInstances: new Cesium.GeometryInstance({
@@ -187,7 +187,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && pickedObject.id === id) {
                   primitive.getGeometryInstanceAttributes(
                     id
@@ -207,8 +207,8 @@
           {
             text: "Geometry",
             onselect: function () {
-              var color = Cesium.Color.WHITE;
-              var entity = viewer.entities.add({
+              let color = Cesium.Color.WHITE;
+              const entity = viewer.entities.add({
                 name: "box",
                 position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 box: {
@@ -229,7 +229,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (
                   Cesium.defined(pickedObject) &&
                   pickedObject.id === entity
@@ -244,7 +244,7 @@
           {
             text: "Ground primitive",
             onselect: function () {
-              var id = "rect";
+              const id = "rect";
               primitive = scene.primitives.add(
                 new Cesium.GroundPrimitive({
                   geometryInstances: new Cesium.GeometryInstance({
@@ -271,7 +271,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && pickedObject.id === id) {
                   primitive.getGeometryInstanceAttributes(
                     id
@@ -291,18 +291,21 @@
           {
             text: "Model",
             onselect: function () {
-              var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-              var hpr = new Cesium.HeadingPitchRoll(
+              const position = Cesium.Cartesian3.fromDegrees(
+                -75.59777,
+                40.03883
+              );
+              const hpr = new Cesium.HeadingPitchRoll(
                 Cesium.Math.toRadians(135),
                 0,
                 0
               );
-              var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+              const orientation = Cesium.Transforms.headingPitchRollQuaternion(
                 position,
                 hpr
               );
 
-              var entity = viewer.entities.add({
+              const entity = viewer.entities.add({
                 position: position,
                 orientation: orientation,
                 model: {
@@ -313,7 +316,7 @@
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
+                const pickedObject = scene.pick(movement.endPosition);
                 if (
                   Cesium.defined(pickedObject) &&
                   pickedObject.id === entity
@@ -328,30 +331,31 @@
           {
             text: "Model instancing collection",
             onselect: function () {
-              var instances = [];
-              var gridSize = 2;
-              var spacing = 0.0002;
-              var centerLongitude = -75.61209431;
-              var centerLatitude = 40.042530612;
-              var height = 50.0;
+              const instances = [];
+              const gridSize = 2;
+              const spacing = 0.0002;
+              const centerLongitude = -75.61209431;
+              const centerLatitude = 40.042530612;
+              const height = 50.0;
 
-              for (var y = 0; y < gridSize; ++y) {
-                for (var x = 0; x < gridSize; ++x) {
-                  var longitude =
+              for (let y = 0; y < gridSize; ++y) {
+                for (let x = 0; x < gridSize; ++x) {
+                  const longitude =
                     centerLongitude + spacing * (x - gridSize / 2);
-                  var latitude = centerLatitude + spacing * (y - gridSize / 2);
-                  var position = Cesium.Cartesian3.fromDegrees(
+                  const latitude =
+                    centerLatitude + spacing * (y - gridSize / 2);
+                  const position = Cesium.Cartesian3.fromDegrees(
                     longitude,
                     latitude,
                     height
                   );
 
-                  var heading = Math.random();
-                  var pitch = Math.random();
-                  var roll = Math.random();
-                  var scale = (Math.random() + 1.0) / 2.0;
+                  const heading = Math.random();
+                  const pitch = Math.random();
+                  const roll = Math.random();
+                  const scale = (Math.random() + 1.0) / 2.0;
 
-                  var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+                  const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
                     position,
                     new Cesium.HeadingPitchRoll(heading, pitch, roll)
                   );
@@ -376,20 +380,20 @@
 
               primitive.readyPromise
                 .then(function (collection) {
-                  var range =
+                  const range =
                     Math.max(
                       collection._boundingSphere.radius,
                       camera.frustum.near
                     ) * 2.0;
-                  var heading = Cesium.Math.toRadians(230.0);
-                  var pitch = Cesium.Math.toRadians(-20.0);
+                  const heading = Cesium.Math.toRadians(230.0);
+                  const pitch = Cesium.Math.toRadians(-20.0);
                   camera.lookAt(
                     collection._boundingSphere.center,
                     new Cesium.HeadingPitchRange(heading, pitch, range)
                   );
                   camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   window.alert(error);
                 });
 
@@ -399,7 +403,7 @@
                   highlighted.feature.model.color = highlighted.originalColor;
                   highlighted.feature = undefined;
                 }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
+                const pickedFeature = viewer.scene.pick(movement.endPosition);
                 if (!Cesium.defined(pickedFeature)) {
                   return;
                 }
@@ -439,7 +443,9 @@
                       highlighted.feature.color = highlighted.originalColor;
                       highlighted.feature = undefined;
                     }
-                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    const pickedFeature = viewer.scene.pick(
+                      movement.endPosition
+                    );
                     if (!Cesium.defined(pickedFeature)) {
                       return;
                     }
@@ -451,7 +457,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -483,7 +489,9 @@
                       highlighted.feature.color = highlighted.originalColor;
                       highlighted.feature = undefined;
                     }
-                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    const pickedFeature = viewer.scene.pick(
+                      movement.endPosition
+                    );
                     if (!Cesium.defined(pickedFeature)) {
                       return;
                     }
@@ -495,7 +503,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -535,7 +543,9 @@
                       );
                       highlighted.feature = undefined;
                     }
-                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    const pickedFeature = viewer.scene.pick(
+                      movement.endPosition
+                    );
                     if (!Cesium.defined(pickedFeature)) {
                       return;
                     }
@@ -548,7 +558,7 @@
                     );
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -594,7 +604,9 @@
                       highlighted.feature.color = highlighted.originalColor;
                       highlighted.feature = undefined;
                     }
-                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    const pickedFeature = viewer.scene.pick(
+                      movement.endPosition
+                    );
                     if (!Cesium.defined(pickedFeature)) {
                       return;
                     }
@@ -606,7 +618,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -652,7 +664,9 @@
                       highlighted.feature.color = highlighted.originalColor;
                       highlighted.feature = undefined;
                     }
-                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    const pickedFeature = viewer.scene.pick(
+                      movement.endPosition
+                    );
                     if (!Cesium.defined(pickedFeature)) {
                       return;
                     }
@@ -664,7 +678,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -695,10 +709,10 @@
         };
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

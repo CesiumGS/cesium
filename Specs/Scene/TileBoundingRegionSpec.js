@@ -13,22 +13,22 @@ import { TileBoundingRegion } from "../../Source/Cesium.js";
 import createFrameState from "../createFrameState.js";
 
 describe("Scene/TileBoundingRegion", function () {
-  var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
-  var regionBox = boundingVolumeRegion.slice(0, 4);
-  var rectangle = new Rectangle(
+  const boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
+  const regionBox = boundingVolumeRegion.slice(0, 4);
+  const rectangle = new Rectangle(
     regionBox[0],
     regionBox[1],
     regionBox[2],
     regionBox[3]
   );
-  var tileBoundingRegion = new TileBoundingRegion({
+  const tileBoundingRegion = new TileBoundingRegion({
     maximumHeight: boundingVolumeRegion[5],
     minimumHeight: boundingVolumeRegion[4],
     rectangle: rectangle,
   });
 
-  var frameState;
-  var camera;
+  let frameState;
+  let camera;
 
   beforeEach(function () {
     frameState = createFrameState();
@@ -42,9 +42,9 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("can be instantiated with rectangle and heights", function () {
-    var minimumHeight = boundingVolumeRegion[4];
-    var maximumHeight = boundingVolumeRegion[5];
-    var tbr = new TileBoundingRegion({
+    const minimumHeight = boundingVolumeRegion[4];
+    const maximumHeight = boundingVolumeRegion[5];
+    const tbr = new TileBoundingRegion({
       maximumHeight: maximumHeight,
       minimumHeight: minimumHeight,
       rectangle: rectangle,
@@ -58,11 +58,23 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("can be instantiated with only a rectangle", function () {
-    var tbr = new TileBoundingRegion({ rectangle: rectangle });
+    const tbr = new TileBoundingRegion({ rectangle: rectangle });
     expect(tbr).toBeDefined();
     expect(tbr.boundingVolume).toBeDefined();
     expect(tbr.boundingSphere).toBeDefined();
     expect(tbr.rectangle).toEqual(rectangle);
+    expect(tbr.minimumHeight).toBeDefined();
+    expect(tbr.maximumHeight).toBeDefined();
+  });
+
+  it("can be instantiated from a zero-area rectangle", function () {
+    const zeroAreaRectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+
+    const tbr = new TileBoundingRegion({ rectangle: zeroAreaRectangle });
+    expect(tbr).toBeDefined();
+    expect(tbr.boundingVolume).toBeDefined();
+    expect(tbr.boundingSphere).toBeDefined();
+    expect(tbr.rectangle).toEqual(zeroAreaRectangle);
     expect(tbr.minimumHeight).toBeDefined();
     expect(tbr.maximumHeight).toBeDefined();
   });
@@ -91,13 +103,13 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("distanceToCamera", function () {
-    var offset = 0.0001;
-    var west = -0.001;
-    var south = -0.001;
-    var east = 0.001;
-    var north = 0.001;
+    const offset = 0.0001;
+    const west = -0.001;
+    const south = -0.001;
+    const east = 0.001;
+    const north = 0.001;
 
-    var tile = new TileBoundingRegion({
+    const tile = new TileBoundingRegion({
       rectangle: new Rectangle(west, south, east, north),
       minimumHeight: 0.0,
       maximumHeight: 10.0,
@@ -120,8 +132,8 @@ describe("Scene/TileBoundingRegion", function () {
       south - offset,
       0.0
     );
-    var southwestPosition = Cartesian3.fromRadians(west, south);
-    var expectedDistance = Cartesian3.distance(
+    const southwestPosition = Cartesian3.fromRadians(west, south);
+    let expectedDistance = Cartesian3.distance(
       camera.position,
       southwestPosition
     );
@@ -136,7 +148,7 @@ describe("Scene/TileBoundingRegion", function () {
       north + offset,
       0.0
     );
-    var northeastPosition = Cartesian3.fromRadians(east, north);
+    const northeastPosition = Cartesian3.fromRadians(east, north);
     expectedDistance = Cartesian3.distance(camera.position, northeastPosition);
     expect(tile.distanceToCamera(frameState)).toEqualEpsilon(
       expectedDistance,
@@ -145,12 +157,12 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("distanceToCamera close to south plane at the northern hemisphere", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
+    const ellipsoid = Ellipsoid.WGS84;
+    const tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
 
     // Tile on the northern hemisphere
-    var rectangle = tilingScheme.tileXYToRectangle(5, 0, 2);
-    var cameraPositionCartographic = new Cartographic(
+    const rectangle = tilingScheme.tileXYToRectangle(5, 0, 2);
+    const cameraPositionCartographic = new Cartographic(
       (rectangle.west + rectangle.east) * 0.5,
       rectangle.south,
       0.0
@@ -158,7 +170,7 @@ describe("Scene/TileBoundingRegion", function () {
 
     cameraPositionCartographic.south -= CesiumMath.EPSILON8;
 
-    var tile = new TileBoundingRegion({
+    const tile = new TileBoundingRegion({
       rectangle: rectangle,
       minimumHeight: 0.0,
       maximumHeight: 10.0,
@@ -174,12 +186,12 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("distanceToCamera close to north plane at the southern hemisphere", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
+    const ellipsoid = Ellipsoid.WGS84;
+    const tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
 
     // Tile on the southern hemisphere
-    var rectangle = tilingScheme.tileXYToRectangle(4, 3, 2);
-    var cameraPositionCartographic = new Cartographic(
+    const rectangle = tilingScheme.tileXYToRectangle(4, 3, 2);
+    const cameraPositionCartographic = new Cartographic(
       (rectangle.west + rectangle.east) * 0.5,
       rectangle.north,
       0.0
@@ -187,7 +199,7 @@ describe("Scene/TileBoundingRegion", function () {
 
     cameraPositionCartographic.north += CesiumMath.EPSILON8;
 
-    var tile = new TileBoundingRegion({
+    const tile = new TileBoundingRegion({
       rectangle: rectangle,
       minimumHeight: 0.0,
       maximumHeight: 10.0,
@@ -205,13 +217,13 @@ describe("Scene/TileBoundingRegion", function () {
   it("distanceToCamera in 2D", function () {
     frameState.mode = SceneMode.SCENE2D;
 
-    var offset = 0.0001;
-    var west = -0.001;
-    var south = -0.001;
-    var east = 0.001;
-    var north = 0.001;
+    const offset = 0.0001;
+    const west = -0.001;
+    const south = -0.001;
+    const east = 0.001;
+    const north = 0.001;
 
-    var tile = new TileBoundingRegion({
+    const tile = new TileBoundingRegion({
       rectangle: new Rectangle(west, south, east, north),
       minimumHeight: 0.0,
       maximumHeight: 10.0,
@@ -222,13 +234,15 @@ describe("Scene/TileBoundingRegion", function () {
     expect(tile.distanceToCamera(frameState)).toEqual(Ellipsoid.WGS84.radii.x);
 
     // From southwest
-    var southwest3D = new Cartographic(west, south, 0.0);
-    var southwest2D = frameState.mapProjection.project(southwest3D);
-    var position3D = new Cartographic(west - offset, south - offset, 0.0);
-    var position2D = frameState.mapProjection.project(position3D);
-    var distance2D = Cartesian2.distance(southwest2D, position2D);
-    var height = Ellipsoid.WGS84.radii.x;
-    var expectedDistance = Math.sqrt(distance2D * distance2D + height * height);
+    const southwest3D = new Cartographic(west, south, 0.0);
+    const southwest2D = frameState.mapProjection.project(southwest3D);
+    const position3D = new Cartographic(west - offset, south - offset, 0.0);
+    const position2D = frameState.mapProjection.project(position3D);
+    const distance2D = Cartesian2.distance(southwest2D, position2D);
+    const height = Ellipsoid.WGS84.radii.x;
+    const expectedDistance = Math.sqrt(
+      distance2D * distance2D + height * height
+    );
 
     camera.position = Cartesian3.fromRadians(
       position3D.longitude,
@@ -247,7 +261,7 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("can create a debug volume", function () {
-    var debugVolume = tileBoundingRegion.createDebugVolume(Color.BLUE);
+    const debugVolume = tileBoundingRegion.createDebugVolume(Color.BLUE);
     expect(debugVolume).toBeDefined();
   });
 
@@ -258,13 +272,13 @@ describe("Scene/TileBoundingRegion", function () {
   });
 
   it("intersects plane", function () {
-    var normal = new Cartesian3();
+    const normal = new Cartesian3();
     Cartesian3.normalize(Cartesian3.fromRadians(0.0, 0.0, 1.0), normal);
-    var distanceFromCenter = Cartesian3.distance(
+    const distanceFromCenter = Cartesian3.distance(
       new Cartesian3(0.0, 0.0, 0.0),
       Cartesian3.fromRadians(0.0, 0.0, 0.0)
     );
-    var plane = new Plane(normal, -distanceFromCenter);
+    const plane = new Plane(normal, -distanceFromCenter);
     expect(tileBoundingRegion.intersectPlane(plane)).toEqual(
       Intersect.INTERSECTING
     );

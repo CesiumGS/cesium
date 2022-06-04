@@ -10,6 +10,7 @@ import { Resource } from "../../Source/Cesium.js";
 import { Material } from "../../Source/Cesium.js";
 import { MaterialAppearance } from "../../Source/Cesium.js";
 import { PolylineCollection } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
 import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
@@ -19,13 +20,13 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/Material",
   function () {
-    var scene;
+    let scene;
 
-    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-    var polygon;
-    var backgroundColor = [0, 0, 128, 255];
-    var polylines;
-    var polyline;
+    const rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+    let polygon;
+    const backgroundColor = [0, 0, 128, 255];
+    let polylines;
+    let polyline;
 
     beforeAll(function () {
       scene = createScene();
@@ -45,7 +46,7 @@ describe(
     });
 
     beforeEach(function () {
-      var vertexFormat = MaterialAppearance.MaterialSupport.ALL.vertexFormat;
+      const vertexFormat = MaterialAppearance.MaterialSupport.ALL.vertexFormat;
 
       polygon = new Primitive({
         geometryInstances: new GeometryInstance({
@@ -104,7 +105,7 @@ describe(
       scene.primitives.removeAll();
       scene.primitives.add(polylines);
 
-      var result;
+      let result;
       expect(scene).toRenderAndCall(function (rgba) {
         result = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -113,7 +114,7 @@ describe(
     }
 
     function verifyMaterial(type) {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: type,
@@ -123,7 +124,7 @@ describe(
     }
 
     function verifyPolylineMaterial(type) {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: type,
@@ -209,7 +210,7 @@ describe(
     });
 
     it("gets the material type", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: "Color",
@@ -219,7 +220,7 @@ describe(
     });
 
     it("creates opaque/translucent materials", function () {
-      var material = new Material({
+      let material = new Material({
         translucent: true,
         strict: true,
         fabric: {
@@ -239,7 +240,7 @@ describe(
     });
 
     it("creates a new material type and builds off of it", function () {
-      var material1 = new Material({
+      const material1 = new Material({
         strict: true,
         fabric: {
           type: "New",
@@ -249,7 +250,7 @@ describe(
         },
       });
 
-      var material2 = new Material({
+      const material2 = new Material({
         strict: true,
         fabric: {
           materials: {
@@ -268,7 +269,7 @@ describe(
     });
 
     it("accesses material properties after construction", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           materials: {
@@ -295,7 +296,7 @@ describe(
     });
 
     it("creates a material inside a material inside a material", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           materials: {
@@ -321,7 +322,7 @@ describe(
     });
 
     it("creates a material with an image uniform", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: "DiffuseMap",
@@ -334,7 +335,7 @@ describe(
     });
 
     it("creates a material with an image resource uniform", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: "DiffuseMap",
@@ -347,14 +348,14 @@ describe(
     });
 
     it("creates a material with an image canvas uniform", function () {
-      var canvas = document.createElement("canvas");
-      var context2D = canvas.getContext("2d");
+      const canvas = document.createElement("canvas");
+      const context2D = canvas.getContext("2d");
       context2D.width = 1;
       context2D.height = 1;
       context2D.fillStyle = "rgb(0,0,255)";
       context2D.fillRect(0, 0, 1, 1);
 
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: "DiffuseMap",
@@ -367,39 +368,15 @@ describe(
       renderMaterial(material);
     });
 
-    it("creates a material with an ktx compressed image uniform", function () {
-      var compressedUrl;
-      var context = scene.context;
-      if (context.s3tc) {
-        compressedUrl = "./Data/Images/Green4x4DXT1.ktx";
-      } else if (context.etc1) {
-        compressedUrl = "./Data/Images/Green4x4ETC1.ktx";
-      } else if (context.pvrtc) {
-        compressedUrl = "./Data/Images/Green4x4PVR.ktx";
+    it("creates a material with an KTX2 compressed image uniform", function () {
+      let compressedUrl;
+      if (FeatureDetection.supportsBasis(scene)) {
+        compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;
       }
 
-      var material = new Material({
-        strict: true,
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: compressedUrl,
-          },
-        },
-      });
-      renderMaterial(material);
-    });
-
-    it("creates a material with an crn compressed image uniform", function () {
-      var context = scene.context;
-      if (!context.s3tc) {
-        return;
-      }
-
-      var compressedUrl = "./Data/Images/Green4x4.crn";
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           type: "DiffuseMap",
@@ -412,7 +389,7 @@ describe(
     });
 
     it("creates a material with a cube map uniform", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -439,7 +416,7 @@ describe(
     });
 
     it("does not crash if source uniform is formatted differently", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -466,7 +443,7 @@ describe(
     });
 
     it("creates a material with a boolean uniform", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -481,7 +458,7 @@ describe(
     });
 
     it("create a material with a matrix uniform", function () {
-      var material1 = new Material({
+      const material1 = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -495,7 +472,7 @@ describe(
       });
       renderMaterial(material1);
 
-      var material2 = new Material({
+      const material2 = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -509,7 +486,7 @@ describe(
       });
       renderMaterial(material2, true);
 
-      var material3 = new Material({
+      const material3 = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -542,7 +519,7 @@ describe(
     });
 
     it("creates a material using unusual uniform and material names", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           uniforms: {
@@ -566,12 +543,12 @@ describe(
     });
 
     it("create a material using fromType", function () {
-      var material = Material.fromType("Color");
+      const material = Material.fromType("Color");
       renderMaterial(material);
     });
 
     it("create material using fromType and overide default uniforms", function () {
-      var material1 = Material.fromType("Color", {
+      const material1 = Material.fromType("Color", {
         color: new Color(0.0, 1.0, 0.0, 1.0),
       });
 
@@ -581,11 +558,11 @@ describe(
     });
 
     it("create multiple materials from the same type", function () {
-      var material1 = Material.fromType("Color", {
+      const material1 = Material.fromType("Color", {
         color: new Color(0.0, 1.0, 0.0, 1.0),
       });
 
-      var material2 = Material.fromType("Color", {
+      const material2 = Material.fromType("Color", {
         color: new Color(1.0, 0.0, 0.0, 1.0),
       });
 
@@ -600,7 +577,7 @@ describe(
     });
 
     it("create material with sub-materials of the same type", function () {
-      var material = new Material({
+      const material = new Material({
         fabric: {
           materials: {
             color1: {
@@ -628,7 +605,7 @@ describe(
     });
 
     it("creates material with custom texture filter", function () {
-      var materialLinear = new Material({
+      const materialLinear = new Material({
         fabric: {
           type: "DiffuseMap",
           uniforms: {
@@ -639,7 +616,7 @@ describe(
         magnificationFilter: TextureMagnificationFilter.LINEAR,
       });
 
-      var materialNearest = new Material({
+      const materialNearest = new Material({
         fabric: {
           type: "DiffuseMap",
           uniforms: {
@@ -650,12 +627,12 @@ describe(
         magnificationFilter: TextureMagnificationFilter.NEAREST,
       });
 
-      var purple = [127, 0, 127, 255];
+      const purple = [127, 0, 127, 255];
 
-      var ignoreBackground = true;
+      const ignoreBackground = true;
       renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
       return pollToPromise(function () {
-        var imageLoaded = materialLinear._loadedImages.length !== 0;
+        const imageLoaded = materialLinear._loadedImages.length !== 0;
         scene.renderForSpecs();
         return imageLoaded;
       })
@@ -667,7 +644,7 @@ describe(
         .then(function () {
           renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
           return pollToPromise(function () {
-            var imageLoaded = materialNearest._loadedImages.length !== 0;
+            const imageLoaded = materialNearest._loadedImages.length !== 0;
             scene.renderForSpecs();
             return imageLoaded;
           }).then(function () {
@@ -676,6 +653,162 @@ describe(
             });
           });
         });
+    });
+
+    it("handles when material image is undefined", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: undefined,
+        color: Color.RED,
+      });
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 0, 0, 255]);
+      });
+    });
+
+    it("handles when material image is set to default image", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: Material.DefaultImageId,
+        color: Color.RED,
+      });
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 0, 0, 255]);
+      });
+    });
+
+    it("handles when material image is changed from undefined to some image", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: undefined,
+        color: Color.WHITE,
+      });
+
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 255, 255, 255]);
+      });
+
+      material.uniforms.image = "./Data/Images/Green.png";
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from default to some image", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: Material.DefaultImageId,
+        color: Color.WHITE,
+      });
+
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 255, 255, 255]);
+      });
+
+      material.uniforms.image = "./Data/Images/Green.png";
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to undefined", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = undefined;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to default", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = Material.DefaultImageId;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to another", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+      let greenTextureId;
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "./Data/Images/Blue.png";
+        return pollToPromise(function () {
+          renderMaterial(material, true);
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
+          renderMaterial(material, true, function (rgba) {
+            expect(rgba).toEqual([0, 0, 255, 255]);
+          });
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to invalid image", function () {
+      const material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+      let greenTextureId;
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "i_dont_exist.png";
+        return pollToPromise(function () {
+          renderMaterial(material, true);
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
+          renderMaterial(material, true, function (rgba) {
+            expect(rgba).toEqual([255, 255, 255, 255]);
+          });
+        });
+      });
     });
 
     it("throws with source and components in same template", function () {
@@ -791,7 +924,7 @@ describe(
       }).toThrowDeveloperError();
 
       // If strict is false, unused uniform strings are ignored.
-      var material = new Material({
+      const material = new Material({
         strict: false,
         fabric: {
           uniforms: {
@@ -819,7 +952,7 @@ describe(
       }).toThrowDeveloperError();
 
       // If strict is false, unused uniforms are ignored.
-      var material = new Material({
+      const material = new Material({
         strict: false,
         fabric: {
           uniforms: {
@@ -849,7 +982,7 @@ describe(
       }).toThrowDeveloperError();
 
       // If strict is false, unused materials are ignored.
-      var material = new Material({
+      const material = new Material({
         strict: false,
         fabric: {
           materials: {
@@ -869,13 +1002,13 @@ describe(
     });
 
     it("destroys material with texture", function () {
-      var material = Material.fromType(Material.DiffuseMapType);
+      const material = Material.fromType(Material.DiffuseMapType);
       material.uniforms.image = "./Data/Images/Green.png";
 
       renderMaterial(material);
 
       return pollToPromise(function () {
-        var result = material._loadedImages.length !== 0;
+        const result = material._loadedImages.length !== 0;
         scene.renderForSpecs();
         return result;
       }).then(function () {
@@ -885,7 +1018,7 @@ describe(
     });
 
     it("destroys sub-materials", function () {
-      var material = new Material({
+      const material = new Material({
         strict: true,
         fabric: {
           materials: {
@@ -910,11 +1043,11 @@ describe(
       renderMaterial(material);
 
       return pollToPromise(function () {
-        var result = material.materials.diffuseMap._loadedImages.length !== 0;
+        const result = material.materials.diffuseMap._loadedImages.length !== 0;
         scene.renderForSpecs();
         return result;
       }).then(function () {
-        var diffuseMap = material.materials.diffuseMap;
+        const diffuseMap = material.materials.diffuseMap;
         material.destroy();
         expect(material.isDestroyed()).toEqual(true);
         expect(diffuseMap.isDestroyed()).toEqual(true);
@@ -922,7 +1055,7 @@ describe(
     });
 
     it("does not destroy default material", function () {
-      var material = Material.fromType(Material.DiffuseMapType);
+      const material = Material.fromType(Material.DiffuseMapType);
       renderMaterial(material);
       material.destroy();
     });

@@ -106,7 +106,7 @@ OffsetGeometryInstanceAttribute.fromCartesian3 = function (offset) {
  * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.modelMatrix = Cesium.OffsetGeometryInstanceAttribute.toValue(modelMatrix, attributes.modelMatrix);
  */
 OffsetGeometryInstanceAttribute.toValue = function (offset, result) {

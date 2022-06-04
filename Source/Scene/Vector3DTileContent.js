@@ -4,23 +4,24 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
 import Vector3DTilePolygons from "./Vector3DTilePolygons.js";
 import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
+import Vector3DTileClampedPolylines from "./Vector3DTileClampedPolylines.js";
+import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 
 /**
  * Represents the contents of a
  * {@link https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData|Vector}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -39,8 +40,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._polylines = undefined;
   this._points = undefined;
 
-  this._contentReadyPromise = undefined;
-  this._readyPromise = when.defer();
+  this._metadata = undefined;
 
   this._batchTable = undefined;
   this._features = undefined;
@@ -49,6 +49,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -71,7 +72,7 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   trianglesLength: {
     get: function () {
-      var trianglesLength = 0;
+      let trianglesLength = 0;
       if (defined(this._polygons)) {
         trianglesLength += this._polygons.trianglesLength;
       }
@@ -84,7 +85,7 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   geometryByteLength: {
     get: function () {
-      var geometryByteLength = 0;
+      let geometryByteLength = 0;
       if (defined(this._polygons)) {
         geometryByteLength += this._polygons.geometryByteLength;
       }
@@ -118,7 +119,22 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      const pointsPromise = defined(this._points)
+        ? this._points.readyPromise
+        : undefined;
+      const polygonPromise = defined(this._polygons)
+        ? this._polygons.readyPromise
+        : undefined;
+      const polylinePromise = defined(this._polylines)
+        ? this._polylines.readyPromise
+        : undefined;
+
+      const that = this;
+      return Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(
+        function () {
+          return that;
+        }
+      );
     },
   },
 
@@ -140,9 +156,27 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  group: {
+    get: function () {
+      return this._group;
+    },
+    set: function (value) {
+      this._group = value;
     },
   },
 });
@@ -156,17 +190,17 @@ function createColorChangedCallback(content) {
 }
 
 function getBatchIds(featureTableJson, featureTableBinary) {
-  var polygonBatchIds;
-  var polylineBatchIds;
-  var pointBatchIds;
-  var i;
+  let polygonBatchIds;
+  let polylineBatchIds;
+  let pointBatchIds;
+  let i;
 
-  var numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
+  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
+  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
 
   if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
-    var polygonBatchIdsByteOffset =
+    const polygonBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.POLYGON_BATCH_IDS.byteOffset;
     polygonBatchIds = new Uint16Array(
@@ -177,7 +211,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   }
 
   if (numberOfPolylines > 0 && defined(featureTableJson.POLYLINE_BATCH_IDS)) {
-    var polylineBatchIdsByteOffset =
+    const polylineBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.POLYLINE_BATCH_IDS.byteOffset;
     polylineBatchIds = new Uint16Array(
@@ -188,7 +222,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   }
 
   if (numberOfPoints > 0 && defined(featureTableJson.POINT_BATCH_IDS)) {
-    var pointBatchIdsByteOffset =
+    const pointBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.POINT_BATCH_IDS.byteOffset;
     pointBatchIds = new Uint16Array(
@@ -198,11 +232,11 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     );
   }
 
-  var atLeastOneDefined =
+  const atLeastOneDefined =
     defined(polygonBatchIds) ||
     defined(polylineBatchIds) ||
     defined(pointBatchIds);
-  var atLeastOneUndefined =
+  const atLeastOneUndefined =
     (numberOfPolygons > 0 && !defined(polygonBatchIds)) ||
     (numberOfPolylines > 0 && !defined(polylineBatchIds)) ||
     (numberOfPoints > 0 && !defined(pointBatchIds));
@@ -213,12 +247,12 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     );
   }
 
-  var allUndefinedBatchIds =
+  const allUndefinedBatchIds =
     !defined(polygonBatchIds) &&
     !defined(polylineBatchIds) &&
     !defined(pointBatchIds);
   if (allUndefinedBatchIds) {
-    var id = 0;
+    let id = 0;
     if (!defined(polygonBatchIds) && numberOfPolygons > 0) {
       polygonBatchIds = new Uint16Array(numberOfPolygons);
       for (i = 0; i < numberOfPolygons; ++i) {
@@ -246,34 +280,39 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   };
 }
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+function createFloatingPolylines(options) {
+  return new Vector3DTilePolylines(options);
+}
+
+function createClampedPolylines(options) {
+  return new Vector3DTileClampedPolylines(options);
+}
 
 function initialize(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic number
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Vector tile version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Vector tile version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
 
-  var byteLength = view.getUint32(byteOffset, true);
+  const byteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    content._readyPromise.resolve(content);
-    return;
+    return Promise.resolve(content);
   }
 
-  var featureTableJSONByteLength = view.getUint32(byteOffset, true);
+  const featureTableJSONByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
   if (featureTableJSONByteLength === 0) {
@@ -282,50 +321,48 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
   }
 
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const featureTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var batchTableJSONByteLength = view.getUint32(byteOffset, true);
+  const batchTableJSONByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var indicesByteLength = view.getUint32(byteOffset, true);
+  const indicesByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var positionByteLength = view.getUint32(byteOffset, true);
+  const positionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var polylinePositionByteLength = view.getUint32(byteOffset, true);
+  const polylinePositionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var pointsPositionByteLength = view.getUint32(byteOffset, true);
+  const pointsPositionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJSONByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJSONByteLength;
 
-  var featureTableBinary = new Uint8Array(
+  const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
     featureTableBinaryByteLength
   );
   byteOffset += featureTableBinaryByteLength;
 
-  var batchTableJson;
-  var batchTableBinary;
+  let batchTableJson;
+  let batchTableBinary;
   if (batchTableJSONByteLength > 0) {
     // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
     // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
     //
     // We could also make another request for it, but that would make the property set/get
     // API async, and would double the number of numbers in some cases.
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJSONByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJSONByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -341,12 +378,12 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
   }
 
-  var numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
-  var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
+  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
+  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
+  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
 
-  var batchTable = new Cesium3DTileBatchTable(
+  const batchTable = new Cesium3DTileBatchTable(
     content,
     totalPrimitives,
     batchTableJson,
@@ -359,23 +396,23 @@ function initialize(content, arrayBuffer, byteOffset) {
     return;
   }
 
-  var featureTable = new Cesium3DTileFeatureTable(
+  const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
     featureTableBinary
   );
-  var region = featureTable.getGlobalProperty("REGION");
+  const region = featureTable.getGlobalProperty("REGION");
   if (!defined(region)) {
     throw new RuntimeError(
       "Feature table global property: REGION must be defined"
     );
   }
-  var rectangle = Rectangle.unpack(region);
-  var minHeight = region[4];
-  var maxHeight = region[5];
+  const rectangle = Rectangle.unpack(region);
+  const minHeight = region[4];
+  const maxHeight = region[5];
 
-  var modelMatrix = content._tile.computedTransform;
+  const modelMatrix = content._tile.computedTransform;
 
-  var center = featureTable.getGlobalProperty(
+  let center = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
@@ -389,13 +426,13 @@ function initialize(content, arrayBuffer, byteOffset) {
     center = Ellipsoid.WGS84.cartographicToCartesian(center);
   }
 
-  var batchIds = getBatchIds(featureTableJson, featureTableBinary);
-  byteOffset += byteOffset % 4;
+  const batchIds = getBatchIds(featureTableJson, featureTableBinary);
+  byteOffset += (4 - (byteOffset % 4)) % 4;
 
   if (numberOfPolygons > 0) {
     featureTable.featuresLength = numberOfPolygons;
 
-    var polygonCounts = defaultValue(
+    const polygonCounts = defaultValue(
       featureTable.getPropertyArray(
         "POLYGON_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
@@ -414,7 +451,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       );
     }
 
-    var polygonIndexCounts = defaultValue(
+    const polygonIndexCounts = defaultValue(
       featureTable.getPropertyArray(
         "POLYGON_INDEX_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
@@ -435,26 +472,30 @@ function initialize(content, arrayBuffer, byteOffset) {
 
     // Use the counts array to determine how many position values we want. If we used the byte length then
     // zero padding values would be included and cause the delta zig-zag decoding to fail
-    var numPolygonPositions = polygonCounts.reduce(function (total, count) {
+    const numPolygonPositions = polygonCounts.reduce(function (total, count) {
       return total + count * 2;
     }, 0);
 
-    var numPolygonIndices = polygonIndexCounts.reduce(function (total, count) {
+    const numPolygonIndices = polygonIndexCounts.reduce(function (
+      total,
+      count
+    ) {
       return total + count;
-    }, 0);
+    },
+    0);
 
-    var indices = new Uint32Array(arrayBuffer, byteOffset, numPolygonIndices);
+    const indices = new Uint32Array(arrayBuffer, byteOffset, numPolygonIndices);
     byteOffset += indicesByteLength;
 
-    var polygonPositions = new Uint16Array(
+    const polygonPositions = new Uint16Array(
       arrayBuffer,
       byteOffset,
       numPolygonPositions
     );
     byteOffset += positionByteLength;
 
-    var polygonMinimumHeights;
-    var polygonMaximumHeights;
+    let polygonMinimumHeights;
+    let polygonMaximumHeights;
     if (
       defined(featureTableJson.POLYGON_MINIMUM_HEIGHTS) &&
       defined(featureTableJson.POLYGON_MAXIMUM_HEIGHTS)
@@ -492,7 +533,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   if (numberOfPolylines > 0) {
     featureTable.featuresLength = numberOfPolylines;
 
-    var polylineCounts = defaultValue(
+    const polylineCounts = defaultValue(
       featureTable.getPropertyArray(
         "POLYLINE_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
@@ -511,31 +552,56 @@ function initialize(content, arrayBuffer, byteOffset) {
       );
     }
 
-    var widths = featureTable.getPropertyArray(
+    let widths = featureTable.getPropertyArray(
       "POLYLINE_WIDTHS",
       ComponentDatatype.UNSIGNED_SHORT,
       1
     );
     if (!defined(widths)) {
       widths = new Uint16Array(numberOfPolylines);
-      for (var i = 0; i < numberOfPolylines; ++i) {
+      for (let i = 0; i < numberOfPolylines; ++i) {
         widths[i] = 2.0;
       }
     }
 
     // Use the counts array to determine how many position values we want. If we used the byte length then
     // zero padding values would be included and cause the delta zig-zag decoding to fail
-    var numPolylinePositions = polylineCounts.reduce(function (total, count) {
+    const numPolylinePositions = polylineCounts.reduce(function (total, count) {
       return total + count * 3;
     }, 0);
-    var polylinePositions = new Uint16Array(
+    const polylinePositions = new Uint16Array(
       arrayBuffer,
       byteOffset,
       numPolylinePositions
     );
     byteOffset += polylinePositionByteLength;
 
-    content._polylines = new Vector3DTilePolylines({
+    const tileset = content._tileset;
+    const examineVectorLinesFunction = tileset.examineVectorLinesFunction;
+    if (defined(examineVectorLinesFunction)) {
+      const decodedPositions = decodeVectorPolylinePositions(
+        new Uint16Array(polylinePositions),
+        rectangle,
+        minHeight,
+        maxHeight,
+        Ellipsoid.WGS84
+      );
+      examineVectorLines(
+        decodedPositions,
+        polylineCounts,
+        batchIds.polylines,
+        batchTable,
+        content.url,
+        examineVectorLinesFunction
+      );
+    }
+
+    let createPolylines = createFloatingPolylines;
+    if (defined(tileset.classificationType)) {
+      createPolylines = createClampedPolylines;
+    }
+
+    content._polylines = createPolylines({
       positions: polylinePositions,
       widths: widths,
       counts: polylineCounts,
@@ -546,11 +612,13 @@ function initialize(content, arrayBuffer, byteOffset) {
       rectangle: rectangle,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
       batchTable: batchTable,
+      classificationType: tileset.classificationType,
+      keepDecodedPositions: tileset.vectorKeepDecodedPositions,
     });
   }
 
   if (numberOfPoints > 0) {
-    var pointPositions = new Uint16Array(
+    const pointPositions = new Uint16Array(
       arrayBuffer,
       byteOffset,
       numberOfPoints * 3
@@ -565,12 +633,14 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
     });
   }
+
+  return Promise.resolve(content);
 }
 
 function createFeatures(content) {
-  var featuresLength = content.featuresLength;
+  const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
-    var features = new Array(featuresLength);
+    const features = new Array(featuresLength);
 
     if (defined(content._polygons)) {
       content._polygons.createFeatures(content, features);
@@ -591,12 +661,12 @@ Vector3DTileContent.prototype.hasProperty = function (batchId, name) {
 
 Vector3DTileContent.prototype.getFeature = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
-  var featuresLength = this.featuresLength;
+  const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');
@@ -631,7 +701,7 @@ Vector3DTileContent.prototype.applyStyle = function (style) {
 };
 
 Vector3DTileContent.prototype.update = function (tileset, frameState) {
-  var ready = true;
+  let ready = true;
   if (defined(this._polygons)) {
     this._polygons.classificationType = this._tileset.classificationType;
     this._polygons.debugWireframe = this._tileset.debugWireframe;
@@ -649,25 +719,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
   if (defined(this._batchTable) && ready) {
     this._batchTable.update(tileset, frameState);
   }
+};
 
-  if (!defined(this._contentReadyPromise)) {
-    var pointsPromise = defined(this._points)
-      ? this._points.readyPromise
-      : undefined;
-    var polygonPromise = defined(this._polygons)
-      ? this._polygons.readyPromise
-      : undefined;
-    var polylinePromise = defined(this._polylines)
-      ? this._polylines.readyPromise
-      : undefined;
-
-    var that = this;
-    this._contentReadyPromise = when
-      .all([pointsPromise, polygonPromise, polylinePromise])
-      .then(function () {
-        that._readyPromise.resolve(that);
-      });
+Vector3DTileContent.prototype.getPolylinePositions = function (batchId) {
+  const polylines = this._polylines;
+  if (!defined(polylines)) {
+    return undefined;
   }
+
+  return polylines.getPositions(batchId);
 };
 
 Vector3DTileContent.prototype.isDestroyed = function () {
@@ -681,4 +741,24 @@ Vector3DTileContent.prototype.destroy = function () {
   this._batchTable = this._batchTable && this._batchTable.destroy();
   return destroyObject(this);
 };
+
+function examineVectorLines(
+  positions,
+  counts,
+  batchIds,
+  batchTable,
+  url,
+  callback
+) {
+  const countsLength = counts.length;
+  let polylineStart = 0;
+  for (let i = 0; i < countsLength; i++) {
+    const count = counts[i] * 3;
+    const linePositions = positions.slice(polylineStart, polylineStart + count);
+    polylineStart += count;
+
+    callback(linePositions, batchIds[i], url, batchTable);
+  }
+}
+
 export default Vector3DTileContent;

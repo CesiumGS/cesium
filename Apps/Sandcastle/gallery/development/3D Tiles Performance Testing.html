@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         /*
@@ -45,26 +45,26 @@ You can add more flights to destinationFunctions to change the tour or make it l
 
 The heatmapTileProperty will colorize the tile property in a heatmap. Booleans should set a reference min/max of -1,1 to help with coloring.
 */
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
-        var camera = scene.camera;
-        var globe = scene.globe;
-        var statistics = Cesium.RequestScheduler.statistics;
-        var Cartesian3 = Cesium.Cartesian3;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+        const camera = scene.camera;
+        const globe = scene.globe;
+        const statistics = Cesium.RequestScheduler.statistics;
+        const Cartesian3 = Cesium.Cartesian3;
 
-        var tourTime = 0;
-        var tourLoads = 0;
-        var destinationFunctions = [];
-        var lastTotalLoaded = 0;
-        var flightDuration = 8.0;
-        var doTour = true;
-        var currentDestination = 0;
+        let tourTime = 0;
+        let tourLoads = 0;
+        const destinationFunctions = [];
+        let lastTotalLoaded = 0;
+        const flightDuration = 8.0;
+        let doTour = true;
+        let currentDestination = 0;
 
-        var referenceMinimum = new Cesium.JulianDate();
-        var referenceMaximum = new Cesium.JulianDate();
-        var heatmapTileProperty = "_foveatedFactor";
+        const referenceMinimum = new Cesium.JulianDate();
+        const referenceMaximum = new Cesium.JulianDate();
+        const heatmapTileProperty = "_foveatedFactor";
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(75343),
           debugHeatmapTilePropertyName: heatmapTileProperty,
         });
@@ -72,7 +72,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
         function updateReferenceMinMax() {
           if (heatmapTileProperty === "_loadTimestamp") {
             Cesium.JulianDate.now(referenceMinimum);
-            var viewLoadTime = 10;
+            const viewLoadTime = 10;
             Cesium.JulianDate.addSeconds(
               referenceMinimum,
               viewLoadTime,
@@ -177,10 +177,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
 
         destinationFunctions[3] = function () {
           console.log(
-            "Total Loads and Time (ignoring first view and flight time): " +
-              tourLoads +
-              ", " +
-              tourTime
+            `Total Loads and Time (ignoring first view and flight time): ${tourLoads}, ${tourTime}`
           );
         };
 
@@ -208,8 +205,8 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
         });
 
         function startTimer() {
-          var timerStart = window.performance.now();
-          var timerListener = function () {
+          const timerStart = window.performance.now();
+          const timerListener = function () {
             if (camera._currentFlight !== undefined) {
               tileset.allTilesLoaded.removeEventListener(timerListener);
               camera.moveEnd.addEventListener(timerListener);
@@ -217,18 +214,13 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
             } else if (!tileset._tilesLoaded) {
               return;
             }
-            var timerEnd = window.performance.now();
-            var duration = (timerEnd - timerStart) / 1000.0;
-            var totalLoaded = tileset._statistics.numberOfLoadedTilesTotal;
+            const timerEnd = window.performance.now();
+            let duration = (timerEnd - timerStart) / 1000.0;
+            const totalLoaded = tileset._statistics.numberOfLoadedTilesTotal;
             duration -= currentDestination === 0 ? 0 : flightDuration;
-            var flightLoads = totalLoaded - lastTotalLoaded;
+            const flightLoads = totalLoaded - lastTotalLoaded;
             console.log(
-              "view " +
-                currentDestination +
-                " flight loads, final view time: " +
-                flightLoads +
-                ", " +
-                duration
+              `view ${currentDestination} flight loads, final view time: ${flightLoads}, ${duration}`
             );
             lastTotalLoaded = totalLoaded;
             tourTime += currentDestination === 0 ? 0 : duration;
@@ -250,49 +242,31 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
         // Add code for flyto
         Sandcastle.addToolbarButton("get cam", function () {
           console.log("requested params for current camera view");
-          var position = camera.position;
-          var direction = camera.direction;
-          var up = camera.up;
+          const position = camera.position;
+          const direction = camera.direction;
+          const up = camera.up;
 
           console.log(
-            "\n\
+            `\n\
 Sandcastle.addToolbarButton(VIEW, function() {\n\
     camera.flyTo({\n\
-        destination : new Cartesian3(" +
-              position.x +
-              ", " +
-              position.y +
-              ", " +
-              position.z +
-              "),\n\
-        orientation : {\n\
-            direction : new Cartesian3(" +
-              direction.x +
-              ", " +
-              direction.y +
-              ", " +
-              direction.z +
-              "),\n\
-            up : new Cartesian3(" +
-              up.x +
-              ", " +
-              up.y +
-              ", " +
-              up.z +
-              "),\n\
-        },\n\
-        duration : flightDuration,\n\
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE,\n\
+  destination : new Cartesian3(${position.x}, ${position.y}, ${position.z}),\n\
+  orientation : {\n\
+      direction : new Cartesian3(${direction.x}, ${direction.y}, ${direction.z}),\n\
+      up : new Cartesian3(${up.x}, ${up.y}, ${up.z}),\n\
+  },\n\
+  duration : flightDuration,\n\
+  easingFunction: Cesium.EasingFunction.LINEAR_NONE,\n\
     });\n\
     timeAll();\n\
-});"
+});`
           );
         }); //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

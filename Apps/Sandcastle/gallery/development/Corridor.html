@@ -29,17 +29,17 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a red corridor on the globe surface.
 
         // Create the corridor geometry.
-        var corridorGeometry = new Cesium.CorridorGeometry({
+        let corridorGeometry = new Cesium.CorridorGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
             -100.0,
             40.0,
@@ -54,7 +54,7 @@
         // Create a geometry instance using the corridor geometry
         // created above. We can also specify a color attribute,
         // in this case, we're creating a translucent red color.
-        var redCorridorInstance = new Cesium.GeometryInstance({
+        const redCorridorInstance = new Cesium.GeometryInstance({
           geometry: corridorGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -95,7 +95,7 @@
         // Create a geometry instance using the corridor geometry
         // created above. Set the color attribute to a
         // solid green.
-        var greenCorridorInstance = new Cesium.GeometryInstance({
+        const greenCorridorInstance = new Cesium.GeometryInstance({
           geometry: corridorGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -137,7 +137,7 @@
         });
         // Create a geometry instance using the corridor geometry
         // created above.
-        var blueCorridorInstance = new Cesium.GeometryInstance({
+        const blueCorridorInstance = new Cesium.GeometryInstance({
           geometry: corridorGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -155,10 +155,10 @@
           })
         ); //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

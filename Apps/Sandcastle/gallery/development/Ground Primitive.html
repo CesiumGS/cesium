@@ -32,22 +32,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
         function offsetPositions(positions, degreeOffset) {
           positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(
             positions
           );
-          var delta = Cesium.Math.toRadians(degreeOffset);
-          for (var i = 0; i < positions.length; ++i) {
-            var position = positions[i];
+          const delta = Cesium.Math.toRadians(degreeOffset);
+          for (let i = 0; i < positions.length; ++i) {
+            const position = positions[i];
             position.latitude += delta;
             position.longitude += delta;
           }
@@ -57,7 +57,7 @@
         }
 
         function createOverlappingPolygons(withAlpha) {
-          var positions = [
+          const positions = [
             new Cesium.Cartesian3(
               -2358138.847340281,
               -3744072.459541374,
@@ -79,9 +79,9 @@
               4581961.863286629
             ),
           ];
-          var polygonHierarchy = { positions: positions };
+          let polygonHierarchy = { positions: positions };
 
-          var color = Cesium.Color.RED;
+          let color = Cesium.Color.RED;
           if (withAlpha) {
             color = color.withAlpha(0.5);
           }
@@ -102,7 +102,7 @@
           );
 
           // Same polygon slightly offset and overlapping.
-          var positionsOffset = offsetPositions(positions, 0.01);
+          let positionsOffset = offsetPositions(positions, 0.01);
           polygonHierarchy = { positions: positionsOffset };
 
           color = Cesium.Color.GREEN;
@@ -166,18 +166,18 @@
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         }
 
-        var handler;
+        let handler;
 
         Sandcastle.addDefaultToolbarButton("Picking Example", function () {
           createOverlappingPolygons(true);
           viewOverlappingPolygons();
 
-          var currentObject;
-          var lastColor;
+          let currentObject;
+          let lastColor;
 
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = scene.pick(movement.endPosition);
+            const pickedObject = scene.pick(movement.endPosition);
             if (
               Cesium.defined(pickedObject) &&
               pickedObject !== currentObject
@@ -190,7 +190,7 @@
 
               currentObject = pickedObject;
 
-              var attributes = currentObject.primitive.getGeometryInstanceAttributes(
+              const attributes = currentObject.primitive.getGeometryInstanceAttributes(
                 currentObject.id
               );
               lastColor = attributes.color;
@@ -213,7 +213,7 @@
 
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = scene.pick(movement.endPosition);
+            const pickedObject = scene.pick(movement.endPosition);
             if (Cesium.defined(pickedObject)) {
               scene.groundPrimitives.raiseToTop(pickedObject.primitive);
             }
@@ -221,27 +221,27 @@
         });
 
         function createBatchedInstances(color, show) {
-          var instances = [];
+          const instances = [];
 
-          var width = 0.02561343838881669;
-          var height = 0.019831817968480436;
+          const width = 0.02561343838881669;
+          const height = 0.019831817968480436;
 
-          var lat = 46.18147866629652;
-          var lon = -122.20406057655991;
+          let lat = 46.18147866629652;
+          let lon = -122.20406057655991;
 
-          var delta = 0.03;
-          var latDeltas = [0.0, 0.0, delta, 0.0];
-          var lonDeltas = [0.0, delta, 0.0, -delta];
+          const delta = 0.03;
+          const latDeltas = [0.0, 0.0, delta, 0.0];
+          const lonDeltas = [0.0, delta, 0.0, -delta];
 
-          var length = latDeltas.length;
-          for (var i = 0; i < length; ++i) {
+          const length = latDeltas.length;
+          for (let i = 0; i < length; ++i) {
             lon = lon + lonDeltas[i];
             lat = lat + latDeltas[i];
 
-            var west = lon;
-            var east = lon + width;
-            var south = lat;
-            var north = lat + height;
+            const west = lon;
+            const east = lon + width;
+            const south = lat;
+            const north = lat + height;
 
             instances.push(
               new Cesium.GeometryInstance({
@@ -257,7 +257,7 @@
                   color: color,
                   show: show,
                 },
-                id: "rectangle" + i,
+                id: `rectangle${i}`,
               })
             );
           }
@@ -266,14 +266,14 @@
         }
 
         Sandcastle.addToolbarButton("Batching", function () {
-          var color = new Cesium.ColorGeometryInstanceAttribute(
+          const color = new Cesium.ColorGeometryInstanceAttribute(
             0.0,
             1.0,
             1.0,
             0.5
           );
-          var show = new Cesium.ShowGeometryInstanceAttribute(true);
-          var instances = createBatchedInstances(color, show);
+          const show = new Cesium.ShowGeometryInstanceAttribute(true);
+          const instances = createBatchedInstances(color, show);
           scene.groundPrimitives.add(
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
@@ -285,16 +285,16 @@
         });
 
         Sandcastle.addToolbarButton("Batch Picking", function () {
-          var color = new Cesium.ColorGeometryInstanceAttribute(
+          let color = new Cesium.ColorGeometryInstanceAttribute(
             0.0,
             1.0,
             1.0,
             0.5
           );
-          var show = new Cesium.ShowGeometryInstanceAttribute(true);
-          var instances = createBatchedInstances(color, show);
+          let show = new Cesium.ShowGeometryInstanceAttribute(true);
+          let instances = createBatchedInstances(color, show);
 
-          var primitive = scene.groundPrimitives.add(
+          const primitive = scene.groundPrimitives.add(
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
               classificationType: Cesium.ClassificationType.TERRAIN,
@@ -306,12 +306,12 @@
           instances = createBatchedInstances(color, show);
 
           // Edit id to differentiate between picked primitive and normally displayed primitive.
-          var pickIdPrefix = "pick";
-          for (var i = 0; i < instances.length; ++i) {
+          const pickIdPrefix = "pick";
+          for (let i = 0; i < instances.length; ++i) {
             instances[i].id = pickIdPrefix + instances[i].id;
           }
 
-          var pickPrimitive = scene.groundPrimitives.add(
+          const pickPrimitive = scene.groundPrimitives.add(
             new Cesium.GroundPrimitive({
               geometryInstances: instances,
               classificationType: Cesium.ClassificationType.TERRAIN,
@@ -320,11 +320,11 @@
 
           viewOverlappingPolygons();
 
-          var currentObject;
+          let currentObject;
 
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = scene.pick(movement.endPosition);
+            const pickedObject = scene.pick(movement.endPosition);
             if (
               Cesium.defined(pickedObject) &&
               pickedObject !== currentObject &&
@@ -497,10 +497,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -29,19 +29,19 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Draw a the outline of a sphere and position
         // it on the globe surface.
 
-        var radius = 300000;
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-98.0, 45.0);
-        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        const radius = 300000;
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-98.0, 45.0);
+        const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radius),
           new Cesium.Matrix4()
@@ -49,7 +49,7 @@
         // Create the sphere outline geometry instance. Use the
         // stackPartitions and slicePartitions options to determine
         // the number of latitude and longitude lines to draw.
-        var sphereOutlineInstance = new Cesium.GeometryInstance({
+        const sphereOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.SphereOutlineGeometry({
             radius: radius,
             stackPartitions: 8,
@@ -76,10 +76,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

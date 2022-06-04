@@ -1,3 +1,4 @@
+import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidGeodesic } from "../../Source/Cesium.js";
@@ -5,28 +6,28 @@ import { EllipsoidRhumbLine } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/EllipsoidRhumbLine", function () {
-  var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
-  var fifteenDegrees = Math.PI / 12;
-  var thirtyDegrees = Math.PI / 6;
-  var fortyfiveDegrees = Math.PI / 4;
+  const oneDegree = CesiumMath.RADIANS_PER_DEGREE;
+  const fifteenDegrees = Math.PI / 12;
+  const thirtyDegrees = Math.PI / 6;
+  const fortyfiveDegrees = Math.PI / 4;
 
   it("throws without start", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine();
+      const rhumb = new EllipsoidRhumbLine();
       return rhumb.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
   });
 
   it("throws without end", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine(new Cartographic(Math.PI, Math.PI));
+      const rhumb = new EllipsoidRhumbLine(new Cartographic(Math.PI, Math.PI));
       return rhumb.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
   });
 
   it("throws without unique position", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine(
+      const rhumb = new EllipsoidRhumbLine(
         new Cartographic(Math.PI, Math.PI),
         new Cartographic(0, Math.PI)
       );
@@ -36,27 +37,27 @@ describe("Core/EllipsoidRhumbLine", function () {
 
   it("setEndPoints throws without start", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine();
+      const rhumb = new EllipsoidRhumbLine();
       rhumb.setEndPoints();
     }).toThrowDeveloperError();
   });
 
   it("setEndPoints throws without end", function () {
     expect(function () {
-      var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
-      var rhumb = new EllipsoidRhumbLine();
+      const start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
+      const rhumb = new EllipsoidRhumbLine();
       rhumb.setEndPoints(start);
       return rhumb.interpolateUsingSurfaceDistance(0);
     }).toThrowDeveloperError();
   });
 
   it("can create using fromStartHeadingDistance function", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var heading = fifteenDegrees;
-    var distance = fifteenDegrees * ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const start = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const heading = fifteenDegrees;
+    const distance = fifteenDegrees * ellipsoid.maximumRadius;
 
-    var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
       start,
       heading,
       distance,
@@ -68,14 +69,14 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("can create using fromStartHeadingDistance function with result", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var scratch = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+    const ellipsoid = Ellipsoid.WGS84;
+    const scratch = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
 
-    var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var heading = fifteenDegrees;
-    var distance = fifteenDegrees * ellipsoid.maximumRadius;
+    const start = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const heading = fifteenDegrees;
+    const distance = fifteenDegrees * ellipsoid.maximumRadius;
 
-    var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
       start,
       heading,
       distance,
@@ -91,42 +92,45 @@ describe("Core/EllipsoidRhumbLine", function () {
 
   it("getSurfaceDistance throws if start or end never defined", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine();
+      const rhumb = new EllipsoidRhumbLine();
       return rhumb.surfaceDistance;
     }).toThrowDeveloperError();
   });
 
   it("getHeading throws if start or end never defined", function () {
     expect(function () {
-      var rhumb = new EllipsoidRhumbLine();
+      const rhumb = new EllipsoidRhumbLine();
       return rhumb.heading;
     }).toThrowDeveloperError();
   });
 
   it("works with two points", function () {
-    var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var end = new Cartographic(thirtyDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
     expect(start).toEqual(rhumb.start);
     expect(end).toEqual(rhumb.end);
   });
 
   it("sets end points", function () {
-    var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
-    var end = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-    var rhumb = new EllipsoidRhumbLine();
+    const start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
+    const end = new Cartographic(
+      CesiumMath.PI_OVER_TWO,
+      CesiumMath.PI_OVER_TWO
+    );
+    const rhumb = new EllipsoidRhumbLine();
     rhumb.setEndPoints(start, end);
     expect(start).toEqual(rhumb.start);
     expect(end).toEqual(rhumb.end);
   });
 
   it("gets heading", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 3);
-    var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
-    var end = new Cartographic(Math.PI, 0);
+    const ellipsoid = new Ellipsoid(6, 6, 3);
+    const start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
+    const end = new Cartographic(Math.PI, 0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
       CesiumMath.EPSILON12
@@ -134,31 +138,31 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes heading not going over the pole", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var start = new Cartographic(0, 1.2);
-    var end = new Cartographic(Math.PI, 1.5);
+    const ellipsoid = Ellipsoid.WGS84;
+    const start = new Cartographic(0, 1.2);
+    const end = new Cartographic(Math.PI, 1.5);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
 
     expect(0.0).not.toEqual(rhumb.heading);
   });
 
   it("computes heading going over the pole", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var start = new Cartographic(1.3, CesiumMath.PI_OVER_TWO);
-    var end = new Cartographic(0.0, CesiumMath.PI / 2.4);
+    const ellipsoid = Ellipsoid.WGS84;
+    const start = new Cartographic(1.3, CesiumMath.PI_OVER_TWO);
+    const end = new Cartographic(0.0, CesiumMath.PI / 2.4);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
 
     expect(0.0).not.toEqual(rhumb.heading);
   });
 
   it("heading works when going around the world at constant latitude", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 6);
-    var start = new Cartographic(0.0, 0.3);
-    var end = new Cartographic(CesiumMath.PI_OVER_TWO, 0.3);
+    const ellipsoid = new Ellipsoid(6, 6, 6);
+    let start = new Cartographic(0.0, 0.3);
+    let end = new Cartographic(CesiumMath.PI_OVER_TWO, 0.3);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
 
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
@@ -167,7 +171,7 @@ describe("Core/EllipsoidRhumbLine", function () {
 
     start = new Cartographic(3 * CesiumMath.PI_OVER_TWO, 0.3);
     end = new Cartographic(CesiumMath.PI, 0.3);
-    var rhumb2 = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(-CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb2.heading,
       CesiumMath.EPSILON12
@@ -175,23 +179,23 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes heading for vertical lines", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var start = new Cartographic(0.0, 1.2);
-    var end = new Cartographic(0.0, 1.5);
+    const ellipsoid = Ellipsoid.WGS84;
+    const start = new Cartographic(0.0, 1.2);
+    const end = new Cartographic(0.0, 1.5);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(0.0).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
 
-    var rhumb2 = new EllipsoidRhumbLine(end, start, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine(end, start, ellipsoid);
     expect(CesiumMath.PI).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
   });
 
   it("computes distance at equator", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 3);
-    var start = new Cartographic(-CesiumMath.PI_OVER_FOUR, 0.0);
-    var end = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
+    const ellipsoid = new Ellipsoid(6, 6, 3);
+    const start = new Cartographic(-CesiumMath.PI_OVER_FOUR, 0.0);
+    const end = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(
       rhumb.surfaceDistance,
       CesiumMath.EPSILON12
@@ -199,11 +203,11 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes distance at meridian", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 6);
-    var start = new Cartographic(CesiumMath.PI_OVER_TWO, fifteenDegrees);
-    var end = new Cartographic(CesiumMath.PI_OVER_TWO, fortyfiveDegrees);
+    const ellipsoid = new Ellipsoid(6, 6, 6);
+    const start = new Cartographic(CesiumMath.PI_OVER_TWO, fifteenDegrees);
+    const end = new Cartographic(CesiumMath.PI_OVER_TWO, fortyfiveDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
     expect(thirtyDegrees * 6).toEqualEpsilon(
       rhumb.surfaceDistance,
       CesiumMath.EPSILON12
@@ -211,28 +215,28 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes equal distance on sphere for 90 degrees arcs along meridian and equator", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 6);
-    var fortyFiveSouth = new Cartographic(0.0, -CesiumMath.PI_OVER_FOUR);
-    var fortyFiveNorth = new Cartographic(0.0, CesiumMath.PI_OVER_FOUR);
-    var fortyFiveWest = new Cartographic(-CesiumMath.PI_OVER_FOUR, 0.0);
-    var fortyFiveEast = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
+    const ellipsoid = new Ellipsoid(6, 6, 6);
+    const fortyFiveSouth = new Cartographic(0.0, -CesiumMath.PI_OVER_FOUR);
+    const fortyFiveNorth = new Cartographic(0.0, CesiumMath.PI_OVER_FOUR);
+    const fortyFiveWest = new Cartographic(-CesiumMath.PI_OVER_FOUR, 0.0);
+    const fortyFiveEast = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
 
-    var westEastRhumb = new EllipsoidRhumbLine(
+    const westEastRhumb = new EllipsoidRhumbLine(
       fortyFiveWest,
       fortyFiveEast,
       ellipsoid
     );
-    var southNorthRhumb = new EllipsoidRhumbLine(
+    const southNorthRhumb = new EllipsoidRhumbLine(
       fortyFiveSouth,
       fortyFiveNorth,
       ellipsoid
     );
-    var eastWestRhumb = new EllipsoidRhumbLine(
+    const eastWestRhumb = new EllipsoidRhumbLine(
       fortyFiveEast,
       fortyFiveWest,
       ellipsoid
     );
-    var northSouthRhumb = new EllipsoidRhumbLine(
+    const northSouthRhumb = new EllipsoidRhumbLine(
       fortyFiveNorth,
       fortyFiveSouth,
       ellipsoid
@@ -265,12 +269,12 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes distance at same latitude", function () {
-    var ellipsoid = new Ellipsoid(6, 6, 6);
-    var start = new Cartographic(0, -fortyfiveDegrees);
-    var end = new Cartographic(CesiumMath.PI_OVER_TWO, -fortyfiveDegrees);
+    const ellipsoid = new Ellipsoid(6, 6, 6);
+    const start = new Cartographic(0, -fortyfiveDegrees);
+    const end = new Cartographic(CesiumMath.PI_OVER_TWO, -fortyfiveDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
-    var distance = Math.cos(fortyfiveDegrees) * CesiumMath.PI_OVER_TWO * 6;
+    const rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
+    const distance = Math.cos(fortyfiveDegrees) * CesiumMath.PI_OVER_TWO * 6;
     expect(distance).toEqualEpsilon(
       rhumb.surfaceDistance,
       CesiumMath.EPSILON12
@@ -278,12 +282,12 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("throws when interpolating rhumb line of zero length", function () {
-    var radius = 6378137.0;
-    var ellipsoid = new Ellipsoid(radius, radius, radius);
-    var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const radius = 6378137.0;
+    const ellipsoid = new Ellipsoid(radius, radius, radius);
+    const initial = new Cartographic(fifteenDegrees, fifteenDegrees);
 
     expect(function () {
-      var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
+      const rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(
         initial,
         fifteenDegrees,
         0.0,
@@ -294,18 +298,18 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes heading and distance given endpoints on sphere ", function () {
-    var radius = 6378137.0;
-    var ellipsoid = new Ellipsoid(radius, radius, radius);
-    var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var distance = radius * fifteenDegrees;
+    const radius = 6378137.0;
+    const ellipsoid = new Ellipsoid(radius, radius, radius);
+    const initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const distance = radius * fifteenDegrees;
 
-    var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       fifteenDegrees,
       distance,
       ellipsoid
     );
-    var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(fifteenDegrees).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(distance).toEqualEpsilon(
@@ -315,17 +319,17 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("computes heading and distance given endpoints on sphereoid", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var distance = ellipsoid.maximumRadius * fifteenDegrees;
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const distance = ellipsoid.maximumRadius * fifteenDegrees;
 
-    var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       fifteenDegrees,
       distance,
       ellipsoid
     );
-    var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(fifteenDegrees).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(distance).toEqualEpsilon(
@@ -335,24 +339,24 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("tests sphere close to 90 degrees", function () {
-    var radius = 6378137.0;
-    var ellipsoid = new Ellipsoid(radius, radius, radius);
-    var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var distance = radius * fifteenDegrees;
+    const radius = 6378137.0;
+    const ellipsoid = new Ellipsoid(radius, radius, radius);
+    const initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const distance = radius * fifteenDegrees;
 
-    var eightyNineDegrees = 89 * oneDegree;
-    var eightyNinePointNineDegrees = 89.9 * oneDegree;
-    var ninetyDegrees = 90 * oneDegree;
-    var ninetyPointOneDegrees = 90.1 * oneDegree;
-    var ninetyPointZeroTwoDegrees = 90.02 * oneDegree;
+    const eightyNineDegrees = 89 * oneDegree;
+    const eightyNinePointNineDegrees = 89.9 * oneDegree;
+    const ninetyDegrees = 90 * oneDegree;
+    const ninetyPointOneDegrees = 90.1 * oneDegree;
+    const ninetyPointZeroTwoDegrees = 90.02 * oneDegree;
 
-    var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    let rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       eightyNineDegrees,
       distance,
       ellipsoid
     );
-    var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
+    let rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
@@ -413,23 +417,23 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("tests spheroid close to 90 degrees", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var distance = ellipsoid.maximumRadius * fifteenDegrees;
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const distance = ellipsoid.maximumRadius * fifteenDegrees;
 
-    var eightyNineDegrees = 89 * oneDegree;
-    var eightyNinePointNineDegrees = 89.9 * oneDegree;
-    var ninetyDegrees = 90 * oneDegree;
-    var ninetyPointOneDegrees = 90.1 * oneDegree;
-    var ninetyPointZeroTwoDegrees = 90.02 * oneDegree;
+    const eightyNineDegrees = 89 * oneDegree;
+    const eightyNinePointNineDegrees = 89.9 * oneDegree;
+    const ninetyDegrees = 90 * oneDegree;
+    const ninetyPointOneDegrees = 90.1 * oneDegree;
+    const ninetyPointZeroTwoDegrees = 90.02 * oneDegree;
 
-    var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    let rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       eightyNineDegrees,
       distance,
       ellipsoid
     );
-    var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
+    let rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
       rhumb2.surfaceDistance,
@@ -490,13 +494,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test sphereoid across meridian", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(-fifteenDegrees, 0.0);
-    var final = new Cartographic(fifteenDegrees, 0.0);
-    var distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(-fifteenDegrees, 0.0);
+    const final = new Cartographic(fifteenDegrees, 0.0);
+    const distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
 
-    var rhumb1 = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var rhumb2 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb1 = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const rhumb2 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       CesiumMath.PI_OVER_TWO,
       distance,
@@ -511,14 +515,14 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test across IDL with -PI to PI range of longitude", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(-CesiumMath.PI + fifteenDegrees, 0.0);
-    var final = new Cartographic(CesiumMath.PI - fifteenDegrees, 0.0);
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(-CesiumMath.PI + fifteenDegrees, 0.0);
+    const final = new Cartographic(CesiumMath.PI - fifteenDegrees, 0.0);
 
-    var distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
+    const distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
 
-    var rhumb1 = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var rhumb2 = new EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb1 = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       3.0 * CesiumMath.PI_OVER_TWO,
       distance,
@@ -539,8 +543,8 @@ describe("Core/EllipsoidRhumbLine", function () {
       CesiumMath.EPSILON6
     );
 
-    var rhumb3 = new EllipsoidRhumbLine(final, initial, ellipsoid);
-    var rhumb4 = new EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb3 = new EllipsoidRhumbLine(final, initial, ellipsoid);
+    const rhumb4 = new EllipsoidRhumbLine.fromStartHeadingDistance(
       final,
       CesiumMath.PI_OVER_TWO,
       distance,
@@ -562,13 +566,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test across equator", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(fifteenDegrees, -oneDegree);
-    var final = new Cartographic(fifteenDegrees, oneDegree);
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(fifteenDegrees, -oneDegree);
+    const final = new Cartographic(fifteenDegrees, oneDegree);
 
     //A rhumb line with heading = 0 should be almost the same as a geodesic
-    var rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
     expect(0.0).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
     expect(geodesic.startHeading).toEqualEpsilon(
       rhumb.heading,
@@ -581,13 +585,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test on equator", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(0.0, 0.0);
-    var final = new Cartographic(CesiumMath.PI - 1, 0.0);
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(0.0, 0.0);
+    const final = new Cartographic(CesiumMath.PI - 1, 0.0);
 
     //A rhumb line on the equator should be the same as a geodesic
-    var rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
+    const rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
     expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(
       rhumb.heading,
       CesiumMath.EPSILON12
@@ -603,21 +607,21 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test close to poles", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var fiveDegrees = CesiumMath.PI / 36.0;
-    var eightyDegrees = 16 * fiveDegrees;
+    const ellipsoid = Ellipsoid.WGS84;
+    const fiveDegrees = CesiumMath.PI / 36.0;
+    const eightyDegrees = 16 * fiveDegrees;
 
-    var distance = fifteenDegrees * ellipsoid.maximumRadius;
+    const distance = fifteenDegrees * ellipsoid.maximumRadius;
 
-    var initial = new Cartographic(0.0, eightyDegrees);
+    const initial = new Cartographic(0.0, eightyDegrees);
 
-    var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       eightyDegrees,
       distance,
       ellipsoid
     );
-    var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
+    const rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
 
     expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     expect(rhumb1.surfaceDistance).toEqualEpsilon(
@@ -627,13 +631,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test interpolate fraction", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(0.0, 0.0);
-    var final = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
-    var halfway = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(0.0, 0.0);
+    const final = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
+    const halfway = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var interpolatedPoint = rhumb.interpolateUsingFraction(0.5);
+    const rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const interpolatedPoint = rhumb.interpolateUsingFraction(0.5);
 
     expect(halfway.longitude).toEqualEpsilon(
       interpolatedPoint.longitude,
@@ -646,15 +650,15 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("test interpolate distance", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var initial = new Cartographic(0.0, 0.0);
-    var final = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
-    var halfway = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
+    const ellipsoid = Ellipsoid.WGS84;
+    const initial = new Cartographic(0.0, 0.0);
+    const final = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
+    const halfway = new Cartographic(CesiumMath.PI_OVER_FOUR, 0.0);
 
-    var distance = ellipsoid.maximumRadius * CesiumMath.PI_OVER_FOUR;
+    const distance = ellipsoid.maximumRadius * CesiumMath.PI_OVER_FOUR;
 
-    var rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    var interpolatedPoint = rhumb.interpolateUsingSurfaceDistance(distance);
+    const rhumb = new EllipsoidRhumbLine(initial, final, ellipsoid);
+    const interpolatedPoint = rhumb.interpolateUsingSurfaceDistance(distance);
 
     expect(halfway.longitude).toEqualEpsilon(
       interpolatedPoint.longitude,
@@ -667,14 +671,14 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates start and end points", function () {
-    var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var end = new Cartographic(thirtyDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
-    var distance = rhumb.surfaceDistance;
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    const distance = rhumb.surfaceDistance;
 
-    var first = rhumb.interpolateUsingSurfaceDistance(0.0);
-    var last = rhumb.interpolateUsingSurfaceDistance(distance);
+    const first = rhumb.interpolateUsingSurfaceDistance(0.0);
+    const last = rhumb.interpolateUsingSurfaceDistance(distance);
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
@@ -686,14 +690,14 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates midpoint", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
-    var expectedMid = new Cartographic(thirtyDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
+    const expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
-    var distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    const distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
 
-    var midpoint = rhumb.interpolateUsingSurfaceDistance(distance);
+    const midpoint = rhumb.interpolateUsingSurfaceDistance(distance);
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
@@ -706,13 +710,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates start and end points using fraction", function () {
-    var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-    var end = new Cartographic(thirtyDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, fifteenDegrees);
+    const end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var first = rhumb.interpolateUsingFraction(0);
-    var last = rhumb.interpolateUsingFraction(1);
+    const first = rhumb.interpolateUsingFraction(0);
+    const last = rhumb.interpolateUsingFraction(1);
 
     expect(start.longitude).toEqualEpsilon(
       first.longitude,
@@ -724,13 +728,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates midpoint using fraction", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
-    var expectedMid = new Cartographic(thirtyDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
+    const expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpoint = rhumb.interpolateUsingFraction(0.5);
+    const midpoint = rhumb.interpolateUsingFraction(0.5);
 
     expect(expectedMid.longitude).toEqualEpsilon(
       midpoint.longitude,
@@ -743,13 +747,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates midpoint fraction using result parameter", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
-    var expectedMid = new Cartographic(thirtyDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
+    const expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
-    var result = new Cartographic();
-    var midpoint = rhumb.interpolateUsingFraction(0.5, result);
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    const result = new Cartographic();
+    const midpoint = rhumb.interpolateUsingFraction(0.5, result);
     expect(result).toBe(midpoint);
 
     expect(expectedMid.longitude).toEqualEpsilon(
@@ -763,15 +767,15 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("interpolates midpoint using result parameter", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
-    var expectedMid = new Cartographic(thirtyDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
+    const expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
-    var distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    const distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
 
-    var result = new Cartographic();
-    var midpoint = rhumb.interpolateUsingSurfaceDistance(distance, result);
+    const result = new Cartographic();
+    const midpoint = rhumb.interpolateUsingSurfaceDistance(distance, result);
 
     expect(result).toBe(midpoint);
 
@@ -786,13 +790,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("finds midpoint and other points using intersection with longitude", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
       midpointUsingInterpolation.longitude
     );
     expect(
@@ -803,8 +807,8 @@ describe("Core/EllipsoidRhumbLine", function () {
       )
     ).toBe(true);
 
-    var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
-    var pointUsingIntersection = rhumb.findIntersectionWithLongitude(
+    let pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
+    let pointUsingIntersection = rhumb.findIntersectionWithLongitude(
       pointUsingInterpolation.longitude
     );
     expect(
@@ -841,13 +845,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("finds correct intersection with IDL", function () {
-    var start = Cartographic.fromDegrees(170, 10);
-    var end = Cartographic.fromDegrees(-170, 23);
+    const start = Cartographic.fromDegrees(170, 10);
+    const end = Cartographic.fromDegrees(-170, 23);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var idlIntersection1 = rhumb.findIntersectionWithLongitude(-Math.PI);
-    var idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
+    let idlIntersection1 = rhumb.findIntersectionWithLongitude(-Math.PI);
+    let idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
 
     expect(
       Cartographic.equalsEpsilon(
@@ -888,13 +892,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("intersection with longitude handles E-W lines", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
       midpointUsingInterpolation.longitude
     );
     expect(
@@ -907,13 +911,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("intersection with longitude handles N-S lines", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fifteenDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
       midpointUsingInterpolation.longitude
     );
 
@@ -921,12 +925,12 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("intersection with longitude handles N-S lines with different longitude", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fifteenDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
+    const midpointUsingIntersection = rhumb.findIntersectionWithLongitude(
       thirtyDegrees
     );
 
@@ -937,13 +941,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("finds midpoint and other points using intersection with latitude", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
       midpointUsingInterpolation.latitude
     );
     expect(
@@ -954,8 +958,8 @@ describe("Core/EllipsoidRhumbLine", function () {
       )
     ).toBe(true);
 
-    var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
-    var pointUsingIntersection = rhumb.findIntersectionWithLatitude(
+    let pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
+    let pointUsingIntersection = rhumb.findIntersectionWithLatitude(
       pointUsingInterpolation.latitude
     );
     expect(
@@ -992,13 +996,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("intersection with latitude handles E-W lines", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fortyfiveDegrees, 0.0);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fortyfiveDegrees, 0.0);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
       midpointUsingInterpolation.latitude
     );
 
@@ -1006,13 +1010,13 @@ describe("Core/EllipsoidRhumbLine", function () {
   });
 
   it("intersection with latitude handles N-S lines", function () {
-    var start = new Cartographic(fifteenDegrees, 0.0);
-    var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+    const start = new Cartographic(fifteenDegrees, 0.0);
+    const end = new Cartographic(fifteenDegrees, thirtyDegrees);
 
-    var rhumb = new EllipsoidRhumbLine(start, end);
+    const rhumb = new EllipsoidRhumbLine(start, end);
 
-    var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
-    var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
+    const midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+    const midpointUsingIntersection = rhumb.findIntersectionWithLatitude(
       midpointUsingInterpolation.latitude
     );
     expect(
@@ -1022,5 +1026,28 @@ describe("Core/EllipsoidRhumbLine", function () {
         CesiumMath.EPSILON12
       )
     ).toBe(true);
+  });
+
+  it("returns the start point when interpolating at surface distance 0.0", function () {
+    const p0 = new Cartesian3(
+      899411.2767873341,
+      -5079219.747324299,
+      3738850.924729517
+    );
+    const p1 = new Cartesian3(
+      899411.0994891181,
+      -5079219.778719673,
+      3738850.9247295167
+    );
+
+    const ellipsoid = Ellipsoid.WGS84;
+    const c0 = ellipsoid.cartesianToCartographic(p0, new Cartographic());
+    const c1 = ellipsoid.cartesianToCartographic(p1, new Cartographic());
+    const rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+
+    const c = rhumb.interpolateUsingSurfaceDistance(0.0, new Cartographic());
+    const p = ellipsoid.cartographicToCartesian(c, new Cartesian3());
+
+    expect(p).toEqualEpsilon(p0, CesiumMath.EPSILON7);
   });
 });

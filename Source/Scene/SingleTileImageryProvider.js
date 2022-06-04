@@ -1,5 +1,6 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -8,7 +9,6 @@ import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
@@ -134,10 +134,10 @@ function SingleTileImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(options.url);
 
-  var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-  var tilingScheme = new GeographicTilingScheme({
+  const rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  const tilingScheme = new GeographicTilingScheme({
     rectangle: rectangle,
     numberOfLevelZeroTilesX: 1,
     numberOfLevelZeroTilesY: 1,
@@ -153,16 +153,16 @@ function SingleTileImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
   this._credit = credit;
 
-  var that = this;
-  var error;
+  const that = this;
+  let error;
 
   function success(image) {
     that._image = image;
@@ -174,7 +174,7 @@ function SingleTileImageryProvider(options) {
   }
 
   function failure(e) {
-    var message = "Failed to load image " + resource.url + ".";
+    const message = `Failed to load image ${resource.url}.`;
     error = TileProviderError.handleError(
       error,
       that,
@@ -186,11 +186,13 @@ function SingleTileImageryProvider(options) {
       doRequest,
       e
     );
-    that._readyPromise.reject(new RuntimeError(message));
+    if (!error.retry) {
+      that._readyPromise.reject(new RuntimeError(message));
+    }
   }
 
   function doRequest() {
-    ImageryProvider.loadImage(null, resource).then(success).otherwise(failure);
+    ImageryProvider.loadImage(null, resource).then(success).catch(failure);
   }
 
   doRequest();
@@ -452,10 +454,7 @@ SingleTileImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<ImageryTypes>|undefined} The resolved image
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
@@ -473,7 +472,11 @@ SingleTileImageryProvider.prototype.requestImage = function (
   }
   //>>includeEnd('debug');
 
-  return this._image;
+  if (!defined(this._image)) {
+    return;
+  }
+
+  return Promise.resolve(this._image);
 };
 
 /**
@@ -485,10 +488,7 @@ SingleTileImageryProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- *                   It may also be undefined if picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 SingleTileImageryProvider.prototype.pickFeatures = function (
   x,

@@ -27,17 +27,17 @@ describe("Core/CubicRealPolynomial", function () {
   });
 
   it("discriminant", function () {
-    var a = 3.0;
-    var b = 2.0;
-    var c = 1.0;
-    var d = 1.0;
-    var expected =
+    const a = 3.0;
+    const b = 2.0;
+    const c = 1.0;
+    const d = 1.0;
+    const expected =
       b * b * c * c -
       4 * a * c * c * c -
       4 * b * b * b * d -
       27 * a * a * d * d +
       18 * a * b * c * d;
-    var actual = CubicRealPolynomial.computeDiscriminant(a, b, c, d);
+    const actual = CubicRealPolynomial.computeDiscriminant(a, b, c, d);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON14);
   });
 
@@ -66,7 +66,7 @@ describe("Core/CubicRealPolynomial", function () {
   });
 
   it("three repeated roots", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(2.0, -12.0, 24.0, -16.0);
+    const roots = CubicRealPolynomial.computeRealRoots(2.0, -12.0, 24.0, -16.0);
     expect(roots.length).toEqual(3);
     expect(roots[0]).toEqualEpsilon(2.0, CesiumMath.EPSILON15);
     expect(roots[1]).toEqualEpsilon(2.0, CesiumMath.EPSILON15);
@@ -74,7 +74,7 @@ describe("Core/CubicRealPolynomial", function () {
   });
 
   it("one unique and two repeated roots", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(2.0, 2.0, -2.0, -2.0);
+    const roots = CubicRealPolynomial.computeRealRoots(2.0, 2.0, -2.0, -2.0);
     expect(roots.length).toEqual(3);
     expect(roots[0]).toEqualEpsilon(-1.0, CesiumMath.EPSILON15);
     expect(roots[1]).toEqualEpsilon(-1.0, CesiumMath.EPSILON15);
@@ -82,7 +82,7 @@ describe("Core/CubicRealPolynomial", function () {
   });
 
   it("three unique roots", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(2.0, 6.0, -26.0, -30.0);
+    const roots = CubicRealPolynomial.computeRealRoots(2.0, 6.0, -26.0, -30.0);
     expect(roots.length).toEqual(3);
     expect(roots[0]).toEqualEpsilon(-5.0, CesiumMath.EPSILON15);
     expect(roots[1]).toEqualEpsilon(-1.0, CesiumMath.EPSILON15);
@@ -90,20 +90,20 @@ describe("Core/CubicRealPolynomial", function () {
   });
 
   it("complex roots", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(2.0, -6.0, 10.0, -6.0);
+    const roots = CubicRealPolynomial.computeRealRoots(2.0, -6.0, 10.0, -6.0);
     expect(roots.length).toEqual(1);
     expect(roots[0]).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
   });
 
   it("quadratic case", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(0.0, 2.0, -4.0, -6.0);
+    const roots = CubicRealPolynomial.computeRealRoots(0.0, 2.0, -4.0, -6.0);
     expect(roots.length).toEqual(2);
     expect(roots[0]).toEqual(-1.0);
     expect(roots[1]).toEqual(3.0);
   });
 
   it("deflated case", function () {
-    var roots = CubicRealPolynomial.computeRealRoots(1.0, 0.0, 1.0, 2.0);
+    let roots = CubicRealPolynomial.computeRealRoots(1.0, 0.0, 1.0, 2.0);
     expect(roots.length).toEqual(1);
     expect(roots[0]).toEqualEpsilon(-1.0, CesiumMath.EPSILON14);
 
