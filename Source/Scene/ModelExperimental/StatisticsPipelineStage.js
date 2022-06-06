@@ -94,13 +94,11 @@ function count2DPositions(statistics, runtimePrimitive) {
   //    positionAttribute.typedArray. In this case, countGeometry() will
   //    detect the typed array and set hasCpuCopy = true. No memory is counted
   //    here.
-  // 2. The scene was in 2D mode so positions were generated as a buffer and the
-  //    typed array was discarded. In this case, countGeometry() will set
-  //    hasCpuCopy = false when counting the original POSITION attribute. This
-  //    method will count it with hasCpuCopy = false since the typed array was
-  //    discarded.
+  // 2. The scene was in 2D mode so positions were generated as a buffer.
+  //    Even though the typed array was unlinked from the attribute, it still
+  //    exists in the loader so we count it here.
   if (defined(buffer2D)) {
-    const hasCpuCopy = false;
+    const hasCpuCopy = true;
     statistics.addBuffer(buffer2D, hasCpuCopy);
   }
 }
@@ -238,8 +236,10 @@ function countPropertyTextures(statistics, structuralMetadata) {
 
 // Exposed for testing
 StatisticsPipelineStage._countGeometry = countGeometry;
+StatisticsPipelineStage._count2DPositions = count2DPositions;
 StatisticsPipelineStage._countMorphTargetAttributes = countMorphTargetAttributes;
 StatisticsPipelineStage._countMaterialTextures = countMaterialTextures;
+StatisticsPipelineStage._countFeatureIdTextures = countFeatureIdTextures;
 StatisticsPipelineStage._countBinaryMetadata = countBinaryMetadata;
 
 export default StatisticsPipelineStage;

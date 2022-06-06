@@ -488,12 +488,6 @@ describe(
         expect(uniformMap.u_featureIdTexture_0()).toBe(
           featureIdTexture.textureReader.texture
         );
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.geometryByteLength).toBe(0);
-        expect(statistics.texturesByteLength).toBe(
-          featureIdTexture.textureReader.texture.sizeInBytes
-        );
       });
     });
 
@@ -616,10 +610,6 @@ describe(
         expect(uniformMap.u_featureIdTexture_4()).toBe(texture);
         expect(uniformMap.u_featureIdTexture_5()).toBe(texture);
         expect(uniformMap.u_featureIdTexture_6()).toBe(texture);
-
-        const statistics = renderResources.model.statistics;
-        expect(statistics.geometryByteLength).toBe(0);
-        expect(statistics.texturesByteLength).toBe(texture.sizeInBytes);
       });
     });
 

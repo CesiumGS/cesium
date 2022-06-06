@@ -10,7 +10,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
-  const animatedMorphCubeUrl =
+  const animatedMorphCube =
     "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
   const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
   const boomBoxSpecularGlossiness =
@@ -21,6 +21,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
   const buildingsMetadata =
     "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+  const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
   const pointCloudRGB =
     "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
   const pointCloudWithPropertyAttributes =
@@ -82,7 +83,51 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     };
   }
 
-  it("counts memory for a model", function () {});
+  function mockRenderResources(components) {
+    return {
+      model: {
+        statistics: new ModelExperimentalStatistics(),
+        structuralMetadata: components.structuralMetadata,
+      },
+      runtimePrimitive: {},
+    };
+  }
+
+  it("counts memory for a model", function () {
+    return loadGltf(boxTextured).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const primitive = components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources(components);
+
+      StatisticsPipelineStage.process(renderResources, primitive);
+
+      const statistics = renderResources.model.statistics;
+
+      const attributes = primitive.attributes;
+      let expectedGeometryLength = 0;
+
+      // Positions and normals share a buffer
+      expectedGeometryLength += attributes[0].buffer.sizeInBytes;
+
+      // Texture coordinates
+      expectedGeometryLength += attributes[2].buffer.sizeInBytes;
+
+      // Indices
+      expectedGeometryLength += primitive.indices.buffer.sizeInBytes;
+
+      const material = primitive.material;
+      const metallicRoughness = material.metallicRoughness;
+
+      const expectedTexturesLength =
+        metallicRoughness.baseColorTexture.texture.sizeInBytes;
+
+      expect(statistics.pointsLength).toBe(0);
+      expect(statistics.trianglesLength).toBe(12);
+      expect(statistics.geometryByteLength).toBe(expectedGeometryLength);
+      expect(statistics.texturesByteLength).toBe(expectedTexturesLength);
+      expect(statistics.propertyTablesByteLength).toBe(0);
+    });
+  });
 
   it("_countGeometry computes memory usage for a triangle mesh", function () {
     return loadGltf(boxTextured).then(function (gltfLoader) {
@@ -242,8 +287,52 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     });
   });
 
+  it("_countPositions2D does not update count if 2D positions were not computed", function () {
+    const statistics = new ModelExperimentalStatistics();
+
+    const mockRuntimePrimitive = {
+      positionBuffer2D: undefined,
+    };
+
+    StatisticsPipelineStage._count2DPositions(statistics, mockRuntimePrimitive);
+
+    expect(statistics.geometryByteLength).toBe(0);
+  });
+
+  it("_countPositions2D updates count if 2D positions exist", function () {
+    return loadGltf(boxTextured, {
+      loadPositionsFor2D: true,
+    }).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const primitive = components.nodes[1].primitives[0];
+      const positionAttribute = primitive.attributes[1];
+
+      const mockRuntimePrimitive = {
+        positionBuffer2D: {
+          sizeInBytes: positionAttribute.typedArray.byteLength,
+        },
+      };
+
+      // Simulate how the 2D stage unlinks the typed array. In practice, this
+      // array may still be referenced by the loader so the statistics stage
+      // will count it.
+      positionAttribute.typedArray = undefined;
+
+      StatisticsPipelineStage._count2DPositions(
+        statistics,
+        mockRuntimePrimitive
+      );
+
+      // This stage intentionally counts the GPU + CPU copies of the 2D
+      // positions
+      const positions2D = mockRuntimePrimitive.positionBuffer2D;
+      expect(statistics.geometryByteLength).toBe(2 * positions2D.sizeInBytes);
+    });
+  });
+
   it("_countMorphTargetAttributes updates memory statistics", function () {
-    return loadGltf(animatedMorphCubeUrl).then(function (gltfLoader) {
+    return loadGltf(animatedMorphCube).then(function (gltfLoader) {
       const statistics = new ModelExperimentalStatistics();
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
@@ -315,6 +404,26 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
         specularGlossiness.specularGlossinessTexture.texture.sizeInBytes;
 
       expect(statistics.texturesByteLength).toBe(totalTextureSize);
+    });
+  });
+
+  it("_countFeatureIdTextures counts feature ID textures", function () {
+    return loadGltf(microcosm).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const primitive = node.primitives[0];
+      const statistics = new ModelExperimentalStatistics();
+
+      StatisticsPipelineStage._countFeatureIdTextures(
+        statistics,
+        primitive.featureIds
+      );
+
+      const featureIdTexture = primitive.featureIds[0];
+      expect(statistics.geometryByteLength).toBe(0);
+      expect(statistics.texturesByteLength).toBe(
+        featureIdTexture.textureReader.texture.sizeInBytes
+      );
     });
   });
 
