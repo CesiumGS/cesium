@@ -29,9 +29,10 @@ describe("Core/RuntimeError", function () {
     const str = new RuntimeError(testMessage).toString();
 
     if (!window.specsUsingRelease) {
-      expect(e.stack).toContain(`${name}: ${testMessage}`);
-    } else {
-      expect(str).toContain(testMessage);
+      expect(e.stack).toContain(name);
     }
+
+    // Since source maps are used, there will not be exact filenames
+    expect(str).toContain(testMessage);
   });
 });

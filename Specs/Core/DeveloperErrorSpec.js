@@ -18,8 +18,9 @@ describe("Core/DeveloperError", function () {
   });
 
   it("has a stack property", function () {
+    // Since we are using source maps, we won't be able to map to a specific file without help from the browser developer tools.
+    // However, we should know the class if not minified
     if (!window.specsUsingRelease) {
-      // Since source maps are used, there will not be exact filenames
       expect(e.stack).toContain(name);
     }
   });
