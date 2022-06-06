@@ -68,7 +68,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -1256,7 +1256,11 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (frameState.mode !== this._sceneMode) {
-    this.resetDrawCommands();
+    if (this._projectTo2D) {
+      this.resetDrawCommands();
+    } else {
+      this._updateModelMatrix = true;
+    }
     this._sceneMode = frameState.mode;
   }
 
@@ -1289,18 +1293,13 @@ ModelExperimental.prototype.update = function (frameState) {
     }
   }
 
-  if (this._debugShowBoundingVolumeDirty) {
-    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode !== SceneMode.SCENE3D) {
+    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
       throw new DeveloperError(
-        "ModelExperimental.modelMatrix is only supported in 3D mode."
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
       );
     }
     //>>includeEnd('debug');
@@ -1319,7 +1318,7 @@ ModelExperimental.prototype.update = function (frameState) {
       : this._scale;
     this._boundingSphere.radius = this._initialRadius * this._clampedScale;
     this._computedScale = getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix();
+    this._sceneGraph.updateModelMatrix(frameState);
     this._updateModelMatrix = false;
   }
 
@@ -1331,6 +1330,11 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._shadowsDirty) {
     this.sceneGraph.updateShadows(this._shadows);
     this._shadowsDirty = false;
+  }
+
+  if (this._debugShowBoundingVolumeDirty) {
+    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
+    this._debugShowBoundingVolumeDirty = false;
   }
 
   const updateForAnimations = this._activeAnimations.update(frameState);
@@ -1349,7 +1353,7 @@ ModelExperimental.prototype.update = function (frameState) {
       frameState.creditDisplay.addCredit(credit);
     }
 
-    const drawCommands = this._sceneGraph.getDrawCommands();
+    const drawCommands = this._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
@@ -1407,7 +1411,7 @@ function getScale(model, frameState) {
       );
       projection.project(cartographic, scratchPosition);
 
-      // In 2D / CV mode the map is a yz-plane in world space, so the coordinates
+      // In 2D / CV mode, the map is a yz-plane in world space, so the coordinates
       // need to be reordered accordingly.
       Cartesian3.fromElements(
         scratchPosition.z,
@@ -1417,7 +1421,7 @@ function getScale(model, frameState) {
       );
     }
 
-    const radius = model.boundingSphere.radius;
+    const radius = model._boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
@@ -1589,7 +1593,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
-@param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1732,13 +1736,6 @@ ModelExperimental.fromGeoJson = function (options) {
   const model = new ModelExperimental(modelOptions);
   return model;
 };
-
-function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
-  const drawCommands = sceneGraph._drawCommands;
-  for (let i = 0; i < drawCommands.length; i++) {
-    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
-  }
-}
 
 /**
  * @private

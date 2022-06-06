@@ -188,7 +188,7 @@ DracoLoader.parse = function (model, context) {
   }
 
   const dequantizeInShader = model._dequantizeInShader;
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   ForEach.mesh(gltf, function (mesh, meshId) {
     ForEach.meshPrimitive(mesh, function (primitive, primitiveId) {
       if (!defined(primitive.extensions)) {

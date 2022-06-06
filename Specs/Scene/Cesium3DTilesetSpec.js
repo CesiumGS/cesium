@@ -751,7 +751,7 @@ describe(
         scene.renderForSpecs();
         const statistics = tileset._statistics;
         expect(statistics.visited).toEqual(5);
-        expect(statistics.numberOfCommands).toEqual(10);
+        expect(statistics.numberOfCommands).toEqual(5);
       });
     });
 
