@@ -70,6 +70,28 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     };
   }
 
+  function mockRenderResourcesFor2D() {
+    return {
+      attributeIndex: 1,
+      attributes: [],
+      instancingTranslationMax: undefined,
+      instancingTranslationMin: undefined,
+      shaderBuilder: new ShaderBuilder(),
+      model: {
+        _projectTo2D: true,
+        _resources: [],
+        computedScale: 1,
+        sceneGraph: {
+          computedModelMatrix: Matrix4.IDENTITY,
+          axisCorrectionMatrix: Matrix4.IDENTITY,
+        },
+      },
+      runtimeNode: {
+        computedTransform: Matrix4.IDENTITY,
+      },
+    };
+  }
+
   function getOptions(gltfPath, options) {
     const resource = new Resource({
       url: gltfPath,
@@ -228,27 +250,10 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   });
 
   it("creates instancing matrices vertex attributes for 2D", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _projectTo2D: true,
-        _resources: [],
-        computedScale: 1,
-        sceneGraph: {
-          computedModelMatrix: Matrix4.IDENTITY,
-          axisCorrectionMatrix: Matrix4.IDENTITY,
-        },
-      },
-      runtimeNode: {
-        computedTransform: Matrix4.IDENTITY,
-      },
-    };
-
-    return loadGltf(boxInstanced).then(function (gltfLoader) {
+    const renderResources = mockRenderResourcesFor2D();
+    return loadGltf(boxInstanced, {
+      loadAttributesFor2D: true,
+    }).then(function (gltfLoader) {
       const components = gltfLoader.components;
       renderResources.model.sceneGraph.components = components;
       const node = components.nodes[0];
@@ -421,6 +426,67 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     });
   });
 
+  it("creates TRANSLATION vertex attributes for 2D", function () {
+    const renderResources = mockRenderResourcesFor2D();
+
+    return loadGltf(boxInstancedTranslationMinMax, {
+      loadAttributesFor2D: true,
+    }).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      renderResources.model.sceneGraph.components = components;
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+
+      scene2D.renderForSpecs();
+      InstancingPipelineStage.process(
+        renderResources,
+        node,
+        scene2D.frameState
+      );
+
+      expect(renderResources.instancingTranslationMax).toEqual(
+        new Cartesian3(2, 2, 0)
+      );
+      expect(renderResources.instancingTranslationMin).toEqual(
+        new Cartesian3(-2, -2, 0)
+      );
+      expect(renderResources.instancingReferencePoint2D).toBeDefined();
+      expect(renderResources.attributes.length).toBe(2);
+
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_TRANSLATION",
+        "USE_2D_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_TRANSLATION",
+      ]);
+
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec3 a_instanceTranslation;",
+        "attribute vec3 a_instanceTranslation2D;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform mat4 u_modelView2D;",
+      ]);
+
+      const translationMatrix = Matrix4.fromTranslation(
+        renderResources.instancingReferencePoint2D,
+        scratchMatrix4
+      );
+      const expectedMatrix = Matrix4.multiplyTransformation(
+        scene2D.context.uniformState.view,
+        translationMatrix,
+        scratchMatrix4
+      );
+      const uniformMap = renderResources.uniformMap;
+      expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
+    });
+  });
+
   it("adds uniforms for legacy instancing path", function () {
     const renderResources = {
       attributeIndex: 1,
@@ -485,7 +551,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       // can insert the instancing transform attribute.
       //
       // modifiedModelView = view * modelMatrix * rtcTransform
-      const view = scene.frameState.context.uniformState.view;
+      const view = scene.frameState.context.uniformState.view3D;
       const modelMatrix = model.modelMatrix;
       const rtcTransform = components.transform;
       let expectedModelView = Matrix4.multiplyTransformation(

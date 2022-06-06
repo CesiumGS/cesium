@@ -1707,6 +1707,7 @@ ModelExperimental.fromI3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
   const loader = new I3dmLoader(loaderOptions);
