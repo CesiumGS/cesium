@@ -114,9 +114,6 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       expect(positions2D).toBeDefined();
       expect(model._modelResources).toEqual([positions2D]);
 
-      const statistics = model.statistics;
-      expect(statistics.geometryByteLength).toBe(positions2D.sizeInBytes);
-
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
         primitive,
@@ -166,9 +163,6 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       const positions2D = runtimePrimitive.positionBuffer2D;
       expect(positions2D).toBeDefined();
       expect(model._modelResources).toEqual([positions2D]);
-
-      const statistics = model.statistics;
-      expect(statistics.geometryByteLength).toBe(positions2D.sizeInBytes);
 
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(

@@ -88,7 +88,7 @@ SceneMode2DPipelineStage.process = function (
     );
 
     // Since this buffer will persist even if the pipeline is re-run,
-    // it will be counted in StatisticsPipelineStage
+    // its memory will be counted in StatisticsPipelineStage
     runtimePrimitive.positionBuffer2D = buffer2D;
     model._modelResources.push(buffer2D);
 
