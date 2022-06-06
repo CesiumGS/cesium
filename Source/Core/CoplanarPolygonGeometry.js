@@ -43,6 +43,7 @@ function createGeometryFromPolygon(
   vertexFormat,
   boundingRectangle,
   stRotation,
+  hardcodedTextureCoordinates,
   projectPointTo2D,
   normal,
   tangent,
@@ -128,18 +129,28 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.z;
 
     if (vertexFormat.st) {
-      const p = Matrix3.multiplyByVector(
-        textureMatrix,
-        position,
-        scratchPosition
-      );
-      const st = projectPointTo2D(p, stScratch);
-      Cartesian2.subtract(st, stOrigin, st);
+      if (
+        defined(hardcodedTextureCoordinates) &&
+        hardcodedTextureCoordinates.positions.length === length
+      ) {
+        textureCoordinates[stIndex++] =
+          hardcodedTextureCoordinates.positions[i].x;
+        textureCoordinates[stIndex++] =
+          hardcodedTextureCoordinates.positions[i].y;
+      } else {
+        const p = Matrix3.multiplyByVector(
+          textureMatrix,
+          position,
+          scratchPosition
+        );
+        const st = projectPointTo2D(p, stScratch);
+        Cartesian2.subtract(st, stOrigin, st);
 
-      const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
-      const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
-      textureCoordinates[stIndex++] = stx;
-      textureCoordinates[stIndex++] = sty;
+        const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
+        const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
+        textureCoordinates[stIndex++] = stx;
+        textureCoordinates[stIndex++] = sty;
+      }
     }
 
     if (vertexFormat.normal) {
@@ -221,6 +232,7 @@ function createGeometryFromPolygon(
  * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  *
  * @example
  * const polygonGeometry = new Cesium.CoplanarPolygonGeometry({
@@ -237,6 +249,7 @@ function createGeometryFromPolygon(
 function CoplanarPolygonGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const polygonHierarchy = options.polygonHierarchy;
+  const textureCoordinates = options.textureCoordinates;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.polygonHierarchy", polygonHierarchy);
   //>>includeEnd('debug');
@@ -249,15 +262,25 @@ function CoplanarPolygonGeometry(options) {
     defaultValue(options.ellipsoid, Ellipsoid.WGS84)
   );
   this._workerName = "createCoplanarPolygonGeometry";
+  this._textureCoordinates = textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
    * @type {Number}
    */
   this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
+    PolygonGeometryLibrary.computeHierarchyPackedLength(
+      polygonHierarchy,
+      Cartesian3
+    ) +
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
+    (defined(textureCoordinates)
+      ? PolygonGeometryLibrary.computeHierarchyPackedLength(
+          textureCoordinates,
+          Cartesian2
+        )
+      : 1) +
     2;
 }
 
@@ -269,6 +292,7 @@ function CoplanarPolygonGeometry(options) {
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  * @returns {CoplanarPolygonGeometry}
  *
  * @example
@@ -300,6 +324,7 @@ CoplanarPolygonGeometry.fromPositions = function (options) {
     vertexFormat: options.vertexFormat,
     stRotation: options.stRotation,
     ellipsoid: options.ellipsoid,
+    textureCoordinates: options.textureCoordinates,
   };
   return new CoplanarPolygonGeometry(newOptions);
 };
@@ -324,7 +349,8 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -334,7 +360,17 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex += VertexFormat.packedLength;
 
   array[startingIndex++] = value._stRotation;
-  array[startingIndex] = value.packedLength;
+  if (defined(value._textureCoordinates)) {
+    startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
+      value._textureCoordinates,
+      array,
+      startingIndex,
+      Cartesian2
+    );
+  } else {
+    array[startingIndex++] = -1.0;
+  }
+  array[startingIndex++] = value.packedLength;
 
   return array;
 };
@@ -361,7 +397,8 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -377,7 +414,21 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   startingIndex += VertexFormat.packedLength;
 
   const stRotation = array[startingIndex++];
-  const packedLength = array[startingIndex];
+  const textureCoordinates =
+    array[startingIndex] === -1.0
+      ? undefined
+      : PolygonGeometryLibrary.unpackPolygonHierarchy(
+          array,
+          startingIndex,
+          Cartesian2
+        );
+  if (defined(textureCoordinates)) {
+    startingIndex = textureCoordinates.startingIndex;
+    delete textureCoordinates.startingIndex;
+  } else {
+    startingIndex++;
+  }
+  const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
     result = new CoplanarPolygonGeometry(scratchOptions);
@@ -387,7 +438,9 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
   result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
   result._stRotation = stRotation;
+  result._textureCoordinates = textureCoordinates;
   result.packedLength = packedLength;
+
   return result;
 };
 
@@ -401,6 +454,8 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   const vertexFormat = polygonGeometry._vertexFormat;
   const polygonHierarchy = polygonGeometry._polygonHierarchy;
   const stRotation = polygonGeometry._stRotation;
+  const textureCoordinates = polygonGeometry._textureCoordinates;
+  const hasTextureCoordinates = defined(textureCoordinates);
 
   let outerPositions = polygonHierarchy.positions;
   outerPositions = arrayRemoveDuplicates(
@@ -468,11 +523,25 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
+    hasTextureCoordinates,
     projectPoints,
     false
   );
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
+
+  const dummyFunction = function (identity) {
+    return identity;
+  };
+
+  const textureCoordinatePolygons = hasTextureCoordinates
+    ? PolygonGeometryLibrary.polygonsFromHierarchy(
+        textureCoordinates,
+        true,
+        dummyFunction,
+        false
+      ).polygons
+    : undefined;
 
   if (hierarchy.length === 0) {
     return;
@@ -496,6 +565,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         vertexFormat,
         boundingRectangle,
         stRotation,
+        hasTextureCoordinates ? textureCoordinatePolygons[i] : undefined,
         projectPoint,
         normal,
         tangent,

@@ -372,7 +372,7 @@ describe(
       }).then(function () {
         expect(state).toBe(BoundingSphereState.DONE);
         const expected = BoundingSphere.transform(
-          modelPrimitive.boundingSphere,
+          modelPrimitive.boundingSphereInternal,
           modelPrimitive.modelMatrix,
           new BoundingSphere()
         );

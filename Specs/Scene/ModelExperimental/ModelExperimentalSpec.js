@@ -75,7 +75,7 @@ describe(
       "west"
     );
 
-    const modelMatrix2D = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
       Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
       new HeadingPitchRoll(0, 0, 0),
       Ellipsoid.WGS84,
@@ -576,11 +576,70 @@ describe(
       });
     });
 
+    it("renders in 2D", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
+    it("renders in 2D over the IDL", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(180.0, 0.0)
+          ),
+        },
+        scene2D
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+
+        model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+          Cartesian3.fromDegrees(-180.0, 0.0)
+        );
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
+    it("renders in CV", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        scene.camera.moveBackward(1.0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+      });
+    });
+
     it("projectTo2D works for 2D", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         scene2D
@@ -597,7 +656,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         sceneCV
@@ -608,6 +667,32 @@ describe(
           zoomToModel: false,
           scene: sceneCV,
         });
+      });
+    });
+
+    it("does not render during morph", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+          projectTo2D: true,
+        },
+        scene
+      ).then(function (model) {
+        const commandList = scene.frameState.commandList;
+        expect(model.ready).toEqual(true);
+
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBe(0);
+
+        scene.completeMorph();
+        scene.morphTo3D(0.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
       });
     });
 
@@ -751,7 +836,7 @@ describe(
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
+          { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
           const boundingSphere = model.boundingSphere;
@@ -1088,11 +1173,32 @@ describe(
       });
     });
 
+    it("changing model matrix in 2D mode works if projectTo2D is false", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        scene2D
+      ).then(function (model) {
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+
+        model.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 10, 10));
+        verifyRender(model, false, {
+          zoomToModel: false,
+          scene: scene2D,
+        });
+      });
+    });
+
     it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: modelMatrix2D,
+          modelMatrix: modelMatrix,
           projectTo2D: true,
         },
         scene2D
@@ -1449,7 +1555,6 @@ describe(
         return loadAndZoomToModelExperimental(
           {
             gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
             scale: 20,
             maximumScale: 10,
           },
@@ -1488,7 +1593,6 @@ describe(
         return loadAndZoomToModelExperimental(
           {
             gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
             minimumPixelSize: 1,
             maximumScale: 10,
           },

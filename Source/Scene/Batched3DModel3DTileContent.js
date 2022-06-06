@@ -184,7 +184,7 @@ function getVertexShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._batchIdAttributeName = getBatchIdAttributeName(gltf);
       content._diffuseAttributeOrUniformName[
@@ -206,7 +206,7 @@ function getFragmentShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._diffuseAttributeOrUniformName[
         programId
