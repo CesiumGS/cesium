@@ -150,11 +150,13 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.instancingTranslationMin = undefined;
 
   /**
-   * The bounding sphere of the instances in the node, in 2D world space.
+   * If the model is instanced and projected to 2D, the reference point is the
+   * average of the instancing translation max and min. The 2D translations are
+   * defined relative to this point to avoid precision issues on the GPU.
    *
-   * @type {BoundingSphere}
+   * @type {Cartesian3}
    *
    * @private
    */
-  this.instancedBoundingSphere2D = undefined;
+  this.instancingReferencePoint2D = undefined;
 }

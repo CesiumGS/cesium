@@ -3,6 +3,7 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
+import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
@@ -18,6 +19,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 const modelViewScratch = new Matrix4();
 const nodeTransformScratch = new Matrix4();
+const modelView2DScratch = new Matrix4();
 
 /**
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
@@ -71,7 +73,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     instancingVertexAttributes
   );
 
-  const uniformMap = renderResources.uniformMap;
+  const uniformMap = {};
+
   if (instances.transformInWorldSpace) {
     shaderBuilder.addDefine(
       "USE_LEGACY_INSTANCING",
@@ -138,12 +141,30 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   }
 
   if (use2D) {
-    shaderBuilder.addDefine("USE_2D_INSTANCING");
+    shaderBuilder.addDefine(
+      "USE_2D_INSTANCING",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+
+    shaderBuilder.addUniform("mat4", "u_modelView2D", ShaderDestination.VERTEX);
+
+    const context = frameState.context;
+    const modelMatrix2D = Matrix4.fromTranslation(
+      renderResources.instancingReferencePoint2D,
+      new Matrix4()
+    );
 
     uniformMap.u_modelView2D = function () {
-      // add modelView2D uniform here. same gimmick as in scenemode2dpipelinestage
+      return Matrix4.multiplyTransformation(
+        context.uniformState.view,
+        modelMatrix2D,
+        modelView2DScratch
+      );
     };
   }
+
+  renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 
   renderResources.instanceCount = count;
   renderResources.attributes.push.apply(
@@ -151,10 +172,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     instancingVertexAttributes
   );
 };
-const modelMatrixScratch = new Matrix4();
-const nodeComputedTransformScratch = new Matrix4();
 
-const translationMatrixScratch = new Matrix4();
+const transformScratch = new Matrix4();
 const projectedPositionScratch = new Cartesian3();
 
 function projectPositionTo2D(
@@ -164,19 +183,16 @@ function projectPositionTo2D(
   frameState,
   result
 ) {
-  const translationMatrix = Matrix4.fromTranslation(
-    position,
-    translationMatrixScratch
-  );
+  const translationMatrix = Matrix4.fromTranslation(position, transformScratch);
   const modelMatrixAndTranslation = Matrix4.multiplyTransformation(
     modelMatrix,
     translationMatrix,
-    result
+    transformScratch
   );
   const finalTransform = Matrix4.multiplyTransformation(
     modelMatrixAndTranslation,
     nodeTransform,
-    result
+    transformScratch
   );
   const finalPosition = Matrix4.getTranslation(
     finalTransform,
@@ -192,13 +208,14 @@ function projectPositionTo2D(
   return result;
 }
 
+const modelMatrixScratch = new Matrix4();
+const nodeComputedTransformScratch = new Matrix4();
 const positionScratch = new Cartesian3();
 
 function projectTransformsTo2D(
   transforms,
   renderResources,
   frameState,
-  referencePoint,
   result
 ) {
   const model = renderResources.model;
@@ -240,10 +257,12 @@ function projectTransformsTo2D(
     );
   }
 
+  const referencePoint = renderResources.instancingReferencePoint2D;
   const count = transforms.length;
   for (let i = 0; i < count; i++) {
     const transform = transforms[i];
     const position = Matrix4.getTranslation(transform, positionScratch);
+
     const projectedPosition = projectPositionTo2D(
       position,
       modelMatrix,
@@ -251,6 +270,7 @@ function projectTransformsTo2D(
       frameState,
       position
     );
+
     const finalTranslation = Cartesian3.subtract(
       projectedPosition,
       referencePoint,
@@ -261,6 +281,39 @@ function projectTransformsTo2D(
   }
 
   return result;
+}
+
+const scratchProjectedMin = new Cartesian3();
+const scratchProjectedMax = new Cartesian3();
+
+function computeReferencePoint2D(renderResources, frameState) {
+  // Compute the bounding sphere in 2D.
+  const modelMatrix = renderResources.model.sceneGraph.computedModelMatrix;
+  const transformedPositionMin = Matrix4.multiplyByPoint(
+    modelMatrix,
+    renderResources.instancingTranslationMin,
+    scratchProjectedMin
+  );
+
+  const projectedMin = SceneTransforms.computeActualWgs84Position(
+    frameState,
+    transformedPositionMin,
+    transformedPositionMin
+  );
+
+  const transformedPositionMax = Matrix4.multiplyByPoint(
+    modelMatrix,
+    renderResources.instancingTranslationMax,
+    scratchProjectedMax
+  );
+
+  const projectedMax = SceneTransforms.computeActualWgs84Position(
+    frameState,
+    transformedPositionMax,
+    transformedPositionMax
+  );
+
+  return Cartesian3.lerp(projectedMin, projectedMax, 0.5, new Cartesian3());
 }
 
 function transformsToTypedArray(transforms) {
@@ -467,19 +520,14 @@ function processTransformAttributes(
   // To prevent jitter, the positions are defined relative to a common
   // reference point. For convenience, this is the center of the instanced
   // translation bounds.
-  const referencePoint = Cartesian3.lerp(
-    renderResources.instancingTranslationMin,
-    renderResources.instancingTranslationMax,
-    0.5,
-    new Cartesian3()
-  );
+  const referencePoint = computeReferencePoint2D(renderResources, frameState);
+  renderResources.instancingReferencePoint2D = referencePoint;
 
   if (useMatrices) {
     const projectedTransforms = projectTransformsTo2D(
       transforms,
       renderResources,
       frameState,
-      referencePoint,
       transforms
     );
     const attributeString2D = "instancingTransform2D";
@@ -501,7 +549,7 @@ function processMatrixAttributes(
   transforms,
   frameState,
   instancingVertexAttributes,
-  attributeInfo
+  attributeString
 ) {
   const transformsTypedArray = transformsToTypedArray(transforms);
   const transformsVertexBuffer = Buffer.createVertexBuffer({
@@ -553,9 +601,6 @@ function processMatrixAttributes(
   ];
 
   const shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addDefine(attributeInfo.defineString);
-
-  const attributeString = attributeInfo.attributeString;
   shaderBuilder.addAttribute("vec4", `a_${attributeString}Row0`);
   shaderBuilder.addAttribute("vec4", `a_${attributeString}Row1`);
   shaderBuilder.addAttribute("vec4", `a_${attributeString}Row2`);

@@ -41,7 +41,7 @@ import loaderProcess from "../loaderProcess.js";
 import pollToPromise from "../pollToPromise.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
-fdescribe(
+describe(
   "Scene/GltfLoader",
   function () {
     const boxWithCredits =

@@ -13,6 +13,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import SceneTransforms from "../SceneTransforms.js";
 
 const scratchModelMatrix = new Matrix4();
+const scratchModelView2D = new Matrix4();
 
 /**
  * The scene mode 2D stage generates resources for rendering a primitive in 2D / CV mode.
@@ -57,17 +58,7 @@ SceneMode2DPipelineStage.process = function (
     VertexAttributeSemantic.POSITION
   );
 
-  // If the model is instanced, 2D projection will be handled in the
-  // InstancingPipelineStage. Unload the typed array and return early.
-  const instanced = defined(renderResources.runtimeNode.node.instances);
-  if (instanced) {
-    positionAttribute.typedArray = undefined;
-    return;
-  }
-
   const shaderBuilder = renderResources.shaderBuilder;
-  const runtimePrimitive = renderResources.runtimePrimitive;
-
   const model = renderResources.model;
   const modelMatrix = model.sceneGraph.computedModelMatrix;
   const nodeComputedTransform = renderResources.runtimeNode.computedTransform;
@@ -83,7 +74,16 @@ SceneMode2DPipelineStage.process = function (
     frameState
   );
 
+  const runtimePrimitive = renderResources.runtimePrimitive;
   runtimePrimitive.boundingSphere2D = boundingSphere2D;
+
+  // If the model is instanced, 2D projection will be handled in the
+  // InstancingPipelineStage. Unload the typed array and return early.
+  const instanced = defined(renderResources.runtimeNode.node.instances);
+  if (instanced) {
+    positionAttribute.typedArray = undefined;
+    return;
+  }
 
   // If the typed array of the position attribute exists, then
   // the positions haven't been projected to 2D yet.
@@ -117,7 +117,6 @@ SceneMode2DPipelineStage.process = function (
     boundingSphere2D.center,
     new Matrix4()
   );
-  const modelView = new Matrix4();
 
   const context = frameState.context;
   const uniformMap = {
@@ -125,7 +124,7 @@ SceneMode2DPipelineStage.process = function (
       return Matrix4.multiplyTransformation(
         context.uniformState.view,
         modelMatrix2D,
-        modelView
+        scratchModelView2D
       );
     },
   };

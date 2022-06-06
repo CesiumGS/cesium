@@ -18,7 +18,9 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
+fdescribe("Scene/ModelExperimental/InstancingPipelineStage", function () {
+  const scratchMatrix4 = new Matrix4();
+
   const boxInstanced =
     "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
   const boxInstancedTranslation =
@@ -29,14 +31,18 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     "./Data/Cesium3DTiles/Instanced/InstancedOrientation/instancedOrientation.i3dm";
 
   let scene;
+  let scene2D;
   const gltfLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
+    scene2D = createScene();
+    scene2D.morphTo2D(0.0);
   });
 
   afterAll(function () {
-    scene.destroyForSpecs();
+    scene = createScene();
+    scene2D.destroyForSpecs();
   });
 
   afterEach(function () {
@@ -50,6 +56,19 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     gltfLoaders.length = 0;
     ResourceCache.clearForSpecs();
   });
+
+  function mockRenderResources() {
+    return {
+      attributeIndex: 1,
+      attributes: [],
+      instancingTranslationMax: undefined,
+      instancingTranslationMin: undefined,
+      shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
+    };
+  }
 
   function getOptions(gltfPath, options) {
     const resource = new Resource({
@@ -95,16 +114,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   }
 
   it("correctly computes instancing TRANSLATION min and max from typed arrays", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _resources: [],
-      },
-    };
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -124,16 +134,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   });
 
   it("sets instancing TRANSLATION min and max from attributes", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _resources: [],
-      },
-    };
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -152,16 +153,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   });
 
   it("creates instancing matrices vertex attributes when ROTATION is present", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _resources: [],
-      },
-    };
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -178,39 +170,28 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       expect(renderResources.attributes.length).toBe(4);
 
-      const attributeLines = renderResources.shaderBuilder._attributeLines;
-      const vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      const fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+      ]);
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec4 a_instancingTransformRow0;",
+        "attribute vec4 a_instancingTransformRow1;",
+        "attribute vec4 a_instancingTransformRow2;",
+        "attribute float a_instanceFeatureId_0;",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
-      expect(fragmentDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
-      expect(attributeLines[0]).toEqual(
-        "attribute vec4 a_instancingTransformRow0;"
-      );
-      expect(attributeLines[1]).toEqual(
-        "attribute vec4 a_instancingTransformRow1;"
-      );
-      expect(attributeLines[2]).toEqual(
-        "attribute vec4 a_instancingTransformRow2;"
-      );
+      expect(renderResources.model._resources.length).toEqual(2);
     });
   });
 
   it("creates instance matrices vertex attributes when TRANSLATION min and max are not present", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _resources: [],
-      },
-    };
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -227,32 +208,26 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       expect(renderResources.attributes.length).toBe(3);
 
-      const attributeLines = renderResources.shaderBuilder._attributeLines;
-      const vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      const fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
-
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
-      expect(fragmentDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
-
-      expect(attributeLines[0]).toEqual(
-        "attribute vec4 a_instancingTransformRow0;"
-      );
-      expect(attributeLines[1]).toEqual(
-        "attribute vec4 a_instancingTransformRow1;"
-      );
-      expect(attributeLines[2]).toEqual(
-        "attribute vec4 a_instancingTransformRow2;"
-      );
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+      ]);
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec4 a_instancingTransformRow0;",
+        "attribute vec4 a_instancingTransformRow1;",
+        "attribute vec4 a_instancingTransformRow2;",
+      ]);
 
       expect(renderResources.model._resources.length).toEqual(1);
     });
   });
 
-  it("correctly creates transform matrices", function () {
+  it("creates instancing matrices vertex attributes for 2D", function () {
     const renderResources = {
       attributeIndex: 1,
       attributes: [],
@@ -260,9 +235,78 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
       model: {
+        _projectTo2D: true,
         _resources: [],
+        computedScale: 1,
+        sceneGraph: {
+          computedModelMatrix: Matrix4.IDENTITY,
+          axisCorrectionMatrix: Matrix4.IDENTITY,
+        },
+      },
+      runtimeNode: {
+        computedTransform: Matrix4.IDENTITY,
       },
     };
+
+    return loadGltf(boxInstanced).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      renderResources.model.sceneGraph.components = components;
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+
+      scene2D.renderForSpecs();
+      InstancingPipelineStage.process(
+        renderResources,
+        node,
+        scene2D.frameState
+      );
+
+      expect(renderResources.instancingTranslationMax).toEqual(
+        new Cartesian3(2, 2, 0)
+      );
+      expect(renderResources.instancingTranslationMin).toEqual(
+        new Cartesian3(-2, -2, 0)
+      );
+      expect(renderResources.instancingReferencePoint2D).toBeDefined();
+      expect(renderResources.attributes.length).toBe(7);
+
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+        "USE_2D_INSTANCING",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+      ]);
+
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec4 a_instancingTransformRow0;",
+        "attribute vec4 a_instancingTransformRow1;",
+        "attribute vec4 a_instancingTransformRow2;",
+        "attribute vec4 a_instancingTransform2DRow0;",
+        "attribute vec4 a_instancingTransform2DRow1;",
+        "attribute vec4 a_instancingTransform2DRow2;",
+        "attribute float a_instanceFeatureId_0;",
+      ]);
+
+      const translationMatrix = Matrix4.fromTranslation(
+        renderResources.instancingReferencePoint2D,
+        scratchMatrix4
+      );
+      const expectedMatrix = Matrix4.multiplyTransformation(
+        scene2D.context.uniformState.view,
+        translationMatrix,
+        scratchMatrix4
+      );
+      const uniformMap = renderResources.uniformMap;
+      expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
+    });
+  });
+
+  it("correctly creates transform matrices", function () {
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -318,7 +362,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         0.3897113800048828,
         0,
       ]);
-      const transforms = InstancingPipelineStage._getInstanceTransformsFromMatrices(
+      const transforms = InstancingPipelineStage._getInstanceTransformsAsMatrices(
         node.instances,
         node.instances.attributes[0].count,
         renderResources
@@ -340,16 +384,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   });
 
   it("creates TRANSLATION vertex attributes", function () {
-    const renderResources = {
-      attributeIndex: 1,
-      attributes: [],
-      instancingTranslationMax: undefined,
-      instancingTranslationMin: undefined,
-      shaderBuilder: new ShaderBuilder(),
-      model: {
-        _resources: [],
-      },
-    };
+    const renderResources = mockRenderResources();
 
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -366,20 +401,19 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       expect(renderResources.attributes.length).toBe(1);
 
-      const attributeLines = renderResources.shaderBuilder._attributeLines;
-      const vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      const fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_TRANSLATION",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_TRANSLATION",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
-      expect(vertexDefineLines[1]).toEqual("HAS_INSTANCE_TRANSLATION");
-      expect(fragmentDefineLines[1]).toEqual("HAS_INSTANCE_TRANSLATION");
-
-      expect(attributeLines[0]).toEqual(
-        "attribute vec3 a_instanceTranslation;"
-      );
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec3 a_instanceTranslation;",
+      ]);
     });
   });
 
@@ -415,7 +449,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const components = i3dmLoader.components;
       const node = components.nodes[0];
       const shaderBuilder = renderResources.shaderBuilder;
-      const uniformMap = renderResources.uniformMap;
       const runtimeNode = renderResources.runtimeNode;
 
       // Add the loaded components to the mocked render resources, as the
@@ -461,12 +494,14 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         rtcTransform,
         expectedModelView
       );
+
+      const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_instance_modifiedModelView()).toEqualEpsilon(
         expectedModelView,
         CesiumMath.EPSILON8
       );
 
-      // The second part of the matrix
+      // The second part of the matrix.
       //
       // nodeTransform = axisCorrection * computedTransform
       const axisCorrection = sceneGraph.axisCorrectionMatrix;
