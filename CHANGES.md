@@ -6,6 +6,10 @@
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
 
+### 1.94.2 - 2022-06-03
+
+- This is an npm only release to fix the improperly published 1.94.1.
+
 ### 1.94.1 - 2022-06-03
 
 ##### Additions :tada:
