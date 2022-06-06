@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 
 /**
- * Statistics for the GPU and CPU memory used by the global
+ * Statistics for the GPU and CPU memory used by the models loaded through the
  * {@link ResourceCache}.
  *
  * @alias ResourceCacheStatistics
@@ -57,7 +57,7 @@ ResourceCacheStatistics.prototype.clear = function () {
  *   <li>If removeLoader() was called before the loader promise resolves, its resources will not be counted</li>
  * </ul>
  * @param {GltfVertexBufferLoader|GltfIndexBufferLoader} loader The geometry buffer with resources to track
- * @returns {Promise} A promise that resolves once the count was updated.
+ * @returns {Promise} A promise that resolves once the count is updated.
  */
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);
@@ -113,7 +113,7 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
  *   <li>If removeLoader() was called before the loader promise resolves, its resources will not be counted</li>
  * </ul>
  * @param {GltfTextureLoader} loader The texture loader with resources to track
- * @returns {Promise} A promise that resolves once the count was updated.
+ * @returns {Promise} A promise that resolves once the count is updated.
  */
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);

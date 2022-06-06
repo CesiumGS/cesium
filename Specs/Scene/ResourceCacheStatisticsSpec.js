@@ -372,5 +372,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     expect(function () {
       return statistics.removeLoader(textureLoader);
     }).not.toThrowDeveloperError();
+
+    expect(statistics.geometryByteLength).toBe(0);
+    expect(statistics.texturesByteLength).toBe(0);
+    expect(statistics._geometrySizes).toEqual({});
+    expect(statistics._textureSizes).toEqual({});
   });
 });

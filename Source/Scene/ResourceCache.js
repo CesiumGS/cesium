@@ -25,7 +25,7 @@ function ResourceCache() {}
 
 ResourceCache.cacheEntries = {};
 
-// Global statistics about binary
+// Statistics about binary data stored in the resource cache
 ResourceCache.statistics = new ResourceCacheStatistics();
 
 /**
