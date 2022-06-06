@@ -4,7 +4,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "2.4.10",
+    "version": "2.4.12",
     "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {
@@ -28,7 +28,7 @@
     "license": [
       "MIT"
     ],
-    "version": "1.0.3",
+    "version": "1.0.4",
     "url": "https://www.npmjs.com/package/bitmap-sdf"
   },
   {
@@ -36,7 +36,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "2.3.6",
+    "version": "2.3.8",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },

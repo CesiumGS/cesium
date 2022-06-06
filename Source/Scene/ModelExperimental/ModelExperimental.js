@@ -1,10 +1,10 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
-import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
@@ -25,6 +25,7 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -67,6 +68,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -160,7 +162,6 @@ export default function ModelExperimental(options) {
   this._drawCommandsBuilt = false;
 
   this._ready = false;
-  this._readyPromise = defer();
   this._customShader = options.customShader;
   this._content = options.content;
 
@@ -204,8 +205,11 @@ export default function ModelExperimental(options) {
   this._featureTableId = undefined;
   this._featureTableIdDirty = true;
 
-  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  // Keeps track of resources that need to be destroyed when the draw commands are reset.
   this._resources = [];
+
+  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  this._modelResources = [];
 
   // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
   this._boundingSphere = new BoundingSphere();
@@ -258,7 +262,12 @@ export default function ModelExperimental(options) {
     SplitDirection.NONE
   );
 
-  initialize(this);
+  this._sceneMode = undefined;
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
+
+  this._completeLoad = function (model, frameState) {};
+  this._texturesLoadedPromise = undefined;
+  this._readyPromise = initialize(this);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -328,36 +337,51 @@ function initialize(model) {
 
   loader.load();
 
-  loader.promise
-    .then(function (loader) {
-      const components = loader.components;
-      const structuralMetadata = components.structuralMetadata;
+  const loaderPromise = loader.promise.then(function (loader) {
+    const components = loader.components;
+    const structuralMetadata = components.structuralMetadata;
 
-      if (
-        defined(structuralMetadata) &&
-        structuralMetadata.propertyTableCount > 0
-      ) {
-        createModelFeatureTables(model, structuralMetadata);
-      }
+    if (
+      defined(structuralMetadata) &&
+      structuralMetadata.propertyTableCount > 0
+    ) {
+      createModelFeatureTables(model, structuralMetadata);
+    }
 
-      model._sceneGraph = new ModelExperimentalSceneGraph({
-        model: model,
-        modelComponents: components,
-      });
-      model._resourcesLoaded = true;
-    })
-    .catch(
-      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
-    );
+    model._sceneGraph = new ModelExperimentalSceneGraph({
+      model: model,
+      modelComponents: components,
+    });
+    model._resourcesLoaded = true;
+  });
 
   // Transcoded .pnts models do not have textures
   const texturesLoadedPromise = defaultValue(
     loader.texturesLoadedPromise,
     Promise.resolve()
   );
-  texturesLoadedPromise
+  model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
+    })
+    .catch(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
+
+  const promise = new Promise(function (resolve, reject) {
+    model._completeLoad = function (model, frameState) {
+      // Set the model as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the model may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        model._ready = true;
+        resolve(model);
+      });
+    };
+  });
+
+  return loaderPromise
+    .then(function () {
+      return promise;
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -397,7 +421,25 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
+    },
+  },
+
+  /**
+   * A promise that resolves when all textures are loaded.
+   * When <code>incrementallyLoadTextures</code> is true this may resolve after
+   * <code>promise</code> resolves.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Promise<void>}
+   * @readonly
+   *
+   * @private
+   */
+  texturesLoadedPromise: {
+    get: function () {
+      return this._texturesLoadedPromise;
     },
   },
 
@@ -680,10 +722,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's bounding sphere in its local coordinate system. This does not
-   * take into account glTF animations, skins, or morph targets. It also does not
-   * account for {@link ModelExperimental#minimumPixelSize}.
-   *
+   * Gets the model's bounding sphere in world space. This does not take into account
+   * glTF animations, skins, or morph targets. It also does not account for
+   * {@link ModelExperimental#minimumPixelSize}.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -873,8 +914,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
-   * Disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
-   * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * Disabling additional light sources by setting
+   * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
+   * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
    * @memberof ModelExperimental.prototype
    *
@@ -1209,8 +1251,17 @@ ModelExperimental.prototype.update = function (frameState) {
   this._defaultTexture = context.defaultTexture;
 
   // short-circuit if the model resources aren't ready.
-  if (!this._resourcesLoaded) {
+  if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
     return;
+  }
+
+  if (frameState.mode !== this._sceneMode) {
+    if (this._projectTo2D) {
+      this.resetDrawCommands();
+    } else {
+      this._updateModelMatrix = true;
+    }
+    this._sceneMode = frameState.mode;
   }
 
   if (this._featureTableIdDirty) {
@@ -1235,26 +1286,23 @@ ModelExperimental.prototype.update = function (frameState) {
     const model = this;
 
     if (!model._ready) {
-      // Set the model as ready after the first frame render since the user might set up events subscribed to
-      // the post render event, and the model may not be ready for those past the first frame.
-      frameState.afterRender.push(function () {
-        model._ready = true;
-        model._readyPromise.resolve(model);
-      });
+      model._completeLoad(model, frameState);
 
       // Don't render until the next frame after the ready promise is resolved
       return;
     }
   }
 
-  if (this._debugShowBoundingVolumeDirty) {
-    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+      );
+    }
+    //>>includeEnd('debug');
     this._updateModelMatrix = true;
     this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
     this._boundingSphere = BoundingSphere.transform(
@@ -1270,7 +1318,7 @@ ModelExperimental.prototype.update = function (frameState) {
       : this._scale;
     this._boundingSphere.radius = this._initialRadius * this._clampedScale;
     this._computedScale = getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix();
+    this._sceneGraph.updateModelMatrix(frameState);
     this._updateModelMatrix = false;
   }
 
@@ -1282,6 +1330,11 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._shadowsDirty) {
     this.sceneGraph.updateShadows(this._shadows);
     this._shadowsDirty = false;
+  }
+
+  if (this._debugShowBoundingVolumeDirty) {
+    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
+    this._debugShowBoundingVolumeDirty = false;
   }
 
   const updateForAnimations = this._activeAnimations.update(frameState);
@@ -1300,7 +1353,7 @@ ModelExperimental.prototype.update = function (frameState) {
       frameState.creditDisplay.addCredit(credit);
     }
 
-    const drawCommands = this._sceneGraph.getDrawCommands();
+    const drawCommands = this._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
@@ -1333,11 +1386,12 @@ function scaleInPixels(positionWC, radius, frameState) {
 }
 
 const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 function getScale(model, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize !== 0.0) {
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(
@@ -1349,7 +1403,25 @@ function getScale(model, frameState) {
     scratchPosition.y = m[13];
     scratchPosition.z = m[14];
 
-    const radius = model.boundingSphere.radius;
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      const projection = frameState.mapProjection;
+      const cartographic = projection.ellipsoid.cartesianToCartographic(
+        scratchPosition,
+        scratchCartographic
+      );
+      projection.project(cartographic, scratchPosition);
+
+      // In 2D / CV mode, the map is a yz-plane in world space, so the coordinates
+      // need to be reordered accordingly.
+      Cartesian3.fromElements(
+        scratchPosition.z,
+        scratchPosition.x,
+        scratchPosition.y,
+        scratchPosition
+      );
+    }
+
+    const radius = model._boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
@@ -1431,6 +1503,7 @@ ModelExperimental.prototype.destroy = function () {
   }
 
   this.destroyResources();
+  this.destroyModelResources();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -1468,6 +1541,18 @@ ModelExperimental.prototype.destroyResources = function () {
 };
 
 /**
+ * Destroys resources generated for the model.
+ * @private
+ */
+ModelExperimental.prototype.destroyModelResources = function () {
+  const resources = this._modelResources;
+  for (let i = 0; i < resources.length; i++) {
+    resources[i].destroy();
+  }
+  this._modelResources = [];
+};
+
+/**
  * <p>
  * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
  * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -1476,7 +1561,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource} options.url The url to the .gltf or .glb file.
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1508,23 +1593,31 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.gltf", options.gltf);
+  if (!defined(options.url) && !defined(options.gltf)) {
+    throw new DeveloperError("options.url is required.");
+  }
   //>>includeEnd('debug');
+
+  // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
+  // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
+  // glTF contents.
+  const gltf = defaultValue(options.url, options.gltf);
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
-
-  const gltf = options.gltf;
 
   const basePath = defaultValue(options.basePath, "");
   const baseResource = Resource.createIfNeeded(basePath);
@@ -1538,7 +1631,7 @@ ModelExperimental.fromGltf = function (options) {
     loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else {
-    loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
+    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
   }
 
   const loader = new GltfLoader(loaderOptions);
@@ -1568,6 +1661,7 @@ ModelExperimental.fromB3dm = function (options) {
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadPositionsFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
   };
 
@@ -1643,13 +1737,6 @@ ModelExperimental.fromGeoJson = function (options) {
   return model;
 };
 
-function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
-  const drawCommands = sceneGraph._drawCommands;
-  for (let i = 0; i < drawCommands.length; i++) {
-    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
-  }
-}
-
 /**
  * @private
  */
@@ -1713,5 +1800,6 @@ function makeModelOptions(loader, modelType, options) {
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
+    projectTo2D: options.projectTo2D,
   };
 }

@@ -2,9 +2,11 @@ import {
   AttributeType,
   Axis,
   Cartesian3,
+  CullFace,
   InstanceAttributeSemantic,
   Matrix4,
   ModelExperimentalUtility,
+  PrimitiveType,
   Quaternion,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
@@ -391,5 +393,33 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expect(
       ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "other")
     ).not.toBeDefined();
+  });
+
+  function expectCullFace(matrix, primitiveType, cullFace) {
+    expect(ModelExperimentalUtility.getCullFace(matrix, primitiveType)).toBe(
+      cullFace
+    );
+  }
+
+  it("getCullFace returns CullFace.BACK when primitiveType is not triangles", function () {
+    const matrix = Matrix4.fromUniformScale(-1.0);
+    expectCullFace(matrix, PrimitiveType.POINTS, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINES, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINE_LOOP, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.LINE_STRIP, CullFace.BACK);
+  });
+
+  it("getCullFace return CullFace.BACK when determinant is greater than zero", function () {
+    const matrix = Matrix4.IDENTITY;
+    expectCullFace(matrix, PrimitiveType.TRIANGLES, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_STRIP, CullFace.BACK);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_FAN, CullFace.BACK);
+  });
+
+  it("getCullFace return CullFace.FRONT when determinant is less than zero", function () {
+    const matrix = Matrix4.fromUniformScale(-1.0);
+    expectCullFace(matrix, PrimitiveType.TRIANGLES, CullFace.FRONT);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_STRIP, CullFace.FRONT);
+    expectCullFace(matrix, PrimitiveType.TRIANGLE_FAN, CullFace.FRONT);
   });
 });

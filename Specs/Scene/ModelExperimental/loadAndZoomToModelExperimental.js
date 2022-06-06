@@ -9,6 +9,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         content: options.content,
         color: options.color,
         gltf: options.gltf,
+        url: options.url,
         show: options.show,
         customShader: options.customShader,
         basePath: options.basePath,
@@ -30,6 +31,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         imageBasedLighting: options.imageBasedLighting,
         backFaceCulling: options.backFaceCulling,
         showCreditsOnScreen: options.showCreditsOnScreen,
+        projectTo2D: options.projectTo2D,
       });
     } catch (error) {
       reject(error);

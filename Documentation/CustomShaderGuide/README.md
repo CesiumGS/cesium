@@ -76,7 +76,7 @@ const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 
 // Applying to a model directly
 const model = Cesium.ModelExperimental.fromGltf({,
-  gltf: "http://example.com/model.gltf",
+  url: "http://example.com/model.gltf",
   customShader: customShader
 });
 ```
@@ -591,7 +591,7 @@ struct by property ID. For example, if the metadata class looked like this:
 
 This will show up in the shader as the struct field as follows:
 
-```
+```glsl
 struct Metadata {
   float temperature;
 }

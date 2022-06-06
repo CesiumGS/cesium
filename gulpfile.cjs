@@ -1318,6 +1318,7 @@ gulp.task("test", function (done) {
     files = [
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/ThirdParty/**", included: false, type: "module" },
       { pattern: "Build/Cesium/Cesium.js", included: true },
       { pattern: "Build/Cesium/Cesium.js.map", included: false },
       { pattern: "Build/Cesium/**", included: false },
@@ -1327,39 +1328,37 @@ gulp.task("test", function (done) {
     ];
   }
 
-  const karma = new Karma.Server(
-    {
-      configFile: karmaConfigFile,
-      singleRun: debug,
-      browsers: browsers,
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      detectBrowsers: {
-        enabled: enableAllBrowsers,
-      },
-      logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
-      files: files,
-      client: {
-        captureConsole: verbose,
-        args: [
-          includeCategory,
-          excludeCategory,
-          "--grep",
-          includeName,
-          webglValidation,
-          webglStub,
-          release,
-        ],
-      },
+  const karmaConfig = Karma.config.parseConfig(karmaConfigFile, {
+    port: 9876,
+    singleRun: debug,
+    browsers: browsers,
+    specReporter: {
+      suppressErrorSummary: false,
+      suppressFailed: false,
+      suppressPassed: suppressPassed,
+      suppressSkipped: true,
     },
-    function (e) {
-      return done(failTaskOnError ? e : undefined);
-    }
-  );
+    detectBrowsers: {
+      enabled: enableAllBrowsers,
+    },
+    logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
+    files: files,
+    client: {
+      captureConsole: verbose,
+      args: [
+        includeCategory,
+        excludeCategory,
+        "--grep",
+        includeName,
+        webglValidation,
+        webglStub,
+        release,
+      ],
+    },
+  });
+  const karma = new Karma.Server(karmaConfig, function doneCallback(exitCode) {
+    return done(failTaskOnError ? exitCode : undefined);
+  });
   karma.start();
 });
 

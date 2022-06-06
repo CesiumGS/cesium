@@ -221,13 +221,9 @@ const uriToGuid = {};
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.95.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -660,6 +656,13 @@ function Model(options) {
   this._cachedRendererResources = undefined;
   this._loadRendererResourcesFromCache = false;
 
+  if (options.dequantizeInShader) {
+    deprecationWarning(
+      "Model.dequantizeInShader",
+      "The Model dequantizeInShader constructor parameter was deprecated in CesiumJS 1.94 and will be removed in 1.95"
+    );
+  }
+
   this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
   this._decodedData = {};
 
@@ -690,28 +693,9 @@ function Model(options) {
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
-  const hasIndividualIBLParameters =
-    defined(options.imageBasedLightingFactor) ||
-    defined(options.luminanceAtZenith) ||
-    defined(options.sphericalHarmonicCoefficients) ||
-    defined(options.specularEnvironmentMaps);
-
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;
     this._shouldDestroyImageBasedLighting = false;
-  } else if (hasIndividualIBLParameters) {
-    deprecationWarning(
-      "ImageBasedLightingConstructor",
-      "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
-    );
-    // Create image-based lighting from the old constructor parameters.
-    this._imageBasedLighting = new ImageBasedLighting({
-      imageBasedLightingFactor: options.imageBasedLightingFactor,
-      luminanceAtZenith: options.luminanceAtZenith,
-      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: options.specularEnvironmentMaps,
-    });
-    this._shouldDestroyImageBasedLighting = true;
   } else {
     this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
@@ -725,6 +709,8 @@ Object.defineProperties(Model.prototype, {
    * The object for the glTF JSON, including properties with default values omitted
    * from the JSON provided to this model.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {Object}
@@ -733,6 +719,21 @@ Object.defineProperties(Model.prototype, {
    * @default undefined
    */
   gltf: {
+    get: function () {
+      deprecationWarning(
+        "Model.gltf",
+        "Model.gltf getter was deprecated in CesiumJS 1.94 and will be removed in 1.95"
+      );
+
+      return this.gltfInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  gltfInternal: {
     get: function () {
       return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
     },
@@ -789,6 +790,8 @@ Object.defineProperties(Model.prototype, {
    * in the same directory as the .gltf.  When this is <code>''</code>,
    * the app's base path is used.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {String}
@@ -797,6 +800,20 @@ Object.defineProperties(Model.prototype, {
    * @default ''
    */
   basePath: {
+    get: function () {
+      deprecationWarning(
+        "model.basePath",
+        "Model.basePath getter is deprecated in CesiumJS 1.94. It will be removed in CesiumJS 1.95"
+      );
+      return this.basePathInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  basePathInternal: {
     get: function () {
       return this._resource.url;
     },
@@ -820,6 +837,20 @@ Object.defineProperties(Model.prototype, {
    * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
    */
   boundingSphere: {
+    get: function () {
+      deprecationWarning(
+        "model.boundingSphere",
+        "Model.boundingSphere currently returns results in model space. In CesiumJS 1.95, model.boundingSphere will be changed to return results in world space. The calling code will no longer need to multiply the bounding sphere by the model matrix"
+      );
+      return this.boundingSphereInternal;
+    },
+  },
+
+  /*
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  boundingSphereInternal: {
     get: function () {
       //>>includeStart('debug', pragmas.debug);
       if (this._state !== ModelState.LOADED) {
@@ -966,12 +997,29 @@ Object.defineProperties(Model.prototype, {
   /**
    * Return the number of pending texture loads.
    *
+   * @deprecated
+   *
    * @memberof Model.prototype
    *
    * @type {Number}
    * @readonly
    */
   pendingTextureLoads: {
+    get: function () {
+      deprecationWarning(
+        "Model.pendingTextureLoads",
+        "The Model.pendingTextureLoads getter was deprecated in CesiumJS 1.94 and will be removed in CesiumJS 1.95"
+      );
+
+      return this.pendingTextureLoadsInternal;
+    },
+  },
+
+  /**
+   * See https://github.com/CesiumGS/cesium/pull/10415#issuecomment-1143600984
+   * @private
+   */
+  pendingTextureLoadsInternal: {
     get: function () {
       return defined(this._loadResources)
         ? this._loadResources.pendingTextureLoads
@@ -1021,7 +1069,9 @@ Object.defineProperties(Model.prototype, {
   extensionsUsed: {
     get: function () {
       if (!defined(this._extensionsUsed)) {
-        this._extensionsUsed = ModelUtility.getUsedExtensions(this.gltf);
+        this._extensionsUsed = ModelUtility.getUsedExtensions(
+          this.gltfInternal
+        );
       }
       return this._extensionsUsed;
     },
@@ -1031,7 +1081,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       if (!defined(this._extensionsRequired)) {
         this._extensionsRequired = ModelUtility.getRequiredExtensions(
-          this.gltf
+          this.gltfInternal
         );
       }
       return this._extensionsRequired;
@@ -1176,8 +1226,9 @@ Object.defineProperties(Model.prototype, {
   /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
-   * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
-   * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * For example, disabling additional light sources by setting
+   * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code>
+   * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
    *
    * @memberof Model.prototype
@@ -1229,87 +1280,6 @@ Object.defineProperties(Model.prototype, {
         this._shouldDestroyImageBasedLighting = false;
         this._shouldRegenerateShaders = true;
       }
-    },
-  },
-
-  /**
-   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
-   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian2}
-   * @default Cartesian2(1.0, 1.0)
-   */
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLighting.imageBasedLightingFactor;
-    },
-    set: function (value) {
-      this._imageBasedLighting.imageBasedLightingFactor = value;
-    },
-  },
-
-  /**
-   * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-   * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
-   *
-   * @memberof Model.prototype
-   *
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {Number}
-   * @default 0.2
-   */
-  luminanceAtZenith: {
-    get: function () {
-      return this._imageBasedLighting.luminanceAtZenith;
-    },
-    set: function (value) {
-      this._imageBasedLighting.luminanceAtZenith = value;
-    },
-  },
-
-  /**
-   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
-   * computed from the atmosphere color is used.
-   * <p>
-   * There are nine <code>Cartesian3</code> coefficients.
-   * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
-   * </p>
-   *
-   * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-   * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
-   * supplied to {@link Model#specularEnvironmentMaps}.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian3[]}
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
-   */
-  sphericalHarmonicCoefficients: {
-    get: function () {
-      return this._imageBasedLighting.sphericalHarmonicCoefficients;
-    },
-    set: function (value) {
-      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
-    },
-  },
-
-  /**
-   * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
-   *
-   * @memberof Model.prototype
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {String}
-   * @see Model#sphericalHarmonicCoefficients
-   */
-  specularEnvironmentMaps: {
-    get: function () {
-      return this._imageBasedLighting.specularEnvironmentMaps;
-    },
-    set: function (value) {
-      this._imageBasedLighting.specularEnvironmentMaps = value;
     },
   },
 
@@ -1457,13 +1427,9 @@ function containsGltfMagic(uint8Array) {
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.95.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -1815,7 +1781,7 @@ Model.prototype.applyArticulations = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 function addBuffersToLoadResources(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const loadResources = model._loadResources;
   ForEach.buffer(gltf, function (buffer, id) {
     loadResources.buffers[id] = buffer.extras._pipeline.source;
@@ -1827,16 +1793,16 @@ function bufferLoad(model, id) {
     const loadResources = model._loadResources;
     const buffer = new Uint8Array(arrayBuffer);
     --loadResources.pendingBufferLoads;
-    model.gltf.buffers[id].extras._pipeline.source = buffer;
+    model.gltfInternal.buffers[id].extras._pipeline.source = buffer;
   };
 }
 
 function parseBufferViews(model) {
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   const vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
   // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-  ForEach.bufferView(model.gltf, function (bufferView, id) {
+  ForEach.bufferView(model.gltfInternal, function (bufferView, id) {
     if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
       vertexBuffersToCreate.enqueue(id);
     }
@@ -1848,7 +1814,7 @@ function parseBufferViews(model) {
   // The Cesium Renderer requires knowing the datatype for an index buffer
   // at creation type, which is not part of the glTF bufferview so loop
   // through glTF accessors to create the bufferview's index buffer.
-  ForEach.accessor(model.gltf, function (accessor) {
+  ForEach.accessor(model.gltfInternal, function (accessor) {
     const bufferViewId = accessor.bufferView;
     if (!defined(bufferViewId)) {
       return;
@@ -1870,7 +1836,7 @@ function parseBufferViews(model) {
 
 function parseTechniques(model) {
   // retain references to gltf techniques
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   if (!usesExtension(gltf, "KHR_techniques_webgl")) {
     return;
   }
@@ -1903,7 +1869,7 @@ function shaderLoad(model, type, id) {
 }
 
 function parseShaders(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const buffers = gltf.buffers;
   const bufferViews = gltf.bufferViews;
   const sourceShaders = model._rendererResources.sourceShaders;
@@ -1965,7 +1931,7 @@ function parseArticulations(model) {
   model._runtime.articulationsByStageKey = articulationsByStageKey;
   model._runtime.stagesByKey = runtimeStagesByKey;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   if (
     !usesExtension(gltf, "AGI_articulations") ||
     !defined(gltf.extensions) ||
@@ -2029,7 +1995,7 @@ function imageLoad(model, textureId) {
 const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function parseTextures(model, context, supportsWebP) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const images = gltf.images;
   let uri;
   ForEach.texture(gltf, function (texture, id) {
@@ -2098,7 +2064,7 @@ function parseNodes(model) {
   const skinnedNodesIds = model._loadResources.skinnedNodesIds;
   const articulationsByName = model._runtime.articulationsByName;
 
-  ForEach.node(model.gltf, function (node, id) {
+  ForEach.node(model.gltfInternal, function (node, id) {
     const runtimeNode = {
       // Animation targets
       matrix: undefined,
@@ -2181,7 +2147,7 @@ function parseNodes(model) {
 }
 
 function parseMaterials(model) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const techniques = model._sourceTechniques;
 
   const runtimeMaterialsByName = {};
@@ -2228,7 +2194,7 @@ function parseMeshes(model) {
   const runtimeMeshesByName = {};
   const runtimeMaterialsById = model._runtime.materialsById;
 
-  ForEach.mesh(model.gltf, function (mesh, meshId) {
+  ForEach.mesh(model.gltfInternal, function (mesh, meshId) {
     runtimeMeshesByName[mesh.name] = new ModelMesh(
       mesh,
       runtimeMaterialsById,
@@ -2255,7 +2221,7 @@ function parseMeshes(model) {
 }
 
 function parseCredits(model) {
-  const asset = model.gltf.asset;
+  const asset = model.gltfInternal.asset;
   const copyright = asset.copyright;
   if (!defined(copyright)) {
     return;
@@ -2291,7 +2257,7 @@ CreateVertexBufferJob.prototype.execute = function () {
 
 function createVertexBuffer(bufferViewId, model, context) {
   const loadResources = model._loadResources;
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   let bufferView = bufferViews[bufferViewId];
 
   // Use bufferView created at runtime
@@ -2338,7 +2304,7 @@ CreateIndexBufferJob.prototype.execute = function () {
 
 function createIndexBuffer(bufferViewId, componentType, model, context) {
   const loadResources = model._loadResources;
-  const bufferViews = model.gltf.bufferViews;
+  const bufferViews = model.gltfInternal.bufferViews;
   let bufferView = bufferViews[bufferViewId];
 
   // Use bufferView created at runtime
@@ -2439,7 +2405,7 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
   let result;
   if (model.extensionsUsed.WEB3D_quantized_attributes) {
     result = ModelUtility.modifyShaderForQuantizedAttributes(
-      model.gltf,
+      model.gltfInternal,
       primitive,
       shader
     );
@@ -2448,7 +2414,7 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
     const decodedData = model._decodedData[primitiveId];
     if (defined(decodedData)) {
       result = ModelUtility.modifyShaderForDracoQuantizedAttributes(
-        model.gltf,
+        model.gltfInternal,
         primitive,
         shader,
         decodedData.attributes
@@ -2802,7 +2768,7 @@ function loadTexturesFromBufferViews(model) {
   while (loadResources.texturesToCreateFromBufferView.length > 0) {
     const gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
 
-    const gltf = model.gltf;
+    const gltf = model.gltfInternal;
     const bufferView = gltf.bufferViews[gltfTexture.bufferView];
     const imageId = gltf.textures[gltfTexture.id].source;
 
@@ -2846,7 +2812,7 @@ function createSamplers(model) {
     loadResources.createSamplers = false;
 
     const rendererSamplers = model._rendererResources.samplers;
-    ForEach.sampler(model.gltf, function (sampler, samplerId) {
+    ForEach.sampler(model.gltfInternal, function (sampler, samplerId) {
       rendererSamplers[samplerId] = new Sampler({
         wrapS: sampler.wrapS,
         wrapT: sampler.wrapT,
@@ -2878,7 +2844,7 @@ CreateTextureJob.prototype.execute = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 function createTexture(gltfTexture, model, context) {
-  const textures = model.gltf.textures;
+  const textures = model.gltfInternal.textures;
   const texture = textures[gltfTexture.id];
 
   const rendererSamplers = model._rendererResources.samplers;
@@ -2891,7 +2857,7 @@ function createTexture(gltfTexture, model, context) {
   }
 
   let usesTextureTransform = false;
-  const materials = model.gltf.materials;
+  const materials = model.gltfInternal.materials;
   const materialsLength = materials.length;
   for (let i = 0; i < materialsLength; ++i) {
     const material = materials[i];
@@ -3135,7 +3101,7 @@ function getAttributeLocations(model, primitive) {
 }
 
 function createJoints(model, runtimeSkins) {
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const skins = gltf.skins;
   const nodes = gltf.nodes;
   const runtimeNodes = model._runtime.nodes;
@@ -3173,7 +3139,7 @@ function createSkins(model) {
   }
   loadResources.createSkins = false;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   const runtimeSkins = {};
 
@@ -3227,9 +3193,9 @@ function createRuntimeAnimations(model) {
   model._runtime.animations = [];
 
   const runtimeNodes = model._runtime.nodes;
-  const accessors = model.gltf.accessors;
+  const accessors = model.gltfInternal.accessors;
 
-  ForEach.animation(model.gltf, function (animation, i) {
+  ForEach.animation(model.gltfInternal, function (animation, i) {
     const channels = animation.channels;
     const samplers = animation.samplers;
 
@@ -3298,7 +3264,7 @@ function createVertexArrays(model, context) {
 
   const rendererBuffers = model._rendererResources.buffers;
   const rendererVertexArrays = model._rendererResources.vertexArrays;
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   ForEach.mesh(gltf, function (mesh, meshId) {
     ForEach.meshPrimitive(mesh, function (primitive, primitiveId) {
@@ -3393,7 +3359,7 @@ function createRenderStates(model) {
   if (loadResources.createRenderStates) {
     loadResources.createRenderStates = false;
 
-    ForEach.material(model.gltf, function (material, materialId) {
+    ForEach.material(model.gltfInternal, function (material, materialId) {
       createRenderStateForMaterial(model, material, materialId);
     });
   }
@@ -3672,7 +3638,7 @@ function createUniformMaps(model, context) {
   }
   loadResources.createUniformMaps = false;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const techniques = model._sourceTechniques;
   const uniformMaps = model._uniformMaps;
 
@@ -3719,7 +3685,7 @@ function createUniformsForQuantizedAttributes(model, primitive) {
   const programId = getProgramForPrimitive(model, primitive);
   const quantizedUniforms = model._quantizedUniforms[programId];
   return ModelUtility.createUniformsForQuantizedAttributes(
-    model.gltf,
+    model.gltfInternal,
     primitive,
     quantizedUniforms
   );
@@ -3872,7 +3838,7 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
   const rendererRenderStates = resources.renderStates;
   const uniformMaps = model._uniformMaps;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const accessors = gltf.accessors;
   const gltfMeshes = gltf.meshes;
 
@@ -4090,7 +4056,7 @@ function createRuntimeNodes(model, context, scene3DOnly) {
   const rootNodes = [];
   const runtimeNodes = model._runtime.nodes;
 
-  const gltf = model.gltf;
+  const gltf = model.gltfInternal;
   const nodes = gltf.nodes;
 
   const scene = gltf.scenes[gltf.scene];
@@ -4321,7 +4287,7 @@ function updateNodeHierarchyModelMatrix(
       );
       model._rtcCenter = model._rtcCenter3D;
     } else {
-      const center = model.boundingSphere.center;
+      const center = model.boundingSphereInternal.center;
       const to2D = Transforms.wgs84To2DModelMatrix(
         projection,
         center,
@@ -5017,7 +4983,7 @@ function getScale(model, frameState) {
       );
     }
 
-    const radius = model.boundingSphere.radius;
+    const radius = model.boundingSphereInternal.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
@@ -5249,7 +5215,7 @@ Model.prototype.update = function (frameState) {
 
   const supportsWebP = FeatureDetection.supportsWebP();
 
-  if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
+  if (this._state === ModelState.NEEDS_LOAD && defined(this.gltfInternal)) {
     // Use renderer resources from cache instead of loading/creating them?
     let cachedRendererResources;
     const cacheKey = this.cacheKey;
@@ -5289,7 +5255,7 @@ Model.prototype.update = function (frameState) {
 
     this._state = ModelState.LOADING;
     if (this._state !== ModelState.FAILED) {
-      const extensions = this.gltf.extensions;
+      const extensions = this.gltfInternal.extensions;
       if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
         const center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
         if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
@@ -5314,7 +5280,7 @@ Model.prototype.update = function (frameState) {
         }
       }
 
-      addPipelineExtras(this.gltf);
+      addPipelineExtras(this.gltfInternal);
 
       this._loadResources = new ModelLoadResources();
       if (!this._loadRendererResourcesFromCache) {
@@ -5342,16 +5308,33 @@ Model.prototype.update = function (frameState) {
         ModelUtility.updateForwardAxis(this);
 
         // glTF pipeline updates, not needed if loading from cache
-        if (!defined(this.gltf.extras.sourceVersion)) {
-          const gltf = this.gltf;
+        if (!defined(this.gltfInternal.extras.sourceVersion)) {
+          const gltf = this.gltfInternal;
           // Add the original version so it remains cached
-          gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
-          gltf.extras.sourceKHRTechniquesWebGL = defined(
+          const sourceVersion = ModelUtility.getAssetVersion(gltf);
+          const sourceKHRTechniquesWebGL = defined(
             ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl
           );
 
-          this._sourceVersion = gltf.extras.sourceVersion;
-          this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
+          if (sourceVersion !== "2.0") {
+            deprecationWarning(
+              "gltf-1.0",
+              "glTF 1.0 assets were deprecated in CesiumJS 1.94. They will be removed in 1.95. Please convert any glTF 1.0 assets to glTF 2.0."
+            );
+          }
+
+          if (sourceKHRTechniquesWebGL) {
+            deprecationWarning(
+              "KHR_techniques_webgl",
+              "Support for glTF 1.0 techniques and the KHR_techniques_webgl glTF extension were deprecated in CesiumJS 1.94. It will be removed in 1.95. If custom GLSL shaders are needed, use CustomShader instead."
+            );
+          }
+
+          gltf.extras.sourceVersion = sourceVersion;
+          gltf.extras.sourceKHRTechniquesWebGL = sourceKHRTechniquesWebGL;
+
+          this._sourceVersion = sourceVersion;
+          this._sourceKHRTechniquesWebGL = sourceKHRTechniquesWebGL;
 
           updateVersion(gltf);
           addDefaults(gltf);
@@ -5364,8 +5347,8 @@ Model.prototype.update = function (frameState) {
           processPbrMaterials(gltf, options);
         }
 
-        this._sourceVersion = this.gltf.extras.sourceVersion;
-        this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
+        this._sourceVersion = this.gltfInternal.extras.sourceVersion;
+        this._sourceKHRTechniquesWebGL = this.gltfInternal.extras.sourceKHRTechniquesWebGL;
 
         // Skip dequantizing in the shader if not encoded
         this._dequantizeInShader =
@@ -5394,7 +5377,11 @@ Model.prototype.update = function (frameState) {
 
       if (!loadResources.finishedDecoding()) {
         DracoLoader.decodeModel(this, context).catch(
-          ModelUtility.getFailedLoadFunction(this, "model", this.basePath)
+          ModelUtility.getFailedLoadFunction(
+            this,
+            "model",
+            this.basePathInternal
+          )
         );
       }
 
@@ -5452,7 +5439,7 @@ Model.prototype.update = function (frameState) {
 
       // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
       this._normalAttributeName = ModelUtility.getAttributeOrUniformBySemantic(
-        this.gltf,
+        this.gltfInternal,
         "NORMAL"
       );
 
@@ -5697,11 +5684,12 @@ Model.prototype.update = function (frameState) {
           }
           commandList.push(command);
           boundingVolume = nc.command.boundingVolume;
-          if (
-            frameState.mode === SceneMode.SCENE2D &&
-            (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-              boundingVolume.center.y - boundingVolume.radius < idl2D)
-          ) {
+          const left = boundingVolume.center.y - boundingVolume.radius;
+          const right = boundingVolume.center.y + boundingVolume.radius;
+          const overIdl =
+            (left < idl2D && right > idl2D) ||
+            (left < -idl2D && right > -idl2D);
+          if (frameState.mode === SceneMode.SCENE2D && overIdl) {
             let command2D = nc.command2D;
             if (silhouette) {
               command2D = nc.silhouetteModelCommand2D;
@@ -5722,11 +5710,12 @@ Model.prototype.update = function (frameState) {
           if (nc.show) {
             commandList.push(nc.silhouetteColorCommand);
             boundingVolume = nc.command.boundingVolume;
-            if (
-              frameState.mode === SceneMode.SCENE2D &&
-              (boundingVolume.center.y + boundingVolume.radius > idl2D ||
-                boundingVolume.center.y - boundingVolume.radius < idl2D)
-            ) {
+            const left = boundingVolume.center.y - boundingVolume.radius;
+            const right = boundingVolume.center.y + boundingVolume.radius;
+            const overIdl =
+              (left < idl2D && right > idl2D) ||
+              (left < -idl2D && right > -idl2D);
+            if (frameState.mode === SceneMode.SCENE2D && overIdl) {
               commandList.push(nc.silhouetteColorCommand2D);
             }
           }

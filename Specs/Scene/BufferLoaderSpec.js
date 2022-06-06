@@ -1,9 +1,4 @@
-import {
-  BufferLoader,
-  defer,
-  Resource,
-  ResourceCache,
-} from "../../Source/Cesium.js";
+import { BufferLoader, Resource, ResourceCache } from "../../Source/Cesium.js";
 
 describe("Scene/BufferLoader", function () {
   const typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
@@ -107,11 +102,15 @@ describe("Scene/BufferLoader", function () {
     });
   });
 
-  function resolveAfterDestroy(reject) {
-    const deferredPromise = defer();
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      deferredPromise.promise
-    );
+  function resolveAfterDestroy(rejectPromise) {
+    const fetchPromise = new Promise(function (resolve, reject) {
+      if (rejectPromise) {
+        reject(new Error());
+      } else {
+        resolve(arrayBuffer);
+      }
+    });
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(fetchPromise);
 
     const bufferLoader = new BufferLoader({
       resource: resource,
@@ -119,24 +118,20 @@ describe("Scene/BufferLoader", function () {
 
     expect(bufferLoader.typedArray).not.toBeDefined();
 
-    bufferLoader.load();
+    const loadPromise = bufferLoader.load();
     bufferLoader.destroy();
 
-    if (reject) {
-      deferredPromise.reject(new Error());
-    } else {
-      deferredPromise.resolve(arrayBuffer);
-    }
-
-    expect(bufferLoader.typedArray).not.toBeDefined();
-    expect(bufferLoader.isDestroyed()).toBe(true);
+    return loadPromise.finally(function () {
+      expect(bufferLoader.typedArray).not.toBeDefined();
+      expect(bufferLoader.isDestroyed()).toBe(true);
+    });
   }
 
   it("handles resolving uri after destroy", function () {
-    resolveAfterDestroy(false);
+    return resolveAfterDestroy(false);
   });
 
   it("handles rejecting uri after destroy", function () {
-    resolveAfterDestroy(true);
+    return resolveAfterDestroy(true);
   });
 });

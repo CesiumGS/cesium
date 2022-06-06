@@ -60,10 +60,6 @@ const LoadState = {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from light sources.
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this collection.
@@ -170,13 +166,7 @@ function ModelInstanceCollection(options) {
     this._imageBasedLighting = options.imageBasedLighting;
     this._shouldDestroyImageBasedLighting = false;
   } else {
-    // Create image-based lighting from the old constructor parameters.
-    this._imageBasedLighting = new ImageBasedLighting({
-      imageBasedLightingFactor: options.imageBasedLightingFactor,
-      luminanceAtZenith: options.luminanceAtZenith,
-      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: options.specularEnvironmentMaps,
-    });
+    this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
   }
 
@@ -226,38 +216,6 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
         this._imageBasedLighting = value;
         this._shouldDestroyImageBasedLighting = false;
       }
-    },
-  },
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLighting.imageBasedLightingFactor;
-    },
-    set: function (value) {
-      this._imageBasedLighting.imageBasedLightingFactor = value;
-    },
-  },
-  luminanceAtZenith: {
-    get: function () {
-      return this._imageBasedLighting.luminanceAtZenith;
-    },
-    set: function (value) {
-      this._imageBasedLighting.luminanceAtZenith = value;
-    },
-  },
-  sphericalHarmonicCoefficients: {
-    get: function () {
-      return this._imageBasedLighting.sphericalHarmonicCoefficients;
-    },
-    set: function (value) {
-      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
-    },
-  },
-  specularEnvironmentMaps: {
-    get: function () {
-      return this._imageBasedLighting.specularEnvironmentMaps;
-    },
-    set: function (value) {
-      this._imageBasedLighting.specularEnvironmentMaps = value;
     },
   },
 });
@@ -450,7 +408,7 @@ function getVertexShaderCallback(collection) {
       `    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n${globalVarsMain}    czm_instancing_main();\n${pickVarying}}\n`;
 
     if (usesBatchTable) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -470,7 +428,7 @@ function getFragmentShaderCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -531,7 +489,7 @@ function getUniformMapCallback(collection, context) {
 function getVertexShaderNonInstancedCallback(collection) {
   return function (vs, programId) {
     if (defined(collection._batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -552,7 +510,7 @@ function getFragmentShaderNonInstancedCallback(collection) {
   return function (fs, programId) {
     const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      const gltf = collection._model.gltf;
+      const gltf = collection._model.gltfInternal;
       const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
@@ -1086,8 +1044,8 @@ ModelInstanceCollection.prototype.update = function (frameState) {
 
     // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
     const modelRadius =
-      model.boundingSphere.radius +
-      Cartesian3.magnitude(model.boundingSphere.center);
+      model.boundingSphereInternal.radius +
+      Cartesian3.magnitude(model.boundingSphereInternal.center);
     this._boundingSphere.radius += modelRadius;
     this._modelCommands = getModelCommands(model);
 

@@ -44,8 +44,20 @@ void main()
     cpuStylingStage(attributes.positionMC, feature);
     #endif
 
+    #ifdef USE_2D_POSITIONS
+    // The scene mode 2D pipeline stage adds a different model view matrix to
+    // accurately project the model's positions in 2D. However, the output
+    // positions and normals should be transformed by the 3D matrices to keep
+    // the data the same for the fragment shader.
+    mat4 modelView = czm_modelView3D;
+    mat3 normal = czm_normal3D;
+    #else
+    // These are used for individual model projection because they will
+    // automatically change based on the scene mode.
     mat4 modelView = czm_modelView;
     mat3 normal = czm_normal;
+    #endif
+    
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING

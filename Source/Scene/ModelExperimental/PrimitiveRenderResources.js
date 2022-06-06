@@ -179,6 +179,16 @@ export default function PrimitiveRenderResources(
   this.indices = primitive.indices;
 
   /**
+   * Additional index buffer for wireframe mode (if enabled)
+   *
+   * @type {Buffer}
+   * @readonly
+   *
+   * @private
+   */
+  this.wireframeIndexBuffer = undefined;
+
+  /**
    * The primitive type such as TRIANGLES or POINTS
    *
    * @type {PrimitiveType}

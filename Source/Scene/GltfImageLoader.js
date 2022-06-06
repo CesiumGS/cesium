@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
@@ -60,7 +59,7 @@ export default function GltfImageLoader(options) {
   this._image = undefined;
   this._mipLevels = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -70,17 +69,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfImageLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof GltfImageLoader.prototype
    *
-   * @type {Promise.<GltfImageLoader>}
+   * @type {Promise.<GltfImageLoader>|undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -129,14 +128,17 @@ Object.defineProperties(GltfImageLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<GltfImageLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfImageLoader.prototype.load = function () {
   if (defined(this._bufferViewId)) {
-    loadFromBufferView(this);
-  } else {
-    loadFromUri(this);
+    this._promise = loadFromBufferView(this);
+    return this._promise;
   }
+
+  this._promise = loadFromUri(this);
+  return this._promise;
 };
 
 function getImageAndMipLevels(image) {
@@ -168,7 +170,7 @@ function loadFromBufferView(imageLoader) {
   imageLoader._bufferViewLoader = bufferViewLoader;
   imageLoader._state = ResourceLoaderState.LOADING;
 
-  bufferViewLoader.promise
+  return bufferViewLoader.promise
     .then(function () {
       if (imageLoader.isDestroyed()) {
         return;
@@ -188,14 +190,14 @@ function loadFromBufferView(imageLoader) {
         imageLoader._image = imageAndMipLevels.image;
         imageLoader._mipLevels = imageAndMipLevels.mipLevels;
         imageLoader._state = ResourceLoaderState.READY;
-        imageLoader._promise.resolve(imageLoader);
+        return imageLoader;
       });
     })
     .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load embedded image");
+      return handleError(imageLoader, error, "Failed to load embedded image");
     });
 }
 
@@ -206,7 +208,7 @@ function loadFromUri(imageLoader) {
     url: uri,
   });
   imageLoader._state = ResourceLoaderState.LOADING;
-  loadImageFromUri(resource)
+  return loadImageFromUri(resource)
     .then(function (image) {
       if (imageLoader.isDestroyed()) {
         return;
@@ -220,20 +222,20 @@ function loadFromUri(imageLoader) {
       imageLoader._image = imageAndMipLevels.image;
       imageLoader._mipLevels = imageAndMipLevels.mipLevels;
       imageLoader._state = ResourceLoaderState.READY;
-      imageLoader._promise.resolve(imageLoader);
+      return imageLoader;
     })
     .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, `Failed to load image: ${uri}`);
+      return handleError(imageLoader, error, `Failed to load image: ${uri}`);
     });
 }
 
 function handleError(imageLoader, error, errorMessage) {
   imageLoader.unload();
   imageLoader._state = ResourceLoaderState.FAILED;
-  imageLoader._promise.reject(imageLoader.getError(errorMessage, error));
+  return Promise.reject(imageLoader.getError(errorMessage, error));
 }
 
 function getMimeTypeFromTypedArray(typedArray) {

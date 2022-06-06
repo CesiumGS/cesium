@@ -124,7 +124,7 @@ let edgeVersionResult;
 function isEdge() {
   if (!defined(isEdgeResult)) {
     isEdgeResult = false;
-    const fields = / Edge\/([\.0-9]+)/.exec(theNavigator.userAgent);
+    const fields = / Edg\/([\.0-9]+)/.exec(theNavigator.userAgent);
     if (fields !== null) {
       isEdgeResult = true;
       edgeVersionResult = extractVersion(fields[1]);
@@ -416,6 +416,6 @@ FeatureDetection.supportsWebWorkers = function () {
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAssembly}
  */
 FeatureDetection.supportsWebAssembly = function () {
-  return typeof WebAssembly !== "undefined" && !FeatureDetection.isEdge();
+  return typeof WebAssembly !== "undefined";
 };
 export default FeatureDetection;

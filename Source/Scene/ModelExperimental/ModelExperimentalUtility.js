@@ -6,6 +6,9 @@ import RuntimeError from "../../Core/RuntimeError.js";
 import Axis from "../Axis.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import CullFace from "../CullFace.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * Utility functions for {@link ModelExperimental}.
@@ -30,7 +33,7 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
     if (defined(error)) {
       message += `\n${error.message}`;
     }
-    model._readyPromise.reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   };
 };
 
@@ -272,4 +275,32 @@ ModelExperimentalUtility.getAxisCorrectionMatrix = function (
   }
 
   return result;
+};
+
+const scratchMatrix3 = new Matrix3();
+
+/**
+ * Get the cull face to use in the command's render state.
+ * <p>
+ * From the glTF spec section 3.7.4:
+ * When a mesh primitive uses any triangle-based topology (i.e., triangles,
+ * triangle strip, or triangle fan), the determinant of the node’s global
+ * transform defines the winding order of that primitive. If the determinant
+ * is a positive value, the winding order triangle faces is counterclockwise;
+ * in the opposite case, the winding order is clockwise.
+ * </p>
+ *
+ * @param {Matrix4} modelMatrix The model matrix
+ * @param {PrimitiveType} primitiveType The primitive type
+ * @return {CullFace} The cull face
+ *
+ * @private
+ */
+ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
+  if (!PrimitiveType.isTriangles(primitiveType)) {
+    return CullFace.BACK;
+  }
+
+  const matrix3 = Matrix4.getMatrix3(modelMatrix, scratchMatrix3);
+  return Matrix3.determinant(matrix3) < 0.0 ? CullFace.FRONT : CullFace.BACK;
 };
