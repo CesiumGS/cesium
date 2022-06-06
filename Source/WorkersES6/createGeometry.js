@@ -10,7 +10,6 @@ function getModule(moduleName) {
   if (!defined(module)) {
     if (typeof exports === "object") {
       // Use CommonJS-style require.
-      // TODO: ?
       moduleCache[module] = module = require(`Workers/${moduleName}`);
     } else {
       // Use importScripts to synchronously load the IIFE
