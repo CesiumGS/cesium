@@ -151,5 +151,14 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\""
+  },
+  "lint-staged": {
+    "*.{js,cjs,html}": [
+      "eslint --cache --quiet",
+      "pretty-quick"
+    ],
+    "*.md": [
+      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"
+    ]
   }
 }
