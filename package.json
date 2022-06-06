@@ -153,7 +153,12 @@
     "prettier-check": "prettier --check \"**/*\""
   },
   "lint-staged": {
-    "*.{js,cjs,html}": ["pretty-quick", "eslint --cache --quiet"],
-    "*.md": ["markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"]
+    "*.{js,cjs,html}": [
+      "eslint --cache --quiet",
+      "pretty-quick"
+    ],
+    "*.md": [
+      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"
+    ]
   }
 }
