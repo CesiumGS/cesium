@@ -405,14 +405,11 @@ function loadVertexBuffer(
   semantic,
   draco,
   dequantize,
-  loadAsTypedArray,
-  loadFor2D
+  loadBuffer,
+  loadTypedArray
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
-
-  const loadBuffer = !loadAsTypedArray;
-  const loadTypedArray = loadAsTypedArray || loadFor2D;
 
   const vertexBufferLoader = ResourceCache.loadVertexBuffer({
     gltf: gltf,
@@ -648,7 +645,6 @@ function loadAttribute(
   gltfSemantic,
   draco,
   dequantize,
-  loadAsTypedArray,
   loadAsTypedArrayPacked,
   frameState
 ) {
@@ -670,6 +666,7 @@ function loadAttribute(
   const setIndex = defined(modelSemantic)
     ? getSetIndex(renamedSemantic)
     : undefined;
+
   const attribute = createAttribute(
     gltf,
     accessorId,
@@ -682,10 +679,20 @@ function loadAttribute(
     return attribute;
   }
 
+  const loadAsTypedArray = loader._loadAttributesAsTypedArray;
+  const isInstancedTransformAttribute =
+    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
+    modelSemantic === InstanceAttributeSemantic.ROTATION ||
+    modelSemantic === InstanceAttributeSemantic.SCALE;
   const loadFor2D =
-    modelSemantic === VertexAttributeSemantic.POSITION &&
+    (modelSemantic === VertexAttributeSemantic.POSITION ||
+      isInstancedTransformAttribute) &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
+
+  const loadBuffer = !loadAsTypedArray || loadFor2D;
+  const loadTypedArray =
+    loadAsTypedArray || loadAsTypedArrayPacked || loadFor2D;
 
   const vertexBufferLoader = loadVertexBuffer(
     loader,
@@ -694,8 +701,8 @@ function loadAttribute(
     gltfSemantic,
     draco,
     dequantize,
-    loadAsTypedArray,
-    loadFor2D
+    loadBuffer,
+    loadTypedArray
   );
   const promise = vertexBufferLoader.promise.then(function (
     vertexBufferLoader
@@ -715,6 +722,10 @@ function loadAttribute(
       );
       attribute.byteOffset = 0;
       attribute.byteStride = undefined;
+
+      if (loadFor2D) {
+        attribute.buffer = vertexBufferLoader.buffer;
+      }
     } else {
       attribute.typedArray = vertexBufferLoader.typedArray;
       attribute.buffer = vertexBufferLoader.buffer;
@@ -754,7 +765,6 @@ function loadVertexAttribute(
     gltfSemantic,
     draco,
     false,
-    loader._loadAttributesAsTypedArray,
     false,
     frameState
   );
@@ -765,7 +775,8 @@ function loadInstancedAttribute(
   gltf,
   accessorId,
   gltfSemantic,
-  loadAsTypedArrayPacked
+  loadAsTypedArrayPacked,
+  frameState
 ) {
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
@@ -777,7 +788,7 @@ function loadInstancedAttribute(
     undefined,
     true,
     loadAsTypedArrayPacked,
-    loadAsTypedArrayPacked
+    frameState
   );
 }
 
@@ -1406,7 +1417,8 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
             gltf,
             accessorId,
             semantic,
-            loadAsTypedArrayPacked
+            loadAsTypedArrayPacked,
+            frameState
           )
         );
       }
