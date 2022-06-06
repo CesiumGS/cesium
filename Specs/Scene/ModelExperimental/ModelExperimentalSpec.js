@@ -310,6 +310,27 @@ describe(
       });
     });
 
+    it("resets draw commands when textures finish loading", function () {
+      const resetDrawCommands = spyOn(
+        ModelExperimental.prototype,
+        "resetDrawCommands"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          url: boxTexturedGltfUrl,
+          incrementallyLoadTextures: true,
+        },
+        scene
+      ).then(function (model) {
+        return model.texturesLoadedPromise.then(function () {
+          // Two reset calls:
+          // - An unrelated call due to IBL initialization
+          // - reset when the texturesLoadedPromise resolves
+          expect(resetDrawCommands).toHaveBeenCalledTimes(2);
+        });
+      });
+    });
+
     it("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
