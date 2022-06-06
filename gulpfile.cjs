@@ -82,7 +82,11 @@ const filesToClean = [
 ];
 
 const workerSourceFiles = ["Source/WorkersES6/**"];
-const specFiles = ["Specs/**/*Spec.js"];
+const watchedSpecFiles = [
+  "Specs/**/*Spec.js",
+  "Specs/*.js",
+  "Specs/TestWorkers/*.js",
+];
 const testWorkers = ["Specs/TestWorkers/*.js"];
 const cssFiles = "Source/**/*.css";
 const shaderFiles = [
@@ -474,7 +478,7 @@ gulp.task(
     });
 
     gulp.watch(
-      specFiles,
+      watchedSpecFiles,
       {
         events: ["add", "unlink"],
       },
@@ -485,7 +489,7 @@ gulp.task(
     );
 
     gulp.watch(
-      specFiles,
+      watchedSpecFiles,
       {
         events: ["change"],
       },
@@ -1675,7 +1679,7 @@ ${source}
 }
 
 function createSpecList() {
-  const files = globby.sync(specFiles);
+  const files = globby.sync(["Specs/**/*Spec.js"]);
 
   let contents = "";
   files.forEach(function (file) {
