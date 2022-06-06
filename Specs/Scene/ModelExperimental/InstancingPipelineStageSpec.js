@@ -291,6 +291,10 @@ fdescribe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         "attribute float a_instanceFeatureId_0;",
       ]);
 
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform mat4 u_modelView2D;",
+      ]);
+
       const translationMatrix = Matrix4.fromTranslation(
         renderResources.instancingReferencePoint2D,
         scratchMatrix4

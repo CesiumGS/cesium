@@ -31,6 +31,7 @@ mat4 getInstancingTransform()
     return instancingTransform;
 }
 
+#ifdef USE_2D_INSTANCING
 mat4 getInstancingTransform2D()
 {
     mat4 instancingTransform2D;
@@ -63,3 +64,4 @@ mat4 getInstancingTransform2D()
 
     return instancingTransform2D;
 }
+#endif
