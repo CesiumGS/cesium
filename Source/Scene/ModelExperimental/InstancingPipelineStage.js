@@ -16,6 +16,7 @@ import Quaternion from "../../Core/Quaternion.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Transforms from "../../Core/Transforms.js";
 
 const modelViewScratch = new Matrix4();
 const nodeTransformScratch = new Matrix4();
@@ -173,8 +174,35 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   );
 };
 
-const transformScratch = new Matrix4();
+const projectedTransformScratch = new Matrix4();
 const projectedPositionScratch = new Cartesian3();
+
+function projectTransformTo2D(
+  transform,
+  modelMatrix,
+  nodeTransform,
+  frameState,
+  result
+) {
+  const modelMatrixAndTransform = Matrix4.multiplyTransformation(
+    modelMatrix,
+    transform,
+    projectedTransformScratch
+  );
+  const finalTransform = Matrix4.multiplyTransformation(
+    modelMatrixAndTransform,
+    nodeTransform,
+    projectedTransformScratch
+  );
+
+  result = Transforms.basisTo2D(
+    frameState.mapProjection,
+    finalTransform,
+    result
+  );
+
+  return result;
+}
 
 function projectPositionTo2D(
   position,
@@ -183,16 +211,19 @@ function projectPositionTo2D(
   frameState,
   result
 ) {
-  const translationMatrix = Matrix4.fromTranslation(position, transformScratch);
+  const translationMatrix = Matrix4.fromTranslation(
+    position,
+    projectedTransformScratch
+  );
   const modelMatrixAndTranslation = Matrix4.multiplyTransformation(
     modelMatrix,
     translationMatrix,
-    transformScratch
+    projectedTransformScratch
   );
   const finalTransform = Matrix4.multiplyTransformation(
     modelMatrixAndTranslation,
     nodeTransform,
-    transformScratch
+    projectedTransformScratch
   );
   const finalPosition = Matrix4.getTranslation(
     finalTransform,
@@ -223,18 +254,13 @@ function getModelMatrixAndNodeTransform(
   if (instances.transformInWorldSpace) {
     // Replicate the multiplication order in LegacyInstancingStageVS.
     modelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix.modelMatrix,
+      model.modelMatrix,
       sceneGraph.components.transform,
       modelMatrix
     );
 
-    nodeComputedTransform = Matrix4.multiplyByUniformScale(
-      sceneGraph.axisCorrectionMatrix,
-      model.computedScale,
-      nodeComputedTransform
-    );
     nodeComputedTransform = Matrix4.multiplyTransformation(
-      nodeComputedTransform,
+      sceneGraph.axisCorrectionMatrix,
       renderResources.runtimeNode.computedTransform,
       nodeComputedTransform
     );
@@ -254,6 +280,7 @@ function getModelMatrixAndNodeTransform(
   }
 }
 
+const transformScratch = new Matrix4();
 const positionScratch = new Cartesian3();
 
 function projectTransformsTo2D(
@@ -275,23 +302,31 @@ function projectTransformsTo2D(
   const count = transforms.length;
   for (let i = 0; i < count; i++) {
     const transform = transforms[i];
-    const position = Matrix4.getTranslation(transform, positionScratch);
 
-    const projectedPosition = projectPositionTo2D(
-      position,
+    const projectedTransform = projectTransformTo2D(
+      transform,
       modelMatrix,
       nodeComputedTransform,
       frameState,
-      position
+      transformScratch
+    );
+
+    const position = Matrix4.getTranslation(
+      projectedTransform,
+      positionScratch
     );
 
     const finalTranslation = Cartesian3.subtract(
-      projectedPosition,
+      position,
       referencePoint,
-      projectedPosition
+      position
     );
 
-    result[i] = Matrix4.setTranslation(transform, finalTranslation, result[i]);
+    result[i] = Matrix4.setTranslation(
+      projectedTransform,
+      finalTranslation,
+      result[i]
+    );
   }
 
   return result;
@@ -628,14 +663,14 @@ function processTransformAttributes(
   // To prevent jitter, the positions are defined relative to a common
   // reference point. For convenience, this is the center of the instanced
   // translation bounds.
-  const referencePoint = computeReferencePoint2D(renderResources, frameState);
+  const referencePoint = computeReferencePoint2D(renderResources, frameStateCV);
   renderResources.instancingReferencePoint2D = referencePoint;
 
   if (useMatrices) {
     const projectedTransforms = projectTransformsTo2D(
       transforms,
       renderResources,
-      frameState,
+      frameStateCV,
       transforms
     );
     const attributeString2D = "Transform2D";
@@ -655,7 +690,7 @@ function processTransformAttributes(
     const projectedTranslations = projectTranslationsTo2D(
       translations,
       renderResources,
-      frameState,
+      frameStateCV,
       translations
     );
     const projectedTypedArray = translationsToTypedArray(projectedTranslations);

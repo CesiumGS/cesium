@@ -18,7 +18,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-fdescribe("Scene/ModelExperimental/InstancingPipelineStage", function () {
+describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   const scratchMatrix4 = new Matrix4();
 
   const boxInstanced =
