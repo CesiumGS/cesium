@@ -137,7 +137,7 @@ Here's the full set of scripts and what they do.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
   - `build-apps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-  - `build-doc` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/main/Documentation/Contributors/DocumentationGuide).
+  - `build-doc` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
   - `build-ts` - Generates a TypeScript definitions file for the Cesium library
   - `build-third-party` - Generates `ThirdParty.json`, a file which lists the latest licensing information of installed third party modules
   - `release` - A full release build that creates a shippable product, including generating documentation.
@@ -147,7 +147,6 @@ Here's the full set of scripts and what they do.
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
   - `coverage` - Runs coverage and opens the default browser with the results
   - `eslint` - Runs [ESLint](http://eslint.org/), a static code analysis tool, on the entire source tree
-  - `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files
   - `prettier` - Formats the code base using [Prettier](https://prettier.io/)
   - `prettier-check` - Verifies prettier formatting, but does not write the output
 - **Testing scripts** -- build and run the unit tests
@@ -213,7 +212,7 @@ To configure the additional commit statuses on GitHub for your fork of Cesium, y
 
 - In GitHub, go to "Settings" and "Personal access tokens"
 - Click "Generate new token" and confirm your password when prompted
-- Give a breif description of the token such as "Travis Statuses" and select "repo:status" and click "Generate token"
+- Give a brief description of the token such as "Travis Statuses" and select "repo:status" and click "Generate token"
   - `repo:status` gives the token access to only commit statuses
 
 ![Token Access](token.jpg)
