@@ -118,7 +118,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
       // modifiedModelView = view * modifiedModel
       return Matrix4.multiplyTransformation(
-        frameState.context.uniformState.view,
+        frameState.context.uniformState.view3D,
         modifiedModelMatrix,
         modelViewScratch
       );
