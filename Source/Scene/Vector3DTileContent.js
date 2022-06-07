@@ -107,7 +107,9 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return defined(this._batchTable) ? this._batchTable.memorySizeInBytes : 0;
+      return defined(this._batchTable)
+        ? this._batchTable.batchTableByteLength
+        : 0;
     },
   },
 

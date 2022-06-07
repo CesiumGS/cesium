@@ -12,7 +12,6 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * @private
  */
-
 const MorphTargetsPipelineStage = {};
 MorphTargetsPipelineStage.name = "MorphTargetsPipelineStage"; // Helps with debugging
 MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION =
@@ -53,11 +52,12 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
 
   addGetMorphedAttributeFunctionDeclarations(shaderBuilder);
 
-  for (let i = 0; i < primitive.morphTargets.length; i++) {
-    const morphTarget = primitive.morphTargets[i];
-    const attributes = morphTarget.attributes;
+  const morphTargetsLength = primitive.morphTargets.length;
+  for (let i = 0; i < morphTargetsLength; i++) {
+    const attributes = primitive.morphTargets[i].attributes;
 
-    for (let j = 0; j < attributes.length; j++) {
+    const attributesLength = attributes.length;
+    for (let j = 0; j < attributesLength; j++) {
       const attribute = attributes[j];
       const semantic = attribute.semantic;
 

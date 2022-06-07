@@ -1610,8 +1610,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The total amount of GPU memory in bytes used by the tileset. This value is estimated from
-   * geometry, texture, and batch table textures of loaded tiles. For point clouds, this value also
-   * includes per-point metadata.
+   * geometry, texture, batch table textures, and binary metadata of loaded tiles.
    *
    * @memberof Cesium3DTileset.prototype
    *

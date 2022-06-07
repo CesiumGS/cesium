@@ -485,8 +485,6 @@ describe(
         Promise.resolve(arrayBuffer)
       );
 
-      spyOn(Buffer, "createIndexBuffer").and.callThrough();
-
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
