@@ -27,7 +27,7 @@ function ModelAnimationCollection(model) {
    *
    * @example
    * model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
-   *   console.log('Animation added: ' + animation.name);
+   *   console.log(`Animation added: ${animation.name}`);
    * });
    */
   this.animationAdded = new Event();
@@ -41,7 +41,7 @@ function ModelAnimationCollection(model) {
    *
    * @example
    * model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
-   *   console.log('Animation removed: ' + animation.name);
+   *   console.log(`Animation removed: ${animation.name}`);
    * });
    */
   this.animationRemoved = new Event();
@@ -140,13 +140,13 @@ function add(collection, index, options) {
  * });
  *
  * animation.start.addEventListener(function(model, animation) {
- *   console.log('Animation started: ' + animation.name);
+ *   console.log(`Animation started: ${animation.name}`);
  * });
  * animation.update.addEventListener(function(model, animation, time) {
- *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+ *   console.log(`Animation updated:  ${animation.name}. glTF animation time: ${time}`);
  * });
  * animation.stop.addEventListener(function(model, animation) {
- *   console.log('Animation stopped: ' + animation.name);
+ *   console.log(`Animation stopped: ${animation.name}`);
  * });
  */
 ModelAnimationCollection.prototype.add = function (options) {

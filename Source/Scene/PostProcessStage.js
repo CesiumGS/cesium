@@ -46,15 +46,15 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @example
  * // Simple stage to change the color
- * const fs =
- *     'uniform sampler2D colorTexture;\n' +
- *     'varying vec2 v_textureCoordinates;\n' +
- *     'uniform float scale;\n' +
- *     'uniform vec3 offset;\n' +
- *     'void main() {\n' +
- *     '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
- *     '    gl_FragColor = vec4(color.rgb * scale + offset, 1.0);\n' +
- *     '}\n';
+ * const fs =`
+ *     uniform sampler2D colorTexture;
+ *     varying vec2 v_textureCoordinates;
+ *     uniform float scale;
+ *     uniform vec3 offset;
+ *     void main() {
+ *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
+ *         gl_FragColor = vec4(color.rgb * scale + offset, 1.0);
+ *     }`;
  * scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
  *     uniforms : {
@@ -68,19 +68,19 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
- * const fs =
- *     'uniform sampler2D colorTexture;\n' +
- *     'varying vec2 v_textureCoordinates;\n' +
- *     'uniform vec4 highlight;\n' +
- *     'void main() {\n' +
- *     '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
- *     '    if (czm_selected()) {\n' +
- *     '        vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;\n' +
- *     '        gl_FragColor = vec4(highlighted, 1.0);\n' +
- *     '    } else { \n' +
- *     '        gl_FragColor = color;\n' +
- *     '    }\n' +
- *     '}\n';
+ * const fs =`
+ *     uniform sampler2D colorTexture;
+ *     varying vec2 v_textureCoordinates;
+ *     uniform vec4 highlight;
+ *     void main() {
+ *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
+ *         if (czm_selected()) {
+ *             vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
+ *             gl_FragColor = vec4(highlighted, 1.0);
+ *         } else { 
+ *             gl_FragColor = color;
+ *         }
+ *     }`;
  * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
  *     uniforms : {
