@@ -1,10 +1,8 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalDrawCommand from "./ModelExperimentalDrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
@@ -132,19 +130,11 @@ function getIndexBuffer(primitiveRenderResources, frameState) {
     return undefined;
   }
 
-  if (defined(indices.buffer)) {
-    return indices.buffer;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices.buffer)) {
+    throw new DeveloperError("Indices must be provided as a Buffer");
   }
+  //>>includeEnd('debug');
 
-  const typedArray = indices.typedArray;
-  const indexDatatype = IndexDatatype.fromSizeInBytes(
-    typedArray.BYTES_PER_ELEMENT
-  );
-
-  return Buffer.createIndexBuffer({
-    context: frameState.context,
-    typedArray: typedArray,
-    usage: BufferUsage.STATIC_DRAW,
-    indexDatatype: indexDatatype,
-  });
+  return indices.buffer;
 }

@@ -848,6 +848,9 @@ function processFeatureIdAttributes(
     vertexBuffer.vertexArrayDestroyable = false;
     model._resources.push(vertexBuffer);
 
+    const hasCpuCopy = false;
+    model.statistics.addBuffer(vertexBuffer, hasCpuCopy);
+
     instancingVertexAttributes.push({
       index: renderResources.attributeIndex++,
       vertexBuffer: vertexBuffer,

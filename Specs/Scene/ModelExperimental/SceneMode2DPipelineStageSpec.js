@@ -3,6 +3,7 @@ import {
   combine,
   GltfLoader,
   Matrix4,
+  ModelExperimentalStatistics,
   ModelExperimentalType,
   ModelExperimentalUtility,
   Resource,
@@ -76,6 +77,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       attributeIndex: 1,
       model: {
         type: ModelExperimentalType.TILE_GLTF,
+        statistics: new ModelExperimentalStatistics(),
         sceneGraph: {
           computedModelMatrix: Matrix4.IDENTITY,
         },
@@ -107,9 +109,14 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scene.frameState
       );
 
+      const model = renderResources.model;
+
       const runtimePrimitive = renderResources.runtimePrimitive;
       expect(runtimePrimitive.boundingSphere2D).toBeDefined();
-      expect(runtimePrimitive.positionBuffer2D).toBeDefined();
+
+      const positions2D = runtimePrimitive.positionBuffer2D;
+      expect(positions2D).toBeDefined();
+      expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
@@ -154,9 +161,14 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scene.frameState
       );
 
+      const model = renderResources.model;
+
       const runtimePrimitive = renderResources.runtimePrimitive;
       expect(runtimePrimitive.boundingSphere2D).toBeDefined();
-      expect(runtimePrimitive.positionBuffer2D).toBeDefined();
+
+      const positions2D = runtimePrimitive.positionBuffer2D;
+      expect(positions2D).toBeDefined();
+      expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(

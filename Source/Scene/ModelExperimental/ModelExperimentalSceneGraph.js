@@ -417,6 +417,9 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   const model = this._model;
   const modelRenderResources = new ModelRenderResources(model);
 
+  // Reset the memory counts before running the pipeline
+  model.statistics.clear();
+
   this.configurePipeline();
   const modelPipelineStages = this.modelPipelineStages;
 
@@ -595,7 +598,7 @@ ModelExperimentalSceneGraph.prototype.update = function (
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
         const stage = runtimePrimitive.updateStages[k];
-        stage.update(runtimePrimitive);
+        stage.update(runtimePrimitive, this);
       }
     }
   }

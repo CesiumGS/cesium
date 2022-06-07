@@ -9,6 +9,7 @@ script:
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
+  - npm --silent run markdownlint
   - npm --silent run prettier-check
 
   - npm --silent run build

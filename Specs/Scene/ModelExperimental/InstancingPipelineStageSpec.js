@@ -5,12 +5,13 @@ import {
   GltfLoader,
   I3dmLoader,
   InstancingPipelineStage,
-  Resource,
-  ResourceCache,
-  ShaderBuilder,
   Matrix4,
   Math as CesiumMath,
   ModelExperimentalUtility,
+  ModelExperimentalStatistics,
+  Resource,
+  ResourceCache,
+  ShaderBuilder,
   _shadersInstancingStageCommon,
   _shadersLegacyInstancingStageVS,
 } from "../../../Source/Cesium.js";
@@ -66,6 +67,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
       },
     };
   }
@@ -85,6 +87,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
           computedModelMatrix: Matrix4.IDENTITY,
           axisCorrectionMatrix: Matrix4.IDENTITY,
         },
+        statistics: new ModelExperimentalStatistics(),
       },
       runtimeNode: {
         computedTransform: Matrix4.IDENTITY,
@@ -152,6 +155,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(4);
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 16;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -171,6 +183,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(1);
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -209,6 +223,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       ]);
 
       expect(renderResources.model._resources.length).toEqual(2);
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 16;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -246,6 +269,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       ]);
 
       expect(renderResources.model._resources.length).toEqual(1);
+
+      // Matrices are stored as 3 vec4s, so this is
+      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+      const matrixSize = 192;
+      // 4 floats
+      const featureIdSize = 0;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -389,6 +421,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
           CesiumMath.EPSILON10
         );
       }
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -423,6 +457,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
         "attribute vec3 a_instanceTranslation;",
       ]);
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -484,6 +520,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
+
+      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -496,6 +534,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        statistics: new ModelExperimentalStatistics(),
         modelMatrix: Matrix4.fromUniformScale(2.0),
         sceneGraph: {
           axisCorrectionMatrix: ModelExperimentalUtility.getAxisCorrectionMatrix(
@@ -584,6 +623,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(uniformMap.u_instance_nodeTransform()).toEqualEpsilon(
         expectedNodeTransform,
         CesiumMath.EPSILON8
+      );
+
+      // matrices are stored as 3 vec4s, so this is
+      // 25 matrices * 12 floats/matrix * 4 bytes/float = 1200
+      const matrixSize = 1200;
+      // 25 floats
+      const featureIdSize = 100;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
       );
     });
   });

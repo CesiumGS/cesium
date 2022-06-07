@@ -21,6 +21,7 @@ import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
+import StatisticsPipelineStage from "./StatisticsPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
@@ -236,6 +237,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   pipelineStages.push(AlphaPipelineStage);
+
+  pipelineStages.push(StatisticsPipelineStage);
 
   return;
 };

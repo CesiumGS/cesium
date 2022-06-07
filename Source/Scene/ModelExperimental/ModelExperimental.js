@@ -11,6 +11,7 @@ import GltfLoader from "../GltfLoader.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
@@ -262,6 +263,8 @@ export default function ModelExperimental(options) {
     SplitDirection.NONE
   );
 
+  this._statistics = new ModelExperimentalStatistics();
+
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
 
@@ -274,7 +277,8 @@ function createModelFeatureTables(model, structuralMetadata) {
   const featureTables = model._featureTables;
 
   const propertyTables = structuralMetadata.propertyTables;
-  for (let i = 0; i < propertyTables.length; i++) {
+  const length = propertyTables.length;
+  for (let i = 0; i < length; i++) {
     const propertyTable = propertyTables[i];
     const modelFeatureTable = new ModelFeatureTable({
       model: model,
@@ -363,6 +367,11 @@ function initialize(model) {
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
+
+      // Re-run the pipeline so texture memory statistics are re-computed
+      if (loader._incrementallyLoadTextures) {
+        model.resetDrawCommands();
+      }
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -453,9 +462,26 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Get the estimated memory usage statistics for this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalStatistics}
+   * @readonly
+   *
+   * @private
+   */
+  statistics: {
+    get: function () {
+      return this._statistics;
+    },
+  },
+
+  /**
    * The currently playing glTF animations.
    *
    * @memberof ModelExperimental.prototype
+   *
    * @type {ModelExperimentalAnimationCollection}
    * @readonly
    */
@@ -499,6 +525,8 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Pass}
    * @readonly
@@ -640,6 +668,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Boolean}
    * @readonly
    *
@@ -653,6 +683,8 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Cesium3DTileStyle}
    */
@@ -1140,10 +1172,6 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
-  if (!this._drawCommandsBuilt) {
-    return;
-  }
-  this.destroyResources();
   this._drawCommandsBuilt = false;
 };
 
@@ -1270,7 +1298,8 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   const featureTables = this._featureTables;
-  for (let i = 0; i < featureTables.length; i++) {
+  const length = featureTables.length;
+  for (let i = 0; i < length; i++) {
     featureTables[i].update(frameState);
     // Check if the types of style commands needed have changed and trigger a reset of the draw commands
     // to ensure that translucent and opaque features are handled in the correct passes.
@@ -1280,6 +1309,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (!this._drawCommandsBuilt) {
+    this.destroyResources();
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
 
@@ -1497,7 +1527,8 @@ ModelExperimental.prototype.destroy = function () {
 
   const featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (let i = 0; i < featureTables.length; i++) {
+    const length = featureTables.length;
+    for (let i = 0; i < length; i++) {
       featureTables[i].destroy();
     }
   }

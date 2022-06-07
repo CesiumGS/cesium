@@ -51,6 +51,8 @@ MaterialPipelineStage.process = function (
   primitive,
   frameState
 ) {
+  // gltf-pipeline automatically creates a default material so this will always
+  // be defined.
   const material = primitive.material;
 
   const uniformMap = renderResources.uniformMap;
