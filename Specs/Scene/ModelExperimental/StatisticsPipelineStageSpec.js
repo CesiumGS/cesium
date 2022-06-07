@@ -363,7 +363,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
       const statistics = new ModelExperimentalStatistics();
-      
+
       StatisticsPipelineStage._countMaterialTextures(
         statistics,
         primitive.material
