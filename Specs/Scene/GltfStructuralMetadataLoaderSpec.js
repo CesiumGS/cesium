@@ -352,7 +352,9 @@ describe(
           const treesTable = structuralMetadata.getPropertyTable(1);
           expect(treesTable.id).toBe(1);
 
-          expect(ResourceCache.statistics.propertyTablesByteLength).toBe(0);
+          expect(ResourceCache.statistics.propertyTablesByteLength).toBe(
+            buildingsTable.byteLength + treesTable.byteLength
+          );
 
           const mapTexture = structuralMetadata.getPropertyTexture(0);
           expect(mapTexture.id).toBe(0);
