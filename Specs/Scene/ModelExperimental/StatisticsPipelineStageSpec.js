@@ -28,6 +28,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
     "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
   const simplePropertyTexture =
     "./Data/Models/GltfLoader/SimplePropertyTexture/SimplePropertyTexture.gltf";
+  const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
   const triangleWithoutIndices =
     "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
   const triangleStrip =
@@ -354,6 +355,23 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       }
 
       expect(statistics.geometryByteLength).toBe(totalSize);
+    });
+  });
+
+  it("_countMaterialTextures does not update memory if there is no material", function () {
+    return loadGltf(triangle).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const primitive = components.nodes[0].primitives[0];
+      const statistics = new ModelExperimentalStatistics();
+
+      console.log(primitive.material);
+
+      StatisticsPipelineStage._countMaterialTextures(
+        statistics,
+        primitive.material
+      );
+
+      expect(statistics.texturesByteLength).toBe(0);
     });
   });
 

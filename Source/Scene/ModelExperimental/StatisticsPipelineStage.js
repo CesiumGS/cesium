@@ -126,6 +126,8 @@ function countMorphTargetAttributes(statistics, primitive) {
 }
 
 function countMaterialTextures(statistics, material) {
+  // gltf-pipeline provides a default material so material will always be
+  // defined.
   const textureReaders = getAllTextureReaders(material);
   const length = textureReaders.length;
   for (let i = 0; i < length; i++) {

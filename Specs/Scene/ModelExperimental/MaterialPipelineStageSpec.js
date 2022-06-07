@@ -79,6 +79,7 @@ describe(
     const boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
     const boxNoNormals =
       "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
+    const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
 
     function expectShaderLines(shaderLines, expected) {
       for (let i = 0; i < expected.length; i++) {
@@ -96,6 +97,37 @@ describe(
         }
       }
     }
+
+    it("processes default material", function () {
+      return loadGltf(triangle).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: { statistics: new ModelExperimentalStatistics() },
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, []);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, []);
+
+        const expectedUniforms = {};
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
 
     it("adds material uniforms", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
