@@ -730,8 +730,7 @@ describe(
         uniformMap,
         textureReader,
         "u_testTexture",
-        "TEST",
-        new ModelExperimentalStatistics()
+        "TEST"
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -761,8 +760,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture,
-        new ModelExperimentalStatistics()
+        mockFrameState.context.defaultTexture
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -795,8 +793,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockFrameState.context.defaultTexture,
-        new ModelExperimentalStatistics()
+        mockFrameState.context.defaultTexture
       );
 
       expectUniformMap(uniformMap, {
