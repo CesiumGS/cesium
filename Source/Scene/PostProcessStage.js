@@ -77,7 +77,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *         if (czm_selected()) {
  *             vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
  *             gl_FragColor = vec4(highlighted, 1.0);
- *         } else { 
+ *         } else {
  *             gl_FragColor = color;
  *         }
  *     }`;
@@ -364,7 +364,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * if (czm_selected(v_textureCoordinates)) {
    *     // apply post-process stage
    * } else {
-   *     gl_FragColor = texture2D(colorTexture, v_textureCordinates);
+   *     gl_FragColor = texture2D(colorTexture, v_textureCoordinates);
    * }
    * </code>
    * </p>
