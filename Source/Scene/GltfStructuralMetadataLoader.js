@@ -280,6 +280,10 @@ function loadBufferViews(structuralMetadataLoader) {
         gltfResource: structuralMetadataLoader._gltfResource,
         baseResource: structuralMetadataLoader._baseResource,
       });
+
+      // Property table properties are counted here since these buffer views
+      // are not vertex buffers
+      ResourceCache.statistics.addPropertyBufferView(bufferViewLoader);
       bufferViewPromises.push(bufferViewLoader.promise);
       structuralMetadataLoader._bufferViewLoaders.push(bufferViewLoader);
       bufferViewLoaders[bufferViewId] = bufferViewLoader;
