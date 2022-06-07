@@ -7,6 +7,7 @@ describe("Scene/ResourceCacheStatistics", function () {
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics._geometrySizes).toEqual({});
     expect(statistics._textureSizes).toEqual({});
+    expect(statistics._propertySizes).toEqual({});
   });
 
   function mockLoader(cacheKey, shouldResolve, data) {
@@ -52,21 +53,36 @@ describe("Scene/ResourceCacheStatistics", function () {
       },
     });
 
+    const bufferViewLoader = mockLoader("bufferView", true, {
+      typedArray: new Uint8Array(50),
+    });
+
     const geometryPromise = statistics.addGeometryLoader(geometryLoader);
     const texturePromise = statistics.addTextureLoader(textureLoader);
+    const bufferViewPromise = statistics.addPropertyBufferView(
+      bufferViewLoader
+    );
 
-    return Promise.all([geometryPromise, texturePromise]).then(function () {
+    return Promise.all([
+      geometryPromise,
+      texturePromise,
+      bufferViewPromise,
+    ]).then(function () {
       expect(statistics.geometryByteLength).not.toBe(0);
       expect(statistics.texturesByteLength).not.toBe(0);
+      expect(statistics.propertyTablesByteLength).not.toBe(0);
       expect(statistics._geometrySizes).not.toEqual({});
       expect(statistics._textureSizes).not.toEqual({});
+      expect(statistics._propertySizes).not.toEqual({});
 
       statistics.clear();
 
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -89,8 +105,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return statistics.addGeometryLoader(geometryLoader).then(function () {
       expect(statistics.geometryByteLength).toBe(100);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({ vertices: 100 });
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -107,8 +125,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return statistics.addGeometryLoader(geometryLoader).then(function () {
       expect(statistics.geometryByteLength).toBe(200);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({ vertices: 200 });
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -128,8 +148,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return Promise.all([promise, promise2]).then(function () {
       expect(statistics.geometryByteLength).toBe(200);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({ vertices: 200 });
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -145,8 +167,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return statistics.addGeometryLoader(geometryLoader).then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -171,8 +195,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return promise.then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -195,8 +221,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return statistics.addTextureLoader(textureLoader).then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(100);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({ texture: 100 });
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -212,8 +240,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return statistics.addTextureLoader(textureLoader).then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -238,8 +268,10 @@ describe("Scene/ResourceCacheStatistics", function () {
     return promise.then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -257,8 +289,96 @@ describe("Scene/ResourceCacheStatistics", function () {
     return Promise.all([promise, promise2]).then(function () {
       expect(statistics.geometryByteLength).toBe(0);
       expect(statistics.texturesByteLength).toBe(100);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({});
       expect(statistics._textureSizes).toEqual({ texture: 100 });
+      expect(statistics._propertySizes).toEqual({});
+    });
+  });
+
+  it("addPropertyBufferView throws for undefined loader", function () {
+    const statistics = new ResourceCacheStatistics();
+    expect(function () {
+      return statistics.addPropertyBufferView(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("addPropertyBufferView counts binary property", function () {
+    const statistics = new ResourceCacheStatistics();
+
+    const loader = mockLoader("bufferView", true, {
+      typedArray: new Uint8Array(100),
+    });
+
+    return statistics.addPropertyBufferView(loader).then(function () {
+      expect(statistics.geometryByteLength).toBe(0);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(100);
+      expect(statistics._geometrySizes).toEqual({});
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({ bufferView: 100 });
+    });
+  });
+
+  it("addPropertyBufferView handles failed load", function () {
+    const statistics = new ResourceCacheStatistics();
+
+    const loader = mockLoader("bufferView", false, {
+      typedArray: new Uint8Array(100),
+    });
+
+    return statistics.addPropertyBufferView(loader).then(function () {
+      expect(statistics.geometryByteLength).toBe(0);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
+      expect(statistics._geometrySizes).toEqual({});
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
+    });
+  });
+
+  it("addPropertyBufferView handles canceled load", function () {
+    const statistics = new ResourceCacheStatistics();
+
+    const loader = mockCanceledLoader("bufferView", true, {
+      typedArray: new Uint8Array(100),
+    });
+
+    const promise = statistics.addPropertyBufferView(loader);
+
+    expect(statistics.propertyTablesByteLength).toBe(0);
+    expect(statistics._propertySizes).toEqual({ bufferView: 0 });
+
+    // simulate removing the loader before the promise resolves
+    statistics.removeLoader(loader);
+    loader.cancel();
+
+    return promise.then(function () {
+      expect(statistics.geometryByteLength).toBe(0);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(0);
+      expect(statistics._geometrySizes).toEqual({});
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({});
+    });
+  });
+
+  it("addPropertyBufferView does not double count memory", function () {
+    const statistics = new ResourceCacheStatistics();
+
+    const loader = mockLoader("bufferView", true, {
+      typedArray: new Uint8Array(100),
+    });
+
+    const promise = statistics.addPropertyBufferView(loader);
+    const promise2 = statistics.addPropertyBufferView(loader);
+    return Promise.all([promise, promise2]).then(function () {
+      expect(statistics.geometryByteLength).toBe(0);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(100);
+      expect(statistics._geometrySizes).toEqual({});
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({ bufferView: 100 });
     });
   });
 
@@ -359,6 +479,56 @@ describe("Scene/ResourceCacheStatistics", function () {
         expect(statistics._textureSizes).toEqual({ texture: 300 });
       }
     );
+  });
+
+  it("removeLoader correctly updates memory for property table properties", function () {
+    const geometryLoader = mockLoader("vertices", true, {
+      buffer: {
+        sizeInBytes: 100,
+      },
+    });
+
+    const bufferViewLoader = mockLoader("bufferView", true, {
+      typedArray: new Uint8Array(50),
+    });
+
+    const bufferViewLoader2 = mockLoader("bufferView2", true, {
+      typedArray: new Uint8Array(25),
+    });
+
+    const statistics = new ResourceCacheStatistics();
+
+    const geometryPromise = statistics.addGeometryLoader(geometryLoader);
+    const bufferViewPromise = statistics.addPropertyBufferView(
+      bufferViewLoader
+    );
+    const bufferViewPromise2 = statistics.addPropertyBufferView(
+      bufferViewLoader2
+    );
+
+    return Promise.all([
+      geometryPromise,
+      bufferViewPromise,
+      bufferViewPromise2,
+    ]).then(function () {
+      expect(statistics.geometryByteLength).toBe(100);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(75);
+      expect(statistics._geometrySizes).toEqual({ vertices: 100 });
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({
+        bufferView: 50,
+        bufferView2: 25,
+      });
+
+      statistics.removeLoader(bufferViewLoader2);
+
+      expect(statistics.geometryByteLength).toBe(100);
+      expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics._geometrySizes).toEqual({ vertices: 100 });
+      expect(statistics._textureSizes).toEqual({});
+      expect(statistics._propertySizes).toEqual({ bufferView: 50 });
+    });
   });
 
   it("removeLoader gracefully handles loader without tracked resources", function () {
