@@ -242,7 +242,8 @@ function Attribute() {
   this.quantization = undefined;
 
   /**
-   * A typed array containing tightly-packed attribute values.
+   * A typed array containing tightly-packed attribute values, as they appear
+   * in the model file.
    *
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
@@ -258,7 +259,9 @@ function Attribute() {
   this.buffer = undefined;
 
   /**
-   * A typed array containing vertex buffer data. Attribute values are accessed using byteOffset and byteStride.
+   * A typed array containing a CPU copy of the vertex buffer for further
+   * processing. Since GPU buffers may have padding, attribute values are
+   * accessed using byteOffset and byteStride.
    *
    * @type {Uint8Array}
    * @private

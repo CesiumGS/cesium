@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -61,6 +62,7 @@ function Buffer(options) {
   gl.bufferData(bufferTarget, hasArray ? typedArray : sizeInBytes, usage);
   gl.bindBuffer(bufferTarget, null);
 
+  this._id = createGuid();
   this._gl = gl;
   this._webgl2 = options.context._webgl2;
   this._bufferTarget = bufferTarget;

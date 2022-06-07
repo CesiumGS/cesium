@@ -32,6 +32,7 @@ describe("Scene/MetadataTable", function () {
     });
 
     expect(metadataTable.count).toBe(10);
+    expect(metadataTable.byteLength).toBe(0);
   });
 
   it("creates metadata table", function () {
@@ -63,6 +64,12 @@ describe("Scene/MetadataTable", function () {
     expect(Object.keys(metadataTable.class.properties).sort()).toEqual(
       expectedPropertyNames
     );
+
+    const heightSize = 2 * 4; // two floats
+    const nameCharArraySize = 2;
+    const nameOffsetSize = 3 * 4; // (2 + 1) indices of the default UINT32
+    const totalSize = heightSize + nameCharArraySize + nameOffsetSize;
+    expect(metadataTable.byteLength).toBe(totalSize);
   });
 
   it("constructor throws without count", function () {

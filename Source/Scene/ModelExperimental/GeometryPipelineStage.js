@@ -1,6 +1,7 @@
 import AttributeType from "../AttributeType.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -139,13 +140,22 @@ GeometryPipelineStage.process = function (
     !frameState.scene3DOnly &&
     model._projectTo2D;
 
-  for (let i = 0; i < primitive.attributes.length; i++) {
+  const length = primitive.attributes.length;
+  for (let i = 0; i < length; i++) {
     const attribute = primitive.attributes[i];
     const attributeLocationCount = AttributeType.getAttributeLocationCount(
       attribute.type
     );
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(attribute.buffer) && !defined(attribute.constant)) {
+      throw new DeveloperError(
+        "Attributes must be provided as a Buffer or constant value"
+      );
+    }
+    //>>includeEnd('debug');
 
     let index;
     if (attributeLocationCount > 1) {

@@ -348,6 +348,9 @@ function processFeatureIdAttributes(
     vertexBuffer.vertexArrayDestroyable = false;
     model._resources.push(vertexBuffer);
 
+    const hasCpuCopy = false;
+    model.statistics.addBuffer(vertexBuffer, hasCpuCopy);
+
     instancingVertexAttributes.push({
       index: renderResources.attributeIndex++,
       vertexBuffer: vertexBuffer,
@@ -381,7 +384,10 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
   });
   // Destruction of resources allocated by the ModelExperimental is handled by ModelExperimental.destroy().
   transformsVertexBuffer.vertexArrayDestroyable = false;
-  renderResources.model._resources.push(transformsVertexBuffer);
+  const model = renderResources.model;
+  model._resources.push(transformsVertexBuffer);
+  const hasCpuCopy = false;
+  model.statistics.addBuffer(transformsVertexBuffer, hasCpuCopy);
 
   const vertexSizeInFloats = 12;
   const componentByteSize = ComponentDatatype.getSizeInBytes(

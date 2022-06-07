@@ -1009,6 +1009,11 @@ describe(
           // 3 floats (xyz), 3 floats (normal), 1 byte (batchId)
           const pointCloudGeometryMemory = 1000 * 25;
 
+          // 2 properties each with 8 features each
+          // dimensions: VEC3 of FLOAT
+          // id: UNSIGNED_INT
+          const binaryPropertyMemory = 8 * (12 + 4);
+
           // One RGBA byte pixel per feature
           const batchTexturesByteLength = content.featuresLength * 4;
           const pickTexturesByteLength = content.featuresLength * 4;
@@ -1016,21 +1021,25 @@ describe(
           // Features have not been picked or colored yet, so the batch table contribution is 0.
           expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
           expect(content.texturesByteLength).toEqual(0);
-          expect(content.batchTableByteLength).toEqual(0);
+          expect(content.batchTableByteLength).toEqual(binaryPropertyMemory);
 
           // Color a feature and expect the texture memory to increase
           content.getFeature(0).color = Color.RED;
           scene.renderForSpecs();
           expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
           expect(content.texturesByteLength).toEqual(0);
-          expect(content.batchTableByteLength).toEqual(batchTexturesByteLength);
+          expect(content.batchTableByteLength).toEqual(
+            binaryPropertyMemory + batchTexturesByteLength
+          );
 
           // Pick the tile and expect the texture memory to increase
           scene.pickForSpecs();
           expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
           expect(content.texturesByteLength).toEqual(0);
           expect(content.batchTableByteLength).toEqual(
-            batchTexturesByteLength + pickTexturesByteLength
+            binaryPropertyMemory +
+              batchTexturesByteLength +
+              pickTexturesByteLength
           );
         }
       );
