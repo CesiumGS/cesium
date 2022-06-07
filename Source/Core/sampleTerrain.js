@@ -49,8 +49,8 @@ function sampleTerrain(terrainProvider, level, positions) {
 }
 
 /**
- * @param {Array.<*>} tileRequests The mutated list of requests, the first one will be attempted
- * @param {Array.<Promise<*>>} results The list to put the result promises into
+ * @param {Array.<Object>} tileRequests The mutated list of requests, the first one will be attempted
+ * @param {Array.<Promise<void>>} results The list to put the result promises into
  * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
  *  or false if we were throttled and should wait awhile before retrying.
  *
@@ -84,6 +84,7 @@ function attemptConsumeNextQueueItem(tileRequests, results) {
 
 /**
  * Wrap window.setTimeout in a Promise
+ * @param {number} ms
  * @private
  */
 function delay(ms) {
@@ -95,9 +96,9 @@ function delay(ms) {
 /**
  * Recursively consumes all the tileRequests until the list has been emptied
  *  and a Promise of each result has been put into the results list
- * @param {Array.<*>} tileRequests The list of requests desired to be made
- * @param {Array.<Promise<*>>} results The list to put all the result promises into
- * @returns {Promise<undefined>} A promise which resolves once all requests have been started
+ * @param {Array.<Object>} tileRequests The list of requests desired to be made
+ * @param {Array.<Promise<void>>} results The list to put all the result promises into
+ * @returns {Promise<void>} A promise which resolves once all requests have been started
  *
  * @private
  */
@@ -252,4 +253,5 @@ function createMarkFailedFunction(tileRequest) {
     }
   };
 }
+
 export default sampleTerrain;
