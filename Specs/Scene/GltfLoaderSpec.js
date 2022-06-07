@@ -3477,6 +3477,66 @@ describe(
       });
     });
 
+    it("loads position attribute as buffer only if model is instanced", function () {
+      if (!scene.context.instancedArrays) {
+        return;
+      }
+
+      const options = {
+        loadAttributesFor2D: true,
+      };
+
+      return loadGltf(boxInstanced, options).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+
+        // Projecting instanced models to 2D doesn't require the position
+        // attribute to be loaded as a typed array.
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.typedArray).toBeUndefined();
+
+        // All instanced transformation attributes, however, need to be
+        // loaded in as both typed arrays and buffers.
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.TRANSLATION
+        );
+        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.buffer).toBeDefined();
+
+        const rotationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.ROTATION
+        );
+        expect(rotationAttribute.packedTypedArray).toBeDefined();
+        expect(rotationAttribute.buffer).toBeDefined();
+
+        const scaleAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.SCALE
+        );
+        expect(scaleAttribute.packedTypedArray).toBeDefined();
+        expect(scaleAttribute.buffer).toBeDefined();
+
+        const featureIdAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.FEATURE_ID,
+          0
+        );
+        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.buffer).toBeUndefined();
+      });
+    });
+
     it("loads indices in typed array for wireframes in WebGL1", function () {
       return loadGltf(triangle, {
         loadIndicesForWireframe: true,
@@ -3526,7 +3586,7 @@ describe(
       });
     });
 
-    it("loads instanced attributes as typed arrays", function () {
+    it("loads instanced attributes as typed arrays only", function () {
       const options = {
         loadAttributesAsTypedArray: true,
       };
@@ -3577,7 +3637,7 @@ describe(
       });
     });
 
-    it("loads instanced attributes as typed arrays for 2D", function () {
+    it("loads instanced attributes as buffers and typed arrays for 2D", function () {
       const options = {
         loadAttributesFor2D: true,
       };

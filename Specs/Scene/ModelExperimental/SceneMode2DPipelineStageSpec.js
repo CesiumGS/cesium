@@ -200,7 +200,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scene.frameState
       );
 
-      // Only the 2D bounding sphere should be computed for the primitive.
+      // Only the 2D bounding sphere will be computed for the primitive.
       const runtimePrimitive = renderResources.runtimePrimitive;
       expect(runtimePrimitive.boundingSphere2D).toBeDefined();
       expect(runtimePrimitive.positionBuffer2D).toBeUndefined();
@@ -212,11 +212,11 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       );
       expect(positionAttribute.typedArray).toBeUndefined();
 
-      // The 2D instancing flag should be added in InstancingPipelineStage
+      // The 2D instancing flag will be added in InstancingPipelineStage
       const shaderBuilder = renderResources.shaderBuilder;
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
 
-      // The u_modelView2D uniform should be added in InstancingPipelineStage
+      // The u_modelView2D uniform will be added in InstancingPipelineStage
       expect(renderResources.uniformMap).toBeUndefined();
     });
   });

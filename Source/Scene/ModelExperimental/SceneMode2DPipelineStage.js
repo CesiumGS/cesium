@@ -78,10 +78,9 @@ SceneMode2DPipelineStage.process = function (
   runtimePrimitive.boundingSphere2D = boundingSphere2D;
 
   // If the model is instanced, 2D projection will be handled in the
-  // InstancingPipelineStage. Unload the typed array and return early.
-  const instanced = defined(renderResources.runtimeNode.node.instances);
-  if (instanced) {
-    positionAttribute.typedArray = undefined;
+  // InstancingPipelineStage.
+  const instances = renderResources.runtimeNode.node.instances;
+  if (defined(instances)) {
     return;
   }
 

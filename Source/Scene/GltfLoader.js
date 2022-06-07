@@ -637,20 +637,13 @@ function getSetIndex(gltfSemantic) {
   return undefined;
 }
 
-function loadAttribute(
-  loader,
-  gltf,
-  accessorId,
-  semanticType,
-  gltfSemantic,
-  draco,
-  dequantize,
-  loadAsTypedArrayPacked,
-  frameState
-) {
-  const accessor = gltf.accessors[accessorId];
-  const bufferViewId = accessor.bufferView;
+const scratchSemanticInfo = {
+  gltfSemantic: undefined,
+  renamedSemantic: undefined,
+  modelSemantic: undefined,
+};
 
+function getSemanticInfo(loader, semanticType, gltfSemantic) {
   // For .b3dm, rename _BATCHID (or the legacy BATCHID) to _FEATURE_ID_0
   // in the generated model components for compatibility with EXT_mesh_features
   let renamedSemantic = gltfSemantic;
@@ -661,12 +654,38 @@ function loadAttribute(
     renamedSemantic = "_FEATURE_ID_0";
   }
 
-  const name = gltfSemantic;
   const modelSemantic = semanticType.fromGltfSemantic(renamedSemantic);
+
+  const semanticInfo = scratchSemanticInfo;
+  semanticInfo.gltfSemantic = gltfSemantic;
+  semanticInfo.renamedSemantic = renamedSemantic;
+  semanticInfo.modelSemantic = modelSemantic;
+
+  return semanticInfo;
+}
+
+function loadAttribute(
+  loader,
+  gltf,
+  accessorId,
+  semanticInfo,
+  draco,
+  dequantize,
+  loadAsTypedArrayPacked,
+  loadFor2D
+) {
+  const accessor = gltf.accessors[accessorId];
+  const bufferViewId = accessor.bufferView;
+
+  const gltfSemantic = semanticInfo.gltfSemantic;
+  const renamedSemantic = semanticInfo.renamedSemantic;
+  const modelSemantic = semanticInfo.modelSemantic;
+
   const setIndex = defined(modelSemantic)
     ? getSetIndex(renamedSemantic)
     : undefined;
 
+  const name = gltfSemantic;
   const attribute = createAttribute(
     gltf,
     accessorId,
@@ -680,16 +699,6 @@ function loadAttribute(
   }
 
   const loadAsTypedArray = loader._loadAttributesAsTypedArray;
-  const isInstancedTransformAttribute =
-    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
-    modelSemantic === InstanceAttributeSemantic.ROTATION ||
-    modelSemantic === InstanceAttributeSemantic.SCALE;
-  const loadFor2D =
-    (modelSemantic === VertexAttributeSemantic.POSITION ||
-      isInstancedTransformAttribute) &&
-    loader._loadAttributesFor2D &&
-    !frameState.scene3DOnly;
-
   const loadBuffer = !loadAsTypedArray || loadFor2D;
   const loadTypedArray =
     loadAsTypedArray || loadAsTypedArrayPacked || loadFor2D;
@@ -755,18 +764,33 @@ function loadVertexAttribute(
   accessorId,
   gltfSemantic,
   draco,
+  hasInstances,
   frameState
 ) {
+  const semanticInfo = getSemanticInfo(
+    loader,
+    VertexAttributeSemantic,
+    gltfSemantic
+  );
+
+  const modelSemantic = semanticInfo.modelSemantic;
+  const isPositionAttribute =
+    modelSemantic === VertexAttributeSemantic.POSITION;
+  const loadFor2D =
+    isPositionAttribute &&
+    !hasInstances &&
+    loader._loadAttributesFor2D &&
+    !frameState.scene3DOnly;
+
   return loadAttribute(
     loader,
     gltf,
     accessorId,
-    VertexAttributeSemantic,
-    gltfSemantic,
+    semanticInfo,
     draco,
     false,
     false,
-    frameState
+    loadFor2D
   );
 }
 
@@ -778,17 +802,34 @@ function loadInstancedAttribute(
   loadAsTypedArrayPacked,
   frameState
 ) {
+  const semanticInfo = getSemanticInfo(
+    loader,
+    InstanceAttributeSemantic,
+    gltfSemantic
+  );
+
+  const modelSemantic = semanticInfo.modelSemantic;
+
+  const isInstancedTransformAttribute =
+    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
+    modelSemantic === InstanceAttributeSemantic.ROTATION ||
+    modelSemantic === InstanceAttributeSemantic.SCALE;
+
+  const loadFor2D =
+    isInstancedTransformAttribute &&
+    loader._loadAttributesFor2D &&
+    !frameState.scene3DOnly;
+
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
     loader,
     gltf,
     accessorId,
-    InstanceAttributeSemantic,
-    gltfSemantic,
+    semanticInfo,
     undefined,
     true,
     loadAsTypedArrayPacked,
-    frameState
+    loadFor2D
   );
 }
 
@@ -1133,6 +1174,7 @@ function loadPrimitive(
   loader,
   gltf,
   gltfPrimitive,
+  hasInstances,
   supportedImageFormats,
   frameState
 ) {
@@ -1166,6 +1208,7 @@ function loadPrimitive(
             accessorId,
             semantic,
             draco,
+            hasInstances,
             frameState
           )
         );
@@ -1519,6 +1562,16 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   node.rotation = fromArray(Quaternion, gltfNode.rotation);
   node.scale = fromArray(Cartesian3, gltfNode.scale);
 
+  const nodeExtensions = defaultValue(
+    gltfNode.extensions,
+    defaultValue.EMPTY_OBJECT
+  );
+  const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
+
+  if (defined(instancingExtension)) {
+    node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
+  }
+
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = gltf.meshes[meshId];
@@ -1530,6 +1583,7 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
           loader,
           gltf,
           primitives[i],
+          defined(node.instances),
           supportedImageFormats,
           frameState
         )
@@ -1547,16 +1601,6 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     node.morphWeights = defined(morphWeights)
       ? morphWeights.slice()
       : arrayFill(new Array(targetsLength), 0.0);
-  }
-
-  const nodeExtensions = defaultValue(
-    gltfNode.extensions,
-    defaultValue.EMPTY_OBJECT
-  );
-  const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
-
-  if (defined(instancingExtension)) {
-    node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
   }
 
   return node;

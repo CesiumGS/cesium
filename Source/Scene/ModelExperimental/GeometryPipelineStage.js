@@ -140,8 +140,8 @@ GeometryPipelineStage.process = function (
     model._projectTo2D;
 
   // If the model is instanced, the work for 2D projection will have been done
-  // in InstancingPipelineSTage. The attribute struct should still be updated
-  // with position2D, but nothing else should be modified.
+  // in InstancingPipelineSTage. The attribute struct will be updated with
+  // position2D, but nothing else should be modified.
   const instanced = defined(renderResources.runtimeNode.node.instances);
 
   // If the scene is in 3D or the model is instanced, the 2D position attribute

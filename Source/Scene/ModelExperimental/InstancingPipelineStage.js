@@ -184,20 +184,21 @@ function projectTransformTo2D(
   frameState,
   result
 ) {
-  const modelMatrixAndTransform = Matrix4.multiplyTransformation(
+  let projectedTransform = Matrix4.multiplyTransformation(
     modelMatrix,
     transform,
     projectedTransformScratch
   );
-  const finalTransform = Matrix4.multiplyTransformation(
-    modelMatrixAndTransform,
+
+  projectedTransform = Matrix4.multiplyTransformation(
+    projectedTransform,
     nodeTransform,
     projectedTransformScratch
   );
 
   result = Transforms.basisTo2D(
     frameState.mapProjection,
-    finalTransform,
+    projectedTransform,
     result
   );
 
@@ -215,18 +216,21 @@ function projectPositionTo2D(
     position,
     projectedTransformScratch
   );
-  const modelMatrixAndTranslation = Matrix4.multiplyTransformation(
+
+  let projectedTransform = Matrix4.multiplyTransformation(
     modelMatrix,
     translationMatrix,
     projectedTransformScratch
   );
-  const finalTransform = Matrix4.multiplyTransformation(
-    modelMatrixAndTranslation,
+
+  projectedTransform = Matrix4.multiplyTransformation(
+    projectedTransform,
     nodeTransform,
     projectedTransformScratch
   );
+
   const finalPosition = Matrix4.getTranslation(
-    finalTransform,
+    projectedTransform,
     projectedPositionScratch
   );
 
@@ -238,9 +242,6 @@ function projectPositionTo2D(
 
   return result;
 }
-
-const modelMatrixScratch = new Matrix4();
-const nodeComputedTransformScratch = new Matrix4();
 
 function getModelMatrixAndNodeTransform(
   renderResources,
@@ -280,6 +281,8 @@ function getModelMatrixAndNodeTransform(
   }
 }
 
+const modelMatrixScratch = new Matrix4();
+const nodeComputedTransformScratch = new Matrix4();
 const transformScratch = new Matrix4();
 const positionScratch = new Cartesian3();
 
@@ -374,7 +377,8 @@ const scratchProjectedMin = new Cartesian3();
 const scratchProjectedMax = new Cartesian3();
 
 function computeReferencePoint2D(renderResources, frameState) {
-  // Compute the bounding sphere in 2D.
+  // Compute the reference point by averaging the instancing translation
+  // min / max values after they are projected to 2D.
   const modelMatrix = renderResources.model.sceneGraph.computedModelMatrix;
   const transformedPositionMin = Matrix4.multiplyByPoint(
     modelMatrix,
@@ -785,10 +789,11 @@ function processVec3Attribute(
   let buffer = attribute.buffer;
   let byteOffset = attribute.byteOffset;
   let byteStride = attribute.byteStride;
+
   if (!defined(buffer)) {
     buffer = Buffer.createVertexBuffer({
       context: frameState.context,
-      typedArray: typedArray,
+      typedArray: defined(typedArray) ? typedArray : attribute.packedTypedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     byteOffset = 0;
