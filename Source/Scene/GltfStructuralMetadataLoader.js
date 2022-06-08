@@ -69,6 +69,9 @@ export default function GltfStructuralMetadataLoader(options) {
   this._structuralMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = undefined;
+
+  // For unit testing purposes
+  this._statisticsPromises = [];
 }
 
 if (defined(Object.create)) {
@@ -283,7 +286,10 @@ function loadBufferViews(structuralMetadataLoader) {
 
       // Property table properties are counted here since these buffer views
       // are not vertex buffers
-      ResourceCache.statistics.addPropertyBufferView(bufferViewLoader);
+      const promise = ResourceCache.statistics.addPropertyBufferView(
+        bufferViewLoader
+      );
+      structuralMetadataLoader._statisticsPromises.push(promise);
       bufferViewPromises.push(bufferViewLoader.promise);
       structuralMetadataLoader._bufferViewLoaders.push(bufferViewLoader);
       bufferViewLoaders[bufferViewId] = bufferViewLoader;

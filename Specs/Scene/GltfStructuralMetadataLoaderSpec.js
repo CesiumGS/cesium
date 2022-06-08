@@ -345,49 +345,54 @@ describe(
       return waitForLoaderProcess(structuralMetadataLoader, scene).then(
         function (structuralMetadataLoader) {
           loaderProcess(structuralMetadataLoader, scene); // Check that calling process after load doesn't break anything
-          const structuralMetadata =
-            structuralMetadataLoader.structuralMetadata;
-          const buildingsTable = structuralMetadata.getPropertyTable(0);
-          expect(buildingsTable.id).toBe(0);
-          const treesTable = structuralMetadata.getPropertyTable(1);
-          expect(treesTable.id).toBe(1);
 
-          expect(ResourceCache.statistics.propertyTablesByteLength).toBe(
-            buildingsTable.byteLength + treesTable.byteLength
+          return Promise.all(structuralMetadataLoader._statisticsPromises).then(
+            function () {
+              const structuralMetadata =
+                structuralMetadataLoader.structuralMetadata;
+              const buildingsTable = structuralMetadata.getPropertyTable(0);
+              expect(buildingsTable.id).toBe(0);
+              const treesTable = structuralMetadata.getPropertyTable(1);
+              expect(treesTable.id).toBe(1);
+
+              expect(ResourceCache.statistics.propertyTablesByteLength).toBe(
+                buildingsTable.byteLength + treesTable.byteLength
+              );
+
+              const mapTexture = structuralMetadata.getPropertyTexture(0);
+              expect(mapTexture.id).toBe(0);
+              const orthoTexture = structuralMetadata.getPropertyTexture(1);
+              expect(orthoTexture.id).toBe(1);
+
+              expect(buildingsTable.getProperty(0, "name")).toBe("House");
+              expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
+              expect(treesTable.getProperty(0, "species")).toEqual([
+                "Sparrow",
+                "Squirrel",
+              ]);
+              expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
+
+              const colorProperty = mapTexture.getProperty("color");
+              const intensityProperty = mapTexture.getProperty("intensity");
+              const vegetationProperty = orthoTexture.getProperty("vegetation");
+
+              expect(colorProperty.textureReader.texture.width).toBe(1);
+              expect(colorProperty.textureReader.texture.height).toBe(1);
+              expect(colorProperty.textureReader.texture).toBe(
+                intensityProperty.textureReader.texture
+              );
+
+              expect(vegetationProperty.textureReader.texture.width).toBe(1);
+              expect(vegetationProperty.textureReader.texture.height).toBe(1);
+              expect(vegetationProperty.textureReader.texture).not.toBe(
+                colorProperty.textureReader.texture
+              );
+
+              expect(
+                Object.keys(structuralMetadata.schema.classes).sort()
+              ).toEqual(["building", "map", "ortho", "tree"]);
+            }
           );
-
-          const mapTexture = structuralMetadata.getPropertyTexture(0);
-          expect(mapTexture.id).toBe(0);
-          const orthoTexture = structuralMetadata.getPropertyTexture(1);
-          expect(orthoTexture.id).toBe(1);
-
-          expect(buildingsTable.getProperty(0, "name")).toBe("House");
-          expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
-          expect(treesTable.getProperty(0, "species")).toEqual([
-            "Sparrow",
-            "Squirrel",
-          ]);
-          expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
-
-          const colorProperty = mapTexture.getProperty("color");
-          const intensityProperty = mapTexture.getProperty("intensity");
-          const vegetationProperty = orthoTexture.getProperty("vegetation");
-
-          expect(colorProperty.textureReader.texture.width).toBe(1);
-          expect(colorProperty.textureReader.texture.height).toBe(1);
-          expect(colorProperty.textureReader.texture).toBe(
-            intensityProperty.textureReader.texture
-          );
-
-          expect(vegetationProperty.textureReader.texture.width).toBe(1);
-          expect(vegetationProperty.textureReader.texture.height).toBe(1);
-          expect(vegetationProperty.textureReader.texture).not.toBe(
-            colorProperty.textureReader.texture
-          );
-
-          expect(
-            Object.keys(structuralMetadata.schema.classes).sort()
-          ).toEqual(["building", "map", "ortho", "tree"]);
         }
       );
     });
