@@ -1179,8 +1179,7 @@ describe(
         expect(indexBufferLoader.typedArray).toBeUndefined();
 
         expect(ResourceCache.statistics.geometryByteLength).toBe(
-          indexBufferLoader.buffer.sizeInBytes +
-            indexBufferLoader.typedArray.byteLength
+          indexBufferLoader.buffer.sizeInBytes
         );
       });
     });

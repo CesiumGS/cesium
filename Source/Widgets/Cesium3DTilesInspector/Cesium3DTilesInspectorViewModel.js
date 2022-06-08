@@ -134,9 +134,6 @@ function getResourceCacheStatistics() {
     <li><strong>Texture Memory (MB): </strong>${formatMemoryString(
       statistics.texturesByteLength
     )}</li>
-    <li><strong>Property Table Memory (MB): </strong>${formatMemoryString(
-      statistics.propertyTablesByteLength
-    )}</li>
   </ul>
   `;
 }

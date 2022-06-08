@@ -27,19 +27,10 @@ export default function ResourceCacheStatistics() {
    */
   this.texturesByteLength = 0;
 
-  /**
-   * The size of all buffer views used to store property table properties
-   *
-   * @type {Number}
-   * @private
-   */
-  this.propertyTablesByteLength = 0;
-
   // Track the sizes of resources by cache key. This is important so
   // removeLoader() can decrement the counts correctly.
   this._geometrySizes = {};
   this._textureSizes = {};
-  this._propertySizes = {};
 }
 
 /**
@@ -50,11 +41,9 @@ export default function ResourceCacheStatistics() {
 ResourceCacheStatistics.prototype.clear = function () {
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.propertyTablesByteLength = 0;
 
   this._geometrySizes = {};
   this._textureSizes = {};
-  this._propertySizes = {};
 };
 
 /**
@@ -162,51 +151,6 @@ ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
 };
 
 /**
- * Track the resources for a buffer view used for a property table property.
- * This is implemented asynchronously since resources may not be immediately
- * available to count. This method handles the following cases gracefully:
- * <ul>
- *   <li>If the loader is added twice, its resources will not be double-counted</li>
- *   <li>If the resource loading failed, its resources will not be counted</li>
- *   <li>If removeLoader() was called before the loader promise resolves, its resources will not be counted</li>
- * </ul>
- * @param {GltfBufferViewLoader} loader The buffer view loader with resources to track
- * @returns {Promise} A promise that resolves once the count is updated.
- *
- * @private
- */
-ResourceCacheStatistics.prototype.addPropertyBufferView = function (loader) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("loader", loader);
-  //>>includeEnd('debug');
-
-  const cacheKey = loader.cacheKey;
-
-  // Don't double count the same resource.
-  if (this._propertySizes.hasOwnProperty(cacheKey)) {
-    return;
-  }
-
-  this._propertySizes[cacheKey] = 0;
-
-  const that = this;
-  return loader.promise
-    .then(function (loader) {
-      // loader was unloaded before its promise resolved
-      if (!that._propertySizes.hasOwnProperty(cacheKey)) {
-        return;
-      }
-
-      const totalSize = loader.typedArray.byteLength;
-      that.propertyTablesByteLength += totalSize;
-      that._propertySizes[cacheKey] = totalSize;
-    })
-    .catch(function () {
-      delete that._propertySizes[cacheKey];
-    });
-};
-
-/**
  * Remove a loader's resources from the memory count. The loader's cache key
  * is used to determine information about the resource, so this method can
  * be used both for geometry and textures. If the loader does not have any
@@ -233,12 +177,5 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
 
   if (defined(textureSize)) {
     this.texturesByteLength -= textureSize;
-  }
-
-  const propertySize = this._propertySizes[cacheKey];
-  delete this._propertySizes[cacheKey];
-
-  if (defined(propertySize)) {
-    this.propertyTablesByteLength -= propertySize;
   }
 };
