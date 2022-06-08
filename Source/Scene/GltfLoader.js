@@ -671,8 +671,9 @@ function loadAttribute(
   semanticInfo,
   draco,
   dequantize,
-  loadAsTypedArrayPacked,
-  loadFor2D
+  loadBuffer,
+  loadTypedArray,
+  loadAsTypedArrayPacked
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -697,11 +698,6 @@ function loadAttribute(
   if (!defined(draco) && !defined(bufferViewId)) {
     return attribute;
   }
-
-  const loadAsTypedArray = loader._loadAttributesAsTypedArray;
-  const loadBuffer = !loadAsTypedArray || loadFor2D;
-  const loadTypedArray =
-    loadAsTypedArray || loadAsTypedArrayPacked || loadFor2D;
 
   const vertexBufferLoader = loadVertexBuffer(
     loader,
@@ -732,7 +728,7 @@ function loadAttribute(
       attribute.byteOffset = 0;
       attribute.byteStride = undefined;
 
-      if (loadFor2D) {
+      if (loadBuffer) {
         attribute.buffer = vertexBufferLoader.buffer;
       }
     } else {
@@ -782,6 +778,11 @@ function loadVertexAttribute(
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
+  const loadAsTypedArrayOnly = loader._loadAttributesAsTypedArray;
+  const loadBuffer = !loadAsTypedArrayOnly;
+  const loadTypedArray = loadAsTypedArrayOnly || loadFor2D;
+  const loadAsTypedArrayPacked = false;
+
   return loadAttribute(
     loader,
     gltf,
@@ -789,8 +790,9 @@ function loadVertexAttribute(
     semanticInfo,
     draco,
     false,
-    false,
-    loadFor2D
+    loadBuffer,
+    loadTypedArray,
+    loadAsTypedArrayPacked
   );
 }
 
@@ -810,15 +812,16 @@ function loadInstancedAttribute(
 
   const modelSemantic = semanticInfo.modelSemantic;
 
-  const isInstancedTransformAttribute =
-    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
-    modelSemantic === InstanceAttributeSemantic.ROTATION ||
-    modelSemantic === InstanceAttributeSemantic.SCALE;
+  const isTranslationAttribute =
+    modelSemantic === InstanceAttributeSemantic.TRANSLATION;
 
   const loadFor2D =
-    isInstancedTransformAttribute &&
+    isTranslationAttribute &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
+
+  const loadBuffer = !loadAsTypedArrayPacked;
+  loadAsTypedArrayPacked = loadAsTypedArrayPacked || loadFor2D;
 
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
@@ -828,8 +831,9 @@ function loadInstancedAttribute(
     semanticInfo,
     undefined,
     true,
+    loadBuffer,
     loadAsTypedArrayPacked,
-    loadFor2D
+    loadAsTypedArrayPacked
   );
 }
 
@@ -1448,7 +1452,6 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
           semantic === InstanceAttributeSemantic.SCALE;
         const loadAsTypedArrayPacked =
           loader._loadAttributesAsTypedArray ||
-          loader._loadAttributesFor2D ||
           ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
           semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0 ||
           !frameState.context.instancedArrays;

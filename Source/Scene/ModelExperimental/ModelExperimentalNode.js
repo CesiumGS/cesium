@@ -8,6 +8,7 @@ import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
+import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
@@ -99,6 +100,30 @@ export default function ModelExperimentalNode(options) {
    * @private
    */
   this.updateStages = [];
+
+  /**
+   * A buffer containing the instanced transforms projected to 2D world
+   * coordinates. Used for rendering in 2D / CV mode. The memory is managed
+   * by ModelExperimental; this is just a reference.
+   *
+   * @type {Buffer}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTransformsBuffer2D = undefined;
+
+  /**
+   * A buffer containing the instanced translation values for the node if
+   * it is instanced. Used for rendering in 2D / CV mode. The memory is
+   * managed by ModelExperimental; this is just a reference.
+   *
+   * @type {Buffer}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTranslationBuffer2D = undefined;
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -446,6 +471,8 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);
   }
+
+  pipelineStages.push(NodeStatisticsPipelineStage);
 
   updateStages.push(ModelMatrixUpdateStage);
 };

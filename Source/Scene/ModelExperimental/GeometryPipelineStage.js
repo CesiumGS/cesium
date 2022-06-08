@@ -51,7 +51,8 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
  *
  * If the scene is in either 2D or CV mode, this stage also:
  * <ul>
- *  <li> adds an attribute for the 2D positions
+ *  <li> adds a struct field for the 2D positions
+ *  <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -141,7 +142,7 @@ GeometryPipelineStage.process = function (
     model._projectTo2D;
 
   // If the model is instanced, the work for 2D projection will have been done
-  // in InstancingPipelineSTage. The attribute struct will be updated with
+  // in InstancingPipelineStage. The attribute struct will be updated with
   // position2D, but nothing else should be modified.
   const instanced = defined(renderResources.runtimeNode.node.instances);
 

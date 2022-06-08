@@ -66,9 +66,11 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
       model: {
+        _modelResources: [],
         _resources: [],
         statistics: new ModelExperimentalStatistics(),
       },
+      runtimeNode: {},
     };
   }
 
@@ -80,14 +82,14 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
       model: {
-        _projectTo2D: true,
+        _modelResources: [],
         _resources: [],
-        computedScale: 1,
+        statistics: new ModelExperimentalStatistics(),
+        _projectTo2D: true,
         sceneGraph: {
           computedModelMatrix: Matrix4.IDENTITY,
           axisCorrectionMatrix: Matrix4.IDENTITY,
         },
-        statistics: new ModelExperimentalStatistics(),
       },
       runtimeNode: {
         computedTransform: Matrix4.IDENTITY,
@@ -155,15 +157,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(4);
-
-      // Matrices are stored as 3 vec4s, so this is
-      // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
-      const matrixSize = 192;
-      // 4 floats
-      const featureIdSize = 16;
-      expect(renderResources.model.statistics.geometryByteLength).toBe(
-        matrixSize + featureIdSize
-      );
     });
   });
 
@@ -183,8 +176,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         new Cartesian3(-2, -2, 0)
       );
       expect(renderResources.attributes.length).toBe(1);
-
-      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -198,12 +189,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       scene.renderForSpecs();
       InstancingPipelineStage.process(renderResources, node, scene.frameState);
 
-      expect(renderResources.instancingTranslationMax).toEqual(
-        new Cartesian3(2, 2, 0)
-      );
-      expect(renderResources.instancingTranslationMin).toEqual(
-        new Cartesian3(-2, -2, 0)
-      );
       expect(renderResources.attributes.length).toBe(4);
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -222,7 +207,10 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         "attribute float a_instanceFeatureId_0;",
       ]);
 
+      // The model has feature IDs, so a resource will also be created
+      // for those.
       expect(renderResources.model._resources.length).toEqual(2);
+      expect(renderResources.model._modelResources.length).toEqual(0);
 
       // Matrices are stored as 3 vec4s, so this is
       // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
@@ -245,12 +233,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       scene.renderForSpecs();
       InstancingPipelineStage.process(renderResources, node, scene.frameState);
 
-      expect(renderResources.instancingTranslationMax).toEqual(
-        new Cartesian3(2, 2, 0)
-      );
-      expect(renderResources.instancingTranslationMin).toEqual(
-        new Cartesian3(-2, -2, 0)
-      );
       expect(renderResources.attributes.length).toBe(3);
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -269,11 +251,11 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       ]);
 
       expect(renderResources.model._resources.length).toEqual(1);
+      expect(renderResources.model._modelResources.length).toEqual(0);
 
       // Matrices are stored as 3 vec4s, so this is
       // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
       const matrixSize = 192;
-      // 4 floats
       const featureIdSize = 0;
       expect(renderResources.model.statistics.geometryByteLength).toBe(
         matrixSize + featureIdSize
@@ -289,7 +271,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const components = gltfLoader.components;
       renderResources.model.sceneGraph.components = components;
       const node = components.nodes[0];
-      renderResources.runtimeNode.node = node;
+      const runtimeNode = renderResources.runtimeNode;
+      runtimeNode.node = node;
 
       scene2D.renderForSpecs();
       InstancingPipelineStage.process(
@@ -298,13 +281,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         scene2D.frameState
       );
 
-      expect(renderResources.instancingTranslationMax).toEqual(
-        new Cartesian3(2, 2, 0)
-      );
-      expect(renderResources.instancingTranslationMin).toEqual(
-        new Cartesian3(-2, -2, 0)
-      );
-      expect(renderResources.instancingReferencePoint2D).toBeDefined();
       expect(renderResources.attributes.length).toBe(7);
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -332,6 +308,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         "uniform mat4 u_modelView2D;",
       ]);
 
+      expect(renderResources.instancingReferencePoint2D).toBeDefined();
       const translationMatrix = Matrix4.fromTranslation(
         renderResources.instancingReferencePoint2D,
         scratchMatrix4
@@ -343,6 +320,18 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       );
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
+
+      expect(runtimeNode.instancingTransformsBuffer2D).toBeDefined();
+      expect(renderResources.model._resources.length).toEqual(2);
+      expect(renderResources.model._modelResources.length).toEqual(1);
+
+      // The 2D buffer will be counted by NodeStatisticsPipelineStage,
+      // so the memory counted here should stay the same.
+      const matrixSize = 192;
+      const featureIdSize = 16;
+      expect(renderResources.model.statistics.geometryByteLength).toBe(
+        matrixSize + featureIdSize
+      );
     });
   });
 
@@ -421,8 +410,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
           CesiumMath.EPSILON10
         );
       }
-
-      expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
 
@@ -436,12 +423,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       scene.renderForSpecs();
       InstancingPipelineStage.process(renderResources, node, scene.frameState);
 
-      expect(renderResources.instancingTranslationMax).toEqual(
-        new Cartesian3(2, 2, 0)
-      );
-      expect(renderResources.instancingTranslationMin).toEqual(
-        new Cartesian3(-2, -2, 0)
-      );
       expect(renderResources.attributes.length).toBe(1);
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -458,6 +439,12 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         "attribute vec3 a_instanceTranslation;",
       ]);
 
+      // No additional buffer was created
+      expect(renderResources.model._resources.length).toEqual(0);
+      expect(renderResources.model._modelResources.length).toEqual(0);
+
+      // Attributes with buffers already loaded in will be counted
+      // in NodeStatisticsPipelineStage
       expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
@@ -471,7 +458,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const components = gltfLoader.components;
       renderResources.model.sceneGraph.components = components;
       const node = components.nodes[0];
-      renderResources.runtimeNode.node = node;
+      const runtimeNode = renderResources.runtimeNode;
+      runtimeNode.node = node;
 
       scene2D.renderForSpecs();
       InstancingPipelineStage.process(
@@ -480,13 +468,6 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         scene2D.frameState
       );
 
-      expect(renderResources.instancingTranslationMax).toEqual(
-        new Cartesian3(2, 2, 0)
-      );
-      expect(renderResources.instancingTranslationMin).toEqual(
-        new Cartesian3(-2, -2, 0)
-      );
-      expect(renderResources.instancingReferencePoint2D).toBeDefined();
       expect(renderResources.attributes.length).toBe(2);
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -509,6 +490,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         "uniform mat4 u_modelView2D;",
       ]);
 
+      expect(renderResources.instancingReferencePoint2D).toBeDefined();
       const translationMatrix = Matrix4.fromTranslation(
         renderResources.instancingReferencePoint2D,
         scratchMatrix4
@@ -521,6 +503,11 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
 
+      expect(runtimeNode.instancingTranslationBuffer2D).toBeDefined();
+      expect(renderResources.model._resources.length).toEqual(0);
+      expect(renderResources.model._modelResources.length).toEqual(1);
+
+      // Both resources will be counted in NodeStatisticsPipelineStage
       expect(renderResources.model.statistics.geometryByteLength).toBe(0);
     });
   });
@@ -534,6 +521,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        _modelResources: [],
         statistics: new ModelExperimentalStatistics(),
         modelMatrix: Matrix4.fromUniformScale(2.0),
         sceneGraph: {
@@ -625,7 +613,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
         CesiumMath.EPSILON8
       );
 
-      // matrices are stored as 3 vec4s, so this is
+      // Matrices are stored as 3 vec4s, so this is
       // 25 matrices * 12 floats/matrix * 4 bytes/float = 1200
       const matrixSize = 1200;
       // 25 floats

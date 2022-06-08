@@ -1560,7 +1560,8 @@ ModelExperimental.prototype.destroy = function () {
 };
 
 /**
- * Destroys resources generated in the pipeline stages.
+ * Destroys resources generated in the pipeline stages
+ * that must be destroyed when draw commands are rebuilt.
  * @private
  */
 ModelExperimental.prototype.destroyResources = function () {
@@ -1572,7 +1573,8 @@ ModelExperimental.prototype.destroyResources = function () {
 };
 
 /**
- * Destroys resources generated for the model.
+ * Destroys resources generated in the pipeline stages
+ * that exist for the lifetime of the model.
  * @private
  */
 ModelExperimental.prototype.destroyModelResources = function () {
