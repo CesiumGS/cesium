@@ -1356,6 +1356,10 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 });
 
 function hasFeatures(content) {
+  if (!defined(content)) {
+    return false;
+  }
+
   if (content.featuresLength > 0) {
     return true;
   }
