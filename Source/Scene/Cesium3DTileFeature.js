@@ -31,7 +31,7 @@ import defined from "../Core/defined.js";
  *         const length = propertyNames.length;
  *         for (let i = 0; i < length; ++i) {
  *             const propertyName = propertyNames[i];
- *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *             console.log(`{propertyName}: ${feature.getProperty(propertyName)}`);
  *         }
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -222,7 +222,7 @@ Cesium3DTileFeature.prototype.getPropertyNames = function (results) {
  * const length = propertyNames.length;
  * for (let i = 0; i < length; ++i) {
  *     const propertyName = propertyNames[i];
- *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *     console.log(`{propertyName}: ${feature.getProperty(propertyName)}`);
  * }
  */
 Cesium3DTileFeature.prototype.getProperty = function (name) {
