@@ -7,9 +7,9 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelMatrixUpdateStage,
+  NodeStatisticsPipelineStage,
   Quaternion,
 } from "../../../Source/Cesium.js";
-import NodeStatisticsPipelineStage from "../../../Source/Scene/ModelExperimental/NodeStatisticsPipelineStage.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   const mockNode = {
