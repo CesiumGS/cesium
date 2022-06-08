@@ -5,6 +5,7 @@ describe("Scene/ResourceCacheStatistics", function () {
     const statistics = new ResourceCacheStatistics();
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(0);
+    expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics._geometrySizes).toEqual({});
     expect(statistics._textureSizes).toEqual({});
     expect(statistics._propertySizes).toEqual({});
@@ -421,18 +422,22 @@ describe("Scene/ResourceCacheStatistics", function () {
     ]).then(function () {
       expect(statistics.geometryByteLength).toBe(300);
       expect(statistics.texturesByteLength).toBe(300);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({
         vertices: 100,
         indices: 200,
       });
       expect(statistics._textureSizes).toEqual({ texture: 300 });
+      expect(statistics._propertySizes).toEqual({});
 
       statistics.removeLoader(geometryLoader2);
 
       expect(statistics.geometryByteLength).toBe(100);
       expect(statistics.texturesByteLength).toBe(300);
+      expect(statistics.propertyTablesByteLength).toBe(0);
       expect(statistics._geometrySizes).toEqual({ vertices: 100 });
       expect(statistics._textureSizes).toEqual({ texture: 300 });
+      expect(statistics._propertySizes).toEqual({});
     });
   });
 
@@ -465,18 +470,22 @@ describe("Scene/ResourceCacheStatistics", function () {
       function () {
         expect(statistics.geometryByteLength).toBe(100);
         expect(statistics.texturesByteLength).toBe(800);
+        expect(statistics.propertyTablesByteLength).toBe(0);
         expect(statistics._geometrySizes).toEqual({ vertices: 100 });
         expect(statistics._textureSizes).toEqual({
           texture: 300,
           texture2: 500,
         });
+        expect(statistics._propertySizes).toEqual({});
 
         statistics.removeLoader(textureLoader2);
 
         expect(statistics.geometryByteLength).toBe(100);
         expect(statistics.texturesByteLength).toBe(300);
+        expect(statistics.propertyTablesByteLength).toBe(0);
         expect(statistics._geometrySizes).toEqual({ vertices: 100 });
         expect(statistics._textureSizes).toEqual({ texture: 300 });
+        expect(statistics._propertySizes).toEqual({});
       }
     );
   });
@@ -525,6 +534,7 @@ describe("Scene/ResourceCacheStatistics", function () {
 
       expect(statistics.geometryByteLength).toBe(100);
       expect(statistics.texturesByteLength).toBe(0);
+      expect(statistics.propertyTablesByteLength).toBe(50);
       expect(statistics._geometrySizes).toEqual({ vertices: 100 });
       expect(statistics._textureSizes).toEqual({});
       expect(statistics._propertySizes).toEqual({ bufferView: 50 });
@@ -545,7 +555,9 @@ describe("Scene/ResourceCacheStatistics", function () {
 
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(0);
+    expect(statistics.propertyTablesByteLength).toBe(0);
     expect(statistics._geometrySizes).toEqual({});
     expect(statistics._textureSizes).toEqual({});
+    expect(statistics._propertySizes).toEqual({});
   });
 });

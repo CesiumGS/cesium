@@ -69,6 +69,8 @@ ResourceCacheStatistics.prototype.clear = function () {
  * </ul>
  * @param {GltfVertexBufferLoader|GltfIndexBufferLoader} loader The geometry buffer with resources to track
  * @returns {Promise} A promise that resolves once the count is updated.
+ *
+ * @private
  */
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);
@@ -125,6 +127,8 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
  * </ul>
  * @param {GltfTextureLoader} loader The texture loader with resources to track
  * @returns {Promise} A promise that resolves once the count is updated.
+ *
+ * @private
  */
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);
@@ -168,6 +172,8 @@ ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
  * </ul>
  * @param {GltfBufferViewLoader} loader The buffer view loader with resources to track
  * @returns {Promise} A promise that resolves once the count is updated.
+ *
+ * @private
  */
 ResourceCacheStatistics.prototype.addPropertyBufferView = function (loader) {
   //>>includeStart('debug', pragmas.debug);
@@ -206,6 +212,8 @@ ResourceCacheStatistics.prototype.addPropertyBufferView = function (loader) {
  * be used both for geometry and textures. If the loader does not have any
  * tracked resources, this is a no-op.
  * @param {ResourceLoader} loader The resource loader to remove from the cache
+ *
+ * @private
  */
 ResourceCacheStatistics.prototype.removeLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);
@@ -231,6 +239,6 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
   delete this._propertySizes[cacheKey];
 
   if (defined(propertySize)) {
-    this.propertySize -= propertySize;
+    this.propertyTablesByteLength -= propertySize;
   }
 };
