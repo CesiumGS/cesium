@@ -481,7 +481,7 @@ function Cesium3DTileset(options) {
    *         return;
    *     }
    *
-   *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
    * });
    */
   this.loadProgress = new Event();
@@ -589,8 +589,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading tile: ' + error.url);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading tile: ${error.url}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.tileFailed = new Event();
@@ -1155,8 +1155,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    *
    * @example
-   * console.log('Maximum building height: ' + tileset.properties.height.maximum);
-   * console.log('Minimum building height: ' + tileset.properties.height.minimum);
+   * console.log(`Maximum building height: ${tileset.properties.height.maximum}`);
+   * console.log(`Minimum building height: ${tileset.properties.height.minimum}`);
    *
    * @see Cesium3DTileFeature#getProperty
    * @see Cesium3DTileFeature#setProperty
