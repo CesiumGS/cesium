@@ -784,9 +784,13 @@ describe(
         }
       );
     });
-    
-    it("renders tileset with custom up and forward axes", function() {
-      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 10.0);
+
+    it("renders tileset with custom up and forward axes", function () {
+      const center = Cartesian3.fromRadians(
+        centerLongitude,
+        centerLatitude,
+        10.0
+      );
 
       // 3 different views of the sides of the colored cube.
       const viewEast = new HeadingPitchRange(-1.57, 0.0, 3.0);
@@ -795,54 +799,53 @@ describe(
 
       // This tile has data in a local ENU frame, ignoring the glTF +y-up
       // convention. Apply a model matrix and configure the tileset to interpret
-      // the glTF data as +z up. 
+      // the glTF data as +z up.
       const tilesetOptions = {
         modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
         modelUpAxis: Axis.Z,
-        modelForwardAxis: Axis.X
+        modelForwardAxis: Axis.X,
       };
 
       const renderOptions = {
         scene: scene,
-        time: JulianDate.fromIso8601("2022-06-09T10:30:00Z")
+        time: JulianDate.fromIso8601("2022-06-09T10:30:00Z"),
       };
 
       // make sure we can see the cube so it loads
       scene.camera.lookAt(center, viewEast);
 
-      return Cesium3DTilesTester.loadTileset(scene, tilesetEastNorthUpUrl, tilesetOptions).then(
-        function(tileset) {
-          // The east (+x) face of the cube is red
-          scene.camera.lookAt(center, viewEast);
-          expect(renderOptions).toRenderAndCall(function(rgba) {
-            console.log(rgba);
-            expect(rgba[0]).toBeGreaterThan(190);
-            expect(rgba[1]).toBeLessThan(64);
-            expect(rgba[2]).toBeLessThan(64);
-            expect(rgba[3]).toEqual(255);
-          });
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetEastNorthUpUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // The east (+x) face of the cube is red
+        scene.camera.lookAt(center, viewEast);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(190);
+          expect(rgba[1]).toBeLessThan(64);
+          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[3]).toEqual(255);
+        });
 
-          // The north (+y) face of the cube is green
-          scene.camera.lookAt(center, viewNorth);
-          expect(renderOptions).toRenderAndCall(function(rgba) {
-            console.log(rgba);
-            expect(rgba[0]).toBeLessThan(64);
-            expect(rgba[1]).toBeGreaterThan(190);
-            expect(rgba[2]).toBeLessThan(64);
-            expect(rgba[3]).toEqual(255);
-          });
+        // The north (+y) face of the cube is green
+        scene.camera.lookAt(center, viewNorth);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeLessThan(64);
+          expect(rgba[1]).toBeGreaterThan(190);
+          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[3]).toEqual(255);
+        });
 
-          // The up (+z) face of the cube is blue
-          scene.camera.lookAt(center, viewUp);
-          expect(renderOptions).toRenderAndCall(function(rgba) {
-            console.log(rgba);
-            expect(rgba[0]).toBeLessThan(64);
-            expect(rgba[1]).toBeLessThan(64);
-            expect(rgba[2]).toBeGreaterThan(190);
-            expect(rgba[3]).toEqual(255);
-          });
-        }
-      );
+        // The up (+z) face of the cube is blue
+        scene.camera.lookAt(center, viewUp);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeLessThan(64);
+          expect(rgba[1]).toBeLessThan(64);
+          expect(rgba[2]).toBeGreaterThan(190);
+          expect(rgba[3]).toEqual(255);
+        });
+      });
     });
 
     it("verify statistics", function () {

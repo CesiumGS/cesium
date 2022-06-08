@@ -63,7 +63,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
  * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
- * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents. 
+ * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
  * @param {Axis} [options.modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
@@ -1000,7 +1000,7 @@ function Cesium3DTileset(options) {
         return;
       }
 
-      that._root = that.loadTileset(resource, tilesetJson); 
+      that._root = that.loadTileset(resource, tilesetJson);
 
       // Handle legacy gltfUpAxis option
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
