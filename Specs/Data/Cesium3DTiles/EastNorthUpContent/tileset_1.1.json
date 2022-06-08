@@ -1,0 +1,21 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 100,
+  "root": {
+    "geometricError": 0,
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1 
+      ]
+    },
+    "refine": "ADD",
+    "content": {
+      "uri": "EastNorthUpContent.gltf"
+    }
+  } 
+}
