@@ -1,0 +1,20 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 2,
+  "root": {
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1 
+      ]
+    },
+    "refine": "ADD",
+    "content": {
+      "uri": "ENUContent.gltf"
+    }
+  } 
+}
