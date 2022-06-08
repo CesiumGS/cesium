@@ -127,7 +127,7 @@ function getResourceCacheStatistics() {
   const statistics = ResourceCache.statistics;
 
   return `
-  <ul>
+  <ul class="cesium-cesiumInspector-statistics">
     <li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
       statistics.geometryByteLength
     )}</li>
