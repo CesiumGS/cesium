@@ -742,10 +742,35 @@ describe(
       });
     });
 
+    it("renders tileset in CV with projectTo2D option", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        projectTo2D: true,
+      }).then(function (tileset) {
+        scene.morphToColumbusView(0.0);
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.numberOfCommands).toEqual(5);
+      });
+    });
+
     it("renders tileset in 2D", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
+        scene.morphTo2D(0.0);
+        tileset.maximumScreenSpaceError = 3;
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.numberOfCommands).toEqual(5);
+      });
+    });
+
+    it("renders tileset in 2D with projectTo2D option", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        projectTo2D: true,
+      }).then(function (tileset) {
         scene.morphTo2D(0.0);
         tileset.maximumScreenSpaceError = 3;
         scene.renderForSpecs();
