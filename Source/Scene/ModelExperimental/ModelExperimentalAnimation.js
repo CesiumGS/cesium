@@ -58,7 +58,7 @@ function ModelExperimentalAnimation(model, animation, options) {
    *
    * @example
    * animation.start.addEventListener(function(model, animation) {
-   *   console.log('Animation started: ' + animation.name);
+   *   console.log(`Animation started: ${animation.name}`);
    * });
    */
   this.start = new Event();
@@ -77,7 +77,7 @@ function ModelExperimentalAnimation(model, animation, options) {
    *
    * @example
    * animation.update.addEventListener(function(model, animation, time) {
-   *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+   *   console.log(`Animation updated: ${animation.name}. glTF animation time: ${time}`);
    * });
    */
   this.update = new Event();
@@ -94,7 +94,7 @@ function ModelExperimentalAnimation(model, animation, options) {
    *
    * @example
    * animation.stop.addEventListener(function(model, animation) {
-   *   console.log('Animation stopped: ' + animation.name);
+   *   console.log(`Animation stopped: ${animation.name}`);
    * });
    */
   this.stop = new Event();

@@ -63,6 +63,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
  * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
+ * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
+ * @param {Axis} [options.modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
@@ -163,7 +165,8 @@ function Cesium3DTileset(options) {
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
   this._extensionsUsed = undefined;
   this._extensions = undefined;
-  this._gltfUpAxis = undefined;
+  this._modelUpAxis = undefined;
+  this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
   this._selectedTiles = [];
@@ -481,7 +484,7 @@ function Cesium3DTileset(options) {
    *         return;
    *     }
    *
-   *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
    * });
    */
   this.loadProgress = new Event();
@@ -589,8 +592,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading tile: ' + error.url);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading tile: ${error.url}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.tileFailed = new Event();
@@ -998,16 +1001,22 @@ function Cesium3DTileset(options) {
       }
 
       that._root = that.loadTileset(resource, tilesetJson);
+
+      // Handle legacy gltfUpAxis option
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
         ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
         : Axis.Y;
+      const modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
+      const modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
+
       const asset = tilesetJson.asset;
       that._asset = asset;
       that._properties = tilesetJson.properties;
       that._geometricError = tilesetJson.geometricError;
       that._extensionsUsed = tilesetJson.extensionsUsed;
       that._extensions = tilesetJson.extensions;
-      that._gltfUpAxis = gltfUpAxis;
+      that._modelUpAxis = modelUpAxis;
+      that._modelForwardAxis = modelForwardAxis;
       that._extras = tilesetJson.extras;
 
       const extras = asset.extras;
@@ -1155,8 +1164,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    *
    * @example
-   * console.log('Maximum building height: ' + tileset.properties.height.maximum);
-   * console.log('Minimum building height: ' + tileset.properties.height.minimum);
+   * console.log(`Maximum building height: ${tileset.properties.height.maximum}`);
+   * console.log(`Minimum building height: ${tileset.properties.height.minimum}`);
    *
    * @see Cesium3DTileFeature#getProperty
    * @see Cesium3DTileFeature#setProperty
