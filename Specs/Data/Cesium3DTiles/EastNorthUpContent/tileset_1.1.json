@@ -2,9 +2,9 @@
   "asset": {
     "version": "1.1"
   },
-  "geometricError": 2,
+  "geometricError": 100,
   "root": {
-    "geometricError": 2,
+    "geometricError": 0,
     "boundingVolume": {
       "box": [
         0, 0, 0,
