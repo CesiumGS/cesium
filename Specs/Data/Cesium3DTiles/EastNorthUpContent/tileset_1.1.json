@@ -4,6 +4,7 @@
   },
   "geometricError": 2,
   "root": {
+    "geometricError": 2,
     "boundingVolume": {
       "box": [
         0, 0, 0,
@@ -14,7 +15,7 @@
     },
     "refine": "ADD",
     "content": {
-      "uri": "ENUContent.gltf"
+      "uri": "EastNorthUpContent.gltf"
     }
   } 
 }
