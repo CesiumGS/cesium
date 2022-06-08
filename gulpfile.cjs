@@ -1159,16 +1159,15 @@ gulp.task("coverage", async function () {
 
   const instrumenter = new istanbul.createInstrumenter({
     esModules: true,
-    produceSourceMap: true,
   });
 
   const instrumentPlugin = {
-    name: "strip-pragmas",
+    name: "instrument",
     setup: (build) => {
       const readFile = Promise.promisify(fs.readFile);
       build.onLoad(
         {
-          filter: /Source\/(Core|DataSources|Renderer|Scene|Shaders|Widgets)(\/\w+)+\.js$/,
+          filter: /Source\/(Core|DataSources|Renderer|Scene|Widgets)(\/\w+)+\.js$/,
         },
         async (args) => {
           const source = await readFile(args.path, "utf8");
@@ -1231,12 +1230,12 @@ gulp.task("coverage", async function () {
             included: true,
             type: "module",
           },
-          { pattern: "Build/Specs/TestWorkers/**", included: false },
           {
             pattern: "Build/Specs/SpecList.js",
             included: true,
             type: "module",
           },
+          { pattern: "Build/Specs/TestWorkers/**", included: false },
         ],
         reporters: ["spec", "coverage"],
         coverageReporter: {
@@ -1248,7 +1247,7 @@ gulp.task("coverage", async function () {
           includeAllSources: true,
         },
         client: {
-          captureConsole: verbose,
+          captureConsole: false,
           args: [
             undefined,
             undefined,
