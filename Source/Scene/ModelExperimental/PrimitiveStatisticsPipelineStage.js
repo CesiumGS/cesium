@@ -5,7 +5,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The primitive statistics update stage updates memory usage statistics
- * on the primitive level. This counts the binary resources that exist 
+ * on the primitive level. This counts the binary resources that exist
  * for the lifetime of the ModelExperimental (e.g. attributes and textures
  * loaded by GltfLoader). It does not count resources that are created
  * every time the pipeline is run. The individual pipeline stages are

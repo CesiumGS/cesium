@@ -112,6 +112,13 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
+
+      // This is set to true in order to test that buffers / typed arrays
+      // are loaded in correctly for instanced models. If this is false,
+      // instanced attributes will always load in as typed arrays, which
+      // will cause several tests to fail.
+      scene.context._instancedArrays = true;
+
       sceneWithWebgl2 = createScene();
       sceneWithWebgl2.context._webgl2 = true;
     });
@@ -2082,10 +2089,6 @@ describe(
     });
 
     it("loads BoxInstanced", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       return loadGltf(boxInstanced).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const scene = components.scene;
@@ -2281,10 +2284,6 @@ describe(
     });
 
     it("loads BoxInstanced with EXT_feature_metadata", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const scene = components.scene;
@@ -2567,10 +2566,6 @@ describe(
     });
 
     it("loads BoxInstanced with default feature ids", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       function modifyGltf(gltf) {
         // Delete feature ID accessor's buffer view
         delete gltf.accessors[6].bufferView;
@@ -2687,10 +2682,6 @@ describe(
     });
 
     it("loads BoxInstancedTranslation", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const scene = components.scene;
@@ -2738,10 +2729,6 @@ describe(
     });
 
     it("loads BoxInstancedTranslationWithMinMax", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       return loadGltf(boxInstancedTranslationMinMax).then(function (
         gltfLoader
       ) {
@@ -2832,10 +2819,6 @@ describe(
     });
 
     it("loads BoxInstancedTranslationWithMinMax for 2D", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       return loadGltf(boxInstancedTranslationMinMax, {
         loadAttributesFor2D: true,
       }).then(function (gltfLoader) {
@@ -3529,10 +3512,6 @@ describe(
     });
 
     it("loads position attribute as buffer only if model is instanced", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       const options = {
         loadAttributesFor2D: true,
       };
@@ -3656,10 +3635,6 @@ describe(
     });
 
     it("loads instanced attributes as typed arrays only for 2D", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
       const options = {
         loadAttributesFor2D: true,
       };
