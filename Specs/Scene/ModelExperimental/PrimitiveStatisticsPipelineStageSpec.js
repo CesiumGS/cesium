@@ -2,14 +2,14 @@ import {
   combine,
   GltfLoader,
   ModelExperimentalStatistics,
-  StatisticsPipelineStage,
+  PrimitiveStatisticsPipelineStage,
   Resource,
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
+describe("Scene/ModelExperimental/PrimitiveStatisticsPipelineStage", function () {
   const animatedMorphCube =
     "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
   const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
@@ -100,7 +100,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const primitive = components.nodes[1].primitives[0];
       const renderResources = mockRenderResources(components);
 
-      StatisticsPipelineStage.process(renderResources, primitive);
+      PrimitiveStatisticsPipelineStage.process(renderResources, primitive);
 
       const statistics = renderResources.model.statistics;
 
@@ -136,7 +136,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[1].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(0);
       // 6 faces * 2 triangles
@@ -164,7 +164,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(0);
       // 1 triangle
@@ -183,7 +183,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
   it("_countGeometry computes memory usage correctly for attributes with CPU copy", function () {
     // This will create a copy of both the positions and indices on the CPU
     const options = {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
       loadIndicesForWireframe: true,
     };
 
@@ -192,7 +192,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[1].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(0);
       // 6 faces * 2 triangles
@@ -223,7 +223,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(2500);
       expect(statistics.trianglesLength).toBe(0);
@@ -244,7 +244,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(0);
       // 1 face * 2 triangles
@@ -269,7 +269,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
 
-      StatisticsPipelineStage._countGeometry(statistics, primitive);
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
 
       expect(statistics.pointsLength).toBe(0);
       // 1 face * 2 triangles
@@ -295,14 +295,17 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       positionBuffer2D: undefined,
     };
 
-    StatisticsPipelineStage._count2DPositions(statistics, mockRuntimePrimitive);
+    PrimitiveStatisticsPipelineStage._count2DPositions(
+      statistics,
+      mockRuntimePrimitive
+    );
 
     expect(statistics.geometryByteLength).toBe(0);
   });
 
   it("_countPositions2D updates count if 2D positions exist", function () {
     return loadGltf(boxTextured, {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const statistics = new ModelExperimentalStatistics();
       const components = gltfLoader.components;
@@ -320,7 +323,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       // will count it.
       positionAttribute.typedArray = undefined;
 
-      StatisticsPipelineStage._count2DPositions(
+      PrimitiveStatisticsPipelineStage._count2DPositions(
         statistics,
         mockRuntimePrimitive
       );
@@ -338,7 +341,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const primitive = components.nodes[0].primitives[0];
 
-      StatisticsPipelineStage._countMorphTargetAttributes(
+      PrimitiveStatisticsPipelineStage._countMorphTargetAttributes(
         statistics,
         primitive
       );
@@ -364,7 +367,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const primitive = components.nodes[0].primitives[0];
       const statistics = new ModelExperimentalStatistics();
 
-      StatisticsPipelineStage._countMaterialTextures(
+      PrimitiveStatisticsPipelineStage._countMaterialTextures(
         statistics,
         primitive.material
       );
@@ -382,7 +385,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const metallicRoughness = material.metallicRoughness;
       const statistics = new ModelExperimentalStatistics();
 
-      StatisticsPipelineStage._countMaterialTextures(
+      PrimitiveStatisticsPipelineStage._countMaterialTextures(
         statistics,
         primitive.material
       );
@@ -407,7 +410,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const specularGlossiness = material.specularGlossiness;
       const statistics = new ModelExperimentalStatistics();
 
-      StatisticsPipelineStage._countMaterialTextures(
+      PrimitiveStatisticsPipelineStage._countMaterialTextures(
         statistics,
         primitive.material
       );
@@ -430,7 +433,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const primitive = node.primitives[0];
       const statistics = new ModelExperimentalStatistics();
 
-      StatisticsPipelineStage._countFeatureIdTextures(
+      PrimitiveStatisticsPipelineStage._countFeatureIdTextures(
         statistics,
         primitive.featureIds
       );
@@ -449,7 +452,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const model = mockModel(components);
 
-      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+      PrimitiveStatisticsPipelineStage._countBinaryMetadata(statistics, model);
 
       expect(statistics.geometryByteLength).toBe(0);
     });
@@ -461,7 +464,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const model = mockModel(components);
 
-      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+      PrimitiveStatisticsPipelineStage._countBinaryMetadata(statistics, model);
 
       const structuralMetadata = model.structuralMetadata;
       const propertyTable = structuralMetadata.getPropertyTable(0);
@@ -480,7 +483,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const model = mockModel(components);
 
-      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+      PrimitiveStatisticsPipelineStage._countBinaryMetadata(statistics, model);
 
       expect(statistics.geometryByteLength).toBe(0);
     });
@@ -492,7 +495,7 @@ describe("Scene/ModelExperimental/StatisticsPipelineStage", function () {
       const components = gltfLoader.components;
       const model = mockModel(components);
 
-      StatisticsPipelineStage._countBinaryMetadata(statistics, model);
+      PrimitiveStatisticsPipelineStage._countBinaryMetadata(statistics, model);
 
       // everything shares the same texture, so the memory is only counted
       // once.
