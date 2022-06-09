@@ -174,22 +174,34 @@ function handleBuildWarnings(result) {
   }
 }
 
+const esbuildBaseConfig = {
+  target: "es6",
+  legalComments: "inline",
+  banner: {
+    js: copyrightHeader,
+  },
+};
+
 async function buildCesiumJs(options) {
   const css = globby.sync(cssFiles);
 
-  // Build ESM
-  const result = await esbuild.build({
+  const buildConfig = {
+    ...esbuildBaseConfig,
     entryPoints: ["Source/Cesium.js"],
     bundle: true,
-    format: "esm",
     minify: options.minify,
     sourcemap: options.sourcemap,
-    target: "es6",
     external: ["https", "http", "url", "zlib"],
-    outfile: path.join(options.path, "index.js"),
     plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
     incremental: options.incremental,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  };
+
+  // Build ESM
+  const result = await esbuild.build({
+    ...buildConfig,
+    format: "esm",
+    outfile: path.join(options.path, "index.js"),
   });
 
   handleBuildWarnings(result);
@@ -198,6 +210,7 @@ async function buildCesiumJs(options) {
 
   // Copy and minify CSS and third party
   await esbuild.build({
+    ...esbuildBaseConfig,
     entryPoints: [
       "Source/ThirdParty/google-earth-dbroot-parser.js",
       ...css, // Load and optionally minify css
@@ -208,25 +221,16 @@ async function buildCesiumJs(options) {
     },
     minify: options.minify,
     sourcemap: options.sourcemap,
-    target: "es6",
     outdir: options.path,
   });
 
   // Build IIFE
   if (options.iife) {
     const result = await esbuild.build({
-      entryPoints: ["Source/Cesium.js"],
-      bundle: true,
-      sourcemap: options.sourcemap,
+      ...buildConfig,
       format: "iife",
       globalName: "Cesium",
-      minify: options.minify,
-      target: "es6",
-      external: ["https", "http", "url", "zlib"],
       outfile: path.join(options.path, "Cesium.js"),
-      plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-      incremental: options.incremental,
-      logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
     });
 
     handleBuildWarnings(result);
@@ -236,15 +240,10 @@ async function buildCesiumJs(options) {
 
   if (options.node) {
     const result = await esbuild.build({
-      entryPoints: ["Source/Cesium.js"],
-      bundle: true,
+      ...buildConfig,
       format: "cjs",
       platform: "node",
-      minify: options.minify,
-      plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-      incremental: options.incremental,
       outfile: path.join(options.path, "index.cjs"),
-      logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
     });
 
     handleBuildWarnings(result);
@@ -270,15 +269,12 @@ async function createWorkers(options) {
   ]);
 
   const result = esbuild.build({
+    ...esbuildBaseConfig,
     entryPoints: workersES6,
     bundle: true,
     globalName: "CesiumWorker",
     format: "iife",
     minify: options.minify,
-    target: "es6",
-    banner: {
-      js: copyrightHeader,
-    },
     sourcemap: options.sourcemap,
     external: ["https", "http", "zlib"],
     outdir: path.join(options.path, "Workers"),
@@ -287,10 +283,8 @@ async function createWorkers(options) {
   });
 
   await esbuild.build({
+    ...esbuildBaseConfig,
     entryPoints: workers,
-    banner: {
-      js: copyrightHeader,
-    },
     outdir: path.join(options.path),
     outbase: "Source", // Maintain existing file paths
     // Only return results from ES6 workers. Third party workers are unlikely to change.
@@ -1986,6 +1980,7 @@ async function buildCesiumViewer() {
   mkdirp.sync(cesiumViewerOutputDirectory);
 
   const result = await esbuild.build({
+    ...esbuildBaseConfig,
     entryPoints: [
       "Apps/CesiumViewer/CesiumViewer.js",
       "Apps/CesiumViewer/CesiumViewer.css",
@@ -1996,10 +1991,6 @@ async function buildCesiumViewer() {
       ".gif": "text",
       ".png": "text",
     },
-    banner: {
-      js: copyrightHeader,
-    },
-    target: "es6",
     format: "iife",
     inject: ["Apps/CesiumViewer/index.js"],
     external: ["https", "http", "zlib"],
