@@ -2,6 +2,10 @@
 
 ### 1.95 - 2022-07-01
 
+##### Breaking Changes :mega:
+
+- Tilesets rendered with `ModelExperimental` must set `projectTo2D` to true in order to be accurately projected and rendered in 2D / CV mode. [#10440](https://github.com/CesiumGS/cesium/pull/10440)
+
 ##### Additions :tada:
 
 - Memory statistics for `ModelExperimental` now appear in the `Cesium3DTilesInspector`. This includes binary metadata memory, which is not counted by `Model`. [#10397](https://github.com/CesiumGS/cesium/pull/10397)
