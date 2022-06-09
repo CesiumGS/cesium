@@ -1626,7 +1626,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
