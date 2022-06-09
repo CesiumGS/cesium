@@ -4,20 +4,21 @@ import ModelComponents from "../ModelComponents.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
- * The statistics update stage updates memory usage statistics for binary
- * resources that exist for the lifetime of the ModelExperimental (e.g.
- * resources loaded by GltfLoader). It does not count resources that are
- * created every time the pipeline is run, the individual pipeline stages are
- * responsible for keeping track of additional memory they allocate.
+ * The primitive statistics update stage updates memory usage statistics
+ * on the primitive level. This counts the binary resources that exist
+ * for the lifetime of the ModelExperimental (e.g. attributes and textures
+ * loaded by GltfLoader). It does not count resources that are created
+ * every time the pipeline is run. The individual pipeline stages are
+ * responsible for tracking the additional memory they allocate.
  *
- * @namespace StatisticsPipelineStage
+ * @namespace PrimitiveStatisticsPipelineStage
  *
  * @private
  */
-const StatisticsPipelineStage = {};
-StatisticsPipelineStage.name = "StatisticsPipelineStage"; // Helps with debugging
+const PrimitiveStatisticsPipelineStage = {};
+PrimitiveStatisticsPipelineStage.name = "PrimitiveStatisticsPipelineStage"; // Helps with debugging
 
-StatisticsPipelineStage.process = function (
+PrimitiveStatisticsPipelineStage.process = function (
   renderResources,
   primitive,
   frameState
@@ -237,11 +238,11 @@ function countPropertyTextures(statistics, structuralMetadata) {
 }
 
 // Exposed for testing
-StatisticsPipelineStage._countGeometry = countGeometry;
-StatisticsPipelineStage._count2DPositions = count2DPositions;
-StatisticsPipelineStage._countMorphTargetAttributes = countMorphTargetAttributes;
-StatisticsPipelineStage._countMaterialTextures = countMaterialTextures;
-StatisticsPipelineStage._countFeatureIdTextures = countFeatureIdTextures;
-StatisticsPipelineStage._countBinaryMetadata = countBinaryMetadata;
+PrimitiveStatisticsPipelineStage._countGeometry = countGeometry;
+PrimitiveStatisticsPipelineStage._count2DPositions = count2DPositions;
+PrimitiveStatisticsPipelineStage._countMorphTargetAttributes = countMorphTargetAttributes;
+PrimitiveStatisticsPipelineStage._countMaterialTextures = countMaterialTextures;
+PrimitiveStatisticsPipelineStage._countFeatureIdTextures = countFeatureIdTextures;
+PrimitiveStatisticsPipelineStage._countBinaryMetadata = countBinaryMetadata;
 
-export default StatisticsPipelineStage;
+export default PrimitiveStatisticsPipelineStage;

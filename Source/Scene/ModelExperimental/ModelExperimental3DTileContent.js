@@ -1,4 +1,3 @@
-import Axis from "../Axis.js";
 import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
@@ -363,8 +362,8 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     modelMatrix: tile.computedTransform,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
+    upAxis: tileset._modelUpAxis,
+    forwardAxis: tileset._modelForwardAxis,
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,

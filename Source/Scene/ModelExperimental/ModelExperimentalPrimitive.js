@@ -17,11 +17,11 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage.js";
 import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
-import StatisticsPipelineStage from "./StatisticsPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
@@ -238,7 +238,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
 
   pipelineStages.push(AlphaPipelineStage);
 
-  pipelineStages.push(StatisticsPipelineStage);
+  pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
   return;
 };

@@ -8,7 +8,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
-import Axis from "./Axis.js";
 import B3dmParser from "./B3dmParser.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
@@ -313,8 +312,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       basePath: resource,
       requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
-      upAxis: tileset._gltfUpAxis,
-      forwardAxis: Axis.X,
+      upAxis: tileset._modelUpAxis,
+      forwardAxis: tileset._modelForwardAxis,
       shadows: tileset.shadows,
       debugWireframe: tileset.debugWireframe,
       incrementallyLoadTextures: false,
@@ -344,8 +343,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       basePath: resource,
       requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
-      upAxis: tileset._gltfUpAxis,
-      forwardAxis: Axis.X,
+      upAxis: tileset._modelUpAxis,
+      forwardAxis: tileset._modelForwardAxis,
       debugWireframe: tileset.debugWireframe,
       vertexShaderLoaded: getVertexShaderCallback(content),
       classificationShaderLoaded: getClassificationFragmentShaderCallback(
