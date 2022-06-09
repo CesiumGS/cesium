@@ -221,13 +221,17 @@ function initialize(sceneGraph) {
   const components = sceneGraph._components;
   const scene = components.scene;
 
-  computeModelMatrix(sceneGraph);
+  // If the model has a height reference that modifies the model matrix,
+  // it will be accounted for in updateModelMatrix.
+  const modelMatrix = sceneGraph._model.modelMatrix;
+  computeModelMatrix(sceneGraph, modelMatrix);
 
   const nodes = components.nodes;
   const nodesLength = nodes.length;
 
-  // Initialize this array to be the same size as the nodes array in the model's file.
-  // This is so nodes can be stored by their index in the file, for future ease of access.
+  // Initialize this array to be the same size as the nodes array in
+  // the model's file. This is so nodes can be stored by their index
+  // in the file, for future ease of access.
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
@@ -276,12 +280,12 @@ function initialize(sceneGraph) {
   }
 }
 
-function computeModelMatrix(sceneGraph) {
+function computeModelMatrix(sceneGraph, modelMatrix) {
   const components = sceneGraph._components;
   const model = sceneGraph._model;
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
-    model.modelMatrix,
+    modelMatrix,
     components.transform,
     sceneGraph._computedModelMatrix
   );
@@ -605,9 +609,10 @@ ModelExperimentalSceneGraph.prototype.update = function (
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (
+  modelMatrix,
   frameState
 ) {
-  computeModelMatrix(this);
+  computeModelMatrix(this, modelMatrix);
   if (frameState.mode !== SceneMode.SCENE3D) {
     computeModelMatrix2D(this, frameState);
   }
