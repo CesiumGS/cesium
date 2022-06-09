@@ -1380,7 +1380,7 @@ ModelExperimental.prototype.update = function (frameState) {
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode === SceneMode.SCENE3D && this._projectTo2D) {
+    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
       throw new DeveloperError(
         "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
       );

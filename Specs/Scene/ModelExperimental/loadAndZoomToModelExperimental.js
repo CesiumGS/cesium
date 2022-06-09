@@ -32,6 +32,8 @@ function loadAndZoomToModelExperimental(options, scene) {
         backFaceCulling: options.backFaceCulling,
         showCreditsOnScreen: options.showCreditsOnScreen,
         projectTo2D: options.projectTo2D,
+        heightReference: options.heightReference,
+        scene: options.scene,
       });
     } catch (error) {
       reject(error);
