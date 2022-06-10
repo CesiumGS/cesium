@@ -1240,9 +1240,7 @@ ModelExperimental.prototype.update = function (frameState) {
   // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
-  if (!this._resourcesLoaded || !this._texturesLoaded) {
-    this._loader.process(frameState);
-  }
+  processLoader(this, frameState);
 
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
@@ -1264,12 +1262,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   this._defaultTexture = frameState.context.defaultTexture;
 
-  if (!this._drawCommandsBuilt) {
-    this.destroyResources();
-    this._sceneGraph.buildDrawCommands(frameState);
-    this._drawCommandsBuilt = true;
-  }
-
+  buildDrawCommands(this, frameState);
   updateModelMatrix(this, frameState);
 
   // Many features (e.g. image-based lighting, clipping planes) depend on the model
@@ -1293,24 +1286,14 @@ ModelExperimental.prototype.update = function (frameState) {
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
-
-  // Check for show here because we still want the draw commands to be built so user can instantly see the model
-  // when show is set to true.
-  if (this._show && this._computedScale !== 0) {
-    const asset = this._sceneGraph.components.asset;
-    const credits = asset.credits;
-
-    const length = credits.length;
-    for (let i = 0; i < length; i++) {
-      const credit = credits[i];
-      credit.showOnScreen = this._showCreditsOnScreen;
-      frameState.creditDisplay.addCredit(credit);
-    }
-
-    const drawCommands = this._sceneGraph.getDrawCommands(frameState);
-    frameState.commandList.push.apply(frameState.commandList, drawCommands);
-  }
+  submitDrawCommands(this, frameState);
 };
+
+function processLoader(model, frameState) {
+  if (!model._resourcesLoaded || !model._texturesLoaded) {
+    model._loader.process(frameState);
+  }
+}
 
 function updateCustomShader(model, frameState) {
   if (defined(model._customShader)) {
@@ -1391,6 +1374,14 @@ function updateFeatureTableId(model) {
     // Re-apply the style to reflect the new feature ID table.
     // This in turn triggers a rebuild of the draw commands.
     model.applyStyle(model._style);
+  }
+}
+
+function buildDrawCommands(model, frameState) {
+  if (!model._drawCommandsBuilt) {
+    model.destroyResources();
+    model._sceneGraph.buildDrawCommands(frameState);
+    model._drawCommandsBuilt = true;
   }
 }
 
@@ -1504,6 +1495,56 @@ function updateBoundingSphereAndScale(model, frameState) {
   model._computedScale = getScale(model, modelMatrix, frameState);
 }
 
+function updateReferenceMatrices(model, frameState) {
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
+  const context = frameState.context;
+
+  const ibl = model._imageBasedLighting;
+  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
+    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+    iblReferenceFrameMatrix4 = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      iblReferenceFrameMatrix4
+    );
+    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+      iblReferenceFrameMatrix4,
+      iblReferenceFrameMatrix3
+    );
+    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+      iblReferenceFrameMatrix3,
+      iblReferenceFrameMatrix3
+    );
+    model._iblReferenceFrameMatrix = Matrix3.transpose(
+      iblReferenceFrameMatrix3,
+      model._iblReferenceFrameMatrix
+    );
+  }
+
+  if (model.isClippingEnabled()) {
+    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
+    clippingPlanesMatrix = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      clippingPlanesMatrix
+    );
+    clippingPlanesMatrix = Matrix4.multiply(
+      clippingPlanesMatrix,
+      model._clippingPlanes.modelMatrix,
+      clippingPlanesMatrix
+    );
+    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
+      clippingPlanesMatrix,
+      model._clippingPlanesMatrix
+    );
+  }
+}
+
 function updateSceneGraph(model, frameState) {
   const sceneGraph = model._sceneGraph;
   if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
@@ -1531,6 +1572,26 @@ function updateSceneGraph(model, frameState) {
 
   const updateForAnimations = model._activeAnimations.update(frameState);
   sceneGraph.update(frameState, updateForAnimations);
+}
+
+function submitDrawCommands(model, frameState) {
+  // Check that show is true after draw commands are built;
+  // we want the user to be able to instantly see the model
+  // when show is set to true.
+  if (model._show && model._computedScale !== 0) {
+    const asset = model._sceneGraph.components.asset;
+    const credits = asset.credits;
+
+    const length = credits.length;
+    for (let i = 0; i < length; i++) {
+      const credit = credits[i];
+      credit.showOnScreen = model._showCreditsOnScreen;
+      frameState.creditDisplay.addCredit(credit);
+    }
+
+    const drawCommands = model._sceneGraph.getDrawCommands(frameState);
+    frameState.commandList.push.apply(frameState.commandList, drawCommands);
+  }
 }
 
 const scratchBoundingSphere = new BoundingSphere();
@@ -1611,56 +1672,6 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
 
     model._heightChanged = true;
   };
-}
-
-function updateReferenceMatrices(model, frameState) {
-  const modelMatrix = defined(model._clampedModelMatrix)
-    ? model._clampedModelMatrix
-    : model.modelMatrix;
-  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
-  const context = frameState.context;
-
-  const ibl = model._imageBasedLighting;
-  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
-
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    model._iblReferenceFrameMatrix = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      model._iblReferenceFrameMatrix
-    );
-  }
-
-  if (model.isClippingEnabled()) {
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      clippingPlanesMatrix
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
-      model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix
-    );
-    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
-      clippingPlanesMatrix,
-      model._clippingPlanesMatrix
-    );
-  }
 }
 
 /**
