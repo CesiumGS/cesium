@@ -92,7 +92,7 @@ describe(
       });
     });
 
-    function applyTransform(sceneGraph, node, transform) {
+    function applyTransform(node, transform) {
       const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
       expect(node._transformDirty).toEqual(false);
 
@@ -115,6 +115,8 @@ describe(
         },
         scene
       ).then(function (model) {
+        scene.renderForSpecs();
+
         const sceneGraph = model._sceneGraph;
 
         // The root node is transformed.
@@ -127,12 +129,12 @@ describe(
         const childTransformation = Matrix4.fromTranslation(
           new Cartesian3(0, 5, 0)
         );
-        applyTransform(sceneGraph, transformedChildNode, childTransformation);
+        applyTransform(transformedChildNode, childTransformation);
 
         const rootTransformation = Matrix4.fromTranslation(
           new Cartesian3(12, 5, 0)
         );
-        applyTransform(sceneGraph, rootNode, rootTransformation);
+        applyTransform(rootNode, rootTransformation);
 
         const rootPrimitive = rootNode.runtimePrimitives[0];
         const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
