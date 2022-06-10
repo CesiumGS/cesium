@@ -1376,12 +1376,13 @@ describe(
     });
 
     it("updates height reference callback when the model matrix changes", function () {
+      const modelMatrix = Transforms.eastNorthUpToFixedFrame(
+        Cartesian3.fromDegrees(-72.0, 40.0)
+      );
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
-            Cartesian3.fromDegrees(-72.0, 40.0)
-          ),
+          modelMatrix: Matrix4.clone(modelMatrix),
           heightReference: HeightReference.CLAMP_TO_GROUND,
           scene: sceneWithMockGlobe,
         },
@@ -1389,15 +1390,20 @@ describe(
       ).then(function (model) {
         expect(sceneWithMockGlobe.globe.callback).toBeDefined();
 
-        const matrix = Matrix4.clone(model.modelMatrix);
+        // Modify the model matrix in place
         const position = Cartesian3.fromDegrees(-73.0, 40.0);
-        matrix[12] = position.x;
-        matrix[13] = position.y;
-        matrix[14] = position.z;
+        model.modelMatrix[12] = position.x;
+        model.modelMatrix[13] = position.y;
+        model.modelMatrix[14] = position.z;
 
-        model.modelMatrix = matrix;
         sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
 
+        // Replace the model matrix entirely
+        model.modelMatrix = modelMatrix;
+
+        sceneWithMockGlobe.renderForSpecs();
         expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
         expect(sceneWithMockGlobe.globe.callback).toBeDefined();
       });

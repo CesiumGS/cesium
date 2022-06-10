@@ -216,7 +216,7 @@ export default function ModelExperimental(options) {
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._modelResources = [];
 
-  // Computation of the model's bounding sphere and its initial radius is done
+  // The model's bounding sphere and its initial radius are computed
   // in ModelExperimentalSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
@@ -1245,69 +1245,24 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   // A custom shader may have to load texture uniforms.
-  if (defined(this._customShader)) {
-    this._customShader.update(frameState);
-  }
+  updateCustomShader(this, frameState);
 
-  // Check if the shader needs to be updated for point cloud attenuation
-  // settings.
-  if (this.pointCloudShading.attenuation !== this._attenuation) {
-    this.resetDrawCommands();
-    this._attenuation = this.pointCloudShading.attenuation;
-  }
+  // The image-based lighting may have to load texture uniforms
+  // for specular maps.
+  updateImageBasedLighting(this, frameState);
 
-  const context = frameState.context;
-  this._defaultTexture = context.defaultTexture;
-
-  // Short-circuit if the model resources aren't ready.
+  // Short-circuit if the model resources aren't ready or the scene
+  // is currently morphing.
   if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
     return;
   }
 
-  // Update the image-based lighting for this model to load any texture uniforms
-  // it uses (specular maps) and to detect any changes in parameters.
-  this._imageBasedLighting.update(frameState);
-  if (this._imageBasedLighting.shouldRegenerateShaders) {
-    this.resetDrawCommands();
-  }
+  updatePointCloudAttenuation(this);
+  updateClippingPlanes(this, frameState);
+  updateSceneMode(this, frameState);
+  updateFeatureTables(this, frameState);
 
-  // Update the clipping planes collection for this model to detect any changes.
-  if (this.isClippingEnabled()) {
-    if (this._clippingPlanes.owner === this) {
-      this._clippingPlanes.update(frameState);
-    }
-
-    const currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
-    if (currentClippingPlanesState !== this._clippingPlanesState) {
-      this.resetDrawCommands();
-      this._clippingPlanesState = currentClippingPlanesState;
-    }
-  }
-
-  if (frameState.mode !== this._sceneMode) {
-    if (this._projectTo2D) {
-      this.resetDrawCommands();
-    } else {
-      this._updateModelMatrix = true;
-    }
-    this._sceneMode = frameState.mode;
-  }
-
-  if (this._featureTableIdDirty) {
-    updateFeatureTableId(this);
-    this._featureTableIdDirty = false;
-  }
-
-  const featureTables = this._featureTables;
-  const length = featureTables.length;
-  for (let i = 0; i < length; i++) {
-    featureTables[i].update(frameState);
-    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-    // to ensure that translucent and opaque features are handled in the correct passes.
-    if (featureTables[i].styleCommandsNeededDirty) {
-      this.resetDrawCommands();
-    }
-  }
+  this._defaultTexture = frameState.context.defaultTexture;
 
   if (!this._drawCommandsBuilt) {
     this.destroyResources();
@@ -1315,55 +1270,14 @@ ModelExperimental.prototype.update = function (frameState) {
     this._drawCommandsBuilt = true;
   }
 
-  // This is done without a dirty flag so that the model matrix can be updated in-place
-  // without needing to use a setter.
-  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
-      throw new DeveloperError(
-        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
-      );
-    }
-    //>>includeEnd('debug');
-    this._updateModelMatrix = true;
-    this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
-  }
+  updateModelMatrix(this, frameState);
 
   // Many features (e.g. image-based lighting, clipping planes) depend on the model
   // matrix being updated for the current height reference, so update it first.
-  if (
-    this._updateModelMatrix ||
-    this._heightDirty ||
-    this._minimumPixelSize !== 0.0
-  ) {
-    updateClamping(this);
-    this._heightDirty = false;
-    this._updateModelMatrix = true;
-  }
+  updateClamping(this);
 
-  const modelMatrix = defined(this._clampedModelMatrix)
-    ? this._clampedModelMatrix
-    : this.modelMatrix;
-
-  // Update bounding sphere, scale, and scene graph model matrix
-  if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
-    this._clampedScale = defined(this._maximumScale)
-      ? Math.min(this._scale, this._maximumScale)
-      : this._scale;
-
-    this._boundingSphere = BoundingSphere.transform(
-      this._sceneGraph.boundingSphere,
-      modelMatrix,
-      this._boundingSphere
-    );
-    this._boundingSphere.radius = this._initialRadius * this._clampedScale;
-    this._computedScale = getScale(this, modelMatrix, frameState);
-    this._sceneGraph.updateModelMatrix(modelMatrix, frameState);
-    this._updateModelMatrix = false;
-  }
-
-  const referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
-  updateReferenceMatrices(this, referenceMatrix, frameState);
+  updateBoundingSphereAndScale(this, frameState);
+  updateReferenceMatrices(this, frameState);
 
   // This check occurs after the bounding sphere has been updated so that
   // zooming to the bounding sphere can account for any modifications
@@ -1376,23 +1290,9 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
-  if (this._backFaceCullingDirty) {
-    this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
-    this._backFaceCullingDirty = false;
-  }
-
-  if (this._shadowsDirty) {
-    this.sceneGraph.updateShadows(this._shadows);
-    this._shadowsDirty = false;
-  }
-
-  if (this._debugShowBoundingVolumeDirty) {
-    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
-  const updateForAnimations = this._activeAnimations.update(frameState);
-  this._sceneGraph.update(frameState, updateForAnimations);
+  // Update the scene graph and draw commands for any changes in model's properties
+  // (e.g. model matrix, back-face culling)
+  updateSceneGraph(this, frameState);
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
@@ -1412,6 +1312,73 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 };
 
+function updateCustomShader(model, frameState) {
+  if (defined(model._customShader)) {
+    model._customShader.update(frameState);
+  }
+}
+
+function updateImageBasedLighting(model, frameState) {
+  model._imageBasedLighting.update(frameState);
+  if (model._imageBasedLighting.shouldRegenerateShaders) {
+    model.resetDrawCommands();
+  }
+}
+
+function updatePointCloudAttenuation(model) {
+  // Check if the shader needs to be updated for point cloud attenuation
+  // settings.
+  if (model.pointCloudShading.attenuation !== model._attenuation) {
+    model.resetDrawCommands();
+    model._attenuation = model.pointCloudShading.attenuation;
+  }
+}
+
+function updateClippingPlanes(model, frameState) {
+  // Update the clipping planes collection for this model to detect any changes.
+  if (model.isClippingEnabled()) {
+    if (model._clippingPlanes.owner === model) {
+      model._clippingPlanes.update(frameState);
+    }
+
+    const currentClippingPlanesState =
+      model._clippingPlanes.clippingPlanesState;
+    if (currentClippingPlanesState !== model._clippingPlanesState) {
+      model.resetDrawCommands();
+      model._clippingPlanesState = currentClippingPlanesState;
+    }
+  }
+}
+
+function updateSceneMode(model, frameState) {
+  if (frameState.mode !== model._sceneMode) {
+    if (model._projectTo2D) {
+      model.resetDrawCommands();
+    } else {
+      model._updateModelMatrix = true;
+    }
+    model._sceneMode = frameState.mode;
+  }
+}
+
+function updateFeatureTables(model, frameState) {
+  if (model._featureTableIdDirty) {
+    updateFeatureTableId(model);
+    model._featureTableIdDirty = false;
+  }
+
+  const featureTables = model._featureTables;
+  const length = featureTables.length;
+  for (let i = 0; i < length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
 function updateFeatureTableId(model) {
   const components = model._sceneGraph.components;
   const structuralMetadata = components.structuralMetadata;
@@ -1427,6 +1394,145 @@ function updateFeatureTableId(model) {
   }
 }
 
+function updateModelMatrix(model, frameState) {
+  // This is done without a dirty flag so that the model matrix can be updated in-place
+  // without needing to use a setter.
+  if (!Matrix4.equals(model.modelMatrix, model._modelMatrix)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+      );
+    }
+    //>>includeEnd('debug');
+    model._updateModelMatrix = true;
+    model._modelMatrix = Matrix4.clone(model.modelMatrix, model._modelMatrix);
+  }
+}
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
+
+function updateClamping(model) {
+  if (
+    !model._updateModelMatrix &&
+    !model._heightDirty &&
+    model._minimumPixelSize === 0.0
+  ) {
+    return;
+  }
+
+  if (defined(model._removeUpdateHeightCallback)) {
+    model._removeUpdateHeightCallback();
+    model._removeUpdateHeightCallback = undefined;
+  }
+
+  const scene = model._scene;
+  if (
+    !defined(scene) ||
+    !defined(scene.globe) ||
+    model.heightReference === HeightReference.NONE
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (model.heightReference !== HeightReference.NONE) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene and globe."
+      );
+    }
+    //>>includeEnd('debug');
+    model._clampedModelMatrix = undefined;
+    return;
+  }
+
+  const globe = scene.globe;
+  const ellipsoid = globe.ellipsoid;
+
+  // Compute cartographic position so we don't recompute every update
+  const modelMatrix = model.modelMatrix;
+  scratchPosition.x = modelMatrix[12];
+  scratchPosition.y = modelMatrix[13];
+  scratchPosition.z = modelMatrix[14];
+  const cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+  if (!defined(model._clampedModelMatrix)) {
+    model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+  }
+
+  // Install callback to handle updating of terrain tiles
+  const surface = globe._surface;
+  model._removeUpdateHeightCallback = surface.updateHeight(
+    cartoPosition,
+    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
+  );
+
+  // Set the correct height now
+  const height = globe.getHeight(cartoPosition);
+  if (defined(height)) {
+    // Get callback with cartoPosition being the non-clamped position
+    const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+    // Compute the clamped cartesian and call updateHeight callback
+    Cartographic.clone(cartoPosition, scratchCartographic);
+    scratchCartographic.height = height;
+    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+    callback(scratchPosition);
+  }
+
+  model._heightDirty = false;
+  model._updateModelMatrix = true;
+}
+
+function updateBoundingSphereAndScale(model, frameState) {
+  if (!model._updateModelMatrix && model._minimumPixelSize === 0.0) {
+    return;
+  }
+
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+
+  model._clampedScale = defined(model._maximumScale)
+    ? Math.min(model._scale, model._maximumScale)
+    : model._scale;
+
+  model._boundingSphere = BoundingSphere.transform(
+    model._sceneGraph.boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
+  model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updateSceneGraph(model, frameState) {
+  const sceneGraph = model._sceneGraph;
+  if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
+    const modelMatrix = defined(model._clampedModelMatrix)
+      ? model._clampedModelMatrix
+      : model.modelMatrix;
+    sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    model._updateModelMatrix = false;
+  }
+
+  if (model._backFaceCullingDirty) {
+    sceneGraph.updateBackFaceCulling(model._backFaceCulling);
+    model._backFaceCullingDirty = false;
+  }
+
+  if (model._shadowsDirty) {
+    sceneGraph.updateShadows(model._shadows);
+    model._shadowsDirty = false;
+  }
+
+  if (model._debugShowBoundingVolumeDirty) {
+    sceneGraph.updateShowBoundingVolume(model._debugShowBoundingVolume);
+    model._debugShowBoundingVolumeDirty = false;
+  }
+
+  const updateForAnimations = model._activeAnimations.update(frameState);
+  sceneGraph.update(frameState, updateForAnimations);
+}
+
 const scratchBoundingSphere = new BoundingSphere();
 
 function scaleInPixels(positionWC, radius, frameState) {
@@ -1438,9 +1544,6 @@ function scaleInPixels(positionWC, radius, frameState) {
     frameState.context.drawingBufferHeight
   );
 }
-
-const scratchPosition = new Cartesian3();
-const scratchCartographic = new Cartographic();
 
 function getScale(model, modelMatrix, frameState) {
   let scale = model.scale;
@@ -1510,66 +1613,13 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
   };
 }
 
-function updateClamping(model) {
-  if (defined(model._removeUpdateHeightCallback)) {
-    model._removeUpdateHeightCallback();
-    model._removeUpdateHeightCallback = undefined;
-  }
-
-  const scene = model._scene;
-  if (
-    !defined(scene) ||
-    !defined(scene.globe) ||
-    model.heightReference === HeightReference.NONE
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    if (model.heightReference !== HeightReference.NONE) {
-      throw new DeveloperError(
-        "Height reference is not supported without a scene and globe."
-      );
-    }
-    //>>includeEnd('debug');
-    model._clampedModelMatrix = undefined;
-    return;
-  }
-
-  const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
-
-  // Compute cartographic position so we don't recompute every update
-  const modelMatrix = model.modelMatrix;
-  scratchPosition.x = modelMatrix[12];
-  scratchPosition.y = modelMatrix[13];
-  scratchPosition.z = modelMatrix[14];
-  const cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
-
-  if (!defined(model._clampedModelMatrix)) {
-    model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
-  }
-
-  // Install callback to handle updating of terrain tiles
-  const surface = globe._surface;
-  model._removeUpdateHeightCallback = surface.updateHeight(
-    cartoPosition,
-    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
-  );
-
-  // Set the correct height now
-  const height = globe.getHeight(cartoPosition);
-  if (defined(height)) {
-    // Get callback with cartoPosition being the non-clamped position
-    const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
-
-    // Compute the clamped cartesian and call updateHeight callback
-    Cartographic.clone(cartoPosition, scratchCartographic);
-    scratchCartographic.height = height;
-    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-    callback(scratchPosition);
-  }
-}
-
-function updateReferenceMatrices(model, referenceMatrix, frameState) {
+function updateReferenceMatrices(model, frameState) {
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
   const context = frameState.context;
+
   const ibl = model._imageBasedLighting;
   if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
     let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
