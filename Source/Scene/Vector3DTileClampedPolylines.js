@@ -723,7 +723,7 @@ function initialize(polylines) {
 
         promise
           .then(function () {
-            finishVertexArray(polylines);
+            finishVertexArray(polylines, frameState);
             resolve(polylines);
           })
           .catch(function (e) {
