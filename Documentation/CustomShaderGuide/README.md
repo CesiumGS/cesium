@@ -693,10 +693,18 @@ This struct contains the output of the custom vertex shader. This includes:
 
 ## `czm_modelMaterial` struct
 
-This struct is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 
 - the material stage produces a material
 - the lighting stage takes in a material, computes lighting, and stores the result into `material.diffuse`
 - Custom shaders (regardless of where in the pipeline it is) takes in a material (even if it's a material with default values) and modifies this.
+
+### Material color space
+
+Material colors (such as `material.diffuse`) are always in linear color space,
+even when `lightingModel` is `LightingModel.UNLIT`.
+
+When `scene.highDynamicRange` is `false`, the final computed color
+(after custom shaders and lighting) is converted to `sRGB`.
