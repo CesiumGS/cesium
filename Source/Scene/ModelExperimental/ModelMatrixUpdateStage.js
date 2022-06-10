@@ -1,4 +1,5 @@
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import SceneMode from "../SceneMode.js";
 
 /**
@@ -47,7 +48,6 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   }
 };
 
-const scratchMatrix = new Matrix4();
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
@@ -77,7 +77,11 @@ function updateRuntimeNode(
     drawCommand.modelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
       transformToRoot,
-      scratchMatrix
+      drawCommand.modelMatrix
+    );
+    drawCommand.cullFace = ModelExperimentalUtility.getCullFace(
+      drawCommand.modelMatrix,
+      drawCommand.primitiveType
     );
   }
 

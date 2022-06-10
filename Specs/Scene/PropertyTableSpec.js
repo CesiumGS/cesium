@@ -345,18 +345,19 @@ describe("Scene/PropertyTable", function () {
 
     let batchTable;
     let batchTableJsonOnly;
-
+    let hierarchy;
+    let metadataTable;
     beforeEach(function () {
       const jsonTable = new JsonMetadataTable({
         count: count,
         properties: jsonProperties,
       });
 
-      const hierarchy = new BatchTableHierarchy({
+      hierarchy = new BatchTableHierarchy({
         extension: hierarchyExtension,
       });
 
-      const metadataTable = new MetadataTable({
+      metadataTable = new MetadataTable({
         count: count,
         properties: propertyTableJson.properties,
         class: schema.classes.box,
@@ -374,6 +375,13 @@ describe("Scene/PropertyTable", function () {
         count: count,
         jsonMetadataTable: jsonTable,
       });
+    });
+
+    it("computes byteLength correctly", function () {
+      const expectedByteLength =
+        metadataTable.byteLength + hierarchy.byteLength;
+      expect(batchTable.byteLength).toBe(expectedByteLength);
+      expect(batchTableJsonOnly.byteLength).toBe(0);
     });
 
     it("getPropertyIds combines binary, json and hierarchy IDs", function () {

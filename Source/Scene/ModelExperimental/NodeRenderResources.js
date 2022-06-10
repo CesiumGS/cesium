@@ -135,7 +135,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise maximum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
@@ -145,9 +144,19 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise minimum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
   this.instancingTranslationMin = undefined;
+
+  /**
+   * If the model is instanced and projected to 2D, the reference point is the
+   * average of the instancing translation max and min. The 2D translations are
+   * defined relative to this point to avoid precision issues on the GPU.
+   *
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  this.instancingReferencePoint2D = undefined;
 }

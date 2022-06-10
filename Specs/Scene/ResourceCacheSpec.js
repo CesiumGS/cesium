@@ -883,6 +883,13 @@ describe(
         vertexBufferLoader
       ) {
         expect(vertexBufferLoader.buffer).toBeDefined();
+
+        return cacheEntry._statisticsPromise.then(function () {
+          // The vertex buffer should only be counted once
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            vertexBufferLoader.buffer.sizeInBytes
+          );
+        });
       });
     });
 
@@ -936,6 +943,13 @@ describe(
         vertexBufferLoader
       ) {
         expect(vertexBufferLoader.buffer).toBeDefined();
+
+        return cacheEntry._statisticsPromise.then(function () {
+          // The vertex buffer should only be counted once
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            vertexBufferLoader.buffer.sizeInBytes
+          );
+        });
       });
     });
 
@@ -967,6 +981,13 @@ describe(
       ) {
         expect(vertexBufferLoader.typedArray).toBeDefined();
         expect(vertexBufferLoader.buffer).toBeUndefined();
+
+        const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+        return cacheEntry._statisticsPromise.then(function () {
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            vertexBufferLoader.typedArray.byteLength
+          );
+        });
       });
     });
 
@@ -1000,6 +1021,14 @@ describe(
       ) {
         expect(vertexBufferLoader.typedArray).toBeDefined();
         expect(vertexBufferLoader.buffer).toBeDefined();
+
+        const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+        return cacheEntry._statisticsPromise.then(function () {
+          const totalSize =
+            vertexBufferLoader.typedArray.byteLength +
+            vertexBufferLoader.buffer.sizeInBytes;
+          expect(ResourceCache.statistics.geometryByteLength).toBe(totalSize);
+        });
       });
     });
 
@@ -1148,6 +1177,10 @@ describe(
       ) {
         expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.typedArray).toBeUndefined();
+
+        expect(ResourceCache.statistics.geometryByteLength).toBe(
+          indexBufferLoader.buffer.sizeInBytes
+        );
       });
     });
 
@@ -1199,6 +1232,13 @@ describe(
         indexBufferLoader
       ) {
         expect(indexBufferLoader.buffer).toBeDefined();
+
+        return cacheEntry._statisticsPromise.then(function () {
+          // The index buffer should only be counted once
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            indexBufferLoader.buffer.sizeInBytes
+          );
+        });
       });
     });
 
@@ -1229,6 +1269,53 @@ describe(
       ) {
         expect(indexBufferLoader.typedArray).toBeDefined();
         expect(indexBufferLoader.buffer).toBeUndefined();
+
+        const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+        return cacheEntry._statisticsPromise.then(function () {
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            indexBufferLoader.typedArray.byteLength
+          );
+        });
+      });
+    });
+
+    it("loads index buffer as buffer and typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadBuffer: true,
+        loadTypedArray: true,
+      });
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadBuffer: true,
+        loadTypedArray: true,
+      });
+
+      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
+
+        const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+        return cacheEntry._statisticsPromise.then(function () {
+          // The statistics will count both buffer and typed array
+          expect(ResourceCache.statistics.geometryByteLength).toBe(
+            2 * indexBufferLoader.typedArray.byteLength
+          );
+        });
       });
     });
 
@@ -1415,6 +1502,13 @@ describe(
         textureLoader
       ) {
         expect(textureLoader.texture).toBeDefined();
+
+        return cacheEntry._statisticsPromise.then(function () {
+          // The texture should only be counted once
+          expect(ResourceCache.statistics.texturesByteLength).toBe(
+            textureLoader.texture.sizeInBytes
+          );
+        });
       });
     });
 

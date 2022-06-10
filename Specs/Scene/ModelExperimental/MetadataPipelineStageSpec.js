@@ -3,6 +3,7 @@ import {
   Cartesian2,
   GltfLoader,
   MetadataPipelineStage,
+  ModelExperimentalStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -74,6 +75,7 @@ describe(
       return {
         shaderBuilder: new ShaderBuilder(),
         model: {
+          statistics: new ModelExperimentalStatistics(),
           structuralMetadata: components.structuralMetadata,
         },
         uniformMap: {},

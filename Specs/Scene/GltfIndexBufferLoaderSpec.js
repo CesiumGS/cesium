@@ -2,7 +2,6 @@ import {
   Buffer,
   clone,
   ComponentDatatype,
-  defer,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
@@ -486,8 +485,6 @@ describe(
         Promise.resolve(arrayBuffer)
       );
 
-      spyOn(Buffer, "createIndexBuffer").and.callThrough();
-
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
@@ -733,21 +730,7 @@ describe(
       });
     });
 
-    function resolveBufferViewAfterDestroy(reject) {
-      const deferredPromise = defer();
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        deferredPromise.promise
-      );
-
-      // Load a copy of the buffer view into the cache so that the buffer view
-      // promise resolves even if the index buffer loader is destroyed
-      const bufferViewLoaderCopy = ResourceCache.loadBufferView({
-        gltf: gltfUncompressed,
-        bufferViewId: 3,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
-
+    function resolveBufferViewAfterDestroy(rejectPromise) {
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
@@ -757,45 +740,35 @@ describe(
         loadBuffer: true,
       });
 
+      const promise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          reject(new Error());
+        } else {
+          resolve(arrayBuffer);
+        }
+      });
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
+
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       indexBufferLoader.destroy();
 
-      if (reject) {
-        deferredPromise.reject(new Error());
-      } else {
-        deferredPromise.resolve(arrayBuffer);
-      }
-
-      expect(indexBufferLoader.buffer).not.toBeDefined();
-      expect(indexBufferLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(bufferViewLoaderCopy);
+      return indexBufferLoader.promise.then(function () {
+        expect(indexBufferLoader.buffer).not.toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(true);
+      });
     }
 
     it("handles resolving buffer view after destroy", function () {
-      resolveBufferViewAfterDestroy(false);
+      return resolveBufferViewAfterDestroy(false);
     });
 
     it("handles rejecting buffer view after destroy", function () {
-      resolveBufferViewAfterDestroy(true);
+      return resolveBufferViewAfterDestroy(true);
     });
 
     function resolveDracoAfterDestroy(rejectPromise) {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
-      );
-
-      // Load a copy of the draco loader into the cache so that the draco loader
-      // promise resolves even if the index buffer loader is destroyed
-      const dracoLoaderCopy = ResourceCache.loadDraco({
-        gltf: gltfDraco,
-        draco: dracoExtension,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
-
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
@@ -806,42 +779,37 @@ describe(
         loadBuffer: true,
       });
 
-      let promise = new Promise(function (resolve, reject) {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+        // After we resolve, process again, then destroy
         setTimeout(function () {
           loaderProcess(indexBufferLoader, scene);
-          if (rejectPromise) {
-            reject(new Error());
-          } else {
-            resolve(decodeDracoResults);
-          }
+          indexBufferLoader.destroy();
         }, 1);
+        return Promise.resolve(arrayBuffer);
       });
-      if (rejectPromise) {
-        promise = promise.catch(function (e) {
-          // swallow that error we just threw
-        });
-      }
 
       const decodeBufferView = spyOn(
         DracoLoader,
         "decodeBufferView"
       ).and.callFake(function () {
-        return promise;
+        return new Promise(function (resolve, reject) {
+          if (rejectPromise) {
+            reject(new Error("Draco decode failed"));
+          } else {
+            resolve(decodeDracoResults);
+          }
+        });
       });
 
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       loaderProcess(indexBufferLoader, scene);
-      return promise.finally(function () {
+      return indexBufferLoader.promise.then(function () {
         expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
-
-        indexBufferLoader.destroy();
 
         expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
-
-        ResourceCache.unload(dracoLoaderCopy);
       });
     }
 

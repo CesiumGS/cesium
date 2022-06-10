@@ -451,9 +451,9 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  * } else {
  *     Promise.resolve(featuresPromise).then(function(features) {
  *         // This function is called asynchronously when the list if picked features is available.
- *         console.log('Number of features: ' + features.length);
+ *         console.log(`Number of features: ${features.length}`);
  *         if (features.length > 0) {
- *             console.log('First feature name: ' + features[0].name);
+ *             console.log(`First feature name: ${features[0].name}`);
  *         }
  *     });
  * }

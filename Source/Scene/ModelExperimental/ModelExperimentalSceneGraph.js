@@ -1,9 +1,7 @@
-import buildDrawCommands from "./buildDrawCommands.js";
+import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
@@ -18,9 +16,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
-import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 import Transforms from "../../Core/Transforms.js";
 
@@ -139,7 +135,16 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this.modelPipelineStages = [];
 
+  // The scene graph's bounding sphere is model space, so that
+  // the model's bounding sphere can be recomputed when given a
+  // new model matrix.
   this._boundingSphere = undefined;
+
+  // The 2D bounding sphere is in world space. This is checked
+  // by the draw commands to see if the model is over the IDL,
+  // and if so, renders the primitives using extra commands.
+  this._boundingSphere2D = undefined;
+
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -197,7 +202,8 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
   },
 
   /**
-   * The bounding sphere containing all the primitives in the scene graph.
+   * The bounding sphere containing all the primitives in the scene graph
+   * in model space.
    *
    * @type {BoundingSphere}
    * @readonly
@@ -293,17 +299,16 @@ function computeModelMatrix(sceneGraph) {
   );
 }
 
-const scratchComputedTranslation = new Cartesian4();
+const scratchComputedTranslation = new Cartesian3();
 
 function computeModelMatrix2D(sceneGraph, frameState) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
-  const translation = Matrix4.getColumn(
+  const translation = Matrix4.getTranslation(
     computedModelMatrix,
-    3,
     scratchComputedTranslation
   );
 
-  if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
+  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
     sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
@@ -322,6 +327,12 @@ function computeModelMatrix2D(sceneGraph, frameState) {
       sceneGraph._computedModelMatrix2D
     );
   }
+
+  sceneGraph._boundingSphere2D = BoundingSphere.transform(
+    sceneGraph._boundingSphere,
+    sceneGraph._computedModelMatrix2D,
+    sceneGraph._boundingSphere2D
+  );
 }
 
 /**
@@ -405,6 +416,9 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   const model = this._model;
   const modelRenderResources = new ModelRenderResources(model);
+
+  // Reset the memory counts before running the pipeline
+  model.statistics.clear();
 
   this.configurePipeline();
   const modelPipelineStages = this.modelPipelineStages;
@@ -497,7 +511,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         modelPositionMax
       );
 
-      const drawCommand = buildDrawCommands(
+      const drawCommand = buildDrawCommand(
         primitiveRenderResources,
         frameState
       );
@@ -584,7 +598,7 @@ ModelExperimentalSceneGraph.prototype.update = function (
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
         const stage = runtimePrimitive.updateStages[k];
-        stage.update(runtimePrimitive);
+        stage.update(runtimePrimitive, this);
       }
     }
   }
@@ -643,17 +657,9 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
   backFaceCulling
 ) {
-  const model = this._model;
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-      const drawCommand = runtimePrimitive.drawCommands[k];
-      const renderState = clone(drawCommand.renderState, true);
-      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
-      const translucent = defined(model.color) && model.color.alpha < 1.0;
-      renderState.cull.enabled =
-        backFaceCulling && !doubleSided && !translucent;
-      drawCommand.renderState = RenderState.fromCache(renderState);
-    }
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.backFaceCulling = backFaceCulling;
   });
 };
 
@@ -668,6 +674,22 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.shadows = shadowMode;
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes whether to show the debug bounding volume.
+ *
+ * @param {Boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
+  debugShowBoundingVolume
+) {
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
   });
 };
 

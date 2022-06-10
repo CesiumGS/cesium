@@ -8,7 +8,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
-import Axis from "./Axis.js";
 import B3dmParser from "./B3dmParser.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
@@ -100,7 +99,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this.batchTable.memorySizeInBytes;
+      return this.batchTable.batchTableByteLength;
     },
   },
 
@@ -184,7 +183,7 @@ function getVertexShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._batchIdAttributeName = getBatchIdAttributeName(gltf);
       content._diffuseAttributeOrUniformName[
@@ -206,7 +205,7 @@ function getFragmentShaderCallback(content) {
     const batchTable = content._batchTable;
     const handleTranslucent = !defined(content._classificationType);
 
-    const gltf = content._model.gltf;
+    const gltf = content._model.gltfInternal;
     if (defined(gltf)) {
       content._diffuseAttributeOrUniformName[
         programId
@@ -313,8 +312,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       basePath: resource,
       requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
-      upAxis: tileset._gltfUpAxis,
-      forwardAxis: Axis.X,
+      upAxis: tileset._modelUpAxis,
+      forwardAxis: tileset._modelForwardAxis,
       shadows: tileset.shadows,
       debugWireframe: tileset.debugWireframe,
       incrementallyLoadTextures: false,
@@ -344,8 +343,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       basePath: resource,
       requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
-      upAxis: tileset._gltfUpAxis,
-      forwardAxis: Axis.X,
+      upAxis: tileset._modelUpAxis,
+      forwardAxis: tileset._modelForwardAxis,
       debugWireframe: tileset.debugWireframe,
       vertexShaderLoaded: getVertexShaderCallback(content),
       classificationShaderLoaded: getClassificationFragmentShaderCallback(

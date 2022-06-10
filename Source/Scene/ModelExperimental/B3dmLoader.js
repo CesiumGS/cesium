@@ -5,7 +5,6 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -50,7 +49,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
- * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
  */
 function B3dmLoader(options) {
@@ -72,7 +71,7 @@ function B3dmLoader(options) {
     options.loadAttributesAsTypedArray,
     false
   );
-  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
+  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
@@ -95,12 +94,12 @@ function B3dmLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadPositionsFor2D = loadPositionsFor2D;
+  this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = B3dmLoaderState.UNLOADED;
 
-  this._promise = defer();
+  this._promise = undefined;
 
   this._gltfLoader = undefined;
 
@@ -121,17 +120,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(B3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise.<B3dmLoader>}
+   * @type {Promise.<B3dmLoader>|undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
 
@@ -184,6 +183,7 @@ Object.defineProperties(B3dmLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<B3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 B3dmLoader.prototype.load = function () {
@@ -226,7 +226,7 @@ B3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
-    loadPositionsFor2D: this._loadPositionsFor2D,
+    loadAttributesFor2D: this._loadAttributesFor2D,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
     renameBatchIdSemantic: true,
   });
@@ -236,7 +236,7 @@ B3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  gltfLoader.promise
+  this._promise = gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
@@ -248,14 +248,16 @@ B3dmLoader.prototype.load = function () {
       that._components = components;
 
       that._state = B3dmLoaderState.READY;
-      that._promise.resolve(that);
+      return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
-      handleError(that, error);
+      return handleError(that, error);
     });
+
+  return this._promise;
 };
 
 function handleError(b3dmLoader, error) {
@@ -263,7 +265,7 @@ function handleError(b3dmLoader, error) {
   b3dmLoader._state = B3dmLoaderState.FAILED;
   const errorMessage = "Failed to load b3dm";
   error = b3dmLoader.getError(errorMessage, error);
-  b3dmLoader._promise.reject(error);
+  return Promise.reject(error);
 }
 
 B3dmLoader.prototype.process = function (frameState) {

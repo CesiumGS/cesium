@@ -3,7 +3,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
-import defer from "../Core/defer.js";
 import destroyObject from "../Core/destroyObject.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -45,16 +44,21 @@ function Vector3DTilePoints(options) {
   this._minHeight = options.minimumHeight;
   this._maxHeight = options.maximumHeight;
 
-  this._billboardCollection = undefined;
-  this._labelCollection = undefined;
-  this._polylineCollection = undefined;
+  this._billboardCollection = new BillboardCollection({
+    batchTable: options.batchTable,
+  });
+  this._labelCollection = new LabelCollection({
+    batchTable: options.batchTable,
+  });
+  this._polylineCollection = new PolylineCollection();
+  this._polylineCollection._useHighlightColor = true;
 
   this._verticesPromise = undefined;
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
-  this._resolvedPromise = false;
+  this._update = function (points, frameState) {};
+  this._readyPromise = initialize(this);
 }
 
 Object.defineProperties(Vector3DTilePoints.prototype, {
@@ -97,7 +101,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -129,10 +133,6 @@ const createVerticesTaskProcessor = new TaskProcessor(
 const scratchPosition = new Cartesian3();
 
 function createPoints(points, ellipsoid) {
-  if (defined(points._billboardCollection)) {
-    return;
-  }
-
   let positions;
   if (!defined(points._verticesPromise)) {
     positions = points._positions;
@@ -161,47 +161,37 @@ function createPoints(points, ellipsoid) {
       return;
     }
 
-    verticesPromise.then(function (result) {
+    return verticesPromise.then(function (result) {
       points._positions = new Float64Array(result.positions);
+      const billboardCollection = points._billboardCollection;
+      const labelCollection = points._labelCollection;
+      const polylineCollection = points._polylineCollection;
+      positions = points._positions;
+      const batchIds = points._batchIds;
+      const numberOfPoints = positions.length / 3;
+
+      for (let i = 0; i < numberOfPoints; ++i) {
+        const id = batchIds[i];
+
+        const position = Cartesian3.unpack(positions, i * 3, scratchPosition);
+
+        const b = billboardCollection.add();
+        b.position = position;
+        b._batchIndex = id;
+
+        const l = labelCollection.add();
+        l.text = " ";
+        l.position = position;
+        l._batchIndex = id;
+
+        const p = polylineCollection.add();
+        p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
+      }
+
+      points._positions = undefined;
+      points._packedBuffer = undefined;
       points._ready = true;
     });
-  }
-
-  if (points._ready && !defined(points._billboardCollection)) {
-    positions = points._positions;
-    const batchTable = points._batchTable;
-    const batchIds = points._batchIds;
-
-    const billboardCollection = (points._billboardCollection = new BillboardCollection(
-      { batchTable: batchTable }
-    ));
-    const labelCollection = (points._labelCollection = new LabelCollection({
-      batchTable: batchTable,
-    }));
-    const polylineCollection = (points._polylineCollection = new PolylineCollection());
-    polylineCollection._useHighlightColor = true;
-
-    const numberOfPoints = positions.length / 3;
-    for (let i = 0; i < numberOfPoints; ++i) {
-      const id = batchIds[i];
-
-      const position = Cartesian3.unpack(positions, i * 3, scratchPosition);
-
-      const b = billboardCollection.add();
-      b.position = position;
-      b._batchIndex = id;
-
-      const l = labelCollection.add();
-      l.text = " ";
-      l.position = position;
-      l._batchIndex = id;
-
-      const p = polylineCollection.add();
-      p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
-    }
-
-    points._positions = undefined;
-    points._packedBuffer = undefined;
   }
 }
 
@@ -471,24 +461,37 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
   }
 };
 
+function initialize(points) {
+  return new Promise(function (resolve, reject) {
+    points._update = function (points, frameState) {
+      const promise = createPoints(points, frameState.mapProjection.ellipsoid);
+
+      if (points._ready) {
+        points._polylineCollection.update(frameState);
+        points._billboardCollection.update(frameState);
+        points._labelCollection.update(frameState);
+      }
+
+      if (!defined(promise)) {
+        return;
+      }
+
+      promise
+        .then(function () {
+          resolve();
+        })
+        .catch(function (e) {
+          reject(e);
+        });
+    };
+  });
+}
+
 /**
  * @private
  */
 Vector3DTilePoints.prototype.update = function (frameState) {
-  createPoints(this, frameState.mapProjection.ellipsoid);
-
-  if (!this._ready) {
-    return;
-  }
-
-  this._polylineCollection.update(frameState);
-  this._billboardCollection.update(frameState);
-  this._labelCollection.update(frameState);
-
-  if (!this._resolvedPromise) {
-    this._readyPromise.resolve();
-    this._resolvedPromise = true;
-  }
+  this._update(this, frameState);
 };
 
 /**

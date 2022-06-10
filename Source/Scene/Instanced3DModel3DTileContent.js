@@ -16,7 +16,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Transforms from "../Core/Transforms.js";
 import TranslationRotationScale from "../Core/TranslationRotationScale.js";
 import Pass from "../Renderer/Pass.js";
-import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
@@ -108,7 +107,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._batchTable.memorySizeInBytes;
+      return this._batchTable.batchTableByteLength;
     },
   },
 
@@ -218,8 +217,8 @@ function initialize(content, arrayBuffer, byteOffset) {
     gltf: undefined,
     basePath: undefined,
     incrementallyLoadTextures: false,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
+    upAxis: tileset._modelUpAxis,
+    forwardAxis: tileset._modelForwardAxis,
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
     pickIdLoaded: getPickIdCallback(content),
     imageBasedLighting: tileset.imageBasedLighting,

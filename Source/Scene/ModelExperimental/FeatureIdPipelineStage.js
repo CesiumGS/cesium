@@ -469,6 +469,8 @@ function generateImplicitFeatureIdAttribute(
     });
     vertexBuffer.vertexArrayDestroyable = false;
     model._resources.push(vertexBuffer);
+    const hasCpuCopy = false;
+    model.statistics.addBuffer(vertexBuffer, hasCpuCopy);
   } else {
     value = [implicitFeatureIds.offset];
   }

@@ -1,4 +1,4 @@
-## Updating the Draco JavaScript Decoder Module
+# Updating the Draco JavaScript Decoder Module
 
 We use a custom build of the [Draco](https://github.com/google/draco) decoder JavaScript module to allow for IE11 compatibility.
 
@@ -9,9 +9,9 @@ We use a custom build of the [Draco](https://github.com/google/draco) decoder Ja
 3. [Download and install Emscripten](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 4. In a seperate directory, follow the [CMake JavaScript Encoder/Decoder Instructions](https://github.com/google/draco#javascript-encoderdecoder). When running cmake, specify `"Unix Makefiles"` as the target, and including the flag `-DIE_COMPATIBLE=true`, ie.
 
-```terminal
-cmake ..\path\to\draco -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE="absolute\path\emscripten\cmake\Modules\Platforms\Emscripten.cmake" -DIE_COMPATIBLE=true
-```
+   ```terminal
+   cmake ..\path\to\draco -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE="absolute\path\emscripten\cmake\Modules\Platforms\Emscripten.cmake" -DIE_COMPATIBLE=true
+   ```
 
 5. In that directory, build with `make -j`.
 6. Copy the output `draco_decoder.js` file to the `Source\ThirdParty\Workers` directory.

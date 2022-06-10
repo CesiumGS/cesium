@@ -6,7 +6,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -64,6 +63,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
  * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
+ * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
+ * @param {Axis} [options.modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
@@ -103,6 +104,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -164,7 +166,8 @@ function Cesium3DTileset(options) {
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
   this._extensionsUsed = undefined;
   this._extensions = undefined;
-  this._gltfUpAxis = undefined;
+  this._modelUpAxis = undefined;
+  this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
   this._selectedTiles = [];
@@ -278,8 +281,6 @@ function Cesium3DTileset(options) {
   this._initialTilesLoaded = false;
 
   this._tileDebugLabels = undefined;
-
-  this._readyPromise = defer();
 
   this._classificationType = options.classificationType;
 
@@ -484,7 +485,7 @@ function Cesium3DTileset(options) {
    *         return;
    *     }
    *
-   *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
    * });
    */
   this.loadProgress = new Event();
@@ -592,8 +593,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading tile: ' + error.url);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading tile: ${error.url}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.tileFailed = new Event();
@@ -772,6 +773,8 @@ function Cesium3DTileset(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -966,7 +969,7 @@ function Cesium3DTileset(options) {
 
   const that = this;
   let resource;
-  Promise.resolve(options.url)
+  this._readyPromise = Promise.resolve(options.url)
     .then(function (url) {
       let basePath;
       resource = Resource.createIfNeeded(url);
@@ -987,22 +990,36 @@ function Cesium3DTileset(options) {
       return Cesium3DTileset.loadJson(resource);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
+      if (that.isDestroyed()) {
+        return;
+      }
+
       that._root = that.loadTileset(resource, tilesetJson);
+
+      // Handle legacy gltfUpAxis option
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
         ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
         : Axis.Y;
+      const modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
+      const modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
+
       const asset = tilesetJson.asset;
       that._asset = asset;
       that._properties = tilesetJson.properties;
       that._geometricError = tilesetJson.geometricError;
       that._extensionsUsed = tilesetJson.extensionsUsed;
       that._extensions = tilesetJson.extensions;
-      that._gltfUpAxis = gltfUpAxis;
+      that._modelUpAxis = modelUpAxis;
+      that._modelForwardAxis = modelForwardAxis;
       that._extras = tilesetJson.extras;
 
       const extras = asset.extras;
@@ -1050,10 +1067,7 @@ function Cesium3DTileset(options) {
         that._initialClippingPlanesOriginMatrix
       );
 
-      that._readyPromise.resolve(that);
-    })
-    .catch(function (error) {
-      that._readyPromise.reject(error);
+      return that;
     });
 }
 
@@ -1153,8 +1167,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    *
    * @example
-   * console.log('Maximum building height: ' + tileset.properties.height.maximum);
-   * console.log('Minimum building height: ' + tileset.properties.height.minimum);
+   * console.log(`Maximum building height: ${tileset.properties.height.maximum}`);
+   * console.log(`Minimum building height: ${tileset.properties.height.minimum}`);
    *
    * @see Cesium3DTileFeature#getProperty
    * @see Cesium3DTileFeature#setProperty
@@ -1214,7 +1228,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -1608,8 +1622,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The total amount of GPU memory in bytes used by the tileset. This value is estimated from
-   * geometry, texture, and batch table textures of loaded tiles. For point clouds, this value also
-   * includes per-point metadata.
+   * geometry, texture, batch table textures, and binary metadata of loaded tiles.
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -2284,7 +2297,11 @@ function requestContent(tileset, tile) {
 
   tileset._requestedTilesInFlight.push(tile);
 
-  tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
+  tile.contentReadyToProcessPromise
+    .then(addToProcessingQueue(tileset, tile))
+    .catch(function (e) {
+      // Any error will propagate through contentReadyPromise and will be handled below
+    });
   tile.contentReadyPromise
     .then(handleTileSuccess(tileset, tile))
     .catch(handleTileFailure(tileset, tile));
@@ -2399,6 +2416,11 @@ function addToProcessingQueue(tileset, tile) {
 
 function handleTileFailure(tileset, tile) {
   return function (error) {
+    if (tile._contentState !== Cesium3DTileContentState.FAILED) {
+      // If the tile has not failed, the request has been rejected this frame, but will be retried. Do not bubble up the error.
+      return;
+    }
+
     const url = tile._contentResource.url;
     const message = defined(error.message) ? error.message : error.toString();
     if (tileset.tileFailed.numberOfListeners > 0) {
@@ -2414,8 +2436,13 @@ function handleTileFailure(tileset, tile) {
 }
 
 function handleTileSuccess(tileset, tile) {
-  return function () {
+  return function (content) {
     --tileset._statistics.numberOfTilesProcessing;
+
+    if (!defined(content)) {
+      // A request was cancelled. Do not update successful statistics. The request will be retried.
+      return;
+    }
 
     if (!tile.hasTilesetContent && !tile.hasImplicitContent) {
       // RESEARCH_IDEA: ability to unload tiles (without content) for an
