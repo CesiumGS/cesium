@@ -1256,10 +1256,6 @@ ModelExperimental.prototype.update = function (frameState) {
     this._attenuation = this.pointCloudShading.attenuation;
   }
 
-  // Update the image-based lighting for this model to load any texture uniforms
-  // it uses (specular maps) and to detect any changes in parameters.
-  this._imageBasedLighting.update(frameState);
-
   const context = frameState.context;
   this._defaultTexture = context.defaultTexture;
 
@@ -1268,81 +1264,24 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
-  // Some of the other features (e.g. image-based lighting, clipping planes)
-  // depend on the model matrix being updated for the current height reference,
-  // so update it first.
-  if (this._heightDirty) {
-    updateClamping(this);
-    this._heightDirty = false;
-    this._updateModelMatrix = true;
-  }
-
-  const modelMatrix = defined(this._clampedModelMatrix)
-    ? this._clampedModelMatrix
-    : this.modelMatrix;
-
-  const referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
-  if (
-    this._imageBasedLighting.useSphericalHarmonicCoefficients ||
-    this._imageBasedLighting.useSpecularEnvironmentMaps
-  ) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
-
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    this._iblReferenceFrameMatrix = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      this._iblReferenceFrameMatrix
-    );
-  }
-
-  // This value will have been updated after calling imageBasedLighting.update()
-  // earlier in the function.
+  // Update the image-based lighting for this model to load any texture uniforms
+  // it uses (specular maps) and to detect any changes in parameters.
+  this._imageBasedLighting.update(frameState);
   if (this._imageBasedLighting.shouldRegenerateShaders) {
     this.resetDrawCommands();
   }
 
   // Update the clipping planes collection for this model to detect any changes.
-  let currentClippingPlanesState = 0;
   if (this.isClippingEnabled()) {
     if (this._clippingPlanes.owner === this) {
       this._clippingPlanes.update(frameState);
     }
 
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      clippingPlanesMatrix
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
-      this._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix
-    );
-    this._clippingPlanesMatrix = Matrix4.inverseTranspose(
-      clippingPlanesMatrix,
-      this._clippingPlanesMatrix
-    );
-
-    currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
-  }
-
-  if (currentClippingPlanesState !== this._clippingPlanesState) {
-    this.resetDrawCommands();
-    this._clippingPlanesState = currentClippingPlanesState;
+    const currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
+    if (currentClippingPlanesState !== this._clippingPlanesState) {
+      this.resetDrawCommands();
+      this._clippingPlanesState = currentClippingPlanesState;
+    }
   }
 
   if (frameState.mode !== this._sceneMode) {
@@ -1390,6 +1329,23 @@ ModelExperimental.prototype.update = function (frameState) {
     this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
   }
 
+  // Many features (e.g. image-based lighting, clipping planes) depend on the model
+  // matrix being updated for the current height reference, so update it first.
+  if (
+    this._updateModelMatrix ||
+    this._heightDirty ||
+    this._minimumPixelSize !== 0.0
+  ) {
+    updateClamping(this);
+    this._heightDirty = false;
+    this._updateModelMatrix = true;
+  }
+
+  const modelMatrix = defined(this._clampedModelMatrix)
+    ? this._clampedModelMatrix
+    : this.modelMatrix;
+
+  // Update bounding sphere, scale, and scene graph model matrix
   if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
     this._clampedScale = defined(this._maximumScale)
       ? Math.min(this._scale, this._maximumScale)
@@ -1406,8 +1362,12 @@ ModelExperimental.prototype.update = function (frameState) {
     this._updateModelMatrix = false;
   }
 
+  const referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
+  updateReferenceMatrices(this, referenceMatrix, frameState);
+
   // This check occurs after the bounding sphere has been updated so that
-  // to account for the modifications from the clamp-to-ground setting.
+  // zooming to the bounding sphere can account for any modifications
+  // from the clamp-to-ground setting.
   const model = this;
   if (!model._ready) {
     model._completeLoad(model, frameState);
@@ -1480,6 +1440,7 @@ function scaleInPixels(positionWC, radius, frameState) {
 }
 
 const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 function getScale(model, modelMatrix, frameState) {
   let scale = model.scale;
@@ -1525,8 +1486,6 @@ function getScale(model, modelMatrix, frameState) {
     ? Math.min(model.maximumScale, scale)
     : scale;
 }
-
-const scratchCartographic = new Cartographic();
 
 function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
   return function (clampedPosition) {
@@ -1606,6 +1565,51 @@ function updateClamping(model) {
     scratchCartographic.height = height;
     ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
     callback(scratchPosition);
+  }
+}
+
+function updateReferenceMatrices(model, referenceMatrix, frameState) {
+  const context = frameState.context;
+  const ibl = model._imageBasedLighting;
+  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
+    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+    iblReferenceFrameMatrix4 = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      iblReferenceFrameMatrix4
+    );
+    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+      iblReferenceFrameMatrix4,
+      iblReferenceFrameMatrix3
+    );
+    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+      iblReferenceFrameMatrix3,
+      iblReferenceFrameMatrix3
+    );
+    model._iblReferenceFrameMatrix = Matrix3.transpose(
+      iblReferenceFrameMatrix3,
+      model._iblReferenceFrameMatrix
+    );
+  }
+
+  if (model.isClippingEnabled()) {
+    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
+    clippingPlanesMatrix = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      clippingPlanesMatrix
+    );
+    clippingPlanesMatrix = Matrix4.multiply(
+      clippingPlanesMatrix,
+      model._clippingPlanes.modelMatrix,
+      clippingPlanesMatrix
+    );
+    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
+      clippingPlanesMatrix,
+      model._clippingPlanesMatrix
+    );
   }
 }
 

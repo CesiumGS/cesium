@@ -3,6 +3,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cesium3DTileStyle,
+  CesiumTerrainProvider,
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
@@ -1290,18 +1291,21 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
+          heightReference: HeightReference.NONE,
           scene: sceneWithMockGlobe,
         },
         sceneWithMockGlobe
       ).then(function (model) {
-        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
-        expect(model._clampedModelMatrix).toBeDefined();
-
-        model.heightReference = HeightReference.NONE;
-        expect(model._heightDirty).toBe(true);
         expect(model.heightReference).toEqual(HeightReference.NONE);
         expect(model._clampedModelMatrix).toBeUndefined();
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model._heightDirty).toBe(true);
+
+        sceneWithMockGlobe.renderForSpecs();
+        expect(model._heightDirty).toBe(false);
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._clampedModelMatrix).toBeDefined();
       });
     });
 
@@ -1344,7 +1348,7 @@ describe(
       });
     });
 
-    it("updates the callback when the height reference changes", function () {
+    it("updates height reference callback when the height reference changes", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1371,7 +1375,7 @@ describe(
       });
     });
 
-    it("updates the callback when the model matrix changes", function () {
+    it("updates height reference callback when the model matrix changes", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1385,18 +1389,21 @@ describe(
       ).then(function (model) {
         expect(sceneWithMockGlobe.globe.callback).toBeDefined();
 
+        const matrix = Matrix4.clone(model.modelMatrix);
         const position = Cartesian3.fromDegrees(-73.0, 40.0);
-        model.modelMatrix[12] = position.x;
-        model.modelMatrix[13] = position.y;
-        model.modelMatrix[14] = position.z;
+        matrix[12] = position.x;
+        matrix[13] = position.y;
+        matrix[14] = position.z;
 
+        model.modelMatrix = matrix;
         sceneWithMockGlobe.renderForSpecs();
+
         expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
         expect(sceneWithMockGlobe.globe.callback).toBeDefined();
       });
     });
 
-    it("callback updates the position", function () {
+    it("height reference callback updates the position", function () {
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1418,6 +1425,103 @@ describe(
         const ellipsoid = sceneWithMockGlobe.globe.ellipsoid;
         const cartographic = ellipsoid.cartesianToCartographic(position);
         expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+      });
+    });
+
+    it("height reference accounts for change in terrain provider", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model._heightDirty).toBe(false);
+        const terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+          requestVertexNormals: true,
+        });
+        sceneWithMockGlobe.terrainProvider = terrainProvider;
+
+        expect(model._heightDirty).toBe(true);
+        sceneWithMockGlobe.terrainProvider = undefined;
+      });
+    });
+
+    it("throws when initializing height reference with no scene", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: undefined,
+        },
+        sceneWithMockGlobe
+      ).catch(function (error) {
+        expect(error.message).toEqual(
+          "Height reference is not supported without a scene and globe."
+        );
+      });
+    });
+
+    it("throws when changing height reference with no scene", function () {
+      expect(function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(-72.0, 40.0)
+            ),
+          },
+          sceneWithMockGlobe
+        ).then(function (model) {
+          expect(function () {
+            model.heightReference = HeightReference.CLAMP_TO_GROUND;
+            sceneWithMockGlobe.renderForSpecs();
+          }).toThrowDeveloperError();
+        });
+      });
+    });
+
+    it("throws when initializing height reference with no globe", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: scene,
+        },
+        scene
+      ).catch(function (error) {
+        expect(error.message).toEqual(
+          "Height reference is not supported without a scene and globe."
+        );
+      });
+    });
+
+    it("throws when changing height reference with no globe", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          scene: scene,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.heightReference = HeightReference.CLAMP_TO_GROUND;
+          scene.renderForSpecs();
+        }).toThrowDeveloperError();
       });
     });
 
@@ -2245,7 +2349,7 @@ describe(
       ).then(function (model) {
         expect(sceneWithMockGlobe.globe.callback).toBeDefined();
 
-        model.destroy();
+        sceneWithMockGlobe.primitives.remove(model);
         expect(model.isDestroyed()).toBe(true);
         expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
       });
