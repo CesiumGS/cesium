@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.94.3 - 2022-06-10
+
+- Fixed a crash with vector tilesets with lines when clamping to terrain or 3D tiles. [#10447](https://github.com/CesiumGS/cesium/pull/10447)
+
 ### 1.94.2 - 2022-06-03
 
 - This is an npm only release to fix the improperly published 1.94.1.
