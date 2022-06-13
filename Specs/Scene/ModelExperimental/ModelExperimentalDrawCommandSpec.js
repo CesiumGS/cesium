@@ -18,9 +18,11 @@ import {
   ShadowMode,
   StyleCommandsNeeded,
   Transforms,
+  WebGLConstants,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
+  const noColor = new Color(0, 0, 0, 0);
   const scratchModelMatrix = new Matrix4();
   const scratchExpectedMatrix = new Matrix4();
 
@@ -41,6 +43,11 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+    const modelColor = defaultValue(options.color, Color.WHITE);
+    const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+    const silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+
     const resources = {
       model: {
         shadows: ShadowMode.ENABLED,
@@ -48,15 +55,15 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
           _boundingSphere2D: new BoundingSphere(Cartesian3.ZERO, 1.0),
         },
         _projectTo2D: false,
-        color: new Color(1.0, 1.0, 1.0, 1.0),
+        color: modelColor,
         isTranslucent: function () {
-          return false;
+          return modelColor.alpha > 0.0 && modelColor.alpha < 1.0;
         },
         isInvisible: function () {
-          return false;
+          return modelColor.alpha === 0.0;
         },
-        silhouetteSize: 0.0,
-        silhouetteColor: Color.RED,
+        silhouetteSize: silhouetteSize,
+        silhouetteColor: silhouetteColor,
       },
       runtimePrimitive: {
         primitive: {
@@ -152,7 +159,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const drawCommand = new ModelExperimentalDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
-      hasSilhouette: deriveSilhouette,
+      useSilhouetteCommands: deriveSilhouette,
     });
 
     // Derive the 2D commands
@@ -161,6 +168,91 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     return drawCommand;
+  }
+
+  function verifySilhouetteModelCommand(
+    command,
+    stencilReference,
+    modelIsInvisible
+  ) {
+    const renderState = command.renderState;
+
+    // Write the reference value into the stencil buffer.
+    const expectedStencilTest = {
+      enabled: true,
+      frontFunction: WebGLConstants.ALWAYS,
+      backFunction: WebGLConstants.ALWAYS,
+      reference: stencilReference,
+      mask: ~0,
+      frontOperation: {
+        fail: WebGLConstants.KEEP,
+        zFail: WebGLConstants.KEEP,
+        zPass: WebGLConstants.REPLACE,
+      },
+      backOperation: {
+        fail: WebGLConstants.KEEP,
+        zFail: WebGLConstants.KEEP,
+        zPass: WebGLConstants.REPLACE,
+      },
+    };
+
+    expect(renderState.stencilTest).toEqual(expectedStencilTest);
+
+    if (modelIsInvisible) {
+      const expectedColorMask = {
+        red: false,
+        green: false,
+        blue: false,
+        alpha: false,
+      };
+
+      expect(renderState.colorMask).toEqual(expectedColorMask);
+      expect(renderState.depthMask).toBe(false);
+    }
+  }
+
+  function verifySilhouetteColorCommand(
+    command,
+    stencilReference,
+    silhouetteIsTranslucent
+  ) {
+    const renderState = command.renderState;
+    expect(renderState.depthTest.enabled).toBe(true);
+    expect(renderState.cull.enabled).toBe(false);
+
+    if (silhouetteIsTranslucent) {
+      expect(command.pass).toBe(Pass.TRANSLUCENT);
+      expect(renderState.depthMask).toBe(false);
+      // The RenderState constructor adds an additional default value
+      // that is not in BlendingState.ALPHA_BLEND.
+      const expectedBlending = clone(BlendingState.ALPHA_BLEND, true);
+      expectedBlending.color = noColor;
+      expect(renderState.blending).toEqual(expectedBlending);
+    }
+
+    // Write the reference value into the stencil buffer.
+    const expectedStencilTest = {
+      enabled: true,
+      frontFunction: WebGLConstants.NOTEQUAL,
+      backFunction: WebGLConstants.NOTEQUAL,
+      reference: stencilReference,
+      mask: ~0,
+      frontOperation: {
+        fail: WebGLConstants.KEEP,
+        zFail: WebGLConstants.KEEP,
+        zPass: WebGLConstants.KEEP,
+      },
+      backOperation: {
+        fail: WebGLConstants.KEEP,
+        zFail: WebGLConstants.KEEP,
+        zPass: WebGLConstants.KEEP,
+      },
+    };
+
+    expect(renderState.stencilTest).toEqual(expectedStencilTest);
+    expect(command.uniformMap.model_silhouettePass()).toEqual(1.0);
+    expect(command.castShadows).toBe(false);
+    expect(command.receiveShadows).toBe(false);
   }
 
   it("throws for undefined command", function () {
@@ -201,7 +293,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     // No other commands should be derived.
     expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._commandList2D.length).toEqual(0);
-    expect(drawCommand.hasSilhouette).toBe(false);
+    expect(drawCommand._useSilhouetteCommands).toBe(false);
   });
 
   it("constructs with silhouette commands", function () {
@@ -210,7 +302,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const drawCommand = new ModelExperimentalDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
-      hasSilhouette: true,
+      useSilhouetteCommands: true,
     });
 
     expect(drawCommand.command).toBe(command);
@@ -220,12 +312,134 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand.modelMatrix).toEqual(command.modelMatrix);
     expect(drawCommand.modelMatrix).not.toBe(command.modelMatrix);
 
-    expect(drawCommand._commandList.length).toEqual(1);
+    expect(drawCommand._useSilhouetteCommands).toBe(true);
+    expect(drawCommand._commandList.length).toEqual(2);
+
+    const silhouetteModelCommand = drawCommand._commandList[0];
+    expect(silhouetteModelCommand).not.toBe(command);
+
+    const stencilReference = 1;
+    verifySilhouetteModelCommand(
+      silhouetteModelCommand,
+      stencilReference,
+      false
+    );
+    const silhouetteColorCommand = drawCommand._commandList[1];
+    verifySilhouetteColorCommand(
+      silhouetteColorCommand,
+      stencilReference,
+      false
+    );
 
     // No other commands should be derived.
     expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._commandList2D.length).toEqual(0);
-    expect(drawCommand.hasSilhouette).toBe(false);
+
+    // Reset so this doesn't interfere with other tests.
+    ModelExperimentalDrawCommand.silhouettesLength = 0;
+  });
+
+  it("constructs silhouette commands correctly for translucent model", function () {
+    const renderResources = mockRenderResources();
+    const command = createDrawCommand({
+      pass: Pass.TRANSLUCENT,
+    });
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+      useSilhouetteCommands: true,
+    });
+
+    expect(drawCommand._useSilhouetteCommands).toBe(true);
+    expect(drawCommand._commandList.length).toEqual(2);
+
+    const silhouetteModelCommand = drawCommand._commandList[0];
+    expect(silhouetteModelCommand).not.toBe(command);
+
+    const stencilReference = 1;
+    verifySilhouetteModelCommand(
+      silhouetteModelCommand,
+      stencilReference,
+      false
+    );
+    const silhouetteColorCommand = drawCommand._commandList[1];
+    verifySilhouetteColorCommand(
+      silhouetteColorCommand,
+      stencilReference,
+      true
+    );
+
+    // Reset so this doesn't interfere with other tests.
+    ModelExperimentalDrawCommand.silhouettesLength = 0;
+  });
+
+  it("constructs silhouette commands correctly for invisible model", function () {
+    const renderResources = mockRenderResources({
+      color: new Color(1.0, 1.0, 1.0, 0.0),
+    });
+    const command = createDrawCommand();
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+      useSilhouetteCommands: true,
+    });
+
+    expect(drawCommand._useSilhouetteCommands).toBe(true);
+    expect(drawCommand._commandList.length).toEqual(2);
+
+    const silhouetteModelCommand = drawCommand._commandList[0];
+    expect(silhouetteModelCommand).not.toBe(command);
+
+    const stencilReference = 1;
+    verifySilhouetteModelCommand(
+      silhouetteModelCommand,
+      stencilReference,
+      true
+    );
+    const silhouetteColorCommand = drawCommand._commandList[1];
+    verifySilhouetteColorCommand(
+      silhouetteColorCommand,
+      stencilReference,
+      false
+    );
+
+    // Reset so this doesn't interfere with other tests.
+    ModelExperimentalDrawCommand.silhouettesLength = 0;
+  });
+
+  it("constructs silhouette commands correctly for translucent silhouette color", function () {
+    const renderResources = mockRenderResources({
+      color: new Color(1.0, 1.0, 1.0, 1.0),
+      silhouetteColor: new Color(1.0, 1.0, 1.0, 0.5),
+    });
+    const command = createDrawCommand();
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+      useSilhouetteCommands: true,
+    });
+
+    expect(drawCommand._useSilhouetteCommands).toBe(true);
+    expect(drawCommand._commandList.length).toEqual(2);
+
+    const silhouetteModelCommand = drawCommand._commandList[0];
+    expect(silhouetteModelCommand).not.toBe(command);
+
+    const stencilReference = 1;
+    verifySilhouetteModelCommand(
+      silhouetteModelCommand,
+      stencilReference,
+      false
+    );
+    const silhouetteColorCommand = drawCommand._commandList[1];
+    verifySilhouetteColorCommand(
+      silhouetteColorCommand,
+      stencilReference,
+      true
+    );
+
+    // Reset so this doesn't interfere with other tests.
+    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("uses opaque command only", function () {
@@ -271,7 +485,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     // The RenderState constructor adds an additional default value
     // that is not in BlendingState.ALPHA_BLEND.
     const expectedBlending = clone(BlendingState.ALPHA_BLEND, true);
-    expectedBlending.color = new Color(0, 0, 0, 0);
+    expectedBlending.color = noColor;
     expect(renderState.blending).toEqual(expectedBlending);
 
     expect(drawCommand._commandList2D.length).toEqual(0);
@@ -305,7 +519,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     // The RenderState constructor adds an additional default value
     // that is not in BlendingState.ALPHA_BLEND.
     const expectedBlending = clone(BlendingState.ALPHA_BLEND, true);
-    expectedBlending.color = new Color(0, 0, 0, 0);
+    expectedBlending.color = noColor;
     expect(renderState.blending).toEqual(expectedBlending);
 
     expect(drawCommand._commandList2D.length).toEqual(0);
@@ -313,7 +527,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   it("doesn't derive translucent command if original command is translucent", function () {
     const renderResources = mockRenderResources({
-      styleCommandsNeeded: StyleCommandsNeeded.ALL_OPAQUE,
+      styleCommandsNeeded: StyleCommandsNeeded.ALL_TRANSLUCENT,
     });
     const command = createDrawCommand({
       pass: Pass.TRANSLUCENT,

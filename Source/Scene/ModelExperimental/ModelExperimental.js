@@ -369,6 +369,24 @@ function selectFeatureTableId(components, model) {
   }
 }
 
+// Returns whether the color alpha state has changed between invisible, translucent, or opaque
+function isColorAlphaDirty(currentColor, previousColor) {
+  if (!defined(currentColor) && !defined(previousColor)) {
+    return false;
+  }
+
+  if (defined(currentColor) !== defined(previousColor)) {
+    return true;
+  }
+
+  const currentAlpha = currentColor.alpha;
+  const previousAlpha = previousColor.alpha;
+  return (
+    Math.floor(currentAlpha) !== Math.floor(previousAlpha) ||
+    Math.ceil(currentAlpha) !== Math.ceil(previousAlpha)
+  );
+}
+
 function initialize(model) {
   const loader = model._loader;
   const resource = model._resource;
@@ -825,15 +843,12 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._silhouetteColor;
     },
     set: function (value) {
-      if (value !== this._silhouetteColor) {
-        const currentAlpha = this._silhouetteColor.alpha;
-        const alphaDirty =
-          (value.alpha === 1.0 && currentAlpha < 1.0) ||
-          (value.alpha !== 1.0 && currentAlpha < 1.0);
+      if (!Color.equals(value, this._silhouetteColor)) {
+        const alphaDirty = isColorAlphaDirty(value, this._silhouetteColor);
         this._silhouetteDirty = this._silhouetteDirty && alphaDirty;
       }
 
-      this._silhouetteColor = value;
+      this._silhouetteColor = Color.clone(value, this._silhouetteColor);
     },
   },
 
@@ -854,8 +869,8 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (value !== this._silhouetteSize) {
         const currentSize = this._silhouetteSize;
         const sizeDirty =
-          (value !== 0 && currentSize === 0) ||
-          (value === 0 && currentSize !== 0);
+          (value > 0.0 && currentSize === 0.0) ||
+          (value === 0.0 && currentSize > 0.0);
         this._silhouetteDirty = this._silhouetteDirty && sizeDirty;
       }
 
@@ -1320,6 +1335,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   updatePointCloudAttenuation(this);
+  updateSilhouette(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
   updateFeatureTables(this, frameState);
@@ -1378,6 +1394,17 @@ function updatePointCloudAttenuation(model) {
   if (model.pointCloudShading.attenuation !== model._attenuation) {
     model.resetDrawCommands();
     model._attenuation = model.pointCloudShading.attenuation;
+  }
+}
+
+function updateSilhouette(model, frameState) {
+  if (model._silhouetteDirty) {
+    // Only rebuild draw commands if silhouettes is supported in the first place.
+    if (supportsSilhouettes(frameState)) {
+      model.resetDrawCommands();
+    }
+
+    model._silhouetteDirty = false;
   }
 }
 
@@ -1747,7 +1774,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
  * @private
  */
 ModelExperimental.prototype.isTranslucent = function () {
-  const color = this._model.color;
+  const color = this.color;
   return defined(color) && color.alpha > 0.0 && color.alpha < 1.0;
 };
 
@@ -1759,7 +1786,7 @@ ModelExperimental.prototype.isTranslucent = function () {
  * @private
  */
 ModelExperimental.prototype.isInvisible = function () {
-  const color = this._model.color;
+  const color = this.color;
   return defined(color) && color.alpha === 0.0;
 };
 

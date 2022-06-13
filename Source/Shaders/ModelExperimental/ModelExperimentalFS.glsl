@@ -79,9 +79,7 @@ void main()
     #endif
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
-    if(model_silhouettePass > 0.0) {
-        silhouetteStage(color);
-    }
+    silhouetteStage(color);
     #endif
 
     gl_FragColor = color;

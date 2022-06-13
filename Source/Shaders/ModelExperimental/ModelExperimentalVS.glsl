@@ -97,9 +97,7 @@ void main()
     geometryStage(attributes, modelView, normal);    
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
-    if(model_silhouettePass > 0.0) {
-        silhouetteStage(attributes);
-    }
+    silhouetteStage(attributes);
     #endif
 
     #ifdef PRIMITIVE_TYPE_POINTS

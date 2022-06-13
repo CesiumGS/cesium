@@ -53,8 +53,10 @@ ModelColorPipelineStage.process = function (
   // Pass the model's color as a uniform. Set the pass type to translucent, if needed.
   const color = model.color;
   const renderStateOptions = renderResources.renderStateOptions;
-  if (color.alpha === 0.0) {
-    // When the model is invisible, disable color and depth writes, but still write into the stencil buffer.
+  if (color.alpha === 0.0 && !model.hasSilhouette(frameState)) {
+    // When the model is invisible, disable color and depth writes, but still
+    // write into the stencil buffer. Only modify if the model does not have
+    // a silhouette.
     renderStateOptions.colorMask = {
       red: false,
       green: false,

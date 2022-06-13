@@ -110,10 +110,12 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
   });
 
+  const useSilhouetteCommands = model.hasSilhouette(frameState);
+
   return new ModelExperimentalDrawCommand({
     primitiveRenderResources: primitiveRenderResources,
     command: command,
-    frameState: frameState,
+    useSilhouetteCommands: useSilhouetteCommands,
   });
 }
 

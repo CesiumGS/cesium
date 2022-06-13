@@ -23,7 +23,7 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
  * @param {Object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
- * @param {Boolean} [options.hasSilhouette=false] Whether the model has a silhouette.
+ * @param {Boolean} [options.useSilhouetteCommands=false] Whether the model has a silhouette.
  * @alias ModelExperimentalDrawCommand
  * @constructor
  *
@@ -34,7 +34,10 @@ function ModelExperimentalDrawCommand(options) {
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
-  const hasSilhouette = defaultValue(options.hasSilhouette, false);
+  const useSilhouetteCommands = defaultValue(
+    options.useSilhouetteCommands,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.command", command);
@@ -59,7 +62,7 @@ function ModelExperimentalDrawCommand(options) {
   this._cullFace = command.renderState.cull.face;
   this._shadows = renderResources.model.shadows;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
-  this._hasSilhouette = hasSilhouette;
+  this._useSilhouetteCommands = useSilhouetteCommands;
 
   this._commandList = [];
   this._commandList2D = [];
@@ -95,7 +98,7 @@ function initialize(drawCommand) {
     }
   }
 
-  rebuildCommandList(drawCommand);
+  buildCommandList(drawCommand);
 }
 
 Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
@@ -293,7 +296,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    *
    * @private
    */
-  hasSilhouette: {
+  /*hasSilhouette: {
     get: function () {
       return this._hasSilhouette;
     },
@@ -308,10 +311,10 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       // The back-face culling settings are affected by silhouettes.
       updateBackFaceCulling(this);
     },
-  },
+  },*/
 });
 
-function rebuildCommandList(drawCommand) {
+function buildCommandList(drawCommand) {
   const commandList = drawCommand._commandList;
   const commandList2D = drawCommand._commandList2D;
   commandList.length = 0;
@@ -319,10 +322,9 @@ function rebuildCommandList(drawCommand) {
 
   // Add opaque and translucent commands depending on the style commands needed.
   const styleCommandsNeeded = drawCommand._styleCommandsNeeded;
-
   const originalCommand = drawCommand._command;
-  if (defined(styleCommandsNeeded)) {
-    const translucentCommand = drawCommand._translucentCommand;
+  const translucentCommand = drawCommand._translucentCommand;
+  if (defined(styleCommandsNeeded) && defined(translucentCommand)) {
     switch (styleCommandsNeeded) {
       case StyleCommandsNeeded.ALL_OPAQUE:
         commandList.push(originalCommand);
@@ -343,7 +345,7 @@ function rebuildCommandList(drawCommand) {
   }
 
   // Derive silhouette commands from the active commands.
-  if (drawCommand._hasSilhouette) {
+  if (drawCommand._useSilhouetteCommands) {
     const length = commandList.length;
     const silhouetteCommands = [];
     const model = drawCommand._model;
@@ -446,11 +448,12 @@ function updateShadows(drawCommand) {
 
 function updateBackFaceCulling(drawCommand) {
   let backFaceCulling = drawCommand.backFaceCulling;
-  const doubleSided = this.runtimePrimitive.primitive.material.doubleSided;
-  const translucent = this._model.isTranslucent();
-  const hasSilhouette = this._hasSilhouette;
+  const doubleSided =
+    drawCommand.runtimePrimitive.primitive.material.doubleSided;
+  const translucent = drawCommand._model.isTranslucent();
+  const useSilhouetteCommands = drawCommand._useSilhouetteCommands;
   backFaceCulling =
-    backFaceCulling && !doubleSided && !translucent && !hasSilhouette;
+    backFaceCulling && !doubleSided && !translucent && !useSilhouetteCommands;
 
   const commandList = getAllCommands(drawCommand);
   const commandLength = commandList.length;
@@ -571,12 +574,20 @@ function derive2DCommand(command) {
   return derivedCommand;
 }
 
-let silhouettesLength = 0;
+/**
+ * Tracks how many silhouettes have been created. This value is used to
+ * assign a reference number to the stencil.
+ *
+ * @type {Number}
+ * @private
+ */
+ModelExperimentalDrawCommand.silhouettesLength = 0;
 
 function deriveSilhouetteModelCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
-  const stencilReference = ++silhouettesLength % 255;
+  const stencilReference =
+    ++ModelExperimentalDrawCommand.silhouettesLength % 255;
   const silhouetteModelCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState);
 
@@ -640,7 +651,7 @@ function deriveSilhouetteColorCommand(command, model) {
     enabled: true,
     frontFunction: WebGLConstants.NOTEQUAL,
     backFunction: WebGLConstants.NOTEQUAL,
-    reference: silhouettesLength,
+    reference: ModelExperimentalDrawCommand.silhouettesLength,
     mask: ~0,
     frontOperation: {
       fail: WebGLConstants.KEEP,
