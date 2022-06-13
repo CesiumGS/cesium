@@ -3,7 +3,6 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -114,9 +113,7 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
 
-  const deferred = defer();
   this._ready = false;
-  this._readyPromise = deferred;
   this._tileCredits = undefined;
 
   const that = this;
@@ -128,23 +125,19 @@ function CesiumTerrainProvider(options) {
   let attribution = "";
   const overallAvailability = [];
   let overallMaxZoom = 0;
-  Promise.resolve(options.url)
-    .then(function (url) {
-      const resource = Resource.createIfNeeded(url);
-      resource.appendForwardSlash();
-      lastResource = resource;
-      layerJsonResource = lastResource.getDerivedResource({
-        url: "layer.json",
-      });
-
-      // ion resources have a credits property we can use for additional attribution.
-      that._tileCredits = resource.credits;
-
-      requestLayerJson();
-    })
-    .catch(function (e) {
-      deferred.reject(e);
+  this._readyPromise = Promise.resolve(options.url).then((url) => {
+    const resource = Resource.createIfNeeded(url);
+    resource.appendForwardSlash();
+    lastResource = resource;
+    layerJsonResource = lastResource.getDerivedResource({
+      url: "layer.json",
     });
+
+    // ion resources have a credits property we can use for additional attribution.
+    that._tileCredits = resource.credits;
+
+    return requestLayerJson();
+  });
 
   function parseMetadataSuccess(data) {
     let message;
@@ -383,7 +376,7 @@ function CesiumTerrainProvider(options) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return Promise.resolve();
+        return Promise.resolve(false);
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -398,7 +391,7 @@ function CesiumTerrainProvider(options) {
         .catch(parseMetadataFailure);
     }
 
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 
   function parseMetadataFailure(data) {
@@ -416,7 +409,7 @@ function CesiumTerrainProvider(options) {
   }
 
   function metadataSuccess(data) {
-    parseMetadataSuccess(data).then(function () {
+    return parseMetadataSuccess(data).then(function () {
       if (defined(metadataError)) {
         return;
       }
@@ -453,7 +446,7 @@ function CesiumTerrainProvider(options) {
       }
 
       that._ready = true;
-      that._readyPromise.resolve(true);
+      return true;
     });
   }
 
@@ -467,13 +460,13 @@ function CesiumTerrainProvider(options) {
         scheme: "tms",
         tiles: ["{z}/{x}/{y}.terrain?v={version}"],
       });
-      return;
+      return true;
     }
     parseMetadataFailure(data);
   }
 
   function requestLayerJson() {
-    Promise.resolve(layerJsonResource.fetchJson())
+    return Promise.resolve(layerJsonResource.fetchJson())
       .then(metadataSuccess)
       .catch(metadataFailure);
   }
@@ -1008,7 +1001,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

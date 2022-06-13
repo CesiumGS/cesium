@@ -1251,13 +1251,13 @@ function loadAsynchronous(primitive, frameState) {
 
     primitive._state = PrimitiveState.CREATING;
 
-    Promise.all(promises)
+    return Promise.all(promises)
       .then(function (results) {
         primitive._createGeometryResults = results;
         primitive._state = PrimitiveState.CREATED;
       })
       .catch(function (error) {
-        setReady(primitive, frameState, PrimitiveState.FAILED, error);
+        return setReady(primitive, frameState, PrimitiveState.FAILED, error);
       });
   } else if (primitive._state === PrimitiveState.CREATED) {
     const transferableObjects = [];
@@ -1290,7 +1290,7 @@ function loadAsynchronous(primitive, frameState) {
     primitive._createGeometryResults = undefined;
     primitive._state = PrimitiveState.COMBINING;
 
-    Promise.resolve(promise)
+    return Promise.resolve(promise)
       .then(function (packedResult) {
         const result = PrimitivePipeline.unpackCombineGeometryResults(
           packedResult
@@ -1313,11 +1313,16 @@ function loadAsynchronous(primitive, frameState) {
           primitive._recomputeBoundingSpheres = true;
           primitive._state = PrimitiveState.COMBINED;
         } else {
-          setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+          return setReady(
+            primitive,
+            frameState,
+            PrimitiveState.FAILED,
+            undefined
+          );
         }
       })
       .catch(function (error) {
-        setReady(primitive, frameState, PrimitiveState.FAILED, error);
+        return setReady(primitive, frameState, PrimitiveState.FAILED, error);
       });
   }
 }
@@ -1380,9 +1385,10 @@ function loadSynchronous(primitive, frameState) {
   if (defined(primitive._geometries) && primitive._geometries.length > 0) {
     primitive._recomputeBoundingSpheres = true;
     primitive._state = PrimitiveState.COMBINED;
-  } else {
-    setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+    return Promise.resolve(result);
   }
+
+  return setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
 }
 
 function recomputeBoundingSpheres(primitive, frameState) {
@@ -2140,9 +2146,9 @@ Primitive.prototype.update = function (frameState) {
     this._state !== PrimitiveState.COMBINED
   ) {
     if (this.asynchronous) {
-      loadAsynchronous(this, frameState);
+      this._readyPromise = loadAsynchronous(this, frameState);
     } else {
-      loadSynchronous(this, frameState);
+      this._readyPromise = loadSynchronous(this, frameState);
     }
   }
 
@@ -2515,17 +2521,19 @@ Primitive.prototype.destroy = function () {
 };
 
 function setReady(primitive, frameState, state, error) {
-  primitive._error = error;
-  primitive._state = state;
-  frameState.afterRender.push(function () {
-    primitive._ready =
-      primitive._state === PrimitiveState.COMPLETE ||
-      primitive._state === PrimitiveState.FAILED;
-    if (!defined(error)) {
-      primitive._readyPromise.resolve(primitive);
-    } else {
-      primitive._readyPromise.reject(error);
-    }
+  return new Promise((resolve, reject) => {
+    primitive._error = error;
+    primitive._state = state;
+    frameState.afterRender.push(function () {
+      primitive._ready =
+        primitive._state === PrimitiveState.COMPLETE ||
+        primitive._state === PrimitiveState.FAILED;
+      if (!defined(error)) {
+        resolve(primitive);
+      } else {
+        reject(error);
+      }
+    });
   });
 }
 export default Primitive;
