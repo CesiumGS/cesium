@@ -316,32 +316,30 @@ DeferredLoading.prototype._process = function (isFirstCall) {
 };
 
 function isZipFile(blob) {
-  const magicBlob = blob.slice(0, Math.min(4, blob.size));
-  const deferred = defer();
-  const reader = new FileReader();
-  reader.addEventListener("load", function () {
-    deferred.resolve(
-      new DataView(reader.result).getUint32(0, false) === 0x504b0304
-    );
+  return new Promise((resolve, reject) => {
+    const magicBlob = blob.slice(0, Math.min(4, blob.size));
+    const reader = new FileReader();
+    reader.addEventListener("load", function () {
+      resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
+    });
+    reader.addEventListener("error", function () {
+      reject(reader.error);
+    });
+    reader.readAsArrayBuffer(magicBlob);
   });
-  reader.addEventListener("error", function () {
-    deferred.reject(reader.error);
-  });
-  reader.readAsArrayBuffer(magicBlob);
-  return deferred.promise;
 }
 
 function readBlobAsText(blob) {
-  const deferred = defer();
-  const reader = new FileReader();
-  reader.addEventListener("load", function () {
-    deferred.resolve(reader.result);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", function () {
+      resolve(reader.result);
+    });
+    reader.addEventListener("error", function () {
+      reject(reader.error);
+    });
+    reader.readAsText(blob);
   });
-  reader.addEventListener("error", function () {
-    deferred.reject(reader.error);
-  });
-  reader.readAsText(blob);
-  return deferred.promise;
 }
 
 function insertNamespaces(text) {
