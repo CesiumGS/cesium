@@ -1,6 +1,5 @@
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -55,7 +54,7 @@ function VRTheWorldTerrainProvider(options) {
 
   this._errorEvent = new Event();
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   this._terrainDataStructure = {
     heightScale: 1.0 / 1000.0,
@@ -124,7 +123,7 @@ function VRTheWorldTerrainProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
+    return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
@@ -142,10 +141,14 @@ function VRTheWorldTerrainProvider(options) {
       undefined,
       requestMetadata
     );
+    return Promise.resolve(e);
   }
 
   function requestMetadata() {
-    that._resource.fetchXML().then(metadataSuccess).catch(metadataFailure);
+    that._readyPromise = that._resource
+      .fetchXML()
+      .then(metadataSuccess)
+      .catch(metadataFailure);
   }
 
   requestMetadata();
@@ -215,12 +218,12 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise.<Boolean>|undefined}
    * @readonly
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
