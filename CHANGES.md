@@ -11,12 +11,17 @@
 - Memory statistics for `ModelExperimental` now appear in the `Cesium3DTilesInspector`. This includes binary metadata memory, which is not counted by `Model`. [#10397](https://github.com/CesiumGS/cesium/pull/10397)
 - Memory statistics for `ResourceCache` (used by `ModelExperimental`) now appear in the `Cesium3DTilesInspector`. [#10413](https://github.com/CesiumGS/cesium/pull/10413)
 - Added support for rendering individual models in 2D / CV using `ModelExperimental`. [#10419](https://github.com/CesiumGS/cesium/pull/10419)
-- Added support for rendering instanced tilesets in 2D / CV using `ModelExperimental`. [#10433](https://github.com/CesiumGS/cesium/pull/10433/)
+- Added support for rendering instanced tilesets in 2D / CV using `ModelExperimental`. [#10433](https://github.com/CesiumGS/cesium/pull/10433)
 - Added `modelUpAxis` and `modelForwardAxis` constructor options to `Cesium3DTileset` [#10439](https://github.com/CesiumGS/cesium/pull/10439)
+- Added `heightReference` to `ModelExperimental`. [#10448](https://github.com/CesiumGS/cesium/pull/10448)
 
 ##### Fixes :wrench:
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
+
+### 1.94.3 - 2022-06-10
+
+- Fixed a crash with vector tilesets with lines when clamping to terrain or 3D tiles. [#10447](https://github.com/CesiumGS/cesium/pull/10447)
 
 ### 1.94.2 - 2022-06-03
 
