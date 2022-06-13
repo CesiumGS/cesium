@@ -4,7 +4,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -212,7 +211,9 @@ function GroundPrimitive(options) {
   this._boundingVolumes2D = [];
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._resolveReadyPromise = undefined;
+  this._rejectReadyPromise = undefined;
+  this._readyPromise = undefined;
 
   this._primitive = undefined;
 
@@ -366,12 +367,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof GroundPrimitive.prototype
-   * @type {Promise.<GroundPrimitive>}
+   * @type {Promise.<GroundPrimitive>|undefined}
    * @readonly
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -914,9 +915,9 @@ GroundPrimitive.prototype.update = function (frameState) {
 
       const error = primitive._error;
       if (!defined(error)) {
-        that._readyPromise.resolve(that);
+        that._readyPromise = Promise.resolve(that);
       } else {
-        that._readyPromise.reject(error);
+        that._readyPromise = Promise.reject(error);
       }
     });
   }

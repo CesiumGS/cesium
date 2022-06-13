@@ -2,7 +2,6 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -196,7 +195,7 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   let tileProtocol = this._tileProtocol;
 

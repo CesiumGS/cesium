@@ -8,7 +8,6 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -349,7 +348,7 @@ function Primitive(options) {
 
   this._createGeometryResults = undefined;
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
@@ -480,12 +479,12 @@ Object.defineProperties(Primitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Primitive.prototype
-   * @type {Promise.<Primitive>}
+   * @type {Promise.<Primitive>|undefined}
    * @readonly
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });

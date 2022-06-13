@@ -2,7 +2,6 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -218,7 +217,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   const metadataResource = resource.getDerivedResource({
     url: "query",
@@ -316,8 +315,8 @@ function GoogleEarthEnterpriseMapsProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
     TileProviderError.handleSuccess(metadataError);
+    return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
@@ -335,21 +334,21 @@ function GoogleEarthEnterpriseMapsProvider(options) {
       undefined,
       requestMetadata
     );
-    that._readyPromise.reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   }
 
   function requestMetadata() {
-    metadataResource
+    return metadataResource
       .fetchText()
       .then(function (text) {
-        metadataSuccess(text);
+        return metadataSuccess(text);
       })
       .catch(function (e) {
-        metadataFailure(e);
+        return metadataFailure(e);
       });
   }
 
-  requestMetadata();
+  this._readyPromise = requestMetadata();
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
@@ -620,12 +619,12 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise.<Boolean>|undefined}
    * @readonly
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

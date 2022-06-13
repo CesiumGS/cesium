@@ -1,7 +1,6 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -193,7 +192,7 @@ function GroundPolylinePrimitive(options) {
   this._zIndex = undefined;
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   this._primitive = undefined;
 
@@ -301,12 +300,12 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof GroundPolylinePrimitive.prototype
-   * @type {Promise.<GroundPolylinePrimitive>}
+   * @type {Promise.<GroundPolylinePrimitive>|undefined}
    * @readonly
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -821,9 +820,9 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
 
       const error = primitive._error;
       if (!defined(error)) {
-        that._readyPromise.resolve(that);
+        that._readyPromise = Promise.resolve(that);
       } else {
-        that._readyPromise.reject(error);
+        that._readyPromise = Promise.reject(error);
       }
     });
   }

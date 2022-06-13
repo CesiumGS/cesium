@@ -6,7 +6,6 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -155,7 +154,7 @@ function ClassificationModel(options) {
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -346,7 +345,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -1187,7 +1186,7 @@ ClassificationModel.prototype.update = function (frameState) {
     const model = this;
     frameState.afterRender.push(function () {
       model._ready = true;
-      model._readyPromise.resolve(model);
+      return Promise.resolve(model);
     });
     return;
   }

@@ -1,7 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -78,13 +77,13 @@ function TileMapServiceImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  const deferred = defer();
-  UrlTemplateImageryProvider.call(this, deferred.promise);
+  this._readyPromise = undefined;
+
+  UrlTemplateImageryProvider.call(this, this._readyPromise);
 
   this._tmsResource = undefined;
   this._xmlResource = undefined;
   this._options = options;
-  this._deferred = deferred;
   this._metadataError = undefined;
 
   this._metadataSuccess = this._metadataSuccess.bind(this);
@@ -103,10 +102,10 @@ function TileMapServiceImageryProvider(options) {
         url: "tilemapresource.xml",
       });
 
-      that._requestMetadata();
+      return that._requestMetadata();
     })
     .catch(function (e) {
-      deferred.reject(e);
+      return Promise.reject(new RuntimeError(e));
     });
 }
 
@@ -178,7 +177,6 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
   const tilesetsList = []; //list of TileSets
   const xmlResource = this._xmlResource;
   let metadataError = this._metadataError;
-  const deferred = this._deferred;
   const requestMetadata = this._requestMetadata;
 
   // Allowing options properties (already copied to that) to override XML values
@@ -217,7 +215,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
       requestMetadata
     );
     if (!metadataError.retry) {
-      deferred.reject(new RuntimeError(message));
+      return Promise.reject(message);
     }
     this._metadataError = metadataError;
     return;
@@ -275,7 +273,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
         requestMetadata
       );
       if (!metadataError.retry) {
-        deferred.reject(new RuntimeError(message));
+        return Promise.reject(message);
       }
       this._metadataError = metadataError;
       return;
@@ -353,7 +351,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
     url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
-  deferred.resolve({
+  return Promise.resolve({
     url: templateResource,
     tilingScheme: tilingScheme,
     rectangle: rectangle,
@@ -392,7 +390,7 @@ TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
     url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
-  this._deferred.resolve({
+  return Promise.resolve({
     url: templateResource,
     tilingScheme: tilingScheme,
     rectangle: rectangle,

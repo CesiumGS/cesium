@@ -1,7 +1,6 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -163,7 +162,7 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
@@ -323,7 +322,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -1290,10 +1289,9 @@ ClassificationPrimitive.prototype.update = function (frameState) {
 
       const error = primitive._error;
       if (!defined(error)) {
-        that._readyPromise.resolve(that);
-      } else {
-        that._readyPromise.reject(error);
+        return Promise.resolve(that);
       }
+      return Promise.reject(error);
     });
   }
 

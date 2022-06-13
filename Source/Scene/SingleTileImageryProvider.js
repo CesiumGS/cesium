@@ -1,6 +1,5 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -153,7 +152,7 @@ function SingleTileImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
+  this._readyPromise = undefined;
 
   let credit = options.credit;
   if (typeof credit === "string") {
@@ -169,7 +168,7 @@ function SingleTileImageryProvider(options) {
     that._tileWidth = image.width;
     that._tileHeight = image.height;
     that._ready = true;
-    that._readyPromise.resolve(true);
+    that._readyPromise = Promise.resolve(true);
     TileProviderError.handleSuccess(that._errorEvent);
   }
 
@@ -187,7 +186,7 @@ function SingleTileImageryProvider(options) {
       e
     );
     if (!error.retry) {
-      that._readyPromise.reject(new RuntimeError(message));
+      that._readyPromise = Promise.reject(new RuntimeError(message));
     }
   }
 
