@@ -23,7 +23,6 @@ import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
-import SilhouettePipelineStage from "./SilhouettePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -215,8 +214,6 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
   }
-
-  pipelineStages.push(SilhouettePipelineStage);
 
   // These stages are always run to ensure structs
   // are declared to avoid compilation errors.

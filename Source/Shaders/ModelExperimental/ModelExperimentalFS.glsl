@@ -78,8 +78,10 @@ void main()
     modelClippingPlanesStage(color);
     #endif
 
-    #ifdef HAS_SILHOUETTE
-    silhouetteStage(color);
+    #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
+    if(model_silhouettePass > 0.0) {
+        silhouetteStage(color);
+    }
     #endif
 
     gl_FragColor = color;
