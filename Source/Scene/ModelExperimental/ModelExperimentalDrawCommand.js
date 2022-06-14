@@ -612,8 +612,9 @@ function deriveSilhouetteColorCommand(command, model) {
   renderState.depthTest.enabled = true;
   renderState.cull.enabled = false;
 
-  // This accounts for translucent model color, since ModelColorPipelineStage
-  // sets the pass to translucent.
+  // Render the silhouette in the translucent pass if the command is translucent
+  // or if the silhouette color is translucent. This accounts for translucent
+  // model color, since ModelColorPipelineStage sets the pass to translucent.
   const silhouetteTranslucent =
     command.pass === Pass.TRANSLUCENT || model.silhouetteColor.alpha < 1.0;
   if (silhouetteTranslucent) {

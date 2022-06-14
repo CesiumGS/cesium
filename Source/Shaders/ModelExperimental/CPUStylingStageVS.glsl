@@ -4,9 +4,15 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
     // Only render translucent features in the translucent pass (if the style or the original command has translucency).
     if (czm_pass == czm_passTranslucent && !styleTranslucent && !model_commandTranslucent)
     {
+        // If the model has a translucent silhouette, it needs to render during the silhouette color command,
+        // (i.e. the command where model_silhouettePass = true), even if the model isn't translucent.
+        #ifdef HAS_SILHOUETTE
+        positionMC *= model_silhouettePass;
+        #else
         positionMC *= 0.0;
+        #endif
     }
-    // If the current pass is not the transluceny pass and the style is not translucent, don't rendeer the feature.
+    // If the current pass is not the transluceny pass and the style is not translucent, don't render the feature.
     else if (czm_pass != czm_passTranslucent && styleTranslucent)
     {
         positionMC *= 0.0;
