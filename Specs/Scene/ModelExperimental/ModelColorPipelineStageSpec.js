@@ -92,6 +92,9 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       color: Color.RED.withAlpha(0.0),
       colorBlendMode: ColorBlendMode.MIX,
       colorBlendAmount: 0.25,
+      hasSilhouette: function () {
+        return false;
+      },
     };
     const defaultAlphaOptions = new ModelAlphaOptions();
     defaultAlphaOptions.pass = Pass.OPAQUE;

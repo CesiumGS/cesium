@@ -186,10 +186,8 @@ export default function ModelExperimental(options) {
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-  this._silhouetteColor = this.silhouetteColor = defaultValue(
-    options.silhouetteColor,
-    Color.RED
-  );
+  const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+  this._silhouetteColor = Color.clone(silhouetteColor);
   this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
   this._silhouetteDirty = false;
 
@@ -845,7 +843,7 @@ Object.defineProperties(ModelExperimental.prototype, {
     set: function (value) {
       if (!Color.equals(value, this._silhouetteColor)) {
         const alphaDirty = isColorAlphaDirty(value, this._silhouetteColor);
-        this._silhouetteDirty = this._silhouetteDirty && alphaDirty;
+        this._silhouetteDirty = this._silhouetteDirty || alphaDirty;
       }
 
       this._silhouetteColor = Color.clone(value, this._silhouetteColor);
@@ -871,7 +869,7 @@ Object.defineProperties(ModelExperimental.prototype, {
         const sizeDirty =
           (value > 0.0 && currentSize === 0.0) ||
           (value === 0.0 && currentSize > 0.0);
-        this._silhouetteDirty = this._silhouetteDirty && sizeDirty;
+        this._silhouetteDirty = this._silhouetteDirty || sizeDirty;
       }
 
       this._silhouetteSize = value;

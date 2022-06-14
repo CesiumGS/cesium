@@ -54,9 +54,9 @@ ModelColorPipelineStage.process = function (
   const color = model.color;
   const renderStateOptions = renderResources.renderStateOptions;
   if (color.alpha === 0.0 && !model.hasSilhouette(frameState)) {
-    // When the model is invisible, disable color and depth writes, but still
-    // write into the stencil buffer. Only modify if the model does not have
-    // a silhouette.
+    // When the model is invisible, only disable the color and depth writes
+    // if the model does not have a silhouette. Otherwise, the silhouette
+    // will not render.
     renderStateOptions.colorMask = {
       red: false,
       green: false,

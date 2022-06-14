@@ -854,7 +854,7 @@ describe(
         { gltf: pointCloudUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
-        const commandList = scene.frameState;
+        const commandList = scene.frameState.commandList;
         let i, command;
         for (i = 0; i < commandList.length; i++) {
           expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
@@ -879,7 +879,7 @@ describe(
         ).then(function (model) {
           let i;
           scene.renderForSpecs();
-          const commandList = scene.frameState;
+          const commandList = scene.frameState.commandList;
           for (i = 0; i < commandList.length; i++) {
             expect(commandList[i].debugShowBoundingVolume).toBe(true);
           }
@@ -1477,21 +1477,20 @@ describe(
     });
 
     it("throws when changing height reference with no scene", function () {
-      expect(function () {
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            sceneWithMockGlobe.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.NONE,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(function () {
+          model.heightReference = HeightReference.CLAMP_TO_GROUND;
+          sceneWithMockGlobe.renderForSpecs();
+        }).toThrowDeveloperError();
       });
     });
 
@@ -1528,6 +1527,33 @@ describe(
           model.heightReference = HeightReference.CLAMP_TO_GROUND;
           scene.renderForSpecs();
         }).toThrowDeveloperError();
+      });
+    });
+
+    it("initializes with model color", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, color: Color.BLACK },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing model color works", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.color = Color.BLACK;
+        verifyRender(model, false);
+
+        model.color = Color.RED;
+        verifyRender(model, true);
+
+        model.color = undefined;
+        verifyRender(model, true);
       });
     });
 
@@ -1954,13 +1980,8 @@ describe(
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
-
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+        verifyRender(model, false, {
+          zoomToModel: false,
         });
       });
     });
@@ -1974,13 +1995,8 @@ describe(
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
-
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
       });
     });
@@ -1994,19 +2010,14 @@ describe(
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
-
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+        verifyRender(model, false, {
+          zoomToModel: false,
         });
 
         model.color = new Color(0, 0, 1.0, 0.5);
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
       });
     });
@@ -2020,19 +2031,14 @@ describe(
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
-
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
 
         model.backFaceCulling = true;
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+        verifyRender(model, false, {
+          zoomToModel: false,
         });
       });
     });
@@ -2043,30 +2049,24 @@ describe(
           gltf: boxBackFaceCullingUrl,
           backFaceCulling: false,
           offset: boxBackFaceCullingOffset,
+          color: new Color(0, 0, 1.0, 0.5),
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
-
-        model.color = new Color(0, 0, 1.0, 0.5);
-
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
 
         model.backFaceCulling = true;
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
 
         model.backFaceCulling = false;
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
       });
     });
