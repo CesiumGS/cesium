@@ -11,7 +11,7 @@ const defaultCredit = new Credit(
 );
 
 /**
- * @typedef {Object} MapboxStyleImageryProvider.ConstructorOptions
+>>> @typedef {Object} MapboxStyleImageryProvider.ConstructorOptions
  *
  * Initialization options for the MapboxStyleImageryProvider constructor
  *
