@@ -870,6 +870,10 @@ Object.defineProperties(ModelExperimental.prototype, {
           (value > 0.0 && currentSize === 0.0) ||
           (value === 0.0 && currentSize > 0.0);
         this._silhouetteDirty = this._silhouetteDirty || sizeDirty;
+
+        // Back-face culling needs to be updated in case the silhouette size
+        // is greater than zero.
+        this._backFaceCullingDirty = this._backFaceCullingDirty || sizeDirty;
       }
 
       this._silhouetteSize = value;
@@ -1397,7 +1401,7 @@ function updatePointCloudAttenuation(model) {
 
 function updateSilhouette(model, frameState) {
   if (model._silhouetteDirty) {
-    // Only rebuild draw commands if silhouettes is supported in the first place.
+    // Only rebuild draw commands if silhouettes are supported in the first place.
     if (supportsSilhouettes(frameState)) {
       model.resetDrawCommands();
     }

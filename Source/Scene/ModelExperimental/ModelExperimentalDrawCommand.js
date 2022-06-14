@@ -23,7 +23,7 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
  * @param {Object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
- * @param {Boolean} [options.useSilhouetteCommands=false] Whether the model has a silhouette.
+ * @param {Boolean} [options.useSilhouetteCommands=false] Whether the model has a silhouette and needs to derive silhouette commands.
  * @alias ModelExperimentalDrawCommand
  * @constructor
  *
@@ -287,31 +287,6 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
       updateShowBoundingVolume(this);
     },
   },
-
-  /**
-   * Configures the draw command for drawing silhouettes.
-   *
-   * @memberof ModelExperimentalDrawCommand.prototype
-   * @type {Boolean}
-   *
-   * @private
-   */
-  /*hasSilhouette: {
-    get: function () {
-      return this._hasSilhouette;
-    },
-    set: function (value) {
-      if (this._hasSilhouette === value) {
-        return;
-      }
-
-      this._hasSilhouette = value;
-      rebuildCommandList(this);
-
-      // The back-face culling settings are affected by silhouettes.
-      updateBackFaceCulling(this);
-    },
-  },*/
 });
 
 function buildCommandList(drawCommand) {
@@ -589,7 +564,7 @@ function deriveSilhouetteModelCommand(command, model) {
   const stencilReference =
     ++ModelExperimentalDrawCommand.silhouettesLength % 255;
   const silhouetteModelCommand = DrawCommand.shallowClone(command);
-  let renderState = clone(command.renderState);
+  let renderState = clone(command.renderState, true);
 
   // Write the reference value into the stencil buffer.
   renderState.stencilTest = {
@@ -631,13 +606,14 @@ function deriveSilhouetteModelCommand(command, model) {
 function deriveSilhouetteColorCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
+  const stencilReference = ModelExperimentalDrawCommand.silhouettesLength % 255;
   const silhouetteColorCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState, true);
   renderState.depthTest.enabled = true;
   renderState.cull.enabled = false;
 
-  // If the model's color is translucent, then it will have been accounted
-  // for in ModelColorPipelineStage.
+  // This accounts for translucent model color, since ModelColorPipelineStage
+  // sets the pass to translucent.
   const silhouetteTranslucent =
     command.pass === Pass.TRANSLUCENT || model.silhouetteColor.alpha < 1.0;
   if (silhouetteTranslucent) {
@@ -651,7 +627,7 @@ function deriveSilhouetteColorCommand(command, model) {
     enabled: true,
     frontFunction: WebGLConstants.NOTEQUAL,
     backFunction: WebGLConstants.NOTEQUAL,
-    reference: ModelExperimentalDrawCommand.silhouettesLength,
+    reference: stencilReference,
     mask: ~0,
     frontOperation: {
       fail: WebGLConstants.KEEP,
