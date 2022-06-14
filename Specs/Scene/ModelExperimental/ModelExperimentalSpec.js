@@ -22,6 +22,7 @@ import {
   ModelExperimental,
   ModelExperimentalSceneGraph,
   ModelFeature,
+  Pass,
   PrimitiveType,
   Resource,
   ResourceCache,
@@ -185,7 +186,7 @@ describe(
       const modelHasIndices = defaultValue(options.hasIndices, true);
       const targetScene = defaultValue(options.scene, scene);
 
-      const commandList = targetScene.frameState;
+      const commandList = targetScene.frameState.commandList;
       const commandCounts = [];
       let i, command;
 
@@ -779,7 +780,7 @@ describe(
           { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
           scene
         ).then(function (model) {
-          const commandList = scene.frameState;
+          const commandList = scene.frameState.commandList;
           const commandCounts = [];
           let i, command;
           scene.renderForSpecs();
@@ -854,16 +855,19 @@ describe(
         { gltf: pointCloudUrl, enableDebugWireframe: true },
         scene
       ).then(function (model) {
+        let i;
+        scene.renderForSpecs();
         const commandList = scene.frameState.commandList;
-        let i, command;
         for (i = 0; i < commandList.length; i++) {
-          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          const command = commandList[i];
+          expect(command.primitiveType).toBe(PrimitiveType.POINTS);
           expect(command.vertexArray.indexBuffer).toBeUndefined();
         }
 
         model.debugWireframe = true;
         for (i = 0; i < commandList.length; i++) {
-          expect(commandList[i].primitiveType).toBe(PrimitiveType.POINTS);
+          const command = commandList[i];
+          expect(command.primitiveType).toBe(PrimitiveType.POINTS);
           expect(command.vertexArray.indexBuffer).toBeUndefined();
         }
       });
@@ -1554,6 +1558,225 @@ describe(
 
         model.color = undefined;
         verifyRender(model, true);
+      });
+    });
+
+    it("invisible model doesn't render", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, color: Color.fromAlpha(Color.BLACK, 0.0) },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+
+        // No commands should have been submitted
+        const commands = scene.frameState.commandList;
+        expect(commands.length).toBe(0);
+      });
+    });
+
+    it("initializes with silhouette size", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.OPAQUE);
+      });
+    });
+
+    it("changing silhouette size works", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(1);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+
+        model.silhouetteSize = 1.0;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.OPAQUE);
+
+        model.silhouetteSize = 0.0;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(1);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+      });
+    });
+
+    it("silhouette works with translucent color", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          silhouetteSize: 1.0,
+          silhouetteColor: Color.fromAlpha(Color.GREEN, 0.5),
+        },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("silhouette is disabled by invisible color", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.OPAQUE);
+
+        model.silhouetteColor = Color.fromAlpha(Color.GREEN, 0.0);
+        scene.renderForSpecs();
+        expect(commands.length).toBe(1);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+        expect(commands[0].pass).toBe(Pass.OPAQUE);
+      });
+    });
+
+    it("silhouette works for invisible model", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          silhouetteSize: 1.0,
+          color: Color.fromAlpha(Color.WHITE, 0.0),
+        },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+        expect(commands[0].renderState.colorMask).toEqual({
+          red: false,
+          green: false,
+          blue: false,
+          alpha: false,
+        });
+        expect(commands[0].renderState.depthMask).toEqual(false);
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("silhouette works for translucent model", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          silhouetteSize: 1.0,
+          color: Color.fromAlpha(Color.WHITE, 0.5),
+        },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+
+        // Even though the silhouette color is opaque, the silhouette
+        // needs to be placed in the translucent pass.
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("silhouette works for translucent model and translucent silhouette color", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          silhouetteSize: 1.0,
+          color: Color.fromAlpha(Color.WHITE, 0.5),
+          silhouetteColor: Color.fromAlpha(Color.RED, 0.5),
+        },
+        scene
+      ).then(function (model) {
+        const commands = scene.frameState.commandList;
+        scene.renderForSpecs();
+        expect(commands.length).toBe(2);
+
+        // Even though the silhouette color is opaque, the silhouette
+        // needs to be placed in the translucent pass.
+        expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
+        expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commands[1].pass).toBe(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("silhouette works for multiple models", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          silhouetteSize: 1.0,
+        },
+        scene
+      ).then(function (model) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            silhouetteSize: 1.0,
+          },
+          scene
+        ).then(function (model2) {
+          const commands = scene.frameState.commandList;
+          scene.renderForSpecs();
+          const length = commands.length;
+          expect(length).toBe(4);
+          for (let i = 0; i < length; i++) {
+            const command = commands[i];
+            expect(command.renderState.stencilTest.enabled).toBe(true);
+            expect(command.pass).toBe(Pass.OPAQUE);
+          }
+
+          const reference1 = commands[0].renderState.stencilTest.reference;
+          const reference2 = commands[2].renderState.stencilTest.reference;
+          expect(reference2).toEqual(reference1 + 1);
+        });
+      });
+    });
+
+    it("silhouette works with style", function () {
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [["${height} > 1", "color('red', 0.5)"]],
+        },
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata, silhouetteSize: 1.0 },
+        scene
+      ).then(function (model) {
+        model.style = style;
+        scene.renderForSpecs();
+        const commandList = scene.frameState.commandList;
+        expect(commandList.length).toBe(2);
+        expect(commandList[0].renderState.stencilTest.enabled).toBe(true);
+        expect(commandList[0].pass).toBe(Pass.TRANSLUCENT);
+        expect(commandList[1].renderState.stencilTest.enabled).toBe(true);
+        expect(commandList[1].pass).toBe(Pass.TRANSLUCENT);
       });
     });
 

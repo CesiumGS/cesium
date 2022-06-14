@@ -1667,7 +1667,16 @@ function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
   // when show is set to true.
-  if (model._show && model._computedScale !== 0) {
+
+  const invisible = model.isInvisible();
+  const silhouette = model.hasSilhouette(frameState);
+  // If the model is invisible but has a silhouette, it still
+  // needs to draw in order to write to the stencil buffer and
+  // render the silhouette.
+  const showModel =
+    model._show && model._computedScale !== 0 && (!invisible || silhouette);
+
+  if (showModel) {
     const asset = model._sceneGraph.components.asset;
     const credits = asset.credits;
 
