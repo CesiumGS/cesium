@@ -8,6 +8,7 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
+import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
@@ -27,6 +28,7 @@ import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import SceneMode from "../SceneMode.js";
+import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -42,6 +44,7 @@ import SplitDirection from "../SplitDirection.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
@@ -55,7 +58,8 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
@@ -69,7 +73,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -212,9 +216,30 @@ export default function ModelExperimental(options) {
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._modelResources = [];
 
-  // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
+  // The model's bounding sphere and its initial radius are computed
+  // in ModelExperimentalSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
+
+  this._heightReference = defaultValue(
+    options.heightReference,
+    HeightReference.NONE
+  );
+  this._heightDirty = this._heightReference !== HeightReference.NONE;
+  this._removeUpdateHeightCallback = undefined;
+
+  this._clampedModelMatrix = undefined; // For use with height reference
+
+  const scene = options.scene;
+  if (defined(scene) && defined(scene.terrainProviderChanged)) {
+    this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
+      function () {
+        this._heightDirty = true;
+      },
+      this
+    );
+  }
+  this._scene = scene;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
@@ -610,6 +635,28 @@ Object.defineProperties(ModelExperimental.prototype, {
   content: {
     get: function () {
       return this._content;
+    },
+  },
+
+  /**
+   * The height reference of the model, which determines how the model is drawn
+   * relative to terrain.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {HeightReference}
+   * @default {HeightReference.NONE}
+   *
+   */
+  heightReference: {
+    get: function () {
+      return this._heightReference;
+    },
+    set: function (value) {
+      if (value !== this._heightReference) {
+        this._heightDirty = true;
+      }
+      this._heightReference = value;
     },
   },
 
@@ -1193,200 +1240,127 @@ ModelExperimental.prototype.update = function (frameState) {
   // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
-  if (!this._resourcesLoaded || !this._texturesLoaded) {
-    this._loader.process(frameState);
-  }
+  processLoader(this, frameState);
 
   // A custom shader may have to load texture uniforms.
-  if (defined(this._customShader)) {
-    this._customShader.update(frameState);
-  }
+  updateCustomShader(this, frameState);
 
-  // Check if the shader needs to be updated for point cloud attenuation
-  // settings.
-  if (this.pointCloudShading.attenuation !== this._attenuation) {
-    this.resetDrawCommands();
-    this._attenuation = this.pointCloudShading.attenuation;
-  }
+  // The image-based lighting may have to load texture uniforms
+  // for specular maps.
+  updateImageBasedLighting(this, frameState);
 
-  const context = frameState.context;
-  const referenceMatrix = defaultValue(this.referenceMatrix, this.modelMatrix);
-
-  // Update the image-based lighting for this model to detect any changes in parameters.
-  this._imageBasedLighting.update(frameState);
-
-  if (
-    this._imageBasedLighting.useSphericalHarmonicCoefficients ||
-    this._imageBasedLighting.useSpecularEnvironmentMaps
-  ) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
-
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    this._iblReferenceFrameMatrix = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      this._iblReferenceFrameMatrix
-    );
-  }
-
-  if (this._imageBasedLighting.shouldRegenerateShaders) {
-    this.resetDrawCommands();
-  }
-
-  // Update the clipping planes collection for this model to detect any changes.
-  let currentClippingPlanesState = 0;
-  if (this.isClippingEnabled()) {
-    if (this._clippingPlanes.owner === this) {
-      this._clippingPlanes.update(frameState);
-    }
-
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      clippingPlanesMatrix
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
-      this._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix
-    );
-    this._clippingPlanesMatrix = Matrix4.inverseTranspose(
-      clippingPlanesMatrix,
-      this._clippingPlanesMatrix
-    );
-
-    currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
-  }
-
-  if (currentClippingPlanesState !== this._clippingPlanesState) {
-    this.resetDrawCommands();
-    this._clippingPlanesState = currentClippingPlanesState;
-  }
-
-  this._defaultTexture = context.defaultTexture;
-
-  // short-circuit if the model resources aren't ready.
+  // Short-circuit if the model resources aren't ready or the scene
+  // is currently morphing.
   if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
     return;
   }
 
-  if (frameState.mode !== this._sceneMode) {
-    if (this._projectTo2D) {
-      this.resetDrawCommands();
-    } else {
-      this._updateModelMatrix = true;
+  updatePointCloudAttenuation(this);
+  updateClippingPlanes(this, frameState);
+  updateSceneMode(this, frameState);
+  updateFeatureTables(this, frameState);
+
+  this._defaultTexture = frameState.context.defaultTexture;
+
+  buildDrawCommands(this, frameState);
+  updateModelMatrix(this, frameState);
+
+  // Many features (e.g. image-based lighting, clipping planes) depend on the model
+  // matrix being updated for the current height reference, so update it first.
+  updateClamping(this);
+
+  updateBoundingSphereAndScale(this, frameState);
+  updateReferenceMatrices(this, frameState);
+
+  // This check occurs after the bounding sphere has been updated so that
+  // zooming to the bounding sphere can account for any modifications
+  // from the clamp-to-ground setting.
+  const model = this;
+  if (!model._ready) {
+    model._completeLoad(model, frameState);
+
+    // Don't render until the next frame after the ready promise is resolved
+    return;
+  }
+
+  // Update the scene graph and draw commands for any changes in model's properties
+  // (e.g. model matrix, back-face culling)
+  updateSceneGraph(this, frameState);
+  submitDrawCommands(this, frameState);
+};
+
+function processLoader(model, frameState) {
+  if (!model._resourcesLoaded || !model._texturesLoaded) {
+    model._loader.process(frameState);
+  }
+}
+
+function updateCustomShader(model, frameState) {
+  if (defined(model._customShader)) {
+    model._customShader.update(frameState);
+  }
+}
+
+function updateImageBasedLighting(model, frameState) {
+  model._imageBasedLighting.update(frameState);
+  if (model._imageBasedLighting.shouldRegenerateShaders) {
+    model.resetDrawCommands();
+  }
+}
+
+function updatePointCloudAttenuation(model) {
+  // Check if the shader needs to be updated for point cloud attenuation
+  // settings.
+  if (model.pointCloudShading.attenuation !== model._attenuation) {
+    model.resetDrawCommands();
+    model._attenuation = model.pointCloudShading.attenuation;
+  }
+}
+
+function updateClippingPlanes(model, frameState) {
+  // Update the clipping planes collection for this model to detect any changes.
+  if (model.isClippingEnabled()) {
+    if (model._clippingPlanes.owner === model) {
+      model._clippingPlanes.update(frameState);
     }
-    this._sceneMode = frameState.mode;
+
+    const currentClippingPlanesState =
+      model._clippingPlanes.clippingPlanesState;
+    if (currentClippingPlanesState !== model._clippingPlanesState) {
+      model.resetDrawCommands();
+      model._clippingPlanesState = currentClippingPlanesState;
+    }
+  }
+}
+
+function updateSceneMode(model, frameState) {
+  if (frameState.mode !== model._sceneMode) {
+    if (model._projectTo2D) {
+      model.resetDrawCommands();
+    } else {
+      model._updateModelMatrix = true;
+    }
+    model._sceneMode = frameState.mode;
+  }
+}
+
+function updateFeatureTables(model, frameState) {
+  if (model._featureTableIdDirty) {
+    updateFeatureTableId(model);
+    model._featureTableIdDirty = false;
   }
 
-  if (this._featureTableIdDirty) {
-    updateFeatureTableId(this);
-    this._featureTableIdDirty = false;
-  }
-
-  const featureTables = this._featureTables;
+  const featureTables = model._featureTables;
   const length = featureTables.length;
   for (let i = 0; i < length; i++) {
     featureTables[i].update(frameState);
     // Check if the types of style commands needed have changed and trigger a reset of the draw commands
     // to ensure that translucent and opaque features are handled in the correct passes.
     if (featureTables[i].styleCommandsNeededDirty) {
-      this.resetDrawCommands();
+      model.resetDrawCommands();
     }
   }
-
-  if (!this._drawCommandsBuilt) {
-    this.destroyResources();
-    this._sceneGraph.buildDrawCommands(frameState);
-    this._drawCommandsBuilt = true;
-
-    const model = this;
-
-    if (!model._ready) {
-      model._completeLoad(model, frameState);
-
-      // Don't render until the next frame after the ready promise is resolved
-      return;
-    }
-  }
-
-  // This is done without a dirty flag so that the model matrix can be updated in-place
-  // without needing to use a setter.
-  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode !== SceneMode.SCENE3D && this._projectTo2D) {
-      throw new DeveloperError(
-        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
-      );
-    }
-    //>>includeEnd('debug');
-    this._updateModelMatrix = true;
-    this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
-    this._boundingSphere = BoundingSphere.transform(
-      this._sceneGraph.boundingSphere,
-      this.modelMatrix,
-      this._boundingSphere
-    );
-  }
-
-  if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
-    this._clampedScale = defined(this._maximumScale)
-      ? Math.min(this._scale, this._maximumScale)
-      : this._scale;
-    this._boundingSphere.radius = this._initialRadius * this._clampedScale;
-    this._computedScale = getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix(frameState);
-    this._updateModelMatrix = false;
-  }
-
-  if (this._backFaceCullingDirty) {
-    this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
-    this._backFaceCullingDirty = false;
-  }
-
-  if (this._shadowsDirty) {
-    this.sceneGraph.updateShadows(this._shadows);
-    this._shadowsDirty = false;
-  }
-
-  if (this._debugShowBoundingVolumeDirty) {
-    this._sceneGraph.updateShowBoundingVolume(this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
-  const updateForAnimations = this._activeAnimations.update(frameState);
-  this._sceneGraph.update(frameState, updateForAnimations);
-
-  // Check for show here because we still want the draw commands to be built so user can instantly see the model
-  // when show is set to true.
-  if (this._show && this._computedScale !== 0) {
-    const asset = this._sceneGraph.components.asset;
-    const credits = asset.credits;
-
-    const length = credits.length;
-    for (let i = 0; i < length; i++) {
-      const credit = credits[i];
-      credit.showOnScreen = this._showCreditsOnScreen;
-      frameState.creditDisplay.addCredit(credit);
-    }
-
-    const drawCommands = this._sceneGraph.getDrawCommands(frameState);
-    frameState.commandList.push.apply(frameState.commandList, drawCommands);
-  }
-};
+}
 
 function updateFeatureTableId(model) {
   const components = model._sceneGraph.components;
@@ -1403,6 +1377,223 @@ function updateFeatureTableId(model) {
   }
 }
 
+function buildDrawCommands(model, frameState) {
+  if (!model._drawCommandsBuilt) {
+    model.destroyResources();
+    model._sceneGraph.buildDrawCommands(frameState);
+    model._drawCommandsBuilt = true;
+  }
+}
+
+function updateModelMatrix(model, frameState) {
+  // This is done without a dirty flag so that the model matrix can be updated in-place
+  // without needing to use a setter.
+  if (!Matrix4.equals(model.modelMatrix, model._modelMatrix)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+      );
+    }
+    //>>includeEnd('debug');
+    model._updateModelMatrix = true;
+    model._modelMatrix = Matrix4.clone(model.modelMatrix, model._modelMatrix);
+  }
+}
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
+
+function updateClamping(model) {
+  if (
+    !model._updateModelMatrix &&
+    !model._heightDirty &&
+    model._minimumPixelSize === 0.0
+  ) {
+    return;
+  }
+
+  if (defined(model._removeUpdateHeightCallback)) {
+    model._removeUpdateHeightCallback();
+    model._removeUpdateHeightCallback = undefined;
+  }
+
+  const scene = model._scene;
+  if (
+    !defined(scene) ||
+    !defined(scene.globe) ||
+    model.heightReference === HeightReference.NONE
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (model.heightReference !== HeightReference.NONE) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene and globe."
+      );
+    }
+    //>>includeEnd('debug');
+    model._clampedModelMatrix = undefined;
+    return;
+  }
+
+  const globe = scene.globe;
+  const ellipsoid = globe.ellipsoid;
+
+  // Compute cartographic position so we don't recompute every update
+  const modelMatrix = model.modelMatrix;
+  scratchPosition.x = modelMatrix[12];
+  scratchPosition.y = modelMatrix[13];
+  scratchPosition.z = modelMatrix[14];
+  const cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+  if (!defined(model._clampedModelMatrix)) {
+    model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+  }
+
+  // Install callback to handle updating of terrain tiles
+  const surface = globe._surface;
+  model._removeUpdateHeightCallback = surface.updateHeight(
+    cartoPosition,
+    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
+  );
+
+  // Set the correct height now
+  const height = globe.getHeight(cartoPosition);
+  if (defined(height)) {
+    // Get callback with cartoPosition being the non-clamped position
+    const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+    // Compute the clamped cartesian and call updateHeight callback
+    Cartographic.clone(cartoPosition, scratchCartographic);
+    scratchCartographic.height = height;
+    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+    callback(scratchPosition);
+  }
+
+  model._heightDirty = false;
+  model._updateModelMatrix = true;
+}
+
+function updateBoundingSphereAndScale(model, frameState) {
+  if (!model._updateModelMatrix && model._minimumPixelSize === 0.0) {
+    return;
+  }
+
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+
+  model._clampedScale = defined(model._maximumScale)
+    ? Math.min(model._scale, model._maximumScale)
+    : model._scale;
+
+  model._boundingSphere = BoundingSphere.transform(
+    model._sceneGraph.boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
+  model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updateReferenceMatrices(model, frameState) {
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
+  const context = frameState.context;
+
+  const ibl = model._imageBasedLighting;
+  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
+    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+    iblReferenceFrameMatrix4 = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      iblReferenceFrameMatrix4
+    );
+    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+      iblReferenceFrameMatrix4,
+      iblReferenceFrameMatrix3
+    );
+    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+      iblReferenceFrameMatrix3,
+      iblReferenceFrameMatrix3
+    );
+    model._iblReferenceFrameMatrix = Matrix3.transpose(
+      iblReferenceFrameMatrix3,
+      model._iblReferenceFrameMatrix
+    );
+  }
+
+  if (model.isClippingEnabled()) {
+    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
+    clippingPlanesMatrix = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      clippingPlanesMatrix
+    );
+    clippingPlanesMatrix = Matrix4.multiply(
+      clippingPlanesMatrix,
+      model._clippingPlanes.modelMatrix,
+      clippingPlanesMatrix
+    );
+    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
+      clippingPlanesMatrix,
+      model._clippingPlanesMatrix
+    );
+  }
+}
+
+function updateSceneGraph(model, frameState) {
+  const sceneGraph = model._sceneGraph;
+  if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
+    const modelMatrix = defined(model._clampedModelMatrix)
+      ? model._clampedModelMatrix
+      : model.modelMatrix;
+    sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    model._updateModelMatrix = false;
+  }
+
+  if (model._backFaceCullingDirty) {
+    sceneGraph.updateBackFaceCulling(model._backFaceCulling);
+    model._backFaceCullingDirty = false;
+  }
+
+  if (model._shadowsDirty) {
+    sceneGraph.updateShadows(model._shadows);
+    model._shadowsDirty = false;
+  }
+
+  if (model._debugShowBoundingVolumeDirty) {
+    sceneGraph.updateShowBoundingVolume(model._debugShowBoundingVolume);
+    model._debugShowBoundingVolumeDirty = false;
+  }
+
+  const updateForAnimations = model._activeAnimations.update(frameState);
+  sceneGraph.update(frameState, updateForAnimations);
+}
+
+function submitDrawCommands(model, frameState) {
+  // Check that show is true after draw commands are built;
+  // we want the user to be able to instantly see the model
+  // when show is set to true.
+  if (model._show && model._computedScale !== 0) {
+    const asset = model._sceneGraph.components.asset;
+    const credits = asset.credits;
+
+    const length = credits.length;
+    for (let i = 0; i < length; i++) {
+      const credit = credits[i];
+      credit.showOnScreen = model._showCreditsOnScreen;
+      frameState.creditDisplay.addCredit(credit);
+    }
+
+    const drawCommands = model._sceneGraph.getDrawCommands(frameState);
+    frameState.commandList.push.apply(frameState.commandList, drawCommands);
+  }
+}
+
 const scratchBoundingSphere = new BoundingSphere();
 
 function scaleInPixels(positionWC, radius, frameState) {
@@ -1415,10 +1606,7 @@ function scaleInPixels(positionWC, radius, frameState) {
   );
 }
 
-const scratchPosition = new Cartesian3();
-const scratchCartographic = new Cartographic();
-
-function getScale(model, frameState) {
+function getScale(model, modelMatrix, frameState) {
   let scale = model.scale;
 
   if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
@@ -1428,25 +1616,14 @@ function getScale(model, frameState) {
       context.drawingBufferWidth,
       context.drawingBufferHeight
     );
-    const m = model.modelMatrix;
-    scratchPosition.x = m[12];
-    scratchPosition.y = m[13];
-    scratchPosition.z = m[14];
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      const projection = frameState.mapProjection;
-      const cartographic = projection.ellipsoid.cartesianToCartographic(
+      SceneTransforms.computeActualWgs84Position(
+        frameState,
         scratchPosition,
-        scratchCartographic
-      );
-      projection.project(cartographic, scratchPosition);
-
-      // In 2D / CV mode, the map is a yz-plane in world space, so the coordinates
-      // need to be reordered accordingly.
-      Cartesian3.fromElements(
-        scratchPosition.z,
-        scratchPosition.x,
-        scratchPosition.y,
         scratchPosition
       );
     }
@@ -1472,6 +1649,29 @@ function getScale(model, frameState) {
   return defined(model.maximumScale)
     ? Math.min(model.maximumScale, scale)
     : scale;
+}
+
+function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+  return function (clampedPosition) {
+    if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+      const clampedCart = ellipsoid.cartesianToCartographic(
+        clampedPosition,
+        scratchCartographic
+      );
+      clampedCart.height += cartoPosition.height;
+      ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+    }
+
+    const clampedModelMatrix = model._clampedModelMatrix;
+
+    // Modify clamped model matrix to use new height
+    Matrix4.clone(model.modelMatrix, clampedModelMatrix);
+    clampedModelMatrix[12] = clampedPosition.x;
+    clampedModelMatrix[13] = clampedPosition.y;
+    clampedModelMatrix[14] = clampedPosition.z;
+
+    model._heightChanged = true;
+  };
 }
 
 /**
@@ -1536,6 +1736,17 @@ ModelExperimental.prototype.destroy = function () {
   this.destroyResources();
   this.destroyModelResources();
 
+  // Remove callbacks for height reference behavior.
+  if (defined(this._removeUpdateHeightCallback)) {
+    this._removeUpdateHeightCallback();
+    this._removeUpdateHeightCallback = undefined;
+  }
+
+  if (defined(this._terrainProviderChangedCallback)) {
+    this._terrainProviderChangedCallback();
+    this._terrainProviderChangedCallback = undefined;
+  }
+
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
   if (
@@ -1596,6 +1807,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Object} options Object with the following properties:
  * @param {String|Resource} options.url The url to the .gltf or .glb file.
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
@@ -1612,7 +1824,8 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
@@ -1626,7 +1839,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If a model is part of a 3D Tiles tileset, this will always be true. If this is false, the model will show up in 2D / CV mode but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1808,6 +2021,7 @@ function makeModelOptions(loader, modelType, options) {
     loader: loader,
     type: modelType,
     resource: options.resource,
+    show: options.show,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
@@ -1820,7 +2034,8 @@ function makeModelOptions(loader, modelType, options) {
     allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
-    show: options.show,
+    heightReference: options.heightReference,
+    scene: options.scene,
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,

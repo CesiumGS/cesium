@@ -3,15 +3,18 @@ import {
   Cartesian2,
   Cartesian3,
   Cesium3DTileStyle,
+  CesiumTerrainProvider,
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
   defaultValue,
   defined,
   Ellipsoid,
+  Event,
   FeatureDetection,
   HeadingPitchRange,
   HeadingPitchRoll,
+  HeightReference,
   ImageBasedLighting,
   JulianDate,
   Math as CesiumMath,
@@ -83,37 +86,47 @@ describe(
     );
 
     let scene;
-    let sceneWithWebgl2;
     let scene2D;
     let sceneCV;
+    let sceneWithMockGlobe;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
-      sceneWithWebgl2 = createScene({
-        contextOptions: {
-          requestWebgl2: true,
-        },
-      });
 
       scene2D = createScene();
       scene2D.morphTo2D(0.0);
 
       sceneCV = createScene();
       sceneCV.morphToColumbusView(0.0);
+
+      sceneWithMockGlobe = createScene();
+
+      sceneWithWebgl2 = createScene({
+        contextOptions: {
+          requestWebgl2: true,
+        },
+      });
+    });
+
+    beforeEach(function () {
+      sceneWithMockGlobe.globe = createMockGlobe();
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-      sceneWithWebgl2.destroyForSpecs();
       scene2D.destroyForSpecs();
       sceneCV.destroyForSpecs();
+      sceneWithMockGlobe.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
-      sceneWithWebgl2.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
+      sceneWithMockGlobe.primitives.removeAll();
+      sceneWithWebgl2.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -214,6 +227,55 @@ describe(
         }
         expect(command.count).toEqual(commandCounts[i]);
       }
+    }
+
+    function createMockGlobe() {
+      const globe = {
+        callback: undefined,
+        removedCallback: false,
+        ellipsoid: Ellipsoid.WGS84,
+        update: function () {},
+        render: function () {},
+        getHeight: function () {
+          return 0.0;
+        },
+        _surface: {
+          tileProvider: {
+            ready: true,
+          },
+          _tileLoadQueueHigh: [],
+          _tileLoadQueueMedium: [],
+          _tileLoadQueueLow: [],
+          _debug: {
+            tilesWaitingForChildren: 0,
+          },
+        },
+        imageryLayersUpdatedEvent: new Event(),
+        destroy: function () {},
+      };
+
+      globe.beginFrame = function () {};
+
+      globe.endFrame = function () {};
+
+      globe.terrainProviderChanged = new Event();
+      Object.defineProperties(globe, {
+        terrainProvider: {
+          set: function (value) {
+            this.terrainProviderChanged.raiseEvent(value);
+          },
+        },
+      });
+
+      globe._surface.updateHeight = function (position, callback) {
+        globe.callback = callback;
+        return function () {
+          globe.removedCallback = true;
+          globe.callback = undefined;
+        };
+      };
+
+      return globe;
     }
 
     it("initializes and renders from Uint8Array", function () {
@@ -1210,6 +1272,265 @@ describe(
       });
     });
 
+    it("initializes with height reference", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._scene).toBe(sceneWithMockGlobe);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+    });
+
+    it("changing height reference works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          heightReference: HeightReference.NONE,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+        expect(model._clampedModelMatrix).toBeUndefined();
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model._heightDirty).toBe(true);
+
+        sceneWithMockGlobe.renderForSpecs();
+        expect(model._heightDirty).toBe(false);
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+    });
+
+    it("creates height update callback when initializing with height reference", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+      });
+    });
+
+    it("creates height update callback after setting height reference", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.NONE,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+        expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+      });
+    });
+
+    it("updates height reference callback when the height reference changes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        model.heightReference = HeightReference.RELATIVE_TO_GROUND;
+        sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        sceneWithMockGlobe.globe.removedCallback = false;
+        model.heightReference = HeightReference.NONE;
+        sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
+      });
+    });
+
+    it("updates height reference callback when the model matrix changes", function () {
+      const modelMatrix = Transforms.eastNorthUpToFixedFrame(
+        Cartesian3.fromDegrees(-72.0, 40.0)
+      );
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Matrix4.clone(modelMatrix),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        // Modify the model matrix in place
+        const position = Cartesian3.fromDegrees(-73.0, 40.0);
+        model.modelMatrix[12] = position.x;
+        model.modelMatrix[13] = position.y;
+        model.modelMatrix[14] = position.z;
+
+        sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        // Replace the model matrix entirely
+        model.modelMatrix = modelMatrix;
+
+        sceneWithMockGlobe.renderForSpecs();
+        expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+      });
+    });
+
+    it("height reference callback updates the position", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        sceneWithMockGlobe.globe.callback(
+          Cartesian3.fromDegrees(-72.0, 40.0, 100.0)
+        );
+        const matrix = model._clampedModelMatrix;
+        const position = new Cartesian3(matrix[12], matrix[13], matrix[14]);
+        const ellipsoid = sceneWithMockGlobe.globe.ellipsoid;
+        const cartographic = ellipsoid.cartesianToCartographic(position);
+        expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+      });
+    });
+
+    it("height reference accounts for change in terrain provider", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(model._heightDirty).toBe(false);
+        const terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+          requestVertexNormals: true,
+        });
+        sceneWithMockGlobe.terrainProvider = terrainProvider;
+
+        expect(model._heightDirty).toBe(true);
+        sceneWithMockGlobe.terrainProvider = undefined;
+      });
+    });
+
+    it("throws when initializing height reference with no scene", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: undefined,
+        },
+        sceneWithMockGlobe
+      ).catch(function (error) {
+        expect(error.message).toEqual(
+          "Height reference is not supported without a scene and globe."
+        );
+      });
+    });
+
+    it("throws when changing height reference with no scene", function () {
+      expect(function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(-72.0, 40.0)
+            ),
+          },
+          sceneWithMockGlobe
+        ).then(function (model) {
+          expect(function () {
+            model.heightReference = HeightReference.CLAMP_TO_GROUND;
+            sceneWithMockGlobe.renderForSpecs();
+          }).toThrowDeveloperError();
+        });
+      });
+    });
+
+    it("throws when initializing height reference with no globe", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: scene,
+        },
+        scene
+      ).catch(function (error) {
+        expect(error.message).toEqual(
+          "Height reference is not supported without a scene and globe."
+        );
+      });
+    });
+
+    it("throws when changing height reference with no globe", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          scene: scene,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.heightReference = HeightReference.CLAMP_TO_GROUND;
+          scene.renderForSpecs();
+        }).toThrowDeveloperError();
+      });
+    });
+
     it("initializes with light color", function () {
       return loadAndZoomToModelExperimental(
         { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
@@ -2017,6 +2338,26 @@ describe(
 
         model.clippingPlanes = undefined;
         expect(clippingPlanes.isDestroyed()).toBe(true);
+      });
+    });
+
+    it("destroys height reference callback", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(-72.0, 40.0)
+          ),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          scene: sceneWithMockGlobe,
+        },
+        sceneWithMockGlobe
+      ).then(function (model) {
+        expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+
+        sceneWithMockGlobe.primitives.remove(model);
+        expect(model.isDestroyed()).toBe(true);
+        expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
       });
     });
 
