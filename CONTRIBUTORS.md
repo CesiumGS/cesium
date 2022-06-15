@@ -158,6 +158,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Janine Liu](https://github.com/j9liu)
   - [Sam Rothstein](https://github.com/srothst1)
   - [Daniel Krupka](https://github.com/krupkad)
+  - [Jeshurun Hembd](https://github.com/jjhembd)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
