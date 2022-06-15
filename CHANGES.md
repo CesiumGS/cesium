@@ -18,6 +18,7 @@
 ##### Fixes :wrench:
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
+- Fixed broken links in documentation of `CesiumTerrainProvider`. [#7478](https://github.com/CesiumGS/cesium/issues/7478)
 
 ### 1.94.3 - 2022-06-10
 
