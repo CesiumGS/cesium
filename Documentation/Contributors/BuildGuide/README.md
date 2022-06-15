@@ -106,10 +106,10 @@ npm start -- --help
 
 ### Build Output
 
-Cesium can be used a few different ways. Cesium can be either a set of platform-generic ESM modules generic to browser, or bundled targeting the browser or NodeJS environment.
+Cesium offers a few different distributions. When developing, make sure to pick the one that fits your app's architecture. Cesium can be either a set of platform-generic ESM modules, or bundled targeting the browser or NodeJS environment.
 
-- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which are supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
-- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`.
+- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
+- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`. ESM modules are recommended for production applications as it allows your build tool of choice to reduce the final release's size using tree shaking.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
 Read the complete list of build scripts and options below for more details.

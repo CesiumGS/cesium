@@ -243,6 +243,7 @@ async function buildCesiumJs(options) {
       ...buildConfig,
       format: "cjs",
       platform: "node",
+      sourcemap: false,
       outfile: path.join(options.path, "index.cjs"),
     });
 
@@ -646,6 +647,13 @@ gulp.task("build-doc-watch", function () {
 gulp.task(
   "release",
   gulp.series(
+    function () {
+      return build({
+        minify: false,
+        removePragmas: false,
+        node: true,
+      });
+    },
     function () {
       return build({
         minify: true,
