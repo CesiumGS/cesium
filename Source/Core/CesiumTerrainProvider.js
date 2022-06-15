@@ -130,19 +130,26 @@ function CesiumTerrainProvider(options) {
   let attribution = "";
   const overallAvailability = [];
   let overallMaxZoom = 0;
-  this._readyPromise = Promise.resolve(options.url).then((url) => {
-    const resource = Resource.createIfNeeded(url);
-    resource.appendForwardSlash();
-    lastResource = resource;
-    layerJsonResource = lastResource.getDerivedResource({
-      url: "layer.json",
+  this._readyPromise = Promise.resolve(options.url)
+    .then(function (url) {
+      const resource = Resource.createIfNeeded(url);
+      resource.appendForwardSlash();
+      lastResource = resource;
+      layerJsonResource = lastResource.getDerivedResource({
+        url: "layer.json",
+      });
+
+      // ion resources have a credits property we can use for additional attribution.
+      that._tileCredits = resource.credits;
+
+      return requestLayerJson();
+    })
+    .then(() => {
+      return Promise.resolve(true);
+    })
+    .catch(function (e) {
+      return Promise.reject(e);
     });
-
-    // ion resources have a credits property we can use for additional attribution.
-    that._tileCredits = resource.credits;
-
-    return requestLayerJson();
-  });
 
   function parseMetadataSuccess(data) {
     let message;
@@ -381,7 +388,7 @@ function CesiumTerrainProvider(options) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return Promise.resolve(false);
+        return Promise.resolve();
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -396,7 +403,7 @@ function CesiumTerrainProvider(options) {
         .catch(parseMetadataFailure);
     }
 
-    return Promise.resolve(true);
+    return Promise.resolve();
   }
 
   function parseMetadataFailure(data) {
@@ -451,7 +458,7 @@ function CesiumTerrainProvider(options) {
       }
 
       that._ready = true;
-      return true;
+      return Promise.resolve(true);
     });
   }
 
@@ -465,7 +472,7 @@ function CesiumTerrainProvider(options) {
         scheme: "tms",
         tiles: ["{z}/{x}/{y}.terrain?v={version}"],
       });
-      return true;
+      return;
     }
     parseMetadataFailure(data);
   }

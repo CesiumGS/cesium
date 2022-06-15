@@ -1,5 +1,4 @@
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -398,13 +397,11 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
+    return new Promise((resolve) => {
+      provider.errorEvent.addEventListener(function (e) {
+        resolve(e);
+      });
+    }).then((error) => {
       expect(error.message).toContain("format is not specified");
     });
   });
@@ -416,13 +413,11 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
+    return new Promise((resolve) => {
+      provider.errorEvent.addEventListener((e) => {
+        resolve(e);
+      });
+    }).then((error) => {
       expect(error.message).toContain("invalid or not supported");
     });
   });
@@ -434,13 +429,11 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
+    return new Promise((resolve) => {
+      provider.errorEvent.addEventListener((e) => {
+        resolve(e);
+      });
+    }).then((error) => {
       expect(error.message).toContain("invalid or not supported");
     });
   });
@@ -469,13 +462,11 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
+    return new Promise((resolve) => {
+      provider.errorEvent.addEventListener((e) => {
+        resolve(e);
+      });
+    }).then((error) => {
       expect(error.message).toContain(
         "does not specify any tile URL templates"
       );
@@ -489,13 +480,11 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
+    return new Promise((resolve) => {
+      provider.errorEvent.addEventListener((e) => {
+        resolve(e);
+      });
+    }).then((error) => {
       expect(error.message).toContain(
         "does not specify any tile URL templates"
       );
