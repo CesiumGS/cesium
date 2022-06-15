@@ -5,7 +5,7 @@ void geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     v_positionMC = positionMC;
     v_positionEC = (modelView * vec4(positionMC, 1.0)).xyz;
 
-    #ifdef USE_2D_POSITIONS
+    #if defined(USE_2D_POSITIONS) || defined(USE_2D_INSTANCING)
     vec3 position2D = attributes.position2D;
     vec3 positionEC = (u_modelView2D * vec4(position2D, 1.0)).xyz;
     gl_Position = czm_projection * vec4(positionEC, 1.0);

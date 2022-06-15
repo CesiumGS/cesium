@@ -97,7 +97,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
       let memory = 0;
       if (defined(this._pickTexture)) {
@@ -475,6 +475,9 @@ function createPickTexture(batchTexture, context) {
     }
 
     batchTexture._pickTexture = createTexture(batchTexture, context, bytes);
+
+    // Make sure the tileset statistics are updated the frame when the pick
+    // texture is created.
     if (defined(statistics)) {
       statistics.batchTableByteLength += batchTexture._pickTexture.sizeInBytes;
     }
@@ -510,6 +513,9 @@ BatchTexture.prototype.update = function (tileset, frameState) {
     // Create batch texture on-demand
     if (!defined(this._batchTexture)) {
       this._batchTexture = createTexture(this, context, this._batchValues);
+
+      // Make sure the tileset statistics are updated the frame when the
+      // batch texture is created.
       if (defined(this._statistics)) {
         this._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
       }

@@ -146,8 +146,8 @@ function TimeDynamicPointCloud(options) {
    *
    * @example
    * pointCloud.frameFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading frame: ' + error.uri);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading frame: ${error.uri}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.frameFailed = new Event();

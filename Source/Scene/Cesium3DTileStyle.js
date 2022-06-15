@@ -791,7 +791,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    *
    * @example
    * const style = new Cesium3DTileStyle({
-   *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
+   *     labelStyle : `(\${Temperature} > 90) ? ${LabelStyle.FILL_AND_OUTLINE} : ${LabelStyle.FILL}`
    * });
    * style.labelStyle.evaluate(feature); // returns a LabelStyle
    *

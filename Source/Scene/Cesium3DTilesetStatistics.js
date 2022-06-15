@@ -29,7 +29,7 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.batchTableByteLength = 0;
+  this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {

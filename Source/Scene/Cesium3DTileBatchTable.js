@@ -58,11 +58,16 @@ function Cesium3DTileBatchTable(
     batchTableJson,
     batchTableBinary
   );
-  this._batchTableBinaryProperties = getBinaryProperties(
+
+  const binaryProperties = getBinaryProperties(
     featuresLength,
     properties,
     batchTableBinary
   );
+  this._binaryPropertiesByteLength = countBinaryPropertyMemory(
+    binaryProperties
+  );
+  this._batchTableBinaryProperties = binaryProperties;
 
   this._content = content;
 
@@ -78,9 +83,26 @@ function Cesium3DTileBatchTable(
 Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Cesium3DTileBatchTable.prototype, {
-  memorySizeInBytes: {
+  /**
+   * Size of the batch table, including the batch table hierarchy's binary
+   * buffers and any binary properties. JSON data is not counted.
+   *
+   * @memberof Cesium3DTileBatchTable.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  batchTableByteLength: {
     get: function () {
-      return this._batchTexture.memorySizeInBytes;
+      let totalByteLength = this._binaryPropertiesByteLength;
+
+      if (defined(this._batchTableHierarchy)) {
+        totalByteLength += this._batchTableHierarchy.byteLength;
+      }
+
+      totalByteLength += this._batchTexture.byteLength;
+
+      return totalByteLength;
     },
   },
 });
@@ -179,6 +201,20 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
     }
   }
   return binaryProperties;
+}
+
+function countBinaryPropertyMemory(binaryProperties) {
+  if (!defined(binaryProperties)) {
+    return 0;
+  }
+
+  let byteLength = 0;
+  for (const name in binaryProperties) {
+    if (binaryProperties.hasOwnProperty(name)) {
+      byteLength += binaryProperties[name].typedArray.byteLength;
+    }
+  }
+  return byteLength;
 }
 
 Cesium3DTileBatchTable.getBinaryProperties = function (

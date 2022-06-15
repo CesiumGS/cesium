@@ -112,7 +112,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the amount of memory used by the batch table textures, in bytes.
+   * Gets the amount of memory used by the batch table textures and any binary
+   * metadata properties not accounted for in geometryByteLength or
+   * texturesByteLength
    *
    * @memberof Cesium3DTileContent.prototype
    *

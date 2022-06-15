@@ -2,9 +2,27 @@
 
 ### 1.95 - 2022-07-01
 
+##### Breaking Changes :mega:
+
+- Tilesets rendered with `ModelExperimental` must set `projectTo2D` to true in order to be accurately projected and rendered in 2D / CV mode. [#10440](https://github.com/CesiumGS/cesium/pull/10440)
+
+##### Additions :tada:
+
+- Memory statistics for `ModelExperimental` now appear in the `Cesium3DTilesInspector`. This includes binary metadata memory, which is not counted by `Model`. [#10397](https://github.com/CesiumGS/cesium/pull/10397)
+- Memory statistics for `ResourceCache` (used by `ModelExperimental`) now appear in the `Cesium3DTilesInspector`. [#10413](https://github.com/CesiumGS/cesium/pull/10413)
+- Added support for rendering individual models in 2D / CV using `ModelExperimental`. [#10419](https://github.com/CesiumGS/cesium/pull/10419)
+- Added support for rendering instanced tilesets in 2D / CV using `ModelExperimental`. [#10433](https://github.com/CesiumGS/cesium/pull/10433)
+- Added `modelUpAxis` and `modelForwardAxis` constructor options to `Cesium3DTileset` [#10439](https://github.com/CesiumGS/cesium/pull/10439)
+- Added `heightReference` to `ModelExperimental`. [#10448](https://github.com/CesiumGS/cesium/pull/10448)
+
 ##### Fixes :wrench:
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
+- Fixed broken links in documentation of `CesiumTerrainProvider`. [#7478](https://github.com/CesiumGS/cesium/issues/7478)
+
+### 1.94.3 - 2022-06-10
+
+- Fixed a crash with vector tilesets with lines when clamping to terrain or 3D tiles. [#10447](https://github.com/CesiumGS/cesium/pull/10447)
 
 ### 1.94.2 - 2022-06-03
 
@@ -52,6 +70,7 @@
 - Fixed `Cesium3DTileset.debugShowUrl` so that it works for implicit tiles too. [#10372](https://github.com/CesiumGS/cesium/issues/10372)
 - Fixed crash when loading a tileset without a metadata schema but has external tilesets with tile or content metadata. [#10387](https://github.com/CesiumGS/cesium/pull/10387)
 - Fixed winding order for negatively scaled models in `ModelExperimental`. [#10405](https://github.com/CesiumGS/cesium/pull/10405)
+- Fixed error when calling `sampleTerrain` over a large area that required lots of tile requests. [#10425](https://github.com/CesiumGS/cesium/pull/10425)
 
 ##### Deprecated :hourglass_flowing_sand:
 
@@ -1848,7 +1867,7 @@ _This is an npm-only release to fix a publishing issue_.
 - Added support for an orthographic projection in 3D and Columbus view.
   - Set `projectionPicker` to `true` in the options when creating a `Viewer` to add a widget that will switch projections. [#5021](https://github.com/CesiumGS/cesium/pull/5021)
   - Call `switchToOrthographicFrustum` or `switchToPerspectiveFrustum` on `Camera` to change projections.
-- Added support for custom time-varying properties in CZML. [#5105](https:/github.com/CesiumGS/cesium/pull/5105).
+- Added support for custom time-varying properties in CZML. [#5105](https://github.com/CesiumGS/cesium/pull/5105).
 - Added new flight parameters to `Camera.flyTo` and `Camera.flyToBoundingSphere`: `flyOverLongitude`, `flyOverLongitudeWeight`, and `pitchAdjustHeight`. [#5070](https://github.com/CesiumGS/cesium/pull/5070)
 - Added the event `Viewer.trackedEntityChanged`, which is raised when the value of `viewer.trackedEntity` changes. [#5060](https://github.com/CesiumGS/cesium/pull/5060)
 - Added `Camera.DEFAULT_OFFSET` for default view of objects with bounding spheres. [#4936](https://github.com/CesiumGS/cesium/pull/4936)

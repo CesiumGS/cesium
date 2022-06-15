@@ -158,6 +158,30 @@ Object.defineProperties(StructuralMetadata.prototype, {
       return this._propertyAttributes;
     },
   },
+
+  /**
+   * Total size in bytes across all property tables
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  propertyTablesByteLength: {
+    get: function () {
+      if (!defined(this._propertyTables)) {
+        return 0;
+      }
+
+      let totalByteLength = 0;
+      const length = this._propertyTables.length;
+      for (let i = 0; i < length; i++) {
+        totalByteLength += this._propertyTables[i].byteLength;
+      }
+
+      return totalByteLength;
+    },
+  },
 });
 
 /**

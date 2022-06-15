@@ -1,4 +1,3 @@
-import Axis from "../Axis.js";
 import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
@@ -48,31 +47,31 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.pointsLength;
     },
   },
 
   trianglesLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.trianglesLength;
     },
   },
 
   geometryByteLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.geometryByteLength;
     },
   },
 
   texturesByteLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.texturesByteLength;
     },
   },
 
   batchTableByteLength: {
     get: function () {
-      return 0;
+      return this._model.statistics.propertyTablesByteLength;
     },
   },
 
@@ -363,8 +362,8 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     modelMatrix: tile.computedTransform,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
+    upAxis: tileset._modelUpAxis,
+    forwardAxis: tileset._modelForwardAxis,
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
@@ -383,7 +382,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     splitDirection: tileset.splitDirection,
     enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
-    projectTo2D: true,
+    projectTo2D: tileset._projectTo2D,
   };
 
   return combine(additionalOptions, mainOptions);
