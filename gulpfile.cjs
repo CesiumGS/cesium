@@ -141,10 +141,11 @@ function rollupWarning(message) {
   console.log(message);
 }
 
-const copyrightHeader = fs.readFileSync(
+let copyrightHeader = fs.readFileSync(
   path.join("Source", "copyrightHeader.js"),
   "utf8"
 );
+copyrightHeader = copyrightHeader.replace("${version}", version);
 
 function createWorkers() {
   rimraf.sync("Build/createWorkers");
