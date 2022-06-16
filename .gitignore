@@ -50,6 +50,9 @@ Source/ThirdParty/Workers/pako_inflate.min.js
 Source/ThirdParty/Workers/pako_deflate.min.js
 Source/ThirdParty/Workers/z-worker-pako.js
 
+/Tools/jsdoc/cesium_template/static/javasript/prism.js
+/Tools/jsdoc/cesium_template/static/styles/prism.css
+
 /node_modules
 npm-debug.log
 npm-debug.log.*
