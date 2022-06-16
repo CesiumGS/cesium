@@ -19,6 +19,7 @@
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
 - Fixed broken links in documentation of `CesiumTerrainProvider`. [#7478](https://github.com/CesiumGS/cesium/issues/7478)
+- Warn if `Cesium3DTile` content.uri property is empty, and load empty tile. [#7263](https://github.com/CesiumGS/cesium/issues/7263)
 - Updated text highlighting for code examples in documentation. [10051](https://github.com/CesiumGS/cesium/issues/10051)
 
 ### 1.94.3 - 2022-06-10
