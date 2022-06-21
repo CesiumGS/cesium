@@ -63,6 +63,8 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
@@ -183,6 +185,11 @@ export default function ModelExperimental(options) {
     ColorBlendMode.HIGHLIGHT
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+  const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+  this._silhouetteColor = Color.clone(silhouetteColor);
+  this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+  this._silhouetteDirty = false;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -358,6 +365,24 @@ function selectFeatureTableId(components, model) {
       }
     }
   }
+}
+
+// Returns whether the color alpha state has changed between invisible, translucent, or opaque
+function isColorAlphaDirty(currentColor, previousColor) {
+  if (!defined(currentColor) && !defined(previousColor)) {
+    return false;
+  }
+
+  if (defined(currentColor) !== defined(previousColor)) {
+    return true;
+  }
+
+  const currentAlpha = currentColor.alpha;
+  const previousAlpha = previousColor.alpha;
+  return (
+    Math.floor(currentAlpha) !== Math.floor(previousAlpha) ||
+    Math.ceil(currentAlpha) !== Math.ceil(previousAlpha)
+  );
 }
 
 function initialize(model) {
@@ -772,6 +797,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
+   *
    * @default ColorBlendMode.HIGHLIGHT
    */
   colorBlendMode: {
@@ -789,6 +815,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   *
    * @default 0.5
    */
   colorBlendAmount: {
@@ -797,6 +824,59 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._colorBlendAmount = value;
+    },
+  },
+
+  /**
+   * The silhouette color.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   *
+   * @default Color.RED
+   */
+  silhouetteColor: {
+    get: function () {
+      return this._silhouetteColor;
+    },
+    set: function (value) {
+      if (!Color.equals(value, this._silhouetteColor)) {
+        const alphaDirty = isColorAlphaDirty(value, this._silhouetteColor);
+        this._silhouetteDirty = this._silhouetteDirty || alphaDirty;
+      }
+
+      this._silhouetteColor = Color.clone(value, this._silhouetteColor);
+    },
+  },
+
+  /**
+   * The size of the silhouette in pixels.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0.0
+   */
+  silhouetteSize: {
+    get: function () {
+      return this._silhouetteSize;
+    },
+    set: function (value) {
+      if (value !== this._silhouetteSize) {
+        const currentSize = this._silhouetteSize;
+        const sizeDirty =
+          (value > 0.0 && currentSize === 0.0) ||
+          (value === 0.0 && currentSize > 0.0);
+        this._silhouetteDirty = this._silhouetteDirty || sizeDirty;
+
+        // Back-face culling needs to be updated in case the silhouette size
+        // is greater than zero.
+        this._backFaceCullingDirty = this._backFaceCullingDirty || sizeDirty;
+      }
+
+      this._silhouetteSize = value;
     },
   },
 
@@ -1000,6 +1080,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Cartesian3}
+   *
    * @default undefined
    */
   lightColor: {
@@ -1048,8 +1129,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
-   * culling is disabled. Back faces are not culled if the model's color is
-   * translucent.
+   * culling is disabled. Back faces are not culled if {@link ModelExperimental#color}
+   * is translucent or {@link ModelExperimental#silhouetteSize} is greater than 0.0.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1256,6 +1337,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   updatePointCloudAttenuation(this);
+  updateSilhouette(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
   updateFeatureTables(this, frameState);
@@ -1314,6 +1396,17 @@ function updatePointCloudAttenuation(model) {
   if (model.pointCloudShading.attenuation !== model._attenuation) {
     model.resetDrawCommands();
     model._attenuation = model.pointCloudShading.attenuation;
+  }
+}
+
+function updateSilhouette(model, frameState) {
+  if (model._silhouetteDirty) {
+    // Only rebuild draw commands if silhouettes are supported in the first place.
+    if (supportsSilhouettes(frameState)) {
+      model.resetDrawCommands();
+    }
+
+    model._silhouetteDirty = false;
   }
 }
 
@@ -1578,7 +1671,16 @@ function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
   // when show is set to true.
-  if (model._show && model._computedScale !== 0) {
+
+  const invisible = model.isInvisible();
+  const silhouette = model.hasSilhouette(frameState);
+  // If the model is invisible but has a silhouette, it still
+  // needs to draw in order to write to the stencil buffer and
+  // render the silhouette.
+  const showModel =
+    model._show && model._computedScale !== 0 && (!invisible || silhouette);
+
+  if (showModel) {
     const asset = model._sceneGraph.components.asset;
     const credits = asset.credits;
 
@@ -1673,6 +1775,50 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     model._heightChanged = true;
   };
 }
+
+/**
+ * Gets whether or not the model is translucent based on its assigned model color.
+ * If the model color's alpha is equal to zero, then it is considered invisible,
+ * not translucent.
+ *
+ * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.isTranslucent = function () {
+  const color = this.color;
+  return defined(color) && color.alpha > 0.0 && color.alpha < 1.0;
+};
+
+/**
+ * Gets whether or not the model is invisible, i.e. if the model color's alpha
+ * is equal to zero.
+ *
+ * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.isInvisible = function () {
+  const color = this.color;
+  return defined(color) && color.alpha === 0.0;
+};
+
+function supportsSilhouettes(frameState) {
+  return frameState.context.stencilBuffer;
+}
+
+/**
+ * Gets whether or not the model has a silhouette. This accounts for whether
+ * silhouettes are supported (i.e. the context supports stencil buffers).
+ *
+ * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.hasSilhouette = function (frameState) {
+  return (
+    supportsSilhouettes(frameState) &&
+    this._silhouetteSize > 0.0 &&
+    this._silhouetteColor.alpha > 0.0
+  );
+};
 
 /**
  * Gets whether or not clipping planes are enabled for this model.
@@ -1829,6 +1975,8 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
@@ -2039,6 +2187,8 @@ function makeModelOptions(loader, modelType, options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
+    silhouetteColor: options.silhouetteColor,
+    silhouetteSize: options.silhouetteSize,
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
