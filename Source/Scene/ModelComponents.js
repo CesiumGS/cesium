@@ -952,6 +952,105 @@ function Animation() {
 }
 
 /**
+ * The motion of the node that is targeted by an articulation stage. The values of
+ * this enum are used to modify the appropriate property on the runtime node.
+ *
+ * @alias {ModelComponents.ArticulationMotionType}
+ * @enum {String}
+ *
+ * @private
+ */
+const ArticulationMotionType = {
+  XTRANSLATE: "xTranslate",
+  YTRANSLATE: "yTranslate",
+  ZTRANSLATE: "zTranslate",
+  XROTATE: "xRotate",
+  YROTATE: "yRotate",
+  ZROTATE: "zRotate",
+  XSCALE: "xScale",
+  YSCALE: "yScale",
+  ZSCALE: "zScale",
+  UNIFORMSCALE: "uniformScale",
+};
+
+/**
+ * An articulation stage belonging to an articulation from the AGI_articulations extension.
+ *
+ * @alias {ModelComponents.ArticulationStage}
+ * @constructor
+ *
+ * @private
+ */
+function ArticulationStage() {
+  /**
+   * The name of the articulation stage.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The type of motion being modified by the articulation stage.
+   *
+   * @type {ModelComponents.ArticulationMotionType}
+   * @private
+   */
+  this.type = undefined;
+
+  /**
+   * The minimum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.minimumValue = undefined;
+
+  /**
+   * The maximum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.maximumValue = undefined;
+
+  /**
+   * The initial value for this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.initialValue = undefined;
+}
+
+/**
+ * An articulation for the model, as specified in the AGI_articulations extension.
+ *
+ * @alias {ModelComponents.Articulation}
+ * @constructor
+ *
+ * @private
+ */
+function Articulation() {
+  /**
+   * The name of the articulation.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  // TODO: update
+  /**
+   * The stages belonging to this articulation.
+   *
+   * @type {ModelComponents.ArticulationStage[]}
+   * @private
+   */
+  this.stages = [];
+}
+
+/**
  * The asset of the model.
  *
  * @alias {ModelComponents.Asset}
@@ -1014,6 +1113,15 @@ function Components() {
    * @type {ModelComponents.Animation[]}
    */
   this.animations = [];
+
+  /**
+   * All articulations in the model as defined by the AGI_articulations extension.
+   * These are stored in a dictionary where the key is the name of the articulation,
+   * and the value is the parsed articulation component.
+   *
+   * @type {Object}
+   */
+  this.articulations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1360,6 +1468,9 @@ ModelComponents.AnimationSampler = AnimationSampler;
 ModelComponents.AnimationTarget = AnimationTarget;
 ModelComponents.AnimationChannel = AnimationChannel;
 ModelComponents.Animation = Animation;
+ModelComponents.ArticulationMotionType = Object.freeze(ArticulationMotionType);
+ModelComponents.ArticulationStage = ArticulationStage;
+ModelComponents.Articulation = Articulation;
 ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;

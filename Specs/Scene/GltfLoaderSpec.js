@@ -105,6 +105,8 @@ describe(
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const boxArticulations =
+      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -3062,6 +3064,49 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
+      });
+    });
+
+    it("loads BoxArticulations", function () {
+      return loadGltf(boxArticulations).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        expect(rootNode).toBeDefined();
+        /*
+        const animation = animations[0];
+        expect(animation.samplers.length).toEqual(1);
+
+        const sampler = animation.samplers[0];
+        const expectedInput = [0, 0.25, 0.5, 0.75, 1.0];
+        const expectedOutput = [
+          new Quaternion(0.0, 0.0, 0.0, 1.0),
+          new Quaternion(0.0, 0.0, 0.707, 0.707),
+          new Quaternion(0.0, 0.0, 1.0, 0.0),
+          new Quaternion(0.0, 0.0, 0.707, -0.707),
+          new Quaternion(0.0, 0.0, 0.0, 1.0),
+        ];
+        expect(sampler.input).toEqual(expectedInput);
+        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
+
+        const length = expectedOutput.length;
+        for (let i = 0; i < length; i++) {
+          expect(
+            Quaternion.equalsEpsilon(
+              sampler.output[i],
+              expectedOutput[i],
+              CesiumMath.EPSILON3
+            )
+          ).toBe(true);
+        }
+
+        expect(animation.channels.length).toEqual(1);
+        const channel = animation.channels[0];
+        expect(channel.sampler).toBe(sampler);
+        expect(channel.target.node).toBe(rootNode);
+        expect(channel.target.path).toEqual(
+          ModelComponents.AnimatedPropertyType.ROTATION
+        );*/
       });
     });
 
