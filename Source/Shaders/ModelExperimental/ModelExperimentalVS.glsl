@@ -96,7 +96,7 @@ void main()
     // This also sets gl_Position.
     geometryStage(attributes, modelView, normal);    
 
-    #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
+    #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes);
     #endif
 

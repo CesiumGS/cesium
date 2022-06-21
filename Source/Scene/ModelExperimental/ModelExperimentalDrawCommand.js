@@ -412,7 +412,7 @@ function updateShadows(drawCommand) {
 
     // Shadows should stay disabled for the silhouette color command.
     const model_silhouettePass = command.uniformMap.model_silhouettePass;
-    if (defined(model_silhouettePass) && model_silhouettePass() > 0.0) {
+    if (defined(model_silhouettePass) && model_silhouettePass()) {
       continue;
     }
 
