@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -293,7 +292,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    */
   hasSelected: {
     get: function () {
-      const stages = arraySlice(this._stages);
+      const stages = this._stages.slice();
       while (stages.length > 0) {
         const stage = stages.pop();
         if (!defined(stage)) {
