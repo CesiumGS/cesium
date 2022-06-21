@@ -7,7 +7,7 @@ void filterByPassType(vec4 featureColor)
         // If the model has a translucent silhouette, it needs to render during the silhouette color command,
         // (i.e. the command where model_silhouettePass = true), even if the model isn't translucent.
         #ifdef HAS_SILHOUETTE
-        if(model_silhouettePass != 1.0) {
+        if(!model_silhouettePass) {
             discard;
         }
         #else

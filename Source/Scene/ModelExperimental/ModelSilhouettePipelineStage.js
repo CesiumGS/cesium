@@ -4,8 +4,7 @@ import ModelSilhouetteStageFS from "../../Shaders/ModelExperimental/ModelSilhoue
 import ModelSilhouetteStageVS from "../../Shaders/ModelExperimental/ModelSilhouetteStageVS.js";
 
 /**
- * The model silhouette pipeline stage is responsible for handling the application
- * of silhouettes to the model.
+ * The model silhouette pipeline stage is responsible applying silhouettes to the model.
  *
  * @namespace ModelSilhouettePipelineStage
  *
@@ -61,14 +60,14 @@ ModelSilhouettePipelineStage.process = function (
 
   // Rendering silhouettes requires two draw commands:
   // - First, the model is rendered as normal, writing to the stencil buffer.
-  // - Second, the stencil buffer is used to determine whether to render the silhouette.
+  // - Second, the silhouette is drawn, and the stencil buffer is used to cutout
+  //   the part that overlaps the regular model.
   //
   // To avoid creating a second shader program to handle silhouettes, a uniform
-  // is used to distinguish between the two draw commands. This functions like a boolean,
-  // and the second command will set this uniform to a non-zero value to indicate "true".
-  // Thus, only the second draw command will apply the silhouette stage.
+  // is used to distinguish between the two draw commands. The second command will set
+  // this uniform true, such that only it applies the silhouette stage.
   shaderBuilder.addUniform(
-    "float",
+    "bool",
     "model_silhouettePass",
     ShaderDestination.BOTH
   );
@@ -81,7 +80,8 @@ ModelSilhouettePipelineStage.process = function (
       return model.silhouetteSize;
     },
     model_silhouettePass: function () {
-      return 0.0;
+      // This will be set to true by the draw command that draws the silhouette.
+      return false;
     },
   };
 

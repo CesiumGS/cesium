@@ -41,6 +41,11 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     mapProjection: scratchProjection,
   };
 
+  afterEach(function () {
+    // Reset so this doesn't interfere with other tests.
+    ModelExperimentalDrawCommand.silhouettesLength = 0;
+  });
+
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -250,7 +255,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     };
 
     expect(renderState.stencilTest).toEqual(expectedStencilTest);
-    expect(command.uniformMap.model_silhouettePass()).toEqual(1.0);
+    expect(command.uniformMap.model_silhouettePass()).toBe(true);
     expect(command.castShadows).toBe(false);
     expect(command.receiveShadows).toBe(false);
   }
@@ -334,9 +339,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     // No other commands should be derived.
     expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._commandList2D.length).toEqual(0);
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("constructs silhouette commands correctly for translucent model", function () {
@@ -368,9 +370,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       stencilReference,
       true
     );
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("constructs silhouette commands correctly for invisible model", function () {
@@ -815,7 +814,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       // Shadows should not be enabled for the silhouette color command.
       if (
         defined(uniformMap.model_silhouettePass) &&
-        uniformMap.model_silhouettePass() > 0.0
+        uniformMap.model_silhouettePass()
       ) {
         expect(command.castShadows).toBe(false);
         expect(command.receiveShadows).toBe(false);

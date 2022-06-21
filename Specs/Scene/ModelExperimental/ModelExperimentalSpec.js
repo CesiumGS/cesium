@@ -1718,8 +1718,6 @@ describe(
         scene.renderForSpecs();
         expect(commands.length).toBe(2);
 
-        // Even though the silhouette color is opaque, the silhouette
-        // needs to be placed in the translucent pass.
         expect(commands[0].renderState.stencilTest.enabled).toBe(true);
         expect(commands[0].pass).toBe(Pass.TRANSLUCENT);
         expect(commands[1].renderState.stencilTest.enabled).toBe(true);

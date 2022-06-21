@@ -7,7 +7,7 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
         // If the model has a translucent silhouette, it needs to render during the silhouette color command,
         // (i.e. the command where model_silhouettePass = true), even if the model isn't translucent.
         #ifdef HAS_SILHOUETTE
-        positionMC *= model_silhouettePass;
+        positionMC *= float(model_silhouettePass);
         #else
         positionMC *= 0.0;
         #endif

@@ -32,11 +32,11 @@ describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
       "uniform float model_silhouetteSize;",
-      "uniform float model_silhouettePass;",
+      "uniform bool model_silhouettePass;",
     ]);
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec4 model_silhouetteColor;",
-      "uniform float model_silhouettePass;",
+      "uniform bool model_silhouettePass;",
     ]);
 
     ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -51,6 +51,6 @@ describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
       mockModel.silhouetteColor
     );
     expect(uniformMap.model_silhouetteSize()).toEqual(mockModel.silhouetteSize);
-    expect(uniformMap.model_silhouettePass()).toEqual(0.0);
+    expect(uniformMap.model_silhouettePass()).toBe(false);
   });
 });

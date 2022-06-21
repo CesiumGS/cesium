@@ -1,5 +1,5 @@
 void silhouetteStage(in ProcessedAttributes attributes) {
-     if(model_silhouettePass > 0.0) {
+     if(model_silhouettePass) {
           vec3 normal = normalize(czm_normal3D * attributes.normalMC);
           normal.x *= czm_projection[0][0];
           normal.y *= czm_projection[1][1];

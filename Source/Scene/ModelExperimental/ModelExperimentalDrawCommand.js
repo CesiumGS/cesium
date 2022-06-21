@@ -623,7 +623,8 @@ function deriveSilhouetteColorCommand(command, model) {
     renderState.blending = BlendingState.ALPHA_BLEND;
   }
 
-  // Only render silhouette if the value in the stencil buffer equals the reference
+  // Only render the pixels of the silhouette that don't conflict with the stencil buffer.
+  // This way, the silhouette doesn't render over the original model.
   renderState.stencilTest = {
     enabled: true,
     frontFunction: WebGLConstants.NOTEQUAL,
@@ -646,7 +647,7 @@ function deriveSilhouetteColorCommand(command, model) {
 
   const uniformMap = clone(command.uniformMap);
   uniformMap.model_silhouettePass = function () {
-    return 1.0;
+    return true;
   };
 
   silhouetteColorCommand.renderState = renderState;
