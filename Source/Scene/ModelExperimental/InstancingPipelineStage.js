@@ -660,8 +660,7 @@ function processTransformAttributes(
     transforms = getInstanceTransformsAsMatrices(
       instances,
       count,
-      renderResources,
-      use2D
+      renderResources
     );
 
     const transformsTypedArray = transformsToTypedArray(transforms);
