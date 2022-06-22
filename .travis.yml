@@ -16,10 +16,10 @@ script:
 
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - travis_wait 20 npm --silent run make-zip -- --concurrency 1
+  - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
   - npm pack &> /dev/null
 
-  - npm --silent run build-apps
+  - npm --silent run buildApps
 
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed

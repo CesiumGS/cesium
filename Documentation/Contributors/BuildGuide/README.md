@@ -105,11 +105,15 @@ npm start -- --help
 
 ### Build Output
 
-Cesium offers a few different distributions. When developing, make sure to pick the one that fits your app's architecture. Cesium can be either a set of platform-generic ESM modules, or bundled targeting the browser or NodeJS environment.
+Cesium offers a few different distributions. When developing, make sure to pick the one that fits your app's architecture.
 
 - [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
-- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`. ESM modules are recommended for production applications as it allows your build tool of choice to reduce the final release's size using tree shaking.
+- [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
+
+In much of our documentation, we use IIFE as it can be easily loaded with a CDN and defines a global *Cesium* variable with all modules attached.
+
+For a production app, we recommend using the the `Source` modules directly which will allow your build tool of choice to reduce the final release's size using tree shaking.
 
 Read the complete list of build scripts and options below for more details.
 
@@ -130,17 +134,20 @@ npm run [target-name]
 Here's the full set of scripts and what they do.
 
 - **Build scripts** -- build and package the source code and documentation
-  - `build` - A fast, developer-oriented build that pre-processes ESM modules, suitable for running tests and most examples. Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. The build output, including an external sourcemap, will default to `Build/CesiumUnminified`.
+  - `build` - A fast, developer-oriented build that bundles the source modules to produce all-in-one files in the `Build/CesiumUnminified` directory that exposes the entire Cesium API attached to a single global `Cesium` object. Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source.
     - `--minify` - [Minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) the output for optimized loading. Specifying this option will output to `Build/Cesium`.
     - `--removePragmas` - Optimizes the output by removing debugging code that validates function input and throws `DeveloperError`s. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
-  - `build-apps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-  - `build-doc` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
+  - `minify` - Bundles bundles the source modules, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>), to produce an all-in-one files in the `Build/Cesium` directory.
+  - `combineRelease` - Bundles plus removes debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
+  - `minifyRelease` - Bundles, minifies, and removes debugging code.
+  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
+  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
   - `build-ts` - Generates a TypeScript definitions file for the Cesium library
   - `build-third-party` - Generates `ThirdParty.json`, a file which lists the latest licensing information of installed third party modules
   - `release` - A full release build that creates a shippable product, including generating documentation.
-  - `make-zip` - Builds a zip file containing all release files. This includes the source ESM modules, bundled ESM and IIFE format `Cesium.js`, plus the bundled minified versions of ESM and IIFE, the generated documentation, the test suite, and the example applications (in both built and source form).
+  - `makeZipFile` - Builds a zip file containing all release files. This includes the source ESM modules, bundled ESM and IIFE format `Cesium.js`, plus the bundled minified versions of ESM and IIFE, the generated documentation, the test suite, and the example applications (in both built and source form).
 - **Utility scripts** -- code coverage, static code analysis, and other utilities
   - `clean` - Removes all generated build artifacts
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
