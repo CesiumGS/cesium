@@ -620,12 +620,21 @@ function Primitive() {
    * @private
    */
   this.propertyAttributeIds = [];
+
+  /**
+   * If the CESIUM_primitive_outline glTF extension is used, this property
+   * stores an additional attribute storing outline coordinates.
+   *
+   * @type {Attribute}
+   * @private
+   */
+  this.outlineCoordinates = undefined;
 }
 
 /**
  * Position and metadata information for instances of a node.
  *
- * @alias ModelComponents.Primitive
+ * @alias ModelComponents.Instances
  * @constructor
  *
  * @private
