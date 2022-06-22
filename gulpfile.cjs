@@ -175,7 +175,7 @@ function handleBuildWarnings(result) {
 }
 
 const esbuildBaseConfig = {
-  target: "es6",
+  target: "es2018",
   legalComments: "inline",
   banner: {
     js: copyrightHeader,
