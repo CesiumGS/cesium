@@ -1,4 +1,4 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian3, Empty3DTileContent } from "../../Source/Cesium.js";
 import { clone } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -60,6 +60,18 @@ describe(
         boundingVolume: {
           region: [-1.2, -1.2, 0, 0, -30, -34],
         },
+      },
+      boundingVolume: {
+        region: [-1.2, -1.2, 0, 0, -30, -34],
+      },
+    };
+
+    const tileWithEmptyContentUri = {
+      geometricError: 1,
+      refine: "REPLACE",
+      children: [],
+      content: {
+        uri: "",
       },
       boundingVolume: {
         region: [-1.2, -1.2, 0, 0, -30, -34],
@@ -172,6 +184,20 @@ describe(
         undefined
       );
       expect(tile.refine).toBe(Cesium3DTileRefine.REPLACE);
+      expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
+    });
+
+    it("logs deprecation warning and loads empty tile if content.uri is an empty string", function () {
+      spyOn(Cesium3DTile, "_deprecationWarning");
+      const header = clone(tileWithEmptyContentUri, true);
+      const tile = new Cesium3DTile(
+        mockTileset,
+        "/some_url",
+        header,
+        undefined
+      );
+      expect(tile.content).toBeDefined();
+      expect(tile.content).toBeInstanceOf(Empty3DTileContent);
       expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
     });
 

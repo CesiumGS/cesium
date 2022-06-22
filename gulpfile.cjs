@@ -94,10 +94,11 @@ const shaderFiles = [
   "Source/ThirdParty/Shaders/*.glsl",
 ];
 
-const copyrightHeader = fs.readFileSync(
+let copyrightHeader = fs.readFileSync(
   path.join("Source", "copyrightHeader.js"),
   "utf8"
 );
+copyrightHeader = copyrightHeader.replace("${version}", version);
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -592,6 +593,7 @@ gulp.task("prepare", function () {
     "node_modules/draco3d/draco_decoder.wasm",
     "Source/ThirdParty/draco_decoder.wasm"
   );
+
   // Copy pako and zip.js worker files to Source/ThirdParty
   fs.copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
@@ -604,6 +606,16 @@ gulp.task("prepare", function () {
   fs.copyFileSync(
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
     "Source/ThirdParty/Workers/z-worker-pako.js"
+  );
+
+  // Copy prism.js and prism.css files into Tools
+  fs.copyFileSync(
+    "node_modules/prismjs/prism.js",
+    "Tools/jsdoc/cesium_template/static/javascript/prism.js"
+  );
+  fs.copyFileSync(
+    "node_modules/prismjs/themes/prism.min.css",
+    "Tools/jsdoc/cesium_template/static/styles/prism.css"
   );
 
   // Copy jasmine runner files into Specs
