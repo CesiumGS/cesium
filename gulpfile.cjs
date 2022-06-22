@@ -176,7 +176,7 @@ function handleBuildWarnings(result) {
 }
 
 const esbuildBaseConfig = {
-  target: "es2018",
+  target: "es2020",
   legalComments: "inline",
   banner: {
     js: copyrightHeader,
@@ -332,7 +332,7 @@ async function buildSpecs(options) {
     bundle: true,
     format: "esm",
     sourcemap: true,
-    target: "es6",
+    target: "es2020",
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     incremental: options.incremental,
@@ -344,7 +344,7 @@ async function buildSpecs(options) {
     bundle: true,
     globalName: "CesiumWorker",
     format: "iife",
-    target: "es6",
+    target: "es2020",
     sourcemap: true,
     external: ["https", "http", "zlib"],
     outdir: path.join("Build", "Specs", "TestWorkers"),
@@ -1213,7 +1213,7 @@ gulp.task("coverage", async function () {
     sourcemap: true,
     format: "iife",
     globalName: "Cesium",
-    target: "es6",
+    target: "es2020",
     external: ["https", "http", "url", "zlib"],
     outfile: path.join(outputDirectory, "Cesium.js"),
     plugins: [instrumentPlugin],
