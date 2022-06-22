@@ -179,48 +179,206 @@ describe("Scene/ModelExperimental/PrimitiveOutlineGenerator", function () {
     };
   }
 
+  // Similar to createGeometry() above, but for testing what happens when we
+  // need to upgrade to a 16- or 32-bit index buffer.
+  function createLargerGeometry(targetVertexCount) {
+    const vertexCount = 9;
+    const copies = Math.floor(targetVertexCount / vertexCount);
+
+    const vertices = [];
+    const indices = [];
+    const edges = [];
+
+    // 6---7---8
+    // | \ | / |
+    // 3---4---5
+    // | / | \ |
+    // 0---1---2
+
+    for (let i = 0; i < copies; i++) {
+      const p0 = new Cartesian3(-1.0, -1.0, 0.0);
+      const p1 = new Cartesian3(0.0, -1.0, 0.0);
+      const p2 = new Cartesian3(1.0, -1.0, 0.0);
+      const p3 = new Cartesian3(-1.0, 0.0, 0.0);
+      const p4 = new Cartesian3(0.0, 0.0, 0.0);
+      const p5 = new Cartesian3(1.0, 0.0, 0.0);
+      const p6 = new Cartesian3(-1.0, 1.0, 0.0);
+      const p7 = new Cartesian3(0.0, 1.0, 0.0);
+      const p8 = new Cartesian3(1.0, 1.0, 0.0);
+
+      const i0 = addVertex(vertices, p0);
+      const i1 = addVertex(vertices, p1);
+      const i2 = addVertex(vertices, p2);
+      const i3 = addVertex(vertices, p3);
+      const i4 = addVertex(vertices, p4);
+      const i5 = addVertex(vertices, p5);
+      const i6 = addVertex(vertices, p6);
+      const i7 = addVertex(vertices, p7);
+      const i8 = addVertex(vertices, p8);
+
+      indices.push(i0, i1, i4);
+      indices.push(i0, i4, i3);
+      indices.push(i1, i2, i4);
+      indices.push(i4, i2, i5);
+      indices.push(i3, i4, i6);
+      indices.push(i6, i4, i7);
+      indices.push(i4, i5, i8);
+      indices.push(i4, i8, i7);
+
+      edges.push(i0, i1);
+      edges.push(i1, i2);
+      edges.push(i2, i5);
+      edges.push(i5, i8);
+      edges.push(i8, i7);
+      edges.push(i7, i6);
+      edges.push(i6, i3);
+    }
+
+    const verticesTypedArray = new Float32Array(vertices);
+
+    let indicesTypedArray;
+    let edgesTypedArray;
+    if (targetVertexCount <= 255) {
+      indicesTypedArray = new Uint8Array(indices);
+      edgesTypedArray = new Uint8Array(edges);
+    } else if (targetVertexCount <= 65535) {
+      indicesTypedArray = new Uint16Array(indices);
+      edgesTypedArray = new Uint16Array(edges);
+    } else {
+      indicesTypedArray = new Uint32Array(indices);
+      edgesTypedArray = new Uint32Array(edges);
+    }
+
+    return {
+      vertices: verticesTypedArray,
+      edges: edgesTypedArray,
+      indices: indicesTypedArray,
+    };
+  }
+
   it("duplicates vertices as needed and generates outline coordinates", function () {
     let geometry = createGeometry();
     let vertices = geometry.vertices;
 
     let generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
       triangleIndices: geometry.indices.slice(),
       outlineIndices: geometry.edges,
-      originalVertexCount: vertices.length,
+      originalVertexCount: vertices.length / 3,
     });
 
-    expect(generator._triangleIndices).toEqual(geometry.indices);
-    expect(generator._vertexCopies).toEqual(undefined);
-    expect(generator._outlineCoordinatesTypedArray).toEqual(undefined);
-    expect(generator._extraVertices).toEqual(undefined);
+    // prettier-ignore
+    let expectedIndices = new Uint8Array([
+      0, 1, 4,
+      9, 4, 3,
+      1, 2, 4,
+      4, 2, 5,
+      10, 4, 6,
+      6, 4, 7,
+      4, 5, 8,
+      4, 8, 11
+    ]);
+    let expectedVertexCopies = {
+      0: 9,
+      3: 10,
+      7: 11,
+    };
+    // prettier-ignore
+    let expectedOutlineCoordinates = new Float32Array([ 
+      0, 1, 0,
+      0, 1, 0,
+      0, 1, 0,
+      0, 0, 0,
+      0, 0, 0,
+      0, 1, 0,
+      1, 0, 0,
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 0,
+      1, 0, 0,
+      0, 1, 0
+    ]);
+    let expectedExtraVertices = [0, 3, 7];
+
+    expect(generator._triangleIndices).toEqual(expectedIndices);
+    expect(generator._vertexCopies).toEqual(expectedVertexCopies);
+    expect(generator._outlineCoordinatesTypedArray).toEqual(
+      expectedOutlineCoordinates
+    );
+    expect(generator._extraVertices).toEqual(expectedExtraVertices);
 
     geometry = createTrickyGeometry();
     vertices = geometry.vertices;
     generator = new PrimitiveOutlineGenerator({
-      triangleIndices: geometry.indices,
+      triangleIndices: geometry.indices.slice(),
       outlineIndices: geometry.edges,
-      originalVertexCount: vertices.length,
+      originalVertexCount: vertices.length / 3,
     });
 
-    expect(generator._triangleIndices).toBe(geometry.indices);
-    expect(generator._vertexCopies).toEqual(undefined);
-    expect(generator._outlineCoordinatesTypedArray).toEqual(undefined);
-    expect(generator._extraVertices).toEqual(undefined);
-  });
+    // prettier-ignore
+    expectedIndices = new Uint8Array([
+      0, 2, 1,
+      3, 4, 5,
+      6, 7, 8,
+      0, 10, 9
+    ]);
+    expectedVertexCopies = {
+      3: 9,
+      6: 10,
+    };
+    // prettier-ignore
+    expectedOutlineCoordinates = new Float32Array([
+      1, 1, 0,
+      1, 0, 0,
+      0, 1, 0,
+      1, 1, 0,
+      0, 1, 0,
+      1, 0, 0,
+      1, 1, 0,
+      0, 1, 0,
+      1, 0, 0,
+      1, 0, 1,
+      0, 1, 1
+    ]);
+    expectedExtraVertices = [3, 6];
 
-  it("handles vertices that are shared between two outlined primitives", function () {
-    fail();
-  });
-
-  it("handles vertices that are shared between an outlined and a non-outlined primitive", function () {
-    fail();
+    expect(generator._triangleIndices).toEqual(expectedIndices);
+    expect(generator._vertexCopies).toEqual(expectedVertexCopies);
+    expect(generator._outlineCoordinatesTypedArray).toEqual(
+      expectedOutlineCoordinates
+    );
+    expect(generator._extraVertices).toEqual(expectedExtraVertices);
   });
 
   it("switches to 16-bit indices if more than 255 vertices are required", function () {
-    fail();
+    const geometry = createLargerGeometry(255);
+    const vertices = geometry.vertices;
+
+    expect(geometry.indices).toBeInstanceOf(Uint8Array);
+
+    const generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    expect(generator._triangleIndices).toBeInstanceOf(Uint16Array);
   });
 
   it("switches to 32-bit indices if more than 65535 vertices are required", function () {
-    fail();
+    const geometry = createLargerGeometry(65535);
+    const vertices = geometry.vertices;
+
+    expect(geometry.indices).toBeInstanceOf(Uint16Array);
+
+    const generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    expect(generator._triangleIndices).toBeInstanceOf(Uint32Array);
   });
 });

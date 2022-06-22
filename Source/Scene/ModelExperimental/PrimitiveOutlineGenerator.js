@@ -12,6 +12,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
 // glTF does not allow an index value of 65535 because this is the primitive
 // restart value in some APIs.
 const MAX_GLTF_UINT16_INDEX = 65534;
+const MAX_GLTF_UINT8_INDEX = 255;
 
 /**
  * A class to handle the low-level details of processing indices and vertex
@@ -39,9 +40,8 @@ export default function PrimitiveOutlineGenerator(options) {
 
   this._triangleIndices = triangleIndices;
 
-  const vertexCount = originalVertexCount;
-  this._originalVertexCount = vertexCount;
-  this._edges = new EdgeSet(outlineIndices, vertexCount);
+  this._originalVertexCount = originalVertexCount;
+  this._edges = new EdgeSet(outlineIndices, originalVertexCount);
 
   this._vertexCopies = {};
   this._outlineCoordinatesTypedArray = undefined;
@@ -104,10 +104,17 @@ function initialize(outlineGenerator) {
 
       if (
         copy > MAX_GLTF_UINT16_INDEX &&
-        triangleIndices instanceof Uint16Array
+        (triangleIndices instanceof Uint16Array ||
+          triangleIndices instanceof Uint8Array)
       ) {
-        // We outgrew a 16-bit index buffer, switch to 32-bit.
+        // We outgrew an 8- or 16-bit index buffer, switch to 32-bit.
         triangleIndices = new Uint32Array(triangleIndices);
+      } else if (
+        copy > MAX_GLTF_UINT8_INDEX &&
+        triangleIndices instanceof Uint8Array
+      ) {
+        // We outgrew an 8-bit index buffer, switch to 16 bit.
+        triangleIndices = new Uint16Array(triangleIndices);
       }
 
       if (unmatchableVertexIndex === i0) {
@@ -389,5 +396,5 @@ function EdgeSet(edgeIndices, originalVertexCount) {
 
 EdgeSet.prototype.isHighlighted = function (a, b) {
   const index = Math.min(a, b) * this._originalVertexCount + Math.max(a, b);
-  return this._edges[index];
+  return this._edges[index] === true;
 };
