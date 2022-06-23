@@ -1,4 +1,5 @@
 import {
+  ArticulationMotionType,
   AttributeType,
   Axis,
   Cartesian2,
@@ -3072,41 +3073,88 @@ describe(
         const components = gltfLoader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
-        expect(rootNode).toBeDefined();
-        /*
-        const animation = animations[0];
-        expect(animation.samplers.length).toEqual(1);
+        expect(rootNode.articulationName).toEqual("SampleArticulation");
 
-        const sampler = animation.samplers[0];
-        const expectedInput = [0, 0.25, 0.5, 0.75, 1.0];
-        const expectedOutput = [
-          new Quaternion(0.0, 0.0, 0.0, 1.0),
-          new Quaternion(0.0, 0.0, 0.707, 0.707),
-          new Quaternion(0.0, 0.0, 1.0, 0.0),
-          new Quaternion(0.0, 0.0, 0.707, -0.707),
-          new Quaternion(0.0, 0.0, 0.0, 1.0),
-        ];
-        expect(sampler.input).toEqual(expectedInput);
-        expect(sampler.interpolation).toEqual(InterpolationType.LINEAR);
+        const articulations = components.articulations;
+        expect(articulations.length).toEqual(1);
 
-        const length = expectedOutput.length;
-        for (let i = 0; i < length; i++) {
-          expect(
-            Quaternion.equalsEpsilon(
-              sampler.output[i],
-              expectedOutput[i],
-              CesiumMath.EPSILON3
-            )
-          ).toBe(true);
-        }
+        const articulation = articulations[0];
+        expect(articulation.name).toEqual("SampleArticulation");
 
-        expect(animation.channels.length).toEqual(1);
-        const channel = animation.channels[0];
-        expect(channel.sampler).toBe(sampler);
-        expect(channel.target.node).toBe(rootNode);
-        expect(channel.target.path).toEqual(
-          ModelComponents.AnimatedPropertyType.ROTATION
-        );*/
+        const stages = articulation.stages;
+        expect(stages.length).toEqual(10);
+
+        const xTranslateStage = stages[0];
+        expect(xTranslateStage.name).toEqual("MoveX");
+        expect(xTranslateStage.type).toEqual(ArticulationMotionType.XTRANSLATE);
+        expect(xTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(xTranslateStage.maximumValue).toEqual(1000.0);
+        expect(xTranslateStage.initialValue).toEqual(0.0);
+
+        const yTranslateStage = stages[1];
+        expect(yTranslateStage.name).toEqual("MoveY");
+        expect(yTranslateStage.type).toEqual(ArticulationMotionType.YTRANSLATE);
+        expect(yTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(yTranslateStage.maximumValue).toEqual(1000.0);
+        expect(yTranslateStage.initialValue).toEqual(0.0);
+
+        const zTranslateStage = stages[2];
+        expect(zTranslateStage.name).toEqual("MoveZ");
+        expect(zTranslateStage.type).toEqual(ArticulationMotionType.ZTRANSLATE);
+        expect(zTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(zTranslateStage.maximumValue).toEqual(1000.0);
+        expect(zTranslateStage.initialValue).toEqual(0.0);
+
+        const yRotateStage = stages[3];
+        expect(yRotateStage.name).toEqual("Yaw");
+        expect(yRotateStage.type).toEqual(ArticulationMotionType.YROTATE);
+        expect(yRotateStage.minimumValue).toEqual(-360.0);
+        expect(yRotateStage.maximumValue).toEqual(360.0);
+        expect(yRotateStage.initialValue).toEqual(0.0);
+
+        const xRotateStage = stages[4];
+        expect(xRotateStage.name).toEqual("Pitch");
+        expect(xRotateStage.type).toEqual(ArticulationMotionType.XROTATE);
+        expect(xRotateStage.minimumValue).toEqual(-360.0);
+        expect(xRotateStage.maximumValue).toEqual(360.0);
+        expect(xRotateStage.initialValue).toEqual(0.0);
+
+        const zRotateStage = stages[5];
+        expect(zRotateStage.name).toEqual("Roll");
+        expect(zRotateStage.type).toEqual(ArticulationMotionType.ZROTATE);
+        expect(zRotateStage.minimumValue).toEqual(-360.0);
+        expect(zRotateStage.maximumValue).toEqual(360.0);
+        expect(zRotateStage.initialValue).toEqual(0.0);
+
+        const uniformScaleStage = stages[6];
+        expect(uniformScaleStage.name).toEqual("Size");
+        expect(uniformScaleStage.type).toEqual(
+          ArticulationMotionType.UNIFORMSCALE
+        );
+        expect(uniformScaleStage.minimumValue).toEqual(0.0);
+        expect(uniformScaleStage.maximumValue).toEqual(1.0);
+        expect(uniformScaleStage.initialValue).toEqual(1.0);
+
+        const xScaleStage = stages[7];
+        expect(xScaleStage.name).toEqual("SizeX");
+        expect(xScaleStage.type).toEqual(ArticulationMotionType.XSCALE);
+        expect(xScaleStage.minimumValue).toEqual(0.0);
+        expect(xScaleStage.maximumValue).toEqual(1.0);
+        expect(xScaleStage.initialValue).toEqual(1.0);
+
+        const yScaleStage = stages[8];
+        expect(yScaleStage.name).toEqual("SizeY");
+        expect(yScaleStage.type).toEqual(ArticulationMotionType.YSCALE);
+        expect(yScaleStage.minimumValue).toEqual(0.0);
+        expect(yScaleStage.maximumValue).toEqual(1.0);
+        expect(yScaleStage.initialValue).toEqual(1.0);
+
+        const zScaleStage = stages[9];
+        expect(zScaleStage.name).toEqual("SizeZ");
+        expect(zScaleStage.type).toEqual(ArticulationMotionType.ZSCALE);
+        expect(zScaleStage.minimumValue).toEqual(0.0);
+        expect(zScaleStage.maximumValue).toEqual(1.0);
+        expect(zScaleStage.initialValue).toEqual(1.0);
       });
     });
 

@@ -1,4 +1,7 @@
 import arrayFill from "../Core/arrayFill.js";
+import ArticulationMotionType from "../Core/ArticulationMotionType.js";
+import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -6,22 +9,20 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import InterpolationType from "../Core/InterpolationType.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Quaternion from "../Core/Quaternion.js";
-import Sampler from "../Renderer/Sampler.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
-import AttributeType from "./AttributeType.js";
-import Axis from "./Axis.js";
-import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
+import InterpolationType from "../Core/InterpolationType.js";
+import Matrix4 from "../Core/Matrix4.js";
 import ModelComponents from "./ModelComponents.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import Quaternion from "../Core/Quaternion.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
+import Sampler from "../Renderer/Sampler.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
@@ -40,6 +41,8 @@ const AnimationSampler = ModelComponents.AnimationSampler;
 const AnimationTarget = ModelComponents.AnimationTarget;
 const AnimationChannel = ModelComponents.AnimationChannel;
 const Animation = ModelComponents.Animation;
+const ArticulationStage = ModelComponents.ArticulationStage;
+const Articulation = ModelComponents.Articulation;
 const Asset = ModelComponents.Asset;
 const Scene = ModelComponents.Scene;
 const Components = ModelComponents.Components;
@@ -1570,9 +1573,14 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     defaultValue.EMPTY_OBJECT
   );
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
+  const articulationsExtension = nodeExtensions.AGI_articulations;
 
   if (defined(instancingExtension)) {
     node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
+  }
+
+  if (defined(articulationsExtension)) {
+    node.articulationName = articulationsExtension.articulationName;
   }
 
   const meshId = gltfNode.mesh;
@@ -1813,6 +1821,58 @@ function loadAnimations(loader, gltf, nodes) {
   return animations;
 }
 
+function loadArticulationStage(gltfStage) {
+  const stage = new ArticulationStage();
+  stage.name = gltfStage.name;
+
+  const type = gltfStage.type.toUpperCase();
+  stage.type = ArticulationMotionType[type];
+
+  stage.minimumValue = gltfStage.minimumValue;
+  stage.maximumValue = gltfStage.maximumValue;
+  stage.initialValue = gltfStage.initialValue;
+
+  return stage;
+}
+
+function loadArticulation(gltfArticulation) {
+  const articulation = new Articulation();
+  articulation.name = gltfArticulation.name;
+
+  const gltfStages = gltfArticulation.stages;
+  const gltfStagesLength = gltfStages.length;
+
+  const stages = new Array(gltfStagesLength);
+  for (let i = 0; i < gltfStagesLength; i++) {
+    const stage = loadArticulationStage(gltfStages[i]);
+    stages[i] = stage;
+  }
+
+  articulation.stages = stages;
+
+  return articulation;
+}
+
+function loadArticulations(gltf) {
+  const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+  const articulationsExtension = extensions.AGI_articulations;
+
+  if (!defined(articulationsExtension)) {
+    return [];
+  }
+
+  const gltfArticulations = articulationsExtension.articulations;
+  const gltfArticulationsLength = gltfArticulations.length;
+
+  const articulations = new Array(gltfArticulationsLength);
+  for (let i = 0; i < gltfArticulationsLength; i++) {
+    const articulation = loadArticulation(gltfArticulations[i]);
+    articulations[i] = articulation;
+  }
+
+  return articulations;
+}
+
 function getSceneNodeIds(gltf) {
   let nodesIds;
   if (defined(gltf.scenes) && defined(gltf.scene)) {
@@ -1864,6 +1924,7 @@ function parse(
   const nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
   const skins = loadSkins(loader, gltf, nodes);
   const animations = loadAnimations(loader, gltf, nodes);
+  const articulations = loadArticulations(gltf);
   const scene = loadScene(gltf, nodes);
 
   const components = new Components();
@@ -1881,6 +1942,7 @@ function parse(
   components.nodes = nodes;
   components.skins = skins;
   components.animations = animations;
+  components.articulations = articulations;
   components.upAxis = loader._upAxis;
   components.forwardAxis = loader._forwardAxis;
 
