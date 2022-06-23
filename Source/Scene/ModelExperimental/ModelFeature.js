@@ -155,7 +155,7 @@ ModelFeature.prototype.hasProperty = function (name) {
  *
  * @example
  * // Display all the properties for a feature in the console log.
- * const propertyNames = feature.getPropertyIds();
+ * const propertyIds = feature.getPropertyIds();
  * const length = propertyIds.length;
  * for (let i = 0; i < length; ++i) {
  *     const propertyId = propertyIds[i];
