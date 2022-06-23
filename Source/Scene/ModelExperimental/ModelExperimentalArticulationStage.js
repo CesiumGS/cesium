@@ -3,15 +3,14 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
-import Matrix3 from "../../Core/Matrix3";
+import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
 const articulationEpsilon = CesiumMath.EPSILON16;
 
 /**
  * An in-memory representation of an articulation stage belonging to a
- * {@link ModelExperimentalArticulation}. that affects nodes
- * in the {@link ModelExperimentalSceneGraph}.
+ * {@link ModelExperimentalArticulation}.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.ArticulationStage} options.stage The articulation stage components from the 3D model.

@@ -31,12 +31,16 @@ export default function ModelExperimentalArticulation(options) {
   this._articulation = articulation;
   this._sceneGraph = sceneGraph;
 
-  this._name = undefined;
+  this._name = articulation.name;
   this._runtimeStages = [];
   this._runtimeStagesByName = {};
+
+  // Will be populated as the runtime nodes are created
   this._runtimeNodes = [];
 
-  this._dirty = false;
+  // Set to true so that the first call to
+  // ModelExperimentalSceneGraph.applyArticulations will work.
+  this._dirty = true;
 
   initialize(this);
 }
@@ -88,6 +92,21 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
   },
 
   /**
+   * The runtime stages that belong to this articulation.
+   *
+   * @memberof ModelExperimentalArticulation.prototype
+   * @type {ModelExperimentalArticulationStage[]}
+   * @readonly
+   *
+   * @private
+   */
+  runtimeStages: {
+    get: function () {
+      return this._runtimeStages;
+    },
+  },
+
+  /**
    * The runtime nodes that are affected by this articulation.
    *
    * @memberof ModelExperimentalArticulation.prototype
@@ -105,7 +124,6 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
 
 function initialize(runtimeArticulation) {
   const articulation = runtimeArticulation.articulation;
-  runtimeArticulation._name = articulation.name;
 
   const stages = articulation.stages;
   const length = stages.length;
@@ -151,13 +169,22 @@ const scratchArticulationMatrix = new Matrix4();
 const scratchNodeMatrix = new Matrix4();
 
 /**
- * Applies the chain of articulation stages to the matrix of each node that
- * participates in any articulation. Note that this will overwrite any existing
- * transformations on participating nodes.
+ * Applies the chain of articulation stages to the transform of each node that
+ * participates in the articulation. This only recomputes the node transforms
+ * if any stage in the articulation has been modified.
+ * <p>
+ * Note that this will overwrite any existing transformations on participating
+ * nodes.
+ * </p>
  *
  * @private
  */
-ModelExperimentalArticulation.prototype.applyArticulation = function () {
+ModelExperimentalArticulation.prototype.apply = function () {
+  if (!this._dirty) {
+    return;
+  }
+  this._dirty = false;
+
   let articulationMatrix = Matrix4.clone(
     Matrix4.IDENTITY,
     scratchArticulationMatrix
