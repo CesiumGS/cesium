@@ -64,8 +64,8 @@ describe(
       "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
     const pointCloudWithPerPointPropertiesUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
-    const pointCloudWithUnicodePropertyNamesUrl =
-      "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/tileset.json";
+    const pointCloudWithUnicodePropertyIdsUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/tileset.json";
     const pointCloudWithTransformUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json";
     const pointCloudTilesetUrl =
@@ -817,10 +817,10 @@ describe(
       });
     });
 
-    it("applies shader style with unicode property names", function () {
+    it("applies shader style with unicode property IDs", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        pointCloudWithUnicodePropertyNamesUrl
+        pointCloudWithUnicodePropertyIdsUrl
       ).then(function (tileset) {
         tileset.style = new Cesium3DTileStyle({
           color: "color() * ${feature['temperature ℃']}",

@@ -1,5 +1,6 @@
 import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 
 /**
  * A feature of a {@link ModelExperimental}.
@@ -154,11 +155,11 @@ ModelFeature.prototype.hasProperty = function (name) {
  *
  * @example
  * // Display all the properties for a feature in the console log.
- * const propertyNames = feature.getPropertyNames();
- * const length = propertyNames.length;
+ * const propertyIds = feature.getPropertyIds();
+ * const length = propertyIds.length;
  * for (let i = 0; i < length; ++i) {
- *     const propertyName = propertyNames[i];
- *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *     const propertyId = propertyIds[i];
+ *     console.log(propertyId + ': ' + feature.getProperty(propertyId));
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
@@ -195,11 +196,27 @@ ModelFeature.prototype.getPropertyInherited = function (name) {
 /**
  * Returns an array of property names for the feature.
  *
+ * @deprecated
+ *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
  */
 ModelFeature.prototype.getPropertyNames = function (results) {
-  return this._featureTable.getPropertyNames(results);
+  deprecationWarning(
+    "ModelFeature.getPropertyNames",
+    "ModelFeature.getPropertyNames is deprecated in CesiumJS 1.95, and will be removed in 1.98. Use ModelFeature.getPropertyIds instead"
+  );
+  return this._featureTable.getPropertyIds(results);
+};
+
+/**
+ * Returns an array of property IDs for the feature.
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The IDs of the feature's properties.
+ */
+ModelFeature.prototype.getPropertyIds = function (results) {
+  return this._featureTable.getPropertyIds(results);
 };
 
 /**
