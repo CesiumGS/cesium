@@ -2,12 +2,12 @@
  * An enum describing the type of motion that is defined by an articulation stage
  * in the AGI_articulations extension.
  *
- * @alias {ArticulationMotionType}
+ * @alias {ArticulationStageType}
  * @enum {String}
  *
  * @private
  */
-const ArticulationMotionType = {
+const ArticulationStageType = {
   XTRANSLATE: "xTranslate",
   YTRANSLATE: "yTranslate",
   ZTRANSLATE: "zTranslate",
@@ -20,4 +20,4 @@ const ArticulationMotionType = {
   UNIFORMSCALE: "uniformScale",
 };
 
-export default Object.freeze(ArticulationMotionType);
+export default Object.freeze(ArticulationStageType);

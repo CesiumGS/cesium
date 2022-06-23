@@ -1,5 +1,5 @@
 import arrayFill from "../Core/arrayFill.js";
-import ArticulationMotionType from "../Core/ArticulationMotionType.js";
+import ArticulationStageType from "../Core/ArticulationStageType.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -1826,7 +1826,7 @@ function loadArticulationStage(gltfStage) {
   stage.name = gltfStage.name;
 
   const type = gltfStage.type.toUpperCase();
-  stage.type = ArticulationMotionType[type];
+  stage.type = ArticulationStageType[type];
 
   stage.minimumValue = gltfStage.minimumValue;
   stage.maximumValue = gltfStage.maximumValue;
@@ -1862,8 +1862,11 @@ function loadArticulations(gltf) {
   }
 
   const gltfArticulations = articulationsExtension.articulations;
-  const gltfArticulationsLength = gltfArticulations.length;
+  if (!defined(gltfArticulations)) {
+    return [];
+  }
 
+  const gltfArticulationsLength = gltfArticulations.length;
   const articulations = new Array(gltfArticulationsLength);
   for (let i = 0; i < gltfArticulationsLength; i++) {
     const articulation = loadArticulation(gltfArticulations[i]);

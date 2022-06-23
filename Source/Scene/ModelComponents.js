@@ -979,9 +979,9 @@ function ArticulationStage() {
   this.name = undefined;
 
   /**
-   * The type of motion being modified by the articulation stage.
+   * The type of the articulation stage, defined by the type of motion it modifies.
    *
-   * @type {ArticulationMotionType}
+   * @type {ArticulationStageType}
    * @private
    */
   this.type = undefined;

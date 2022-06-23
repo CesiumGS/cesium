@@ -1,5 +1,5 @@
 import {
-  ArticulationMotionType,
+  ArticulationStageType,
   AttributeType,
   Axis,
   Cartesian2,
@@ -3086,42 +3086,42 @@ describe(
 
         const xTranslateStage = stages[0];
         expect(xTranslateStage.name).toEqual("MoveX");
-        expect(xTranslateStage.type).toEqual(ArticulationMotionType.XTRANSLATE);
+        expect(xTranslateStage.type).toEqual(ArticulationStageType.XTRANSLATE);
         expect(xTranslateStage.minimumValue).toEqual(-1000.0);
         expect(xTranslateStage.maximumValue).toEqual(1000.0);
         expect(xTranslateStage.initialValue).toEqual(0.0);
 
         const yTranslateStage = stages[1];
         expect(yTranslateStage.name).toEqual("MoveY");
-        expect(yTranslateStage.type).toEqual(ArticulationMotionType.YTRANSLATE);
+        expect(yTranslateStage.type).toEqual(ArticulationStageType.YTRANSLATE);
         expect(yTranslateStage.minimumValue).toEqual(-1000.0);
         expect(yTranslateStage.maximumValue).toEqual(1000.0);
         expect(yTranslateStage.initialValue).toEqual(0.0);
 
         const zTranslateStage = stages[2];
         expect(zTranslateStage.name).toEqual("MoveZ");
-        expect(zTranslateStage.type).toEqual(ArticulationMotionType.ZTRANSLATE);
+        expect(zTranslateStage.type).toEqual(ArticulationStageType.ZTRANSLATE);
         expect(zTranslateStage.minimumValue).toEqual(-1000.0);
         expect(zTranslateStage.maximumValue).toEqual(1000.0);
         expect(zTranslateStage.initialValue).toEqual(0.0);
 
         const yRotateStage = stages[3];
         expect(yRotateStage.name).toEqual("Yaw");
-        expect(yRotateStage.type).toEqual(ArticulationMotionType.YROTATE);
+        expect(yRotateStage.type).toEqual(ArticulationStageType.YROTATE);
         expect(yRotateStage.minimumValue).toEqual(-360.0);
         expect(yRotateStage.maximumValue).toEqual(360.0);
         expect(yRotateStage.initialValue).toEqual(0.0);
 
         const xRotateStage = stages[4];
         expect(xRotateStage.name).toEqual("Pitch");
-        expect(xRotateStage.type).toEqual(ArticulationMotionType.XROTATE);
+        expect(xRotateStage.type).toEqual(ArticulationStageType.XROTATE);
         expect(xRotateStage.minimumValue).toEqual(-360.0);
         expect(xRotateStage.maximumValue).toEqual(360.0);
         expect(xRotateStage.initialValue).toEqual(0.0);
 
         const zRotateStage = stages[5];
         expect(zRotateStage.name).toEqual("Roll");
-        expect(zRotateStage.type).toEqual(ArticulationMotionType.ZROTATE);
+        expect(zRotateStage.type).toEqual(ArticulationStageType.ZROTATE);
         expect(zRotateStage.minimumValue).toEqual(-360.0);
         expect(zRotateStage.maximumValue).toEqual(360.0);
         expect(zRotateStage.initialValue).toEqual(0.0);
@@ -3129,7 +3129,7 @@ describe(
         const uniformScaleStage = stages[6];
         expect(uniformScaleStage.name).toEqual("Size");
         expect(uniformScaleStage.type).toEqual(
-          ArticulationMotionType.UNIFORMSCALE
+          ArticulationStageType.UNIFORMSCALE
         );
         expect(uniformScaleStage.minimumValue).toEqual(0.0);
         expect(uniformScaleStage.maximumValue).toEqual(1.0);
@@ -3137,21 +3137,21 @@ describe(
 
         const xScaleStage = stages[7];
         expect(xScaleStage.name).toEqual("SizeX");
-        expect(xScaleStage.type).toEqual(ArticulationMotionType.XSCALE);
+        expect(xScaleStage.type).toEqual(ArticulationStageType.XSCALE);
         expect(xScaleStage.minimumValue).toEqual(0.0);
         expect(xScaleStage.maximumValue).toEqual(1.0);
         expect(xScaleStage.initialValue).toEqual(1.0);
 
         const yScaleStage = stages[8];
         expect(yScaleStage.name).toEqual("SizeY");
-        expect(yScaleStage.type).toEqual(ArticulationMotionType.YSCALE);
+        expect(yScaleStage.type).toEqual(ArticulationStageType.YSCALE);
         expect(yScaleStage.minimumValue).toEqual(0.0);
         expect(yScaleStage.maximumValue).toEqual(1.0);
         expect(yScaleStage.initialValue).toEqual(1.0);
 
         const zScaleStage = stages[9];
         expect(zScaleStage.name).toEqual("SizeZ");
-        expect(zScaleStage.type).toEqual(ArticulationMotionType.ZSCALE);
+        expect(zScaleStage.type).toEqual(ArticulationStageType.ZSCALE);
         expect(zScaleStage.minimumValue).toEqual(0.0);
         expect(zScaleStage.maximumValue).toEqual(1.0);
         expect(zScaleStage.initialValue).toEqual(1.0);
