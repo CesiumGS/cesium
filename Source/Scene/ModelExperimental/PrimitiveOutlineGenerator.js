@@ -22,7 +22,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * @constructor
  *
  * @param {Number} options Object with the following properties:
- * @param {Float16Array|Float32Array} options.triangleIndices The original triangle indices of the primitive
+ * @param {Float8Array|Float16Array|Float32Array} options.triangleIndices The original triangle indices of the primitive. The constructor takes ownership of this typed array as it will be modified internally. Use the updatedTriangleIndices getter to get the final result.
  * @param {Float16Aray|Float32Array} options.outlineIndices The indices of edges in the triangle from the CESIUM_primitive_outline extension
  * @param {Number} options.originalVertexCount The original number of vertices in the primitive
  */
@@ -49,6 +49,20 @@ export default function PrimitiveOutlineGenerator(options) {
 
   initialize(this);
 }
+
+Object.defineProperties(PrimitiveOutlineGenerator.prototype, {
+  updatedTriangleIndices: {
+    get: function () {
+      return this._triangleIndices;
+    },
+  },
+
+  outlineCoordinates: {
+    get: function () {
+      return this._outlineCoordinatesTypedArray;
+    },
+  },
+});
 
 function initialize(outlineGenerator) {
   // triangle indices may be extended from 16-bits to 32 bits if needed.
@@ -316,6 +330,40 @@ function popcount6Bit(value) {
     ((value >> 5) & 1)
   );
 }
+
+PrimitiveOutlineGenerator.prototype.updateAttribute = function (
+  attributeTypedArray
+) {
+  const extraVertices = this._extraVertices;
+
+  const originalLength = attributeTypedArray.length;
+
+  // This is a stride in number of typed elements. For example, a VEC3 would
+  // have a stride of 3 (floats)
+  const stride = originalLength / this._originalVertexCount;
+
+  const extraVerticesLength = extraVertices.length;
+
+  // Make a larger typed array of the same type as the input
+  const ArrayType = attributeTypedArray.constructor;
+  const result = new ArrayType(
+    attributeTypedArray.length + extraVerticesLength * stride
+  );
+
+  // Copy original vertices
+  result.set(attributeTypedArray);
+
+  // Copy the vertices added for outlining
+  for (let i = 0; i < extraVerticesLength; i++) {
+    const sourceIndex = extraVertices[i] * stride;
+    const resultIndex = originalLength + i * stride;
+    for (let j = 0; j < stride; j++) {
+      result[resultIndex + j] = result[sourceIndex + j];
+    }
+  }
+
+  return result;
+};
 
 PrimitiveOutlineGenerator.createTexture = function (context) {
   let cache = context.cache.modelOutliningCache;

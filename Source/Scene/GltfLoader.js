@@ -1198,6 +1198,8 @@ function loadPrimitive(
     gltfPrimitive.extensions,
     defaultValue.EMPTY_OBJECT
   );
+  //const outlines = extensions.CESIUM_primitive_outline;
+
   const draco = extensions.KHR_draco_mesh_compression;
 
   const attributes = gltfPrimitive.attributes;

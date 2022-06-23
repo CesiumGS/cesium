@@ -300,11 +300,9 @@ describe("Scene/ModelExperimental/PrimitiveOutlineGenerator", function () {
     ]);
     let expectedExtraVertices = [0, 3, 7];
 
-    expect(generator._triangleIndices).toEqual(expectedIndices);
+    expect(generator.updatedTriangleIndices).toEqual(expectedIndices);
     expect(generator._vertexCopies).toEqual(expectedVertexCopies);
-    expect(generator._outlineCoordinatesTypedArray).toEqual(
-      expectedOutlineCoordinates
-    );
+    expect(generator.outlineCoordinates).toEqual(expectedOutlineCoordinates);
     expect(generator._extraVertices).toEqual(expectedExtraVertices);
 
     geometry = createTrickyGeometry();
@@ -342,11 +340,9 @@ describe("Scene/ModelExperimental/PrimitiveOutlineGenerator", function () {
     ]);
     expectedExtraVertices = [3, 6];
 
-    expect(generator._triangleIndices).toEqual(expectedIndices);
+    expect(generator.updatedTriangleIndices).toEqual(expectedIndices);
     expect(generator._vertexCopies).toEqual(expectedVertexCopies);
-    expect(generator._outlineCoordinatesTypedArray).toEqual(
-      expectedOutlineCoordinates
-    );
+    expect(generator.outlineCoordinates).toEqual(expectedOutlineCoordinates);
     expect(generator._extraVertices).toEqual(expectedExtraVertices);
   });
 
@@ -363,7 +359,7 @@ describe("Scene/ModelExperimental/PrimitiveOutlineGenerator", function () {
       originalVertexCount: vertices.length / 3,
     });
 
-    expect(generator._triangleIndices).toBeInstanceOf(Uint16Array);
+    expect(generator.updatedTriangleIndices).toBeInstanceOf(Uint16Array);
   });
 
   it("switches to 32-bit indices if more than 65535 vertices are required", function () {
@@ -379,6 +375,172 @@ describe("Scene/ModelExperimental/PrimitiveOutlineGenerator", function () {
       originalVertexCount: vertices.length / 3,
     });
 
-    expect(generator._triangleIndices).toBeInstanceOf(Uint32Array);
+    expect(generator.updatedTriangleIndices).toBeInstanceOf(Uint32Array);
+  });
+
+  it("updateAttribute copies vertex attributes", function () {
+    let geometry = createGeometry();
+    let vertices = geometry.vertices;
+
+    let generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    geometry = createTrickyGeometry();
+    vertices = geometry.vertices;
+
+    let attribute = new Uint16Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    let result = generator.updateAttribute(attribute);
+    let expectedAttribute = new Uint16Array([
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      0, // copy of vertex 0
+      3, // copy of vertex 3
+      7, // copy of vertex 7
+    ]);
+    expect(result).toEqual(expectedAttribute);
+
+    generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    attribute = new Float32Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    result = generator.updateAttribute(attribute);
+    expectedAttribute = new Float32Array([
+      0.0,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      3.0, // copy of vertex 3
+      6.0, // copy of vertex 6
+    ]);
+    expect(result).toEqual(expectedAttribute);
+  });
+
+  it("updateAttribute copies vector attributes", function () {
+    let geometry = createGeometry();
+    let vertices = geometry.vertices;
+
+    let generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    let result = generator.updateAttribute(geometry.vertices);
+    let expectedVertices = new Float32Array([
+      -1,
+      -1,
+      0,
+      0,
+      -1,
+      0,
+      1,
+      -1,
+      0,
+      -1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      -1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      -1,
+      -1,
+      0, // copy of vertex 0
+      -1,
+      0,
+      0, // copy of vertex 3
+      0,
+      1,
+      0, // copy of vertex 7
+    ]);
+    expect(result).toEqual(expectedVertices);
+
+    geometry = createTrickyGeometry();
+    vertices = geometry.vertices;
+
+    generator = new PrimitiveOutlineGenerator({
+      // slice because the value may be modified in place
+      triangleIndices: geometry.indices.slice(),
+      outlineIndices: geometry.edges,
+      originalVertexCount: vertices.length / 3,
+    });
+
+    result = generator.updateAttribute(geometry.vertices);
+    expectedVertices = new Float32Array([
+      -1,
+      1,
+      0,
+      -2,
+      2,
+      0,
+      -1,
+      2,
+      0,
+      1,
+      1,
+      0,
+      2,
+      2,
+      0,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      -1,
+      0,
+      -1,
+      1,
+      0,
+      1,
+      1,
+      0, // copy of vertex 3
+      0,
+      0,
+      0, // copy of vertex 6
+    ]);
+    expect(result).toEqual(expectedVertices);
+  });
+
+  it("createTexture creates texture on the first run", function () {
+    fail();
+  });
+
+  it("createTexture uses a cached texture on subsequent runs", function () {
+    fail();
   });
 });
