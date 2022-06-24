@@ -1,6 +1,12 @@
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import getImageFromTypedArray from "../../Core/getImageFromTypedArray.js";
+import CesiumMath from "../../Core/Math.js";
+import resizeImageToNextPowerOfTwo from "../../Core/resizeImageToNextPowerOfTwo.js";
+import PixelDatatype from "../../Renderer/PixelDatatype.js";
 import Texture from "../../Renderer/Texture.js";
+import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
+import TextureWrap from "../../Renderer/TextureWrap.js";
 
 /**
  * An object to manage loading textures
@@ -71,33 +77,11 @@ TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
 };
 
 function createTexture(textureManager, loadedImage, context) {
-  const id = loadedImage.id;
-  const textureUniform = loadedImage.textureUniform;
+  const { id, textureUniform, image } = loadedImage;
 
-  const typedArray = textureUniform.typedArray;
-  const sampler = textureUniform.sampler;
-
-  let texture;
-  if (defined(typedArray)) {
-    texture = new Texture({
-      context: context,
-      pixelFormat: textureUniform.pixelFormat,
-      pixelDatatype: textureUniform.pixelDatatype,
-      source: {
-        arrayBufferView: typedArray,
-        width: textureUniform.width,
-        height: textureUniform.height,
-      },
-      sampler: sampler,
-      flipY: false,
-    });
-  } else {
-    texture = new Texture({
-      context: context,
-      source: loadedImage.image,
-      sampler: sampler,
-    });
-  }
+  const texture = context.webgl2
+    ? getWebGL2Texture(textureUniform, image, context)
+    : getWebGL1Texture(textureUniform, image, context);
 
   // Destroy the old texture once the new one is loaded for more seamless
   // transitions between values
@@ -106,6 +90,96 @@ function createTexture(textureManager, loadedImage, context) {
     oldTexture.destroy();
   }
   textureManager._textures[id] = texture;
+}
+
+function getWebGL2Texture(textureUniform, image, context) {
+  const { typedArray, sampler } = textureUniform;
+
+  const texture = defined(typedArray)
+    ? getTextureFromTypedArray(textureUniform, context)
+    : new Texture({ context, source: image, sampler });
+
+  if (samplerRequiresMipmap(sampler)) texture.generateMipmap();
+
+  return texture;
+}
+
+function getWebGL1Texture(textureUniform, image, context) {
+  const { typedArray, sampler } = textureUniform;
+
+  // WebGL1 requires power-of-two texture dimensions for mipmapping and REPEAT wrap modes
+  const needMipmap = samplerRequiresMipmap(sampler);
+
+  const samplerRepeats =
+    sampler.wrapS === TextureWrap.REPEAT ||
+    sampler.wrapS === TextureWrap.MIRRORED_REPEAT ||
+    sampler.wrapT === TextureWrap.REPEAT ||
+    sampler.wrapT === TextureWrap.MIRRORED_REPEAT;
+
+  const { width, height } = defined(typedArray) ? textureUniform : image;
+  const isPowerOfTwo = [width, height].every(CesiumMath.isPowerOfTwo);
+  const requiresResize = (needMipmap || samplerRepeats) && !isPowerOfTwo;
+
+  if (!defined(typedArray)) {
+    const source = requiresResize ? resizeImageToNextPowerOfTwo(image) : image;
+    const texture = new Texture({ context, source, sampler });
+    if (needMipmap) texture.generateMipmap();
+    return texture;
+  }
+
+  const canResize =
+    textureUniform.pixelDatatype === PixelDatatype.UNSIGNED_BYTE;
+
+  if (requiresResize && canResize) {
+    const imageFromArray = getImageFromTypedArray(typedArray, width, height);
+    const source = resizeImageToNextPowerOfTwo(imageFromArray);
+    const texture = new Texture({ context, source, sampler });
+    if (needMipmap) texture.generateMipmap();
+    return texture;
+  }
+
+  if (requiresResize && needMipmap) {
+    console.warn(
+      "Texture requires resizing for mipmaps but pixelDataType cannot be resized. The texture may be rendered incorrectly."
+    );
+  } else if (requiresResize && samplerRepeats) {
+    console.warn(
+      "Texture requires resizing for wrapping but pixelDataType cannot be resized. The texture may be rendered incorrectly."
+    );
+  }
+
+  const texture = getTextureFromTypedArray(textureUniform, context);
+  if (needMipmap && isPowerOfTwo) texture.generateMipmap();
+  return texture;
+}
+
+function samplerRequiresMipmap(sampler) {
+  return [
+    TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
+    TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+    TextureMinificationFilter.LINEAR_MIPMAP_NEAREST,
+    TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+  ].includes(sampler.minificationFilter);
+}
+
+function getTextureFromTypedArray(textureUniform, context) {
+  const {
+    pixelFormat,
+    pixelDatatype,
+    width,
+    height,
+    typedArray: arrayBufferView,
+    sampler,
+  } = textureUniform;
+
+  return new Texture({
+    context,
+    pixelFormat,
+    pixelDatatype,
+    source: { arrayBufferView, width, height },
+    sampler,
+    flipY: false,
+  });
 }
 
 TextureManager.prototype.update = function (frameState) {
