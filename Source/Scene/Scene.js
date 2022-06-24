@@ -2880,6 +2880,7 @@ Scene.prototype.updateAndExecuteCommands = function (
     mode !== SceneMode.SCENE2D ||
     this._mapMode2D === MapMode2D.ROTATE
   ) {
+    exitWebVRUpdateViewport(this, passState)
     executeCommandsInViewport(true, this, passState, backgroundColor);
   } else {
     updateAndClearFramebuffers(this, passState, backgroundColor);
@@ -2942,6 +2943,15 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
   executeCommands(scene, passState);
 
   Camera.clone(savedCamera, camera);
+}
+
+
+function exitWebVRUpdateViewport(scene, passState){
+  const viewport = passState.viewport;
+  if(viewport.x!==0){
+    viewport.width = viewport.width * 2;
+    viewport.x = 0;
+  }
 }
 
 const scratch2DViewportCartographic = new Cartographic(
