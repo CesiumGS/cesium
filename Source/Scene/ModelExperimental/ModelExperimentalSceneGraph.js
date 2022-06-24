@@ -300,6 +300,9 @@ function initialize(sceneGraph) {
     skinnedNode._runtimeSkin = runtimeSkins[skinIndex];
     skinnedNode.updateJointMatrices();
   }
+
+  // Ensure articulations are applied with their initial values to their target nodes.
+  sceneGraph.applyArticulations();
 }
 
 function computeModelMatrix(sceneGraph, modelMatrix) {
