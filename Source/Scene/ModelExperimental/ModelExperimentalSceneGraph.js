@@ -14,6 +14,7 @@ import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
@@ -445,7 +446,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   // Reset the memory counts before running the pipeline
   model.statistics.clear();
 
-  this.configurePipeline();
+  this.configurePipeline(frameState);
   const modelPipelineStages = this.modelPipelineStages;
 
   let i, j, k;
@@ -573,7 +574,9 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
+ModelExperimentalSceneGraph.prototype.configurePipeline = function (
+  frameState
+) {
   const modelPipelineStages = this.modelPipelineStages;
   modelPipelineStages.length = 0;
 
@@ -596,6 +599,10 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
     model.splitDirection !== SplitDirection.NONE
   ) {
     modelPipelineStages.push(ModelSplitterPipelineStage);
+  }
+
+  if (model.hasSilhouette(frameState)) {
+    modelPipelineStages.push(ModelSilhouettePipelineStage);
   }
 };
 
