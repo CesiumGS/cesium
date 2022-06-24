@@ -9,6 +9,7 @@ import {
   Color,
   defaultValue,
   defined,
+  DistanceDisplayCondition,
   Ellipsoid,
   Event,
   FeatureDetection,
@@ -1530,6 +1531,92 @@ describe(
         expect(function () {
           model.heightReference = HeightReference.CLAMP_TO_GROUND;
           scene.renderForSpecs();
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("initializes with distance display condition", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const ddc = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          distanceDisplayCondition: ddc,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing distance display condition works", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const ddc = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.distanceDisplayCondition = ddc;
+        verifyRender(model, false);
+      });
+    });
+
+    it("distanceDisplayCondition works with camera movement", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const ddc = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        // Model distance is smaller than near value, should not render
+        model.distanceDisplayCondition = ddc;
+        verifyRender(model, false);
+
+        const frameState = scene.frameState;
+
+        // Model distance is between near and far values, should render
+        frameState.camera.lookAt(
+          Cartesian3.ZERO,
+          new HeadingPitchRange(0.0, 0.0, (far + near) * 0.5)
+        );
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+
+        // Model distance is greater than far value, should not render
+        frameState.camera.lookAt(
+          Cartesian3.ZERO,
+          new HeadingPitchRange(0.0, 0.0, far + 10.0)
+        );
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
+      });
+    });
+
+    it("distanceDisplayCondition throws when near >= far", function () {
+      const near = 101.0;
+      const far = 100.0;
+      const ddc = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.distanceDisplayCondition = ddc;
         }).toThrowDeveloperError();
       });
     });
