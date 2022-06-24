@@ -1564,6 +1564,9 @@ describe(
 
         model.distanceDisplayCondition = ddc;
         verifyRender(model, false);
+
+        model.distanceDisplayCondition = undefined;
+        verifyRender(model, true);
       });
     });
 
