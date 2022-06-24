@@ -80,7 +80,7 @@ function createTexture(textureManager, loadedImage, context) {
   const { id, textureUniform, image } = loadedImage;
 
   const texture = context.webgl2
-    ? getWebGL2Texture(textureUniform, image, context)
+    ? getTextureAndMips(textureUniform, image, context)
     : getWebGL1Texture(textureUniform, image, context);
 
   // Destroy the old texture once the new one is loaded for more seamless
@@ -92,7 +92,7 @@ function createTexture(textureManager, loadedImage, context) {
   textureManager._textures[id] = texture;
 }
 
-function getWebGL2Texture(textureUniform, image, context) {
+function getTextureAndMips(textureUniform, image, context) {
   const { typedArray, sampler } = textureUniform;
 
   const texture = defined(typedArray)
@@ -120,37 +120,28 @@ function getWebGL1Texture(textureUniform, image, context) {
   const isPowerOfTwo = [width, height].every(CesiumMath.isPowerOfTwo);
   const requiresResize = (needMipmap || samplerRepeats) && !isPowerOfTwo;
 
-  if (!defined(typedArray)) {
-    const source = requiresResize ? resizeImageToNextPowerOfTwo(image) : image;
-    const texture = new Texture({ context, source, sampler });
-    if (needMipmap) texture.generateMipmap();
-    return texture;
-  }
-
-  const canResize =
-    textureUniform.pixelDatatype === PixelDatatype.UNSIGNED_BYTE;
-
-  if (requiresResize && canResize) {
+  if (!requiresResize) {
+    return getTextureAndMips(textureUniform, image, context);
+  } else if (!defined(typedArray)) {
+    const resizedImage = resizeImageToNextPowerOfTwo(image);
+    return getTextureAndMips(textureUniform, resizedImage, context);
+  } else if (textureUniform.pixelDatatype === PixelDatatype.UNSIGNED_BYTE) {
     const imageFromArray = getImageFromTypedArray(typedArray, width, height);
-    const source = resizeImageToNextPowerOfTwo(imageFromArray);
-    const texture = new Texture({ context, source, sampler });
-    if (needMipmap) texture.generateMipmap();
-    return texture;
+    const resizedImage = resizeImageToNextPowerOfTwo(imageFromArray);
+    return getTextureAndMips(textureUniform, resizedImage, context);
   }
 
-  if (requiresResize && needMipmap) {
+  // typedArray is non-power-of-two but can't be resized. Warn and return raw texture (no mipmaps)
+  if (needMipmap) {
     console.warn(
       "Texture requires resizing for mipmaps but pixelDataType cannot be resized. The texture may be rendered incorrectly."
     );
-  } else if (requiresResize && samplerRepeats) {
+  } else if (samplerRepeats) {
     console.warn(
       "Texture requires resizing for wrapping but pixelDataType cannot be resized. The texture may be rendered incorrectly."
     );
   }
-
-  const texture = getTextureFromTypedArray(textureUniform, context);
-  if (needMipmap && isPowerOfTwo) texture.generateMipmap();
-  return texture;
+  return getTextureFromTypedArray(textureUniform, context);
 }
 
 function samplerRequiresMipmap(sampler) {
