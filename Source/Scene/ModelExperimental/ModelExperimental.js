@@ -1214,6 +1214,51 @@ Object.defineProperties(ModelExperimental.prototype, {
 });
 
 /**
+ * Sets the current value of an articulation stage.  After setting one or multiple stage values, call
+ * ModelExperimental.applyArticulations() to cause the node matrices to be recalculated.
+ *
+ * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+ * @param {Number} value The numeric value of this stage of the articulation.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ *
+ * @see ModelExperimental#applyArticulations
+ */
+ModelExperimental.prototype.setArticulationStage = function (
+  articulationStageKey,
+  value
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+
+  this._sceneGraph.setArticulationStage(articulationStageKey, value);
+};
+
+/**
+ * Applies any modified articulation stages to the matrix of each node that participates
+ * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ */
+ModelExperimental.prototype.applyArticulations = function () {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+
+  this._sceneGraph.applyArticulations();
+};
+
+/**
  * Resets the draw commands for this model.
  *
  * @private

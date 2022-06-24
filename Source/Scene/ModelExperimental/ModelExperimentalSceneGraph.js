@@ -6,6 +6,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalArticulation from "./ModelExperimentalArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
@@ -154,6 +155,10 @@ export default function ModelExperimentalSceneGraph(options) {
     new Matrix4()
   );
 
+  // Store articulations from the AGI_articulations extension
+  // by name in a dictionary for easy retrieval.
+  this._runtimeArticulations = {};
+
   initialize(this);
 }
 
@@ -218,6 +223,7 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
+  let i;
   const components = sceneGraph._components;
   const scene = components.scene;
 
@@ -225,6 +231,21 @@ function initialize(sceneGraph) {
   // it will be accounted for in updateModelMatrix.
   const modelMatrix = sceneGraph._model.modelMatrix;
   computeModelMatrix(sceneGraph, modelMatrix);
+
+  const articulations = components.articulations;
+  const articulationsLength = articulations.length;
+
+  const runtimeArticulations = sceneGraph._runtimeArticulations;
+  for (i = 0; i < articulationsLength; i++) {
+    const articulation = articulations[i];
+    const runtimeArticulation = new ModelExperimentalArticulation({
+      articulation: articulation,
+      sceneGraph: sceneGraph,
+    });
+
+    const name = runtimeArticulation.name;
+    runtimeArticulations[name] = runtimeArticulation;
+  }
 
   const nodes = components.nodes;
   const nodesLength = nodes.length;
@@ -237,7 +258,7 @@ function initialize(sceneGraph) {
   const rootNodes = scene.nodes;
   const rootNodesLength = rootNodes.length;
   const transformToRoot = Matrix4.IDENTITY;
-  for (let i = 0; i < rootNodesLength; i++) {
+  for (i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
     const rootNodeIndex = traverseSceneGraph(
@@ -254,7 +275,7 @@ function initialize(sceneGraph) {
   const runtimeSkins = sceneGraph._runtimeSkins;
 
   const skinsLength = skins.length;
-  for (let i = 0; i < skinsLength; i++) {
+  for (i = 0; i < skinsLength; i++) {
     const skin = skins[i];
     runtimeSkins.push(
       new ModelExperimentalSkin({
@@ -266,7 +287,7 @@ function initialize(sceneGraph) {
 
   const skinnedNodes = sceneGraph._skinnedNodes;
   const skinnedNodesLength = skinnedNodes.length;
-  for (let i = 0; i < skinnedNodesLength; i++) {
+  for (i = 0; i < skinnedNodesLength; i++) {
     const skinnedNodeIndex = skinnedNodes[i];
     const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
 
@@ -716,4 +737,46 @@ ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
     drawCommands.push.apply(drawCommands, result);
   });
   return drawCommands;
+};
+
+/**
+ * Sets the current value of an articulation stage.
+ *
+ * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+ * @param {Number} value The numeric value of this stage of the articulation.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.setArticulationStage = function (
+  articulationStageKey,
+  value
+) {
+  const names = articulationStageKey.split(" ");
+  if (names.length !== 2) {
+    return;
+  }
+
+  const articulationName = names[0];
+  const stageName = names[1];
+
+  const runtimeArticulation = this._runtimeArticulations[articulationName];
+  if (defined(runtimeArticulation)) {
+    runtimeArticulation.setArticulationStage(stageName, value);
+  }
+};
+
+/**
+ * Applies any modified articulation stages to the matrix of each node that participates
+ * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.applyArticulations = function () {
+  const runtimeArticulations = this._runtimeArticulations;
+  for (const articulationName in runtimeArticulations) {
+    if (runtimeArticulations.hasOwnProperty(articulationName)) {
+      const articulation = runtimeArticulations[articulationName];
+      articulation.apply();
+    }
+  }
 };

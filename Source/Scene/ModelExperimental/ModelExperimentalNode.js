@@ -62,11 +62,6 @@ export default function ModelExperimentalNode(options) {
   this._runtimeSkin = undefined;
   this._computedJointMatrices = [];
 
-  // Used for the AGI_articulations extension
-  this._runtimeArticulation = undefined;
-
-  initialize(this);
-
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
    * is an array of classes, each with a static method called
@@ -119,6 +114,8 @@ export default function ModelExperimentalNode(options) {
    * @private
    */
   this.instancingTranslationBuffer2D = undefined;
+
+  initialize(this);
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -436,10 +433,12 @@ function initialize(runtimeNode) {
     runtimeNode._morphWeights = node.morphWeights.slice();
   }
 
+  // If this node is affected by an articulation from the AGI_articulations
+  // extension, add this node to its list of affected nodes.
   const articulationName = node.articulationName;
   if (defined(articulationName)) {
     const sceneGraph = runtimeNode.sceneGraph;
-    const runtimeArticulations = sceneGraph.runtimeArticulations;
+    const runtimeArticulations = sceneGraph._runtimeArticulations;
 
     const runtimeArticulation = runtimeArticulations[articulationName];
     if (defined(runtimeArticulation)) {
