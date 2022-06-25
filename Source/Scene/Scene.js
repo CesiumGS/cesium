@@ -2880,7 +2880,7 @@ Scene.prototype.updateAndExecuteCommands = function (
     mode !== SceneMode.SCENE2D ||
     this._mapMode2D === MapMode2D.ROTATE
   ) {
-    exitWebVRUpdateViewport(this, passState)
+    exitWebVRUpdateViewport(this, passState);
     executeCommandsInViewport(true, this, passState, backgroundColor);
   } else {
     updateAndClearFramebuffers(this, passState, backgroundColor);
@@ -2945,10 +2945,9 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
   Camera.clone(savedCamera, camera);
 }
 
-
-function exitWebVRUpdateViewport(scene, passState){
+function exitWebVRUpdateViewport(scene, passState) {
   const viewport = passState.viewport;
-  if(viewport.x!==0){
+  if (viewport.x !== 0) {
     viewport.width = viewport.width * 2;
     viewport.x = 0;
   }
