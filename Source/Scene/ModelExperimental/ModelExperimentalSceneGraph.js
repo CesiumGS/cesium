@@ -224,7 +224,6 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
-  let i;
   const components = sceneGraph._components;
   const scene = components.scene;
 
@@ -237,7 +236,7 @@ function initialize(sceneGraph) {
   const articulationsLength = articulations.length;
 
   const runtimeArticulations = sceneGraph._runtimeArticulations;
-  for (i = 0; i < articulationsLength; i++) {
+  for (let i = 0; i < articulationsLength; i++) {
     const articulation = articulations[i];
     const runtimeArticulation = new ModelExperimentalArticulation({
       articulation: articulation,
@@ -259,7 +258,7 @@ function initialize(sceneGraph) {
   const rootNodes = scene.nodes;
   const rootNodesLength = rootNodes.length;
   const transformToRoot = Matrix4.IDENTITY;
-  for (i = 0; i < rootNodesLength; i++) {
+  for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
     const rootNodeIndex = traverseSceneGraph(
@@ -276,7 +275,7 @@ function initialize(sceneGraph) {
   const runtimeSkins = sceneGraph._runtimeSkins;
 
   const skinsLength = skins.length;
-  for (i = 0; i < skinsLength; i++) {
+  for (let i = 0; i < skinsLength; i++) {
     const skin = skins[i];
     runtimeSkins.push(
       new ModelExperimentalSkin({
@@ -288,7 +287,7 @@ function initialize(sceneGraph) {
 
   const skinnedNodes = sceneGraph._skinnedNodes;
   const skinnedNodesLength = skinnedNodes.length;
-  for (i = 0; i < skinnedNodesLength; i++) {
+  for (let i = 0; i < skinnedNodesLength; i++) {
     const skinnedNodeIndex = skinnedNodes[i];
     const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
 

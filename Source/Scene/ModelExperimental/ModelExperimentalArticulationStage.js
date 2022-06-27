@@ -170,10 +170,11 @@ const scratchArticulationRotation = new Matrix3();
 
 /**
  * Modifies a Matrix4 by applying a transformation for a given value of a stage.
- * Note this is different usage from the typical <code>result</code> parameter,
- * in that the incoming value of <code>result</code> is meaningful. Various stages
- * of an articulation can be multiplied together, so their transformations are
- * all merged into a composite Matrix4 representing them all.
+ * Note that the <code>result</code> parameter is not just a container for the
+ * returned value. The incoming value of <code>result</code> is part of the
+ * computation itself. Various stages of an articulation can be multiplied
+ * together, so their transformations are all merged into a composite Matrix4
+ * representing them all.
  *
  * @param {Matrix4} result The matrix to be modified.
  * @returns {Matrix4} The transformed matrix as requested by the articulation stage.
@@ -197,60 +198,60 @@ ModelExperimentalArticulationStage.prototype.applyStageToMatrix = function (
         CesiumMath.toRadians(value),
         scratchArticulationRotation
       );
-      Matrix4.multiplyByMatrix3(result, rotation, result);
+      result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;
     case ArticulationStageType.YROTATE:
       rotation = Matrix3.fromRotationY(
         CesiumMath.toRadians(value),
         scratchArticulationRotation
       );
-      Matrix4.multiplyByMatrix3(result, rotation, result);
+      result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;
     case ArticulationStageType.ZROTATE:
       rotation = Matrix3.fromRotationZ(
         CesiumMath.toRadians(value),
         scratchArticulationRotation
       );
-      Matrix4.multiplyByMatrix3(result, rotation, result);
+      result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;
     case ArticulationStageType.XTRANSLATE:
       cartesian.x = value;
       cartesian.y = 0.0;
       cartesian.z = 0.0;
-      Matrix4.multiplyByTranslation(result, cartesian, result);
+      result = Matrix4.multiplyByTranslation(result, cartesian, result);
       break;
     case ArticulationStageType.YTRANSLATE:
       cartesian.x = 0.0;
       cartesian.y = value;
       cartesian.z = 0.0;
-      Matrix4.multiplyByTranslation(result, cartesian, result);
+      result = Matrix4.multiplyByTranslation(result, cartesian, result);
       break;
     case ArticulationStageType.ZTRANSLATE:
       cartesian.x = 0.0;
       cartesian.y = 0.0;
       cartesian.z = value;
-      Matrix4.multiplyByTranslation(result, cartesian, result);
+      result = Matrix4.multiplyByTranslation(result, cartesian, result);
       break;
     case ArticulationStageType.XSCALE:
       cartesian.x = value;
       cartesian.y = 1.0;
       cartesian.z = 1.0;
-      Matrix4.multiplyByScale(result, cartesian, result);
+      result = Matrix4.multiplyByScale(result, cartesian, result);
       break;
     case ArticulationStageType.YSCALE:
       cartesian.x = 1.0;
       cartesian.y = value;
       cartesian.z = 1.0;
-      Matrix4.multiplyByScale(result, cartesian, result);
+      result = Matrix4.multiplyByScale(result, cartesian, result);
       break;
     case ArticulationStageType.ZSCALE:
       cartesian.x = 1.0;
       cartesian.y = 1.0;
       cartesian.z = value;
-      Matrix4.multiplyByScale(result, cartesian, result);
+      result = Matrix4.multiplyByScale(result, cartesian, result);
       break;
     case ArticulationStageType.UNIFORMSCALE:
-      Matrix4.multiplyByUniformScale(result, value, result);
+      result = Matrix4.multiplyByUniformScale(result, value, result);
       break;
     default:
       break;

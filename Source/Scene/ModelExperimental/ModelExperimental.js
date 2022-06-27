@@ -1295,8 +1295,9 @@ Object.defineProperties(ModelExperimental.prototype, {
 });
 
 /**
- * Sets the current value of an articulation stage.  After setting one or multiple stage values, call
- * ModelExperimental.applyArticulations() to cause the node matrices to be recalculated.
+ * Sets the current value of an articulation stage.  After setting one or
+ * multiple stage values, call ModelExperimental.applyArticulations() to
+ * cause the node matrices to be recalculated.
  *
  * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
  * @param {Number} value The numeric value of this stage of the articulation.
@@ -1304,6 +1305,10 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
  *
  * @see ModelExperimental#applyArticulations
+ *
+ * @example
+ * // Sets the value of the stage named "MoveX" belonging to the articulation named "SampleArticulation"
+ * model.setArticulationStage("SampleArticulation MoveX", 50.0);
  */
 ModelExperimental.prototype.setArticulationStage = function (
   articulationStageKey,
@@ -1322,8 +1327,9 @@ ModelExperimental.prototype.setArticulationStage = function (
 };
 
 /**
- * Applies any modified articulation stages to the matrix of each node that participates
- * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+ * Applies any modified articulation stages to the matrix of each node that
+ * participates in any articulation. Note that this will overwrite any node
+ * transformations on participating nodes.
  *
  * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
  */
