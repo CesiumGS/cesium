@@ -3,11 +3,12 @@ import CesiumMath from "./Math.js";
 /**
  * Resizes an image to ensure both width and height are powers of 2.
  * NOTE: The input image is resampled larger, rather than padded.
- * The aspect ratio of the image will change
+ * The aspect ratio of the image may change.
  *
- * @private
  * @param {HTMLImageElement|HTMLCanvasElement} image The image to be resized
  * @returns {HTMLCanvasElement} A new canvas with the resized image drawn to it
+ *
+ * @private
  */
 function resizeImageToNextPowerOfTwo(image) {
   const canvas = document.createElement("canvas");

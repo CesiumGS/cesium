@@ -15,6 +15,7 @@
 - Added `modelUpAxis` and `modelForwardAxis` constructor options to `Cesium3DTileset` [#10439](https://github.com/CesiumGS/cesium/pull/10439)
 - Added `heightReference` to `ModelExperimental`. [#10448](https://github.com/CesiumGS/cesium/pull/10448)
 - Added `silhouetteSize` and `silhouetteColor` to `ModelExperimental`. [#10457](https://github.com/CesiumGS/cesium/pull/10457)
+- Added support for mipmapped textures in `ModelExperimental`. [#10231](https://github.com/CesiumGS/cesium/issues/10231)
 
 ##### Fixes :wrench:
 

@@ -79,6 +79,8 @@ TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
 function createTexture(textureManager, loadedImage, context) {
   const { id, textureUniform, image } = loadedImage;
 
+  // If the context is WebGL1, and the sampler needs mipmaps or repeating
+  // boundary conditions, the image may need to be resized first
   const texture = context.webgl2
     ? getTextureAndMips(textureUniform, image, context)
     : getWebGL1Texture(textureUniform, image, context);
@@ -128,7 +130,7 @@ function getWebGL1Texture(textureUniform, image, context) {
   } else if (textureUniform.pixelDatatype === PixelDatatype.UNSIGNED_BYTE) {
     const imageFromArray = getImageFromTypedArray(typedArray, width, height);
     const resizedImage = resizeImageToNextPowerOfTwo(imageFromArray);
-    return getTextureAndMips(textureUniform, resizedImage, context);
+    return getTextureAndMips({ sampler }, resizedImage, context);
   }
 
   // typedArray is non-power-of-two but can't be resized. Warn and return raw texture (no mipmaps)
