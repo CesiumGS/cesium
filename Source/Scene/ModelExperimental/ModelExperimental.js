@@ -1819,13 +1819,13 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
 const scratchDisplayConditionCartesian = new Cartesian3();
 
 function passesDistanceDisplayCondition(model, frameState) {
-  const ddc = model.distanceDisplayCondition;
-  if (!defined(ddc)) {
+  const condition = model.distanceDisplayCondition;
+  if (!defined(condition)) {
     return true;
   }
 
-  const nearSquared = ddc.near * ddc.near;
-  const farSquared = ddc.far * ddc.far;
+  const nearSquared = condition.near * condition.near;
+  const farSquared = condition.far * condition.far;
   let distanceSquared;
 
   if (frameState.mode === SceneMode.SCENE2D) {

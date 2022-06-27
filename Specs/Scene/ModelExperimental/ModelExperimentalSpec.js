@@ -1538,11 +1538,11 @@ describe(
     it("initializes with distance display condition", function () {
       const near = 10.0;
       const far = 100.0;
-      const ddc = new DistanceDisplayCondition(near, far);
+      const condition = new DistanceDisplayCondition(near, far);
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
-          distanceDisplayCondition: ddc,
+          distanceDisplayCondition: condition,
         },
         scene
       ).then(function (model) {
@@ -1553,7 +1553,7 @@ describe(
     it("changing distance display condition works", function () {
       const near = 10.0;
       const far = 100.0;
-      const ddc = new DistanceDisplayCondition(near, far);
+      const condition = new DistanceDisplayCondition(near, far);
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1562,7 +1562,7 @@ describe(
       ).then(function (model) {
         verifyRender(model, true);
 
-        model.distanceDisplayCondition = ddc;
+        model.distanceDisplayCondition = condition;
         verifyRender(model, false);
 
         model.distanceDisplayCondition = undefined;
@@ -1573,7 +1573,7 @@ describe(
     it("distanceDisplayCondition works with camera movement", function () {
       const near = 10.0;
       const far = 100.0;
-      const ddc = new DistanceDisplayCondition(near, far);
+      const condition = new DistanceDisplayCondition(near, far);
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1583,7 +1583,7 @@ describe(
         verifyRender(model, true);
 
         // Model distance is smaller than near value, should not render
-        model.distanceDisplayCondition = ddc;
+        model.distanceDisplayCondition = condition;
         verifyRender(model, false);
 
         const frameState = scene.frameState;
@@ -1611,7 +1611,7 @@ describe(
     it("distanceDisplayCondition throws when near >= far", function () {
       const near = 101.0;
       const far = 100.0;
-      const ddc = new DistanceDisplayCondition(near, far);
+      const condition = new DistanceDisplayCondition(near, far);
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGltfUrl,
@@ -1619,7 +1619,7 @@ describe(
         scene
       ).then(function (model) {
         expect(function () {
-          model.distanceDisplayCondition = ddc;
+          model.distanceDisplayCondition = condition;
         }).toThrowDeveloperError();
       });
     });
