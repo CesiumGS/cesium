@@ -38,6 +38,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         projectTo2D: options.projectTo2D,
         heightReference: options.heightReference,
         scene: options.scene,
+        distanceDisplayCondition: options.distanceDisplayCondition,
       });
     } catch (error) {
       reject(error);

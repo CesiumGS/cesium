@@ -243,32 +243,32 @@ describe(
       expect(batchTable.hasProperty(0, "id")).toEqual(false);
     });
 
-    it("getPropertyNames throws with invalid batchId", function () {
+    it("getPropertyIds throws with invalid batchId", function () {
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
-        batchTable.getPropertyNames();
+        batchTable.getPropertyIds();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(-1);
+        batchTable.getPropertyIds(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(1);
+        batchTable.getPropertyIds(1);
       }).toThrowDeveloperError();
     });
 
-    it("getPropertyNames", function () {
+    it("getPropertyIds", function () {
       let batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-      expect(batchTable.getPropertyNames(0)).toEqual([]);
+      expect(batchTable.getPropertyIds(0)).toEqual([]);
 
       const batchTableJson = {
         height: [0.0],
         id: [0],
       };
       batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
-      expect(batchTable.getPropertyNames(0)).toEqual(["height", "id"]);
+      expect(batchTable.getPropertyIds(0)).toEqual(["height", "id"]);
     });
 
-    it("getPropertyNames works with results argument", function () {
+    it("getPropertyIds works with results argument", function () {
       const batchTableJson = {
         height: [0.0],
         id: [0],
@@ -279,7 +279,7 @@ describe(
         batchTableJson
       );
       const results = [];
-      const names = batchTable.getPropertyNames(0, results);
+      const names = batchTable.getPropertyIds(0, results);
       expect(names).toBe(results);
       expect(names).toEqual(["height", "id"]);
     });
@@ -1019,7 +1019,7 @@ describe(
       expect(doorFeature.hasProperty("height")).toBe(true);
 
       // Includes batch table properties and hierarchy properties from all inherited classes
-      const expectedPropertyNames = [
+      const expectedPropertyIds = [
         "height",
         "area",
         "door_mass",
@@ -1034,12 +1034,12 @@ describe(
       // door0 has two parents - building0 and classifier_old
       // building0 has two parents - zone0 and classifier_new
       if (multipleParents) {
-        expectedPropertyNames.push("year", "color", "name", "architect"); // classier_new
-        expectedPropertyNames.push("description", "inspection"); // classifier_old
+        expectedPropertyIds.push("year", "color", "name", "architect"); // classier_new
+        expectedPropertyIds.push("description", "inspection"); // classifier_old
       }
 
-      const propertyNames = doorFeature.getPropertyNames();
-      expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
+      const propertyIds = doorFeature.getPropertyIds();
+      expect(expectedPropertyIds.sort()).toEqual(propertyIds.sort());
 
       expect(doorFeature.getProperty("height")).toBe(5.0); // Gets generic property
       expect(doorFeature.getProperty("door_name")).toBe("door0"); // Gets class property
@@ -1066,7 +1066,7 @@ describe(
       expect(doorFeature.getExactClassName()).toBeUndefined();
       expect(doorFeature.hasProperty("door_name")).toBe(false);
       expect(doorFeature.hasProperty("height")).toBe(true);
-      expect(doorFeature.getPropertyNames()).toEqual(["height", "area"]);
+      expect(doorFeature.getPropertyIds()).toEqual(["height", "area"]);
       expect(doorFeature.getProperty("height")).toBe(10.0);
       expect(doorFeature.getProperty("door_name")).toBeUndefined();
       expect(doorFeature.getProperty("building_name")).toBeUndefined();
@@ -1086,7 +1086,7 @@ describe(
       expect(doorFeature.hasProperty("height")).toBe(true);
 
       // Includes batch table properties and hierarchy properties from all inherited classes
-      const expectedPropertyNames = [
+      const expectedPropertyIds = [
         "height",
         "area",
         "door_mass",
@@ -1094,8 +1094,8 @@ describe(
         "door_name",
       ];
 
-      const propertyNames = doorFeature.getPropertyNames();
-      expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
+      const propertyIds = doorFeature.getPropertyIds();
+      expect(expectedPropertyIds.sort()).toEqual(propertyIds.sort());
 
       expect(doorFeature.getProperty("height")).toBe(5.0); // Gets generic property
       expect(doorFeature.getProperty("door_name")).toBe("door0"); // Gets class property

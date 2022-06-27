@@ -16,6 +16,8 @@
 - Added `heightReference` to `ModelExperimental`. [#10448](https://github.com/CesiumGS/cesium/pull/10448)
 - Added `silhouetteSize` and `silhouetteColor` to `ModelExperimental`. [#10457](https://github.com/CesiumGS/cesium/pull/10457)
 - Added support for mipmapped textures in `ModelExperimental`. [#10231](https://github.com/CesiumGS/cesium/issues/10231)
+- Added `distanceDisplayCondition` to `ModelExperimental`. [#10481](https://github.com/CesiumGS/cesium/pull/10481)
+- Added support for `AGI_articulations` to `ModelExperimental`. [#10479](https://github.com/CesiumGS/cesium/pull/10479)
 
 ##### Fixes :wrench:
 
@@ -24,6 +26,10 @@
 - Warn if `Cesium3DTile` content.uri property is empty, and load empty tile. [#7263](https://github.com/CesiumGS/cesium/issues/7263)
 - Updated text highlighting for code examples in documentation. [#10051](https://github.com/CesiumGS/cesium/issues/10051)
 - Updated ModelExperimental shader defaults to match glTF spec. [#9992](https://github.com/CesiumGS/cesium/issues/9992)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- The `.getPropertyNames` methods of `Cesium3DTileFeature`, `Cesium3DTilePointFeature`, and `ModelFeature` have been deprecated and will be removed in 1.98. Use the `.getPropertyIds` methods instead.
 
 ### 1.94.3 - 2022-06-10
 

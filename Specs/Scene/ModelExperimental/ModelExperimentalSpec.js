@@ -9,6 +9,7 @@ import {
   Color,
   defaultValue,
   defined,
+  DistanceDisplayCondition,
   Ellipsoid,
   Event,
   FeatureDetection,
@@ -73,6 +74,8 @@ describe(
     );
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+    const boxArticulationsUrl =
+      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -1534,6 +1537,95 @@ describe(
       });
     });
 
+    it("initializes with distance display condition", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const condition = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          distanceDisplayCondition: condition,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing distance display condition works", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const condition = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.distanceDisplayCondition = condition;
+        verifyRender(model, false);
+
+        model.distanceDisplayCondition = undefined;
+        verifyRender(model, true);
+      });
+    });
+
+    it("distanceDisplayCondition works with camera movement", function () {
+      const near = 10.0;
+      const far = 100.0;
+      const condition = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        // Model distance is smaller than near value, should not render
+        model.distanceDisplayCondition = condition;
+        verifyRender(model, false);
+
+        const frameState = scene.frameState;
+
+        // Model distance is between near and far values, should render
+        frameState.camera.lookAt(
+          Cartesian3.ZERO,
+          new HeadingPitchRange(0.0, 0.0, (far + near) * 0.5)
+        );
+        verifyRender(model, true, {
+          zoomToModel: false,
+        });
+
+        // Model distance is greater than far value, should not render
+        frameState.camera.lookAt(
+          Cartesian3.ZERO,
+          new HeadingPitchRange(0.0, 0.0, far + 10.0)
+        );
+        verifyRender(model, false, {
+          zoomToModel: false,
+        });
+      });
+    });
+
+    it("distanceDisplayCondition throws when near >= far", function () {
+      const near = 101.0;
+      const far = 100.0;
+      const condition = new DistanceDisplayCondition(near, far);
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.distanceDisplayCondition = condition;
+        }).toThrowDeveloperError();
+      });
+    });
+
     it("initializes with model color", function () {
       return loadAndZoomToModelExperimental(
         { gltf: boxTexturedGltfUrl, color: Color.BLACK },
@@ -2484,6 +2576,33 @@ describe(
 
         model.clippingPlanes.unionClippingRegions = false;
         scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
+    it("applies articulations", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.setArticulationStage("SampleArticulation MoveX", 10.0);
+        model.applyArticulations();
+        verifyRender(model, false);
+
+        model.setArticulationStage("SampleArticulation MoveX", 0.0);
+        model.applyArticulations();
+        verifyRender(model, true);
+
+        model.setArticulationStage("SampleArticulation Size", 0.0);
+        model.applyArticulations();
+        verifyRender(model, false);
+
+        model.setArticulationStage("SampleArticulation Size", 1.0);
+        model.applyArticulations();
         verifyRender(model, true);
       });
     });
