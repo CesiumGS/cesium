@@ -74,6 +74,8 @@ describe(
     );
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+    const boxArticulationsUrl =
+      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -2574,6 +2576,33 @@ describe(
 
         model.clippingPlanes.unionClippingRegions = false;
         scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
+    it("applies articulations", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.setArticulationStage("SampleArticulation MoveX", 10.0);
+        model.applyArticulations();
+        verifyRender(model, false);
+
+        model.setArticulationStage("SampleArticulation MoveX", 0.0);
+        model.applyArticulations();
+        verifyRender(model, true);
+
+        model.setArticulationStage("SampleArticulation Size", 0.0);
+        model.applyArticulations();
+        verifyRender(model, false);
+
+        model.setArticulationStage("SampleArticulation Size", 1.0);
+        model.applyArticulations();
         verifyRender(model, true);
       });
     });
