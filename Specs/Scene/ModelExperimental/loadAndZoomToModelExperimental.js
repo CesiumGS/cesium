@@ -34,6 +34,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         lightColor: options.lightColor,
         imageBasedLighting: options.imageBasedLighting,
         backFaceCulling: options.backFaceCulling,
+        credit: options.credit,
         showCreditsOnScreen: options.showCreditsOnScreen,
         projectTo2D: options.projectTo2D,
         heightReference: options.heightReference,

@@ -2,6 +2,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
+import Credit from "../../Core/Credit.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
@@ -72,6 +73,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
@@ -104,8 +106,9 @@ export default function ModelExperimental(options) {
    * ModelExperimentalType is part of the private API.
    *
    * @type {ModelExperimentalType}
-   * @private
    * @readonly
+   *
+   * @private
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
@@ -292,7 +295,22 @@ export default function ModelExperimental(options) {
   );
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
+  // Credit specified by the user.
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+
+  this._credit = credit;
+
+  // Credits to be added from the Resource (if it is an IonResource)
+  this._resourceCredits = [];
+
+  // Credits parsed from the glTF by GltfLoader.
+  this._gltfCredits = [];
+
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+  this._showCreditsOnScreenDirty = true;
 
   this._splitDirection = defaultValue(
     options.splitDirection,
@@ -406,10 +424,14 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    model._sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelExperimentalSceneGraph({
       model: model,
       modelComponents: components,
     });
+
+    model._sceneGraph = sceneGraph;
+    model._gltfCredits = sceneGraph.components.asset.credits;
+
     model._resourcesLoaded = true;
   });
 
@@ -723,6 +745,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {StructuralMetadata}
    * @readonly
+   *
    * @private
    */
   structuralMetadata: {
@@ -1212,6 +1235,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
+   *
    * @private
    */
   computedScale: {
@@ -1287,6 +1312,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Gets the credit that will be displayed for the model
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
+
+  /**
    * Gets or sets whether the credits of the model will be displayed on the screen
    *
    * @memberof ModelExperimental.prototype
@@ -1300,6 +1339,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._showCreditsOnScreen;
     },
     set: function (value) {
+      if (this._showCreditsOnScreen !== value) {
+        this._showCreditsOnScreenDirty = true;
+      }
+
       this._showCreditsOnScreen = value;
     },
   },
@@ -1310,6 +1353,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {SplitDirection}
+   *
    * @default {@link SplitDirection.NONE}
    */
   splitDirection: {
@@ -1450,6 +1494,7 @@ ModelExperimental.prototype.update = function (frameState) {
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
+  updateShowCreditsOnScreen(this);
   submitDrawCommands(this, frameState);
 };
 
@@ -1749,6 +1794,30 @@ function updateSceneGraph(model, frameState) {
   sceneGraph.update(frameState, updateForAnimations);
 }
 
+function updateShowCreditsOnScreen(model) {
+  if (!model._showCreditsOnScreenDirty) {
+    return;
+  }
+  model._showCreditsOnScreenDirty = false;
+
+  const showOnScreen = model._showCreditsOnScreen;
+  if (defined(model._credit)) {
+    model._credit.showOnScreen = showOnScreen;
+  }
+
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let i = 0; i < resourceCreditsLength; i++) {
+    resourceCredits[i].showOnScreen = showOnScreen;
+  }
+
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let i = 0; i < gltfCreditsLength; i++) {
+    gltfCredits[i].showOnScreen = showOnScreen;
+  }
+}
+
 function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
@@ -1772,16 +1841,7 @@ function submitDrawCommands(model, frameState) {
     (!invisible || silhouette);
 
   if (showModel) {
-    const asset = model._sceneGraph.components.asset;
-    const credits = asset.credits;
-
-    const length = credits.length;
-    for (let i = 0; i < length; i++) {
-      const credit = credits[i];
-      credit.showOnScreen = model._showCreditsOnScreen;
-      frameState.creditDisplay.addCredit(credit);
-    }
-
+    addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
@@ -1902,6 +1962,27 @@ function passesDistanceDisplayCondition(model, frameState) {
   }
 
   return distanceSquared >= nearSquared && distanceSquared <= farSquared;
+}
+
+function addCreditsToCreditDisplay(model, frameState) {
+  const creditDisplay = frameState.creditDisplay;
+  // Add all credits to the credit display.
+  const credit = model._credit;
+  if (defined(credit)) {
+    creditDisplay.addCredit(credit);
+  }
+
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let c = 0; c < resourceCreditsLength; c++) {
+    creditDisplay.addCredit(resourceCredits[c]);
+  }
+
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let c = 0; c < gltfCreditsLength; c++) {
+    creditDisplay.addCredit(gltfCredits[c]);
+  }
 }
 
 /**
@@ -2112,6 +2193,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
@@ -2327,6 +2409,7 @@ function makeModelOptions(loader, modelType, options) {
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
+    credit: options.credit,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
