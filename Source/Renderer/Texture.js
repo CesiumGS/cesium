@@ -977,8 +977,8 @@ Texture.prototype.copyFromFramebuffer = function (
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.
- * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
- * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
+ * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap() in a WebGL1 context.
+ * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap() in a WebGL1 context.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
