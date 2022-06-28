@@ -1,5 +1,6 @@
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
+import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
@@ -58,8 +59,10 @@ function generateOutlines(loadPlan) {
     originalVertexCount: vertexCount,
   });
 
-  // The generator modifies the indices
+  // The generator modifies/adds indices. In some uncommon cases it may have
+  // to upgrade to 16- or 32-bit indices so the datatype may change.
   indices.typedArray = generator.updatedTriangleIndices;
+  indices.indexDatatype = IndexDatatype.fromTypedArray(indices.typedArray);
 
   // The outline generator creates a new attribute for the outline coordinates
   // that are used with a lookup texture.
@@ -89,7 +92,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   const attribute = new ModelComponents.Attribute();
   attribute.name = "_OUTLINE_COORDINATES";
   attribute.packedTypedArray = outlineCoordinatesTypedArray;
-  attribute.componentDataType = ComponentDatatype.FLOAT;
+  attribute.componentDatatype = ComponentDatatype.FLOAT;
   attribute.type = AttributeType.VEC3;
   attribute.normalized = false;
   attribute.count = outlineCoordinatesTypedArray.length / 3;
@@ -114,11 +117,13 @@ function generateAttributeBuffers(attributePlans, context) {
     const packedTypedArray = attribute.packedTypedArray;
 
     if (attributePlan.loadBuffer) {
-      attribute.buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         typedArray: packedTypedArray,
         context: context,
         usage: BufferUsage.STATIC_DRAW,
       });
+      buffer.vertexArrayDestroyable = false;
+      attribute.buffer = buffer;
     }
 
     if (attributePlan.loadTypedArray) {
@@ -140,12 +145,14 @@ function generateAttributeBuffers(attributePlans, context) {
 function generateIndexBuffers(indicesPlan, context) {
   const indices = indicesPlan.indices;
   if (indicesPlan.loadBuffer) {
-    indices.buffer = Buffer.createIndexBuffer({
+    const buffer = Buffer.createIndexBuffer({
       typedArray: indices.typedArray,
       context: context,
       usage: BufferUsage.STATIC_DRAW,
       indexDatatype: indices.indexDatatype,
     });
+    indices.buffer = buffer;
+    buffer.vertexArrayDestroyable = false;
   }
 
   if (!indicesPlan.loadIndexBuffer) {
