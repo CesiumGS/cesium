@@ -1039,7 +1039,6 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
     material.pbrSpecularGlossiness = pbrSpecularGlossiness;
   } else if (defined(pbrMetallicRoughness)) {
     const metallicRoughness = new MetallicRoughness();
-    material.metallicRoughness = metallicRoughness;
 
     if (defined(pbrMetallicRoughness.baseColorTexture)) {
       metallicRoughness.baseColorTexture = loadTexture(
@@ -1063,7 +1062,7 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
     );
     metallicRoughness.metallicFactor = pbrMetallicRoughness.metallicFactor;
     metallicRoughness.roughnessFactor = pbrMetallicRoughness.roughnessFactor;
-    material.pbrMetallicRoughness = pbrMetallicRoughness;
+    material.metallicRoughness = metallicRoughness;
   }
 
   // Top level textures
