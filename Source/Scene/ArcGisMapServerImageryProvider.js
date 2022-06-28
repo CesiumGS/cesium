@@ -234,7 +234,7 @@ function ArcGisMapServerImageryProvider(options) {
   const that = this;
   let metadataError;
 
-  function metadataSuccess(data) {
+  function metadataSuccess(data, resolve, reject) {
     const tileInfo = data.tileInfo;
     if (!defined(tileInfo)) {
       that._useTiles = false;
@@ -263,10 +263,12 @@ function ArcGisMapServerImageryProvider(options) {
           undefined,
           undefined,
           undefined,
-          requestMetadata
+          requestMetadata,
+          resolve,
+          reject
         );
         if (!metadataError.retry) {
-          that._readyPromise.reject(new RuntimeError(message));
+          reject(new RuntimeError(message));
         }
         return;
       }
@@ -335,7 +337,7 @@ function ArcGisMapServerImageryProvider(options) {
               requestMetadata
             );
             if (!metadataError.retry) {
-              that._readyPromise.reject(new RuntimeError(extentMessage));
+              reject(new RuntimeError(extentMessage));
             }
             return;
           }
@@ -368,11 +370,11 @@ function ArcGisMapServerImageryProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
+    resolve(true);
     TileProviderError.handleSuccess(metadataError);
   }
 
-  function metadataFailure(e) {
+  function metadataFailure(e, reject) {
     const message = `An error occurred while accessing ${that._resource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
@@ -384,10 +386,10 @@ function ArcGisMapServerImageryProvider(options) {
       undefined,
       requestMetadata
     );
-    that._readyPromise.reject(new RuntimeError(message));
+    reject(new RuntimeError(message));
   }
 
-  function requestMetadata() {
+  function requestMetadata(resolve, reject) {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
         f: "json",
@@ -396,18 +398,20 @@ function ArcGisMapServerImageryProvider(options) {
     resource
       .fetchJsonp()
       .then(function (result) {
-        metadataSuccess(result);
+        metadataSuccess(result, resolve, reject);
       })
       .catch(function (e) {
-        metadataFailure(e);
+        metadataFailure(e, reject);
       });
   }
 
   if (this._useTiles) {
-    requestMetadata();
+    this._readyPromise = new Promise((resolve, reject) => {
+      requestMetadata(resolve, reject);
+    });
   } else {
     this._ready = true;
-    this._readyPromise.resolve(true);
+    this._readyPromise = Promise.resolve(true);
   }
 }
 
@@ -677,7 +681,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

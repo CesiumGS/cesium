@@ -104,6 +104,8 @@ function TileProviderError(
  *        error is not specific to a particular tile.
  * @param {TileProviderError.RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
  *        operation will not be retried.
+ * @param {Function} resolveFunction The function to call to resolve the operation. Must be defined, if retryFunction is defined.
+ * @param {Function} rejectFunction The function to call to reject the operation. Must be defined, if retryFunction is defined.
  * @param {Error} [errorDetails] The error or exception that occurred, if any.
  * @returns {TileProviderError} The error instance that was passed to the event listeners and that
  *          should be passed to this function the next time it is called for the same error in order
@@ -118,6 +120,8 @@ TileProviderError.handleError = function (
   y,
   level,
   retryFunction,
+  resolveFunction,
+  rejectFunction,
   errorDetails
 ) {
   let error = previousError;
@@ -153,7 +157,7 @@ TileProviderError.handleError = function (
   }
 
   if (error.retry && defined(retryFunction)) {
-    retryFunction();
+    retryFunction(resolveFunction, rejectFunction);
   }
 
   return error;

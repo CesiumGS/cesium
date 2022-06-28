@@ -2,7 +2,6 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -196,7 +195,6 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
 
   let tileProtocol = this._tileProtocol;
 
@@ -228,8 +226,7 @@ function BingMapsImageryProvider(options) {
 
   function metadataSuccess(data) {
     if (data.resourceSets.length !== 1) {
-      metadataFailure();
-      return;
+      return metadataFailure();
     }
     const resource = data.resourceSets[0].resources[0];
 
@@ -278,8 +275,8 @@ function BingMapsImageryProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
     TileProviderError.handleSuccess(metadataError);
+    return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
@@ -294,21 +291,21 @@ function BingMapsImageryProvider(options) {
       undefined,
       requestMetadata
     );
-    that._readyPromise.reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   }
 
   const cacheKey = metadataResource.url;
   function requestMetadata() {
     const promise = metadataResource.fetchJsonp("jsonp");
     BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-    promise.then(metadataSuccess).catch(metadataFailure);
+    return promise.then(metadataSuccess).catch(metadataFailure);
   }
 
   const promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (defined(promise)) {
-    promise.then(metadataSuccess).catch(metadataFailure);
+    this._readyPromise = promise.then(metadataSuccess).catch(metadataFailure);
   } else {
-    requestMetadata();
+    this._readyPromise = requestMetadata();
   }
 }
 
@@ -558,7 +555,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
