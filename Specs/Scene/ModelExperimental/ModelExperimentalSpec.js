@@ -17,6 +17,7 @@ import {
   HeadingPitchRoll,
   HeightReference,
   ImageBasedLighting,
+  JobScheduler,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
@@ -432,6 +433,26 @@ describe(
           .catch(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("passes asynchronous option to loader", function () {
+      const jobSchedulerExecute = spyOn(
+        JobScheduler.prototype,
+        "execute"
+      ).and.callThrough();
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+          asynchronous: false,
+        },
+        scene
+      ).then(function (model) {
+        const loader = model.loader;
+        expect(loader._asynchronous).toBe(false);
+
+        expect(jobSchedulerExecute).not.toHaveBeenCalled();
       });
     });
 

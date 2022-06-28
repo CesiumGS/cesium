@@ -29,6 +29,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         debugWireframe: options.debugWireframe,
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+        asynchronous: options.asynchronous,
         incrementallyLoadTextures: options.incrementallyLoadTextures,
         clippingPlanes: options.clippingPlanes,
         lightColor: options.lightColor,
