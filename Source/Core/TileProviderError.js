@@ -118,6 +118,8 @@ TileProviderError.handleError = function (
   y,
   level,
   retryFunction,
+  resolve,
+  reject,
   errorDetails
 ) {
   let error = previousError;
@@ -153,7 +155,7 @@ TileProviderError.handleError = function (
   }
 
   if (error.retry && defined(retryFunction)) {
-    retryFunction();
+    retryFunction(resolve, reject);
   }
 
   return error;

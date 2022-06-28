@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -227,13 +228,13 @@ function ArcGisMapServerImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = undefined;
+  this._readyPromise = defer();
 
   // Grab the details of this MapServer.
   const that = this;
   let metadataError;
 
-  function metadataSuccess(data) {
+  function metadataSuccess(data, resolve, reject) {
     const tileInfo = data.tileInfo;
     if (!defined(tileInfo)) {
       that._useTiles = false;
@@ -262,12 +263,14 @@ function ArcGisMapServerImageryProvider(options) {
           undefined,
           undefined,
           undefined,
-          requestMetadata
+          requestMetadata,
+          resolve,
+          reject
         );
         if (!metadataError.retry) {
-          return Promise.reject(message);
+          reject(new RuntimeError(message));
         }
-        return Promise.reject();
+        return;
       }
       that._maximumLevel = data.tileInfo.lods.length - 1;
 
@@ -334,9 +337,9 @@ function ArcGisMapServerImageryProvider(options) {
               requestMetadata
             );
             if (!metadataError.retry) {
-              return Promise.reject(extentMessage);
+              reject(new RuntimeError(extentMessage));
             }
-            return Promise.reject();
+            return;
           }
         }
       } else {
@@ -367,11 +370,11 @@ function ArcGisMapServerImageryProvider(options) {
     }
 
     that._ready = true;
+    resolve(true);
     TileProviderError.handleSuccess(metadataError);
-    return Promise.resolve(true);
   }
 
-  function metadataFailure(e) {
+  function metadataFailure(e, reject) {
     const message = `An error occurred while accessing ${that._resource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
@@ -383,30 +386,33 @@ function ArcGisMapServerImageryProvider(options) {
       undefined,
       requestMetadata
     );
-    return Promise.reject(message);
+    reject(new RuntimeError(message));
   }
 
-  function requestMetadata() {
+  function requestMetadata(resolve, reject) {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
         f: "json",
       },
     });
-    return resource
+    resource
       .fetchJsonp()
       .then(function (result) {
-        return metadataSuccess(result);
+        metadataSuccess(result, resolve, reject);
       })
       .catch(function (e) {
-        return metadataFailure(new RuntimeError(e));
+        metadataFailure(e, reject);
       });
   }
 
   if (this._useTiles) {
-    return requestMetadata();
+    this._readyPromise = new Promise((resolve, reject) => {
+      requestMetadata(resolve, reject);
+    });
+  } else {
+    this._ready = true;
+    this._readyPromise = Promise.resolve(true);
   }
-  this._ready = true;
-  return Promise.resolve(true);
 }
 
 function buildImageResource(imageryProvider, x, y, level, request) {
@@ -670,7 +676,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Promise.<Boolean>|undefined}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
