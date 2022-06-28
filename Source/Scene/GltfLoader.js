@@ -814,7 +814,7 @@ function loadVertexAttribute(
   // - On the other hand, if post-processing is not needed, just set the load
   // flags directly
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
-  const loadTypedArray = needsPostProcessing ? false : outputTypedArray;
+  const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
   const loadAsTypedArrayPacked = needsPostProcessing
     ? true
     : outputTypedArrayPacked;
@@ -914,7 +914,7 @@ function loadIndices(
   // - On the other hand, if post-processing is not needed, just set the load
   // flags directly
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
-  const loadTypedArray = needsPostProcessing ? false : outputTypedArray;
+  const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
 
   const indexBufferLoader = loadIndexBuffer(
     loader,

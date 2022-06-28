@@ -71,6 +71,7 @@ function generateOutlines(loadPlan) {
   outlineCoordinatesPlan.loadTypedArray = false;
   outlineCoordinatesPlan.loadPackedTypedArray = false;
   loadPlan.attributePlans.push(outlineCoordinatesPlan);
+  primitive.outlineCoordinates = outlineCoordinatesPlan.attribute;
 
   // Some vertices may be copied due to the addition of the new attribute
   // which may have multiple values at a vertex depending on the face
@@ -97,16 +98,15 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
 }
 
 function generateBuffers(loadPlan, frameState) {
-  generateAttributeBuffers(loadPlan.attributePlans, frameState);
+  const context = frameState.context;
+  generateAttributeBuffers(loadPlan.attributePlans, context);
 
   if (defined(loadPlan.indicesPlan)) {
-    generateIndexBuffers(loadPlan.indicesPlan, frameState);
+    generateIndexBuffers(loadPlan.indicesPlan, context);
   }
 }
 
-function generateAttributeBuffers(attributePlans, frameState) {
-  const context = frameState.context;
-
+function generateAttributeBuffers(attributePlans, context) {
   const attributesLength = attributePlans.length;
   for (let i = 0; i < attributesLength; i++) {
     const attributePlan = attributePlans[i];
