@@ -20,6 +20,7 @@ import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
+import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
@@ -47,14 +48,16 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 const SpecularGlossiness = ModelComponents.SpecularGlossiness;
 const Material = ModelComponents.Material;
 
+// TODO: Document these
 const GltfLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
   LOADED: 2,
   PROCESSING: 3,
-  PROCESSED: 4,
-  READY: 4,
-  FAILED: 5,
+  POST_PROCESSING: 4,
+  PROCESSED: 5,
+  READY: 6,
+  FAILED: 7,
 };
 
 /**
@@ -143,6 +146,11 @@ export default function GltfLoader(options) {
   this._texturesLoadedPromise = undefined;
   this._process = function (loader, frameState) {};
   this._processTextures = function (loader, frameState) {};
+
+  // Information about whether to load primitives as typed arrays or buffers,
+  // and if further post-processing is needed after loading (e.g. for
+  // generating outlines)
+  this._primitiveLoadPlans = [];
 
   // Loaders that need to be processed before the glTF becomes ready
   this._loaderPromises = [];
@@ -296,6 +304,11 @@ GltfLoader.prototype.load = function () {
           processLoaders(loader, frameState);
         }
 
+        if (loader._state === GltfLoaderState.POST_PROCESSING) {
+          postProcessGeometry(loader, frameState);
+          loader._state = GltfLoaderState.PROCESSED;
+        }
+
         if (loader._state === GltfLoaderState.PROCESSED) {
           unloadBufferViews(loader); // Buffer views can be unloaded after the data has been copied
           loader._state = GltfLoaderState.READY;
@@ -364,21 +377,30 @@ function handleError(gltfLoader, error) {
 }
 
 function processLoaders(loader, frameState) {
-  let i;
   const bufferViewLoaders = loader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
-  for (i = 0; i < bufferViewLoadersLength; ++i) {
+  for (let i = 0; i < bufferViewLoadersLength; ++i) {
     bufferViewLoaders[i].process(frameState);
   }
 
   const geometryLoaders = loader._geometryLoaders;
   const geometryLoadersLength = geometryLoaders.length;
-  for (i = 0; i < geometryLoadersLength; ++i) {
+  for (let i = 0; i < geometryLoadersLength; ++i) {
     geometryLoaders[i].process(frameState);
   }
 
   if (defined(loader._structuralMetadataLoader)) {
     loader._structuralMetadataLoader.process(frameState);
+  }
+}
+
+function postProcessGeometry(loader, frameState) {
+  // Apply post-processing steps on geometry such as
+  // updating attributes for rendering outlines.
+  const loadPlans = loader._primitiveLoadPlans;
+  const length = loadPlans.length;
+  for (let i = 0; i < length; i++) {
+    loadPlans[i].postProcess(frameState);
   }
 }
 
@@ -430,16 +452,15 @@ function loadVertexBuffer(
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(loader, gltf, accessorId, draco, frameState) {
-  const loadAttributesAsTypedArray = loader._loadAttributesAsTypedArray;
-
-  // Load the index buffer as a typed array to generate wireframes in WebGL1.
-  const loadForWireframe =
-    loader._loadIndicesForWireframe && !frameState.context.webgl2;
-
-  const loadBuffer = !loadAttributesAsTypedArray;
-  const loadTypedArray = loadAttributesAsTypedArray || loadForWireframe;
-
+function loadIndexBuffer(
+  loader,
+  gltf,
+  accessorId,
+  draco,
+  frameState,
+  loadBuffer,
+  loadTypedArray
+) {
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -761,6 +782,7 @@ function loadVertexAttribute(
   gltfSemantic,
   draco,
   hasInstances,
+  needsPostProcessing,
   frameState
 ) {
   const semanticInfo = getSemanticInfo(
@@ -778,12 +800,26 @@ function loadVertexAttribute(
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
-  const loadAsTypedArrayOnly = loader._loadAttributesAsTypedArray;
-  const loadBuffer = !loadAsTypedArrayOnly;
-  const loadTypedArray = loadAsTypedArrayOnly || loadFor2D;
-  const loadAsTypedArrayPacked = false;
+  // Whether the final output should be a buffer or typed array
+  // after loading and post-processing.
+  const outputTypedArrayOnly = loader._loadAttributesAsTypedArray;
+  const outputBuffer = !outputTypedArrayOnly;
+  const outputTypedArray = outputTypedArrayOnly || loadFor2D;
+  const outputTypedArrayPacked = false;
 
-  return loadAttribute(
+  // Determine what to load right now:
+  //
+  // - If post-processing is needed, load a packed typed array for
+  // further processing, defer the buffer loading until later.
+  // - On the other hand, if post-processing is not needed, just set the load
+  // flags directly
+  const loadBuffer = needsPostProcessing ? false : outputBuffer;
+  const loadTypedArray = needsPostProcessing ? false : outputTypedArray;
+  const loadAsTypedArrayPacked = needsPostProcessing
+    ? true
+    : outputTypedArrayPacked;
+
+  const attribute = loadAttribute(
     loader,
     gltf,
     accessorId,
@@ -794,6 +830,12 @@ function loadVertexAttribute(
     loadTypedArray,
     loadAsTypedArrayPacked
   );
+
+  const attributePlan = new PrimitiveLoadPlan.AttributeLoadPlan(attribute);
+  attributePlan.loadBuffer = outputBuffer;
+  attributePlan.loadTypedArray = outputTypedArray;
+  attributePlan.loadPackedTypedArray = outputTypedArrayPacked;
+  return attributePlan;
 }
 
 function loadInstancedAttribute(
@@ -837,7 +879,14 @@ function loadInstancedAttribute(
   );
 }
 
-function loadIndices(loader, gltf, accessorId, draco, frameState) {
+function loadIndices(
+  loader,
+  gltf,
+  accessorId,
+  draco,
+  needsPostProcessing,
+  frameState
+) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -848,12 +897,33 @@ function loadIndices(loader, gltf, accessorId, draco, frameState) {
   const indices = new Indices();
   indices.count = accessor.count;
 
+  const loadAttributesAsTypedArray = loader._loadAttributesAsTypedArray;
+  // Load the index buffer as a typed array to generate wireframes in WebGL1.
+  const loadForWireframe =
+    loader._loadIndicesForWireframe && !frameState.context.webgl2;
+
+  // Whether the final output should be a buffer or typed array
+  // after loading and post-processing.
+  const outputBuffer = !loadAttributesAsTypedArray;
+  const outputTypedArray = loadAttributesAsTypedArray || loadForWireframe;
+
+  // Determine what to load right now:
+  //
+  // - If post-processing is needed, load a packed typed array for
+  // further processing, defer the buffer loading until later.
+  // - On the other hand, if post-processing is not needed, just set the load
+  // flags directly
+  const loadBuffer = needsPostProcessing ? false : outputBuffer;
+  const loadTypedArray = needsPostProcessing ? false : outputTypedArray;
+
   const indexBufferLoader = loadIndexBuffer(
     loader,
     gltf,
     accessorId,
     draco,
-    frameState
+    frameState,
+    loadBuffer,
+    loadTypedArray
   );
 
   const promise = indexBufferLoader.promise.then(function (indexBufferLoader) {
@@ -869,7 +939,10 @@ function loadIndices(loader, gltf, accessorId, draco, frameState) {
 
   loader._loaderPromises.push(promise);
 
-  return indices;
+  const indicesPlan = new PrimitiveLoadPlan.IndicesLoadPlan(indices);
+  indicesPlan.loadBuffer = outputBuffer;
+  indicesPlan.loadTypedArray = outputTypedArray;
+  return indicesPlan;
 }
 
 function loadTexture(
@@ -1158,16 +1231,39 @@ function loadFeatureIdTextureLegacy(
   return featureIdTexture;
 }
 
-function loadMorphTarget(loader, gltf, target) {
+function loadMorphTarget(
+  loader,
+  gltf,
+  target,
+  needsPostProcessing,
+  primitiveLoadPlan,
+  frameState
+) {
   const morphTarget = new MorphTarget();
+
+  // Don't pass in draco object since morph targets can't be draco compressed
+  const draco = undefined;
+  const hasInstances = false;
 
   for (const semantic in target) {
     if (target.hasOwnProperty(semantic)) {
       const accessorId = target[semantic];
-      morphTarget.attributes.push(
-        // Don't pass in draco object since morph targets can't be draco compressed
-        loadVertexAttribute(loader, gltf, accessorId, semantic, undefined)
+
+      const attributePlan = loadVertexAttribute(
+        loader,
+        gltf,
+        accessorId,
+        semantic,
+        draco,
+        hasInstances,
+        needsPostProcessing,
+        frameState
       );
+      morphTarget.attributes.push(attributePlan.attribute);
+
+      // The load plan doesn't need to distinguish morph target attributes from
+      // regular attributes
+      primitiveLoadPlan.attributePlans.push(attributePlan);
     }
   }
 
@@ -1183,6 +1279,8 @@ function loadPrimitive(
   frameState
 ) {
   const primitive = new Primitive();
+  const primitivePlan = new PrimitiveLoadPlan(primitive);
+  loader._primitiveLoadPlans.push(primitivePlan);
 
   const materialId = gltfPrimitive.material;
   if (defined(materialId)) {
@@ -1198,7 +1296,19 @@ function loadPrimitive(
     gltfPrimitive.extensions,
     defaultValue.EMPTY_OBJECT
   );
-  //const outlines = extensions.CESIUM_primitive_outline;
+
+  let needsPostProcessing = false;
+  const outlineExtension = extensions.CESIUM_primitive_outline;
+  if (defined(outlineExtension)) {
+    needsPostProcessing = true;
+    primitivePlan.needsOutlines = true;
+    primitivePlan.outlineIndices = loadPrimitiveOutline(
+      loader,
+      gltf,
+      outlineExtension,
+      primitivePlan
+    );
+  }
 
   const draco = extensions.KHR_draco_mesh_compression;
 
@@ -1207,17 +1317,18 @@ function loadPrimitive(
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         const accessorId = attributes[semantic];
-        primitive.attributes.push(
-          loadVertexAttribute(
-            loader,
-            gltf,
-            accessorId,
-            semantic,
-            draco,
-            hasInstances,
-            frameState
-          )
+        const attributePlan = loadVertexAttribute(
+          loader,
+          gltf,
+          accessorId,
+          semantic,
+          draco,
+          hasInstances,
+          needsPostProcessing,
+          frameState
         );
+        primitivePlan.attributePlans.push(attributePlan);
+        primitive.attributes.push(attributePlan.attribute);
       }
     }
   }
@@ -1226,13 +1337,34 @@ function loadPrimitive(
   if (defined(targets)) {
     const targetsLength = targets.length;
     for (let i = 0; i < targetsLength; ++i) {
-      primitive.morphTargets.push(loadMorphTarget(loader, gltf, targets[i]));
+      primitive.morphTargets.push(
+        loadMorphTarget(
+          loader,
+          gltf,
+          targets[i],
+          needsPostProcessing,
+          primitivePlan,
+          frameState
+        )
+      );
     }
   }
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
-    primitive.indices = loadIndices(loader, gltf, indices, draco, frameState);
+    const indicesPlan = loadIndices(
+      loader,
+      gltf,
+      indices,
+      draco,
+      needsPostProcessing,
+      frameState
+    );
+
+    if (defined(indicesPlan)) {
+      primitivePlan.indicesPlan = indicesPlan;
+      primitive.indices = indicesPlan.indices;
+    }
   }
 
   // With the latest revision, feature IDs are defined in EXT_mesh_features
@@ -1273,6 +1405,12 @@ function loadPrimitive(
   primitive.primitiveType = gltfPrimitive.mode;
 
   return primitive;
+}
+
+function loadPrimitiveOutline(loader, gltf, outlineExtension) {
+  const accessorId = outlineExtension.indices;
+  const useQuaternion = false;
+  return loadAccessor(loader, gltf, accessorId, useQuaternion);
 }
 
 // For EXT_mesh_features
@@ -1925,7 +2063,7 @@ function parse(
       if (loader.isDestroyed()) {
         return;
       }
-      loader._state = GltfLoaderState.PROCESSED;
+      loader._state = GltfLoaderState.POST_PROCESSING;
     })
     .catch(rejectPromise);
 
@@ -1935,6 +2073,8 @@ function parse(
       if (loader.isDestroyed()) {
         return;
       }
+
+      // post processing only applies for geometry
       loader._textureState = GltfLoaderState.PROCESSED;
     })
     .catch(rejectTexturesPromise);

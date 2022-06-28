@@ -54,3 +54,5 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addVertexLines([PrimitiveOutlineStageVS]);
   shaderBuilder.addFragmentLines([PrimitiveOutlineStageFS]);
 };
+
+export default PrimitiveOutlinePipelineStage;
