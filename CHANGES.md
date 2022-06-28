@@ -17,6 +17,7 @@
 - Added `silhouetteSize` and `silhouetteColor` to `ModelExperimental`. [#10457](https://github.com/CesiumGS/cesium/pull/10457)
 - Added `distanceDisplayCondition` to `ModelExperimental`. [#10481](https://github.com/CesiumGS/cesium/pull/10481)
 - Added support for `AGI_articulations` to `ModelExperimental`. [#10479](https://github.com/CesiumGS/cesium/pull/10479)
+- Added `asynchronous` to `ModelExperimental.fromGltf`. [#10490](https://github.com/CesiumGS/cesium/pull/10490)
 
 ##### Fixes :wrench:
 
