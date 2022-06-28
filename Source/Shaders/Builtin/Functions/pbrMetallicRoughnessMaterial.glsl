@@ -24,7 +24,7 @@ czm_pbrParameters czm_pbrMetallicRoughnessMaterial(
     roughness = clamp(roughness, 0.0, 1.0);
     results.roughness = roughness * roughness;
 
-    // dielectrics us f0 = 0.04, metals use albedo as f0
+    // dielectrics use f0 = 0.04, metals use albedo as f0
     metallic = clamp(metallic, 0.0, 1.0);
     const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
     vec3 f0 = mix(REFLECTANCE_DIELECTRIC, baseColor, metallic);

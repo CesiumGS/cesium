@@ -6,17 +6,21 @@ function loadAndZoomToModelExperimental(options, scene) {
     let model;
     try {
       model = ModelExperimental.fromGltf({
-        content: options.content,
-        color: options.color,
-        gltf: options.gltf,
         url: options.url,
-        show: options.show,
-        customShader: options.customShader,
+        gltf: options.gltf,
         basePath: options.basePath,
         modelMatrix: options.modelMatrix,
         scale: options.scale,
         minimumPixelSize: options.minimumPixelSize,
         maximumScale: options.maximumScale,
+        content: options.content,
+        color: options.color,
+        colorBlendAmount: options.colorBlendAmount,
+        colorBlendMode: options.colorBlendMode,
+        silhouetteColor: options.silhouetteColor,
+        silhouetteSize: options.silhouetteSize,
+        show: options.show,
+        customShader: options.customShader,
         allowPicking: options.allowPicking,
         upAxis: options.upAxis,
         forwardAxis: options.forwardAxis,
@@ -34,6 +38,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         projectTo2D: options.projectTo2D,
         heightReference: options.heightReference,
         scene: options.scene,
+        distanceDisplayCondition: options.distanceDisplayCondition,
       });
     } catch (error) {
       reject(error);

@@ -194,12 +194,12 @@
           }
           console.log(`Class: ${feature.getExactClassName()}`);
           console.log("Properties:");
-          const propertyNames = feature.getPropertyNames();
-          const length = propertyNames.length;
+          const propertyIds = feature.getPropertyIds();
+          const length = propertyIds.length;
           for (let i = 0; i < length; ++i) {
-            const name = propertyNames[i];
-            const value = feature.getProperty(name);
-            console.log(`  ${name}: ${value}`);
+            const propertyId = propertyIds[i];
+            const value = feature.getProperty(propertyId);
+            console.log(`  ${propertyId}: ${value}`);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
