@@ -2613,7 +2613,7 @@ describe(
         { gltf: boxTexturedGlbUrl },
         scene
       ).then(function (model) {
-        const resources = model._resources;
+        const resources = model._pipelineResources;
         const loader = model._loader;
         let resource;
 

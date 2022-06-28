@@ -50,6 +50,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
@@ -180,6 +181,9 @@ export default function ModelExperimental(options) {
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
+  this._id = options.id;
+  this._idDirty = true;
+
   const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
@@ -220,10 +224,15 @@ export default function ModelExperimental(options) {
   this._featureTableIdDirty = true;
 
   // Keeps track of resources that need to be destroyed when the draw commands are reset.
-  this._resources = [];
+  this._pipelineResources = [];
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._modelResources = [];
+
+  // Keeps track of the pick IDs for this model. These are stored and destroyed in the
+  // pipeline resources array; the purpose of this array is to separate them from other
+  // resources and update their ID objects when necessary.
+  this._pickIds = [];
 
   // The model's bounding sphere and its initial radius are computed
   // in ModelExperimentalSceneGraph.
@@ -765,6 +774,29 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._featureTables = value;
+    },
+  },
+
+  /**
+   * User-defined object returned when the model is picked.
+   *
+   * @memberof ModelExperimental.prototype
+   * @type {Object}
+   *
+   * @default undefined
+   *
+   * @see Scene#pick
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+    set: function (value) {
+      if (value !== this._id) {
+        this._idDirty = true;
+      }
+
+      this._id = value;
     },
   },
 
@@ -1447,6 +1479,8 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  updatePickIds(this);
+
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
@@ -1554,7 +1588,7 @@ function updateFeatureTableId(model) {
 
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
-    model.destroyResources();
+    model.destroyPipelineResources();
     model._sceneGraph.buildDrawCommands(frameState);
     model._drawCommandsBuilt = true;
   }
@@ -1668,6 +1702,20 @@ function updateBoundingSphereAndScale(model, frameState) {
   );
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
   model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updatePickIds(model) {
+  if (!model._idDirty) {
+    return;
+  }
+  model._idDirty = false;
+
+  const id = model._id;
+  const pickIds = model._pickIds;
+  const length = pickIds.length;
+  for (let i = 0; i < length; ++i) {
+    pickIds[i].object.id = id;
+  }
 }
 
 function updateReferenceMatrices(model, frameState) {
@@ -2007,7 +2055,7 @@ ModelExperimental.prototype.destroy = function () {
     }
   }
 
-  this.destroyResources();
+  this.destroyPipelineResources();
   this.destroyModelResources();
 
   // Remove callbacks for height reference behavior.
@@ -2049,12 +2097,13 @@ ModelExperimental.prototype.destroy = function () {
  * that must be destroyed when draw commands are rebuilt.
  * @private
  */
-ModelExperimental.prototype.destroyResources = function () {
-  const resources = this._resources;
+ModelExperimental.prototype.destroyPipelineResources = function () {
+  const resources = this._pipelineResources;
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._resources = [];
+  this._pipelineResources.length = 0;
+  this._pickIds.length = 0;
 };
 
 /**
@@ -2067,7 +2116,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._modelResources = [];
+  this._modelResources.length = 0;
 };
 
 /**
@@ -2086,8 +2135,9 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
- * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.

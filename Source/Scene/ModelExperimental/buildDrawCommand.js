@@ -42,10 +42,10 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     attributes: primitiveRenderResources.attributes,
   });
 
-  model._resources.push(vertexArray);
+  model._pipelineResources.push(vertexArray);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-  model._resources.push(shaderProgram);
+  model._pipelineResources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
   const sceneGraph = model.sceneGraph;
