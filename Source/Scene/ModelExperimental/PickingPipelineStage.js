@@ -50,7 +50,6 @@ PickingPipelineStage.process = function (
     const pickObject = buildPickObject(renderResources);
 
     const pickId = context.createPickId(pickObject);
-    pickId.object.id = model._id;
     model._pipelineResources.push(pickId);
     model._pickIds.push(pickId);
 
@@ -99,6 +98,8 @@ function buildPickObject(renderResources, instanceId) {
       detail: detailPickObject,
     };
   }
+
+  pickObject.id = model.id;
 
   if (defined(instanceId)) {
     // For instanced models, an instanceId property is added to the pick object.
@@ -165,7 +166,6 @@ function processInstancedPickIds(renderResources, context) {
     const pickObject = buildPickObject(renderResources, i);
 
     const pickId = context.createPickId(pickObject);
-    pickId.object.id = model._id;
     pipelineResources.push(pickId);
     pickIds[i] = pickId;
 

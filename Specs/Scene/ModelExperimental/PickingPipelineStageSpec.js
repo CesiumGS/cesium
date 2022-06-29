@@ -20,7 +20,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
   const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
 
-  //const mockIdObject = {};
+  const mockIdObject = {};
 
   let scene;
   const gltfLoaders = [];
@@ -198,8 +198,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     });
   });
 
-  /*it("sets value for pick ids if model has an id defined", function () {
-    // TODO
+  it("sets value for pick object id if model has an id defined", function () {
     const renderResources = mockRenderResources();
     renderResources.model.id = mockIdObject;
 
@@ -222,6 +221,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       const pickObject =
         context._pickObjects[Object.keys(context._pickObjects)[0]];
       verifyPickObject(pickObject, renderResources, undefined);
+      expect(pickObject.id).toBe(mockIdObject);
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.czm_pickColor).toBeDefined();
@@ -231,10 +231,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       expect(renderResources.model._pickIds.length).toEqual(1);
 
       expect(renderResources.pickId).toEqual("czm_pickColor");
-
-      expect(pickObject.id).toBe(id);
     });
-  });*/
+  });
 
   it("sets the picking variables in render resources with instancing", function () {
     const renderResources = mockRenderResources();
@@ -283,6 +281,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       expect(pickIdAttribute.instanceDivisor).toEqual(1);
 
       expect(renderResources.model._pipelineResources.length).toEqual(5);
+      expect(renderResources.model._pickIds.length).toEqual(4);
 
       const statistics = renderResources.model.statistics;
       expect(statistics.geometryByteLength).toBe(

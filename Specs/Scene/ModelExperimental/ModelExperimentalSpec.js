@@ -988,6 +988,55 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("initializes with id", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+          id: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.id).toBe(boxTexturedGlbUrl);
+
+        const pickIds = model._pickIds;
+        expect(pickIds.length).toEqual(1);
+        expect(pickIds[0].object.id).toEqual(boxTexturedGlbUrl);
+      });
+    });
+
+    it("changing id works", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.id).toBeUndefined();
+
+        const pickIds = model._pickIds;
+        expect(pickIds.length).toEqual(1);
+        expect(pickIds[0].object.id).toBeUndefined();
+
+        model.id = boxTexturedGlbUrl;
+        scene.renderForSpecs();
+        expect(pickIds[0].object.id).toBe(boxTexturedGlbUrl);
+
+        model.id = undefined;
+        scene.renderForSpecs();
+        expect(pickIds[0].object.id).toBeUndefined();
+      });
+    });
+
     it("picks box textured", function () {
       if (FeatureDetection.isInternetExplorer()) {
         // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
@@ -1012,16 +1061,47 @@ describe(
       });
     });
 
+    it("picks box textured with id", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+          id: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toBeInstanceOf(ModelExperimental);
+          expect(result.primitive).toEqual(model);
+          expect(result.id).toEqual(boxTexturedGlbUrl);
+        });
+      });
+    });
+
     it("doesn't pick when allowPicking is false", function () {
       if (FeatureDetection.isInternetExplorer()) {
         // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
         return;
       }
 
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
           allowPicking: false,
+          offset: offset,
         },
         scene
       ).then(function () {

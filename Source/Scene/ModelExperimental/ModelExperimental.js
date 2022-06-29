@@ -705,6 +705,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {DistanceDisplayCondition}
+   *
    * @default undefined
    *
    */
@@ -732,6 +733,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {StructuralMetadata}
    * @readonly
+   *
    * @private
    */
   structuralMetadata: {
@@ -781,6 +783,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * User-defined object returned when the model is picked.
    *
    * @memberof ModelExperimental.prototype
+   *
    * @type {Object}
    *
    * @default undefined
@@ -2354,32 +2357,34 @@ function makeModelOptions(loader, modelType, options) {
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
+    id: options.id,
+    allowPicking: options.allowPicking,
+    clampAnimations: options.clampAnimations,
+    shadows: options.shadows,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
     heightReference: options.heightReference,
     scene: options.scene,
+    distanceDisplayCondition: options.distanceDisplayCondition,
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
     clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
-    distanceDisplayCondition: options.distanceDisplayCondition,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
   };
 }
