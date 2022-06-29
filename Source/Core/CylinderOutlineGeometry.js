@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -247,12 +246,11 @@ CylinderOutlineGeometry.createGeometry = function (cylinderGeometry) {
 
   if (defined(cylinderGeometry._offsetAttribute)) {
     length = positions.length;
-    const applyOffset = new Uint8Array(length / 3);
     const offsetValue =
       cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
         ? 0
         : 1;
-    arrayFill(applyOffset, offsetValue);
+    const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 1,

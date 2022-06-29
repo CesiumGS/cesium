@@ -3,20 +3,26 @@ import {
   TextureManager,
   TextureUniform,
 } from "../../../Source/Cesium.js";
+import TextureMinificationFilter from "../../../Source/Renderer/TextureMinificationFilter.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 
 describe(
   "Scene/ModelExperimental/TextureManager",
   function () {
-    let scene;
+    let sceneWithWebgl1;
+    let sceneWithWebgl2;
 
     beforeAll(function () {
-      scene = createScene();
+      sceneWithWebgl1 = createScene();
+      sceneWithWebgl2 = createScene({
+        contextOptions: { requestWebgl2: true },
+      });
     });
 
     afterAll(function () {
-      scene.destroyForSpecs();
+      sceneWithWebgl1.destroyForSpecs();
+      sceneWithWebgl2.destroyForSpecs();
     });
 
     const textureManagers = [];
@@ -30,7 +36,9 @@ describe(
       textureManagers.length = 0;
     });
 
-    function waitForTextureLoad(textureManager, textureId) {
+    function waitForTextureLoad(textureManager, textureId, webgl2) {
+      const scene = webgl2 ? sceneWithWebgl2 : sceneWithWebgl1;
+
       const oldValue = textureManager.getTexture(textureId);
       return pollToPromise(function () {
         scene.renderForSpecs();
@@ -43,8 +51,11 @@ describe(
         return textureManager.getTexture(textureId);
       });
     }
+
     const blueUrl = "Data/Images/Blue2x2.png";
     const greenUrl = "Data/Images/Green1x4.png";
+    const redUrl = "Data/Images/Red16x16.png";
+    const blue10x10Url = "/Data/Images/Blue10x10.png";
 
     it("constructs", function () {
       const textureManager = new TextureManager();
@@ -88,6 +99,96 @@ describe(
       return waitForTextureLoad(textureManager, id).then(function (texture) {
         expect(texture.width).toBe(1);
         expect(texture.height).toBe(2);
+      });
+    });
+
+    it("generates mipmaps when sampler type requires them", function () {
+      const textureManager = new TextureManager();
+      textureManagers.push(textureManager);
+      const id = "testTexture";
+
+      textureManager.loadTexture2D(
+        id,
+        new TextureUniform({
+          url: redUrl,
+          minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+        })
+      );
+
+      return waitForTextureLoad(textureManager, id).then(function (texture) {
+        expect(texture._hasMipmap).toBe(true);
+      });
+    });
+
+    it("resizes image to power-of-two dimensions if needed", function () {
+      const textureManager = new TextureManager();
+      textureManagers.push(textureManager);
+      const id = "testTexture";
+
+      textureManager.loadTexture2D(
+        id,
+        new TextureUniform({
+          url: blue10x10Url,
+          minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_NEAREST,
+        })
+      );
+
+      return waitForTextureLoad(textureManager, id).then(function (texture) {
+        expect(texture.width).toBe(16);
+        expect(texture.height).toBe(16);
+        expect(texture._hasMipmap).toBe(true);
+      });
+    });
+
+    it("can resize a texture supplied as a Uint8Array", function () {
+      const redPixels3x3 = Array(9).fill([255, 0, 0, 255]).flat();
+      const uint8array3x3 = new Uint8Array(redPixels3x3);
+
+      const textureUniform = new TextureUniform({
+        typedArray: uint8array3x3,
+        width: 3,
+        height: 3,
+        minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+      });
+
+      const textureManager = new TextureManager();
+      textureManagers.push(textureManager);
+      const id = "testTexture";
+
+      textureManager.loadTexture2D(id, textureUniform);
+
+      return waitForTextureLoad(textureManager, id).then(function (texture) {
+        expect(texture.width).toBe(4);
+        expect(texture.height).toBe(4);
+        expect(texture._hasMipmap).toBe(true);
+      });
+    });
+
+    it("generates mipmaps without resizing in WebGL2", function () {
+      if (!sceneWithWebgl2.context.webgl2) {
+        return;
+      }
+
+      const textureManager = new TextureManager();
+      textureManagers.push(textureManager);
+      const id = "testTexture";
+
+      textureManager.loadTexture2D(
+        id,
+        new TextureUniform({
+          url: blue10x10Url,
+          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
+        })
+      );
+
+      const webgl2 = true;
+
+      return waitForTextureLoad(textureManager, id, webgl2).then(function (
+        texture
+      ) {
+        expect(texture.width).toBe(10);
+        expect(texture.height).toBe(10);
+        expect(texture._hasMipmap).toBe(true);
       });
     });
 
@@ -144,7 +245,7 @@ describe(
 
       // Call update first to ensure the default texture is available
       // when the fetchImage() call rejects
-      textureManager.update(scene.frameState);
+      textureManager.update(sceneWithWebgl1.frameState);
       textureManager.loadTexture2D(
         id,
         new TextureUniform({
@@ -153,7 +254,8 @@ describe(
       );
       return waitForTextureLoad(textureManager, id)
         .then(function (texture) {
-          const defaultTexture = scene.frameState.context.defaultTexture;
+          const defaultTexture =
+            sceneWithWebgl1.frameState.context.defaultTexture;
           expect(texture).toBe(defaultTexture);
         })
         .catch(console.error);

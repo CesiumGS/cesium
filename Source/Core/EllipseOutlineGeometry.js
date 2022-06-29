@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -124,11 +123,11 @@ function computeExtrudedEllipse(options) {
   if (defined(options.offsetAttribute)) {
     let applyOffset = new Uint8Array(length);
     if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
+      applyOffset = applyOffset.fill(1, 0, length / 2);
     } else {
       const offsetValue =
         options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      applyOffset = arrayFill(applyOffset, offsetValue);
+      applyOffset = applyOffset.fill(offsetValue);
     }
 
     attributes.applyOffset = new GeometryAttribute({
@@ -431,12 +430,11 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
 
     if (defined(ellipseGeometry._offsetAttribute)) {
       const length = geometry.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
       const offsetValue =
         ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       geometry.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

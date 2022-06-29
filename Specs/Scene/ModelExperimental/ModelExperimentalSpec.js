@@ -7,6 +7,7 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
+  Credit,
   defaultValue,
   defined,
   DistanceDisplayCondition,
@@ -554,6 +555,52 @@ describe(
       });
     });
 
+    it("initializes with credit", function () {
+      const credit = new Credit("User Credit");
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: credit,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          expect(credits[0].credit.html).toEqual("User Credit");
+        });
+      });
+    });
+
+    it("initializes with credit string", function () {
+      const creditString = "User Credit";
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: creditString,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          expect(credits[0].credit.html).toEqual(creditString);
+        });
+      });
+    });
+
     it("gets copyrights from gltf", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -583,18 +630,53 @@ describe(
       });
     });
 
-    it("shows credits on screen", function () {
+    it("displays all types of credits", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
             gltf: gltf,
             basePath: boxWithCreditsUrl,
+            credit: "User Credit",
+          },
+          scene
+        ).then(function (model) {
+          model._resourceCredits = [new Credit("Resource Credit")];
+          const expectedCredits = [
+            "User Credit",
+            "Resource Credit",
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+        });
+      });
+    });
+
+    it("initializes with showCreditsOnScreen", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+            credit: "User Credit",
             showCreditsOnScreen: true,
           },
           scene
         ).then(function (model) {
           const expectedCredits = [
+            "User Credit",
             "First Source",
             "Second Source",
             "Third Source",
@@ -613,18 +695,20 @@ describe(
       });
     });
 
-    it("toggles showing credits on screen", function () {
+    it("changing showCreditsOnScreen works", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
             gltf: gltf,
             basePath: boxWithCreditsUrl,
+            credit: "User Credit",
             showCreditsOnScreen: false,
           },
           scene
         ).then(function (model) {
           const expectedCredits = [
+            "User Credit",
             "First Source",
             "Second Source",
             "Third Source",
@@ -661,6 +745,31 @@ describe(
             expect(lightboxCredits[i].credit.html).toEqual(expectedCredits[i]);
           }
           expect(screenCredits.length).toEqual(0);
+        });
+      });
+    });
+
+    it("showCreditsOnScreen overrides existing credit setting", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: new Credit("User Credit", false),
+            showCreditsOnScreen: true,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.screenCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual("User Credit");
+          }
         });
       });
     });
@@ -1029,6 +1138,55 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("initializes with id", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+          id: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.id).toBe(boxTexturedGlbUrl);
+
+        const pickIds = model._pickIds;
+        expect(pickIds.length).toEqual(1);
+        expect(pickIds[0].object.id).toEqual(boxTexturedGlbUrl);
+      });
+    });
+
+    it("changing id works", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.id).toBeUndefined();
+
+        const pickIds = model._pickIds;
+        expect(pickIds.length).toEqual(1);
+        expect(pickIds[0].object.id).toBeUndefined();
+
+        model.id = boxTexturedGlbUrl;
+        scene.renderForSpecs();
+        expect(pickIds[0].object.id).toBe(boxTexturedGlbUrl);
+
+        model.id = undefined;
+        scene.renderForSpecs();
+        expect(pickIds[0].object.id).toBeUndefined();
+      });
+    });
+
     it("picks box textured", function () {
       if (FeatureDetection.isInternetExplorer()) {
         // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
@@ -1053,16 +1211,47 @@ describe(
       });
     });
 
+    it("picks box textured with id", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          offset: offset,
+          id: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toBeInstanceOf(ModelExperimental);
+          expect(result.primitive).toEqual(model);
+          expect(result.id).toEqual(boxTexturedGlbUrl);
+        });
+      });
+    });
+
     it("doesn't pick when allowPicking is false", function () {
       if (FeatureDetection.isInternetExplorer()) {
         // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
         return;
       }
 
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
           allowPicking: false,
+          offset: offset,
         },
         scene
       ).then(function () {
@@ -2654,7 +2843,7 @@ describe(
         { gltf: boxTexturedGlbUrl },
         scene
       ).then(function (model) {
-        const resources = model._resources;
+        const resources = model._pipelineResources;
         const loader = model._loader;
         let resource;
 

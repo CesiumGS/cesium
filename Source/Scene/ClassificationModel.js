@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
@@ -861,9 +860,9 @@ function createPrimitive(model) {
     );
   }
 
-  positionsBuffer = arraySlice(positionsBuffer);
-  vertexBatchIds = arraySlice(vertexBatchIds);
-  indices = arraySlice(indices, offset, offset + count);
+  positionsBuffer = positionsBuffer.slice();
+  vertexBatchIds = vertexBatchIds.slice();
+  indices = indices.slice(offset, offset + count);
 
   const batchIds = [];
   const indexCounts = [];

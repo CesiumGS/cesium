@@ -2,6 +2,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
+import Credit from "../../Core/Credit.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
@@ -50,6 +51,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
@@ -72,6 +74,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
@@ -104,8 +107,9 @@ export default function ModelExperimental(options) {
    * ModelExperimentalType is part of the private API.
    *
    * @type {ModelExperimentalType}
-   * @private
    * @readonly
+   *
+   * @private
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
@@ -180,6 +184,9 @@ export default function ModelExperimental(options) {
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
+  this._id = options.id;
+  this._idDirty = false;
+
   const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
@@ -220,10 +227,15 @@ export default function ModelExperimental(options) {
   this._featureTableIdDirty = true;
 
   // Keeps track of resources that need to be destroyed when the draw commands are reset.
-  this._resources = [];
+  this._pipelineResources = [];
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._modelResources = [];
+
+  // Keeps track of the pick IDs for this model. These are stored and destroyed in the
+  // pipeline resources array; the purpose of this array is to separate them from other
+  // resources and update their ID objects when necessary.
+  this._pickIds = [];
 
   // The model's bounding sphere and its initial radius are computed
   // in ModelExperimentalSceneGraph.
@@ -292,7 +304,22 @@ export default function ModelExperimental(options) {
   );
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
+  // Credit specified by the user.
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+
+  this._credit = credit;
+
+  // Credits to be added from the Resource (if it is an IonResource)
+  this._resourceCredits = [];
+
+  // Credits parsed from the glTF by GltfLoader.
+  this._gltfCredits = [];
+
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+  this._showCreditsOnScreenDirty = true;
 
   this._splitDirection = defaultValue(
     options.splitDirection,
@@ -406,10 +433,22 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    model._sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelExperimentalSceneGraph({
       model: model,
       modelComponents: components,
     });
+
+    model._sceneGraph = sceneGraph;
+    model._gltfCredits = sceneGraph.components.asset.credits;
+
+    const resourceCredits = model._resource.credits;
+    if (defined(resourceCredits)) {
+      const length = resourceCredits.length;
+      for (let i = 0; i < length; i++) {
+        model._resourceCredits.push(resourceCredits[i]);
+      }
+    }
+
     model._resourcesLoaded = true;
   });
 
@@ -696,6 +735,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {DistanceDisplayCondition}
+   *
    * @default undefined
    *
    */
@@ -723,6 +763,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {StructuralMetadata}
    * @readonly
+   *
    * @private
    */
   structuralMetadata: {
@@ -765,6 +806,30 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._featureTables = value;
+    },
+  },
+
+  /**
+   * A user-defined object that is returned when the model is picked.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Object}
+   *
+   * @default undefined
+   *
+   * @see Scene#pick
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+    set: function (value) {
+      if (value !== this._id) {
+        this._idDirty = true;
+      }
+
+      this._id = value;
     },
   },
 
@@ -1212,6 +1277,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
+   *
    * @private
    */
   computedScale: {
@@ -1287,6 +1354,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Gets the credit that will be displayed for the model
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
+
+  /**
    * Gets or sets whether the credits of the model will be displayed on the screen
    *
    * @memberof ModelExperimental.prototype
@@ -1300,6 +1381,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._showCreditsOnScreen;
     },
     set: function (value) {
+      if (this._showCreditsOnScreen !== value) {
+        this._showCreditsOnScreenDirty = true;
+      }
+
       this._showCreditsOnScreen = value;
     },
   },
@@ -1310,6 +1395,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {SplitDirection}
+   *
    * @default {@link SplitDirection.NONE}
    */
   splitDirection: {
@@ -1447,9 +1533,12 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  updatePickIds(this);
+
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
+  updateShowCreditsOnScreen(this);
   submitDrawCommands(this, frameState);
 };
 
@@ -1554,7 +1643,7 @@ function updateFeatureTableId(model) {
 
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
-    model.destroyResources();
+    model.destroyPipelineResources();
     model._sceneGraph.buildDrawCommands(frameState);
     model._drawCommandsBuilt = true;
   }
@@ -1670,6 +1759,20 @@ function updateBoundingSphereAndScale(model, frameState) {
   model._computedScale = getScale(model, modelMatrix, frameState);
 }
 
+function updatePickIds(model) {
+  if (!model._idDirty) {
+    return;
+  }
+  model._idDirty = false;
+
+  const id = model._id;
+  const pickIds = model._pickIds;
+  const length = pickIds.length;
+  for (let i = 0; i < length; ++i) {
+    pickIds[i].object.id = id;
+  }
+}
+
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
@@ -1749,6 +1852,30 @@ function updateSceneGraph(model, frameState) {
   sceneGraph.update(frameState, updateForAnimations);
 }
 
+function updateShowCreditsOnScreen(model) {
+  if (!model._showCreditsOnScreenDirty) {
+    return;
+  }
+  model._showCreditsOnScreenDirty = false;
+
+  const showOnScreen = model._showCreditsOnScreen;
+  if (defined(model._credit)) {
+    model._credit.showOnScreen = showOnScreen;
+  }
+
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let i = 0; i < resourceCreditsLength; i++) {
+    resourceCredits[i].showOnScreen = showOnScreen;
+  }
+
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let i = 0; i < gltfCreditsLength; i++) {
+    gltfCredits[i].showOnScreen = showOnScreen;
+  }
+}
+
 function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
@@ -1772,16 +1899,7 @@ function submitDrawCommands(model, frameState) {
     (!invisible || silhouette);
 
   if (showModel) {
-    const asset = model._sceneGraph.components.asset;
-    const credits = asset.credits;
-
-    const length = credits.length;
-    for (let i = 0; i < length; i++) {
-      const credit = credits[i];
-      credit.showOnScreen = model._showCreditsOnScreen;
-      frameState.creditDisplay.addCredit(credit);
-    }
-
+    addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
@@ -1904,6 +2022,27 @@ function passesDistanceDisplayCondition(model, frameState) {
   return distanceSquared >= nearSquared && distanceSquared <= farSquared;
 }
 
+function addCreditsToCreditDisplay(model, frameState) {
+  const creditDisplay = frameState.creditDisplay;
+  // Add all credits to the credit display.
+  const credit = model._credit;
+  if (defined(credit)) {
+    creditDisplay.addCredit(credit);
+  }
+
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let c = 0; c < resourceCreditsLength; c++) {
+    creditDisplay.addCredit(resourceCredits[c]);
+  }
+
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let c = 0; c < gltfCreditsLength; c++) {
+    creditDisplay.addCredit(gltfCredits[c]);
+  }
+}
+
 /**
  * Gets whether or not the model is translucent based on its assigned model color.
  * If the model color's alpha is equal to zero, then it is considered invisible,
@@ -2007,7 +2146,7 @@ ModelExperimental.prototype.destroy = function () {
     }
   }
 
-  this.destroyResources();
+  this.destroyPipelineResources();
   this.destroyModelResources();
 
   // Remove callbacks for height reference behavior.
@@ -2049,12 +2188,13 @@ ModelExperimental.prototype.destroy = function () {
  * that must be destroyed when draw commands are rebuilt.
  * @private
  */
-ModelExperimental.prototype.destroyResources = function () {
-  const resources = this._resources;
+ModelExperimental.prototype.destroyPipelineResources = function () {
+  const resources = this._pipelineResources;
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._resources = [];
+  this._pipelineResources.length = 0;
+  this._pickIds.length = 0;
 };
 
 /**
@@ -2067,7 +2207,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._modelResources = [];
+  this._modelResources.length = 0;
 };
 
 /**
@@ -2086,6 +2226,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -2113,6 +2254,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
@@ -2308,32 +2450,35 @@ function makeModelOptions(loader, modelType, options) {
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
+    id: options.id,
+    allowPicking: options.allowPicking,
+    clampAnimations: options.clampAnimations,
+    shadows: options.shadows,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
     heightReference: options.heightReference,
     scene: options.scene,
+    distanceDisplayCondition: options.distanceDisplayCondition,
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
     clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
+    credit: options.credit,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
-    distanceDisplayCondition: options.distanceDisplayCondition,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
   };
 }

@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -238,10 +237,10 @@ function createPrimitive(polygons) {
 
     if (!defined(batchTableColors)) {
       // Copy because they may be the views on the same buffer.
-      positions = polygons._positions = arraySlice(polygons._positions);
-      counts = polygons._counts = arraySlice(polygons._counts);
-      indexCounts = polygons._indexCounts = arraySlice(polygons._indexCounts);
-      indices = polygons._indices = arraySlice(polygons._indices);
+      positions = polygons._positions = polygons._positions.slice();
+      counts = polygons._counts = polygons._counts.slice();
+      indexCounts = polygons._indexCounts = polygons._indexCounts.slice();
+      indices = polygons._indices = polygons._indices.slice();
 
       polygons._center = polygons._ellipsoid.cartographicToCartesian(
         Rectangle.center(polygons._rectangle)
@@ -286,8 +285,8 @@ function createPrimitive(polygons) {
     let minimumHeights = polygons._polygonMinimumHeights;
     let maximumHeights = polygons._polygonMaximumHeights;
     if (defined(minimumHeights) && defined(maximumHeights)) {
-      minimumHeights = arraySlice(minimumHeights);
-      maximumHeights = arraySlice(maximumHeights);
+      minimumHeights = minimumHeights.slice();
+      maximumHeights = maximumHeights.slice();
 
       transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
       parameters.minimumHeights = minimumHeights;
