@@ -20,6 +20,7 @@
 - Added support for `AGI_articulations` to `ModelExperimental`. [#10479](https://github.com/CesiumGS/cesium/pull/10479)
 - Added `credit` to `ModelExperimental`. [#10489](https://github.com/CesiumGS/cesium/pull/10489)
 - Added `id` to `ModelExperimental`. [#10491](https://github.com/CesiumGS/cesium/pull/10491)
+- `ExperimentalFeatures.enableModelExperimental` now enables `ModelExperimental` for entities and CZML in addition to 3D Tiles. [#10492](https://github.com/CesiumGS/cesium/pull/10492)
 
 ##### Fixes :wrench:
 
