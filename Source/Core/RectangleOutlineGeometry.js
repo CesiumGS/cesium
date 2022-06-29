@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
@@ -469,13 +468,13 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
       const size = geometry.attributes.position.values.length / 3;
       let offsetAttribute = new Uint8Array(size);
       if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
-        offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+        offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
       } else {
         offsetValue =
           rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
             ? 0
             : 1;
-        offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+        offsetAttribute = offsetAttribute.fill(offsetValue);
       }
 
       geometry.attributes.applyOffset = new GeometryAttribute({
@@ -508,12 +507,11 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
 
     if (defined(rectangleGeometry._offsetAttribute)) {
       const length = geometry.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
       offsetValue =
         rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       geometry.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

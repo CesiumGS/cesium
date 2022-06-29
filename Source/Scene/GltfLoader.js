@@ -1,4 +1,3 @@
-import arrayFill from "../Core/arrayFill.js";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
@@ -523,11 +522,11 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
 function loadDefaultAccessorValues(accessor, values) {
   const accessorType = accessor.type;
   if (accessorType === AttributeType.SCALAR) {
-    return arrayFill(values, 0);
+    return values.fill(0);
   }
 
   const MathType = AttributeType.getMathType(accessorType);
-  return arrayFill(values, MathType.clone(MathType.ZERO));
+  return values.fill(MathType.clone(MathType.ZERO));
 }
 
 function loadAccessorValues(accessor, packedTypedArray, values, useQuaternion) {
@@ -1611,7 +1610,7 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     // be stored at the node level.
     node.morphWeights = defined(morphWeights)
       ? morphWeights.slice()
-      : arrayFill(new Array(targetsLength), 0.0);
+      : new Array(targetsLength).fill(0.0);
   }
 
   return node;
@@ -1667,10 +1666,7 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
       inverseBindMatricesAccessorId
     );
   } else {
-    skin.inverseBindMatrices = arrayFill(
-      new Array(jointsLength),
-      Matrix4.IDENTITY
-    );
+    skin.inverseBindMatrices = new Array(jointsLength).fill(Matrix4.IDENTITY);
   }
 
   return skin;
