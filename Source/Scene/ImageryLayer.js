@@ -974,6 +974,8 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.y,
       imagery.level,
       doRequest,
+      undefined,
+      undefined,
       e
     );
   }
