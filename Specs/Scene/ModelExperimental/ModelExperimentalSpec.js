@@ -7,6 +7,7 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
+  Credit,
   defaultValue,
   defined,
   DistanceDisplayCondition,
@@ -513,6 +514,52 @@ describe(
       });
     });
 
+    it("initializes with credit", function () {
+      const credit = new Credit("User Credit");
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: credit,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          expect(credits[0].credit.html).toEqual("User Credit");
+        });
+      });
+    });
+
+    it("initializes with credit string", function () {
+      const creditString = "User Credit";
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: creditString,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          expect(credits[0].credit.html).toEqual(creditString);
+        });
+      });
+    });
+
     it("gets copyrights from gltf", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -542,18 +589,53 @@ describe(
       });
     });
 
-    it("shows credits on screen", function () {
+    it("displays all types of credits", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
             gltf: gltf,
             basePath: boxWithCreditsUrl,
+            credit: "User Credit",
+          },
+          scene
+        ).then(function (model) {
+          model._resourceCredits = [new Credit("Resource Credit")];
+          const expectedCredits = [
+            "User Credit",
+            "Resource Credit",
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+        });
+      });
+    });
+
+    it("initializes with showCreditsOnScreen", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+            credit: "User Credit",
             showCreditsOnScreen: true,
           },
           scene
         ).then(function (model) {
           const expectedCredits = [
+            "User Credit",
             "First Source",
             "Second Source",
             "Third Source",
@@ -572,18 +654,20 @@ describe(
       });
     });
 
-    it("toggles showing credits on screen", function () {
+    it("changing showCreditsOnScreen works", function () {
       const resource = Resource.createIfNeeded(boxWithCreditsUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
             gltf: gltf,
             basePath: boxWithCreditsUrl,
+            credit: "User Credit",
             showCreditsOnScreen: false,
           },
           scene
         ).then(function (model) {
           const expectedCredits = [
+            "User Credit",
             "First Source",
             "Second Source",
             "Third Source",
@@ -620,6 +704,31 @@ describe(
             expect(lightboxCredits[i].credit.html).toEqual(expectedCredits[i]);
           }
           expect(screenCredits.length).toEqual(0);
+        });
+      });
+    });
+
+    it("showCreditsOnScreen overrides existing credit setting", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            credit: new Credit("User Credit", false),
+            showCreditsOnScreen: true,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.screenCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(1);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual("User Credit");
+          }
         });
       });
     });
