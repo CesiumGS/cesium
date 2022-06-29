@@ -1,5 +1,4 @@
 import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { arraySlice } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
 import { destroyObject } from "../../Source/Cesium.js";
@@ -364,13 +363,13 @@ describe(
 
     function expectRender(scene, color) {
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(arraySlice(rgba, 0, 4)).toEqual(color);
+        expect(rgba.slice(0, 4)).toEqual(color);
       });
     }
 
     function expectRenderBlank(scene) {
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(arraySlice(rgba)).not.toEqual([0, 0, 0, 255]);
+        expect(rgba.slice()).not.toEqual([0, 0, 0, 255]);
         expect(rgba[0]).toEqual(0);
       });
     }

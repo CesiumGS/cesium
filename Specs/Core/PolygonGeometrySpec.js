@@ -1,5 +1,4 @@
 import { ArcType } from "../../Source/Cesium.js";
-import { arrayFill } from "../../Source/Cesium.js";
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
@@ -901,8 +900,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -930,10 +928,10 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 13);
-    expected = arrayFill(expected, 1, 26, 38);
+    const expected = new Array(offset.length)
+      .fill(0)
+      .fill(1, 0, 13)
+      .fill(1, 26, 38);
     expect(offset).toEqual(expected);
   });
 
@@ -962,9 +960,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 13, 25);
+    const expected = new Array(offset.length).fill(0).fill(1, 13, 25);
     expect(offset).toEqual(expected);
   });
 
@@ -993,9 +989,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 25);
+    const expected = new Array(offset.length).fill(0).fill(1, 0, 25);
     expect(offset).toEqual(expected);
   });
 
@@ -1025,9 +1019,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 12);
+    const expected = new Array(offset.length).fill(0).fill(1, 0, 12);
     expect(offset).toEqual(expected);
   });
 
@@ -1055,8 +1047,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -1085,8 +1076,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -1115,8 +1105,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -1146,8 +1135,7 @@ describe("Core/PolygonGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 

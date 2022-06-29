@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -546,11 +545,11 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
     const size = (length / 3) * 2;
     let offsetAttribute = new Uint8Array(size);
     if (offsetAttributeValue === GeometryOffsetAttribute.TOP) {
-      offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+      offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
     } else {
       offsetValue =
         offsetAttributeValue === GeometryOffsetAttribute.NONE ? 0 : 1;
-      offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+      offsetAttribute = offsetAttribute.fill(offsetValue);
     }
 
     topBottomGeo.attributes.applyOffset = new GeometryAttribute({
@@ -636,7 +635,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
     offsetAttributeValue === GeometryOffsetAttribute.TOP;
   if (hasOffsets && !computeTopOffsets) {
     offsetValue = offsetAttributeValue === GeometryOffsetAttribute.ALL ? 1 : 0;
-    wallOffsetAttribute = arrayFill(wallOffsetAttribute, offsetValue);
+    wallOffsetAttribute = wallOffsetAttribute.fill(offsetValue);
   }
 
   let posIndex = 0;
@@ -1313,12 +1312,11 @@ RectangleGeometry.createGeometry = function (rectangleGeometry) {
 
     if (defined(rectangleGeometry._offsetAttribute)) {
       const length = geometry.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
       const offsetValue =
         rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       geometry.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

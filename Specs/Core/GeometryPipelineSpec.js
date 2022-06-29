@@ -1,4 +1,3 @@
-import { arraySlice } from "../../Source/Cesium.js";
 import { AttributeCompression } from "../../Source/Cesium.js";
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { BoxGeometry } from "../../Source/Cesium.js";
@@ -1999,7 +1998,7 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.normal).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2030,7 +2029,7 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.st).toBeDefined();
-    const originalST = arraySlice(geometry.attributes.st.values);
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2066,8 +2065,8 @@ describe("Core/GeometryPipeline", function () {
     );
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.st).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
-    const originalST = arraySlice(geometry.attributes.st.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2113,9 +2112,9 @@ describe("Core/GeometryPipeline", function () {
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.tangent).toBeDefined();
     expect(geometry.attributes.bitangent).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
-    const originalTangents = arraySlice(geometry.attributes.tangent.values);
-    const originalBitangents = arraySlice(geometry.attributes.bitangent.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalTangents = geometry.attributes.tangent.values.slice();
+    const originalBitangents = geometry.attributes.bitangent.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
