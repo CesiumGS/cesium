@@ -2229,6 +2229,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
@@ -2278,6 +2279,7 @@ ModelExperimental.fromGltf = function (options) {
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
@@ -2324,6 +2326,7 @@ ModelExperimental.fromB3dm = function (options) {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
@@ -2370,6 +2373,7 @@ ModelExperimental.fromI3dm = function (options) {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,

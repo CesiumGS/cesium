@@ -17,6 +17,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         id: options.id,
         allowPicking: options.allowPicking,
         incrementallyLoadTextures: options.incrementallyLoadTextures,
+        asynchronous: options.asynchronous,
         clampAnimations: options.clampAnimations,
         shadows: options.shadows,
         debugShowBoundingVolume: options.debugShowBoundingVolume,
