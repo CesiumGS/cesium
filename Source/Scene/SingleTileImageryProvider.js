@@ -1,6 +1,5 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -153,7 +152,6 @@ function SingleTileImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
 
   let credit = options.credit;
   if (typeof credit === "string") {
@@ -164,16 +162,16 @@ function SingleTileImageryProvider(options) {
   const that = this;
   let error;
 
-  function success(image) {
+  function success(image, resolve, reject) {
     that._image = image;
     that._tileWidth = image.width;
     that._tileHeight = image.height;
     that._ready = true;
-    that._readyPromise.resolve(true);
+    resolve(true);
     TileProviderError.handleSuccess(that._errorEvent);
   }
 
-  function failure(e) {
+  function failure(e, resolve, reject) {
     const message = `Failed to load image ${resource.url}.`;
     error = TileProviderError.handleError(
       error,
@@ -184,18 +182,28 @@ function SingleTileImageryProvider(options) {
       0,
       0,
       doRequest,
+      resolve,
+      reject,
       e
     );
     if (!error.retry) {
-      that._readyPromise.reject(new RuntimeError(message));
+      reject(new RuntimeError(message));
     }
   }
 
-  function doRequest() {
-    ImageryProvider.loadImage(null, resource).then(success).catch(failure);
+  function doRequest(resolve, reject) {
+    ImageryProvider.loadImage(null, resource)
+      .then((image) => {
+        success(image, resolve, reject);
+      })
+      .catch((e) => {
+        failure(e, resolve, reject);
+      });
   }
 
-  doRequest();
+  this._readyPromise = new Promise((resolve, reject) => {
+    doRequest(resolve, reject);
+  });
 }
 
 Object.defineProperties(SingleTileImageryProvider.prototype, {
@@ -398,7 +406,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
