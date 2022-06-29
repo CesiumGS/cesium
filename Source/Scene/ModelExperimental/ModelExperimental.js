@@ -182,7 +182,7 @@ export default function ModelExperimental(options) {
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
   this._id = options.id;
-  this._idDirty = true;
+  this._idDirty = false;
 
   const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
@@ -780,7 +780,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * User-defined object returned when the model is picked.
+   * A user-defined object that is returned when the model is picked.
    *
    * @memberof ModelExperimental.prototype
    *
