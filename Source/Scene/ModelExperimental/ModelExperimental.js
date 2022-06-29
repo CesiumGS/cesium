@@ -432,6 +432,14 @@ function initialize(model) {
     model._sceneGraph = sceneGraph;
     model._gltfCredits = sceneGraph.components.asset.credits;
 
+    const resourceCredits = model._resource.credits;
+    if (defined(resourceCredits)) {
+      const length = resourceCredits.length;
+      for (let i = 0; i < length; i++) {
+        model._resourceCredits.push(resourceCredits[i]);
+      }
+    }
+
     model._resourcesLoaded = true;
   });
 
