@@ -22,7 +22,6 @@
 - Added `asynchronous` to `ModelExperimental.fromGltf`. [#10490](https://github.com/CesiumGS/cesium/pull/10490)
 - Added `id` to `ModelExperimental`. [#10491](https://github.com/CesiumGS/cesium/pull/10491)
 
-
 ##### Fixes :wrench:
 
 - Fixed `FeatureDetection` for Microsoft Edge. [#10429](https://github.com/CesiumGS/cesium/pull/10429)
