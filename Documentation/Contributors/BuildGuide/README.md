@@ -111,7 +111,7 @@ Cesium offers a few different distributions. When developing, make sure to pick 
 - [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
-In much of our documentation, we use IIFE as it can be easily loaded with a CDN and defines a global *Cesium* variable with all modules attached.
+In much of our documentation, we use IIFE as it can be easily loaded with a CDN and defines a global _Cesium_ variable with all modules attached.
 
 For a production app, we recommend using the the `Source` modules directly which will allow your build tool of choice to reduce the final release's size using tree shaking.
 
