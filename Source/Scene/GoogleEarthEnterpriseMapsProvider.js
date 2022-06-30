@@ -228,7 +228,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   const that = this;
   let metadataError;
 
-  function metadataSuccess(text, resolve, reject) {
+  function metadataSuccess(text) {
     let data;
 
     // The Google Earth server sends malformed JSON data currently...
@@ -254,36 +254,30 @@ function GoogleEarthEnterpriseMapsProvider(options) {
 
     if (!defined(layer)) {
       message = `Could not find layer with channel (id) of ${that._channel}.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestMetadata,
-        resolve,
-        reject
+        message
       );
-      throw new RuntimeError(message);
+      if (metadataError.retry) {
+        return requestMetadata();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     if (!defined(layer.version)) {
       message = `Could not find a version in channel (id) ${that._channel}.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestMetadata,
-        resolve,
-        reject
+        message
       );
-      throw new RuntimeError(message);
+      if (metadataError.retry) {
+        return requestMetadata();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
     that._version = layer.version;
 
@@ -303,60 +297,45 @@ function GoogleEarthEnterpriseMapsProvider(options) {
       });
     } else {
       message = `Unsupported projection ${data.projection}.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestMetadata,
-        resolve,
-        reject
+        message
       );
-      throw new RuntimeError(message);
+      if (metadataError.retry) {
+        return requestMetadata();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     that._ready = true;
-    resolve(true);
-    TileProviderError.handleSuccess(metadataError);
+    TileProviderError.reportSuccess(metadataError);
+    return Promise.resolve(true);
   }
 
-  function metadataFailure(e, reject) {
+  function metadataFailure(e) {
     const message = defaultValue(
       e.message,
       `An error occurred while accessing ${metadataResource.url}.`
     );
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined,
-      requestMetadata,
-      undefined,
-      reject
+      message
     );
-    reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   }
 
-  function requestMetadata(resolve, reject) {
-    metadataResource
+  function requestMetadata() {
+    return metadataResource
       .fetchText()
-      .then(function (text) {
-        metadataSuccess(text, resolve, reject);
-      })
-      .catch(function (e) {
-        metadataFailure(e, reject);
-      });
+      .then(metadataSuccess)
+      .catch(metadataFailure);
   }
 
-  this._readyPromise = new Promise((resolve, reject) => {
-    requestMetadata(resolve, reject);
-  });
+  this._readyPromise = requestMetadata();
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {

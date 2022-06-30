@@ -88,19 +88,21 @@ function TileMapServiceImageryProvider(options) {
 
   let resource;
   const that = this;
-  const promise = Promise.resolve(options.url).then(function (url) {
-    resource = Resource.createIfNeeded(url);
-    resource.appendForwardSlash();
+  const promise = Promise.resolve(options.url)
+    .then(function (url) {
+      resource = Resource.createIfNeeded(url);
+      resource.appendForwardSlash();
 
-    that._tmsResource = resource;
-    that._xmlResource = resource.getDerivedResource({
-      url: "tilemapresource.xml",
-    });
+      that._tmsResource = resource;
+      that._xmlResource = resource.getDerivedResource({
+        url: "tilemapresource.xml",
+      });
 
-    return new Promise((resolve, reject) => {
-      that._requestMetadata(resolve, reject);
+      return that._requestMetadata();
+    })
+    .catch((e) => {
+      return Promise.reject(e);
     });
-  });
 
   UrlTemplateImageryProvider.call(this, promise);
   this._promise = promise;
@@ -113,19 +115,12 @@ if (defined(Object.create)) {
   TileMapServiceImageryProvider.prototype.constructor = TileMapServiceImageryProvider;
 }
 
-TileMapServiceImageryProvider.prototype._requestMetadata = function (
-  resolve,
-  reject
-) {
+TileMapServiceImageryProvider.prototype._requestMetadata = function () {
   // Try to load remaining parameters from XML
-  this._xmlResource
+  return this._xmlResource
     .fetchXML()
-    .then((data) => {
-      this._metadataSuccess(data, resolve, reject);
-    })
-    .catch((e) => {
-      this._metadataFailure(e, resolve, reject);
-    });
+    .then(this._metadataSuccess)
+    .catch(this._metadataFailure);
 };
 
 /**
@@ -172,11 +167,7 @@ function calculateSafeMinimumDetailLevel(
   return minimumLevel;
 }
 
-TileMapServiceImageryProvider.prototype._metadataSuccess = function (
-  xml,
-  resolve,
-  reject
-) {
+TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
   const tileFormatRegex = /tileformat/i;
   const tileSetRegex = /tileset/i;
   const tileSetsRegex = /tilesets/i;
@@ -212,23 +203,17 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (
   let message;
   if (!defined(tilesets) || !defined(bbox)) {
     message = `Unable to find expected tilesets or bbox attributes in ${xmlResource.url}.`;
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       this,
       this.errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined,
-      requestMetadata,
-      resolve,
-      reject
+      message
     );
-    if (!metadataError.retry) {
-      reject(new RuntimeError(message));
+    if (metadataError.retry) {
+      this._metadataError = metadataError;
+      return requestMetadata();
     }
-    this._metadataError = metadataError;
-    return;
+    return Promise.reject(new RuntimeError(message));
   }
 
   const options = this._options;
@@ -272,23 +257,17 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (
       });
     } else {
       message = `${xmlResource.url}specifies an unsupported profile attribute, ${tilingSchemeName}.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         this,
         this.errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestMetadata,
-        resolve,
-        reject
+        message
       );
-      if (!metadataError.retry) {
-        reject(new RuntimeError(message));
+      if (metadataError.retry) {
+        this._metadataError = metadataError;
+        return requestMetadata();
       }
-      this._metadataError = metadataError;
-      return;
+      return Promise.reject(new RuntimeError(message));
     }
   }
 
@@ -363,7 +342,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (
     url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
-  resolve({
+  return Promise.resolve({
     url: templateResource,
     tilingScheme: tilingScheme,
     rectangle: rectangle,
@@ -376,11 +355,12 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (
   });
 };
 
-TileMapServiceImageryProvider.prototype._metadataFailure = function (
-  error,
-  resolve,
-  reject
-) {
+TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
+  // Only reject if the error is from parsing
+  if (error instanceof RuntimeError) {
+    return Promise.reject(error);
+  }
+
   // Can't load XML, still allow options and defaults
   const options = this._options;
   const fileExtension = defaultValue(options.fileExtension, "png");
@@ -406,7 +386,7 @@ TileMapServiceImageryProvider.prototype._metadataFailure = function (
     url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
-  resolve({
+  return Promise.resolve({
     url: templateResource,
     tilingScheme: tilingScheme,
     rectangle: rectangle,

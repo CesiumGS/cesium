@@ -246,7 +246,5 @@ TileProviderError.handleSuccess = function (previousError) {
 /**
  * A function that will be called to retry the operation.
  * @callback TileProviderError.RetryFunction
- *
- * @deprecated
  */
 export default TileProviderError;

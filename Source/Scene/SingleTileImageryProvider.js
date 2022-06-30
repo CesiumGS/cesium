@@ -162,48 +162,39 @@ function SingleTileImageryProvider(options) {
   const that = this;
   let error;
 
-  function success(image, resolve, reject) {
+  function success(image) {
     that._image = image;
     that._tileWidth = image.width;
     that._tileHeight = image.height;
     that._ready = true;
-    resolve(true);
-    TileProviderError.handleSuccess(that._errorEvent);
+    TileProviderError.reportSuccess(that._errorEvent);
+    return Promise.resolve(true);
   }
 
-  function failure(e, resolve, reject) {
+  function failure(e) {
     const message = `Failed to load image ${resource.url}.`;
-    error = TileProviderError.handleError(
+    error = TileProviderError.reportError(
       error,
       that,
       that._errorEvent,
       message,
       0,
       0,
-      0,
-      doRequest,
-      resolve,
-      reject,
-      e
+      0
     );
-    if (!error.retry) {
-      reject(new RuntimeError(message));
+    if (error.retry) {
+      return doRequest();
     }
+    return Promise.reject(new RuntimeError(message));
   }
 
-  function doRequest(resolve, reject) {
-    ImageryProvider.loadImage(null, resource)
-      .then((image) => {
-        success(image, resolve, reject);
-      })
-      .catch((e) => {
-        failure(e, resolve, reject);
-      });
+  function doRequest() {
+    return ImageryProvider.loadImage(null, resource)
+      .then(success)
+      .catch(failure);
   }
 
-  this._readyPromise = new Promise((resolve, reject) => {
-    doRequest(resolve, reject);
-  });
+  this._readyPromise = doRequest();
 }
 
 Object.defineProperties(SingleTileImageryProvider.prototype, {

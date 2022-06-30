@@ -275,22 +275,24 @@ function BingMapsImageryProvider(options) {
     }
 
     that._ready = true;
-    TileProviderError.handleSuccess(metadataError);
+    TileProviderError.reportSuccess(metadataError);
     return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
     const message = `An error occurred while accessing ${metadataResource.url}.`;
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
       message,
       undefined,
       undefined,
-      undefined,
-      requestMetadata
+      undefined
     );
+    if (metadataError.retry) {
+      return requestMetadata();
+    }
     return Promise.reject(new RuntimeError(message));
   }
 
