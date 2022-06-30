@@ -14,8 +14,8 @@ import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
-  const boxWithPrimitiveOutlines =
-    "./Data/Models/GltfLoader/BoxWithPrimitiveOutlines/glTF/BoxWithPrimitiveOutlines.gltf";
+  const boxWithPrimitiveOutline =
+    "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
 
   let scene;
   const gltfLoaders = [];
@@ -74,7 +74,7 @@ describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
   }
 
   it("Processes model with CESIUM_primitive_outline extension", function () {
-    return loadGltf(boxWithPrimitiveOutlines).then(function (gltfLoader) {
+    return loadGltf(boxWithPrimitiveOutline).then(function (gltfLoader) {
       const components = gltfLoader.components;
       const [node] = components.nodes;
       const [primitive] = node.primitives;
