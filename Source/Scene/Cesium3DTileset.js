@@ -104,6 +104,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -772,6 +773,8 @@ function Cesium3DTileset(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.

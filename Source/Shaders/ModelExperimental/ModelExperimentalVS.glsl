@@ -99,6 +99,10 @@ void main()
     // This also sets gl_Position.
     geometryStage(attributes, modelView, normal);    
 
+    #ifdef HAS_SILHOUETTE
+    silhouetteStage(attributes);
+    #endif
+
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
         gl_PointSize = vsOutput.pointSize;

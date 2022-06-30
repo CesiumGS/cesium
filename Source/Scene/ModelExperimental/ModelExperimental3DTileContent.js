@@ -382,7 +382,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     splitDirection: tileset.splitDirection,
     enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
-    projectTo2D: true,
+    projectTo2D: tileset._projectTo2D,
   };
 
   return combine(additionalOptions, mainOptions);

@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
@@ -140,8 +139,8 @@ function createPoints(points, ellipsoid) {
 
     if (!defined(packedBuffer)) {
       // Copy because they may be the views on the same buffer.
-      positions = points._positions = arraySlice(positions);
-      points._batchIds = arraySlice(points._batchIds);
+      positions = points._positions = positions.slice();
+      points._batchIds = points._batchIds.slice();
 
       packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
     }

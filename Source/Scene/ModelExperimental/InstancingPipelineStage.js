@@ -114,7 +114,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     uniformMap.u_instance_modifiedModelView = function () {
       // Model matrix without the node hierarchy or axis correction
       // (see u_instance_nodeTransform).
-      const modifiedModelMatrix = Matrix4.multiplyTransformation(
+      let modifiedModelMatrix = Matrix4.multiplyTransformation(
         // For 3D Tiles, model.modelMatrix is the computed tile
         // transform (which includes tileset.modelMatrix). This always applies
         // for i3dm, since such models are always part of a tileset.
@@ -125,9 +125,32 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         modelViewScratch
       );
 
+      if (use2D) {
+        // If projectTo2D is enabled, the 2D view matrix
+        // will be accounted for in the u_modelView2D
+        // uniform.
+        //
+        // modifiedModelView = view3D * modifiedModel
+        return Matrix4.multiplyTransformation(
+          frameState.context.uniformState.view3D,
+          modifiedModelMatrix,
+          modelViewScratch
+        );
+      }
+
+      // For projection to 2D without projectTo2D enabled,
+      // project the model matrix to 2D.
+      if (frameState.mode !== SceneMode.SCENE3D) {
+        modifiedModelMatrix = Transforms.basisTo2D(
+          frameState.mapProjection,
+          modifiedModelMatrix,
+          modelViewScratch
+        );
+      }
+
       // modifiedModelView = view * modifiedModel
       return Matrix4.multiplyTransformation(
-        frameState.context.uniformState.view3D,
+        frameState.context.uniformState.view,
         modifiedModelMatrix,
         modelViewScratch
       );
@@ -637,13 +660,12 @@ function processTransformAttributes(
     transforms = getInstanceTransformsAsMatrices(
       instances,
       count,
-      renderResources,
-      use2D
+      renderResources
     );
 
     const transformsTypedArray = transformsToTypedArray(transforms);
     const buffer = createVertexBuffer(transformsTypedArray, frameState);
-    renderResources.model._resources.push(buffer);
+    renderResources.model._pipelineResources.push(buffer);
 
     processMatrixAttributes(
       renderResources,
@@ -673,7 +695,7 @@ function processTransformAttributes(
           translationAttribute.packedTypedArray,
           frameState
         );
-        renderResources.model._resources.push(buffer);
+        renderResources.model._pipelineResources.push(buffer);
 
         byteOffset = 0;
         byteStride = undefined;
@@ -713,7 +735,7 @@ function processTransformAttributes(
           scaleAttribute.packedTypedArray,
           frameState
         );
-        renderResources.model._resources.push(buffer);
+        renderResources.model._pipelineResources.push(buffer);
 
         byteOffset = 0;
         byteStride = undefined;
@@ -931,7 +953,7 @@ function processFeatureIdAttributes(
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;
-    model._resources.push(vertexBuffer);
+    model._pipelineResources.push(vertexBuffer);
 
     // Packed typed arrays are omitted from statistics because they don't
     // necessarily correspond to the size of the GPU buffer containing

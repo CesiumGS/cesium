@@ -803,6 +803,15 @@ function Node() {
    * @private
    */
   this.morphWeights = [];
+
+  /**
+   * The name of the articulation affecting this node, as defined by the
+   * AGI_articulations extension.
+   *
+   * @type {String}
+   * @private
+   */
+  this.articulationName = undefined;
 }
 
 /**
@@ -961,6 +970,84 @@ function Animation() {
 }
 
 /**
+ * An articulation stage belonging to an articulation from the
+ * AGI_articulations extension.
+ *
+ * @alias {ModelComponents.ArticulationStage}
+ * @constructor
+ *
+ * @private
+ */
+function ArticulationStage() {
+  /**
+   * The name of the articulation stage.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The type of the articulation stage, defined by the type of motion it modifies.
+   *
+   * @type {ArticulationStageType}
+   * @private
+   */
+  this.type = undefined;
+
+  /**
+   * The minimum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.minimumValue = undefined;
+
+  /**
+   * The maximum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.maximumValue = undefined;
+
+  /**
+   * The initial value for this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.initialValue = undefined;
+}
+
+/**
+ * An articulation for the model, as defined by the AGI_articulations extension.
+ *
+ * @alias {ModelComponents.Articulation}
+ * @constructor
+ *
+ * @private
+ */
+function Articulation() {
+  /**
+   * The name of the articulation.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The stages belonging to this articulation. The stages are applied to
+   * the model in order of appearance.
+   *
+   * @type {ModelComponents.ArticulationStage[]}
+   * @private
+   */
+  this.stages = [];
+}
+
+/**
  * The asset of the model.
  *
  * @alias {ModelComponents.Asset}
@@ -1023,6 +1110,13 @@ function Components() {
    * @type {ModelComponents.Animation[]}
    */
   this.animations = [];
+
+  /**
+   * All articulations in the model as defined by the AGI_articulations extension.
+   *
+   * @type {ModelComponents.Articulation[]}
+   */
+  this.articulations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1369,6 +1463,8 @@ ModelComponents.AnimationSampler = AnimationSampler;
 ModelComponents.AnimationTarget = AnimationTarget;
 ModelComponents.AnimationChannel = AnimationChannel;
 ModelComponents.Animation = Animation;
+ModelComponents.ArticulationStage = ArticulationStage;
+ModelComponents.Articulation = Articulation;
 ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;
