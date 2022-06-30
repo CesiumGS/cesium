@@ -55,7 +55,7 @@ describe(
     const blueUrl = "Data/Images/Blue2x2.png";
     const greenUrl = "Data/Images/Green1x4.png";
     const redUrl = "Data/Images/Red16x16.png";
-    const blue10x10Url = "/Data/Images/Blue10x10.png";
+    const blue10x10Url = "Data/Images/Blue10x10.png";
 
     it("constructs", function () {
       const textureManager = new TextureManager();
