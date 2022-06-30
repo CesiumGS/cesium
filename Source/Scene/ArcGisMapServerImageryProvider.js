@@ -232,7 +232,7 @@ function ArcGisMapServerImageryProvider(options) {
   const that = this;
   let metadataError;
 
-  function metadataSuccess(data, resolve, reject) {
+  function metadataSuccess(data) {
     const tileInfo = data.tileInfo;
     if (!defined(tileInfo)) {
       that._useTiles = false;
@@ -253,22 +253,19 @@ function ArcGisMapServerImageryProvider(options) {
         });
       } else {
         const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
-        metadataError = TileProviderError.handleError(
+        metadataError = TileProviderError.reportError(
           metadataError,
           that,
           that._errorEvent,
           message,
           undefined,
           undefined,
-          undefined,
-          requestMetadata,
-          resolve,
-          reject
+          undefined
         );
-        if (!metadataError.retry) {
-          reject(new RuntimeError(message));
+        if (metadataError.retry) {
+          return requestMetadata();
         }
-        return;
+        return Promise.reject(new RuntimeError(message));
       }
       that._maximumLevel = data.tileInfo.lods.length - 1;
 
@@ -324,20 +321,19 @@ function ArcGisMapServerImageryProvider(options) {
             );
           } else {
             const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
-            metadataError = TileProviderError.handleError(
+            metadataError = TileProviderError.reportError(
               metadataError,
               that,
               that._errorEvent,
               extentMessage,
               undefined,
               undefined,
-              undefined,
-              requestMetadata
+              undefined
             );
-            if (!metadataError.retry) {
-              reject(new RuntimeError(extentMessage));
+            if (metadataError.retry) {
+              return requestMetadata();
             }
-            return;
+            return Promise.reject(new RuntimeError(extentMessage));
           }
         }
       } else {
@@ -368,45 +364,34 @@ function ArcGisMapServerImageryProvider(options) {
     }
 
     that._ready = true;
-    resolve(true);
-    TileProviderError.handleSuccess(metadataError);
+    TileProviderError.reportSuccess(metadataError);
+    return Promise.resolve(true);
   }
 
-  function metadataFailure(e, reject) {
+  function metadataFailure(e) {
     const message = `An error occurred while accessing ${that._resource.url}.`;
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
       message,
       undefined,
       undefined,
-      undefined,
-      requestMetadata
+      undefined
     );
-    reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   }
-
-  function requestMetadata(resolve, reject) {
+  function requestMetadata() {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
         f: "json",
       },
     });
-    resource
-      .fetchJsonp()
-      .then(function (result) {
-        metadataSuccess(result, resolve, reject);
-      })
-      .catch(function (e) {
-        metadataFailure(e, reject);
-      });
+    return resource.fetchJsonp().then(metadataSuccess).catch(metadataFailure);
   }
 
   if (this._useTiles) {
-    this._readyPromise = new Promise((resolve, reject) => {
-      requestMetadata(resolve, reject);
-    });
+    this._readyPromise = requestMetadata();
   } else {
     this._ready = true;
     this._readyPromise = Promise.resolve(true);

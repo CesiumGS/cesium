@@ -1,5 +1,6 @@
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 import formatError from "./formatError.js";
 
 /**
@@ -85,10 +86,9 @@ function TileProviderError(
 }
 
 /**
- * Handles an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
+ * Reports an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
  * logging the error to the console if the event has no listeners.  This method also tracks the number
- * of times the operation has been retried and will automatically retry if requested to do so by the
- * event listeners.
+ * of times the operation has been retried.
  *
  * @param {TileProviderError} previousError The error instance returned by this function the last
  *        time it was called for this error, or undefined if this is the first time this error has
@@ -102,16 +102,12 @@ function TileProviderError(
  *        error is not specific to a particular tile.
  * @param {Number} level The level-of-detail of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
- * @param {TileProviderError.RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
- *        operation will not be retried.
- * @param {Function} resolveFunction The function to call to resolve the operation. Must be defined, if retryFunction is defined.
- * @param {Function} rejectFunction The function to call to reject the operation. Must be defined, if retryFunction is defined.
  * @param {Error} [errorDetails] The error or exception that occurred, if any.
  * @returns {TileProviderError} The error instance that was passed to the event listeners and that
  *          should be passed to this function the next time it is called for the same error in order
  *          to track retry counts.
  */
-TileProviderError.handleError = function (
+TileProviderError.reportError = function (
   previousError,
   provider,
   event,
@@ -119,9 +115,6 @@ TileProviderError.handleError = function (
   x,
   y,
   level,
-  retryFunction,
-  resolveFunction,
-  rejectFunction,
   errorDetails
 ) {
   let error = previousError;
@@ -156,11 +149,81 @@ TileProviderError.handleError = function (
     );
   }
 
+  return error;
+};
+
+/**
+ * Handles an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
+ * logging the error to the console if the event has no listeners.  This method also tracks the number
+ * of times the operation has been retried and will automatically retry if requested to do so by the
+ * event listeners.
+ *
+ * @param {TileProviderError} previousError The error instance returned by this function the last
+ *        time it was called for this error, or undefined if this is the first time this error has
+ *        occurred.
+ * @param {ImageryProvider|TerrainProvider} provider The imagery or terrain provider that encountered the error.
+ * @param {Event} event The event to raise to inform listeners of the error.
+ * @param {String} message The message describing the error.
+ * @param {Number} x The X coordinate of the tile that experienced the error, or undefined if the
+ *        error is not specific to a particular tile.
+ * @param {Number} y The Y coordinate of the tile that experienced the error, or undefined if the
+ *        error is not specific to a particular tile.
+ * @param {Number} level The level-of-detail of the tile that experienced the error, or undefined if the
+ *        error is not specific to a particular tile.
+ * @param {TileProviderError.RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
+ *        operation will not be retried.
+ * @param {Error} [errorDetails] The error or exception that occurred, if any.
+ * @returns {TileProviderError} The error instance that was passed to the event listeners and that
+ *          should be passed to this function the next time it is called for the same error in order
+ *          to track retry counts.
+ *
+ * @deprecated
+ */
+TileProviderError.handleError = function (
+  previousError,
+  provider,
+  event,
+  message,
+  x,
+  y,
+  level,
+  retryFunction,
+  errorDetails
+) {
+  deprecationWarning(
+    "TileProviderError.handleError",
+    "TileProviderError.handleError was deprecated in CesiumJS 1.96 and will be removed in 1.97. Use TileProviderError.reportError instead."
+  );
+
+  const error = TileProviderError.reportError(
+    previousError,
+    provider,
+    event,
+    message,
+    x,
+    y,
+    level,
+    errorDetails
+  );
+
   if (error.retry && defined(retryFunction)) {
-    retryFunction(resolveFunction, rejectFunction);
+    retryFunction();
   }
 
   return error;
+};
+
+/**
+ * Reports success of an operation by resetting the retry count of a previous error, if any.  This way,
+ * if the error occurs again in the future, the listeners will be informed that it has not yet been retried.
+ *
+ * @param {TileProviderError} previousError The previous error, or undefined if this operation has
+ *        not previously resulted in an error.
+ */
+TileProviderError.reportSuccess = function (previousError) {
+  if (defined(previousError)) {
+    previousError.timesRetried = -1;
+  }
 };
 
 /**
@@ -169,15 +232,21 @@ TileProviderError.handleError = function (
  *
  * @param {TileProviderError} previousError The previous error, or undefined if this operation has
  *        not previously resulted in an error.
+ *
+ * @deprecated
  */
 TileProviderError.handleSuccess = function (previousError) {
-  if (defined(previousError)) {
-    previousError.timesRetried = -1;
-  }
+  deprecationWarning(
+    "TileProviderError.handleSuccess",
+    "TileProviderError.handleSuccess was deprecated in CesiumJS 1.96 and will be removed in 1.97. Use TileProviderError.reportSuccess instead."
+  );
+  TileProviderError.reportSuccess(previousError);
 };
 
 /**
  * A function that will be called to retry the operation.
  * @callback TileProviderError.RetryFunction
+ *
+ * @deprecated
  */
 export default TileProviderError;
