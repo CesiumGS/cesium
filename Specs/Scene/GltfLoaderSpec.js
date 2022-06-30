@@ -108,6 +108,10 @@ describe(
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
     const boxArticulations =
       "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+    const boxWithPrimitiveOutline =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+    const boxWithPrimitiveOutlineSharedVertices =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -3878,6 +3882,98 @@ describe(
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline", function () {
+      return loadGltf(boxWithPrimitiveOutline).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        expect(outlineCoordinates.count).toBe(24);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline with shared vertices", function () {
+      return loadGltf(boxWithPrimitiveOutlineSharedVertices).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).not.toBeDefined();
+        expect(texCoordAttribute).not.toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        // the model originally had 8 vertices, but some are duplicated
+        // when generating outlines
+        expect(outlineCoordinates.count).toBe(16);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
       });
     });
 
