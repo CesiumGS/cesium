@@ -132,8 +132,12 @@ IndexDatatype.createTypedArray = function (
   if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
     return new Uint32Array(indicesLengthOrArray);
   }
-
-  return new Uint16Array(indicesLengthOrArray);
+  
+  else if (numberOfVertices >= CesiumMath.THIRTY_TWO_KILOBYTES) {
+    return new Uint16Array(indicesLengthOrArray);
+  }
+  
+  return new Uint8Array(indicesLengthOrArray);
 };
 
 /**

@@ -31,6 +31,7 @@
 - Updated text highlighting for code examples in documentation. [#10051](https://github.com/CesiumGS/cesium/issues/10051)
 - Updated ModelExperimental shader defaults to match glTF spec. [#9992](https://github.com/CesiumGS/cesium/issues/9992)
 - Fixed shadow rendering artifacts that appeared in `ModelExperimental`. [#10501](https://github.com/CesiumGS/cesium/pull/10501/)
+- Fixed the issue where only uint16 and uint32array were returned `IndexDatatype.createTypedArray`. [#10349](https://github.com/CesiumGS/cesium/issues/10349) 
 
 ##### Deprecated :hourglass_flowing_sand:
 
