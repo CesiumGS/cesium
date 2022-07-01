@@ -227,6 +227,16 @@ function Cesium3DTilesInspector(container, scene) {
     "html: pickStatisticsText, visible: showPickStatistics"
   );
   loggingPanelContents.appendChild(pickStatistics);
+  loggingPanelContents.appendChild(
+    createCheckbox("Resource Cache Statistics", "showResourceCacheStatistics")
+  );
+  const resourceCacheStatistics = document.createElement("div");
+  resourceCacheStatistics.className = "cesium-3dTilesInspector-statistics";
+  resourceCacheStatistics.setAttribute(
+    "data-bind",
+    "html: resourceCacheStatisticsText, visible: showResourceCacheStatistics"
+  );
+  loggingPanelContents.appendChild(resourceCacheStatistics);
 
   const stylePanelEditor = document.createElement("div");
   stylePanelContents.appendChild(stylePanelEditor);

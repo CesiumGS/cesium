@@ -17,6 +17,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage.js";
 import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
@@ -89,13 +90,13 @@ export default function ModelExperimentalPrimitive(options) {
   this.pipelineStages = [];
 
   /**
-   * The generated {@link DrawCommand}s associated with this primitive.
+   * The generated {@link ModelExperimentalDrawCommand} associated with this primitive.
    *
-   * @type {DrawCommand[]}
+   * @type {ModelExperimentalDrawCommand}
    *
    * @private
    */
-  this.drawCommands = [];
+  this.drawCommand = undefined;
 
   /**
    * The bounding sphere of this primitive in object-space.
@@ -236,6 +237,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   pipelineStages.push(AlphaPipelineStage);
+
+  pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
   return;
 };

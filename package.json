@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.94.0",
+  "version": "1.95.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -75,7 +75,7 @@
     "jasmine-core": "^4.0.1",
     "jsdoc": "^3.6.7",
     "jsep": "^0.3.1",
-    "karma": "^5.2.3",
+    "karma": "^6.3.20",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.3",
     "karma-coverage-istanbul-instrumenter": "^1.0.3",
@@ -90,6 +90,7 @@
     "kdbush": "^3.0.0",
     "ktx-parse": "^0.2.1",
     "lerc": "^2.0.0",
+    "markdownlint-cli": "^0.31.1",
     "merge-stream": "^2.0.0",
     "mersenne-twister": "^1.1.0",
     "meshoptimizer": "^0.16.1",
@@ -99,7 +100,7 @@
     "open": "^8.2.1",
     "pako": "^1.0.4",
     "prettier": "2.1.2",
-    "pretty-quick": "^3.1.1",
+    "prismjs": "^1.28.0",
     "protobufjs": "6.7.0",
     "rbush": "^3.0.1",
     "request": "^2.79.0",
@@ -135,6 +136,7 @@
     "generateDocumentation-watch": "gulp generateDocumentation-watch",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
     "makeZipFile": "gulp makeZipFile",
+    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
     "release": "gulp release",
@@ -152,5 +154,14 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\""
+  },
+  "lint-staged": {
+    "*.{js,cjs,html}": [
+      "eslint --cache --quiet",
+      "prettier --write"
+    ],
+    "*.md": [
+      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"
+    ]
   }
 }

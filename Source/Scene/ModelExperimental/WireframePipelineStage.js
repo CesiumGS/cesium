@@ -33,13 +33,22 @@ WireframePipelineStage.process = function (
   primitive,
   frameState
 ) {
+  const model = renderResources.model;
   const wireframeIndexBuffer = createWireframeIndexBuffer(
     primitive,
     renderResources.indices,
     frameState
   );
-  renderResources.model._resources.push(wireframeIndexBuffer);
+  model._pipelineResources.push(wireframeIndexBuffer);
   renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
+
+  // We only need to count memory for the generated buffer. In WebGL 1, the CPU
+  // copy of the original indices is already counted in the geometry stage,
+  // and in WebGL 2, the CPU copy of the original indices (generated from the
+  // data of the original buffer) is discarded after generating the wireframe
+  // indices.
+  const hasCpuCopy = false;
+  model.statistics.addBuffer(wireframeIndexBuffer, hasCpuCopy);
 
   // Update render resources so we render LINES with the correct index count
   const originalPrimitiveType = renderResources.primitiveType;
@@ -57,12 +66,13 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
     VertexAttributeSemantic.POSITION
   );
   const vertexCount = positionAttribute.count;
+  const webgl2 = frameState.context.webgl2;
 
   let originalIndices;
   if (defined(indices)) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
-    if (defined(indicesBuffer) && frameState.context.webgl2) {
+    if (defined(indicesBuffer) && webgl2) {
       const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
       originalIndices = useUint8Array
         ? new Uint8Array(indicesCount)

@@ -46,8 +46,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/pointCloudBatched.pnts";
   const pointCloudWithPerPointPropertiesUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/pointCloudWithPerPointProperties.pnts";
-  const pointCloudWithUnicodePropertyNamesUrl =
-    "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/pointCloudWithUnicodePropertyNames.pnts";
+  const pointCloudWithUnicodePropertyIdsUrl =
+    "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/pointCloudWithUnicodePropertyIds.pnts";
 
   let scene;
   const pntsLoaders = [];
@@ -524,8 +524,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     });
   });
 
-  it("loads PointCloudWithUnicodePropertyNames", function () {
-    return loadPnts(pointCloudWithUnicodePropertyNamesUrl).then(function (
+  it("loads PointCloudWithUnicodePropertyIds", function () {
+    return loadPnts(pointCloudWithUnicodePropertyIdsUrl).then(function (
       loader
     ) {
       const components = loader.components;

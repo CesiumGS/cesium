@@ -1,7 +1,6 @@
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import getComponentReader from "./getComponentReader.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
-import arrayFill from "../../Core/arrayFill.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 
@@ -23,19 +22,13 @@ function findAccessorMinMax(gltf, accessor) {
   // According to the spec, when bufferView is not defined, accessor must be initialized with zeros
   if (!defined(accessor.bufferView)) {
     return {
-      min: arrayFill(new Array(numberOfComponents), 0.0),
-      max: arrayFill(new Array(numberOfComponents), 0.0),
+      min: new Array(numberOfComponents).fill(0.0),
+      max: new Array(numberOfComponents).fill(0.0),
     };
   }
 
-  const min = arrayFill(
-    new Array(numberOfComponents),
-    Number.POSITIVE_INFINITY
-  );
-  const max = arrayFill(
-    new Array(numberOfComponents),
-    Number.NEGATIVE_INFINITY
-  );
+  const min = new Array(numberOfComponents).fill(Number.POSITIVE_INFINITY);
+  const max = new Array(numberOfComponents).fill(Number.NEGATIVE_INFINITY);
 
   const bufferView = bufferViews[bufferViewId];
   const bufferId = bufferView.buffer;

@@ -57,13 +57,13 @@ function onTimelineScrubfunction(e) {
 }
 
 function getCesium3DTileFeatureDescription(feature) {
-  const propertyNames = feature.getPropertyNames();
+  const propertyIds = feature.getPropertyIds();
 
   let html = "";
-  propertyNames.forEach(function (propertyName) {
-    const value = feature.getProperty(propertyName);
+  propertyIds.forEach(function (propertyId) {
+    const value = feature.getProperty(propertyId);
     if (defined(value)) {
-      html += `<tr><th>${propertyName}</th><td>${value}</td></tr>`;
+      html += `<tr><th>${propertyId}</th><td>${value}</td></tr>`;
     }
   });
 
@@ -75,35 +75,35 @@ function getCesium3DTileFeatureDescription(feature) {
 }
 
 function getCesium3DTileFeatureName(feature) {
-  // We need to iterate all property names to find potential
-  // candidates, but since we prefer some property names
+  // We need to iterate all property IDs to find potential
+  // candidates, but since we prefer some property IDs
   // over others, we store them in an indexed array
   // and then use the first defined element in the array
   // as the preferred choice.
 
   let i;
-  const possibleNames = [];
-  const propertyNames = feature.getPropertyNames();
-  for (i = 0; i < propertyNames.length; i++) {
-    const propertyName = propertyNames[i];
-    if (/^name$/i.test(propertyName)) {
-      possibleNames[0] = feature.getProperty(propertyName);
-    } else if (/name/i.test(propertyName)) {
-      possibleNames[1] = feature.getProperty(propertyName);
-    } else if (/^title$/i.test(propertyName)) {
-      possibleNames[2] = feature.getProperty(propertyName);
-    } else if (/^(id|identifier)$/i.test(propertyName)) {
-      possibleNames[3] = feature.getProperty(propertyName);
-    } else if (/element/i.test(propertyName)) {
-      possibleNames[4] = feature.getProperty(propertyName);
-    } else if (/(id|identifier)$/i.test(propertyName)) {
-      possibleNames[5] = feature.getProperty(propertyName);
+  const possibleIds = [];
+  const propertyIds = feature.getPropertyIds();
+  for (i = 0; i < propertyIds.length; i++) {
+    const propertyId = propertyIds[i];
+    if (/^name$/i.test(propertyId)) {
+      possibleIds[0] = feature.getProperty(propertyId);
+    } else if (/name/i.test(propertyId)) {
+      possibleIds[1] = feature.getProperty(propertyId);
+    } else if (/^title$/i.test(propertyId)) {
+      possibleIds[2] = feature.getProperty(propertyId);
+    } else if (/^(id|identifier)$/i.test(propertyId)) {
+      possibleIds[3] = feature.getProperty(propertyId);
+    } else if (/element/i.test(propertyId)) {
+      possibleIds[4] = feature.getProperty(propertyId);
+    } else if (/(id|identifier)$/i.test(propertyId)) {
+      possibleIds[5] = feature.getProperty(propertyId);
     }
   }
 
-  const length = possibleNames.length;
+  const length = possibleIds.length;
   for (i = 0; i < length; i++) {
-    const item = possibleNames[i];
+    const item = possibleIds[i];
     if (defined(item) && item !== "") {
       return item;
     }

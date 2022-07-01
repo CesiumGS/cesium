@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -223,8 +222,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
         "Draco properties, byteOffset, and byteLength must be defined"
       );
     }
-    dracoBuffer = arraySlice(
-      featureTable.buffer,
+    dracoBuffer = featureTable.buffer.slice(
       dracoByteOffset,
       dracoByteOffset + dracoByteLength
     );

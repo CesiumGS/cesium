@@ -3,6 +3,7 @@ import {
   combine,
   GltfLoader,
   Matrix4,
+  ModelExperimentalStatistics,
   ModelExperimentalType,
   ModelExperimentalUtility,
   Resource,
@@ -22,6 +23,8 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
   const dracoBoxWithTangentsUrl =
     "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+  const boxInstancedTranslationUrl =
+    "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
 
   let scene;
   const gltfLoaders = [];
@@ -74,6 +77,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       attributeIndex: 1,
       model: {
         type: ModelExperimentalType.TILE_GLTF,
+        statistics: new ModelExperimentalStatistics(),
         sceneGraph: {
           computedModelMatrix: Matrix4.IDENTITY,
         },
@@ -92,10 +96,12 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     const renderResources = mockRenderResources();
 
     return loadGltf(boxTexturedUrl, {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
-      const primitive = components.nodes[1].primitives[0];
+      const node = components.nodes[1];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
 
       SceneMode2DPipelineStage.process(
         renderResources,
@@ -103,9 +109,14 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scene.frameState
       );
 
+      const model = renderResources.model;
+
       const runtimePrimitive = renderResources.runtimePrimitive;
       expect(runtimePrimitive.boundingSphere2D).toBeDefined();
-      expect(runtimePrimitive.positionBuffer2D).toBeDefined();
+
+      const positions2D = runtimePrimitive.positionBuffer2D;
+      expect(positions2D).toBeDefined();
+      expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
@@ -137,10 +148,12 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
     const renderResources = mockRenderResources();
 
     return loadGltf(dracoBoxWithTangentsUrl, {
-      loadPositionsFor2D: true,
+      loadAttributesFor2D: true,
     }).then(function (gltfLoader) {
       const components = gltfLoader.components;
-      const primitive = components.nodes[0].primitives[0];
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
 
       SceneMode2DPipelineStage.process(
         renderResources,
@@ -148,9 +161,14 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         scene.frameState
       );
 
+      const model = renderResources.model;
+
       const runtimePrimitive = renderResources.runtimePrimitive;
       expect(runtimePrimitive.boundingSphere2D).toBeDefined();
-      expect(runtimePrimitive.positionBuffer2D).toBeDefined();
+
+      const positions2D = runtimePrimitive.positionBuffer2D;
+      expect(positions2D).toBeDefined();
+      expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
       const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
@@ -174,6 +192,44 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
         translationMatrix
       );
       expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
+    });
+  });
+
+  it("processes resources for instanced model in 2D", function () {
+    const renderResources = mockRenderResources();
+
+    return loadGltf(boxInstancedTranslationUrl, {
+      loadAttributesFor2D: true,
+    }).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
+
+      SceneMode2DPipelineStage.process(
+        renderResources,
+        primitive,
+        scene.frameState
+      );
+
+      // Only the 2D bounding sphere will be computed for the primitive.
+      const runtimePrimitive = renderResources.runtimePrimitive;
+      expect(runtimePrimitive.boundingSphere2D).toBeDefined();
+      expect(runtimePrimitive.positionBuffer2D).toBeUndefined();
+
+      // Check that the position attribute's typed array has been unloaded.
+      const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION
+      );
+      expect(positionAttribute.typedArray).toBeUndefined();
+
+      // The 2D instancing flag will be added in InstancingPipelineStage
+      const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+
+      // The u_modelView2D uniform will be added in InstancingPipelineStage
+      expect(renderResources.uniformMap).toBeUndefined();
     });
   });
 });

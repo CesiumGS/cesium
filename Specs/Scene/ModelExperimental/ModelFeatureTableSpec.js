@@ -169,7 +169,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     }
   });
 
-  it("getPropertyNames works", function () {
+  it("getPropertyIds works", function () {
     const table = new ModelFeatureTable({
       model: {
         type: ModelExperimentalType.GLTF,
@@ -181,7 +181,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     for (let i = 0; i < modelFeatures.length; i++) {
       results = [];
       const feature = modelFeatures[i];
-      expect(feature.getPropertyNames(results)).toEqual([
+      expect(feature.getPropertyIds(results)).toEqual([
         "height",
         "name",
         "HEIGHT_SEMANTIC",

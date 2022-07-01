@@ -117,7 +117,7 @@ describe("Core/sampleTerrain", function () {
     });
 
     function spyOnTerrainDataCreateMesh(terrainProvider) {
-      // do some sneaky spying so we can check how many times createMesh is called
+      // do some sneaky spying, so we can check how many times createMesh is called
       const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
       spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
         x,
@@ -289,6 +289,69 @@ describe("Core/sampleTerrain", function () {
         // 1 tile was requested (all positions were close enough on the same tile)
         //  and the mesh was created once because we're using an ArcGIS tile
         return expectTileAndMeshCounts(terrainProvider, 1, true);
+      });
+    });
+
+    it("should handle the RequestScheduler throttling the requestTileGeometry requests with a retry", function () {
+      patchXHRLoad({
+        "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
+        "/tilemap/10/384/640/128/128":
+          "Data/ArcGIS/9_214_379/tilemap_10_384_640_128_128.json",
+        // we need multiple tiles to be requested, the actual value is not so important for this test
+        "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
+        "/tile/9/214/378": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
+        "/tile/9/214/376": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
+      });
+
+      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
+        url: "made/up/url",
+      });
+
+      let i = 0;
+      const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
+      spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
+        x,
+        y,
+        level,
+        request
+      ) {
+        i++;
+        if (i === 2 || i === 3) {
+          // on the 2nd and 3rd requestTileGeometry call, return undefined
+          //  to simulate RequestScheduler throttling the request
+          return undefined;
+        }
+        // otherwise, call the original method
+        return originalRequestTileGeometry.call(
+          terrainProvider,
+          x,
+          y,
+          level,
+          request
+        );
+      });
+
+      // 3 positions, quite far apart (requires multiple tile requests)
+      const positionA = Cartographic.fromDegrees(85, 28);
+      const positionB = Cartographic.fromDegrees(86, 28);
+      const positionC = Cartographic.fromDegrees(87, 28);
+
+      const level = 9;
+      return sampleTerrain(terrainProvider, level, [
+        positionA,
+        positionB,
+        positionC,
+      ]).then(function () {
+        // the order of requests is an implementation detail and not important,
+        //  but it is deterministic, and we can assert that there were some retries in there
+        const calls = terrainProvider.requestTileGeometry.calls;
+        expect(calls.count()).toEqual(5);
+        expect(calls.argsFor(0)).toEqual([376, 214, 9]);
+        expect(calls.argsFor(1)).toEqual([378, 214, 9]);
+        // this tile was retried twice, because the 2nd and 3rd call to requestTileGeometry returned undefined as expected
+        expect(calls.argsFor(2)).toEqual([378, 214, 9]);
+        expect(calls.argsFor(3)).toEqual([378, 214, 9]);
+        expect(calls.argsFor(4)).toEqual([379, 214, 9]);
       });
     });
   });

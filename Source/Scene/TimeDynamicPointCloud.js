@@ -1,4 +1,3 @@
-import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -146,8 +145,8 @@ function TimeDynamicPointCloud(options) {
    *
    * @example
    * pointCloud.frameFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading frame: ' + error.uri);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading frame: ${error.uri}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.frameFailed = new Event();
@@ -192,7 +191,7 @@ function TimeDynamicPointCloud(options) {
   this._runningSum = 0.0;
   this._runningLength = 0;
   this._runningIndex = 0;
-  this._runningSamples = arrayFill(new Array(5), 0.0);
+  this._runningSamples = new Array(5).fill(0.0);
   this._runningAverage = 0.0;
 }
 

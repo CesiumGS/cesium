@@ -8,10 +8,10 @@ script:
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
+  - npm --silent run markdownlint
   - npm --silent run prettier-check
 
   - npm --silent run build
-  - npm --silent run build-ts
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
   - travis_wait 20 npm --silent run website-release -- --concurrency 1

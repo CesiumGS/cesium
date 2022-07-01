@@ -49,7 +49,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
- * @param {Boolean} [options.loadPositionsFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
  */
 function B3dmLoader(options) {
@@ -71,7 +71,7 @@ function B3dmLoader(options) {
     options.loadAttributesAsTypedArray,
     false
   );
-  const loadPositionsFor2D = defaultValue(options.loadPositionsFor2D, false);
+  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
@@ -94,7 +94,7 @@ function B3dmLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadPositionsFor2D = loadPositionsFor2D;
+  this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
 
   this._state = B3dmLoaderState.UNLOADED;
@@ -226,7 +226,7 @@ B3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
-    loadPositionsFor2D: this._loadPositionsFor2D,
+    loadAttributesFor2D: this._loadAttributesFor2D,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
     renameBatchIdSemantic: true,
   });

@@ -1,6 +1,7 @@
 import {
   combine,
   GltfLoader,
+  ModelExperimentalStatistics,
   PrimitiveType,
   Resource,
   ResourceCache,
@@ -76,7 +77,8 @@ describe(
         primitiveType: primitive.primitiveType,
         wireframeIndexBuffer: undefined,
         model: {
-          _resources: resources,
+          _pipelineResources: resources,
+          statistics: new ModelExperimentalStatistics(),
         },
       };
     }
@@ -100,7 +102,14 @@ describe(
         expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
         WireframePipelineStage.process(renderResources, primitive, frameState);
-        expect(renderResources.wireframeIndexBuffer).toBeDefined();
+
+        const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
+        const model = renderResources.model;
+        expect(wireframeIndexBuffer).toBeDefined();
+        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
+        expect(model.statistics.geometryByteLength).toBe(
+          wireframeIndexBuffer.sizeInBytes
+        );
         expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
         expect(renderResources.count).toBe(72);
       });
@@ -124,7 +133,15 @@ describe(
         expect(renderResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
         WireframePipelineStage.process(renderResources, primitive, frameState);
-        expect(renderResources.wireframeIndexBuffer).toBeDefined();
+
+        const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
+        const model = renderResources.model;
+        expect(wireframeIndexBuffer).toBeDefined();
+        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
+        expect(model.statistics.geometryByteLength).toBe(
+          wireframeIndexBuffer.sizeInBytes
+        );
+
         expect(renderResources.primitiveType).toBe(PrimitiveType.LINES);
         expect(renderResources.count).toBe(72);
       });

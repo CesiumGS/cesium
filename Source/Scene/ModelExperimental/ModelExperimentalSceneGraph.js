@@ -1,12 +1,12 @@
-import buildDrawCommands from "./buildDrawCommands.js";
+import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelExperimentalArticulation from "./ModelExperimentalArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
@@ -14,12 +14,13 @@ import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import RenderState from "../../Renderer/RenderState.js";
-import ShadowMode from "../ShadowMode.js";
+import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
+import Transforms from "../../Core/Transforms.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -125,17 +126,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._runtimeSkins = [];
 
   /**
-   * Once computed, the {@link DrawCommand}s that are used to render this
-   * scene graph are stored here.
-   *
-   * @type {DrawCommand[]}
-   * @readonly
-   *
-   * @private
-   */
-  this._drawCommands = [];
-
-  /**
    * Pipeline stages to apply to this model. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -147,14 +137,28 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this.modelPipelineStages = [];
 
+  // The scene graph's bounding sphere is model space, so that
+  // the model's bounding sphere can be recomputed when given a
+  // new model matrix.
   this._boundingSphere = undefined;
+
+  // The 2D bounding sphere is in world space. This is checked
+  // by the draw commands to see if the model is over the IDL,
+  // and if so, renders the primitives using extra commands.
+  this._boundingSphere2D = undefined;
+
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+  this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
   this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
     new Matrix4()
   );
+
+  // Store articulations from the AGI_articulations extension
+  // by name in a dictionary for easy retrieval.
+  this._runtimeArticulations = {};
 
   initialize(this);
 }
@@ -204,7 +208,8 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
   },
 
   /**
-   * The bounding sphere containing all the primitives in the scene graph.
+   * The bounding sphere containing all the primitives in the scene graph
+   * in model space.
    *
    * @type {BoundingSphere}
    * @readonly
@@ -222,13 +227,32 @@ function initialize(sceneGraph) {
   const components = sceneGraph._components;
   const scene = components.scene;
 
-  computeModelMatrix(sceneGraph);
+  // If the model has a height reference that modifies the model matrix,
+  // it will be accounted for in updateModelMatrix.
+  const modelMatrix = sceneGraph._model.modelMatrix;
+  computeModelMatrix(sceneGraph, modelMatrix);
+
+  const articulations = components.articulations;
+  const articulationsLength = articulations.length;
+
+  const runtimeArticulations = sceneGraph._runtimeArticulations;
+  for (let i = 0; i < articulationsLength; i++) {
+    const articulation = articulations[i];
+    const runtimeArticulation = new ModelExperimentalArticulation({
+      articulation: articulation,
+      sceneGraph: sceneGraph,
+    });
+
+    const name = runtimeArticulation.name;
+    runtimeArticulations[name] = runtimeArticulation;
+  }
 
   const nodes = components.nodes;
   const nodesLength = nodes.length;
 
-  // Initialize this array to be the same size as the nodes array in the model's file.
-  // This is so nodes can be stored by their index in the file, for future ease of access.
+  // Initialize this array to be the same size as the nodes array in
+  // the model's file. This is so nodes can be stored by their index
+  // in the file, for future ease of access.
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
@@ -275,14 +299,17 @@ function initialize(sceneGraph) {
     skinnedNode._runtimeSkin = runtimeSkins[skinIndex];
     skinnedNode.updateJointMatrices();
   }
+
+  // Ensure articulations are applied with their initial values to their target nodes.
+  sceneGraph.applyArticulations();
 }
 
-function computeModelMatrix(sceneGraph) {
+function computeModelMatrix(sceneGraph, modelMatrix) {
   const components = sceneGraph._components;
   const model = sceneGraph._model;
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
-    model.modelMatrix,
+    modelMatrix,
     components.transform,
     sceneGraph._computedModelMatrix
   );
@@ -297,6 +324,42 @@ function computeModelMatrix(sceneGraph) {
     sceneGraph._computedModelMatrix,
     model.computedScale,
     sceneGraph._computedModelMatrix
+  );
+}
+
+const scratchComputedTranslation = new Cartesian3();
+
+function computeModelMatrix2D(sceneGraph, frameState) {
+  const computedModelMatrix = sceneGraph._computedModelMatrix;
+  const translation = Matrix4.getTranslation(
+    computedModelMatrix,
+    scratchComputedTranslation
+  );
+
+  if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
+    sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
+      frameState.mapProjection,
+      computedModelMatrix,
+      sceneGraph._computedModelMatrix2D
+    );
+  } else {
+    const center = sceneGraph.boundingSphere.center;
+    const to2D = Transforms.wgs84To2DModelMatrix(
+      frameState.mapProjection,
+      center,
+      sceneGraph._computedModelMatrix2D
+    );
+    sceneGraph._computedModelMatrix2D = Matrix4.multiply(
+      to2D,
+      computedModelMatrix,
+      sceneGraph._computedModelMatrix2D
+    );
+  }
+
+  sceneGraph._boundingSphere2D = BoundingSphere.transform(
+    sceneGraph._boundingSphere,
+    sceneGraph._computedModelMatrix2D,
+    sceneGraph._boundingSphere2D
   );
 }
 
@@ -369,7 +432,7 @@ const scratchModelPositionMax = new Cartesian3();
 const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
- * Generates the draw commands for each primitive in the model.
+ * Generates the {@link ModelExperimentalDrawCommand} for each primitive in the model.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -382,7 +445,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   const model = this._model;
   const modelRenderResources = new ModelRenderResources(model);
 
-  this.configurePipeline();
+  // Reset the memory counts before running the pipeline
+  model.statistics.clear();
+
+  this.configurePipeline(frameState);
   const modelPipelineStages = this.modelPipelineStages;
 
   let i, j, k;
@@ -473,12 +539,12 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         modelPositionMax
       );
 
-      const drawCommands = buildDrawCommands(
+      const drawCommand = buildDrawCommand(
         primitiveRenderResources,
         frameState
       );
 
-      runtimePrimitive.drawCommands = drawCommands;
+      runtimePrimitive.drawCommand = drawCommand;
     }
   }
 
@@ -510,7 +576,9 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
+ModelExperimentalSceneGraph.prototype.configurePipeline = function (
+  frameState
+) {
   const modelPipelineStages = this.modelPipelineStages;
   modelPipelineStages.length = 0;
 
@@ -534,6 +602,10 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   ) {
     modelPipelineStages.push(ModelSplitterPipelineStage);
   }
+
+  if (model.hasSilhouette(frameState)) {
+    modelPipelineStages.push(ModelSilhouettePipelineStage);
+  }
 };
 
 ModelExperimentalSceneGraph.prototype.update = function (
@@ -550,7 +622,9 @@ ModelExperimentalSceneGraph.prototype.update = function (
       nodeUpdateStage.update(runtimeNode, this, frameState);
     }
 
-    if (updateForAnimations) {
+    const disableAnimations =
+      frameState.mode !== SceneMode.SCENE3D && this._model._projectTo2D;
+    if (updateForAnimations && !disableAnimations) {
       this.updateJointMatrices();
     }
 
@@ -558,14 +632,20 @@ ModelExperimentalSceneGraph.prototype.update = function (
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
         const stage = runtimePrimitive.updateStages[k];
-        stage.update(runtimePrimitive);
+        stage.update(runtimePrimitive, this);
       }
     }
   }
 };
 
-ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
-  computeModelMatrix(this);
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (
+  modelMatrix,
+  frameState
+) {
+  computeModelMatrix(this, modelMatrix);
+  if (frameState.mode !== SceneMode.SCENE3D) {
+    computeModelMatrix2D(this, frameState);
+  }
 
   // Mark all root nodes as dirty. Any and all children will be
   // affected recursively in the update stage.
@@ -612,17 +692,9 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
   backFaceCulling
 ) {
-  const model = this._model;
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-      const drawCommand = runtimePrimitive.drawCommands[k];
-      const renderState = clone(drawCommand.renderState, true);
-      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
-      const translucent = defined(model.color) && model.color.alpha < 1.0;
-      renderState.cull.enabled =
-        backFaceCulling && !doubleSided && !translucent;
-      drawCommand.renderState = RenderState.fromCache(renderState);
-    }
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.backFaceCulling = backFaceCulling;
   });
 };
 
@@ -634,15 +706,25 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
  * @private
  */
 ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
-  const model = this._model;
-  const castShadows = ShadowMode.castShadows(model.shadows);
-  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-      const drawCommand = runtimePrimitive.drawCommands[k];
-      drawCommand.castShadows = castShadows;
-      drawCommand.receiveShadows = receiveShadows;
-    }
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.shadows = shadowMode;
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes whether to show the debug bounding volume.
+ *
+ * @param {Boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
+  debugShowBoundingVolume
+) {
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    const drawCommand = runtimePrimitive.drawCommand;
+    drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
   });
 };
 
@@ -650,12 +732,60 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
  * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
  * the draw commands associated with each primitive.
  *
+ * @param {FrameState} frameState The frame state.
+ *
+ * @returns {DrawCommand[]} The draw commands of the primitives in the scene graph.
+ *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
+ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
   const drawCommands = [];
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
-    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+    const primitiveDrawCommand = runtimePrimitive.drawCommand;
+    const result = primitiveDrawCommand.getCommands(frameState);
+    drawCommands.push.apply(drawCommands, result);
   });
   return drawCommands;
+};
+
+/**
+ * Sets the current value of an articulation stage.
+ *
+ * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+ * @param {Number} value The numeric value of this stage of the articulation.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.setArticulationStage = function (
+  articulationStageKey,
+  value
+) {
+  const names = articulationStageKey.split(" ");
+  if (names.length !== 2) {
+    return;
+  }
+
+  const articulationName = names[0];
+  const stageName = names[1];
+
+  const runtimeArticulation = this._runtimeArticulations[articulationName];
+  if (defined(runtimeArticulation)) {
+    runtimeArticulation.setArticulationStage(stageName, value);
+  }
+};
+
+/**
+ * Applies any modified articulation stages to the matrix of each node that participates
+ * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.applyArticulations = function () {
+  const runtimeArticulations = this._runtimeArticulations;
+  for (const articulationName in runtimeArticulations) {
+    if (runtimeArticulations.hasOwnProperty(articulationName)) {
+      const articulation = runtimeArticulations[articulationName];
+      articulation.apply();
+    }
+  }
 };

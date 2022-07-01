@@ -17,6 +17,7 @@ import {
   PickingPipelineStage,
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
+  PrimitiveStatisticsPipelineStage,
   PrimitiveType,
   SceneMode,
   SceneMode2DPipelineStage,
@@ -134,6 +135,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
@@ -155,6 +157,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -197,6 +200,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -242,6 +246,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -297,6 +302,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ]);
   });
 
@@ -323,6 +329,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -352,6 +359,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -381,6 +389,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -419,6 +428,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -452,6 +462,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -484,6 +495,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -513,6 +525,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -544,6 +557,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -584,6 +598,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -615,6 +630,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -645,6 +661,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -675,6 +692,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameStateWebgl2);
@@ -704,6 +722,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameStateWebgl2);
@@ -734,6 +753,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState2D);
@@ -763,6 +783,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
@@ -792,6 +813,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MetadataPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState3DOnly);

@@ -1,3 +1,4 @@
+import { Axis } from "../../Source/Cesium.js";
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
@@ -148,6 +149,12 @@ describe(
       "Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources/tileset.json";
     const tilesetUrlWithContentUri =
       "Data/Cesium3DTiles/Batched/BatchedWithContentDataUri/tileset.json";
+
+    // Tileset where glTF positions are stored as east-north-up instead of
+    // the glTF y-up convention. This is used for testing modelUpAxis and
+    // modelForwardAxis.
+    const tilesetEastNorthUpUrl =
+      "Data/Cesium3DTiles/EastNorthUpContent/tileset_1.1.json";
 
     const tilesetSubtreeExpirationUrl =
       "Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/tileset.json";
@@ -742,6 +749,18 @@ describe(
       });
     });
 
+    it("renders tileset in CV with projectTo2D option", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        projectTo2D: true,
+      }).then(function (tileset) {
+        scene.morphToColumbusView(0.0);
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.numberOfCommands).toEqual(5);
+      });
+    });
+
     it("renders tileset in 2D", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
@@ -751,7 +770,20 @@ describe(
         scene.renderForSpecs();
         const statistics = tileset._statistics;
         expect(statistics.visited).toEqual(5);
-        expect(statistics.numberOfCommands).toEqual(10);
+        expect(statistics.numberOfCommands).toEqual(5);
+      });
+    });
+
+    it("renders tileset in 2D with projectTo2D option", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        projectTo2D: true,
+      }).then(function (tileset) {
+        scene.morphTo2D(0.0);
+        tileset.maximumScreenSpaceError = 3;
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.visited).toEqual(5);
+        expect(statistics.numberOfCommands).toEqual(5);
       });
     });
 
@@ -776,6 +808,69 @@ describe(
           expect(statistics.numberOfCommands).toEqual(4); // Empty tile doesn't issue a command
         }
       );
+    });
+
+    it("renders tileset with custom up and forward axes", function () {
+      const center = Cartesian3.fromRadians(
+        centerLongitude,
+        centerLatitude,
+        10.0
+      );
+
+      // 3 different views of the sides of the colored cube.
+      const viewEast = new HeadingPitchRange(-1.57, 0.0, 3.0);
+      const viewNorth = new HeadingPitchRange(3.14, 0.0, 3.0);
+      const viewUp = new HeadingPitchRange(0.0, -1.57, 3.0);
+
+      // This tile has data in a local ENU frame, ignoring the glTF +y-up
+      // convention. Apply a model matrix and configure the tileset to interpret
+      // the glTF data as +z up.
+      const tilesetOptions = {
+        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        modelUpAxis: Axis.Z,
+        modelForwardAxis: Axis.X,
+      };
+
+      const renderOptions = {
+        scene: scene,
+        time: JulianDate.fromIso8601("2022-06-09T10:30:00Z"),
+      };
+
+      // make sure we can see the cube so it loads
+      scene.camera.lookAt(center, viewEast);
+
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetEastNorthUpUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // The east (+x) face of the cube is red
+        scene.camera.lookAt(center, viewEast);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(190);
+          expect(rgba[1]).toBeLessThan(64);
+          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // The north (+y) face of the cube is green
+        scene.camera.lookAt(center, viewNorth);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeLessThan(64);
+          expect(rgba[1]).toBeGreaterThan(190);
+          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        // The up (+z) face of the cube is blue
+        scene.camera.lookAt(center, viewUp);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeLessThan(64);
+          expect(rgba[1]).toBeLessThan(64);
+          expect(rgba[2]).toBeGreaterThan(190);
+          expect(rgba[3]).toEqual(255);
+        });
+      });
     });
 
     it("verify statistics", function () {

@@ -3,6 +3,7 @@ import {
   ComponentDatatype,
   FeatureIdPipelineStage,
   GltfLoader,
+  ModelExperimentalStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -82,7 +83,8 @@ describe(
         model: {
           // pointer to the global resources so they can be cleaned up
           // in afterEach()
-          _resources: resources,
+          _pipelineResources: resources,
+          statistics: new ModelExperimentalStatistics(),
         },
         attributes: [
           {
@@ -156,6 +158,10 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(0);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -272,6 +278,12 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        // Only the implicit attribute is counted here, the rest are handled
+        // by the geometry stage
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -388,6 +400,12 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        // Only the implicit attribute is counted here, the rest are handled
+        // by the geometry stage
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
 
@@ -712,6 +730,10 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
+
+        const statistics = renderResources.model.statistics;
+        expect(statistics.geometryByteLength).toBe(vertexBuffer.sizeInBytes);
+        expect(statistics.texturesByteLength).toBe(0);
       });
     });
   },

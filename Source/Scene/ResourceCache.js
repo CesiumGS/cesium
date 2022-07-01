@@ -12,6 +12,7 @@ import GltfTextureLoader from "./GltfTextureLoader.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
+import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
 
 /**
  * Cache for resources shared across 3D Tiles and glTF.
@@ -23,6 +24,9 @@ import ResourceCacheKey from "./ResourceCacheKey.js";
 function ResourceCache() {}
 
 ResourceCache.cacheEntries = {};
+
+// Statistics about binary data stored in the resource cache
+ResourceCache.statistics = new ResourceCacheStatistics();
 
 /**
  * A reference-counted cache entry.
@@ -37,6 +41,9 @@ ResourceCache.cacheEntries = {};
 function CacheEntry(resourceLoader) {
   this.referenceCount = 1;
   this.resourceLoader = resourceLoader;
+
+  // For unit testing only
+  this._statisticsPromise = undefined;
 }
 
 /**
@@ -122,6 +129,7 @@ ResourceCache.unload = function (resourceLoader) {
   --cacheEntry.referenceCount;
 
   if (cacheEntry.referenceCount === 0) {
+    ResourceCache.statistics.removeLoader(resourceLoader);
     resourceLoader.destroy();
     delete ResourceCache.cacheEntries[cacheKey];
   }
@@ -531,6 +539,13 @@ ResourceCache.loadVertexBuffer = function (options) {
     resourceLoader: vertexBufferLoader,
   });
 
+  const promise = ResourceCache.statistics.addGeometryLoader(
+    vertexBufferLoader
+  );
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
+
   return vertexBufferLoader;
 };
 
@@ -603,6 +618,10 @@ ResourceCache.loadIndexBuffer = function (options) {
   ResourceCache.load({
     resourceLoader: indexBufferLoader,
   });
+  const promise = ResourceCache.statistics.addGeometryLoader(indexBufferLoader);
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
 
   return indexBufferLoader;
 };
@@ -718,6 +737,10 @@ ResourceCache.loadTexture = function (options) {
   ResourceCache.load({
     resourceLoader: textureLoader,
   });
+  const promise = ResourceCache.statistics.addTextureLoader(textureLoader);
+
+  // Needed for unit testing
+  ResourceCache.cacheEntries[cacheKey]._statisticsPromise = promise;
 
   return textureLoader;
 };
@@ -767,6 +790,8 @@ ResourceCache.clearForSpecs = function () {
       delete cacheEntries[cacheKey];
     }
   }
+
+  ResourceCache.statistics.clear();
 };
 
 export default ResourceCache;

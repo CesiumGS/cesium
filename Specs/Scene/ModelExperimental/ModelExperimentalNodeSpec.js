@@ -7,6 +7,7 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelMatrixUpdateStage,
+  NodeStatisticsPipelineStage,
   Quaternion,
 } from "../../../Source/Cesium.js";
 
@@ -131,7 +132,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     verifyTransforms(transform, transformToRoot, node);
 
     node.configurePipeline();
-    expect(node.pipelineStages).toEqual([]);
+    expect(node.pipelineStages).toEqual([NodeStatisticsPipelineStage]);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
 
@@ -377,8 +378,10 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     verifyTransforms(transform, transformToRoot, node);
 
     node.configurePipeline();
-    expect(node.pipelineStages.length).toBe(1);
-    expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
+    expect(node.pipelineStages).toEqual([
+      InstancingPipelineStage,
+      NodeStatisticsPipelineStage,
+    ]);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
   });
