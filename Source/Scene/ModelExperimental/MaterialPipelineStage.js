@@ -130,6 +130,14 @@ MaterialPipelineStage.process = function (
       ShaderDestination.FRAGMENT
     );
   }
+
+  if (material.doubleSided) {
+    shaderBuilder.addDefine(
+      "HAS_DOUBLE_SIDED_MATERIAL",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
 };
 
 /**
