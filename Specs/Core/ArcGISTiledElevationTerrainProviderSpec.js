@@ -492,7 +492,9 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
             throttle: true,
             throttleByServer: true,
           });
-          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+          promise = terrainProvider
+            .requestTileGeometry(0, 0, 0, request)
+            .catch((e) => {});
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();

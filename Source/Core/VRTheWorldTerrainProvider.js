@@ -1,6 +1,5 @@
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -11,6 +10,7 @@ import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
+import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 
@@ -55,7 +55,6 @@ function VRTheWorldTerrainProvider(options) {
 
   this._errorEvent = new Event();
   this._ready = false;
-  this._readyPromise = defer();
 
   this._terrainDataStructure = {
     heightScale: 1.0 / 1000.0,
@@ -86,8 +85,17 @@ function VRTheWorldTerrainProvider(options) {
     if (srs === "EPSG:4326") {
       that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
     } else {
-      metadataFailure(`SRS ${srs} is not supported.`);
-      return;
+      const message = `SRS ${srs} is not supported.`;
+      metadataError = TileProviderError.reportError(
+        metadataError,
+        that,
+        that._errorEvent,
+        message
+      );
+      if (metadataError.retry) {
+        return requestMetadata();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     const tileFormat = xml.getElementsByTagName("TileFormat")[0];
@@ -124,31 +132,34 @@ function VRTheWorldTerrainProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
+    return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
     const message = defaultValue(
-      e,
+      e.message,
       `An error occurred while accessing ${that._resource.url}.`
     );
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined,
-      requestMetadata
+      message
     );
+    if (metadataError.retry) {
+      return requestMetadata();
+    }
+    return Promise.reject(new RuntimeError(message));
   }
 
   function requestMetadata() {
-    that._resource.fetchXML().then(metadataSuccess).catch(metadataFailure);
+    return that._resource
+      .fetchXML()
+      .then(metadataSuccess)
+      .catch(metadataFailure);
   }
 
-  requestMetadata();
+  this._readyPromise = requestMetadata();
 }
 
 Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
@@ -220,7 +231,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

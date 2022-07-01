@@ -1,5 +1,4 @@
 import { DefaultProxy } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -233,13 +232,16 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    let called = false;
+    const errorFunction = function () {
+      called = true;
+    };
 
-    terrainProvider.errorEvent.addEventListener(function () {
-      deferred.resolve();
+    terrainProvider.errorEvent.addEventListener(errorFunction);
+
+    return terrainProvider.readyPromise.catch(() => {
+      expect(called).toBe(true);
     });
-
-    return deferred.promise;
   });
 
   describe("requestTileGeometry", function () {
@@ -287,7 +289,8 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         })
         .then(function (loadedData) {
           expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
-        });
+        })
+        .catch((e) => {});
     });
 
     it("returns undefined if too many requests are already in progress", function () {
@@ -313,12 +316,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-          promise = terrainProvider.requestTileGeometry(
-            0,
-            0,
-            0,
-            createRequest()
-          );
+          promise = terrainProvider
+            .requestTileGeometry(0, 0, 0, createRequest())
+            .catch((e) => {});
           promises.push(promise);
         }
         RequestScheduler.update();

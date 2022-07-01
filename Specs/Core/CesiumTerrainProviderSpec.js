@@ -1,5 +1,4 @@
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -265,19 +264,21 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
-      expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
-        provider.getLevelMaximumGeometricError(1) * 2.0,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
-        provider.getLevelMaximumGeometricError(2) * 2.0,
-        CesiumMath.EPSILON10
-      );
-    });
+    return provider.readyPromise
+      .then(function () {
+        expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+        expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
+          provider.getLevelMaximumGeometricError(1) * 2.0,
+          CesiumMath.EPSILON10
+        );
+        expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
+          provider.getLevelMaximumGeometricError(2) * 2.0,
+          CesiumMath.EPSILON10
+        );
+      })
+      .catch((e) => {
+        console.log(e);
+      });
   });
 
   it("logo is undefined if credit is not provided", function () {
@@ -398,15 +399,14 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("format is not specified");
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("format is not specified");
-    });
+    return provider.readyPromise.catch((e) => {});
   });
 
   it("raises an error if layer.json specifies an unknown format", function () {
@@ -416,15 +416,14 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("invalid or not supported");
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("invalid or not supported");
-    });
+    return provider.readyPromise.catch((e) => {});
   });
 
   it("raises an error if layer.json does not specify quantized-mesh 1.x format", function () {
@@ -434,15 +433,14 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("invalid or not supported");
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("invalid or not supported");
-    });
+    return provider.readyPromise.catch((e) => {});
   });
 
   it("supports quantized-mesh1.x minor versions", function () {
@@ -469,17 +467,16 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain(
+    const errorMatcher = function (event) {
+      expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
-    });
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
+
+    provider.errorEvent.addEventListener(errorMatcher);
+
+    return provider.readyPromise.catch((e) => {});
   });
 
   it("raises an error if layer.json tiles property is an empty array", function () {
@@ -489,17 +486,16 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain(
+    const errorMatcher = function (event) {
+      expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
-    });
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
+
+    provider.errorEvent.addEventListener(errorMatcher);
+
+    return provider.readyPromise.catch((e) => {});
   });
 
   it("uses attribution specified in layer.json", function () {
@@ -1040,12 +1036,9 @@ describe("Core/CesiumTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-          promise = terrainProvider.requestTileGeometry(
-            0,
-            0,
-            0,
-            createRequest()
-          );
+          promise = terrainProvider
+            .requestTileGeometry(0, 0, 0, createRequest())
+            .catch((e) => {}); // Ignore the error here.
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();
