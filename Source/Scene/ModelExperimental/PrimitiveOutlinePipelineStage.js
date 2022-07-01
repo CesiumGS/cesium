@@ -53,6 +53,24 @@ PrimitiveOutlinePipelineStage.process = function (
     return outlineTexture;
   };
 
+  const model = renderResources.model;
+  shaderBuilder.addUniform(
+    "vec4",
+    "model_outlineColor",
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap.model_outlineColor = function () {
+    return model.outlineColor;
+  };
+  shaderBuilder.addUniform(
+    "bool",
+    "model_showOutline",
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap.model_showOutline = function () {
+    return model.showOutline;
+  };
+
   shaderBuilder.addVertexLines([PrimitiveOutlineStageVS]);
   shaderBuilder.addFragmentLines([PrimitiveOutlineStageFS]);
 };

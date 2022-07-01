@@ -182,7 +182,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
-  const hasOutlines = defined(primitive.outlineCoordinates);
+  const hasOutlines =
+    model._enableShowOutline && defined(primitive.outlineCoordinates);
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 

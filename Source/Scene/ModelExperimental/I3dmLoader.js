@@ -60,6 +60,7 @@ const Instances = ModelComponents.Instances;
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

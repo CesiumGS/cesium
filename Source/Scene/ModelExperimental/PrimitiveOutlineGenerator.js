@@ -411,6 +411,7 @@ PrimitiveOutlineGenerator.createTexture = function (context) {
 
 function createMipLevel(size) {
   const texture = new Uint8Array(size);
+
   texture[size - 1] = 192;
   if (size === 8) {
     texture[size - 1] = 96;

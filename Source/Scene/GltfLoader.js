@@ -85,6 +85,7 @@ const GltfLoaderState = {
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
@@ -110,6 +111,8 @@ export default function GltfLoader(options) {
     options.loadIndicesForWireframe,
     false
   );
+  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
+
   const renameBatchIdSemantic = defaultValue(
     options.renameBatchIdSemantic,
     false
@@ -133,6 +136,7 @@ export default function GltfLoader(options) {
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
@@ -1300,7 +1304,7 @@ function loadPrimitive(
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
-  if (defined(outlineExtension)) {
+  if (loader._loadPrimitiveOutline && defined(outlineExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsOutlines = true;
     primitivePlan.outlineIndices = loadPrimitiveOutline(
