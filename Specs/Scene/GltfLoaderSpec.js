@@ -3977,6 +3977,48 @@ describe(
       });
     });
 
+    it("does not load CESIUM_primitive_outline if loadPrimitiveOutline is false", function () {
+      const options = {
+        loadPrimitiveOutline: false,
+      };
+      return loadGltf(boxWithPrimitiveOutline, options).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).not.toBeDefined();
+      });
+    });
+
     it("parses copyright field", function () {
       return loadGltf(boxWithCredits).then(function (gltfLoader) {
         const components = gltfLoader.components;
