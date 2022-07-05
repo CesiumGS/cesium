@@ -66,6 +66,12 @@ function countGeometry(statistics, primitive) {
     }
   }
 
+  const outlineCoordinates = primitive.outlineCoordinates;
+  if (defined(outlineCoordinates) && defined(outlineCoordinates.buffer)) {
+    const hasCpuCopy = false;
+    statistics.addBuffer(outlineCoordinates.buffer, hasCpuCopy);
+  }
+
   const indices = primitive.indices;
   if (defined(indices) && defined(indices.buffer)) {
     // Wireframe mode will have both GPU and CPU copies

@@ -19,6 +19,8 @@ describe("Scene/ModelExperimental/PrimitiveStatisticsPipelineStage", function ()
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
   const boxTexturedBinary =
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+  const boxWithPrimitiveOutline =
+    "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
   const buildingsMetadata =
     "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
   const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
@@ -263,7 +265,7 @@ describe("Scene/ModelExperimental/PrimitiveStatisticsPipelineStage", function ()
     });
   });
 
-  it("_countGeometry Computes memory usage for triangle fan", function () {
+  it("_countGeometry computes memory usage for triangle fan", function () {
     return loadGltf(triangleFan).then(function (gltfLoader) {
       const statistics = new ModelExperimentalStatistics();
       const components = gltfLoader.components;
@@ -280,6 +282,38 @@ describe("Scene/ModelExperimental/PrimitiveStatisticsPipelineStage", function ()
 
       // Positions
       expectedLength += attributes[0].buffer.sizeInBytes;
+
+      // Indices
+      expectedLength += primitive.indices.buffer.sizeInBytes;
+
+      expect(statistics.geometryByteLength).toBe(expectedLength);
+    });
+  });
+
+  it("_countGeometry computes memory usage for CESIUM_primitive_outline", function () {
+    return loadGltf(boxWithPrimitiveOutline).then(function (gltfLoader) {
+      const statistics = new ModelExperimentalStatistics();
+      const components = gltfLoader.components;
+      const [node] = components.nodes;
+      const [primitive] = node.primitives;
+
+      PrimitiveStatisticsPipelineStage._countGeometry(statistics, primitive);
+
+      expect(statistics.pointsLength).toBe(0);
+      // 6 faces * 2 triangles
+      expect(statistics.trianglesLength).toBe(12);
+
+      // Positions, normals and texture coordinates
+      const attributes = primitive.attributes;
+      // Count the attributes
+      let expectedLength = 0;
+      const attributesLength = attributes.length;
+      for (let i = 0; i < attributesLength; i++) {
+        expectedLength += attributes[i].buffer.sizeInBytes;
+      }
+
+      // generated outline coordinates
+      expectedLength += primitive.outlineCoordinates.buffer.sizeInBytes;
 
       // Indices
       expectedLength += primitive.indices.buffer.sizeInBytes;
