@@ -40,7 +40,7 @@ function PropertyTextureProperty(options) {
   const textureInfo = property;
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
-    channels: reformatChannels(property.channels),
+    channels: reformatChannels(defaultValue(property.channels, [0])),
     texture: textures[textureInfo.index],
   });
 
