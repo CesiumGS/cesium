@@ -85,17 +85,7 @@ function VRTheWorldTerrainProvider(options) {
     if (srs === "EPSG:4326") {
       that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
     } else {
-      const message = `SRS ${srs} is not supported.`;
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        message
-      );
-      if (metadataError.retry) {
-        return requestMetadata();
-      }
-      return Promise.reject(new RuntimeError(message));
+      return Promise.reject(new RuntimeError(`SRS ${srs} is not supported.`));
     }
 
     const tileFormat = xml.getElementsByTagName("TileFormat")[0];
