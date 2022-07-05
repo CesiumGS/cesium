@@ -268,21 +268,17 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    return provider.readyPromise
-      .then(function () {
-        expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
-        expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
-          provider.getLevelMaximumGeometricError(1) * 2.0,
-          CesiumMath.EPSILON10
-        );
-        expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
-          provider.getLevelMaximumGeometricError(2) * 2.0,
-          CesiumMath.EPSILON10
-        );
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    return provider.readyPromise.then(function () {
+      expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+      expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
+        provider.getLevelMaximumGeometricError(1) * 2.0,
+        CesiumMath.EPSILON10
+      );
+      expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
+        provider.getLevelMaximumGeometricError(2) * 2.0,
+        CesiumMath.EPSILON10
+      );
+    });
   });
 
   it("logo is undefined if credit is not provided", function () {
