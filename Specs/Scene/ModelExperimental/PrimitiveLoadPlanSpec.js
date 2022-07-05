@@ -1,4 +1,8 @@
-import { PrimitiveLoadPlan, ModelComponents } from "../../../Source/Cesium.js";
+import {
+  AttributeType,
+  PrimitiveLoadPlan,
+  ModelComponents,
+} from "../../../Source/Cesium.js";
 import createContext from "../../createContext.js";
 
 describe(
@@ -16,18 +20,18 @@ describe(
       position.count = 4;
       // prettier-ignore
       position.packedTypedArray = new Float32Array([
-      0, 0, 0,
-      1, 0, 0,
-      1, 1, 0,
-      0, 1, 0
-    ]);
+        0, 0, 0,
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0
+      ]);
 
       const indices = new ModelComponents.Indices();
       // prettier-ignore
       indices.typedArray = new Uint8Array([
-      0, 1, 2,
-      0, 2, 3
-    ]);
+        0, 1, 2,
+        0, 2, 3
+      ]);
 
       primitive.attributes.push(position);
       primitive.indices = indices;
@@ -55,9 +59,32 @@ describe(
     // 3---2
     //     |
     // 0---1
-    const mockOutlineIndices = [0, 1, 1, 2, 2, 3];
+    // prettier-ignore
+    const mockOutlineIndices = [
+      0, 1,
+      1, 2,
+      2, 3
+    ];
 
     const buffers = [];
+
+    function expectOutlineCoordinates(primitive, outlineCoordinatesPlan) {
+      expect(outlineCoordinatesPlan.loadBuffer).toBe(true);
+      expect(outlineCoordinatesPlan.loadTypedArray).toBe(false);
+      expect(outlineCoordinatesPlan.loadPackedTypedArray).toBe(false);
+
+      const attribute = outlineCoordinatesPlan.attribute;
+      expect(attribute.name).toBe("_OUTLINE_COORDINATES");
+      expect(attribute.buffer).toBeDefined();
+      buffers.push(attribute.buffer);
+      expect(attribute.typedArray).not.toBeDefined();
+      expect(attribute.type).toBe(AttributeType.VEC3);
+      expect(attribute.normalized).toBe(false);
+      expect(attribute.count).toBe(5);
+
+      expect(primitive.outlineCoordinates).toBe(attribute);
+    }
+
     let context;
     beforeAll(function () {
       context = createContext();
@@ -128,6 +155,11 @@ describe(
       indicesPlan.loadBuffer = true;
       loadPlan.postProcess(context);
 
+      // A new attribute is created for the outline coordinates
+      expect(loadPlan.attributePlans.length).toBe(1);
+      const [outputPositionPlan] = loadPlan.attributePlans;
+      expect(outputPositionPlan).toBe(positionPlan);
+
       // Normally the loaders will have already created buffers, but this
       // is intentionally not done here so an undefined buffer means a no-op
       expect(positionPlan.attribute.buffer).not.toBeDefined();
@@ -145,6 +177,15 @@ describe(
       positionPlan.loadBuffer = true;
       indicesPlan.loadBuffer = true;
       loadPlan.postProcess(context);
+
+      // A new attribute is created for the outline coordinates
+      expect(loadPlan.attributePlans.length).toBe(2);
+      const [
+        outputPositionPlan,
+        outlineCoordinatesPlan,
+      ] = loadPlan.attributePlans;
+      expect(outputPositionPlan).toBe(positionPlan);
+      expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
 
       const attribute = positionPlan.attribute;
       expect(attribute.buffer).toBeDefined();
@@ -174,6 +215,15 @@ describe(
       indicesPlan.loadTypedArray = true;
       loadPlan.postProcess(context);
 
+      // A new attribute is created for the outline coordinates
+      expect(loadPlan.attributePlans.length).toBe(2);
+      const [
+        outputPositionPlan,
+        outlineCoordinatesPlan,
+      ] = loadPlan.attributePlans;
+      expect(outputPositionPlan).toBe(positionPlan);
+      expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
+
       const attribute = positionPlan.attribute;
       expect(attribute.buffer).not.toBeDefined();
       const typedArray = attribute.typedArray;
@@ -194,9 +244,9 @@ describe(
 
       // prettier-ignore
       const expectedIndices = new Uint8Array([
-      0, 1, 2,
-      4, 2, 3 // 4 is a copy of vertex 0
-    ]);
+        0, 1, 2,
+        4, 2, 3 // 4 is a copy of vertex 0
+      ]);
       expect(indices.typedArray).toEqual(expectedIndices);
     });
 
@@ -218,6 +268,15 @@ describe(
       indicesPlan.loadBuffer = true;
       indicesPlan.loadTypedArray = true;
       loadPlan.postProcess(context);
+
+      // A new attribute is created for the outline coordinates
+      expect(loadPlan.attributePlans.length).toBe(2);
+      const [
+        outputPositionPlan,
+        outlineCoordinatesPlan,
+      ] = loadPlan.attributePlans;
+      expect(outputPositionPlan).toBe(positionPlan);
+      expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
 
       const attribute = positionPlan.attribute;
       expect(attribute.buffer).toBeDefined();
@@ -241,9 +300,9 @@ describe(
 
       // prettier-ignore
       const expectedIndices = new Uint8Array([
-      0, 1, 2,
-      4, 2, 3 // 4 is a copy of vertex 0
-    ]);
+        0, 1, 2,
+        4, 2, 3 // 4 is a copy of vertex 0
+      ]);
       expect(indices.typedArray).toEqual(expectedIndices);
     });
   },
