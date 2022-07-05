@@ -396,6 +396,12 @@ function selectFeatureTableId(components, model) {
       }
     }
   }
+
+  // If there's only one feature table, then select it by default. This is
+  // to ensure backwards compatibility with the older handling of b3dm models.
+  if (model._featureTables.length === 1) {
+    return 0;
+  }
 }
 
 // Returns whether the color alpha state has changed between invisible, translucent, or opaque
@@ -1508,6 +1514,7 @@ ModelExperimental.prototype.update = function (frameState) {
   updateSilhouette(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
+  updateFeatureTableId(this);
   updateFeatureTables(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
@@ -1609,11 +1616,6 @@ function updateSceneMode(model, frameState) {
 }
 
 function updateFeatureTables(model, frameState) {
-  if (model._featureTableIdDirty) {
-    updateFeatureTableId(model);
-    model._featureTableIdDirty = false;
-  }
-
   const featureTables = model._featureTables;
   const length = featureTables.length;
   for (let i = 0; i < length; i++) {
@@ -1627,6 +1629,11 @@ function updateFeatureTables(model, frameState) {
 }
 
 function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
   const components = model._sceneGraph.components;
   const structuralMetadata = components.structuralMetadata;
 
@@ -1635,6 +1642,7 @@ function updateFeatureTableId(model) {
     structuralMetadata.propertyTableCount > 0
   ) {
     model.featureTableId = selectFeatureTableId(components, model);
+
     // Re-apply the style to reflect the new feature ID table.
     // This in turn triggers a rebuild of the draw commands.
     model.applyStyle(model._style);
@@ -2434,6 +2442,11 @@ ModelExperimental.prototype.applyStyle = function (style) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
+    // check if the feature table id is undefined, or
+    // if the table doesn't exist
+    // if so, use empty feature table?
+
+    // empty feature table.applyStyle
     this.applyColorAndShow(style);
   }
 
