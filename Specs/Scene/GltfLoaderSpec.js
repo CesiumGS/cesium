@@ -1,4 +1,5 @@
 import {
+  ArticulationStageType,
   AttributeType,
   Axis,
   Cartesian2,
@@ -105,6 +106,8 @@ describe(
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const boxArticulations =
+      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -3062,6 +3065,96 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
+      });
+    });
+
+    it("loads BoxArticulations", function () {
+      return loadGltf(boxArticulations).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        expect(rootNode.articulationName).toEqual("SampleArticulation");
+
+        const articulations = components.articulations;
+        expect(articulations.length).toEqual(1);
+
+        const articulation = articulations[0];
+        expect(articulation.name).toEqual("SampleArticulation");
+
+        const stages = articulation.stages;
+        expect(stages.length).toEqual(10);
+
+        const xTranslateStage = stages[0];
+        expect(xTranslateStage.name).toEqual("MoveX");
+        expect(xTranslateStage.type).toEqual(ArticulationStageType.XTRANSLATE);
+        expect(xTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(xTranslateStage.maximumValue).toEqual(1000.0);
+        expect(xTranslateStage.initialValue).toEqual(0.0);
+
+        const yTranslateStage = stages[1];
+        expect(yTranslateStage.name).toEqual("MoveY");
+        expect(yTranslateStage.type).toEqual(ArticulationStageType.YTRANSLATE);
+        expect(yTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(yTranslateStage.maximumValue).toEqual(1000.0);
+        expect(yTranslateStage.initialValue).toEqual(0.0);
+
+        const zTranslateStage = stages[2];
+        expect(zTranslateStage.name).toEqual("MoveZ");
+        expect(zTranslateStage.type).toEqual(ArticulationStageType.ZTRANSLATE);
+        expect(zTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(zTranslateStage.maximumValue).toEqual(1000.0);
+        expect(zTranslateStage.initialValue).toEqual(0.0);
+
+        const yRotateStage = stages[3];
+        expect(yRotateStage.name).toEqual("Yaw");
+        expect(yRotateStage.type).toEqual(ArticulationStageType.YROTATE);
+        expect(yRotateStage.minimumValue).toEqual(-360.0);
+        expect(yRotateStage.maximumValue).toEqual(360.0);
+        expect(yRotateStage.initialValue).toEqual(0.0);
+
+        const xRotateStage = stages[4];
+        expect(xRotateStage.name).toEqual("Pitch");
+        expect(xRotateStage.type).toEqual(ArticulationStageType.XROTATE);
+        expect(xRotateStage.minimumValue).toEqual(-360.0);
+        expect(xRotateStage.maximumValue).toEqual(360.0);
+        expect(xRotateStage.initialValue).toEqual(0.0);
+
+        const zRotateStage = stages[5];
+        expect(zRotateStage.name).toEqual("Roll");
+        expect(zRotateStage.type).toEqual(ArticulationStageType.ZROTATE);
+        expect(zRotateStage.minimumValue).toEqual(-360.0);
+        expect(zRotateStage.maximumValue).toEqual(360.0);
+        expect(zRotateStage.initialValue).toEqual(0.0);
+
+        const uniformScaleStage = stages[6];
+        expect(uniformScaleStage.name).toEqual("Size");
+        expect(uniformScaleStage.type).toEqual(
+          ArticulationStageType.UNIFORMSCALE
+        );
+        expect(uniformScaleStage.minimumValue).toEqual(0.0);
+        expect(uniformScaleStage.maximumValue).toEqual(1.0);
+        expect(uniformScaleStage.initialValue).toEqual(1.0);
+
+        const xScaleStage = stages[7];
+        expect(xScaleStage.name).toEqual("SizeX");
+        expect(xScaleStage.type).toEqual(ArticulationStageType.XSCALE);
+        expect(xScaleStage.minimumValue).toEqual(0.0);
+        expect(xScaleStage.maximumValue).toEqual(1.0);
+        expect(xScaleStage.initialValue).toEqual(1.0);
+
+        const yScaleStage = stages[8];
+        expect(yScaleStage.name).toEqual("SizeY");
+        expect(yScaleStage.type).toEqual(ArticulationStageType.YSCALE);
+        expect(yScaleStage.minimumValue).toEqual(0.0);
+        expect(yScaleStage.maximumValue).toEqual(1.0);
+        expect(yScaleStage.initialValue).toEqual(1.0);
+
+        const zScaleStage = stages[9];
+        expect(zScaleStage.name).toEqual("SizeZ");
+        expect(zScaleStage.type).toEqual(ArticulationStageType.ZSCALE);
+        expect(zScaleStage.minimumValue).toEqual(0.0);
+        expect(zScaleStage.maximumValue).toEqual(1.0);
+        expect(zScaleStage.initialValue).toEqual(1.0);
       });
     });
 

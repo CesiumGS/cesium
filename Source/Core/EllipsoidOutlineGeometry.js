@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -442,12 +441,11 @@ EllipsoidOutlineGeometry.createGeometry = function (ellipsoidGeometry) {
 
   if (defined(ellipsoidGeometry._offsetAttribute)) {
     const length = positions.length;
-    const applyOffset = new Uint8Array(length / 3);
     const offsetValue =
       ellipsoidGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
         ? 0
         : 1;
-    arrayFill(applyOffset, offsetValue);
+    const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 1,

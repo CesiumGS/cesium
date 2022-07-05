@@ -1,5 +1,4 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import arraySlice from "../Core/arraySlice.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
@@ -233,13 +232,11 @@ function createVertexArray(polylines, context) {
 
     if (!defined(packedBuffer)) {
       // Copy because they may be the views on the same buffer.
-      positions = polylines._positions = arraySlice(positions);
-      widths = polylines._widths = arraySlice(widths);
-      counts = polylines._counts = arraySlice(counts);
+      positions = polylines._positions = positions.slice();
+      widths = polylines._widths = widths.slice();
+      counts = polylines._counts = counts.slice();
 
-      batchIds = polylines._transferrableBatchIds = arraySlice(
-        polylines._batchIds
-      );
+      batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
 
       packedBuffer = polylines._packedBuffer = packBuffer(polylines);
     }

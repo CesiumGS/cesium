@@ -10,6 +10,7 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js";
 
 /**
  * Loads a glTF texture.
@@ -252,25 +253,6 @@ CreateTextureJob.prototype.execute = function () {
     this.context
   );
 };
-
-function resizeImageToNextPowerOfTwo(image) {
-  const canvas = document.createElement("canvas");
-  canvas.width = CesiumMath.nextPowerOfTwo(image.width);
-  canvas.height = CesiumMath.nextPowerOfTwo(image.height);
-  const canvasContext = canvas.getContext("2d");
-  canvasContext.drawImage(
-    image,
-    0,
-    0,
-    image.width,
-    image.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-  return canvas;
-}
 
 function createTexture(gltf, textureInfo, image, mipLevels, context) {
   // internalFormat is only defined for CompressedTextureBuffer

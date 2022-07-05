@@ -1,4 +1,3 @@
-import { arrayFill } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { CornerType } from "../../Source/Cesium.js";
 import { CorridorGeometry } from "../../Source/Cesium.js";
@@ -143,8 +142,7 @@ describe("Core/CorridorGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -165,10 +163,10 @@ describe("Core/CorridorGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 12);
-    expected = arrayFill(expected, 1, 24, 48);
+    const expected = new Array(offset.length)
+      .fill(0)
+      .fill(1, 0, 12)
+      .fill(1, 24, 48);
     expect(offset).toEqual(expected);
   });
 
@@ -189,8 +187,7 @@ describe("Core/CorridorGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
