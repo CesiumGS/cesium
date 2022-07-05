@@ -253,8 +253,12 @@ describe("Core/CesiumTerrainProvider", function () {
     const provider = new CesiumTerrainProvider({
       url: "made/up/url",
     });
-    expect(provider.errorEvent).toBeDefined();
-    expect(provider.errorEvent).toBe(provider.errorEvent);
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider.errorEvent).toBeDefined();
+      expect(provider.errorEvent).toBe(provider.errorEvent);
+    });
   });
 
   it("returns reasonable geometric error for various levels", function () {
