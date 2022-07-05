@@ -127,7 +127,7 @@ function VRTheWorldTerrainProvider(options) {
 
   function metadataFailure(e) {
     const message = defaultValue(
-      e.message,
+      defined(e) ? e.message : undefined,
       `An error occurred while accessing ${that._resource.url}.`
     );
     metadataError = TileProviderError.reportError(

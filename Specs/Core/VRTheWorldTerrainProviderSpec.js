@@ -122,6 +122,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     });
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
+    return provider.readyPromise;
   });
 
   it("returns reasonable geometric error for various levels", function () {
@@ -150,6 +151,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(function () {
       provider.getLevelMaximumGeometricError(0);
     }).toThrowDeveloperError();
+    return provider.readyPromise;
   });
 
   it("getTilingScheme must not be called before isReady returns true", function () {
@@ -160,6 +162,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(function () {
       return provider.tilingScheme;
     }).toThrowDeveloperError();
+    return provider.readyPromise;
   });
 
   it("logo is undefined if credit is not provided", function () {
@@ -167,6 +170,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.credit).toBeUndefined();
+    return provider.readyPromise;
   });
 
   it("logo is defined if credit is provided", function () {
@@ -175,6 +179,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       credit: "thanks to our awesome made up contributors!",
     });
     expect(provider.credit).toBeDefined();
+    return provider.readyPromise;
   });
 
   it("does not have a water mask", function () {
@@ -182,6 +187,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.hasWaterMask).toBe(false);
+    return provider.readyPromise;
   });
 
   it("is not ready immediately", function () {
@@ -189,6 +195,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.ready).toBe(false);
+    return provider.readyPromise;
   });
 
   it("raises an error if the SRS is not supported", function () {
@@ -254,6 +261,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       expect(function () {
         terrainProvider.requestTileGeometry(0, 0, 0);
       }).toThrowDeveloperError();
+      return terrainProvider.readyPromise;
     });
 
     it("provides HeightmapTerrainData", function () {
