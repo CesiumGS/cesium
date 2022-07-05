@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.96 - 2022-08-01
+
+##### Fixes :wrench:
+
+- Fixed a crash in the 3D Tiles Feature Styling sandcastle that occurred when using `ModelExperimental`. [#10514](https://github.com/CesiumGS/cesium/pull/10514)
+
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:
