@@ -1,4 +1,5 @@
 import {
+  Color,
   combine,
   ComponentDatatype,
   GltfLoader,
@@ -66,6 +67,10 @@ describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
 
   function mockRenderResources() {
     return {
+      model: {
+        outlineColor: Color.RED,
+        showOutline: false,
+      },
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       attributes: [],
@@ -92,6 +97,8 @@ describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.model_outlineTexture()).toBe(outlineTexture);
+      expect(uniformMap.model_outlineColor()).toBe(Color.RED);
+      expect(uniformMap.model_showOutline()).toBe(false);
 
       const shaderBuilder = renderResources.shaderBuilder;
 
@@ -109,7 +116,9 @@ describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
       ]);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform bool model_showOutline;",
         "uniform sampler2D model_outlineTexture;",
+        "uniform vec4 modelOutlineColor;",
       ]);
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersPrimitiveOutlineStageVS,
