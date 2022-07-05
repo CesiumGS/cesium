@@ -118,7 +118,7 @@ describe("Scene/ModelExperimental/PrimitiveOutlinePipelineStage", function () {
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform bool model_showOutline;",
         "uniform sampler2D model_outlineTexture;",
-        "uniform vec4 modelOutlineColor;",
+        "uniform vec4 model_outlineColor;",
       ]);
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersPrimitiveOutlineStageVS,
