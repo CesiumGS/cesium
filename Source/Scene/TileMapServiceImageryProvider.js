@@ -120,7 +120,12 @@ TileMapServiceImageryProvider.prototype._requestMetadata = function () {
   return this._xmlResource
     .fetchXML()
     .then(this._metadataSuccess)
-    .catch(this._metadataFailure);
+    .catch((e) => {
+      if (e instanceof RuntimeError) {
+        return Promise.reject(e);
+      }
+      return this._metadataFailure();
+    });
 };
 
 /**
@@ -355,12 +360,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
   });
 };
 
-TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
-  // Only reject if the error is from parsing
-  if (error instanceof RuntimeError) {
-    return Promise.reject(error);
-  }
-
+TileMapServiceImageryProvider.prototype._metadataFailure = function () {
   // Can't load XML, still allow options and defaults
   const options = this._options;
   const fileExtension = defaultValue(options.fileExtension, "png");
