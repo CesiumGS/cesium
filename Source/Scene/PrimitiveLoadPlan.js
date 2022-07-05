@@ -1,3 +1,4 @@
+import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -7,44 +8,165 @@ import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./ModelExperimental/PrimitiveOutlineGenerator.js";
 
+/**
+ * Simple struct for tracking whether an attribute will be loaded as a buffer
+ * or typed array after post-processing.
+ * @alias PrimitiveLoadPlan.AttributeLoadPlan
+ * @constructor
+ *
+ * @param {ModelComponents.Attribute} attribute The attribute to be updated
+ *
+ * @private
+ */
 function AttributeLoadPlan(attribute) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("attribute", attribute);
+  //>>includeEnd('debug');
+
+  /**
+   * The attribute to track.
+   *
+   * @type {ModelComponents.Attribute}
+   * @readonly
+   * @private
+   */
   this.attribute = attribute;
-  this.loadBuffer = true;
-  this.loadTypedArray = true;
-  this.loadPackedTypedArray = true;
+
+  /**
+   * Whether the attribute will be loaded as a GPU buffer by the time
+   * {@link PrimitiveLoadPlan#postProcess} is finished.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.loadBuffer = false;
+
+  /**
+   * Whether the attribute will be loaded as a typed array copy of the GPU
+   * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.loadTypedArray = false;
+
+  /**
+   * Whether the attribute will be loaded as a packed typed array by the time
+   * {@link PrimitiveLoadPlan#postProcess} is finished.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.loadPackedTypedArray = false;
 }
 
+/**
+ * Simple struct for tracking whether an index buffer will be loaded as a buffer
+ * or typed array after post-processing.
+ *
+ * @alias PrimitiveLoadPlan.IndicesLoadPlan
+ * @constructor
+ *
+ * @param {ModelComponents.Indices} indices The indices to be updated
+ *
+ * @private
+ */
 function IndicesLoadPlan(indices) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("indices", indices);
+  //>>includeEnd('debug');
+
   this.indices = indices;
-  this.loadBuffer = true;
-  this.loadTypedArray = true;
+
+  /**
+   * Whether the attribute will be loaded as a GPU buffer by the time
+   * {@link PrimitiveLoadPlan#postProcess} is finished.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.loadBuffer = false;
+
+  /**
+   * Whether the attribute will be loaded as a typed array copy of the GPU
+   * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.loadTypedArray = false;
 }
 
+/**
+ * Primitives may need post-processing steps such as generating outlines for
+ * the CESIUM_primitive_outline glTF extension. This object tracks what
+ * indices and attributes need to be post-processed.
+ *
+ * @alias PrimitiveLoadPlan
+ * @constructor
+ *
+ * @param {ModelComponents.Primitive} primitive The primitive to track
+ *
+ * @private
+ */
 function PrimitiveLoadPlan(primitive) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("primitive", primitive);
+  //>>includeEnd('debug');
+
   this.primitive = primitive;
 
-  // this is a flat list of all attributes and morph target attributes combined,
-  // as the postprocessing doesn't need to distinguish them.
+  /**
+   * A flat list of attributes that need to be post-processed, even if the
+   * attributes came from morph targets
+   *
+   * @type {PrimitiveLoadPlan.AttributeLoadPlan[]}
+   * @private
+   */
   this.attributePlans = [];
 
+  /**
+   * Information about the triangle indices that need to be post-processed
+   * (if there were indices)
+   *
+   * @type {IndicesLoadPlan}
+   * @private
+   */
   this.indicesPlan = undefined;
 
-  // Details for CESIUM_primitive_outline
+  /**
+   * Set this true to indicate that the primitive has the
+   * CESIUM_primitive_outline extension and needs to be post-processed
+   *
+   * @type {Boolean}
+   * @private
+   */
   this.needsOutlines = false;
+
+  /**
+   * The outline edge indices from the CESIUM_primitive_outline extension
+   *
+   * @type {Number[]}
+   * @private
+   */
   this.outlineIndices = undefined;
-  this._outlinesDirty = true;
 }
 
-PrimitiveLoadPlan.prototype.postProcess = function (frameState) {
+/**
+ * Apply post-processing steps that may modify geometry such as generating
+ * outline coordinates. If no post-processing steps are needed, this function
+ * is a no-op.
+ *
+ * @param {Context} context The frame state, needed for generating buffers
+ */
+PrimitiveLoadPlan.prototype.postProcess = function (context) {
   // Handle CESIUM_primitive_outline. This modifies indices and attributes and
   // also generates a new attribute for the outline coordinates. These steps
   // are synchronous.
   if (this.needsOutlines) {
     generateOutlines(this);
-    generateBuffers(this, frameState);
+    generateBuffers(this, context);
   }
-
-  // nothing needs to be done since we don't need postprocessing!
 };
 
 function generateOutlines(loadPlan) {
@@ -100,8 +222,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-function generateBuffers(loadPlan, frameState) {
-  const context = frameState.context;
+function generateBuffers(loadPlan, context) {
   generateAttributeBuffers(loadPlan.attributePlans, context);
 
   if (defined(loadPlan.indicesPlan)) {
@@ -155,7 +276,7 @@ function generateIndexBuffers(indicesPlan, context) {
     buffer.vertexArrayDestroyable = false;
   }
 
-  if (!indicesPlan.loadIndexBuffer) {
+  if (!indicesPlan.loadTypedArray) {
     indices.typedArray = undefined;
   }
 }

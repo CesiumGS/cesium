@@ -311,7 +311,7 @@ GltfLoader.prototype.load = function () {
         }
 
         if (loader._state === GltfLoaderState.POST_PROCESSING) {
-          postProcessGeometry(loader, frameState);
+          postProcessGeometry(loader, frameState.context);
           loader._state = GltfLoaderState.PROCESSED;
         }
 
@@ -400,13 +400,13 @@ function processLoaders(loader, frameState) {
   }
 }
 
-function postProcessGeometry(loader, frameState) {
+function postProcessGeometry(loader, context) {
   // Apply post-processing steps on geometry such as
   // updating attributes for rendering outlines.
   const loadPlans = loader._primitiveLoadPlans;
   const length = loadPlans.length;
   for (let i = 0; i < length; i++) {
-    loadPlans[i].postProcess(frameState);
+    loadPlans[i].postProcess(context);
   }
 }
 

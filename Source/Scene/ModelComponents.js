@@ -34,6 +34,7 @@ function Quantization() {
    * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
    *
    * @type {Boolean}
+   * @private
    */
   this.octEncodedZXY = false;
 
