@@ -1529,6 +1529,7 @@ describe(
       }).not.toThrow();
 
       scene.destroyForSpecs();
+      return scene.terrainProvider.readyPromise;
     });
 
     it("Gets terrainProviderChanged", function () {
