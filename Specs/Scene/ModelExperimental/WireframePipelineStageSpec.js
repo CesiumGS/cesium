@@ -77,7 +77,7 @@ describe(
         primitiveType: primitive.primitiveType,
         wireframeIndexBuffer: undefined,
         model: {
-          _resources: resources,
+          _pipelineResources: resources,
           statistics: new ModelExperimentalStatistics(),
         },
       };
@@ -106,7 +106,7 @@ describe(
         const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
         const model = renderResources.model;
         expect(wireframeIndexBuffer).toBeDefined();
-        expect(model._resources).toEqual([wireframeIndexBuffer]);
+        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
         expect(model.statistics.geometryByteLength).toBe(
           wireframeIndexBuffer.sizeInBytes
         );
@@ -137,7 +137,7 @@ describe(
         const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
         const model = renderResources.model;
         expect(wireframeIndexBuffer).toBeDefined();
-        expect(model._resources).toEqual([wireframeIndexBuffer]);
+        expect(model._pipelineResources).toEqual([wireframeIndexBuffer]);
         expect(model.statistics.geometryByteLength).toBe(
           wireframeIndexBuffer.sizeInBytes
         );

@@ -1,5 +1,4 @@
 import ArcType from "./ArcType.js";
-import arrayFill from "./arrayFill.js";
 import BoundingRectangle from "./BoundingRectangle.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
@@ -406,14 +405,14 @@ function computeAttributes(options) {
 
     if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
       if ((top && bottom) || wall) {
-        offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+        offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
       } else if (top) {
-        offsetAttribute = arrayFill(offsetAttribute, 1);
+        offsetAttribute = offsetAttribute.fill(1);
       }
     } else {
       const offsetValue =
         options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+      offsetAttribute = offsetAttribute.fill(offsetValue);
     }
 
     geometry.attributes.applyOffset = new GeometryAttribute({
@@ -1311,12 +1310,11 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
       if (defined(polygonGeometry._offsetAttribute)) {
         const length =
           geometryInstance.geometry.attributes.position.values.length;
-        const applyOffset = new Uint8Array(length / 3);
         const offsetValue =
           polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
             ? 0
             : 1;
-        arrayFill(applyOffset, offsetValue);
+        const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
         geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute(
           {
             componentDatatype: ComponentDatatype.UNSIGNED_BYTE,

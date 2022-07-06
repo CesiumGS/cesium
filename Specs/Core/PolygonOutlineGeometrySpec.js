@@ -1,5 +1,4 @@
 import { ArcType } from "../../Source/Cesium.js";
-import { arrayFill } from "../../Source/Cesium.js";
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -756,8 +755,7 @@ describe("Core/PolygonOutlineGeometry", function () {
     expect(p.attributes.position.values.length).toEqual(numVertices * 3);
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -784,9 +782,7 @@ describe("Core/PolygonOutlineGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 8);
+    const expected = new Array(offset.length).fill(0).fill(1, 0, 8);
     expect(offset).toEqual(expected);
   });
 
@@ -813,8 +809,7 @@ describe("Core/PolygonOutlineGeometry", function () {
 
     const offset = p.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
