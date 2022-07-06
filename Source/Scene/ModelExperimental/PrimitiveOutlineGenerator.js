@@ -25,6 +25,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * @param {Uint8Array|Uint16Array|Uint32Array} options.triangleIndices The original triangle indices of the primitive. The constructor takes ownership of this typed array as it will be modified internally. Use the updatedTriangleIndices getter to get the final result.
  * @param {Number[]} options.outlineIndices The indices of edges in the triangle from the CESIUM_primitive_outline extension
  * @param {Number} options.originalVertexCount The original number of vertices in the primitive
+ *
  * @private
  */
 export default function PrimitiveOutlineGenerator(options) {
@@ -82,10 +83,12 @@ function initialize(outlineGenerator) {
     let i2 = triangleIndices[i + 2];
 
     const all = false; // set this to true to draw a full wireframe.
-    const has01 = all || edges.isHighlighted(i0, i1);
-    const has12 = all || edges.isHighlighted(i1, i2);
-    const has20 = all || edges.isHighlighted(i2, i0);
+    const has01 = all || edges.hasEdge(i0, i1);
+    const has12 = all || edges.hasEdge(i1, i2);
+    const has20 = all || edges.hasEdge(i2, i0);
 
+    // this returns -1 if there was a match or the index or the triangle index
+    // that was not matched.
     let unmatchableVertexIndex = matchAndStoreCoordinates(
       outlineCoordinates,
       i0,
@@ -106,7 +109,7 @@ function initialize(outlineGenerator) {
         copy = vertexCopies[i2];
       }
 
-      if (copy === undefined) {
+      if (!defined(copy)) {
         copy = vertexCount + extraVertices.length;
 
         let original = unmatchableVertexIndex;
@@ -444,7 +447,7 @@ function EdgeSet(edgeIndices, originalVertexCount) {
   }
 }
 
-EdgeSet.prototype.isHighlighted = function (a, b) {
+EdgeSet.prototype.hasEdge = function (a, b) {
   const index = Math.min(a, b) * this._originalVertexCount + Math.max(a, b);
   return this._edges[index] === true;
 };

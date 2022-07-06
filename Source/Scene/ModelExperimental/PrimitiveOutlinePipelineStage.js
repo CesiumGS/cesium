@@ -22,10 +22,9 @@ PrimitiveOutlinePipelineStage.process = function (
   );
 
   shaderBuilder.addAttribute("vec3", "a_outlineCoordinates");
-  const outlineCoordinates = primitive.outlineCoordinates;
-
   shaderBuilder.addVarying("vec3", "v_outlineCoordinates");
 
+  const outlineCoordinates = primitive.outlineCoordinates;
   const vertexAttribute = {
     index: renderResources.attributeIndex++,
     vertexBuffer: outlineCoordinates.buffer,

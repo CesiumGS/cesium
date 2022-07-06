@@ -154,7 +154,7 @@ export default function GltfLoader(options) {
   this._processTextures = function (loader, frameState) {};
 
   // Information about whether to load primitives as typed arrays or buffers,
-  // and if further post-processing is needed after loading (e.g. for
+  // and whether post-processing is needed after loading (e.g. for
   // generating outlines)
   this._primitiveLoadPlans = [];
 
@@ -857,9 +857,9 @@ function loadVertexAttribute(
   // Determine what to load right now:
   //
   // - If post-processing is needed, load a packed typed array for
-  // further processing, defer the buffer loading until later.
-  // - On the other hand, if post-processing is not needed, just set the load
-  // flags directly
+  //   further processing, and defer the buffer loading until later.
+  // - On the other hand, if post-processing is not needed,
+  //   set the load flags directly
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
   const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
   const loadAsTypedArrayPacked = needsPostProcessing
@@ -882,6 +882,7 @@ function loadVertexAttribute(
   attributePlan.loadBuffer = outputBuffer;
   attributePlan.loadTypedArray = outputTypedArray;
   attributePlan.loadPackedTypedArray = outputTypedArrayPacked;
+
   return attributePlan;
 }
 
@@ -957,9 +958,9 @@ function loadIndices(
   // Determine what to load right now:
   //
   // - If post-processing is needed, load a packed typed array for
-  // further processing, defer the buffer loading until later.
-  // - On the other hand, if post-processing is not needed, just set the load
-  // flags directly
+  //   further processing, and defer the buffer loading until later.
+  // - On the other hand, if post-processing is not needed, set the load
+  //   flags directly
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
   const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
 
@@ -989,6 +990,7 @@ function loadIndices(
   const indicesPlan = new PrimitiveLoadPlan.IndicesLoadPlan(indices);
   indicesPlan.loadBuffer = outputBuffer;
   indicesPlan.loadTypedArray = outputTypedArray;
+
   return indicesPlan;
 }
 

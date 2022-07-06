@@ -11,6 +11,7 @@ import PrimitiveOutlineGenerator from "./ModelExperimental/PrimitiveOutlineGener
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
+ *
  * @alias PrimitiveLoadPlan.AttributeLoadPlan
  * @constructor
  *
@@ -76,10 +77,17 @@ function IndicesLoadPlan(indices) {
   Check.typeOf.object("indices", indices);
   //>>includeEnd('debug');
 
+  /**
+   * The indices to track.
+   *
+   * @type {ModelComponents.Indices}
+   * @readonly
+   * @private
+   */
   this.indices = indices;
 
   /**
-   * Whether the attribute will be loaded as a GPU buffer by the time
+   * Whether the indices will be loaded as a GPU buffer by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
    *
    * @type {Boolean}
@@ -88,7 +96,7 @@ function IndicesLoadPlan(indices) {
   this.loadBuffer = false;
 
   /**
-   * Whether the attribute will be loaded as a typed array copy of the GPU
+   * Whether the indices will be loaded as a typed array copy of the GPU
    * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
    *
    * @type {Boolean}
@@ -98,9 +106,10 @@ function IndicesLoadPlan(indices) {
 }
 
 /**
- * Primitives may need post-processing steps such as generating outlines for
- * the CESIUM_primitive_outline glTF extension. This object tracks what
- * indices and attributes need to be post-processed.
+ * Primitives may need post-processing steps after their attributes and indices
+ * hae loaded, such as generating outlines for the CESIUM_primitive_outline glTF
+ * extension. This object tracks what indices and attributes need to be
+ * post-processed.
  *
  * @alias PrimitiveLoadPlan
  * @constructor
@@ -114,11 +123,18 @@ function PrimitiveLoadPlan(primitive) {
   Check.typeOf.object("primitive", primitive);
   //>>includeEnd('debug');
 
+  /**
+   * The primitive to track.
+   *
+   * @type {ModelComponents.Primitive}
+   * @readonly
+   * @private
+   */
   this.primitive = primitive;
 
   /**
-   * A flat list of attributes that need to be post-processed, even if the
-   * attributes came from morph targets
+   * A flat list of attributes that need to be post-processed. This includes
+   * both regular attributes and morph target attributes.
    *
    * @type {PrimitiveLoadPlan.AttributeLoadPlan[]}
    * @private
@@ -126,10 +142,10 @@ function PrimitiveLoadPlan(primitive) {
   this.attributePlans = [];
 
   /**
-   * Information about the triangle indices that need to be post-processed
-   * (if there were indices)
+   * Information about the triangle indices that need to be post-processed,
+   * if they exist.
    *
-   * @type {IndicesLoadPlan}
+   * @type {PrimitiveLoadPlan.IndicesLoadPlan}
    * @private
    */
   this.indicesPlan = undefined;
@@ -157,7 +173,7 @@ function PrimitiveLoadPlan(primitive) {
  * outline coordinates. If no post-processing steps are needed, this function
  * is a no-op.
  *
- * @param {Context} context The frame state, needed for generating buffers
+ * @param {Context} context The context for generating buffers on the GPU
  */
 PrimitiveLoadPlan.prototype.postProcess = function (context) {
   // Handle CESIUM_primitive_outline. This modifies indices and attributes and

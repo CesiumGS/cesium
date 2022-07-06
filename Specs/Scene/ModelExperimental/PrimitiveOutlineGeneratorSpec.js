@@ -515,7 +515,7 @@ describe(
         const texture = PrimitiveOutlineGenerator.createTexture(context);
         const texture2 = PrimitiveOutlineGenerator.createTexture(context);
 
-        expect(texture2).toBe(texture2);
+        expect(texture2).toBe(texture);
         expect(texture).toBeDefined();
         expect(cache.modelOutliningCache.outlineTexture).toBe(texture);
       });

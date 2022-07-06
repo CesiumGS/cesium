@@ -150,12 +150,13 @@ describe(
       const [positionPlan] = loadPlan.attributePlans;
       const indicesPlan = loadPlan.indicesPlan;
 
-      // No outline indices were set, so postProcess should do nothing
+      // loadPlan.needsOutlines was not set to true, so postProcess should do
+      // nothing
       positionPlan.loadBuffer = true;
       indicesPlan.loadBuffer = true;
       loadPlan.postProcess(context);
 
-      // A new attribute is created for the outline coordinates
+      // No attribute is created for the outline coordinates
       expect(loadPlan.attributePlans.length).toBe(1);
       const [outputPositionPlan] = loadPlan.attributePlans;
       expect(outputPositionPlan).toBe(positionPlan);
@@ -261,7 +262,6 @@ describe(
       loadPlan.needsOutlines = true;
       loadPlan.outlineIndices = mockOutlineIndices;
 
-      // No outline indices were set, so postProcess should do nothing
       positionPlan.loadBuffer = true;
       positionPlan.loadTypedArray = true;
       positionPlan.loadPackedTypedArray = true;
