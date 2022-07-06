@@ -1,3 +1,7 @@
-export default function () {
-  throw new Error("BadGeometry.createGeometry");
-}
+define(function () {
+  "use strict";
+
+  return function () {
+    throw new Error("BadGeometry.createGeometry");
+  };
+});

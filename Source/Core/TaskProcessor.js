@@ -138,10 +138,14 @@ function createWorker(processor) {
     worker.postMessage
   );
 
-  const moduleName = processor._workerPath.replace(/\.js/, ""); //  Truncate the extension if provided.
   const bootstrapMessage = {
-    baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-    workerModule: buildModuleUrl(`${moduleName}.js`),
+    loaderConfig: {
+      paths: {
+        Workers: buildModuleUrl("Workers"),
+      },
+      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+    },
+    workerModule: processor._workerPath,
   };
 
   worker.postMessage(bootstrapMessage);

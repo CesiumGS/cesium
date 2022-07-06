@@ -1,4 +1,5 @@
-import { Cartesian2, Math as CesiumMath } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../Source/Cesium.js";
 import createPackableArraySpecs from "../createPackableArraySpecs.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 

@@ -1,3 +1,4 @@
+/* global require */
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -362,27 +363,19 @@ function decodeDraco(event) {
   const wasmConfig = data.webAssemblyConfig;
   if (defined(wasmConfig)) {
     // Require and compile WebAssembly module, or use fallback if not supported
+    return require([wasmConfig.modulePath], function (dracoModule) {
+      if (defined(wasmConfig.wasmBinaryFile)) {
+        if (!defined(dracoModule)) {
+          dracoModule = self.DracoDecoderModule;
+        }
 
-    let dracoModule;
-    try {
-      /* global importScripts, DracoDecoderModule */
-      importScripts(wasmConfig.modulePath);
-      dracoModule = DracoDecoderModule;
-    } catch (e) {
-      // Handled below
-    }
-
-    if (!defined(dracoModule)) {
-      dracoModule = self.DracoDecoderModule;
-    }
-
-    if (defined(wasmConfig.wasmBinaryFile)) {
-      dracoModule(wasmConfig).then(function (compiledModule) {
-        initWorker(compiledModule);
-      });
-    } else {
-      initWorker(dracoModule());
-    }
+        dracoModule(wasmConfig).then(function (compiledModule) {
+          initWorker(compiledModule);
+        });
+      } else {
+        initWorker(dracoModule());
+      }
+    });
   }
 }
 export default decodeDraco;

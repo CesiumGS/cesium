@@ -41,6 +41,8 @@
   },
   "type": "module",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
     "@zip.js/zip.js": "^2.3.12",
     "autolinker": "^3.14.3",
     "aws-sdk": "^2.932.0",
@@ -102,6 +104,9 @@
     "rbush": "^3.0.1",
     "request": "^2.79.0",
     "rimraf": "^3.0.2",
+    "rollup": "^2.52.2",
+    "rollup-plugin-strip-pragma": "^1.0.0",
+    "rollup-plugin-terser": "^7.0.2",
     "stream-to-promise": "^3.0.0",
     "topojson-client": "^3.1.0",
     "tsd-jsdoc": "^2.5.0",

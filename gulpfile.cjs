@@ -32,6 +32,11 @@ const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 const esbuild = require("esbuild");
 const istanbul = require("istanbul-lib-instrument");
+const rollup = require("rollup");
+const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
+const rollupPluginTerser = require("rollup-plugin-terser");
+const rollupCommonjs = require("@rollup/plugin-commonjs");
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
 
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -88,7 +93,6 @@ const watchedSpecFiles = [
   "Specs/*.js",
   "Specs/TestWorkers/*.js",
 ];
-const testWorkers = ["Specs/TestWorkers/*.js"];
 const cssFiles = "Source/**/*.css";
 const shaderFiles = [
   "Source/Shaders/**/*.glsl",
@@ -256,44 +260,72 @@ async function buildCesiumJs(options) {
   return results;
 }
 
+function rollupWarning(message) {
+  // Ignore eval warnings in third-party code we don't have control over
+  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
+    return;
+  }
+
+  console.log(message);
+}
+
 /**
- * Bundles the workers and outputs to the Source/Workers directory
+ * Bundles the workers and outputs the result to the specified directory
  * @param {Object} options
  * @param {boolean} [options.minify=false] true if the worker output should be minified
- * @param {boolean} [options.sourcemap=false] true if a sourcemap should be generated
- * @param {String} options.path true if the worker output should be minified
- * @returns {Promise.<Object>} esbuild result
+ * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {String} options.path output directory
  */
-async function createWorkers(options) {
-  const workersES6 = globby.sync(workerSourceFiles);
+async function buildWorkers(options) {
+  // Copy existing workers
   const workers = globby.sync([
     "Source/Workers/**",
     "Source/ThirdParty/Workers/**",
   ]);
 
-  const result = esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: workersES6,
-    bundle: true,
-    globalName: "CesiumWorker",
-    format: "iife",
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    external: ["https", "http", "zlib"],
-    outdir: path.join(options.path, "Workers"),
-    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-    incremental: options.incremental,
-  });
-
   await esbuild.build({
     ...esbuildBaseConfig,
     entryPoints: workers,
-    outdir: path.join(options.path),
+    outdir: options.path,
     outbase: "Source", // Maintain existing file paths
-    // Only return results from ES6 workers. Third party workers are unlikely to change.
+    minify: options.minify,
   });
 
-  return result;
+  // Use rollup to build the workers:
+  // 1) They can be built as AMD style modules
+  // 2) They can be built using code-splitting, resulting in smaller modules
+  return globby(["Source/WorkersES6/*.js"]).then(function (files) {
+    const plugins = [rollupResolve(), rollupCommonjs()];
+
+    if (options.removePragmas) {
+      plugins.push(
+        rollupPluginStripPragma({
+          pragmas: ["debug"],
+        })
+      );
+    }
+
+    if (options.minify) {
+      plugins.push(rollupPluginTerser.terser());
+    }
+
+    return rollup
+      .rollup({
+        input: files,
+        plugins: plugins,
+        onwarn: rollupWarning,
+      })
+      .then(function (bundle) {
+        return bundle.write({
+          dir: path.join(options.path, "Workers"),
+          format: "amd",
+          // Rollup cannot generate a sourcemap
+          sourcemap: options.sourcemap && !options.removePragmas,
+          banner: copyrightHeader,
+        });
+      });
+  });
 }
 
 const externalResolvePlugin = {
@@ -339,19 +371,6 @@ async function buildSpecs(options) {
     incremental: options.incremental,
   });
 
-  const testWorkerFiles = globby.sync(testWorkers);
-  await esbuild.build({
-    entryPoints: testWorkerFiles,
-    bundle: true,
-    globalName: "CesiumWorker",
-    format: "iife",
-    target: "es2020",
-    sourcemap: true,
-    external: ["https", "http", "zlib"],
-    outdir: path.join("Build", "Specs", "TestWorkers"),
-    // Only rebuild if Spec files change. Test workers are unlikely to change.
-  });
-
   return results;
 }
 
@@ -386,7 +405,7 @@ async function build(options) {
       path: outputDirectory,
       node: options.node,
     }),
-    createWorkers({
+    buildWorkers({
       minify: options.minify,
       sourcemap: options.sourcemap,
       path: outputDirectory,
@@ -441,12 +460,11 @@ gulp.task(
       incremental: true,
     });
 
-    let workerResult = await createWorkers({
+    await buildWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
       sourcemap: sourcemap,
-      incremental: true,
     });
 
     gulp.watch(shaderFiles, async () => {
@@ -495,8 +513,13 @@ gulp.task(
       }
     );
 
-    gulp.watch(workerSourceFiles, async () => {
-      workerResult = await workerResult.rebuild();
+    gulp.watch(workerSourceFiles, () => {
+      return buildWorkers({
+        minify: minify,
+        path: outputDirectory,
+        removePragmas: removePragmas,
+        sourcemap: sourcemap,
+      });
     });
 
     process.on("SIGINT", () => {
@@ -512,7 +535,6 @@ gulp.task(
       }
 
       specResult.rebuild.dispose();
-      workerResult.rebuild.dispose();
       process.exit(0);
     });
   })
@@ -1250,7 +1272,7 @@ gulp.task("coverage", async function () {
             included: true,
             type: "module",
           },
-          { pattern: "Build/Specs/TestWorkers/**", included: false },
+          { pattern: "Specs/TestWorkers/**", included: false },
         ],
         reporters: ["spec", "coverage"],
         coverageReporter: {
@@ -1329,7 +1351,7 @@ gulp.task("test", function (done) {
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-    { pattern: "Build/Specs/TestWorkers/**", included: false },
+    { pattern: "Specs/TestWorkers/**", included: false },
   ];
 
   if (release) {
@@ -1342,7 +1364,7 @@ gulp.task("test", function (done) {
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
       { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-      { pattern: "Build/Specs/TestWorkers/**", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
     ];
   }
 
@@ -2035,8 +2057,9 @@ async function buildCesiumViewer() {
     outbase: "Source",
   });
 
-  await createWorkers({
+  await buildWorkers({
     minify: true,
+    removePragmas: true,
     path: cesiumViewerOutputDirectory,
   });
 
