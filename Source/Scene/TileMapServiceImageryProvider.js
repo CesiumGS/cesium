@@ -6,6 +6,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
+import RequestErrorEvent from "../Core/RequestErrorEvent.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
@@ -121,10 +122,10 @@ TileMapServiceImageryProvider.prototype._requestMetadata = function () {
     .fetchXML()
     .then(this._metadataSuccess)
     .catch((e) => {
-      if (e instanceof RuntimeError) {
-        return Promise.reject(e);
+      if (e instanceof RequestErrorEvent) {
+        return this._metadataFailure();
       }
-      return this._metadataFailure();
+      return Promise.reject(e);
     });
 };
 
