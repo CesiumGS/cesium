@@ -501,10 +501,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     shadows: options.shadows,
     terrainShadows: options.terrainShadows,
     mapMode2D: options.mapMode2D,
-    blurActiveElementOnCanvasFocus: defaultValue(
-      options.blurActiveElementOnCanvasFocus,
-      true
-    ),
+    blurActiveElementOnCanvasFocus: options.blurActiveElementOnCanvasFocus,
     requestRenderMode: options.requestRenderMode,
     maximumRenderTimeChange: options.maximumRenderTimeChange,
     depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
