@@ -504,7 +504,6 @@ function loadIndexBuffer(
   gltf,
   accessorId,
   draco,
-  frameState,
   loadBuffer,
   loadTypedArray
 ) {
@@ -969,7 +968,6 @@ function loadIndices(
     gltf,
     accessorId,
     draco,
-    frameState,
     loadBuffer,
     loadTypedArray
   );
