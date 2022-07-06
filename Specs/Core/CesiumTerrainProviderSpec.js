@@ -996,7 +996,7 @@ describe("Core/CesiumTerrainProvider", function () {
             false
           );
 
-          return terrainProvider.requestTileGeometry(0, 0, 0);
+          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
         })
         .then(function (loadedData) {
           expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
@@ -1138,7 +1138,7 @@ describe("Core/CesiumTerrainProvider", function () {
           expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
           expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBeUndefined();
 
-          return terrainProvider.requestTileGeometry(0, 0, 0);
+          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
         })
         .then(function () {
           expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBe(true);
@@ -1187,7 +1187,7 @@ describe("Core/CesiumTerrainProvider", function () {
           IonResource.prototype,
           "getDerivedResource"
         ).and.callThrough();
-        terrainProvider.requestTileGeometry(0, 0, 0);
+        terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
         const options = getDerivedResource.calls.argsFor(0)[0];
         expect(options.queryParameters.extensions).toEqual(
           "octvertexnormals-watermask-metadata"
