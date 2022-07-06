@@ -2442,11 +2442,6 @@ ModelExperimental.prototype.applyStyle = function (style) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
-    // check if the feature table id is undefined, or
-    // if the table doesn't exist
-    // if so, use empty feature table?
-
-    // empty feature table.applyStyle
     this.applyColorAndShow(style);
   }
 
