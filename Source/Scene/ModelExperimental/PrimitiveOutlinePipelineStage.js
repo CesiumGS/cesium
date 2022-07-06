@@ -4,9 +4,30 @@ import PrimitiveOutlineGenerator from "./PrimitiveOutlineGenerator.js";
 import PrimitiveOutlineStageVS from "../../Shaders/ModelExperimental/PrimitiveOutlineStageVS.js";
 import PrimitiveOutlineStageFS from "../../Shaders/ModelExperimental/PrimitiveOutlineStageFS.js";
 
+/**
+ * The primitive outline pipeline stage configures the shader to render outlines
+ * from the CESIUM_primitive_outline extension.
+ *
+ * @namespace PrimitiveOutlinePipelineStage
+ *
+ * @private
+ */
 const PrimitiveOutlinePipelineStage = {};
 PrimitiveOutlinePipelineStage.name = "PrimitiveOutlinePipelineStage";
 
+/**
+ * Process a primitive. This modifies the following parts of the render
+ * resources:
+ * <ul>
+ *  <li>Declares a new attribute for the outline (texture) coordinates</li>
+ *  <li>Adds shader code to overlay the outlines over the result of lighting calculations</li>
+ *  <li>Add uniforms for showing the outline and changing its color</li>
+ * </ul>
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {FrameState} frameState The frame state
+ * @private
+ */
 PrimitiveOutlinePipelineStage.process = function (
   renderResources,
   primitive,
