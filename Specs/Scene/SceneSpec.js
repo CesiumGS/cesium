@@ -1519,17 +1519,22 @@ describe(
         url: "//terrain/tiles",
       });
 
-      expect(scene.terrainProvider).toBe(globe.terrainProvider);
-
-      scene.globe = undefined;
-      expect(function () {
-        scene.terrainProvider = new CesiumTerrainProvider({
-          url: "//newTerrain/tiles",
+      return scene.terrainProvider.readyPromise
+        .catch(() => {
+          expect(scene.terrainProvider).toBe(globe.terrainProvider);
+          scene.globe = undefined;
+          const newProvider = new CesiumTerrainProvider({
+            url: "//newTerrain/tiles",
+          });
+          return newProvider.readyPromise.catch(() => {
+            expect(function () {
+              scene.terrainProvider = newProvider;
+            }).not.toThrow();
+          });
+        })
+        .finally(() => {
+          scene.destroyForSpecs();
         });
-      }).not.toThrow();
-
-      scene.destroyForSpecs();
-      return scene.terrainProvider.readyPromise;
     });
 
     it("Gets terrainProviderChanged", function () {
