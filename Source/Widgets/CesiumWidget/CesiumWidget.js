@@ -213,7 +213,6 @@ function CesiumWidget(container, options) {
   // This leads to unexpected interaction if the last element was an input field.
   // For example, clicking the mouse wheel could lead to the value in  the field changing
   // unexpectedly. The solution is to blur whatever has focus as soon as canvas interaction begins.
-  //
   // Although in some cases the active element needs to stay active even after interacting with canvas,
   // for example when clicking on it only for getting a coordinate or an id of an entity.
   // For this case, the `blurActiveElementOnCanvasFocus` can be passed with false to avoid blurring
