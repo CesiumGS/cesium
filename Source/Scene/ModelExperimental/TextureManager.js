@@ -102,7 +102,7 @@ function getTextureAndMips(textureUniform, image, context) {
     : new Texture({ context, source: image, sampler });
 
   if (samplerRequiresMipmap(sampler)) {
-    return texture.generateMipmap();
+    texture.generateMipmap();
   }
 
   return texture;
