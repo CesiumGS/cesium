@@ -41,11 +41,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     mapProjection: scratchProjection,
   };
 
-  afterEach(function () {
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
-  });
-
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -69,6 +64,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
         },
         silhouetteSize: silhouetteSize,
         silhouetteColor: silhouetteColor,
+        _silhouetteId: 1,
       },
       runtimePrimitive: {
         primitive: {
@@ -401,9 +397,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       stencilReference,
       false
     );
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("constructs silhouette commands correctly for translucent silhouette color", function () {
@@ -436,9 +429,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       stencilReference,
       true
     );
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("uses opaque command only", function () {

@@ -64,6 +64,7 @@ function ModelExperimentalDrawCommand(options) {
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
   this._useSilhouetteCommands = useSilhouetteCommands;
 
+  // TODO: reorganize
   this._commandList = [];
   this._commandList2D = [];
 
@@ -549,20 +550,10 @@ function derive2DCommand(command) {
   return derivedCommand;
 }
 
-/**
- * Tracks how many silhouettes have been created. This value is used to
- * assign a reference number to the stencil.
- *
- * @type {Number}
- * @private
- */
-ModelExperimentalDrawCommand.silhouettesLength = 0;
-
 function deriveSilhouetteModelCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
-  const stencilReference =
-    ++ModelExperimentalDrawCommand.silhouettesLength % 255;
+  const stencilReference = model._silhouetteId % 255;
   const silhouetteModelCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState, true);
 
@@ -606,7 +597,7 @@ function deriveSilhouetteModelCommand(command, model) {
 function deriveSilhouetteColorCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
-  const stencilReference = ModelExperimentalDrawCommand.silhouettesLength % 255;
+  const stencilReference = model._silhouetteId % 255;
   const silhouetteColorCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState, true);
   renderState.depthTest.enabled = true;

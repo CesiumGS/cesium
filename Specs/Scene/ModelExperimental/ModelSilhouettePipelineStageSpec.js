@@ -8,10 +8,16 @@ import {
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
+  beforeAll(function () {
+    // Reset this, in case it was modified by other tests
+    ModelSilhouettePipelineStage.silhouettesLength = 0;
+  });
+
   it("configures the render resources for silhouette", function () {
     const mockModel = {
       silhouetteColor: Color.RED,
       silhouetteSize: 1.0,
+      _silhouetteId: undefined,
     };
 
     const renderResources = {
@@ -22,6 +28,9 @@ describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
 
     const shaderBuilder = renderResources.shaderBuilder;
     ModelSilhouettePipelineStage.process(renderResources, mockModel);
+
+    expect(ModelSilhouettePipelineStage.silhouettesLength).toEqual(1);
+    expect(mockModel._silhouetteId).toEqual(1);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "HAS_SILHOUETTE",
