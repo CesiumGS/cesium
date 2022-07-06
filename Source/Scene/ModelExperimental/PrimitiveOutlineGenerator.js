@@ -416,7 +416,12 @@ PrimitiveOutlineGenerator.createTexture = function (context) {
 function createMipLevel(size) {
   const texture = new Uint8Array(size);
 
+  // This lookup texture creates an outline with width 0.75 px in screen space.
   texture[size - 1] = 192;
+
+  // As we reach the top of the mip pyramid, a single set pixel becomes a
+  // significant portion of the texture. This doesn't look great when zoomed
+  // out, so attenuate the value by 50% at each level.
   if (size === 8) {
     texture[size - 1] = 96;
   } else if (size === 4) {
