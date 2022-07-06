@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.96 - 2022-08-01
+
+##### Fixes :wrench:
+
+- Fixed improper handling of double-sided materials in `ModelExperimental`. [#10507](https://github.com/CesiumGS/cesium/pull/10507)
+
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:

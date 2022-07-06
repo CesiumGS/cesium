@@ -52,6 +52,12 @@ vec3 computeNormal(ProcessedAttributes attributes)
         #endif
     #endif
 
+    #ifdef HAS_DOUBLE_SIDED_MATERIAL
+    if (czm_backFacing()) {
+        normal = -normal;
+    }
+    #endif
+
     return normal;
 }
 #endif
