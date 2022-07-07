@@ -85,6 +85,7 @@ function I3dmLoader(options) {
     options.loadIndicesForWireframe,
     false
   );
+  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -104,6 +105,7 @@ function I3dmLoader(options) {
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._loadPrimitiveOutline = loadPrimitiveOutline;
 
   this._state = I3dmLoaderState.UNLOADED;
   this._promise = undefined;
@@ -240,6 +242,7 @@ I3dmLoader.prototype.load = function () {
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
+    loadPrimitiveOutline: this._loadPrimitiveOutline,
   };
 
   if (gltfFormat === 0) {
