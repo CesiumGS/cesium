@@ -8,7 +8,7 @@ import {
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
-  beforeAll(function () {
+  beforeEach(function () {
     // Reset this, in case it was modified by other tests
     ModelSilhouettePipelineStage.silhouettesLength = 0;
   });

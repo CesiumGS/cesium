@@ -200,8 +200,9 @@ export default function ModelExperimental(options) {
   this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
   this._silhouetteDirty = false;
 
-  // If silhouettes are used for the model, this set to a number coresponding to
-  // the stencil buffer used for rendering the silhouette.
+  // If silhouettes are used for the model, this will be set to the number
+  // of the stencil buffer used for rendering the silhouette. This is set
+  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
   this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
