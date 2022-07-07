@@ -739,12 +739,32 @@ ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
  * @private
  */
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
+  // If a model has silhouettes, the commands that draw the silhouettes for
+  // each primitive can only be invoked after the entire model has drawn.
+  // Otherwise, the silhouette may draw on top of the model. This requires
+  // gathering the original commands and the silhouette commands separately.
   const drawCommands = [];
+  const silhouetteCommands = [];
+
+  const hasSilhouette = this._model.hasSilhouette(frameState);
+
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
     const primitiveDrawCommand = runtimePrimitive.drawCommand;
+
     const result = primitiveDrawCommand.getCommands(frameState);
     drawCommands.push.apply(drawCommands, result);
+
+    if (hasSilhouette) {
+      const silhouetteResult = primitiveDrawCommand.getSilhouetteCommands(
+        frameState
+      );
+      silhouetteCommands.push.apply(silhouetteCommands, silhouetteResult);
+    }
   });
+
+  // Submit the silhouette commands after all the original commands.
+  drawCommands.push.apply(drawCommands, silhouetteCommands);
+
   return drawCommands;
 };
 
