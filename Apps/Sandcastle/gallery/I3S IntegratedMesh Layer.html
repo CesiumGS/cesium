@@ -47,20 +47,48 @@
           animation: false,
           timeline: false,
         });
+        //More datasets to tour can be added here..
+        let tours = {
+          "Frankfurt":
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer",
+        };
         //Create an I3S DataSource with the camera autocentered to the I3S layers' extent
-        //No need to do a geoid conversion as both the elevation proivder (ArcGISTiledElevationTerrainProvider)
-        //and the I3S layer to be added (Frankfurt) use orthometric height systems .
-        var dataSource = new Cesium.I3SDataSource("Frankfurt", viewer.scene, {
-          autoCenterCameraOnStart: true,
-        });
-        dataSource.camera = viewer.camera;
-        //populate the I3S DataSource with an IntegratedMesh I3S layer URL and add it to the viewer
-        dataSource
-          .loadUrl(
-            "https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer"
-          )
-          .then(function () {});
-        viewer.dataSources.add(dataSource);
+
+        //No need to do the below geoid conversion as both the elevation proivder (ArcGISTiledElevationTerrainProvider)
+        //and the I3S layer to be added (Frankfurt) use Gravity related (orthometric) height systems
+        //The geoid conversion will be necessariy if using ellipsoidiaL based terrain provider (for example the cesium world terrain (terrainProvider: new Cesium.createWorldTerrain({}))
+
+        // Initialize a terrain provider which provides geoid conversion between gravity releated (typically I3S datasets) and ellipsoidiaL based
+        // height systems (cesium world terrain).
+        // If this is not specified, or the URL is invalid no geoid conversion will be applied.
+        // The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
+        //var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+        //url:
+        //"https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
+        //});
+
+        // Create i3s and cesiumTileset options to pass optional parameters useful for debuging and visualizing
+        let i3sOptions = {
+          traceFetches: false, // for tracing I3S fetches
+          autoCenterCameraOnStart: true, // auto center to the location of the i3s
+          //geoidTiledTerrainProvider: geoidService, // pass the geoid service
+        };
+        let cesiumTilesetOptions = {
+          show: true,
+          skipLevelOfDetail: false,
+          debugShowBoundingVolume: false,
+        };
+        //Create I3S data provider. autoCenterCameraOnStart i3s option autocenters the camera to the I3S layers' extent
+        let i3sProvider = new Cesium.I3SDataProvider(
+          "",
+          viewer.scene,
+          i3sOptions,
+          cesiumTilesetOptions
+        );
+        i3sProvider.camera = viewer.camera; // for debug
+        i3sProvider.loadUrl(tours["Frankfurt"]).then(function () {});
+        //add the i3s layer provider as a primitive data type
+        viewer.scene.primitives.add(i3sProvider);
         //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;
