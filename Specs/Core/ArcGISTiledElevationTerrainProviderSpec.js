@@ -487,14 +487,13 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       }).then(function () {
         let promise;
         let i;
-        for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+        // Make one less request to account for the additional availability request.
+        for (i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
           const request = new Request({
             throttle: true,
             throttleByServer: true,
           });
-          promise = terrainProvider
-            .requestTileGeometry(0, 0, 0, request)
-            .catch((e) => {});
+          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();

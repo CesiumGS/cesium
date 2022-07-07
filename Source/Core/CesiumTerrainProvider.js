@@ -909,6 +909,9 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   }
 
   return promise.then(function (buffer) {
+    if (!defined(buffer)) {
+      return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
+    }
     if (defined(provider._heightmapStructure)) {
       return createHeightmapTerrainData(provider, buffer, level, x, y);
     }

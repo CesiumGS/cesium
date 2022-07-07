@@ -297,8 +297,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         })
         .then(function (loadedData) {
           expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
-        })
-        .catch((e) => {});
+        });
     });
 
     it("returns undefined if too many requests are already in progress", function () {
@@ -324,9 +323,11 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-          promise = terrainProvider
-            .requestTileGeometry(0, 0, 0, createRequest())
-            .catch((e) => {});
+          const request = new Request({
+            throttle: true,
+            throttleByServer: true,
+          });
+          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
           promises.push(promise);
         }
         RequestScheduler.update();

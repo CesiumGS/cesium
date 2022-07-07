@@ -406,7 +406,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
     provider.errorEvent.addEventListener(errorMatcher);
 
-    return provider.readyPromise.catch((e) => {});
+    return provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
   });
 
   it("raises an error if layer.json specifies an unknown format", function () {
@@ -423,7 +425,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
     provider.errorEvent.addEventListener(errorMatcher);
 
-    return provider.readyPromise.catch((e) => {});
+    return provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
   });
 
   it("raises an error if layer.json does not specify quantized-mesh 1.x format", function () {
@@ -440,7 +444,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
     provider.errorEvent.addEventListener(errorMatcher);
 
-    return provider.readyPromise.catch((e) => {});
+    return provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
   });
 
   it("supports quantized-mesh1.x minor versions", function () {
@@ -476,7 +482,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
     provider.errorEvent.addEventListener(errorMatcher);
 
-    return provider.readyPromise.catch((e) => {});
+    return provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
   });
 
   it("raises an error if layer.json tiles property is an empty array", function () {
@@ -495,7 +503,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
     provider.errorEvent.addEventListener(errorMatcher);
 
-    return provider.readyPromise.catch((e) => {});
+    return provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
   });
 
   it("uses attribution specified in layer.json", function () {
@@ -996,7 +1006,9 @@ describe("Core/CesiumTerrainProvider", function () {
             false
           );
 
-          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
+          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {
+            expect(e.message).toContain("Mesh buffer doesn't exist.");
+          });
         })
         .then(function (loadedData) {
           expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
@@ -1036,9 +1048,15 @@ describe("Core/CesiumTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+          const request = new Request({
+            throttle: true,
+            throttleByServer: true,
+          });
           promise = terrainProvider
-            .requestTileGeometry(0, 0, 0, createRequest())
-            .catch((e) => {}); // Ignore the error here.
+            .requestTileGeometry(0, 0, 0, request)
+            .catch((e) => {
+              expect(e.message).toContain("Mesh buffer doesn't exist.");
+            });
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();
@@ -1138,7 +1156,9 @@ describe("Core/CesiumTerrainProvider", function () {
           expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
           expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBeUndefined();
 
-          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
+          return terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {
+            expect(e.message).toContain("Mesh buffer doesn't exist.");
+          });
         })
         .then(function () {
           expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBe(true);
@@ -1187,7 +1207,9 @@ describe("Core/CesiumTerrainProvider", function () {
           IonResource.prototype,
           "getDerivedResource"
         ).and.callThrough();
-        terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {});
+        terrainProvider.requestTileGeometry(0, 0, 0).catch((e) => {
+          expect(e.message).toContain("Mesh buffer doesn't exist.");
+        });
         const options = getDerivedResource.calls.argsFor(0)[0];
         expect(options.queryParameters.extensions).toEqual(
           "octvertexnormals-watermask-metadata"
