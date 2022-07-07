@@ -396,19 +396,20 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       overrideMimeType
     ) {
       requestMetadata.resolve(url);
-      deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+      deferred.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
     });
 
     const provider = new TileMapServiceImageryProvider({
       url: "http://server.invalid?query=1",
     });
-    provider.readyPromise.catch((e) => {
-      expect(e.message).toContain("An error occurred while accessing");
-    });
 
-    return requestMetadata.promise.then(function (url) {
-      expect(/\?query=1$/.test(url)).toEqual(true);
-    });
+    return requestMetadata.promise
+      .then(function (url) {
+        expect(/\?query=1$/.test(url)).toEqual(true);
+      })
+      .then(() => {
+        return provider.readyPromise;
+      });
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {

@@ -125,11 +125,7 @@ TileMapServiceImageryProvider.prototype._requestMetadata = function () {
       if (e instanceof RequestErrorEvent) {
         return this._metadataFailure();
       }
-      return Promise.reject(
-        new RuntimeError(
-          `An error occurred while accessing ${this._xmlResource.url}.`
-        )
-      );
+      return Promise.reject(e);
     });
 };
 
