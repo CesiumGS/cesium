@@ -246,7 +246,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
     terrainProvider.errorEvent.addEventListener(errorFunction);
 
-    return terrainProvider.readyPromise.catch(() => {
+    return terrainProvider.readyPromise.then(fail).catch(() => {
       expect(called).toBe(true);
     });
   });
