@@ -80,6 +80,8 @@ describe(
     const boxNoNormals =
       "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
+    const twoSidedPlane =
+      "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
 
     function expectShaderLines(shaderLines, expected) {
       for (let i = 0; i < expected.length; i++) {
@@ -738,14 +740,37 @@ describe(
         );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "HAS_EMISSIVE_TEXTURE",
-          "TEXCOORD_EMISSIVE v_texCoord_0",
-          "HAS_EMISSIVE_FACTOR",
-          "HAS_NORMAL_TEXTURE",
-          "TEXCOORD_NORMAL v_texCoord_0",
-          "HAS_OCCLUSION_TEXTURE",
-          "TEXCOORD_OCCLUSION v_texCoord_0",
           "USE_WIREFRAME",
+        ]);
+      });
+    });
+
+    it("adds define to shader if material is double-sided", function () {
+      return loadGltf(twoSidedPlane).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: {
+            statistics: new ModelExperimentalStatistics(),
+            debugWireframe: true,
+          },
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_DOUBLE_SIDED_MATERIAL",
         ]);
       });
     });
