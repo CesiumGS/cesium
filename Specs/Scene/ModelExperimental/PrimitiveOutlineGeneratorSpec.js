@@ -253,39 +253,33 @@ describe(
 
       // prettier-ignore
       let expectedIndices = new Uint8Array([
-      0, 1, 4,
-      9, 4, 3,
-      1, 2, 4,
-      4, 2, 5,
-      10, 4, 6,
-      6, 4, 7,
-      4, 5, 8,
-      4, 8, 11
-    ]);
-      let expectedVertexCopies = {
-        0: 9,
-        3: 10,
-        7: 11,
-      };
+        0, 1, 4,
+        9, 4, 3,
+        1, 2, 4,
+        4, 2, 5,
+        10, 4, 6,
+        6, 4, 7,
+        4, 5, 8,
+        4, 8, 11
+      ]);
       // prettier-ignore
       let expectedOutlineCoordinates = new Float32Array([ 
-      0, 1, 0,
-      0, 1, 0,
-      0, 1, 0,
-      0, 0, 0,
-      0, 0, 0,
-      0, 1, 0,
-      1, 0, 0,
-      1, 0, 0,
-      0, 1, 0,
-      0, 0, 0,
-      1, 0, 0,
-      0, 1, 0
-    ]);
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 1, 0,
+        1, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0
+      ]);
       let expectedExtraVertices = [0, 3, 7];
 
       expect(generator.updatedTriangleIndices).toEqual(expectedIndices);
-      expect(generator._vertexCopies).toEqual(expectedVertexCopies);
       expect(generator.outlineCoordinates).toEqual(expectedOutlineCoordinates);
       expect(generator._extraVertices).toEqual(expectedExtraVertices);
 
@@ -299,33 +293,29 @@ describe(
 
       // prettier-ignore
       expectedIndices = new Uint8Array([
-      0, 2, 1,
-      3, 4, 5,
-      6, 7, 8,
-      0, 10, 9
-    ]);
-      expectedVertexCopies = {
-        3: 9,
-        6: 10,
-      };
+        0, 2, 1,
+        3, 4, 5,
+        6, 7, 8,
+        0, 10, 9
+      ]);
+
       // prettier-ignore
       expectedOutlineCoordinates = new Float32Array([
-      1, 1, 0,
-      1, 0, 0,
-      0, 1, 0,
-      1, 1, 0,
-      0, 1, 0,
-      1, 0, 0,
-      1, 1, 0,
-      0, 1, 0,
-      1, 0, 0,
-      1, 0, 1,
-      0, 1, 1
-    ]);
+        1, 1, 0,
+        1, 0, 0,
+        0, 1, 0,
+        1, 1, 0,
+        0, 1, 0,
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0,
+        1, 0, 0,
+        1, 0, 1,
+        0, 1, 1
+      ]);
       expectedExtraVertices = [3, 6];
 
       expect(generator.updatedTriangleIndices).toEqual(expectedIndices);
-      expect(generator._vertexCopies).toEqual(expectedVertexCopies);
       expect(generator.outlineCoordinates).toEqual(expectedOutlineCoordinates);
       expect(generator._extraVertices).toEqual(expectedExtraVertices);
     });
@@ -443,19 +433,19 @@ describe(
       let result = generator.updateAttribute(geometry.vertices);
       // prettier-ignore
       let expectedVertices = new Float32Array([
-      -1, -1, 0,
-      0, -1, 0,
-      1, -1, 0,
-      -1, 0, 0,
-      0, 0, 0,
-      1, 0, 0,
-      -1, 1, 0,
-      0, 1, 0,
-      1, 1, 0,
-      -1, -1, 0, // copy of vertex 0
-      -1, 0, 0, // copy of vertex 3
-      0, 1, 0, // copy of vertex 7
-    ]);
+        -1, -1, 0,
+        0, -1, 0,
+        1, -1, 0,
+        -1, 0, 0,
+        0, 0, 0,
+        1, 0, 0,
+        -1, 1, 0,
+        0, 1, 0,
+        1, 1, 0,
+        -1, -1, 0, // copy of vertex 0
+        -1, 0, 0, // copy of vertex 3
+        0, 1, 0, // copy of vertex 7
+      ]);
       expect(result).toEqual(expectedVertices);
 
       geometry = createTrickyGeometry();
@@ -471,18 +461,18 @@ describe(
       result = generator.updateAttribute(geometry.vertices);
       // prettier-ignore
       expectedVertices = new Float32Array([
-      -1, 1, 0,
-      -2, 2, 0,
-      -1, 2, 0,
-      1, 1, 0,
-      2, 2, 0,
-      1, 2, 0,
-      0, 0, 0,
-      -1, -1, 0,
-      -1, 1, 0,
-      1, 1, 0, // copy of vertex 3
-      0, 0, 0, // copy of vertex 6
-    ]);
+        -1, 1, 0,
+        -2, 2, 0,
+        -1, 2, 0,
+        1, 1, 0,
+        2, 2, 0,
+        1, 2, 0,
+        0, 0, 0,
+        -1, -1, 0,
+        -1, 1, 0,
+        1, 1, 0, // copy of vertex 3
+        0, 0, 0, // copy of vertex 6
+      ]);
       expect(result).toEqual(expectedVertices);
     });
 
