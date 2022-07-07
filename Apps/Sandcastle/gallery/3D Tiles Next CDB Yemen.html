@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load a 3D Tile Next tileset converted from CDB."
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      table,
+      th,
+      td {
+        border: 1px solid white;
+        border-collapse: collapse;
+      }
+      tt {
+        padding: 8px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {});
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T07:27:37.016064475348684937Z"
+        );
+        const scene = viewer.scene;
+        scene.light.intensity = 7.0;
+
+        // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
+        const terrainTileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(667809),
+          })
+        );
+        const buildingsTileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(666747),
+            maximumScreenSpaceError: 12,
+          })
+        );
+
+        const cameraTransforms = {
+          tileset: {
+            destination: new Cesium.Cartesian3(
+              4397999.822774582,
+              4404502.67774069,
+              1397782.4709840622
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.29335588497705106,
+              -0.6066709587467911,
+              0.7388454997917905
+            ),
+            up: new Cesium.Cartesian3(
+              0.6240972421637774,
+              0.46391380837591956,
+              0.6287182283994301
+            ),
+          },
+          airport: {
+            destination: new Cesium.Cartesian3(
+              4394719.151490939,
+              4402317.401942875,
+              1406608.6602404779
+            ),
+            direction: new Cesium.Cartesian3(
+              0.4146699515908668,
+              -0.8887814163588482,
+              0.1952342828060377
+            ),
+            up: new Cesium.Cartesian3(
+              0.8415067525520951,
+              0.4561872920946922,
+              0.28941240460723
+            ),
+          },
+          crater: {
+            destination: new Cesium.Cartesian3(
+              4398179.160380196,
+              4402518.469409466,
+              1399161.7612076725
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.2800903637088597,
+              -0.6348021519070498,
+              0.7201219452923355
+            ),
+            up: new Cesium.Cartesian3(
+              0.6319189548885261,
+              0.4427783126727723,
+              0.6361020360596605
+            ),
+          },
+          port: {
+            destination: new Cesium.Cartesian3(
+              4399698.85724341,
+              4399019.639078034,
+              1405153.7766045567
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.5651458936543287,
+              0.17696574231117793,
+              -0.8057873447342694
+            ),
+            up: new Cesium.Cartesian3(
+              0.4886488937394081,
+              0.8587605935024302,
+              -0.15411846642958343
+            ),
+          },
+        };
+
+        function flyCameraTo(cameraTransform, duration) {
+          // Fly to a nice overview of the city.
+          viewer.camera.flyTo({
+            duration: duration,
+            destination: cameraTransform.destination,
+            orientation: {
+              direction: cameraTransform.direction,
+              up: cameraTransform.up,
+            },
+            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+          });
+        }
+
+        buildingsTileset.readyPromise.then(function (tileset) {
+          const center = Cesium.Cartesian3.fromDegrees(
+            45.04192,
+            12.753525,
+            2000
+          );
+          const heading = Cesium.Math.toRadians(50.0);
+          const pitch = Cesium.Math.toRadians(-20.0);
+          const range = 5000.0;
+
+          flyCameraTo(cameraTransforms.tileset);
+        });
+
+        // --- Style ---
+
+        const buildingStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${HGT} !== undefined && ${HGT} < 5", "color('#f5fd2d')"],
+              [
+                "${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10",
+                "color('#d3a34a')",
+              ],
+              [
+                "${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15",
+                "color('#947e75')",
+              ],
+              [
+                "${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20",
+                "color('#565a9f')",
+              ],
+              ["${HGT} !== undefined && ${HGT} > 20", "color('#223bc3')"],
+              ["true", "color('white')"],
+            ],
+          },
+        });
+
+        const terrainStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${name} === 'OCEAN'", "color('#436d9d')"],
+              ["${name} === 'LAKE'", "color('#3987c9')"],
+              ["${name} === 'CALCAREOUS'", "color('#BBB6B1')"],
+              ["${name} === 'GRASS'", "color('#567d46')"],
+              ["${name} === 'FOREST'", "color('green')"],
+              ["${name} === 'CITY'", "color('lightgray')"],
+              ["${name} === 'ASPHALTROAD'", "color('#434343')"],
+              ["${name} === 'ASPHALT'", "color('#463d39')"],
+              ["${name} === 'CONCRETE'", "color('#b9b4ab')"],
+              ["${name} === 'DRYGROUND'", "color('#9B7653')"],
+              ["${name} === 'WETGROUND'", "color('#5a4332')"],
+              ["${name} === 'SAND'", "color('gold')"],
+              ["true", "color('#9B7653')"],
+            ],
+          },
+        });
+
+        // --- Picking ---
+
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+        const metadataOverlay = document.createElement("div");
+        viewer.container.appendChild(metadataOverlay);
+        metadataOverlay.className = "backdrop";
+        metadataOverlay.style.display = "none";
+        metadataOverlay.style.position = "absolute";
+        metadataOverlay.style.bottom = "0";
+        metadataOverlay.style.left = "0";
+        metadataOverlay.style["pointer-events"] = "none";
+        metadataOverlay.style.padding = "4px";
+        metadataOverlay.style.backgroundColor = "#303030";
+        metadataOverlay.style.whiteSpace = "pre-line";
+        metadataOverlay.style.fontSize = "16px";
+        metadataOverlay.style.borderRadius = "4px";
+
+        let tableHtmlScratch;
+        let materialsScratch;
+        let weightsScratch;
+        let i;
+
+        const highlighted = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        const selected = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            // If a feature was previously highlighted, undo the highlight
+            if (Cesium.defined(highlighted.feature)) {
+              highlighted.feature.color = highlighted.originalColor;
+              highlighted.feature = undefined;
+            }
+
+            const feature = scene.pick(movement.endPosition);
+            const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+
+            const isTerrainFeature =
+              featurePicked && feature.hasProperty("substrates");
+            const isBuildingFeature =
+              featurePicked && feature.hasProperty("HGT");
+
+            if (isTerrainFeature) {
+              metadataOverlay.style.display = "block";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
+
+              tableHtmlScratch = `<table><thead><tr><td>Material:</td><th><tt>${feature.getProperty(
+                "name"
+              )}</tt></tr></thead><tbody>`;
+
+              materialsScratch = feature.getProperty("substrates");
+              weightsScratch = feature.getProperty("weights");
+              tableHtmlScratch +=
+                "<tr><td colspan='2' style='text-align: center;'><b>Substrates</b></td></tr>";
+
+              for (i = 0; i < materialsScratch.length; i++) {
+                tableHtmlScratch += `<tr><td><tt>${materialsScratch[i].slice(
+                  3
+                )}</tt></td><td style='text-align: right;'><tt>${
+                  weightsScratch[i]
+                }%</tt></td></tr>`;
+              }
+              tableHtmlScratch += "</tbody></table>";
+              metadataOverlay.innerHTML = tableHtmlScratch;
+            } else {
+              metadataOverlay.style.display = "none";
+            }
+
+            if (isBuildingFeature) {
+              // Highlight the feature if it's not already selected.
+              if (feature !== selected.feature) {
+                highlighted.feature = feature;
+                Cesium.Color.clone(feature.color, highlighted.originalColor);
+                feature.color = Cesium.Color.MAGENTA;
+              }
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction(function (movement) {
+          // If a feature was previously selected, undo the highlight
+          if (Cesium.defined(selected.feature)) {
+            selected.feature.color = selected.originalColor;
+            selected.feature = undefined;
+          }
+
+          const feature = scene.pick(movement.position);
+          const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+          const isBuildingFeature = featurePicked && feature.hasProperty("HGT");
+
+          if (isBuildingFeature) {
+            // Select the feature if it's not already selected
+            if (selected.feature === feature) {
+              return;
+            }
+            selected.feature = feature;
+
+            // Save the selected feature's original color
+            if (feature === highlighted.feature) {
+              Cesium.Color.clone(
+                highlighted.originalColor,
+                selected.originalColor
+              );
+              highlighted.feature = undefined;
+            } else {
+              Cesium.Color.clone(feature.color, selected.originalColor);
+            }
+            feature.color = Cesium.Color.LIME;
+
+            tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
+            tableHtmlScratch +=
+              "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
+            const metadataClass =
+              feature.content.batchTable._propertyTable.class;
+            const propertyIds = feature.getPropertyIds();
+            const length = propertyIds.length;
+            for (let i = 0; i < length; ++i) {
+              const propertyId = propertyIds[i];
+
+              // Skip these properties, since they are always empty.
+              if (
+                propertyId === "APID" ||
+                propertyId === "FACC" ||
+                propertyId === "RWID"
+              ) {
+                continue;
+              }
+
+              const propertyValue = feature.getProperty(propertyId);
+              const property = metadataClass.properties[propertyId];
+
+              const propertyType = Cesium.defaultValue(
+                property.componentType,
+                property.type
+              );
+              tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${propertyType}</td><td>${propertyValue}</td></tr>`;
+            }
+            tableHtmlScratch +=
+              "<tr><th colspan='4'><i style='font-size:10px'>Hover on a row for description</i></th></tr></tbody></table>";
+            viewer.selectedEntity.description = tableHtmlScratch;
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // Hide the terrain metadata overlay when the mouse is over the info box, to prevent overlaps.
+        const infoBoxContainer = document
+          .getElementsByClassName("cesium-viewer-infoBoxContainer")
+          .item(0);
+        infoBoxContainer.onmouseover = function (e) {
+          metadataOverlay.style.display = "none";
+        };
+
+        // --- UI ---
+
+        const locations = [
+          {
+            text: "Overview",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.tileset);
+            },
+          },
+          {
+            text: "Airport",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.airport);
+            },
+          },
+          {
+            text: "Crater",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.crater);
+            },
+          },
+          {
+            text: "Port",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.port);
+            },
+          },
+        ];
+
+        function resetHighlight() {
+          if (Cesium.defined(selected.feature)) {
+            selected.feature.color = selected.originalColor;
+            selected.feature = undefined;
+          }
+          if (Cesium.defined(highlighted.feature)) {
+            highlighted.feature.color = highlighted.originalColor;
+            highlighted.feature = undefined;
+          }
+        }
+
+        const modes = [
+          {
+            text: "No style",
+            onselect: function () {
+              resetHighlight();
+              buildingsTileset.style = undefined;
+              terrainTileset.style = undefined;
+            },
+          },
+          {
+            text: "Style buildings based on height",
+            onselect: function () {
+              resetHighlight();
+              buildingsTileset.style = buildingStyle;
+              terrainTileset.style = undefined;
+            },
+          },
+          {
+            text: "Style terrain based on materials",
+            onselect: function () {
+              buildingsTileset.style = undefined;
+              terrainTileset.style = terrainStyle;
+            },
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(locations);
+        Sandcastle.addToolbarMenu(modes);
+        Sandcastle.addToggleButton(
+          "Enable terrain picking",
+          enablePicking,
+          function (checked) {
+            if (enablePicking) {
+              metadataOverlay.style.display = "none";
+            }
+
+            enablePicking = checked;
+          }
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

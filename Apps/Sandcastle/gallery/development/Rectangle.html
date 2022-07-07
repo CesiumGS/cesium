@@ -29,15 +29,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a red rectangle on the globe surface.
-        var redRectangleInstance = new Cesium.GeometryInstance({
+        const redRectangleInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleGeometry({
             rectangle: Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -55,7 +55,7 @@
         // extruded side.  The height option is used to specify the distnace
         // from the globe surface to the rectangle.  The rotation
         // option can also be used to rotate the rectangle.
-        var greenRectangleInstance = new Cesium.GeometryInstance({
+        const greenRectangleInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleGeometry({
             rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
             rotation: Cesium.Math.toRadians(45),
@@ -81,10 +81,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -22,10 +22,14 @@
 # Re-ignore a few things caught above
 **/*.min.js
 Source/Cesium.js
+Source/Scene/GltfPipeline/**
 Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/Workers/**/*
+Specs/jasmine/**
 Apps/Sandcastle/ThirdParty
+Tools/jsdoc/cesium_template/static/javascript/prism.js
+Tools/jsdoc/cesium_template/static/styles/prism.css
 
 !Source/Workers/cesiumWorkerBootstrapper.js
 !Source/Workers/transferTypedArrayTest.js

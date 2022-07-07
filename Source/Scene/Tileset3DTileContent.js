@@ -1,9 +1,8 @@
 import destroyObject from "../Core/destroyObject.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Represents content for a tile in a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset whose
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset whose
  * content points to another 3D Tiles tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
@@ -18,12 +17,13 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
 
-  initialize(this, json);
+  this._metadata = undefined;
+  this._group = undefined;
+
+  this._readyPromise = initialize(this, json);
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
@@ -71,7 +71,7 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -99,19 +99,28 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  metadata: {
     get: function () {
-      return this._groupMetadata;
+      return this._metadata;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._metadata = value;
+    },
+  },
+
+  group: {
+    get: function () {
+      return this._group;
+    },
+    set: function (value) {
+      this._group = value;
     },
   },
 });
 
 function initialize(content, json) {
   content._tileset.loadTileset(content._resource, json, content._tile);
-  content._readyPromise.resolve(content);
+  return Promise.resolve(content);
 }
 
 /**

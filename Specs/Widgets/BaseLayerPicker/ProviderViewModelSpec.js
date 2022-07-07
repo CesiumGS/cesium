@@ -3,14 +3,14 @@ import { ProviderViewModel } from "../../../Source/Cesium.js";
 import { createCommand } from "../../../Source/Cesium.js";
 
 describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
-  var spyCreationFunction;
+  let spyCreationFunction;
   beforeEach(function () {
     spyCreationFunction = jasmine.createSpy("creationFunction");
   });
 
   describe("with observables", function () {
     it("constructor sets expected parameters", function () {
-      var options = {
+      const options = {
         name: knockout.observable("name"),
         tooltip: knockout.observable("tooltip"),
         iconUrl: knockout.observable("iconUrl"),
@@ -18,7 +18,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
         creationFunction: createCommand(spyCreationFunction),
       };
 
-      var viewModel = new ProviderViewModel(options);
+      const viewModel = new ProviderViewModel(options);
       expect(viewModel.name).toBe(options.name());
       expect(viewModel.tooltip).toBe(options.tooltip());
       expect(viewModel.iconUrl).toBe(options.iconUrl());
@@ -30,7 +30,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no name", function () {
-      var options = {
+      const options = {
         tooltip: knockout.observable("tooltip"),
         iconUrl: knockout.observable("iconUrl"),
         creationFunction: createCommand(spyCreationFunction),
@@ -42,7 +42,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no tooltip", function () {
-      var options = {
+      const options = {
         name: knockout.observable("name"),
         iconUrl: knockout.observable("iconUrl"),
         creationFunction: createCommand(spyCreationFunction),
@@ -54,7 +54,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no iconUrl", function () {
-      var options = {
+      const options = {
         name: knockout.observable("name"),
         tooltip: knockout.observable("tooltip"),
         creationFunction: createCommand(spyCreationFunction),
@@ -66,7 +66,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no creationFunction", function () {
-      var options = {
+      const options = {
         name: knockout.observable("name"),
         tooltip: knockout.observable("tooltip"),
         iconUrl: knockout.observable("iconUrl"),
@@ -80,14 +80,14 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
 
   describe("with values", function () {
     it("constructor sets expected parameters", function () {
-      var options = {
+      const options = {
         name: "name",
         tooltip: "tooltip",
         iconUrl: "iconUrl",
         creationFunction: spyCreationFunction,
       };
 
-      var viewModel = new ProviderViewModel(options);
+      const viewModel = new ProviderViewModel(options);
       expect(viewModel.name).toEqual(options.name);
       expect(viewModel.tooltip).toEqual(options.tooltip);
       expect(viewModel.iconUrl).toEqual(options.iconUrl);
@@ -98,7 +98,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no name", function () {
-      var options = {
+      const options = {
         tooltip: "tooltip",
         iconUrl: "iconUrl",
         creationFunction: spyCreationFunction,
@@ -110,7 +110,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no tooltip", function () {
-      var options = {
+      const options = {
         name: "name",
         iconUrl: "iconUrl",
         creationFunction: spyCreationFunction,
@@ -122,7 +122,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no iconUrl", function () {
-      var options = {
+      const options = {
         name: "name",
         tooltip: "tooltip",
         creationFunction: spyCreationFunction,
@@ -134,7 +134,7 @@ describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
     });
 
     it("constructor throws with no creationFunction", function () {
-      var options = {
+      const options = {
         name: "name",
         tooltip: "tooltip",
         iconUrl: "iconUrl",

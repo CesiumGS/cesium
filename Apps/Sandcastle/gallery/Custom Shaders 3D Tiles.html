@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create 3D models using glTF." />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        const tileset = new Cesium.Cesium3DTileset({
+          url: Cesium.IonResource.fromAssetId(75343),
+          customShader: new Cesium.CustomShader({
+            lightingModel: Cesium.LightingModel.UNLIT,
+            fragmentShaderText: `
+              // Color tiles by distance to the camera
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+              {
+                  material.diffuse = vec3(0.0, 0.0, 1.0);
+                  material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
+              }
+              `,
+          }),
+        });
+        viewer.scene.primitives.add(tileset);
+        const initialPosition = Cesium.Cartesian3.fromDegrees(
+          -74.01881302800248,
+          40.69114333714821,
+          753
+        );
+        const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+          21.27879878293835,
+          -21.34390550872461,
+          0.0716951918898415
+        );
+        viewer.scene.camera.setView({
+          destination: initialPosition,
+          orientation: initialOrientation,
+          endTransform: Cesium.Matrix4.IDENTITY,
+        });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

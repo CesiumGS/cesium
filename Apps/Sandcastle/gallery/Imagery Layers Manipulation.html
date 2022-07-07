@@ -104,15 +104,15 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayerPicker: false,
         });
-        var imageryLayers = viewer.imageryLayers;
+        const imageryLayers = viewer.imageryLayers;
 
-        var viewModel = {
+        const viewModel = {
           layers: [],
           baseLayers: [],
           upLayer: null,
@@ -149,7 +149,7 @@
             return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
           },
         };
-        var baseLayers = viewModel.baseLayers;
+        const baseLayers = viewModel.baseLayers;
 
         Cesium.knockout.track(viewModel);
 
@@ -267,7 +267,7 @@
         }
 
         function addBaseLayerOption(name, imageryProvider) {
-          var layer;
+          let layer;
           if (typeof imageryProvider === "undefined") {
             layer = imageryLayers.get(0);
             viewModel.selectedLayer = layer;
@@ -280,7 +280,7 @@
         }
 
         function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
-          var layer = imageryLayers.addImageryProvider(imageryProvider);
+          const layer = imageryLayers.addImageryProvider(imageryProvider);
           layer.alpha = Cesium.defaultValue(alpha, 0.5);
           layer.show = Cesium.defaultValue(show, true);
           layer.name = name;
@@ -288,9 +288,9 @@
         }
 
         function updateLayerList() {
-          var numLayers = imageryLayers.length;
+          const numLayers = imageryLayers.length;
           viewModel.layers.splice(0, viewModel.layers.length);
-          for (var i = numLayers - 1; i >= 0; --i) {
+          for (let i = numLayers - 1; i >= 0; --i) {
             viewModel.layers.push(imageryLayers.get(i));
           }
         }
@@ -299,24 +299,24 @@
         updateLayerList();
 
         //Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
           .getObservable(viewModel, "selectedLayer")
           .subscribe(function (baseLayer) {
             // Handle changes to the drop-down base layer selector.
-            var activeLayerIndex = 0;
-            var numLayers = viewModel.layers.length;
-            for (var i = 0; i < numLayers; ++i) {
+            let activeLayerIndex = 0;
+            const numLayers = viewModel.layers.length;
+            for (let i = 0; i < numLayers; ++i) {
               if (viewModel.isSelectableLayer(viewModel.layers[i])) {
                 activeLayerIndex = i;
                 break;
               }
             }
-            var activeLayer = viewModel.layers[activeLayerIndex];
-            var show = activeLayer.show;
-            var alpha = activeLayer.alpha;
+            const activeLayer = viewModel.layers[activeLayerIndex];
+            const show = activeLayer.show;
+            const alpha = activeLayer.alpha;
             imageryLayers.remove(activeLayer, false);
             imageryLayers.add(baseLayer, numLayers - activeLayerIndex - 1);
             baseLayer.show = show;
@@ -326,10 +326,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

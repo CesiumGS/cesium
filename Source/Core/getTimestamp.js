@@ -8,7 +8,7 @@
  *
  * @returns {Number} The timestamp in milliseconds since some unspecified reference time.
  */
-var getTimestamp;
+let getTimestamp;
 
 if (
   typeof performance !== "undefined" &&

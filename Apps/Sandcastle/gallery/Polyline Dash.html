@@ -29,12 +29,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var redLine = viewer.entities.add({
+        const redLine = viewer.entities.add({
           name: "Red dashed line",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -52,7 +52,7 @@
           },
         });
 
-        var blueLine = viewer.entities.add({
+        const blueLine = viewer.entities.add({
           name: "Wide blue dashed line with a gap color",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -71,7 +71,7 @@
           },
         });
 
-        var orangeLine = viewer.entities.add({
+        const orangeLine = viewer.entities.add({
           name: "Orange dashed line with a short dash length",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -90,7 +90,7 @@
           },
         });
 
-        var cyanLine = viewer.entities.add({
+        const cyanLine = viewer.entities.add({
           name: "Cyan dashed line with a dash pattern.",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -109,7 +109,7 @@
           },
         });
 
-        var yellowLine = viewer.entities.add({
+        const yellowLine = viewer.entities.add({
           name: "Yellow dashed line with a dash pattern.",
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -131,10 +131,10 @@
         viewer.zoomTo(viewer.entities);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

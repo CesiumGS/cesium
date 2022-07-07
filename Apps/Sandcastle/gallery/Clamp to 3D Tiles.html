@@ -32,18 +32,18 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var scene = viewer.scene;
-        var clock = viewer.clock;
+        const scene = viewer.scene;
+        const clock = viewer.clock;
 
-        var entity;
-        var positionProperty;
-        var dataSourcePromise = Cesium.CzmlDataSource.load(
+        let entity;
+        let positionProperty;
+        const dataSourcePromise = Cesium.CzmlDataSource.load(
           "../../SampleData/ClampToGround.czml"
         );
         viewer.dataSources.add(dataSourcePromise).then(function (dataSource) {
@@ -51,7 +51,7 @@
           positionProperty = entity.position;
         });
 
-        var tileset = scene.primitives.add(
+        const tileset = scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(40866),
           })
@@ -79,18 +79,18 @@
 
         function start() {
           clock.shouldAnimate = true;
-          var objectsToExclude = [entity];
+          const objectsToExclude = [entity];
           scene.postRender.addEventListener(function () {
-            var position = positionProperty.getValue(clock.currentTime);
+            const position = positionProperty.getValue(clock.currentTime);
             entity.position = scene.clampToHeight(position, objectsToExclude);
           });
         }
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

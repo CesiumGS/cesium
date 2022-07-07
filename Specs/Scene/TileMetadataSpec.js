@@ -1,14 +1,20 @@
 import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
 
 describe("Scene/TileMetadata", function () {
-  var tileClass = new MetadataClass({
+  const tileClassWithNoProperties = new MetadataClass({
+    id: "tile",
+    class: {},
+  });
+
+  const tileClass = new MetadataClass({
     id: "tile",
     class: {
       properties: {
         color: {
-          type: "ARRAY",
+          type: "SCALAR",
           componentType: "FLOAT32",
-          componentCount: 8,
+          array: true,
+          count: 8,
           semantic: "COLOR",
         },
         isSquare: {
@@ -20,7 +26,7 @@ describe("Scene/TileMetadata", function () {
     },
   });
 
-  var tileExtension = {
+  const tileExtension = {
     class: "tile",
     properties: {
       color: [1.0, 0.5, 0.0],
@@ -28,7 +34,7 @@ describe("Scene/TileMetadata", function () {
     },
   };
 
-  var tileMetadata;
+  let tileMetadata;
   beforeEach(function () {
     tileMetadata = new TileMetadata({
       tile: tileExtension,
@@ -45,27 +51,36 @@ describe("Scene/TileMetadata", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws without class", function () {
+    expect(function () {
+      tileMetadata = new TileMetadata({
+        tile: {},
+        class: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("creates tile metadata with default values", function () {
-    var metadata = new TileMetadata({
+    const metadata = new TileMetadata({
       tile: {},
+      class: tileClassWithNoProperties,
     });
 
-    expect(metadata.class).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
     expect(metadata.extensions).toBeUndefined();
   });
 
   it("creates tile metadata", function () {
-    var properties = {
+    const properties = {
       color: [0.0, 0.0, 1.0],
       isSquare: false,
     };
 
-    var extras = {
+    const extras = {
       version: "0.0",
     };
 
-    var extensions = {
+    const extensions = {
       "3DTILES_extension": {},
     };
     tileMetadata = new TileMetadata({
@@ -101,13 +116,15 @@ describe("Scene/TileMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var propertyIds = tileMetadata.getPropertyIds([]);
+    const propertyIds = tileMetadata.getPropertyIds([]);
     propertyIds.sort();
     expect(propertyIds).toEqual(["color", "isSquare"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
-    expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
+  it("getProperty returns throws if a property does not exist", function () {
+    expect(function () {
+      return tileMetadata.getProperty("height");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

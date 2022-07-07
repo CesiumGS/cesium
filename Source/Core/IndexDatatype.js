@@ -9,7 +9,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var IndexDatatype = {
+const IndexDatatype = {
   /**
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.
@@ -46,7 +46,7 @@ var IndexDatatype = {
  *
  * @example
  * // Returns 2
- * var size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
+ * const size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
  */
 IndexDatatype.getSizeInBytes = function (indexDatatype) {
   switch (indexDatatype) {
@@ -171,4 +171,29 @@ IndexDatatype.createTypedArrayFromArrayBuffer = function (
 
   return new Uint16Array(sourceArray, byteOffset, length);
 };
+
+/**
+ * Gets the {@link IndexDatatype} for the provided TypedArray instance.
+ *
+ * @param {Uint8Array|Uint16Array|Uint32Array} array The typed array.
+ * @returns {IndexDatatype} The IndexDatatype for the provided array, or undefined if the array is not a Uint8Array, Uint16Array, or Uint32Array.
+ */
+IndexDatatype.fromTypedArray = function (array) {
+  if (array instanceof Uint8Array) {
+    return IndexDatatype.UNSIGNED_BYTE;
+  }
+  if (array instanceof Uint16Array) {
+    return IndexDatatype.UNSIGNED_SHORT;
+  }
+  if (array instanceof Uint32Array) {
+    return IndexDatatype.UNSIGNED_INT;
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be a Uint8Array, Uint16Array, or Uint32Array."
+  );
+  //>>includeEnd('debug');
+};
+
 export default Object.freeze(IndexDatatype);

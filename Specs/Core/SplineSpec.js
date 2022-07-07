@@ -1,6 +1,7 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { HermiteSpline } from "../../Source/Cesium.js";
 import { Spline } from "../../Source/Cesium.js";
+import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/Spline", function () {
   it("contructor throws", function () {
@@ -10,7 +11,7 @@ describe("Core/Spline", function () {
   });
 
   it("wraps time that is out-of-bounds", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -20,7 +21,7 @@ describe("Core/Spline", function () {
   });
 
   it("clamps time that is out-of-bounds", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -30,7 +31,7 @@ describe("Core/Spline", function () {
   });
 
   it("wrapTime throws without a time", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -41,7 +42,7 @@ describe("Core/Spline", function () {
   });
 
   it("clampTime throws without a time", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -52,7 +53,7 @@ describe("Core/Spline", function () {
   });
 
   it("findTimeInterval throws without a time", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -63,7 +64,7 @@ describe("Core/Spline", function () {
   });
 
   it("findTimeInterval throws when time is out of range", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
       times: [0.0, 1.0, 2.0],
     });
@@ -74,7 +75,7 @@ describe("Core/Spline", function () {
   });
 
   it("findTimeInterval", function () {
-    var spline = HermiteSpline.createNaturalCubic({
+    const spline = HermiteSpline.createNaturalCubic({
       points: [
         Cartesian3.ZERO,
         Cartesian3.UNIT_X,
@@ -83,7 +84,7 @@ describe("Core/Spline", function () {
       ],
       times: [0.0, 1.0, 2.0, 4.0],
     });
-    var times = spline.times;
+    const times = spline.times;
 
     expect(spline.findTimeInterval(times[0])).toEqual(0);
 
@@ -100,5 +101,17 @@ describe("Core/Spline", function () {
 
     // jump far back
     expect(spline.findTimeInterval(times[0], times.length - 1)).toEqual(0);
+  });
+
+  it("getPointType throws for invalid point type", function () {
+    expect(function () {
+      Spline.getPointType({});
+    }).toThrowDeveloperError();
+  });
+
+  it("getPointType", function () {
+    expect(Spline.getPointType(1.0)).toEqual(Number);
+    expect(Spline.getPointType(new Cartesian3())).not.toThrowDeveloperError();
+    expect(Spline.getPointType(new Quaternion())).not.toThrowDeveloperError();
   });
 });

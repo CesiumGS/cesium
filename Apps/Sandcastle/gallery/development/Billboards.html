@@ -32,16 +32,16 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         function addBillboard() {
           Sandcastle.declare(addBillboard);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -53,7 +53,7 @@
         function setBillboardProperties() {
           Sandcastle.declare(setBillboardProperties);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -77,13 +77,13 @@
         function changeBillboardProperties() {
           Sandcastle.declare(changeBillboardProperties);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
 
           // add() returns a Billboard object containing functions to change
           // the billboard's position and appearance.
-          var b = billboards.add({
+          const b = billboards.add({
             image: "../images/Cesium_Logo_overlay.png",
           });
 
@@ -99,16 +99,16 @@
         function sizeBillboardInMeters() {
           Sandcastle.declare(sizeBillboardInMeters);
 
-          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-          var heading = Cesium.Math.toRadians(50.0);
-          var pitch = Cesium.Math.toRadians(-20.0);
-          var range = 100.0;
+          const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const heading = Cesium.Math.toRadians(50.0);
+          const pitch = Cesium.Math.toRadians(-20.0);
+          const range = 100.0;
           viewer.camera.lookAt(
             center,
             new Cesium.HeadingPitchRange(heading, pitch, range)
           );
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -121,10 +121,10 @@
         function addMultipleBillboards() {
           Sandcastle.declare(addMultipleBillboards);
 
-          var logoUrl = "../images/Cesium_Logo_overlay.png";
-          var facilityUrl = "../images/facility.gif";
+          const logoUrl = "../images/Cesium_Logo_overlay.png";
+          const facilityUrl = "../images/facility.gif";
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -144,7 +144,7 @@
         function scaleByDistance() {
           Sandcastle.declare(scaleByDistance);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -157,7 +157,7 @@
         function fadeByDistance() {
           Sandcastle.declare(fadeByDistance);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -174,52 +174,49 @@
 
         function offsetByDistance() {
           Sandcastle.declare(offsetByDistance);
-          Cesium.when.all(
-            [
-              Cesium.Resource.createIfNeeded(
-                "../images/Cesium_Logo_overlay.png"
-              ).fetchImage(),
-              Cesium.Resource.createIfNeeded(
-                "../images/facility.gif"
-              ).fetchImage(),
-            ],
-            function (images) {
-              var billboards = scene.primitives.add(
-                new Cesium.BillboardCollection()
-              );
+          Promise.all([
+            Cesium.Resource.createIfNeeded(
+              "../images/Cesium_Logo_overlay.png"
+            ).fetchImage(),
+            Cesium.Resource.createIfNeeded(
+              "../images/facility.gif"
+            ).fetchImage(),
+          ]).then(function (images) {
+            const billboards = scene.primitives.add(
+              new Cesium.BillboardCollection()
+            );
 
-              // As viewer zooms closer to facility billboard,
-              // increase pixelOffset on CesiumLogo billboard to this height
-              var facilityHeight = images[1].height;
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            const facilityHeight = images[1].height;
 
-              // colocated billboards, separate as viewer gets closer
-              billboards.add({
-                image: images[1],
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-              });
-              billboards.add({
-                image: images[0],
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
-                pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
-                  1.0e3,
-                  1.0,
-                  1.5e6,
-                  0.0
-                ),
-                translucencyByDistance: new Cesium.NearFarScalar(
-                  1.0e3,
-                  1.0,
-                  1.5e6,
-                  0.1
-                ),
-              });
-            }
-          );
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+              image: images[1],
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            });
+            billboards.add({
+              image: images[0],
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
+              pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
+                1.0e3,
+                1.0,
+                1.5e6,
+                0.0
+              ),
+              translucencyByDistance: new Cesium.NearFarScalar(
+                1.0e3,
+                1.0,
+                1.5e6,
+                0.1
+              ),
+            });
+          });
         }
 
         function addPointBillboards() {
@@ -231,17 +228,17 @@
           //
           // The 2D canvas can draw much more than circles.  See:
           // https://developer.mozilla.org/en/Canvas_tutorial
-          var canvas = document.createElement("canvas");
+          const canvas = document.createElement("canvas");
           canvas.width = 16;
           canvas.height = 16;
-          var context2D = canvas.getContext("2d");
+          const context2D = canvas.getContext("2d");
           context2D.beginPath();
           context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
           context2D.closePath();
           context2D.fillStyle = "rgb(255, 255, 255)";
           context2D.fill();
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
           billboards.add({
@@ -269,7 +266,7 @@
         function addMarkerBillboards() {
           Sandcastle.declare(addMarkerBillboards);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
 
@@ -309,15 +306,15 @@
         function inReferenceFrame() {
           Sandcastle.declare(inReferenceFrame);
 
-          var billboards = scene.primitives.add(
+          const billboards = scene.primitives.add(
             new Cesium.BillboardCollection()
           );
-          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
           billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             center
           );
 
-          var facilityUrl = "../images/facility.gif";
+          const facilityUrl = "../images/facility.gif";
 
           // center
           billboards.add({
@@ -427,10 +424,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

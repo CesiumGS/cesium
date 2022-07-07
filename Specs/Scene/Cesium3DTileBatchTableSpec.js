@@ -10,6 +10,7 @@ import { ContextLimits } from "../../Source/Cesium.js";
 import { Batched3DModel3DTileContent } from "../../Source/Cesium.js";
 import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
 import { Cesium3DTileStyle } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 import concatTypedArrays from "../concatTypedArrays.js";
@@ -17,44 +18,46 @@ import concatTypedArrays from "../concatTypedArrays.js";
 describe(
   "Scene/Cesium3DTileBatchTable",
   function () {
-    var scene;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var withBatchTableUrl =
+    const withBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-    var withoutBatchTableUrl =
+    const withoutBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
-    var noBatchIdsUrl =
+    const withBatchTableBinaryUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json";
+    const noBatchIdsUrl =
       "./Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
-    var batchTableHierarchyUrl =
+    const batchTableHierarchyUrl =
       "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json";
-    var batchTableHierarchyBinaryUrl =
+    const batchTableHierarchyBinaryUrl =
       "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/tileset.json";
-    var batchTableHierarchyMultipleParentsUrl =
+    const batchTableHierarchyMultipleParentsUrl =
       "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/tileset.json";
-    var batchTableHierarchyNoParentsUrl =
+    const batchTableHierarchyNoParentsUrl =
       "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/tileset.json";
-    var batchTableHierarchyLegacyUrl =
+    const batchTableHierarchyLegacyUrl =
       "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyLegacy/tileset.json";
 
-    var result = new Color();
+    const result = new Color();
 
-    var mockTileset = {
-      _statistics: {
+    const mockTileset = {
+      statistics: {
         texturesByteLength: 0,
       },
       getFeature: function (batchId) {
         return { batchId: batchId };
       },
     };
-    mockTileset._tileset = mockTileset;
+    mockTileset.tileset = mockTileset;
 
     beforeAll(function () {
       scene = createScene();
 
       // One feature is located at the center, point the camera there
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
 
       // Keep the error from logging to the console when running tests
@@ -71,7 +74,7 @@ describe(
     });
 
     it("setShow throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setShow();
       }).toThrowDeveloperError();
@@ -84,14 +87,14 @@ describe(
     });
 
     it("setShow throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setShow(0);
       }).toThrowDeveloperError();
     });
 
     it("setShow sets show", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
       // Show is true by default
       expect(batchTable.getShow(0)).toBe(true);
@@ -103,7 +106,7 @@ describe(
     });
 
     it("getShow throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getShow();
       }).toThrowDeveloperError();
@@ -116,7 +119,7 @@ describe(
     });
 
     it("getShow", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       // Show is true by default
       expect(batchTable.getShow(0)).toEqual(true);
       batchTable.setShow(0, false);
@@ -124,7 +127,7 @@ describe(
     });
 
     it("setColor throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setColor();
       }).toThrowDeveloperError();
@@ -137,14 +140,14 @@ describe(
     });
 
     it("setColor throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setColor(0);
       }).toThrowDeveloperError();
     });
 
     it("setColor", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
       batchTable.setColor(0, Color.YELLOW);
       batchTable.update(mockTileset, scene.frameState);
@@ -152,35 +155,35 @@ describe(
     });
 
     it("setAllColor throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setAllColor();
       }).toThrowDeveloperError();
     });
 
     it("setAllColor", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
       batchTable.setAllColor(Color.YELLOW);
       expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
       expect(batchTable.getColor(1, result)).toEqual(Color.YELLOW);
     });
 
     it("setAllShow throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setAllShow();
       }).toThrowDeveloperError();
     });
 
     it("setAllShow", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
       batchTable.setAllShow(false);
       expect(batchTable.getShow(0)).toBe(false);
       expect(batchTable.getShow(1)).toBe(false);
     });
 
     it("getColor throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getColor();
       }).toThrowDeveloperError();
@@ -193,14 +196,14 @@ describe(
     });
 
     it("getColor throws with undefined result", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getColor(0);
       }).toThrowDeveloperError();
     });
 
     it("getColor", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       // Color is true by default
       expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
       batchTable.setColor(0, Color.YELLOW);
@@ -208,7 +211,7 @@ describe(
     });
 
     it("hasProperty throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.hasProperty();
       }).toThrowDeveloperError();
@@ -221,17 +224,17 @@ describe(
     });
 
     it("hasProperty throws with undefined name", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.hasProperty(0);
       }).toThrowDeveloperError();
     });
 
     it("hasProperty", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         height: [0.0],
       };
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         1,
         batchTableJson
@@ -240,49 +243,49 @@ describe(
       expect(batchTable.hasProperty(0, "id")).toEqual(false);
     });
 
-    it("getPropertyNames throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+    it("getPropertyIds throws with invalid batchId", function () {
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
-        batchTable.getPropertyNames();
+        batchTable.getPropertyIds();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(-1);
+        batchTable.getPropertyIds(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(1);
+        batchTable.getPropertyIds(1);
       }).toThrowDeveloperError();
     });
 
-    it("getPropertyNames", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-      expect(batchTable.getPropertyNames(0)).toEqual([]);
+    it("getPropertyIds", function () {
+      let batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      expect(batchTable.getPropertyIds(0)).toEqual([]);
 
-      var batchTableJson = {
+      const batchTableJson = {
         height: [0.0],
         id: [0],
       };
       batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
-      expect(batchTable.getPropertyNames(0)).toEqual(["height", "id"]);
+      expect(batchTable.getPropertyIds(0)).toEqual(["height", "id"]);
     });
 
-    it("getPropertyNames works with results argument", function () {
-      var batchTableJson = {
+    it("getPropertyIds works with results argument", function () {
+      const batchTableJson = {
         height: [0.0],
         id: [0],
       };
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         1,
         batchTableJson
       );
-      var results = [];
-      var names = batchTable.getPropertyNames(0, results);
+      const results = [];
+      const names = batchTable.getPropertyIds(0, results);
       expect(names).toBe(results);
       expect(names).toEqual(["height", "id"]);
     });
 
     it("getProperty throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getProperty();
       }).toThrowDeveloperError();
@@ -295,17 +298,17 @@ describe(
     });
 
     it("getProperty throws with undefined name", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getProperty(0);
       }).toThrowDeveloperError();
     });
 
     it("getProperty", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      let batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(batchTable.getProperty(0, "height")).toBeUndefined();
 
-      var batchTableJson = {
+      const batchTableJson = {
         height: [1.0],
       };
       batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
@@ -314,7 +317,7 @@ describe(
     });
 
     it("setProperty throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setProperty();
       }).toThrowDeveloperError();
@@ -327,7 +330,7 @@ describe(
     });
 
     it("setProperty throws with undefined name", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.setProperty(0);
       }).toThrowDeveloperError();
@@ -335,7 +338,7 @@ describe(
 
     it("setProperty without existing batch table", function () {
       // Check that a batch table is created with a height of 1.0 for the first resource and undefined for the others
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 3);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 3);
       batchTable.setProperty(0, "height", 1.0);
 
       expect(batchTable._properties.height.length).toEqual(3);
@@ -345,10 +348,10 @@ describe(
     });
 
     it("setProperty with existing batch table", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         height: [1.0, 2.0],
       };
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
         batchTableJson
@@ -360,13 +363,13 @@ describe(
     });
 
     it("setProperty with object value", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         info: [
           { name: "building0", year: 2000 },
           { name: "building1", year: 2001 },
         ],
       };
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
         batchTableJson
@@ -384,13 +387,13 @@ describe(
     });
 
     it("setProperty with array value", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         rooms: [
           ["room1", "room2"],
           ["room3", "room4"],
         ],
       };
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
         batchTableJson
@@ -405,13 +408,13 @@ describe(
     });
 
     it("throws if the binary property does not specify a componentType", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         propertyScalar: {
           byteOffset: 0,
           type: "SCALAR",
         },
       };
-      var batchTableBinary = new Float64Array([0, 1]);
+      const batchTableBinary = new Float64Array([0, 1]);
       expect(function () {
         return new Cesium3DTileBatchTable(
           mockTileset,
@@ -419,17 +422,17 @@ describe(
           batchTableJson,
           batchTableBinary
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if the binary property does not specify a type", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         propertyScalar: {
           byteOffset: 0,
           componentType: "DOUBLE",
         },
       };
-      var batchTableBinary = new Float64Array([0, 1]);
+      const batchTableBinary = new Float64Array([0, 1]);
       expect(function () {
         return new Cesium3DTileBatchTable(
           mockTileset,
@@ -437,11 +440,11 @@ describe(
           batchTableJson,
           batchTableBinary
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if a binary property exists but there is no batchTableBinary", function () {
-      var batchTableJson = {
+      const batchTableJson = {
         propertyScalar: {
           byteOffset: 0,
           componentType: "DOUBLE",
@@ -450,14 +453,14 @@ describe(
       };
       expect(function () {
         return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("getProperty and setProperty work for binary properties", function () {
-      var propertyScalarBinary = new Float64Array([0, 1]);
-      var propertyVec2Binary = new Float32Array([2, 3, 4, 5]);
-      var propertyVec3Binary = new Int32Array([6, 7, 8, 9, 10, 11]);
-      var propertyVec4Binary = new Uint32Array([
+      const propertyScalarBinary = new Float64Array([0, 1]);
+      const propertyVec2Binary = new Float32Array([2, 3, 4, 5]);
+      const propertyVec3Binary = new Int32Array([6, 7, 8, 9, 10, 11]);
+      const propertyVec4Binary = new Uint32Array([
         12,
         13,
         14,
@@ -467,8 +470,17 @@ describe(
         18,
         19,
       ]);
-      var propertyMat2Binary = new Int16Array([20, 21, 22, 23, 24, 25, 26, 27]);
-      var propertyMat3Binary = new Uint16Array([
+      const propertyMat2Binary = new Int16Array([
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+      ]);
+      const propertyMat3Binary = new Uint16Array([
         28,
         29,
         30,
@@ -488,7 +500,7 @@ describe(
         44,
         45,
       ]);
-      var propertyMat4Binary = new Uint8Array([
+      const propertyMat4Binary = new Uint8Array([
         46,
         47,
         48,
@@ -523,7 +535,7 @@ describe(
         77,
       ]);
 
-      var buffers = [
+      const buffers = [
         propertyScalarBinary,
         propertyVec2Binary,
         propertyVec3Binary,
@@ -532,8 +544,8 @@ describe(
         propertyMat3Binary,
         propertyMat4Binary,
       ];
-      var batchTableBinary = concatTypedArrays(buffers);
-      var batchTableJson = {
+      const batchTableBinary = concatTypedArrays(buffers);
+      const batchTableJson = {
         propertyScalar: {
           byteOffset: 0,
           componentType: "DOUBLE",
@@ -571,7 +583,7 @@ describe(
         },
       };
 
-      var batchTable = new Cesium3DTileBatchTable(
+      const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
         batchTableJson,
@@ -689,7 +701,7 @@ describe(
     it("renders tileset with batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
 
           // Each feature in the b3dm file has an id property from 0 to 9,
           // check that the 2nd resource has an id of 2
@@ -716,7 +728,7 @@ describe(
     it("renders tileset without batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
 
           expect(content.getFeature(2).getProperty("id")).toBeUndefined();
 
@@ -727,7 +739,7 @@ describe(
 
     it("renders when vertex texture fetch is not supported", function () {
       // Disable VTF
-      var maximumVertexTextureImageUnits =
+      const maximumVertexTextureImageUnits =
         ContextLimits.maximumVertexTextureImageUnits;
       ContextLimits._maximumVertexTextureImageUnits = 0;
 
@@ -743,12 +755,12 @@ describe(
 
     it("renders with featuresLength greater than maximumTextureSize", function () {
       // Set maximum texture size to 4 temporarily. Batch length of b3dm file is 10.
-      var maximumTextureSize = ContextLimits.maximumTextureSize;
+      const maximumTextureSize = ContextLimits.maximumTextureSize;
       ContextLimits._maximumTextureSize = 4;
 
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           expect(content.featuresLength).toBeGreaterThan(
             ContextLimits._maximumTextureSize
           );
@@ -774,10 +786,10 @@ describe(
     });
 
     function expectRenderTranslucent(tileset) {
-      var batchTable = tileset.root.content.batchTable;
+      const batchTable = tileset.root.content.batchTable;
 
       // Get initial color
-      var opaqueColor;
+      let opaqueColor;
       Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
         opaqueColor = rgba;
       });
@@ -813,7 +825,7 @@ describe(
 
     it("renders translucent style when vertex texture fetch is not supported", function () {
       // Disable VTF
-      var maximumVertexTextureImageUnits =
+      const maximumVertexTextureImageUnits =
         ContextLimits.maximumVertexTextureImageUnits;
       ContextLimits._maximumVertexTextureImageUnits = 0;
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
@@ -826,7 +838,7 @@ describe(
     });
 
     it("isExactClass throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.isExactClass();
       }).toThrowDeveloperError();
@@ -839,14 +851,14 @@ describe(
     });
 
     it("isExactClass throws with undefined className", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.isExactClass(0);
       }).toThrowDeveloperError();
     });
 
     it("isClass throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.isClass();
       }).toThrowDeveloperError();
@@ -859,14 +871,14 @@ describe(
     });
 
     it("isClass throws with undefined className", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.isClass(0);
       }).toThrowDeveloperError();
     });
 
     it("getExactClassName throws with invalid batchId", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       expect(function () {
         batchTable.getExactClassName();
       }).toThrowDeveloperError();
@@ -991,12 +1003,12 @@ describe(
 
     function checkHierarchyProperties(tileset, multipleParents) {
       // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-      var content = tileset.root.content;
-      var batchTable = content.batchTable;
-      var hierarchy = batchTable._batchTableHierarchy;
+      const content = tileset.root.content;
+      const batchTable = content.batchTable;
+      const hierarchy = batchTable._batchTableHierarchy;
 
-      var doorFeature = content.getFeature(4);
-      var roofFeature = content.getFeature(8);
+      const doorFeature = content.getFeature(4);
+      const roofFeature = content.getFeature(8);
       expect(doorFeature.isExactClass("door")).toBe(true);
       expect(doorFeature.isExactClass("building")).toBe(false);
       expect(doorFeature.isClass("door")).toBe(true);
@@ -1007,7 +1019,7 @@ describe(
       expect(doorFeature.hasProperty("height")).toBe(true);
 
       // Includes batch table properties and hierarchy properties from all inherited classes
-      var expectedPropertyNames = [
+      const expectedPropertyIds = [
         "height",
         "area",
         "door_mass",
@@ -1022,12 +1034,12 @@ describe(
       // door0 has two parents - building0 and classifier_old
       // building0 has two parents - zone0 and classifier_new
       if (multipleParents) {
-        expectedPropertyNames.push("year", "color", "name", "architect"); // classier_new
-        expectedPropertyNames.push("description", "inspection"); // classifier_old
+        expectedPropertyIds.push("year", "color", "name", "architect"); // classier_new
+        expectedPropertyIds.push("description", "inspection"); // classifier_old
       }
 
-      var propertyNames = doorFeature.getPropertyNames();
-      expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
+      const propertyIds = doorFeature.getPropertyIds();
+      expect(expectedPropertyIds.sort()).toEqual(propertyIds.sort());
 
       expect(doorFeature.getProperty("height")).toBe(5.0); // Gets generic property
       expect(doorFeature.getProperty("door_name")).toBe("door0"); // Gets class property
@@ -1054,7 +1066,7 @@ describe(
       expect(doorFeature.getExactClassName()).toBeUndefined();
       expect(doorFeature.hasProperty("door_name")).toBe(false);
       expect(doorFeature.hasProperty("height")).toBe(true);
-      expect(doorFeature.getPropertyNames()).toEqual(["height", "area"]);
+      expect(doorFeature.getPropertyIds()).toEqual(["height", "area"]);
       expect(doorFeature.getProperty("height")).toBe(10.0);
       expect(doorFeature.getProperty("door_name")).toBeUndefined();
       expect(doorFeature.getProperty("building_name")).toBeUndefined();
@@ -1063,8 +1075,8 @@ describe(
 
     function checkHierarchyPropertiesNoParents(tileset) {
       // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-      var content = tileset.root.content;
-      var doorFeature = content.getFeature(4);
+      const content = tileset.root.content;
+      const doorFeature = content.getFeature(4);
       expect(doorFeature.isExactClass("door")).toBe(true);
       expect(doorFeature.isExactClass("doorknob")).toBe(false);
       expect(doorFeature.isClass("door")).toBe(true);
@@ -1074,7 +1086,7 @@ describe(
       expect(doorFeature.hasProperty("height")).toBe(true);
 
       // Includes batch table properties and hierarchy properties from all inherited classes
-      var expectedPropertyNames = [
+      const expectedPropertyIds = [
         "height",
         "area",
         "door_mass",
@@ -1082,8 +1094,8 @@ describe(
         "door_name",
       ];
 
-      var propertyNames = doorFeature.getPropertyNames();
-      expect(expectedPropertyNames.sort()).toEqual(propertyNames.sort());
+      const propertyIds = doorFeature.getPropertyIds();
+      expect(expectedPropertyIds.sort()).toEqual(propertyIds.sort());
 
       expect(doorFeature.getProperty("height")).toBe(5.0); // Gets generic property
       expect(doorFeature.getProperty("door_name")).toBe("door0"); // Gets class property
@@ -1146,11 +1158,82 @@ describe(
       );
     });
 
+    it("computes batchTableByteLength without a batch table", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
+        function (tileset) {
+          const content = tileset.root.content;
+          const batchTable = content.batchTable;
+          expect(batchTable.batchTableByteLength).toBe(0);
+
+          // The batch texture isn't created until the first pick pass
+          scene.pickForSpecs();
+          const batchTextureSize = batchTable._batchTexture.byteLength;
+          expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
+        }
+      );
+    });
+
+    it("batchTableByteLength does not count JSON batch table properties", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          const content = tileset.root.content;
+          const batchTable = content.batchTable;
+          expect(batchTable.batchTableByteLength).toBe(0);
+
+          // The batch texture isn't created until the first pick pass
+          scene.pickForSpecs();
+          const batchTextureSize = batchTable._batchTexture.byteLength;
+          expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
+        }
+      );
+    });
+
+    it("computes batchTableByteLength for binary batch table", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        withBatchTableBinaryUrl
+      ).then(function (tileset) {
+        const content = tileset.root.content;
+        const batchTable = content.batchTable;
+        const binaryPropertiesByteLength =
+          batchTable._binaryPropertiesByteLength;
+        expect(batchTable.batchTableByteLength).toBe(
+          binaryPropertiesByteLength
+        );
+
+        // The batch texture isn't created until the first pick pass
+        scene.pickForSpecs();
+        const batchTextureSize = batchTable._batchTexture.byteLength;
+        expect(batchTable.batchTableByteLength).toBe(
+          binaryPropertiesByteLength + batchTextureSize
+        );
+      });
+    });
+
+    it("computes batchTableByteLength with a batch table hierarchy", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        batchTableHierarchyUrl
+      ).then(function (tileset) {
+        const content = tileset.root.content;
+        const batchTable = content.batchTable;
+        const hierarchySize = batchTable._batchTableHierarchy.byteLength;
+        expect(batchTable.batchTableByteLength).toBe(hierarchySize);
+
+        // The batch texture isn't created until the first pick pass
+        scene.pickForSpecs();
+        const batchTextureSize = batchTable._batchTexture.byteLength;
+        expect(batchTable.batchTableByteLength).toBe(
+          hierarchySize + batchTextureSize
+        );
+      });
+    });
+
     it("destroys", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
-          var batchTable = content.batchTable;
+          const content = tileset.root.content;
+          const batchTable = content.batchTable;
           expect(batchTable.isDestroyed()).toEqual(false);
           scene.primitives.remove(tileset);
           expect(batchTable.isDestroyed()).toEqual(true);

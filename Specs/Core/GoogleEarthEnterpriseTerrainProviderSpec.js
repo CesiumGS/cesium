@@ -11,7 +11,6 @@ import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { TerrainProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
   function installMockGetQuadTreePacket() {
@@ -20,27 +19,27 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       "getQuadTreePacket"
     ).and.callFake(function (quadKey, version) {
       quadKey = defaultValue(quadKey, "");
-      var t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
+      let t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "0"] = t;
+      this._tileInfo[`${quadKey}0`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "1"] = t;
+      this._tileInfo[`${quadKey}1`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "2"] = t;
+      this._tileInfo[`${quadKey}2`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "3"] = t;
+      this._tileInfo[`${quadKey}3`] = t;
 
-      return when();
+      return Promise.resolve();
     });
   }
 
-  var terrainProvider;
+  let terrainProvider;
 
   function waitForTile(level, x, y, f) {
     terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
@@ -53,9 +52,9 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         terrainProvider.getTileDataAvailable(x, y, level)
       );
     }).then(function () {
-      var promise = terrainProvider.requestTileGeometry(level, x, y);
+      const promise = terrainProvider.requestTileGeometry(level, x, y);
 
-      return when(promise, f, function (error) {
+      return Promise.resolve(promise, f, function (error) {
         expect("requestTileGeometry").toBe("returning a tile."); // test failure
       });
     });
@@ -106,7 +105,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/url",
     });
 
@@ -141,7 +140,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
   it("can use a custom ellipsoid", function () {
     installMockGetQuadTreePacket();
 
-    var ellipsoid = new Ellipsoid(1, 2, 3);
+    const ellipsoid = new Ellipsoid(1, 2, 3);
     terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
       url: "made/up/url",
       ellipsoid: ellipsoid,
@@ -160,9 +159,15 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
     });
     expect(terrainProvider.errorEvent).toBeDefined();
     expect(terrainProvider.errorEvent).toBe(terrainProvider.errorEvent);
+
+    return terrainProvider.readyPromise.catch(function (e) {
+      expect(terrainProvider.ready).toBe(false);
+    });
   });
 
   it("returns reasonable geometric error for various levels", function () {
+    installMockGetQuadTreePacket();
+
     terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
       url: "made/up/url",
     });
@@ -178,12 +183,14 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       terrainProvider.getLevelMaximumGeometricError(2) * 2.0,
       CesiumMath.EPSILON10
     );
+
+    return terrainProvider.readyPromise;
   });
 
   it("readyPromise rejects if there isn't terrain", function () {
     installMockGetQuadTreePacket();
 
-    var metadata = new GoogleEarthEnterpriseMetadata({
+    const metadata = new GoogleEarthEnterpriseMetadata({
       url: "made/up/url",
     });
 
@@ -197,7 +204,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       .then(function () {
         fail("Server does not have terrain, so we shouldn't resolve.");
       })
-      .otherwise(function () {
+      .catch(function (e) {
         expect(terrainProvider.ready).toBe(false);
       });
   });
@@ -288,10 +295,10 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
     it("returns undefined if too many requests are already in progress", function () {
       installMockGetQuadTreePacket();
-      var baseUrl = "made/up/url";
+      const baseUrl = "made/up/url";
 
-      var deferreds = [];
-      var loadRealTile = true;
+      const deferreds = [];
+      let loadRealTile = true;
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -324,22 +331,22 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         url: baseUrl,
       });
 
-      var promises = [];
+      const promises = [];
       return pollToPromise(function () {
         return terrainProvider.ready;
       })
         .then(function () {
           return pollToPromise(function () {
-            var b = true;
-            for (var i = 0; i < 10; ++i) {
+            let b = true;
+            for (let i = 0; i < 10; ++i) {
               b = b && terrainProvider.getTileDataAvailable(i, i, i);
             }
             return b && terrainProvider.getTileDataAvailable(1, 2, 3);
           });
         })
         .then(function () {
-          var promise;
-          for (var i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+          let promise;
+          for (let i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
             promise = terrainProvider.requestTileGeometry(
               i,
               i,
@@ -355,12 +362,12 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         })
         .then(function (terrainData) {
           expect(terrainData).toBeUndefined();
-          for (var i = 0; i < deferreds.length; ++i) {
+          for (let i = 0; i < deferreds.length; ++i) {
             deferreds[i].resolve();
           }
 
           // Parsing terrain will fail, so just eat the errors and request the tile again
-          return when.all(promises).otherwise(function () {
+          return Promise.all(promises).catch(function () {
             loadRealTile = true;
             return terrainProvider.requestTileGeometry(1, 2, 3);
           });
@@ -372,7 +379,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
     it("supports getTileDataAvailable()", function () {
       installMockGetQuadTreePacket();
-      var baseUrl = "made/up/url";
+      const baseUrl = "made/up/url";
 
       Resource._Implementations.loadWithXhr = function (
         url,
@@ -400,8 +407,8 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       return pollToPromise(function () {
         return terrainProvider.ready;
       }).then(function () {
-        var tileInfo = terrainProvider._metadata._tileInfo;
-        var info =
+        const tileInfo = terrainProvider._metadata._tileInfo;
+        const info =
           tileInfo[GoogleEarthEnterpriseMetadata.tileXYToQuadKey(0, 1, 0)];
         info._bits = 0x7f; // Remove terrain bit from 0,1,0 tile
         info.terrainState = 1; // NONE

@@ -19,8 +19,8 @@ import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
 describe("DataSources/StaticGeometryColorBatch", function () {
-  var time = JulianDate.now();
-  var scene;
+  const time = JulianDate.now();
+  let scene;
   beforeAll(function () {
     scene = createScene();
   });
@@ -30,7 +30,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates color attribute after rebuilding geometry primitive", function () {
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -38,7 +38,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var entity = new Entity({
+    const entity = new Entity({
       position: new Cartesian3(1234, 5678, 9101112),
       ellipse: {
         semiMajorAxis: 2,
@@ -51,18 +51,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(time, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      const primitive = scene.primitives.get(0);
+      const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.color).toEqual([255, 0, 0, 255]);
 
       entity.ellipse.material = Color.GREEN;
@@ -71,13 +71,13 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       batch.add(time, updater);
       return pollToPromise(function () {
         scene.initializeFrame();
-        var isUpdated = batch.update(time);
+        const isUpdated = batch.update(time);
         scene.render(time);
         return isUpdated;
       }).then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes.color).toEqual([0, 128, 0, 255]);
         batch.removeAllPrimitives();
       });
@@ -85,16 +85,16 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates with sampled color out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
-    var color = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
+    const color = new TimeIntervalCollectionProperty();
     color.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -109,7 +109,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -117,18 +117,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.color).toEqual([255, 0, 0, 255]);
 
       batch.update(outOfRangeTime);
@@ -143,16 +143,16 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates with sampled distance display condition out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
-    var ddc = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
+    const ddc = new TimeIntervalCollectionProperty();
     ddc.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -168,7 +168,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -176,18 +176,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
         CesiumMath.EPSILON6
@@ -205,16 +205,16 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates with sampled show out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
-    var show = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
+    const show = new TimeIntervalCollectionProperty();
     show.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -229,7 +229,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -237,18 +237,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.show).toEqual([1]);
 
       batch.update(outOfRangeTime);
@@ -263,7 +263,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates color attribute after rebuilding polyline primitive", function () {
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PolylineColorAppearance,
       undefined,
@@ -271,7 +271,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var entity = new Entity({
+    const entity = new Entity({
       polyline: {
         positions: [
           Cartesian3.fromDegrees(0.0, 0.0),
@@ -281,18 +281,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var updater = new PolylineGeometryUpdater(entity, scene);
+    const updater = new PolylineGeometryUpdater(entity, scene);
     batch.add(time, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      const primitive = scene.primitives.get(0);
+      const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.color).toEqual([255, 0, 0, 255]);
 
       entity.polyline.material = Color.GREEN;
@@ -300,13 +300,13 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       batch.add(time, updater);
       return pollToPromise(function () {
         scene.initializeFrame();
-        var isUpdated = batch.update(time);
+        const isUpdated = batch.update(time);
         scene.render(time);
         return isUpdated;
       }).then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes.color).toEqual([0, 128, 0, 255]);
         batch.removeAllPrimitives();
       });
@@ -314,15 +314,15 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("updates with sampled depth fail color out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var color = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const color = new TimeIntervalCollectionProperty();
     color.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -338,7 +338,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PolylineColorAppearance,
       PolylineColorAppearance,
@@ -346,18 +346,18 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new PolylineGeometryUpdater(entity, scene);
+    const updater = new PolylineGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.depthFailColor).toEqual([255, 0, 0, 255]);
 
       batch.update(time);
@@ -372,7 +372,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
   });
 
   it("shows only one primitive while rebuilding primitive", function () {
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -394,22 +394,22 @@ describe("DataSources/StaticGeometryColorBatch", function () {
 
     function renderScene() {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }
 
-    var entity1 = buildEntity();
-    var entity2 = buildEntity();
+    const entity1 = buildEntity();
+    const entity2 = buildEntity();
 
-    var updater1 = new EllipseGeometryUpdater(entity1, scene);
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const updater1 = new EllipseGeometryUpdater(entity1, scene);
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
 
     batch.add(time, updater1);
     return pollToPromise(renderScene)
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
+        const primitive = scene.primitives.get(0);
         expect(primitive.show).toBeTruthy();
       })
       .then(function () {
@@ -422,7 +422,7 @@ describe("DataSources/StaticGeometryColorBatch", function () {
         });
       })
       .then(function () {
-        var showCount = 0;
+        let showCount = 0;
         expect(scene.primitives.length).toEqual(2);
         showCount += !!scene.primitives.get(0).show;
         showCount += !!scene.primitives.get(1).show;
@@ -433,14 +433,14 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
+        const primitive = scene.primitives.get(0);
         expect(primitive.show).toBeTruthy();
         batch.removeAllPrimitives();
       });
   });
 
   it("has correct show attribute after rebuilding primitive", function () {
-    var batch = new StaticGeometryColorBatch(
+    const batch = new StaticGeometryColorBatch(
       scene.primitives,
       PerInstanceColorAppearance,
       undefined,
@@ -462,23 +462,23 @@ describe("DataSources/StaticGeometryColorBatch", function () {
 
     function renderScene() {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }
 
-    var entity1 = buildEntity();
-    var updater1 = new EllipseGeometryUpdater(entity1, scene);
+    const entity1 = buildEntity();
+    const updater1 = new EllipseGeometryUpdater(entity1, scene);
     batch.add(time, updater1);
 
-    var entity2 = buildEntity();
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const entity2 = buildEntity();
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
 
     return pollToPromise(renderScene)
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([1]);
 
         entity1.show = false;
@@ -487,8 +487,8 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
         batch.add(time, updater2);
@@ -496,8 +496,8 @@ describe("DataSources/StaticGeometryColorBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        let attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
         attributes = primitive.getGeometryInstanceAttributes(entity2);

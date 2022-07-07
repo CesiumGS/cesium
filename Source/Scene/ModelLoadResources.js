@@ -72,8 +72,8 @@ ModelLoadResources.prototype.finishedProgramCreation = function () {
 };
 
 ModelLoadResources.prototype.finishedTextureCreation = function () {
-  var finishedPendingLoads = this.pendingTextureLoads === 0;
-  var finishedResourceCreation =
+  const finishedPendingLoads = this.pendingTextureLoads === 0;
+  const finishedResourceCreation =
     this.texturesToCreate.length === 0 &&
     this.texturesToCreateFromBufferView.length === 0;
 
@@ -81,9 +81,9 @@ ModelLoadResources.prototype.finishedTextureCreation = function () {
 };
 
 ModelLoadResources.prototype.finishedEverythingButTextureCreation = function () {
-  var finishedPendingLoads =
+  const finishedPendingLoads =
     this.pendingBufferLoads === 0 && this.pendingShaderLoads === 0;
-  var finishedResourceCreation =
+  const finishedResourceCreation =
     this.vertexBuffersToCreate.length === 0 &&
     this.indexBuffersToCreate.length === 0 &&
     this.programsToCreate.length === 0 &&

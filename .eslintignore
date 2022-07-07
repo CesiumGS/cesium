@@ -2,14 +2,15 @@ Apps/HelloWorld.html
 Apps/Sandcastle/ThirdParty/**
 Build/**
 Documentation/**
+Source/Scene/GltfPipeline/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/**
 !Source/Workers/transferTypedArrayTest.js
+Specs/jasmine/**
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
 Apps/Sandcastle/gallery/gallery-index.js
-Source/Core/buildModuleUrl.js
-Specs/spec-main.js
+index.html
 index.release.html

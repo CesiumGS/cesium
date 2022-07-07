@@ -1,6 +1,6 @@
 import defined from "./defined.js";
 
-var a;
+let a;
 
 /**
  * Given a URL, determine whether that URL is considered cross-origin to the current page.
@@ -17,8 +17,8 @@ function isCrossOriginUrl(url) {
   a.href = window.location.href;
 
   // host includes both hostname and port if the port is not standard
-  var host = a.host;
-  var protocol = a.protocol;
+  const host = a.host;
+  const protocol = a.protocol;
 
   a.href = url;
   // IE only absolutizes href on get, not set

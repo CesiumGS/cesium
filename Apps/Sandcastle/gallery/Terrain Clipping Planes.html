@@ -58,39 +58,39 @@
       Edge styling enabled
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Use clipping planes to selectively hide parts of the globe surface.
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           skyAtmosphere: false,
           shouldAnimate: true,
           terrainProvider: Cesium.createWorldTerrain(),
           scene3DOnly: true,
         });
-        var globe = viewer.scene.globe;
+        const globe = viewer.scene.globe;
 
-        var exampleTypes = [
+        const exampleTypes = [
           "Cesium Man",
           "St. Helens",
           "Grand Canyon Isolated",
         ];
-        var viewModel = {
+        const viewModel = {
           exampleTypes: exampleTypes,
           currentExampleType: exampleTypes[0],
           clippingPlanesEnabled: true,
           edgeStylingEnabled: true,
         };
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.track(viewModel);
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         // For tracking state when switching exampleTypes
-        var clippingPlanesEnabled = true;
-        var edgeStylingEnabled = true;
+        let clippingPlanesEnabled = true;
+        let edgeStylingEnabled = true;
 
-        var tileset;
+        let tileset;
 
         loadCesiumMan();
 
@@ -100,13 +100,13 @@
         }
 
         function loadCesiumMan() {
-          var position = Cesium.Cartesian3.fromRadians(
+          const position = Cesium.Cartesian3.fromRadians(
             -2.0862979473351286,
             0.6586620013036164,
             1400.0
           );
 
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: position,
             box: {
               dimensions: new Cesium.Cartesian3(1400.0, 1400.0, 2800.0),
@@ -158,7 +158,7 @@
 
         function loadStHelens() {
           // Create clipping planes for polygon around area to be clipped.
-          var points = [
+          const points = [
             new Cesium.Cartesian3(
               -2358434.3501556474,
               -3743554.5012105294,
@@ -231,13 +231,13 @@
             ),
           ];
 
-          var pointsLength = points.length;
+          const pointsLength = points.length;
 
           // Create center points for each clipping plane
-          var clippingPlanes = [];
-          for (var i = 0; i < pointsLength; ++i) {
-            var nextIndex = (i + 1) % pointsLength;
-            var midpoint = Cesium.Cartesian3.add(
+          const clippingPlanes = [];
+          for (let i = 0; i < pointsLength; ++i) {
+            const nextIndex = (i + 1) % pointsLength;
+            let midpoint = Cesium.Cartesian3.add(
               points[i],
               points[nextIndex],
               new Cesium.Cartesian3()
@@ -248,18 +248,18 @@
               midpoint
             );
 
-            var up = Cesium.Cartesian3.normalize(
+            const up = Cesium.Cartesian3.normalize(
               midpoint,
               new Cesium.Cartesian3()
             );
-            var right = Cesium.Cartesian3.subtract(
+            let right = Cesium.Cartesian3.subtract(
               points[nextIndex],
               midpoint,
               new Cesium.Cartesian3()
             );
             right = Cesium.Cartesian3.normalize(right, right);
 
-            var normal = Cesium.Cartesian3.cross(
+            let normal = Cesium.Cartesian3.cross(
               right,
               up,
               new Cesium.Cartesian3()
@@ -267,8 +267,8 @@
             normal = Cesium.Cartesian3.normalize(normal, normal);
 
             // Compute distance by pretending the plane is at the origin
-            var originCenteredPlane = new Cesium.Plane(normal, 0.0);
-            var distance = Cesium.Plane.getPointDistance(
+            const originCenteredPlane = new Cesium.Plane(normal, 0.0);
+            const distance = Cesium.Plane.getPointDistance(
               originCenteredPlane,
               midpoint
             );
@@ -290,23 +290,21 @@
           });
           return tileset.readyPromise
             .then(function () {
-              tileset.pointCloudShading.attenuation = true;
-
               // Adjust height so tileset is in terrain
-              var cartographic = Cesium.Cartographic.fromCartesian(
+              const cartographic = Cesium.Cartographic.fromCartesian(
                 tileset.boundingSphere.center
               );
-              var surface = Cesium.Cartesian3.fromRadians(
+              const surface = Cesium.Cartesian3.fromRadians(
                 cartographic.longitude,
                 cartographic.latitude,
                 0.0
               );
-              var offset = Cesium.Cartesian3.fromRadians(
+              const offset = Cesium.Cartesian3.fromRadians(
                 cartographic.longitude,
                 cartographic.latitude,
                 -20.0
               );
-              var translation = Cesium.Cartesian3.subtract(
+              const translation = Cesium.Cartesian3.subtract(
                 offset,
                 surface,
                 new Cesium.Cartesian3()
@@ -319,27 +317,27 @@
 
               viewer.scene.primitives.add(tileset);
 
-              var boundingSphere = tileset.boundingSphere;
+              const boundingSphere = tileset.boundingSphere;
 
-              var radius = boundingSphere.radius;
+              const radius = boundingSphere.radius;
               viewer.camera.viewBoundingSphere(
                 boundingSphere,
                 new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
               );
               viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               throw error;
             });
         }
 
         function loadGrandCanyon() {
           // Pick a position at the Grand Canyon
-          var position = Cesium.Cartographic.toCartesian(
+          const position = Cesium.Cartographic.toCartesian(
             new Cesium.Cartographic.fromDegrees(-113.2665534, 36.0939345, 100)
           );
-          var distance = 3000.0;
-          var boundingSphere = new Cesium.BoundingSphere(position, distance);
+          const distance = 3000.0;
+          const boundingSphere = new Cesium.BoundingSphere(position, distance);
 
           globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
             modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
@@ -405,10 +403,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

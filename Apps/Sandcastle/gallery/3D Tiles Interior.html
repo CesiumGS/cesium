@@ -33,23 +33,23 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // San Miguel model created by Guillermo M. Leal Llaguno. Cleaned up and hosted by Morgan McGuire: http://graphics.cs.williams.edu/data/meshes.xml
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(125737),
         });
         viewer.scene.primitives.add(tileset);
 
-        var initialPosition = new Cesium.Cartesian3(
+        const initialPosition = new Cesium.Cartesian3(
           -1111583.3721328347,
           -5855888.151574568,
           2262561.444696748
         );
-        var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+        const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           100.0,
           -15.0,
           0.0
@@ -61,10 +61,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

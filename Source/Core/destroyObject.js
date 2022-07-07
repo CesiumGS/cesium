@@ -44,7 +44,7 @@ function destroyObject(object, message) {
     //>>includeEnd('debug');
   }
 
-  for (var key in object) {
+  for (const key in object) {
     if (typeof object[key] === "function") {
       object[key] = throwOnDestroyed;
     }

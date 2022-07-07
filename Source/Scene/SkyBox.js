@@ -93,7 +93,7 @@ function SkyBox(options) {
  * @exception {DeveloperError} this.sources properties must all be the same type.
  */
 SkyBox.prototype.update = function (frameState, useHdr) {
-  var that = this;
+  const that = this;
 
   if (!this.show) {
     return undefined;
@@ -111,11 +111,11 @@ SkyBox.prototype.update = function (frameState, useHdr) {
     return undefined;
   }
 
-  var context = frameState.context;
+  const context = frameState.context;
 
   if (this._sources !== this.sources) {
     this._sources = this.sources;
-    var sources = this.sources;
+    const sources = this.sources;
 
     //>>includeStart('debug', pragmas.debug);
     if (
@@ -159,7 +159,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
     }
   }
 
-  var command = this._command;
+  const command = this._command;
 
   if (!defined(command.vertexArray)) {
     command.uniformMap = {
@@ -168,13 +168,13 @@ SkyBox.prototype.update = function (frameState, useHdr) {
       },
     };
 
-    var geometry = BoxGeometry.createGeometry(
+    const geometry = BoxGeometry.createGeometry(
       BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(2.0, 2.0, 2.0),
         vertexFormat: VertexFormat.POSITION_ONLY,
       })
     );
-    var attributeLocations = (this._attributeLocations = GeometryPipeline.createAttributeLocations(
+    const attributeLocations = (this._attributeLocations = GeometryPipeline.createAttributeLocations(
       geometry
     ));
 
@@ -191,7 +191,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
   }
 
   if (!defined(command.shaderProgram) || this._useHdr !== useHdr) {
-    var fs = new ShaderSource({
+    const fs = new ShaderSource({
       defines: [useHdr ? "HDR" : ""],
       sources: [SkyBoxFS],
     });
@@ -242,7 +242,7 @@ SkyBox.prototype.isDestroyed = function () {
  * @see SkyBox#isDestroyed
  */
 SkyBox.prototype.destroy = function () {
-  var command = this._command;
+  const command = this._command;
   command.vertexArray = command.vertexArray && command.vertexArray.destroy();
   command.shaderProgram =
     command.shaderProgram && command.shaderProgram.destroy();

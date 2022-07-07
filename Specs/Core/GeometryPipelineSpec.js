@@ -1,4 +1,3 @@
-import { arraySlice } from "../../Source/Cesium.js";
 import { AttributeCompression } from "../../Source/Cesium.js";
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { BoxGeometry } from "../../Source/Cesium.js";
@@ -23,7 +22,7 @@ import { VertexFormat } from "../../Source/Cesium.js";
 
 describe("Core/GeometryPipeline", function () {
   it("converts triangles to wireframe in place", function () {
-    var geometry = GeometryPipeline.toWireframe(
+    const geometry = GeometryPipeline.toWireframe(
       new Geometry({
         attributes: {},
         indices: [0, 1, 2, 3, 4, 5],
@@ -33,7 +32,7 @@ describe("Core/GeometryPipeline", function () {
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-    var v = geometry.indices;
+    const v = geometry.indices;
     expect(v.length).toEqual(12);
 
     expect(v[0]).toEqual(0);
@@ -52,7 +51,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("converts a triangle fan to wireframe in place", function () {
-    var geometry = GeometryPipeline.toWireframe(
+    const geometry = GeometryPipeline.toWireframe(
       new Geometry({
         attributes: {},
         indices: [0, 1, 2, 3],
@@ -62,7 +61,7 @@ describe("Core/GeometryPipeline", function () {
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-    var v = geometry.indices;
+    const v = geometry.indices;
     expect(v.length).toEqual(12);
 
     expect(v[0]).toEqual(0);
@@ -81,7 +80,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("converts a triangle strip to wireframe in place", function () {
-    var geometry = GeometryPipeline.toWireframe(
+    const geometry = GeometryPipeline.toWireframe(
       new Geometry({
         attributes: {},
         indices: [0, 1, 2, 3],
@@ -91,7 +90,7 @@ describe("Core/GeometryPipeline", function () {
 
     expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-    var v = geometry.indices;
+    const v = geometry.indices;
     expect(v.length).toEqual(12);
 
     expect(v[0]).toEqual(0);
@@ -128,7 +127,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("createLineSegmentsForVectors", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -144,12 +143,12 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.TRIANGLES,
       boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
     });
-    var lines = GeometryPipeline.createLineSegmentsForVectors(
+    const lines = GeometryPipeline.createLineSegmentsForVectors(
       geometry,
       "normal",
       1.0
     );
-    var linePositions = [
+    const linePositions = [
       0.0,
       0.0,
       0.0,
@@ -193,7 +192,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("createLineSegmentsForVectors throws when geometry.attributes does not have an attributeName property", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -210,7 +209,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("creates attribute indices", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -231,9 +230,9 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.TRIANGLES,
     });
 
-    var indices = GeometryPipeline.createAttributeLocations(geometry);
+    const indices = GeometryPipeline.createAttributeLocations(geometry);
 
-    var validIndices = [0, 1, 2];
+    const validIndices = [0, 1, 2];
     expect(validIndices).toContain(indices.position);
     expect(validIndices).toContain(indices.normal);
     expect(validIndices).toContain(indices.color);
@@ -248,7 +247,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("reorderForPreVertexCache reorders all indices and attributes for the pre vertex cache", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         weight: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -327,7 +326,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("reoderForPreVertexCache removes unused vertices", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         weight: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -378,7 +377,7 @@ describe("Core/GeometryPipeline", function () {
 
   it("reorderForPreVertexCache throws when attributes have a different number of attributes", function () {
     expect(function () {
-      var geometry = new Geometry({
+      const geometry = new Geometry({
         attributes: {
           attribute1: new GeometryAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
@@ -398,14 +397,14 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("reorderForPostVertexCache reorders indices for the post vertex cache", function () {
-    var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
-    var acmrBefore = Tipsify.calculateACMR({
+    let geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
+    const acmrBefore = Tipsify.calculateACMR({
       indices: geometry.indices,
       cacheSize: 24,
     });
     expect(acmrBefore).toBeGreaterThan(1.0);
     geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
-    var acmrAfter = Tipsify.calculateACMR({
+    const acmrAfter = Tipsify.calculateACMR({
       indices: geometry.indices,
       cacheSize: 24,
     });
@@ -419,7 +418,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndicestoThrowDeveloperErrorot change geometry", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         time: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -436,20 +435,20 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.TRIANGLES,
     });
 
-    var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+    const geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
 
     expect(geometries.length).toEqual(1);
     expect(geometries[0]).toBe(geometry);
   });
 
   it("fitToUnsignedShortIndices creates one geometry", function () {
-    var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
-    var times = [];
-    for (var i = 0; i < sixtyFourK + 1; ++i) {
+    const sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
+    const times = [];
+    for (let i = 0; i < sixtyFourK + 1; ++i) {
       times.push(i);
     }
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         time: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -461,7 +460,7 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.TRIANGLES,
     });
 
-    var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+    const geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
 
     expect(geometries.length).toEqual(1);
     expect(geometries[0].attributes.time.componentDatatype).toEqual(
@@ -475,20 +474,20 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndices creates two triangle geometries", function () {
-    var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
+    const sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
-    var positions = [];
-    for (var i = 0; i < sixtyFourK + 1; ++i) {
+    const positions = [];
+    for (let i = 0; i < sixtyFourK + 1; ++i) {
       positions.push(i, i, i);
     }
 
-    var indices = [];
-    for (var j = sixtyFourK; j > 1; j -= 3) {
+    const indices = [];
+    for (let j = sixtyFourK; j > 1; j -= 3) {
       indices.push(j, j - 1, j - 2);
     }
     indices.push(0, 1, 2);
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -500,7 +499,7 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.TRIANGLES,
     });
 
-    var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+    const geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
 
     expect(geometries.length).toEqual(2);
 
@@ -514,20 +513,20 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndices creates two line geometries", function () {
-    var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
+    const sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
-    var positions = [];
-    for (var i = 0; i < sixtyFourK + 2; ++i) {
+    const positions = [];
+    for (let i = 0; i < sixtyFourK + 2; ++i) {
       positions.push(i, i, i);
     }
 
-    var indices = [];
-    for (var j = sixtyFourK; j > 1; j -= 2) {
+    const indices = [];
+    for (let j = sixtyFourK; j > 1; j -= 2) {
       indices.push(j, j - 1);
     }
     indices.push(0, 1);
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -539,7 +538,7 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.LINES,
     });
 
-    var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+    const geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
 
     expect(geometries.length).toEqual(2);
 
@@ -553,16 +552,16 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndices creates two point geometries", function () {
-    var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
+    const sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
-    var positions = [];
-    var indices = [];
-    for (var i = 0; i < sixtyFourK + 1; ++i) {
+    const positions = [];
+    const indices = [];
+    for (let i = 0; i < sixtyFourK + 1; ++i) {
       positions.push(i, i, i);
       indices.push(i);
     }
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -574,7 +573,7 @@ describe("Core/GeometryPipeline", function () {
       primitiveType: PrimitiveType.POINTS,
     });
 
-    var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+    const geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
 
     expect(geometries.length).toEqual(2);
 
@@ -594,7 +593,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndices throws without triangles, lines, or points", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         time: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -612,7 +611,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("fitToUnsignedShortIndices throws with different numbers of attributes", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         time: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -635,10 +634,10 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("projectTo2D", function () {
-    var p1 = new Cartesian3(100000, 200000, 300000);
-    var p2 = new Cartesian3(400000, 500000, 600000);
+    const p1 = new Cartesian3(100000, 200000, 300000);
+    const p2 = new Cartesian3(400000, 500000, 600000);
 
-    var geometry = {};
+    let geometry = {};
     geometry.attributes = {};
     geometry.attributes.position = {
       componentDatatype: ComponentDatatype.DOUBLE,
@@ -653,10 +652,14 @@ describe("Core/GeometryPipeline", function () {
       "position2D"
     );
 
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection();
-    var projectedP1 = projection.project(ellipsoid.cartesianToCartographic(p1));
-    var projectedP2 = projection.project(ellipsoid.cartesianToCartographic(p2));
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection();
+    const projectedP1 = projection.project(
+      ellipsoid.cartesianToCartographic(p1)
+    );
+    const projectedP2 = projection.project(
+      ellipsoid.cartesianToCartographic(p2)
+    );
 
     expect(geometry.attributes.position2D.values[0]).toEqual(projectedP1.x);
     expect(geometry.attributes.position2D.values[1]).toEqual(projectedP1.y);
@@ -755,7 +758,7 @@ describe("Core/GeometryPipeline", function () {
 
   it("projectTo2D throws without ComponentDatatype.DOUBLE", function () {
     expect(function () {
-      var geometry = new Geometry({
+      const geometry = new Geometry({
         attributes: {
           position: new GeometryAttribute({
             componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
@@ -774,7 +777,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("projectTo2D throws when trying to project a point close to the origin", function () {
-    var geometry = {};
+    const geometry = {};
     geometry.attributes = {};
     geometry.attributes.position = {
       componentDatatype: ComponentDatatype.DOUBLE,
@@ -793,10 +796,10 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("encodeAttribute encodes positions", function () {
-    var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
-    var encoded = EncodedCartesian3.fromCartesian(c);
+    const c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
+    const encoded = EncodedCartesian3.fromCartesian(c);
 
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.DOUBLE,
@@ -906,7 +909,7 @@ describe("Core/GeometryPipeline", function () {
 
   it("encodeAttribute throws without ComponentDatatype.DOUBLE", function () {
     expect(function () {
-      var geometry = new Geometry({
+      const geometry = new Geometry({
         attributes: {
           position: new GeometryAttribute({
             componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
@@ -925,7 +928,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("transformToWorldCoordinates", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -963,9 +966,9 @@ describe("Core/GeometryPipeline", function () {
       ),
     });
 
-    var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
-    var transformedPositions = [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
-    var transformedNormals = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+    const transformedPositions = [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
+    const transformedNormals = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
       transformedPositions
@@ -980,7 +983,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("transformToWorldCoordinates with non-uniform scale", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1001,9 +1004,9 @@ describe("Core/GeometryPipeline", function () {
       modelMatrix: Matrix4.fromScale(new Cartesian3(1.0, 2.0, 4.0)),
     });
 
-    var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
-    var transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0];
-    var transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+    const transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0];
+    const transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
       transformedPositions
@@ -1018,7 +1021,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("transformToWorldCoordinates does nothing when already in world coordinates", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1039,9 +1042,9 @@ describe("Core/GeometryPipeline", function () {
       modelMatrix: Matrix4.IDENTITY,
     });
 
-    var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
-    var transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
-    var transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+    const transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+    const transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
 
     expect(transformed.geometry.attributes.position.values).toEqual(
       transformedPositions
@@ -1062,7 +1065,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances combines one geometry", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1075,12 +1078,12 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var combined = GeometryPipeline.combineInstances([instance])[0];
+    const combined = GeometryPipeline.combineInstances([instance])[0];
     expect(combined).toEqual(instance.geometry);
   });
 
   it("combineInstances combines several geometries without indicess", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1092,7 +1095,7 @@ describe("Core/GeometryPipeline", function () {
         primitiveType: PrimitiveType.POINTS,
       }),
     });
-    var anotherInstance = new GeometryInstance({
+    const anotherInstance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1105,7 +1108,7 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var combined = GeometryPipeline.combineInstances([
+    const combined = GeometryPipeline.combineInstances([
       instance,
       anotherInstance,
     ])[0];
@@ -1124,7 +1127,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances combines several geometries with indicess", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1142,7 +1145,7 @@ describe("Core/GeometryPipeline", function () {
         primitiveType: PrimitiveType.TRIANGLES,
       }),
     });
-    var anotherInstance = new GeometryInstance({
+    const anotherInstance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1156,7 +1159,7 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var combined = GeometryPipeline.combineInstances([
+    const combined = GeometryPipeline.combineInstances([
       instance,
       anotherInstance,
     ])[0];
@@ -1195,7 +1198,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances with geometry that is and is not split by the IDL", function () {
-    var instances = [
+    const instances = [
       GeometryPipeline.splitLongitude(
         new GeometryInstance({
           geometry: PolygonGeometry.createGeometry(
@@ -1236,12 +1239,12 @@ describe("Core/GeometryPipeline", function () {
       }),
     ];
 
-    var combinedInstances = GeometryPipeline.combineInstances(instances);
+    const combinedInstances = GeometryPipeline.combineInstances(instances);
     expect(combinedInstances.length).toEqual(3);
   });
 
   it("combineInstances combines bounding spheres", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1255,7 +1258,7 @@ describe("Core/GeometryPipeline", function () {
         boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
       }),
     });
-    var anotherInstance = new GeometryInstance({
+    const anotherInstance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1270,11 +1273,11 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var combined = GeometryPipeline.combineInstances([
+    const combined = GeometryPipeline.combineInstances([
       instance,
       anotherInstance,
     ])[0];
-    var expected = BoundingSphere.union(
+    const expected = BoundingSphere.union(
       instance.geometry.boundingSphere,
       anotherInstance.geometry.boundingSphere
     );
@@ -1294,7 +1297,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances throws when instances.modelMatrix do not match", function () {
-    var instance0 = new GeometryInstance({
+    const instance0 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1308,7 +1311,7 @@ describe("Core/GeometryPipeline", function () {
       modelMatrix: Matrix4.fromScale(new Cartesian3(1.0, 1.0, 1.0)),
     });
 
-    var instance1 = new GeometryInstance({
+    const instance1 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1328,7 +1331,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances throws when instance geometries do not all have or not have an indices", function () {
-    var instance0 = new GeometryInstance({
+    const instance0 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1342,7 +1345,7 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var instance1 = new GeometryInstance({
+    const instance1 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1361,7 +1364,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("combineInstances throws when instance geometries do not all have the same primitive type", function () {
-    var instance0 = new GeometryInstance({
+    const instance0 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1374,7 +1377,7 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var instance1 = new GeometryInstance({
+    const instance1 = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -1399,7 +1402,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal throws when geometry.attributes.position is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {},
       primitiveType: PrimitiveType.TRIANGLES,
     });
@@ -1410,7 +1413,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal throws when geometry.indices is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1427,7 +1430,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal throws when geometry.indices.length is not a multiple of 3", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1],
@@ -1444,7 +1447,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal throws when primitive type is not triangle", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1462,7 +1465,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal computes normal for one triangle", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1491,7 +1494,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal computes normal for two triangles", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
@@ -1505,10 +1508,10 @@ describe("Core/GeometryPipeline", function () {
 
     geometry = GeometryPipeline.computeNormal(geometry);
 
-    var normals = geometry.attributes.normal.values;
+    const normals = geometry.attributes.normal.values;
     expect(normals.length).toEqual(4 * 3);
 
-    var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
+    let a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
 
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
@@ -1531,7 +1534,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal computes normal for six triangles", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [
@@ -1567,10 +1570,10 @@ describe("Core/GeometryPipeline", function () {
 
     geometry = GeometryPipeline.computeNormal(geometry);
 
-    var normals = geometry.attributes.normal.values;
+    const normals = geometry.attributes.normal.values;
     expect(normals.length).toEqual(7 * 3);
 
-    var a = Cartesian3.normalize(new Cartesian3(-1, -1, -1), new Cartesian3());
+    let a = Cartesian3.normalize(new Cartesian3(-1, -1, -1), new Cartesian3());
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
       CesiumMath.EPSILON7
@@ -1611,7 +1614,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal computes normal of (0,0,1) for a degenerate triangle", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0],
@@ -1630,7 +1633,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeNormal takes first normal for two coplanar triangles with opposite winding orders", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 1, 1, 1, 1],
@@ -1644,10 +1647,10 @@ describe("Core/GeometryPipeline", function () {
 
     geometry = GeometryPipeline.computeNormal(geometry);
 
-    var normals = geometry.attributes.normal.values;
+    const normals = geometry.attributes.normal.values;
     expect(normals.length).toEqual(3 * 3);
 
-    var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
+    const a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
 
     expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(
       a,
@@ -1670,7 +1673,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when position is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         normal: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1693,7 +1696,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when normal is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1716,7 +1719,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when st is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1739,7 +1742,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when geometry.indices is undefined", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1766,7 +1769,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when indices is not a multiple of 3", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1794,7 +1797,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent throws when primitive type is not triangle", function () {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1822,7 +1825,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent computes tangent and bitangent for one triangle", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -1867,7 +1870,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent computes tangent and bitangent for two triangles", function () {
-    var geometry = new Geometry({
+    let geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
@@ -1923,7 +1926,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("computeTangentAndBitangent computes tangent and bitangent for BoxGeometry", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -1935,25 +1938,25 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
-    var actualTangents = geometry.attributes.tangent.values;
-    var actualBitangents = geometry.attributes.bitangent.values;
+    const actualTangents = geometry.attributes.tangent.values;
+    const actualBitangents = geometry.attributes.bitangent.values;
 
-    var expectedGeometry = BoxGeometry.createGeometry(
+    const expectedGeometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: VertexFormat.ALL,
         maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
         minimum: new Cartesian3(-250000.0, -250000.0, -250000.0),
       })
     );
-    var expectedTangents = expectedGeometry.attributes.tangent.values;
-    var expectedBitangents = expectedGeometry.attributes.bitangent.values;
+    const expectedTangents = expectedGeometry.attributes.tangent.values;
+    const expectedBitangents = expectedGeometry.attributes.bitangent.values;
 
     expect(actualTangents.length).toEqual(expectedTangents.length);
     expect(actualBitangents.length).toEqual(expectedBitangents.length);
 
-    for (var i = 0; i < actualTangents.length; i += 3) {
-      var actual = Cartesian3.fromArray(actualTangents, i);
-      var expected = Cartesian3.fromArray(expectedTangents, i);
+    for (let i = 0; i < actualTangents.length; i += 3) {
+      let actual = Cartesian3.fromArray(actualTangents, i);
+      let expected = Cartesian3.fromArray(expectedTangents, i);
       expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
 
       actual = Cartesian3.fromArray(actualBitangents, i);
@@ -1969,7 +1972,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("compressVertices on geometry without normals or texture coordinates does nothing", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -1984,7 +1987,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("compressVertices compresses normals", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -1995,16 +1998,16 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.normal).toBeDefined();
-    var originalNormals = arraySlice(geometry.attributes.normal.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
     expect(geometry.attributes.compressedAttributes).toBeDefined();
 
-    var normals = geometry.attributes.compressedAttributes.values;
+    const normals = geometry.attributes.compressedAttributes.values;
     expect(normals.length).toEqual(originalNormals.length / 3);
 
-    for (var i = 0; i < normals.length; ++i) {
+    for (let i = 0; i < normals.length; ++i) {
       expect(
         AttributeCompression.octDecodeFloat(normals[i], new Cartesian3())
       ).toEqualEpsilon(
@@ -2015,7 +2018,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("compressVertices compresses texture coordinates", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -2026,21 +2029,21 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.st).toBeDefined();
-    var originalST = arraySlice(geometry.attributes.st.values);
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
     expect(geometry.attributes.st).not.toBeDefined();
     expect(geometry.attributes.compressedAttributes).toBeDefined();
 
-    var st = geometry.attributes.compressedAttributes.values;
+    const st = geometry.attributes.compressedAttributes.values;
     expect(st.length).toEqual(originalST.length / 2);
 
-    for (var i = 0; i < st.length; ++i) {
-      var temp = st[i] / 4096.0;
-      var stx = Math.floor(temp) / 4096.0;
-      var sty = temp - Math.floor(temp);
-      var texCoord = new Cartesian2(stx, sty);
+    for (let i = 0; i < st.length; ++i) {
+      const temp = st[i] / 4096.0;
+      const stx = Math.floor(temp) / 4096.0;
+      const sty = temp - Math.floor(temp);
+      const texCoord = new Cartesian2(stx, sty);
       expect(texCoord).toEqualEpsilon(
         Cartesian2.fromArray(originalST, i * 2, new Cartesian2()),
         CesiumMath.EPSILON2
@@ -2049,7 +2052,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("compressVertices packs compressed normals with texture coordinates", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -2062,8 +2065,8 @@ describe("Core/GeometryPipeline", function () {
     );
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.st).toBeDefined();
-    var originalNormals = arraySlice(geometry.attributes.normal.values);
-    var originalST = arraySlice(geometry.attributes.st.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2071,10 +2074,10 @@ describe("Core/GeometryPipeline", function () {
     expect(geometry.attributes.st).not.toBeDefined();
     expect(geometry.attributes.compressedAttributes).toBeDefined();
 
-    var stNormal = geometry.attributes.compressedAttributes.values;
+    const stNormal = geometry.attributes.compressedAttributes.values;
     expect(stNormal.length).toEqual(originalST.length);
 
-    for (var i = 0; i < stNormal.length; i += 2) {
+    for (let i = 0; i < stNormal.length; i += 2) {
       expect(
         AttributeCompression.decompressTextureCoordinates(
           stNormal[i],
@@ -2094,7 +2097,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("compressVertices packs compressed tangents and bitangents", function () {
-    var geometry = BoxGeometry.createGeometry(
+    let geometry = BoxGeometry.createGeometry(
       new BoxGeometry({
         vertexFormat: new VertexFormat({
           position: true,
@@ -2109,9 +2112,9 @@ describe("Core/GeometryPipeline", function () {
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.tangent).toBeDefined();
     expect(geometry.attributes.bitangent).toBeDefined();
-    var originalNormals = arraySlice(geometry.attributes.normal.values);
-    var originalTangents = arraySlice(geometry.attributes.tangent.values);
-    var originalBitangents = arraySlice(geometry.attributes.bitangent.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalTangents = geometry.attributes.tangent.values.slice();
+    const originalBitangents = geometry.attributes.bitangent.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2119,15 +2122,15 @@ describe("Core/GeometryPipeline", function () {
     expect(geometry.attributes.bitangent).not.toBeDefined();
     expect(geometry.attributes.compressedAttributes).toBeDefined();
 
-    var compressedNormals = geometry.attributes.compressedAttributes.values;
+    const compressedNormals = geometry.attributes.compressedAttributes.values;
     expect(compressedNormals.length).toEqual((originalNormals.length / 3) * 2);
 
-    var normal = new Cartesian3();
-    var tangent = new Cartesian3();
-    var bitangent = new Cartesian3();
+    const normal = new Cartesian3();
+    const tangent = new Cartesian3();
+    const bitangent = new Cartesian3();
 
-    for (var i = 0; i < compressedNormals.length; i += 2) {
-      var compressed = Cartesian2.fromArray(
+    for (let i = 0; i < compressedNormals.length; i += 2) {
+      const compressed = Cartesian2.fromArray(
         compressedNormals,
         i,
         new Cartesian2()
@@ -2150,7 +2153,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude does nothing for geometry not split by the IDL", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: PolygonGeometry.createGeometry(
         PolygonGeometry.fromPositions({
           positions: Cartesian3.fromDegreesArray([
@@ -2169,16 +2172,16 @@ describe("Core/GeometryPipeline", function () {
       ),
     });
 
-    var splitInstance = GeometryPipeline.splitLongitude(instance);
+    const splitInstance = GeometryPipeline.splitLongitude(instance);
     expect(splitInstance).toBe(instance);
   });
 
   it("splitLongitude interpolates custom attributes for geometry split by the IDL", function () {
-    var p0 = Cartesian3.fromDegrees(-179.0, 0.0);
-    var p1 = Cartesian3.fromDegrees(179.0, 0.0);
-    var p2 = Cartesian3.fromDegrees(-179.0, 1.0);
+    const p0 = Cartesian3.fromDegrees(-179.0, 0.0);
+    const p1 = Cartesian3.fromDegrees(179.0, 0.0);
+    const p2 = Cartesian3.fromDegrees(-179.0, 1.0);
 
-    var positions = new Float64Array([
+    const positions = new Float64Array([
       p0.x,
       p0.y,
       p0.z,
@@ -2190,15 +2193,15 @@ describe("Core/GeometryPipeline", function () {
       p2.z,
     ]);
 
-    var vec4s = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0]);
+    const vec4s = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0]);
 
-    var vec3s = new Uint8Array([0, 0, 0, 0, 0, 255, 0, 0, 0]);
+    const vec3s = new Uint8Array([0, 0, 0, 0, 0, 255, 0, 0, 0]);
 
-    var vec2s = new Uint8Array([0, 0, 0, 255, 0, 0]);
+    const vec2s = new Uint8Array([0, 0, 0, 255, 0, 0]);
 
-    var scalars = new Uint8Array([0, 255, 0]);
+    const scalars = new Uint8Array([0, 255, 0]);
 
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2233,16 +2236,16 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
 
-    var splitInstance = GeometryPipeline.splitLongitude(instance);
-    var eastHemisphereGeometry = splitInstance.eastHemisphereGeometry;
+    const splitInstance = GeometryPipeline.splitLongitude(instance);
+    const eastHemisphereGeometry = splitInstance.eastHemisphereGeometry;
     expect(eastHemisphereGeometry.indices.length).toEqual(3);
 
-    var newVec4s = eastHemisphereGeometry.attributes.vec4s.values;
-    var newVec3s = eastHemisphereGeometry.attributes.vec3s.values;
-    var newVec2s = eastHemisphereGeometry.attributes.vec2s.values;
-    var newScalars = eastHemisphereGeometry.attributes.scalars.values;
-    var i;
-    var index;
+    let newVec4s = eastHemisphereGeometry.attributes.vec4s.values;
+    let newVec3s = eastHemisphereGeometry.attributes.vec3s.values;
+    let newVec2s = eastHemisphereGeometry.attributes.vec2s.values;
+    let newScalars = eastHemisphereGeometry.attributes.scalars.values;
+    let i;
+    let index;
 
     // Expect eastern hemisphere vertices to all be 255 or 127 at the end of the value
     expect(Array.prototype.indexOf.call(newScalars, 127)).not.toBe(-1);
@@ -2274,7 +2277,7 @@ describe("Core/GeometryPipeline", function () {
       );
     }
 
-    var westHemisphereGeometry = splitInstance.westHemisphereGeometry;
+    const westHemisphereGeometry = splitInstance.westHemisphereGeometry;
     expect(westHemisphereGeometry.indices.length).toEqual(6);
 
     newVec4s = westHemisphereGeometry.attributes.vec4s.values;
@@ -2314,7 +2317,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude provides indices for an un-indexed triangle list", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2351,7 +2354,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns unchanged geometry if indices are already defined for an un-indexed triangle list", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2389,7 +2392,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is TRIANGLES and number of vertices is less than 3", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2408,7 +2411,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is TRIANGLES and number of vertices is not a multiple of 3", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2445,7 +2448,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude creates indexed triangles for a triangle fan", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2477,7 +2480,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is TRIANGLE_FAN and number of vertices is less than 3", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2496,7 +2499,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude creates indexd triangles for triangle strips", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2547,7 +2550,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when the primitive type is TRIANGLE_STRIP and number of vertices is less than 3", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2566,7 +2569,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude creates indexed lines", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2597,7 +2600,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns lines unchanged if indices are provided", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2629,7 +2632,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is LINES and number of vertices is less than 2", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2648,7 +2651,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is LINES and number of vertices is not a multiple 2", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2677,7 +2680,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude creates indexed lines from line strip", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2709,7 +2712,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when primitive type is LINE_STRIP and number of vertices is less than 2", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2728,7 +2731,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude creates indexed lines from line loops", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2760,7 +2763,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude throws when the primitive type is LINE_LOOP and number of vertices is less than 2", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2779,7 +2782,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p0 behind", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2823,7 +2826,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p1 behind", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2867,7 +2870,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p2 behind", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2911,7 +2914,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p0 ahead", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2955,7 +2958,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p1 ahead", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -2999,7 +3002,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides triangle crossing the international date line, p2 ahead", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3043,7 +3046,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns offset triangle that touches the international date line", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3067,11 +3070,11 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1, 2]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([
       -1.0,
       CesiumMath.EPSILON6,
@@ -3087,7 +3090,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns the same points if the triangle doesn't cross the international date line, behind", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3111,11 +3114,11 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1, 2]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([
       -1.0,
       -1.0,
@@ -3131,7 +3134,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns the same points if the triangle doesn't cross the international date line, ahead", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3155,17 +3158,17 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1, 2]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([-1.0, 1.0, 1.0, -1.0, 2.0, 1.0, -1.0, 2.0, 2.0]);
     expect(positions.length).toEqual(3 * 3);
   });
 
   it("splitLongitude returns the same points if the triangle doesn't cross the international date line, positive x", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3189,17 +3192,17 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1, 2]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 2.0]);
     expect(positions.length).toEqual(3 * 3);
   });
 
   it("splitLongitude computes all attributes for a triangle crossing the international date line", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3325,7 +3328,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude subdivides line crossing the international date line", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3359,7 +3362,7 @@ describe("Core/GeometryPipeline", function () {
   });
 
   it("splitLongitude returns offset line that touches the international date line", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3373,16 +3376,16 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0]);
   });
 
   it("splitLongitude returns the same points if the line doesn't cross the international date line", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3396,16 +3399,16 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).toEqual([0, 1]);
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
   });
 
   it("splitLongitude does nothing for points", function () {
-    var instance = new GeometryInstance({
+    const instance = new GeometryInstance({
       geometry: new Geometry({
         attributes: {
           position: new GeometryAttribute({
@@ -3418,17 +3421,17 @@ describe("Core/GeometryPipeline", function () {
       }),
     });
     GeometryPipeline.splitLongitude(instance);
-    var geometry = instance.geometry;
+    const geometry = instance.geometry;
 
     expect(geometry.indices).not.toBeDefined();
 
-    var positions = geometry.attributes.position.values;
+    const positions = geometry.attributes.position.values;
     expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
   });
 
   describe("splitLongitude polylines", function () {
     it("subdivides wide line crossing the international date line", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -3562,7 +3565,7 @@ describe("Core/GeometryPipeline", function () {
     });
 
     it("returns offset wide line with first point on the IDL and the second is east", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -3640,13 +3643,13 @@ describe("Core/GeometryPipeline", function () {
         }),
       });
       GeometryPipeline.splitLongitude(instance);
-      var geometry = instance.geometry;
+      const geometry = instance.geometry;
 
       expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-      var positions = geometry.attributes.position.values;
-      var nextPositions = geometry.attributes.nextPosition.values;
-      var prevPositions = geometry.attributes.prevPosition.values;
+      const positions = geometry.attributes.position.values;
+      const nextPositions = geometry.attributes.nextPosition.values;
+      const prevPositions = geometry.attributes.prevPosition.values;
 
       expect(positions).toEqual([
         -1.0,
@@ -3693,7 +3696,7 @@ describe("Core/GeometryPipeline", function () {
     });
 
     it("returns offset wide line with first point on the IDL and the second is west", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -3771,13 +3774,13 @@ describe("Core/GeometryPipeline", function () {
         }),
       });
       GeometryPipeline.splitLongitude(instance);
-      var geometry = instance.geometry;
+      const geometry = instance.geometry;
 
       expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-      var positions = geometry.attributes.position.values;
-      var nextPositions = geometry.attributes.nextPosition.values;
-      var prevPositions = geometry.attributes.prevPosition.values;
+      const positions = geometry.attributes.position.values;
+      const nextPositions = geometry.attributes.nextPosition.values;
+      const prevPositions = geometry.attributes.prevPosition.values;
 
       expect(positions).toEqual([
         -1.0,
@@ -3824,7 +3827,7 @@ describe("Core/GeometryPipeline", function () {
     });
 
     it("returns offset wide line with first point is east and the second is on the IDL", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -3902,13 +3905,13 @@ describe("Core/GeometryPipeline", function () {
         }),
       });
       GeometryPipeline.splitLongitude(instance);
-      var geometry = instance.geometry;
+      const geometry = instance.geometry;
 
       expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-      var positions = geometry.attributes.position.values;
-      var nextPositions = geometry.attributes.nextPosition.values;
-      var prevPositions = geometry.attributes.prevPosition.values;
+      const positions = geometry.attributes.position.values;
+      const nextPositions = geometry.attributes.nextPosition.values;
+      const prevPositions = geometry.attributes.prevPosition.values;
 
       expect(positions).toEqual([
         -1.0,
@@ -3955,7 +3958,7 @@ describe("Core/GeometryPipeline", function () {
     });
 
     it("returns offset wide line with first point is west and the second is on the IDL", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -4033,13 +4036,13 @@ describe("Core/GeometryPipeline", function () {
         }),
       });
       GeometryPipeline.splitLongitude(instance);
-      var geometry = instance.geometry;
+      const geometry = instance.geometry;
 
       expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-      var positions = geometry.attributes.position.values;
-      var nextPositions = geometry.attributes.nextPosition.values;
-      var prevPositions = geometry.attributes.prevPosition.values;
+      const positions = geometry.attributes.position.values;
+      const nextPositions = geometry.attributes.nextPosition.values;
+      const prevPositions = geometry.attributes.prevPosition.values;
 
       expect(positions).toEqual([
         -1.0,
@@ -4086,7 +4089,7 @@ describe("Core/GeometryPipeline", function () {
     });
 
     it("returns the same points if the wide line doesn't cross the international date line", function () {
-      var instance = new GeometryInstance({
+      const instance = new GeometryInstance({
         geometry: new Geometry({
           attributes: {
             position: new GeometryAttribute({
@@ -4164,11 +4167,11 @@ describe("Core/GeometryPipeline", function () {
         }),
       });
       GeometryPipeline.splitLongitude(instance);
-      var geometry = instance.geometry;
+      const geometry = instance.geometry;
 
       expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-      var positions = geometry.attributes.position.values;
+      const positions = geometry.attributes.position.values;
       expect(positions).toEqual([
         -1.0,
         1.0,

@@ -13,25 +13,25 @@ import TimeConstants from "./TimeConstants.js";
  *
  * @private
  */
-var Iau2000Orientation = {};
+const Iau2000Orientation = {};
 
-var TdtMinusTai = 32.184;
-var J2000d = 2451545.0;
+const TdtMinusTai = 32.184;
+const J2000d = 2451545.0;
 
-var c1 = -0.0529921;
-var c2 = -0.1059842;
-var c3 = 13.0120009;
-var c4 = 13.3407154;
-var c5 = 0.9856003;
-var c6 = 26.4057084;
-var c7 = 13.064993;
-var c8 = 0.3287146;
-var c9 = 1.7484877;
-var c10 = -0.1589763;
-var c11 = 0.0036096;
-var c12 = 0.1643573;
-var c13 = 12.9590088;
-var dateTT = new JulianDate();
+const c1 = -0.0529921;
+const c2 = -0.1059842;
+const c3 = 13.0120009;
+const c4 = 13.3407154;
+const c5 = 0.9856003;
+const c6 = 26.4057084;
+const c7 = 13.064993;
+const c8 = 0.3287146;
+const c9 = 1.7484877;
+const c10 = -0.1589763;
+const c11 = 0.0036096;
+const c12 = 0.1643573;
+const c13 = 12.9590088;
+let dateTT = new JulianDate();
 
 /**
  * Compute the orientation parameters for the Moon.
@@ -47,52 +47,52 @@ Iau2000Orientation.ComputeMoon = function (date, result) {
   }
 
   dateTT = JulianDate.addSeconds(date, TdtMinusTai, dateTT);
-  var d = JulianDate.totalDays(dateTT) - J2000d;
-  var T = d / TimeConstants.DAYS_PER_JULIAN_CENTURY;
+  const d = JulianDate.totalDays(dateTT) - J2000d;
+  const T = d / TimeConstants.DAYS_PER_JULIAN_CENTURY;
 
-  var E1 = (125.045 + c1 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E2 = (250.089 + c2 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E3 = (260.008 + c3 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E4 = (176.625 + c4 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E5 = (357.529 + c5 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E6 = (311.589 + c6 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E7 = (134.963 + c7 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E8 = (276.617 + c8 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E9 = (34.226 + c9 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E10 = (15.134 + c10 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E11 = (119.743 + c11 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E12 = (239.961 + c12 * d) * CesiumMath.RADIANS_PER_DEGREE;
-  var E13 = (25.053 + c13 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E1 = (125.045 + c1 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E2 = (250.089 + c2 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E3 = (260.008 + c3 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E4 = (176.625 + c4 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E5 = (357.529 + c5 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E6 = (311.589 + c6 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E7 = (134.963 + c7 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E8 = (276.617 + c8 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E9 = (34.226 + c9 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E10 = (15.134 + c10 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E11 = (119.743 + c11 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E12 = (239.961 + c12 * d) * CesiumMath.RADIANS_PER_DEGREE;
+  const E13 = (25.053 + c13 * d) * CesiumMath.RADIANS_PER_DEGREE;
 
-  var sinE1 = Math.sin(E1);
-  var sinE2 = Math.sin(E2);
-  var sinE3 = Math.sin(E3);
-  var sinE4 = Math.sin(E4);
-  var sinE5 = Math.sin(E5);
-  var sinE6 = Math.sin(E6);
-  var sinE7 = Math.sin(E7);
-  var sinE8 = Math.sin(E8);
-  var sinE9 = Math.sin(E9);
-  var sinE10 = Math.sin(E10);
-  var sinE11 = Math.sin(E11);
-  var sinE12 = Math.sin(E12);
-  var sinE13 = Math.sin(E13);
+  const sinE1 = Math.sin(E1);
+  const sinE2 = Math.sin(E2);
+  const sinE3 = Math.sin(E3);
+  const sinE4 = Math.sin(E4);
+  const sinE5 = Math.sin(E5);
+  const sinE6 = Math.sin(E6);
+  const sinE7 = Math.sin(E7);
+  const sinE8 = Math.sin(E8);
+  const sinE9 = Math.sin(E9);
+  const sinE10 = Math.sin(E10);
+  const sinE11 = Math.sin(E11);
+  const sinE12 = Math.sin(E12);
+  const sinE13 = Math.sin(E13);
 
-  var cosE1 = Math.cos(E1);
-  var cosE2 = Math.cos(E2);
-  var cosE3 = Math.cos(E3);
-  var cosE4 = Math.cos(E4);
-  var cosE5 = Math.cos(E5);
-  var cosE6 = Math.cos(E6);
-  var cosE7 = Math.cos(E7);
-  var cosE8 = Math.cos(E8);
-  var cosE9 = Math.cos(E9);
-  var cosE10 = Math.cos(E10);
-  var cosE11 = Math.cos(E11);
-  var cosE12 = Math.cos(E12);
-  var cosE13 = Math.cos(E13);
+  const cosE1 = Math.cos(E1);
+  const cosE2 = Math.cos(E2);
+  const cosE3 = Math.cos(E3);
+  const cosE4 = Math.cos(E4);
+  const cosE5 = Math.cos(E5);
+  const cosE6 = Math.cos(E6);
+  const cosE7 = Math.cos(E7);
+  const cosE8 = Math.cos(E8);
+  const cosE9 = Math.cos(E9);
+  const cosE10 = Math.cos(E10);
+  const cosE11 = Math.cos(E11);
+  const cosE12 = Math.cos(E12);
+  const cosE13 = Math.cos(E13);
 
-  var rightAscension =
+  const rightAscension =
     (269.9949 +
       0.0031 * T -
       3.8787 * sinE1 -
@@ -103,7 +103,7 @@ Iau2000Orientation.ComputeMoon = function (date, result) {
       0.0052 * sinE10 +
       0.0043 * sinE13) *
     CesiumMath.RADIANS_PER_DEGREE;
-  var declination =
+  const declination =
     (66.5392 +
       0.013 * T +
       1.5419 * cosE1 +
@@ -115,7 +115,7 @@ Iau2000Orientation.ComputeMoon = function (date, result) {
       0.0008 * cosE10 -
       0.0009 * cosE13) *
     CesiumMath.RADIANS_PER_DEGREE;
-  var rotation =
+  const rotation =
     (38.3213 +
       13.17635815 * d -
       1.4e-12 * d * d +
@@ -134,7 +134,7 @@ Iau2000Orientation.ComputeMoon = function (date, result) {
       0.0044 * sinE13) *
     CesiumMath.RADIANS_PER_DEGREE;
 
-  var rotationRate =
+  const rotationRate =
     ((13.17635815 -
       1.4e-12 * (2.0 * d) +
       3.561 * cosE1 * c1 +

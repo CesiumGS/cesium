@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 
 /**
@@ -26,13 +25,13 @@ import Check from "./Check.js";
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
- * Cesium.when(promise, function(updatedPositions) {
+ * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * Promise.resolve(promise).then(function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
  * });
@@ -49,21 +48,95 @@ function sampleTerrain(terrainProvider, level, positions) {
   });
 }
 
-function doSampling(terrainProvider, level, positions) {
-  var tilingScheme = terrainProvider.tilingScheme;
+/**
+ * @param {Array.<Object>} tileRequests The mutated list of requests, the first one will be attempted
+ * @param {Array.<Promise<void>>} results The list to put the result promises into
+ * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
+ *  or false if we were throttled and should wait awhile before retrying.
+ *
+ * @private
+ */
+function attemptConsumeNextQueueItem(tileRequests, results) {
+  const tileRequest = tileRequests[0];
+  const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
+    tileRequest.x,
+    tileRequest.y,
+    tileRequest.level
+  );
 
-  var i;
+  if (!requestPromise) {
+    // getting back undefined instead of a promise indicates we should retry a bit later
+    return false;
+  }
+
+  const promise = requestPromise
+    .then(createInterpolateFunction(tileRequest))
+    .catch(createMarkFailedFunction(tileRequest));
+
+  // remove the request we've just done from the queue
+  //  and add its promise result to the result list
+  tileRequests.shift();
+  results.push(promise);
+
+  // indicate we should synchronously attempt the next request as well
+  return true;
+}
+
+/**
+ * Wrap window.setTimeout in a Promise
+ * @param {number} ms
+ * @private
+ */
+function delay(ms) {
+  return new Promise(function (res) {
+    setTimeout(res, ms);
+  });
+}
+
+/**
+ * Recursively consumes all the tileRequests until the list has been emptied
+ *  and a Promise of each result has been put into the results list
+ * @param {Array.<Object>} tileRequests The list of requests desired to be made
+ * @param {Array.<Promise<void>>} results The list to put all the result promises into
+ * @returns {Promise<void>} A promise which resolves once all requests have been started
+ *
+ * @private
+ */
+function drainTileRequestQueue(tileRequests, results) {
+  // nothing left to do
+  if (!tileRequests.length) {
+    return Promise.resolve();
+  }
+
+  // consume an item from the queue, which will
+  //  mutate the request and result lists, and return true if we should
+  //  immediately attempt to consume the next item as well
+  const success = attemptConsumeNextQueueItem(tileRequests, results);
+  if (success) {
+    return drainTileRequestQueue(tileRequests, results);
+  }
+
+  // wait a small fixed amount of time first, before retrying the same request again
+  return delay(100).then(() => {
+    return drainTileRequestQueue(tileRequests, results);
+  });
+}
+
+function doSampling(terrainProvider, level, positions) {
+  const tilingScheme = terrainProvider.tilingScheme;
+
+  let i;
 
   // Sort points into a set of tiles
-  var tileRequests = []; // Result will be an Array as it's easier to work with
-  var tileRequestSet = {}; // A unique set
+  const tileRequests = []; // Result will be an Array as it's easier to work with
+  const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
-    var xy = tilingScheme.positionToTileXY(positions[i], level);
-    var key = xy.toString();
+    const xy = tilingScheme.positionToTileXY(positions[i], level);
+    const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
       // When tile is requested for the first time
-      var value = {
+      const value = {
         x: xy.x,
         y: xy.y,
         level: level,
@@ -79,23 +152,14 @@ function doSampling(terrainProvider, level, positions) {
     tileRequestSet[key].positions.push(positions[i]);
   }
 
-  // Send request for each required tile
-  var tilePromises = [];
-  for (i = 0; i < tileRequests.length; ++i) {
-    var tileRequest = tileRequests[i];
-    var requestPromise = tileRequest.terrainProvider.requestTileGeometry(
-      tileRequest.x,
-      tileRequest.y,
-      tileRequest.level
-    );
-    var tilePromise = requestPromise
-      .then(createInterpolateFunction(tileRequest))
-      .otherwise(createMarkFailedFunction(tileRequest));
-    tilePromises.push(tilePromise);
-  }
-
-  return when.all(tilePromises, function () {
-    return positions;
+  // create our list of result promises to be filled
+  const tilePromises = [];
+  return drainTileRequestQueue(tileRequests, tilePromises).then(function () {
+    // now all the required requests have been started
+    //  we just wait for them all to finish
+    return Promise.all(tilePromises).then(function () {
+      return positions;
+    });
   });
 }
 
@@ -111,7 +175,7 @@ function doSampling(terrainProvider, level, positions) {
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {
-  var height = terrainData.interpolateHeight(
+  const height = terrainData.interpolateHeight(
     rectangle,
     position.longitude,
     position.latitude
@@ -127,17 +191,17 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
 }
 
 function createInterpolateFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
-  var rectangle = tileRequest.tilingScheme.tileXYToRectangle(
+  const tilePositions = tileRequest.positions;
+  const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
     tileRequest.y,
     tileRequest.level
   );
   return function (terrainData) {
-    var isMeshRequired = false;
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
-      var isHeightAssigned = interpolateAndAssignHeight(
+    let isMeshRequired = false;
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
+      const isHeightAssigned = interpolateAndAssignHeight(
         position,
         terrainData,
         rectangle
@@ -153,7 +217,7 @@ function createInterpolateFunction(tileRequest) {
 
     if (!isMeshRequired) {
       // all position heights were interpolated - we don't need the mesh
-      return when.resolve();
+      return Promise.resolve();
     }
 
     // create the mesh - and interpolate all the positions again
@@ -171,8 +235,8 @@ function createInterpolateFunction(tileRequest) {
       .then(function () {
         // mesh has been created - so go through every position (maybe again)
         //  and re-interpolate the heights - presumably using the mesh this time
-        for (var i = 0; i < tilePositions.length; ++i) {
-          var position = tilePositions[i];
+        for (let i = 0; i < tilePositions.length; ++i) {
+          const position = tilePositions[i];
           // if it doesn't work this time - that's fine, we tried.
           interpolateAndAssignHeight(position, terrainData, rectangle);
         }
@@ -181,12 +245,13 @@ function createInterpolateFunction(tileRequest) {
 }
 
 function createMarkFailedFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
+  const tilePositions = tileRequest.positions;
   return function () {
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
       position.height = undefined;
     }
   };
 }
+
 export default sampleTerrain;

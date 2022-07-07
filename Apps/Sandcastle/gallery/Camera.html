@@ -42,13 +42,13 @@
       <div id="cameraChanged">Camera Changed</div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
-        var clock = viewer.clock;
-        var referenceFramePrimitive;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+        const clock = viewer.clock;
+        let referenceFramePrimitive;
 
         function flyToSanDiego() {
           Sandcastle.declare(flyToSanDiego);
@@ -90,12 +90,12 @@
         function viewRectangle() {
           Sandcastle.declare(viewRectangle);
 
-          var west = -77.0;
-          var south = 38.0;
-          var east = -72.0;
-          var north = 42.0;
+          const west = -77.0;
+          const south = 38.0;
+          const east = -72.0;
+          const north = 42.0;
 
-          var rectangle = Cesium.Rectangle.fromDegrees(
+          const rectangle = Cesium.Rectangle.fromDegrees(
             west,
             south,
             east,
@@ -119,11 +119,11 @@
         function flyToRectangle() {
           Sandcastle.declare(flyToRectangle);
 
-          var west = -90.0;
-          var south = 38.0;
-          var east = -87.0;
-          var north = 40.0;
-          var rectangle = Cesium.Rectangle.fromDegrees(
+          const west = -90.0;
+          const south = 38.0;
+          const east = -87.0;
+          const north = 40.0;
+          const rectangle = Cesium.Rectangle.fromDegrees(
             west,
             south,
             east,
@@ -148,11 +148,11 @@
         function setReferenceFrame() {
           Sandcastle.declare(setReferenceFrame);
 
-          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-          var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+          const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
           // View in east-north-up frame
-          var camera = viewer.camera;
+          const camera = viewer.camera;
           camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
           camera.lookAtTransform(
             transform,
@@ -171,7 +171,7 @@
         function setHeadingPitchRoll() {
           Sandcastle.declare(setHeadingPitchRoll);
 
-          var camera = viewer.camera;
+          const camera = viewer.camera;
           camera.setView({
             destination: Cesium.Cartesian3.fromDegrees(
               -75.5847,
@@ -191,11 +191,13 @@
             return;
           }
 
-          var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+          const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
           if (Cesium.defined(icrfToFixed)) {
-            var camera = viewer.camera;
-            var offset = Cesium.Cartesian3.clone(camera.position);
-            var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+            const camera = viewer.camera;
+            const offset = Cesium.Cartesian3.clone(camera.position);
+            const transform = Cesium.Matrix4.fromRotationTranslation(
+              icrfToFixed
+            );
             camera.lookAtTransform(transform, offset);
           }
         }
@@ -210,15 +212,15 @@
           scene.globe.enableLighting = true;
         }
 
-        var viewChanged = document.getElementById("viewChanged");
+        const viewChanged = document.getElementById("viewChanged");
 
-        var removeStart;
-        var removeEnd;
+        let removeStart;
+        let removeEnd;
 
         function cameraEvents() {
           Sandcastle.declare(cameraEvents);
 
-          var camera = viewer.camera;
+          const camera = viewer.camera;
           removeStart = camera.moveStart.addEventListener(function () {
             viewChanged.style.display = "block";
           });
@@ -227,20 +229,21 @@
           });
         }
 
-        var cameraChanged = document.getElementById("cameraChanged");
+        const cameraChanged = document.getElementById("cameraChanged");
 
-        var removeChanged;
+        let removeChanged;
 
         function cameraChanges() {
           Sandcastle.declare(cameraChanges);
 
-          var i = 0;
+          let i = 0;
           removeChanged = viewer.camera.changed.addEventListener(function (
             percentage
           ) {
             ++i;
-            cameraChanged.innerText =
-              "Camera Changed: " + i + ", " + percentage.toFixed(6);
+            cameraChanged.innerText = `Camera Changed: ${i}, ${percentage.toFixed(
+              6
+            )}`;
             cameraChanged.style.display = "block";
           });
         }
@@ -248,7 +251,7 @@
         function flyInACity() {
           Sandcastle.declare(flyInACity);
 
-          var camera = scene.camera;
+          const camera = scene.camera;
           camera.flyTo({
             destination: Cesium.Cartesian3.fromDegrees(
               -73.98580932617188,
@@ -275,9 +278,9 @@
         }
 
         function losAngelesToTokyo(adjustPitch) {
-          var camera = scene.camera;
+          const camera = scene.camera;
 
-          var tokyoOptions = {
+          const tokyoOptions = {
             destination: Cesium.Cartesian3.fromDegrees(
               139.8148,
               35.7142,
@@ -292,7 +295,7 @@
             flyOverLongitude: Cesium.Math.toRadians(60.0),
           };
 
-          var laOptions = {
+          const laOptions = {
             destination: Cesium.Cartesian3.fromDegrees(
               -117.729,
               34.457,
@@ -483,10 +486,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

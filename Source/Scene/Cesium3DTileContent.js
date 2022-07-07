@@ -52,7 +52,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
    * </p>
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#batched-points}
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -112,7 +112,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the amount of memory used by the batch table textures, in bytes.
+   * Gets the amount of memory used by the batch table textures and any binary
+   * metadata properties not accounted for in geometryByteLength or
+   * texturesByteLength
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -129,7 +131,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   /**
    * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite specification}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -222,20 +224,43 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the group metadata for this content if the content uses the
-   * <code>3DTILES_metadata</code> extension. If the extension is not used,
+   * Gets the metadata for this content, whether it is available explicitly or via
+   * implicit tiling. If there is no metadata, this property should be undefined.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @type {ImplicitMetadataView|undefined}
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadata: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+    set: function (value) {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+
+  /**
+   * Gets the group for this content if the content has metadata (3D Tiles 1.1) or
+   * if it uses the <code>3DTILES_metadata</code> extension. If neither are present,
    * this property should be undefined.
    * <p>
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {GroupMetadata|undefined}
+   * @type {Cesium3DTileContentGroup|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  groupMetadata: {
+  group: {
     // eslint-disable-next-line getter-return
     get: function () {
       DeveloperError.throwInstantiationError();
@@ -265,7 +290,7 @@ Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
  * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
  *
  * @param {Number} batchId The batchId for the feature.
  * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.

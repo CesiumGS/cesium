@@ -48,13 +48,13 @@ import ClippingPlane from "./ClippingPlane.js";
  * // This clipping plane's distance is positive, which means its normal
  * // is facing the origin. This will clip everything that is behind
  * // the plane, which is anything with y coordinate < -5.
- * var clippingPlanes = new Cesium.ClippingPlaneCollection({
+ * const clippingPlanes = new Cesium.ClippingPlaneCollection({
  *     planes : [
  *         new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 5.0)
  *     ],
  * });
  * // Create an entity and attach the ClippingPlaneCollection to the model.
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *     position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 10000),
  *     model : {
  *         uri : 'model.gltf',
@@ -124,7 +124,10 @@ function ClippingPlaneCollection(options) {
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
   this._owner = undefined;
 
-  var unionClippingRegions = defaultValue(options.unionClippingRegions, false);
+  const unionClippingRegions = defaultValue(
+    options.unionClippingRegions,
+    false
+  );
   this._unionClippingRegions = unionClippingRegions;
   this._testIntersection = unionClippingRegions
     ? unionIntersectFunction
@@ -136,10 +139,10 @@ function ClippingPlaneCollection(options) {
   this._clippingPlanesTexture = undefined;
 
   // Add each ClippingPlane object.
-  var planes = options.planes;
+  const planes = options.planes;
   if (defined(planes)) {
-    var planesLength = planes.length;
-    for (var i = 0; i < planesLength; ++i) {
+    const planesLength = planes.length;
+    for (let i = 0; i < planesLength; ++i) {
       this.add(planes[i]);
     }
   }
@@ -243,7 +246,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * Returns a Number encapsulating the state for this ClippingPlaneCollection.
    *
    * Clipping mode is encoded in the sign of the number, which is just the plane count.
-   * Used for checking if shader regeneration is necessary.
+   * If this value changes, then shader regeneration is necessary.
    *
    * @memberof ClippingPlaneCollection.prototype
    * @returns {Number} A Number that describes the ClippingPlaneCollection's state.
@@ -280,9 +283,9 @@ function setIndexDirty(collection, index) {
  * @see ClippingPlaneCollection#removeAll
  */
 ClippingPlaneCollection.prototype.add = function (plane) {
-  var newPlaneIndex = this._planes.length;
+  const newPlaneIndex = this._planes.length;
 
-  var that = this;
+  const that = this;
   plane.onChangeCallback = function (index) {
     setIndexDirty(that, index);
   };
@@ -314,8 +317,8 @@ ClippingPlaneCollection.prototype.get = function (index) {
 };
 
 function indexOf(planes, plane) {
-  var length = planes.length;
-  for (var i = 0; i < length; ++i) {
+  const length = planes.length;
+  for (let i = 0; i < length; ++i) {
     if (Plane.equals(planes[i], plane)) {
       return i;
     }
@@ -347,8 +350,8 @@ ClippingPlaneCollection.prototype.contains = function (clippingPlane) {
  * @see ClippingPlaneCollection#removeAll
  */
 ClippingPlaneCollection.prototype.remove = function (clippingPlane) {
-  var planes = this._planes;
-  var index = indexOf(planes, clippingPlane);
+  const planes = this._planes;
+  const index = indexOf(planes, clippingPlane);
 
   if (index === -1) {
     return false;
@@ -361,9 +364,9 @@ ClippingPlaneCollection.prototype.remove = function (clippingPlane) {
   }
 
   // Shift and update indices
-  var length = planes.length - 1;
-  for (var i = index; i < length; ++i) {
-    var planeToKeep = planes[i + 1];
+  const length = planes.length - 1;
+  for (let i = index; i < length; ++i) {
+    const planeToKeep = planes[i + 1];
     planes[i] = planeToKeep;
     if (planeToKeep instanceof ClippingPlane) {
       planeToKeep.index = i;
@@ -387,10 +390,10 @@ ClippingPlaneCollection.prototype.remove = function (clippingPlane) {
  */
 ClippingPlaneCollection.prototype.removeAll = function () {
   // Dereference this ClippingPlaneCollection from all ClippingPlanes
-  var planes = this._planes;
-  var planesCount = planes.length;
-  for (var i = 0; i < planesCount; ++i) {
-    var plane = planes[i];
+  const planes = this._planes;
+  const planesCount = planes.length;
+  for (let i = 0; i < planesCount; ++i) {
+    const plane = planes[i];
     if (plane instanceof ClippingPlane) {
       plane.onChangeCallback = undefined;
       plane.index = -1;
@@ -401,16 +404,16 @@ ClippingPlaneCollection.prototype.removeAll = function () {
   this._planes = [];
 };
 
-var distanceEncodeScratch = new Cartesian4();
-var oct32EncodeScratch = new Cartesian4();
+const distanceEncodeScratch = new Cartesian4();
+const oct32EncodeScratch = new Cartesian4();
 function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
-  var uint8View = clippingPlaneCollection._uint8View;
-  var planes = clippingPlaneCollection._planes;
-  var byteIndex = 0;
-  for (var i = startIndex; i < endIndex; ++i) {
-    var plane = planes[i];
+  const uint8View = clippingPlaneCollection._uint8View;
+  const planes = clippingPlaneCollection._planes;
+  let byteIndex = 0;
+  for (let i = startIndex; i < endIndex; ++i) {
+    const plane = planes[i];
 
-    var oct32Normal = AttributeCompression.octEncodeToCartesian4(
+    const oct32Normal = AttributeCompression.octEncodeToCartesian4(
       plane.normal,
       oct32EncodeScratch
     );
@@ -419,7 +422,7 @@ function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
     uint8View[byteIndex + 2] = oct32Normal.z;
     uint8View[byteIndex + 3] = oct32Normal.w;
 
-    var encodedDistance = Cartesian4.packFloat(
+    const encodedDistance = Cartesian4.packFloat(
       plane.distance,
       distanceEncodeScratch
     );
@@ -434,13 +437,13 @@ function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
 
 // Pack starting at the beginning of the buffer to allow partial update
 function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
-  var float32View = clippingPlaneCollection._float32View;
-  var planes = clippingPlaneCollection._planes;
+  const float32View = clippingPlaneCollection._float32View;
+  const planes = clippingPlaneCollection._planes;
 
-  var floatIndex = 0;
-  for (var i = startIndex; i < endIndex; ++i) {
-    var plane = planes[i];
-    var normal = plane.normal;
+  let floatIndex = 0;
+  for (let i = startIndex; i < endIndex; ++i) {
+    const plane = planes[i];
+    const normal = plane.normal;
 
     float32View[floatIndex] = normal.x;
     float32View[floatIndex + 1] = normal.y;
@@ -452,13 +455,13 @@ function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
 }
 
 function computeTextureResolution(pixelsNeeded, result) {
-  var maxSize = ContextLimits.maximumTextureSize;
+  const maxSize = ContextLimits.maximumTextureSize;
   result.x = Math.min(pixelsNeeded, maxSize);
   result.y = Math.ceil(pixelsNeeded / result.x);
   return result;
 }
 
-var textureResolutionScratch = new Cartesian2();
+const textureResolutionScratch = new Cartesian2();
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
  * build the resources for clipping planes.
@@ -467,18 +470,18 @@ var textureResolutionScratch = new Cartesian2();
  * </p>
  */
 ClippingPlaneCollection.prototype.update = function (frameState) {
-  var clippingPlanesTexture = this._clippingPlanesTexture;
-  var context = frameState.context;
-  var useFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
+  let clippingPlanesTexture = this._clippingPlanesTexture;
+  const context = frameState.context;
+  const useFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
 
   // Compute texture requirements for current planes
   // In RGBA FLOAT, A plane is 4 floats packed to a RGBA.
   // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
   // so 8 bits or 2 pixels in RGBA.
-  var pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
+  const pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
 
   if (defined(clippingPlanesTexture)) {
-    var currentPixelCount =
+    const currentPixelCount =
       clippingPlanesTexture.width * clippingPlanesTexture.height;
     // Recreate the texture to double current requirement if it isn't big enough or is 4 times larger than it needs to be.
     // Optimization note: this isn't exactly the classic resizeable array algorithm
@@ -501,7 +504,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   }
 
   if (!defined(clippingPlanesTexture)) {
-    var requiredResolution = computeTextureResolution(
+    const requiredResolution = computeTextureResolution(
       pixelsNeeded,
       textureResolutionScratch
     );
@@ -541,57 +544,61 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
     this._multipleDirtyPlanes = true;
   }
 
-  var dirtyIndex = this._dirtyIndex;
+  const dirtyIndex = this._dirtyIndex;
   if (!this._multipleDirtyPlanes && dirtyIndex === -1) {
     return;
   }
   if (!this._multipleDirtyPlanes) {
     // partial updates possible
-    var offsetX = 0;
-    var offsetY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
     if (useFloatTexture) {
       offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
       offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
 
       packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
-      clippingPlanesTexture.copyFrom(
-        {
+      clippingPlanesTexture.copyFrom({
+        source: {
           width: 1,
           height: 1,
           arrayBufferView: this._float32View,
         },
-        offsetX,
-        offsetY
-      );
+        xOffset: offsetX,
+        yOffset: offsetY,
+      });
     } else {
       offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
       offsetX = Math.floor(
         dirtyIndex * 2 - offsetY * clippingPlanesTexture.width
       );
       packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
-      clippingPlanesTexture.copyFrom(
-        {
+      clippingPlanesTexture.copyFrom({
+        source: {
           width: 2,
           height: 1,
           arrayBufferView: this._uint8View,
         },
-        offsetX,
-        offsetY
-      );
+        xOffset: offsetX,
+        yOffset: offsetY,
+      });
     }
   } else if (useFloatTexture) {
     packPlanesAsFloats(this, 0, this._planes.length);
     clippingPlanesTexture.copyFrom({
-      width: clippingPlanesTexture.width,
-      height: clippingPlanesTexture.height,
-      arrayBufferView: this._float32View,
+      source: {
+        width: clippingPlanesTexture.width,
+        height: clippingPlanesTexture.height,
+        arrayBufferView: this._float32View,
+      },
     });
   } else {
     packPlanesAsUint8(this, 0, this._planes.length);
     clippingPlanesTexture.copyFrom({
-      width: clippingPlanesTexture.width,
-      height: clippingPlanesTexture.height,
-      arrayBufferView: this._uint8View,
+      source: {
+        width: clippingPlanesTexture.width,
+        height: clippingPlanesTexture.height,
+        arrayBufferView: this._uint8View,
+      },
     });
   }
 
@@ -599,8 +606,8 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   this._dirtyIndex = -1;
 };
 
-var scratchMatrix = new Matrix4();
-var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+const scratchMatrix = new Matrix4();
+const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
  * @private
@@ -616,10 +623,10 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = functi
   tileBoundingVolume,
   transform
 ) {
-  var planes = this._planes;
-  var length = planes.length;
+  const planes = this._planes;
+  const length = planes.length;
 
-  var modelMatrix = this.modelMatrix;
+  let modelMatrix = this.modelMatrix;
   if (defined(transform)) {
     modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
   }
@@ -628,17 +635,17 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = functi
   // considered completely clipped. If the collection is set to union the clipping regions, if the volume can be
   // outside any the planes, it is considered completely clipped.
   // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
-  var intersection = Intersect.INSIDE;
+  let intersection = Intersect.INSIDE;
   if (!this.unionClippingRegions && length > 0) {
     intersection = Intersect.OUTSIDE;
   }
 
-  for (var i = 0; i < length; ++i) {
-    var plane = planes[i];
+  for (let i = 0; i < length; ++i) {
+    const plane = planes[i];
 
     Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
 
-    var value = tileBoundingVolume.intersectPlane(scratchPlane);
+    const value = tileBoundingVolume.intersectPlane(scratchPlane);
     if (value === Intersect.INTERSECTING) {
       intersection = value;
     } else if (this._testIntersection(value)) {
@@ -709,17 +716,17 @@ ClippingPlaneCollection.getTextureResolution = function (
   context,
   result
 ) {
-  var texture = clippingPlaneCollection.texture;
+  const texture = clippingPlaneCollection.texture;
   if (defined(texture)) {
     result.x = texture.width;
     result.y = texture.height;
     return result;
   }
 
-  var pixelsNeeded = ClippingPlaneCollection.useFloatTexture(context)
+  const pixelsNeeded = ClippingPlaneCollection.useFloatTexture(context)
     ? clippingPlaneCollection.length
     : clippingPlaneCollection.length * 2;
-  var requiredResolution = computeTextureResolution(pixelsNeeded, result);
+  const requiredResolution = computeTextureResolution(pixelsNeeded, result);
 
   // Allocate twice as much space as needed to avoid frequent texture reallocation.
   requiredResolution.y *= 2;

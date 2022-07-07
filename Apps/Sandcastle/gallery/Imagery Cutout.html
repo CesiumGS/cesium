@@ -46,25 +46,25 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.TileMapServiceImageryProvider({
             url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
           }),
           baseLayerPicker: false,
         });
 
-        var canvas = viewer.canvas;
+        const canvas = viewer.canvas;
         canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
         canvas.onclick = function () {
           canvas.focus();
         };
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
-        var defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(
+        const defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(
           -90,
           20,
           -70,
@@ -72,8 +72,8 @@
         );
 
         // Cut a rectangle out of the base layer
-        var layers = viewer.imageryLayers;
-        var imageryBaseLayer = layers.get(0);
+        const layers = viewer.imageryLayers;
+        const imageryBaseLayer = layers.get(0);
 
         imageryBaseLayer.cutoutRectangle = defaultImageryLayerCutout;
 
@@ -86,7 +86,7 @@
         );
 
         // Add an Earth at Night layer and a "traveling" cutout
-        var earthAtNight = layers.addImageryProvider(
+        const earthAtNight = layers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
         earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(
@@ -98,7 +98,7 @@
         earthAtNight.alpha = 0.9;
 
         // "traveling" code
-        var flags = {
+        const flags = {
           moveEast: false,
           moveWest: false,
           moveNorth: false,
@@ -123,7 +123,7 @@
         document.addEventListener(
           "keydown",
           function (e) {
-            var flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.keyCode);
             if (typeof flagName !== "undefined") {
               flags[flagName] = true;
             }
@@ -134,7 +134,7 @@
         document.addEventListener(
           "keyup",
           function (e) {
-            var flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.keyCode);
             if (typeof flagName !== "undefined") {
               flags[flagName] = false;
             }
@@ -142,9 +142,9 @@
           false
         );
 
-        var moveIncrement = 0.05;
+        const moveIncrement = 0.05;
         viewer.clock.onTick.addEventListener(function (clock) {
-          var travelingRectangle = earthAtNight.cutoutRectangle;
+          const travelingRectangle = earthAtNight.cutoutRectangle;
           if (
             flags.moveNorth &&
             travelingRectangle.north + moveIncrement < Cesium.Math.PI_OVER_TWO
@@ -183,10 +183,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

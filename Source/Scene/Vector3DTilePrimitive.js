@@ -143,9 +143,9 @@ function Vector3DTilePrimitive(options) {
 
   this._batchIdLookUp = {};
 
-  var length = this._batchIds.length;
-  for (var i = 0; i < length; ++i) {
-    var batchId = this._batchIds[i];
+  const length = this._batchIds.length;
+  for (let i = 0; i < length; ++i) {
+    const batchId = this._batchIds[i];
     this._batchIdLookUp[batchId] = i;
   }
 }
@@ -180,7 +180,7 @@ Object.defineProperties(Vector3DTilePrimitive.prototype, {
   },
 });
 
-var defaultAttributeLocations = {
+const defaultAttributeLocations = {
   position: 0,
   a_batchId: 1,
 };
@@ -190,17 +190,17 @@ function createVertexArray(primitive, context) {
     return;
   }
 
-  var positionBuffer = Buffer.createVertexBuffer({
+  const positionBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: primitive._positions,
     usage: BufferUsage.STATIC_DRAW,
   });
-  var idBuffer = Buffer.createVertexBuffer({
+  const idBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: primitive._vertexBatchIds,
     usage: BufferUsage.STATIC_DRAW,
   });
-  var indexBuffer = Buffer.createIndexBuffer({
+  const indexBuffer = Buffer.createIndexBuffer({
     context: context,
     typedArray: primitive._indices,
     usage: BufferUsage.DYNAMIC_DRAW,
@@ -210,7 +210,7 @@ function createVertexArray(primitive, context) {
         : IndexDatatype.UNSIGNED_INT,
   });
 
-  var vertexAttributes = [
+  const vertexAttributes = [
     {
       index: 0,
       vertexBuffer: positionBuffer,
@@ -257,15 +257,15 @@ function createShaders(primitive, context) {
     return;
   }
 
-  var batchTable = primitive._batchTable;
-  var attributeLocations = defaultValue(
+  const batchTable = primitive._batchTable;
+  const attributeLocations = defaultValue(
     primitive._attributeLocations,
     defaultAttributeLocations
   );
 
-  var pickId = primitive._pickId;
-  var vertexShaderSource = primitive._vertexShaderSource;
-  var fragmentShaderSource = primitive._fragmentShaderSource;
+  let pickId = primitive._pickId;
+  const vertexShaderSource = primitive._vertexShaderSource;
+  let fragmentShaderSource = primitive._fragmentShaderSource;
   if (defined(vertexShaderSource)) {
     primitive._sp = ShaderProgram.fromCache({
       context: context,
@@ -280,14 +280,11 @@ function createShaders(primitive, context) {
       "czm_non_pick_main"
     );
     fragmentShaderSource =
-      fragmentShaderSource +
-      "void main() \n" +
-      "{ \n" +
-      "    czm_non_pick_main(); \n" +
-      "    gl_FragColor = " +
-      pickId +
-      "; \n" +
-      "} \n";
+      `${fragmentShaderSource}void main() \n` +
+      `{ \n` +
+      `    czm_non_pick_main(); \n` +
+      `    gl_FragColor = ${pickId}; \n` +
+      `} \n`;
     primitive._spPick = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vertexShaderSource,
@@ -297,12 +294,12 @@ function createShaders(primitive, context) {
     return;
   }
 
-  var vsSource = batchTable.getVertexShaderCallback(
+  const vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
     undefined
   )(VectorTileVS);
-  var fsSource = batchTable.getFragmentShaderCallback(
+  let fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
     true
@@ -310,10 +307,10 @@ function createShaders(primitive, context) {
 
   pickId = batchTable.getPickId();
 
-  var vs = new ShaderSource({
+  let vs = new ShaderSource({
     sources: [vsSource],
   });
-  var fs = new ShaderSource({
+  let fs = new ShaderSource({
     defines: ["VECTOR_TILE"],
     sources: [fsSource],
   });
@@ -342,20 +339,17 @@ function createShaders(primitive, context) {
 
   fsSource = ShaderSource.replaceMain(fsSource, "czm_non_pick_main");
   fsSource =
-    fsSource +
-    "\n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_non_pick_main(); \n" +
-    "    gl_FragColor = " +
-    pickId +
-    "; \n" +
-    "} \n";
+    `${fsSource}\n` +
+    `void main() \n` +
+    `{ \n` +
+    `    czm_non_pick_main(); \n` +
+    `    gl_FragColor = ${pickId}; \n` +
+    `} \n`;
 
-  var pickVS = new ShaderSource({
+  const pickVS = new ShaderSource({
     sources: [vsSource],
   });
-  var pickFS = new ShaderSource({
+  const pickFS = new ShaderSource({
     defines: ["VECTOR_TILE"],
     sources: [fsSource],
   });
@@ -368,7 +362,7 @@ function createShaders(primitive, context) {
 }
 
 function getStencilDepthRenderState(mask3DTiles) {
-  var stencilFunction = mask3DTiles
+  const stencilFunction = mask3DTiles
     ? StencilFunction.EQUAL
     : StencilFunction.ALWAYS;
   return {
@@ -404,7 +398,7 @@ function getStencilDepthRenderState(mask3DTiles) {
   };
 }
 
-var colorRenderState = {
+const colorRenderState = {
   stencilTest: {
     enabled: true,
     frontFunction: StencilFunction.NOT_EQUAL,
@@ -430,7 +424,7 @@ var colorRenderState = {
   blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
 };
 
-var pickRenderState = {
+const pickRenderState = {
   stencilTest: {
     enabled: true,
     frontFunction: StencilFunction.NOT_EQUAL,
@@ -470,18 +464,18 @@ function createRenderStates(primitive) {
   primitive._rsPickPass = RenderState.fromCache(pickRenderState);
 }
 
-var modifiedModelViewScratch = new Matrix4();
-var rtcScratch = new Cartesian3();
+const modifiedModelViewScratch = new Matrix4();
+const rtcScratch = new Cartesian3();
 
 function createUniformMap(primitive, context) {
   if (defined(primitive._uniformMap)) {
     return;
   }
 
-  var uniformMap = {
+  const uniformMap = {
     u_modifiedModelViewProjection: function () {
-      var viewMatrix = context.uniformState.view;
-      var projectionMatrix = context.uniformState.projection;
+      const viewMatrix = context.uniformState.view;
+      const projectionMatrix = context.uniformState.projection;
       Matrix4.clone(viewMatrix, modifiedModelViewScratch);
       Matrix4.multiplyByPoint(
         modifiedModelViewScratch,
@@ -519,16 +513,16 @@ function copyIndicesCPU(
   batchIds,
   batchIdLookUp
 ) {
-  var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
+  const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
-  var batchedIdsLength = batchIds.length;
-  for (var j = 0; j < batchedIdsLength; ++j) {
-    var batchedId = batchIds[j];
-    var index = batchIdLookUp[batchedId];
-    var offset = offsets[index];
-    var count = counts[index];
+  const batchedIdsLength = batchIds.length;
+  for (let j = 0; j < batchedIdsLength; ++j) {
+    const batchedId = batchIds[j];
+    const index = batchIdLookUp[batchedId];
+    const offset = offsets[index];
+    const count = counts[index];
 
-    var subarray = new indices.constructor(
+    const subarray = new indices.constructor(
       indices.buffer,
       sizeInBytes * offset,
       count
@@ -543,17 +537,17 @@ function copyIndicesCPU(
 }
 
 function rebatchCPU(primitive, batchedIndices) {
-  var indices = primitive._indices;
-  var indexOffsets = primitive._indexOffsets;
-  var indexCounts = primitive._indexCounts;
-  var batchIdLookUp = primitive._batchIdLookUp;
+  const indices = primitive._indices;
+  const indexOffsets = primitive._indexOffsets;
+  const indexCounts = primitive._indexCounts;
+  const batchIdLookUp = primitive._batchIdLookUp;
 
-  var newIndices = new indices.constructor(indices.length);
+  const newIndices = new indices.constructor(indices.length);
 
-  var current = batchedIndices.pop();
-  var newBatchedIndices = [current];
+  let current = batchedIndices.pop();
+  const newBatchedIndices = [current];
 
-  var currentOffset = copyIndicesCPU(
+  let currentOffset = copyIndicesCPU(
     indices,
     newIndices,
     0,
@@ -567,7 +561,7 @@ function rebatchCPU(primitive, batchedIndices) {
   current.count = currentOffset;
 
   while (batchedIndices.length > 0) {
-    var next = batchedIndices.pop();
+    const next = batchedIndices.pop();
     if (Color.equals(next.color, current.color)) {
       currentOffset = copyIndicesCPU(
         indices,
@@ -581,7 +575,7 @@ function rebatchCPU(primitive, batchedIndices) {
       current.batchIds = current.batchIds.concat(next.batchIds);
       current.count = currentOffset - current.offset;
     } else {
-      var offset = currentOffset;
+      const offset = currentOffset;
       currentOffset = copyIndicesCPU(
         indices,
         newIndices,
@@ -614,14 +608,14 @@ function copyIndicesGPU(
   batchIds,
   batchIdLookUp
 ) {
-  var sizeInBytes = readBuffer.bytesPerIndex;
+  const sizeInBytes = readBuffer.bytesPerIndex;
 
-  var batchedIdsLength = batchIds.length;
-  for (var j = 0; j < batchedIdsLength; ++j) {
-    var batchedId = batchIds[j];
-    var index = batchIdLookUp[batchedId];
-    var offset = offsets[index];
-    var count = counts[index];
+  const batchedIdsLength = batchIds.length;
+  for (let j = 0; j < batchedIdsLength; ++j) {
+    const batchedId = batchIds[j];
+    const index = batchIdLookUp[batchedId];
+    const offset = offsets[index];
+    const count = counts[index];
 
     writeBuffer.copyFromBuffer(
       readBuffer,
@@ -638,17 +632,17 @@ function copyIndicesGPU(
 }
 
 function rebatchGPU(primitive, batchedIndices) {
-  var indexOffsets = primitive._indexOffsets;
-  var indexCounts = primitive._indexCounts;
-  var batchIdLookUp = primitive._batchIdLookUp;
+  const indexOffsets = primitive._indexOffsets;
+  const indexCounts = primitive._indexCounts;
+  const batchIdLookUp = primitive._batchIdLookUp;
 
-  var current = batchedIndices.pop();
-  var newBatchedIndices = [current];
+  let current = batchedIndices.pop();
+  const newBatchedIndices = [current];
 
-  var readBuffer = primitive._va.indexBuffer;
-  var writeBuffer = primitive._vaSwap.indexBuffer;
+  const readBuffer = primitive._va.indexBuffer;
+  const writeBuffer = primitive._vaSwap.indexBuffer;
 
-  var currentOffset = copyIndicesGPU(
+  let currentOffset = copyIndicesGPU(
     readBuffer,
     writeBuffer,
     0,
@@ -662,7 +656,7 @@ function rebatchGPU(primitive, batchedIndices) {
   current.count = currentOffset;
 
   while (batchedIndices.length > 0) {
-    var next = batchedIndices.pop();
+    const next = batchedIndices.pop();
     if (Color.equals(next.color, current.color)) {
       currentOffset = copyIndicesGPU(
         readBuffer,
@@ -676,7 +670,7 @@ function rebatchGPU(primitive, batchedIndices) {
       current.batchIds = current.batchIds.concat(next.batchIds);
       current.count = currentOffset - current.offset;
     } else {
-      var offset = currentOffset;
+      const offset = currentOffset;
       currentOffset = copyIndicesGPU(
         readBuffer,
         writeBuffer,
@@ -693,7 +687,7 @@ function rebatchGPU(primitive, batchedIndices) {
     }
   }
 
-  var temp = primitive._va;
+  const temp = primitive._va;
   primitive._va = primitive._vaSwap;
   primitive._vaSwap = temp;
 
@@ -711,15 +705,15 @@ function rebatchCommands(primitive, context) {
     return false;
   }
 
-  var batchedIndices = primitive._batchedIndices;
-  var length = batchedIndices.length;
+  const batchedIndices = primitive._batchedIndices;
+  const length = batchedIndices.length;
 
-  var needToRebatch = false;
-  var colorCounts = {};
+  let needToRebatch = false;
+  const colorCounts = {};
 
-  for (var i = 0; i < length; ++i) {
-    var color = batchedIndices[i].color;
-    var rgba = color.toRgba();
+  for (let i = 0; i < length; ++i) {
+    const color = batchedIndices[i].color;
+    const rgba = color.toRgba();
     if (defined(colorCounts[rgba])) {
       needToRebatch = true;
       break;
@@ -758,12 +752,12 @@ function rebatchCommands(primitive, context) {
 }
 
 function createColorCommands(primitive, context) {
-  var needsRebatch = rebatchCommands(primitive, context);
+  const needsRebatch = rebatchCommands(primitive, context);
 
-  var commands = primitive._commands;
-  var batchedIndices = primitive._batchedIndices;
-  var length = batchedIndices.length;
-  var commandsLength = length * 2;
+  const commands = primitive._commands;
+  const batchedIndices = primitive._batchedIndices;
+  const length = batchedIndices.length;
+  const commandsLength = length * 2;
 
   if (
     defined(commands) &&
@@ -775,17 +769,17 @@ function createColorCommands(primitive, context) {
 
   commands.length = commandsLength;
 
-  var vertexArray = primitive._va;
-  var sp = primitive._sp;
-  var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-  var uniformMap = primitive._uniformMap;
-  var bv = primitive._boundingVolume;
+  const vertexArray = primitive._va;
+  const sp = primitive._sp;
+  const modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+  const uniformMap = primitive._uniformMap;
+  const bv = primitive._boundingVolume;
 
-  for (var j = 0; j < length; ++j) {
-    var offset = batchedIndices[j].offset;
-    var count = batchedIndices[j].count;
+  for (let j = 0; j < length; ++j) {
+    const offset = batchedIndices[j].offset;
+    const count = batchedIndices[j].count;
 
-    var stencilDepthCommand = commands[j * 2];
+    let stencilDepthCommand = commands[j * 2];
     if (!defined(stencilDepthCommand)) {
       stencilDepthCommand = commands[j * 2] = new DrawCommand({
         owner: primitive,
@@ -803,7 +797,7 @@ function createColorCommands(primitive, context) {
     stencilDepthCommand.cull = false;
     stencilDepthCommand.pass = Pass.TERRAIN_CLASSIFICATION;
 
-    var stencilDepthDerivedCommand = DrawCommand.shallowClone(
+    const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
       stencilDepthCommand.derivedCommands.tileset
     );
@@ -812,7 +806,7 @@ function createColorCommands(primitive, context) {
     stencilDepthDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     stencilDepthCommand.derivedCommands.tileset = stencilDepthDerivedCommand;
 
-    var colorCommand = commands[j * 2 + 1];
+    let colorCommand = commands[j * 2 + 1];
     if (!defined(colorCommand)) {
       colorCommand = commands[j * 2 + 1] = new DrawCommand({
         owner: primitive,
@@ -830,7 +824,7 @@ function createColorCommands(primitive, context) {
     colorCommand.cull = false;
     colorCommand.pass = Pass.TERRAIN_CLASSIFICATION;
 
-    var colorDerivedCommand = DrawCommand.shallowClone(
+    const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
       colorCommand.derivedCommands.tileset
     );
@@ -850,16 +844,16 @@ function createColorCommandsIgnoreShow(primitive, frameState) {
     return;
   }
 
-  var commands = primitive._commands;
-  var commandsIgnoreShow = primitive._commandsIgnoreShow;
-  var spStencil = primitive._spStencil;
+  const commands = primitive._commands;
+  const commandsIgnoreShow = primitive._commandsIgnoreShow;
+  const spStencil = primitive._spStencil;
 
-  var commandsLength = commands.length;
-  var length = (commandsIgnoreShow.length = commandsLength / 2);
+  const commandsLength = commands.length;
+  const length = (commandsIgnoreShow.length = commandsLength / 2);
 
-  var commandIndex = 0;
-  for (var j = 0; j < length; ++j) {
-    var commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
+  let commandIndex = 0;
+  for (let j = 0; j < length; ++j) {
+    const commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
       commands[commandIndex],
       commandsIgnoreShow[j]
     ));
@@ -877,24 +871,24 @@ function createPickCommands(primitive) {
     return;
   }
 
-  var length = primitive._indexOffsets.length;
-  var pickCommands = primitive._pickCommands;
+  const length = primitive._indexOffsets.length;
+  const pickCommands = primitive._pickCommands;
   pickCommands.length = length * 2;
 
-  var vertexArray = primitive._va;
-  var spStencil = primitive._spStencil;
-  var spPick = primitive._spPick;
-  var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-  var uniformMap = primitive._uniformMap;
+  const vertexArray = primitive._va;
+  const spStencil = primitive._spStencil;
+  const spPick = primitive._spPick;
+  const modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+  const uniformMap = primitive._uniformMap;
 
-  for (var j = 0; j < length; ++j) {
-    var offset = primitive._indexOffsets[j];
-    var count = primitive._indexCounts[j];
-    var bv = defined(primitive._boundingVolumes)
+  for (let j = 0; j < length; ++j) {
+    const offset = primitive._indexOffsets[j];
+    const count = primitive._indexCounts[j];
+    const bv = defined(primitive._boundingVolumes)
       ? primitive._boundingVolumes[j]
       : primitive.boundingVolume;
 
-    var stencilDepthCommand = pickCommands[j * 2];
+    let stencilDepthCommand = pickCommands[j * 2];
     if (!defined(stencilDepthCommand)) {
       stencilDepthCommand = pickCommands[j * 2] = new DrawCommand({
         owner: primitive,
@@ -912,7 +906,7 @@ function createPickCommands(primitive) {
     stencilDepthCommand.boundingVolume = bv;
     stencilDepthCommand.pass = Pass.TERRAIN_CLASSIFICATION;
 
-    var stencilDepthDerivedCommand = DrawCommand.shallowClone(
+    const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
       stencilDepthCommand.derivedCommands.tileset
     );
@@ -921,7 +915,7 @@ function createPickCommands(primitive) {
     stencilDepthDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     stencilDepthCommand.derivedCommands.tileset = stencilDepthDerivedCommand;
 
-    var colorCommand = pickCommands[j * 2 + 1];
+    let colorCommand = pickCommands[j * 2 + 1];
     if (!defined(colorCommand)) {
       colorCommand = pickCommands[j * 2 + 1] = new DrawCommand({
         owner: primitive,
@@ -939,7 +933,7 @@ function createPickCommands(primitive) {
     colorCommand.boundingVolume = bv;
     colorCommand.pass = Pass.TERRAIN_CLASSIFICATION;
 
-    var colorDerivedCommand = DrawCommand.shallowClone(
+    const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
       colorCommand.derivedCommands.tileset
     );
@@ -957,10 +951,10 @@ function createPickCommands(primitive) {
  * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
  */
 Vector3DTilePrimitive.prototype.createFeatures = function (content, features) {
-  var batchIds = this._batchIds;
-  var length = batchIds.length;
-  for (var i = 0; i < length; ++i) {
-    var batchId = batchIds[i];
+  const batchIds = this._batchIds;
+  const length = batchIds.length;
+  for (let i = 0; i < length; ++i) {
+    const batchId = batchIds[i];
     features[batchId] = new Cesium3DTileFeature(content, batchId);
   }
 };
@@ -978,19 +972,19 @@ Vector3DTilePrimitive.prototype.applyDebugSettings = function (enabled, color) {
 function clearStyle(polygons, features) {
   polygons._updatingAllCommands = true;
 
-  var batchIds = polygons._batchIds;
-  var length = batchIds.length;
-  var i;
+  const batchIds = polygons._batchIds;
+  let length = batchIds.length;
+  let i;
 
   for (i = 0; i < length; ++i) {
-    var batchId = batchIds[i];
-    var feature = features[batchId];
+    const batchId = batchIds[i];
+    const feature = features[batchId];
 
     feature.show = true;
     feature.color = Color.WHITE;
   }
 
-  var batchedIndices = polygons._batchedIndices;
+  const batchedIndices = polygons._batchedIndices;
   length = batchedIndices.length;
 
   for (i = 0; i < length; ++i) {
@@ -1001,12 +995,12 @@ function clearStyle(polygons, features) {
   polygons._batchDirty = true;
 }
 
-var scratchColor = new Color();
+const scratchColor = new Color();
 
-var DEFAULT_COLOR_VALUE = Color.WHITE;
-var DEFAULT_SHOW_VALUE = true;
+const DEFAULT_COLOR_VALUE = Color.WHITE;
+const DEFAULT_SHOW_VALUE = true;
 
-var complexExpressionReg = /\$/;
+const complexExpressionReg = /\$/;
 
 /**
  * Apply a style to the content.
@@ -1020,19 +1014,19 @@ Vector3DTilePrimitive.prototype.applyStyle = function (style, features) {
     return;
   }
 
-  var colorExpression = style.color;
-  var isSimpleStyle =
+  const colorExpression = style.color;
+  const isSimpleStyle =
     colorExpression instanceof Expression &&
     !complexExpressionReg.test(colorExpression.expression);
   this._updatingAllCommands = isSimpleStyle;
 
-  var batchIds = this._batchIds;
-  var length = batchIds.length;
-  var i;
+  const batchIds = this._batchIds;
+  let length = batchIds.length;
+  let i;
 
   for (i = 0; i < length; ++i) {
-    var batchId = batchIds[i];
-    var feature = features[batchId];
+    const batchId = batchIds[i];
+    const feature = features[batchId];
 
     feature.color = defined(style.color)
       ? style.color.evaluateColor(feature, scratchColor)
@@ -1043,7 +1037,7 @@ Vector3DTilePrimitive.prototype.applyStyle = function (style, features) {
   }
 
   if (isSimpleStyle) {
-    var batchedIndices = this._batchedIndices;
+    const batchedIndices = this._batchedIndices;
     length = batchedIndices.length;
 
     for (i = 0; i < length; ++i) {
@@ -1067,25 +1061,25 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
     return;
   }
 
-  var batchIdLookUp = this._batchIdLookUp;
-  var index = batchIdLookUp[batchId];
+  const batchIdLookUp = this._batchIdLookUp;
+  const index = batchIdLookUp[batchId];
   if (!defined(index)) {
     return;
   }
 
-  var indexOffsets = this._indexOffsets;
-  var indexCounts = this._indexCounts;
+  const indexOffsets = this._indexOffsets;
+  const indexCounts = this._indexCounts;
 
-  var offset = indexOffsets[index];
-  var count = indexCounts[index];
+  const offset = indexOffsets[index];
+  const count = indexCounts[index];
 
-  var batchedIndices = this._batchedIndices;
-  var length = batchedIndices.length;
+  const batchedIndices = this._batchedIndices;
+  const length = batchedIndices.length;
 
-  var i;
+  let i;
   for (i = 0; i < length; ++i) {
-    var batchedOffset = batchedIndices[i].offset;
-    var batchedCount = batchedIndices[i].count;
+    const batchedOffset = batchedIndices[i].offset;
+    const batchedCount = batchedIndices[i].count;
 
     if (offset >= batchedOffset && offset < batchedOffset + batchedCount) {
       break;
@@ -1101,19 +1095,19 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
     })
   );
 
-  var startIds = [];
-  var endIds = [];
+  const startIds = [];
+  const endIds = [];
 
-  var batchIds = batchedIndices[i].batchIds;
-  var batchIdsLength = batchIds.length;
+  const batchIds = batchedIndices[i].batchIds;
+  const batchIdsLength = batchIds.length;
 
-  for (var j = 0; j < batchIdsLength; ++j) {
-    var id = batchIds[j];
+  for (let j = 0; j < batchIdsLength; ++j) {
+    const id = batchIds[j];
     if (id === batchId) {
       continue;
     }
 
-    var offsetIndex = batchIdLookUp[id];
+    const offsetIndex = batchIdLookUp[id];
     if (indexOffsets[offsetIndex] < offset) {
       startIds.push(id);
     } else {
@@ -1144,15 +1138,16 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
 };
 
 function queueCommands(primitive, frameState, commands, commandsIgnoreShow) {
-  var classificationType = primitive.classificationType;
-  var queueTerrainCommands =
+  const classificationType = primitive.classificationType;
+  const queueTerrainCommands =
     classificationType !== ClassificationType.CESIUM_3D_TILE;
-  var queue3DTilesCommands = classificationType !== ClassificationType.TERRAIN;
+  const queue3DTilesCommands =
+    classificationType !== ClassificationType.TERRAIN;
 
-  var commandList = frameState.commandList;
-  var commandLength = commands.length;
-  var command;
-  var i;
+  const commandList = frameState.commandList;
+  let commandLength = commands.length;
+  let command;
+  let i;
   for (i = 0; i < commandLength; ++i) {
     if (queueTerrainCommands) {
       command = commands[i];
@@ -1177,17 +1172,17 @@ function queueCommands(primitive, frameState, commands, commandsIgnoreShow) {
 }
 
 function queueWireframeCommands(frameState, commands) {
-  var commandList = frameState.commandList;
-  var commandLength = commands.length;
-  for (var i = 0; i < commandLength; i += 2) {
-    var command = commands[i + 1];
+  const commandList = frameState.commandList;
+  const commandLength = commands.length;
+  for (let i = 0; i < commandLength; i += 2) {
+    const command = commands[i + 1];
     command.pass = Pass.OPAQUE;
     commandList.push(command);
   }
 }
 
 function updateWireframe(primitive) {
-  var earlyExit = primitive.debugWireframe === primitive._debugWireframe;
+  let earlyExit = primitive.debugWireframe === primitive._debugWireframe;
   earlyExit =
     earlyExit && !(primitive.debugWireframe && primitive._wireframeDirty);
   if (earlyExit) {
@@ -1198,8 +1193,8 @@ function updateWireframe(primitive) {
     primitive._rsWireframe = RenderState.fromCache({});
   }
 
-  var rs;
-  var type;
+  let rs;
+  let type;
 
   if (primitive.debugWireframe) {
     rs = primitive._rsWireframe;
@@ -1209,10 +1204,10 @@ function updateWireframe(primitive) {
     type = PrimitiveType.TRIANGLES;
   }
 
-  var commands = primitive._commands;
-  var commandLength = commands.length;
-  for (var i = 0; i < commandLength; i += 2) {
-    var command = commands[i + 1];
+  const commands = primitive._commands;
+  const commandLength = commands.length;
+  for (let i = 0; i < commandLength; i += 2) {
+    const command = commands[i + 1];
     command.renderState = rs;
     command.primitiveType = type;
   }
@@ -1227,14 +1222,14 @@ function updateWireframe(primitive) {
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePrimitive.prototype.update = function (frameState) {
-  var context = frameState.context;
+  const context = frameState.context;
 
   createVertexArray(this, context);
   createShaders(this, context);
   createRenderStates(this);
   createUniformMap(this, context);
 
-  var passes = frameState.passes;
+  const passes = frameState.passes;
   if (passes.render) {
     createColorCommands(this, context);
     createColorCommandsIgnoreShow(this, frameState);

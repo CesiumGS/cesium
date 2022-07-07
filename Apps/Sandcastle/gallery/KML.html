@@ -30,13 +30,14 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var options = {
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const options = {
           camera: viewer.scene.camera,
           canvas: viewer.scene.canvas,
+          screenOverlayContainer: viewer.container,
         };
 
         Sandcastle.addToolbarMenu(
@@ -77,7 +78,7 @@
                   )
                   .then(function (dataSource) {
                     viewer.clock.shouldAnimate = false;
-                    var rider = dataSource.entities.getById("tour");
+                    const rider = dataSource.entities.getById("tour");
                     viewer.flyTo(rider).then(function () {
                       viewer.trackedEntity = rider;
                       viewer.selectedEntity = viewer.trackedEntity;
@@ -98,10 +99,10 @@
         };
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

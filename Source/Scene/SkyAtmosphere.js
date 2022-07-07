@@ -14,6 +14,7 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
@@ -23,9 +24,8 @@ import CullFace from "./CullFace.js";
 import SceneMode from "./SceneMode.js";
 
 /**
- * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
- * {@link https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
- * in GPU Gems 2.
+ * An atmosphere drawn around the limb of the provided ellipsoid. Based on
+ * {@link http://nishitalab.org/user/nis/cdrom/sig93_nis.pdf|Display of The Earth Taking Into Account Atmospheric Scattering}.
  * <p>
  * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
  * </p>
@@ -37,8 +37,6 @@ import SceneMode from "./SceneMode.js";
  *
  * @example
  * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
- *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
  *
  * @see Scene.skyAtmosphere
  */
@@ -64,8 +62,8 @@ function SkyAtmosphere(ellipsoid) {
 
   this._ellipsoid = ellipsoid;
 
-  var outerEllipsoidScale = 1.025;
-  var scaleVector = Cartesian3.multiplyByScalar(
+  const outerEllipsoidScale = 1.025;
+  const scaleVector = Cartesian3.multiplyByScalar(
     ellipsoid.radii,
     outerEllipsoidScale,
     new Cartesian3()
@@ -81,6 +79,56 @@ function SkyAtmosphere(ellipsoid) {
   this._spSkyFromAtmosphere = undefined;
 
   this._flags = undefined;
+
+  /**
+   * The intensity of the light that is used for computing the sky atmosphere color.
+   *
+   * @type {Number}
+   * @default 50.0
+   */
+  this.atmosphereLightIntensity = 50.0;
+
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
+   */
+  this.atmosphereRayleighCoefficient = new Cartesian3(5.5e-6, 13.0e-6, 28.4e-6);
+
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   *
+   * @type {Cartesian3}
+   * @default Cartesian3(21e-6, 21e-6, 21e-6)
+   */
+  this.atmosphereMieCoefficient = new Cartesian3(21e-6, 21e-6, 21e-6);
+
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 10000.0
+   */
+  this.atmosphereRayleighScaleHeight = 10000.0;
+
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   *
+   * @type {Number}
+   * @default 3200.0
+   */
+  this.atmosphereMieScaleHeight = 3200.0;
+
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * <p>
+   * Valid values are between -1.0 and 1.0.
+   * </p>
+   * @type {Number}
+   * @default 0.9
+   */
+  this.atmosphereMieAnisotropy = 0.9;
 
   /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
@@ -109,7 +157,7 @@ function SkyAtmosphere(ellipsoid) {
   this._hueSaturationBrightness = new Cartesian3();
 
   // outer radius, inner radius, dynamic atmosphere color flag
-  var radiiAndDynamicAtmosphereColor = new Cartesian3();
+  const radiiAndDynamicAtmosphereColor = new Cartesian3();
 
   radiiAndDynamicAtmosphereColor.x =
     ellipsoid.maximumRadius * outerEllipsoidScale;
@@ -120,7 +168,7 @@ function SkyAtmosphere(ellipsoid) {
 
   this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
 
-  var that = this;
+  const that = this;
 
   this._command.uniformMap = {
     u_radiiAndDynamicAtmosphereColor: function () {
@@ -131,6 +179,24 @@ function SkyAtmosphere(ellipsoid) {
       that._hueSaturationBrightness.y = that.saturationShift;
       that._hueSaturationBrightness.z = that.brightnessShift;
       return that._hueSaturationBrightness;
+    },
+    u_atmosphereLightIntensity: function () {
+      return that.atmosphereLightIntensity;
+    },
+    u_atmosphereRayleighCoefficient: function () {
+      return that.atmosphereRayleighCoefficient;
+    },
+    u_atmosphereMieCoefficient: function () {
+      return that.atmosphereMieCoefficient;
+    },
+    u_atmosphereRayleighScaleHeight: function () {
+      return that.atmosphereRayleighScaleHeight;
+    },
+    u_atmosphereMieScaleHeight: function () {
+      return that.atmosphereMieScaleHeight;
+    },
+    u_atmosphereMieAnisotropy: function () {
+      return that.atmosphereMieAnisotropy;
     },
   };
 }
@@ -157,11 +223,11 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   enableLighting,
   useSunDirection
 ) {
-  var lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
+  const lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
   this._radiiAndDynamicAtmosphereColor.z = lightEnum;
 };
 
-var scratchModelMatrix = new Matrix4();
+const scratchModelMatrix = new Matrix4();
 
 /**
  * @private
@@ -171,7 +237,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
     return undefined;
   }
 
-  var mode = frameState.mode;
+  const mode = frameState.mode;
   if (mode !== SceneMode.SCENE3D && mode !== SceneMode.MORPHING) {
     return undefined;
   }
@@ -183,34 +249,34 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
 
   // Align the ellipsoid geometry so it always faces the same direction as the
   // camera to reduce artifacts when rendering atmosphere per-vertex
-  var rotationMatrix = Matrix4.fromRotationTranslation(
+  const rotationMatrix = Matrix4.fromRotationTranslation(
     frameState.context.uniformState.inverseViewRotation,
     Cartesian3.ZERO,
     scratchModelMatrix
   );
-  var rotationOffsetMatrix = Matrix4.multiplyTransformation(
+  const rotationOffsetMatrix = Matrix4.multiplyTransformation(
     rotationMatrix,
     Axis.Y_UP_TO_Z_UP,
     scratchModelMatrix
   );
-  var modelMatrix = Matrix4.multiply(
+  const modelMatrix = Matrix4.multiply(
     this._scaleMatrix,
     rotationOffsetMatrix,
     scratchModelMatrix
   );
   Matrix4.clone(modelMatrix, this._modelMatrix);
 
-  var context = frameState.context;
+  const context = frameState.context;
 
-  var colorCorrect = hasColorCorrection(this);
-  var translucent = frameState.globeTranslucencyState.translucent;
-  var perFragmentAtmosphere =
+  const colorCorrect = hasColorCorrection(this);
+  const translucent = frameState.globeTranslucencyState.translucent;
+  const perFragmentAtmosphere =
     this.perFragmentAtmosphere || translucent || !defined(globe) || !globe.show;
 
-  var command = this._command;
+  const command = this._command;
 
   if (!defined(command.vertexArray)) {
-    var geometry = EllipsoidGeometry.createGeometry(
+    const geometry = EllipsoidGeometry.createGeometry(
       new EllipsoidGeometry({
         radii: new Cartesian3(1.0, 1.0, 1.0),
         slicePartitions: 256,
@@ -234,12 +300,13 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
     });
   }
 
-  var flags = colorCorrect | (perFragmentAtmosphere << 2) | (translucent << 3);
+  const flags =
+    colorCorrect | (perFragmentAtmosphere << 2) | (translucent << 3);
 
   if (flags !== this._flags) {
     this._flags = flags;
 
-    var defines = [];
+    const defines = [];
 
     if (colorCorrect) {
       defines.push("COLOR_CORRECT");
@@ -253,48 +320,23 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
       defines.push("GLOBE_TRANSLUCENT");
     }
 
-    var vs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_SPACE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+    const vs = new ShaderSource({
+      defines: defines,
+      sources: [AtmosphereCommon, SkyAtmosphereCommon, SkyAtmosphereVS],
     });
 
-    var fs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_SPACE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
+    const fs = new ShaderSource({
+      defines: defines,
+      sources: [AtmosphereCommon, SkyAtmosphereCommon, SkyAtmosphereFS],
     });
 
-    this._spSkyFromSpace = ShaderProgram.fromCache({
+    this._spSkyAtmosphere = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
       fragmentShaderSource: fs,
     });
 
-    vs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
-    });
-
-    fs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
-    });
-
-    this._spSkyFromAtmosphere = ShaderProgram.fromCache({
-      context: context,
-      vertexShaderSource: vs,
-      fragmentShaderSource: fs,
-    });
-  }
-
-  var cameraPosition = frameState.camera.positionWC;
-  var cameraHeight = Cartesian3.magnitude(cameraPosition);
-
-  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
-    // Camera in space
-    command.shaderProgram = this._spSkyFromSpace;
-  } else {
-    // Camera in atmosphere
-    command.shaderProgram = this._spSkyFromAtmosphere;
+    command.shaderProgram = this._spSkyAtmosphere;
   }
 
   return command;
@@ -351,11 +393,10 @@ SkyAtmosphere.prototype.isDestroyed = function () {
  * @see SkyAtmosphere#isDestroyed
  */
 SkyAtmosphere.prototype.destroy = function () {
-  var command = this._command;
+  const command = this._command;
   command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-  this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
-  this._spSkyFromAtmosphere =
-    this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
+  this._spSkyAtmosphere =
+    this._spSkyAtmosphere && this._spSkyAtmosphere.destroy();
   return destroyObject(this);
 };
 export default SkyAtmosphere;

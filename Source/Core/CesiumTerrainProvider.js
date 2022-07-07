@@ -1,9 +1,9 @@
-import when from "../ThirdParty/when.js";
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -39,6 +39,11 @@ function LayerInformation(layer) {
 
 /**
  * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
+ * Terrain formats can be one of the following:
+ * <ul>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
+ * </ul>
  *
  * @alias CesiumTerrainProvider
  * @constructor
@@ -54,7 +59,7 @@ function LayerInformation(layer) {
  *
  * @example
  * // Create Arctic DEM terrain with normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     terrainProvider : new Cesium.CesiumTerrainProvider({
  *         url : Cesium.IonResource.fromAssetId(3956),
  *         requestVertexNormals : true
@@ -106,7 +111,7 @@ function CesiumTerrainProvider(options) {
 
   this._errorEvent = new Event();
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -114,23 +119,23 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
 
-  var deferred = when.defer();
+  const deferred = defer();
   this._ready = false;
   this._readyPromise = deferred;
   this._tileCredits = undefined;
 
-  var that = this;
-  var lastResource;
-  var layerJsonResource;
-  var metadataError;
+  const that = this;
+  let lastResource;
+  let layerJsonResource;
+  let metadataError;
 
-  var layers = (this._layers = []);
-  var attribution = "";
-  var overallAvailability = [];
-  var overallMaxZoom = 0;
-  when(options.url)
+  const layers = (this._layers = []);
+  let attribution = "";
+  const overallAvailability = [];
+  let overallMaxZoom = 0;
+  Promise.resolve(options.url)
     .then(function (url) {
-      var resource = Resource.createIfNeeded(url);
+      const resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
       lastResource = resource;
       layerJsonResource = lastResource.getDerivedResource({
@@ -142,12 +147,12 @@ function CesiumTerrainProvider(options) {
 
       requestLayerJson();
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       deferred.reject(e);
     });
 
   function parseMetadataSuccess(data) {
-    var message;
+    let message;
 
     if (!data.format) {
       message = "The tile format is not specified in the layer.json file.";
@@ -179,11 +184,11 @@ function CesiumTerrainProvider(options) {
       return;
     }
 
-    var hasVertexNormals = false;
-    var hasWaterMask = false;
-    var hasMetadata = false;
-    var littleEndianExtensionSize = true;
-    var isHeightmap = false;
+    let hasVertexNormals = false;
+    let hasWaterMask = false;
+    let hasMetadata = false;
+    let littleEndianExtensionSize = true;
+    let isHeightmap = false;
     if (data.format === "heightmap-1.0") {
       isHeightmap = true;
       if (!defined(that._heightmapStructure)) {
@@ -201,8 +206,7 @@ function CesiumTerrainProvider(options) {
       hasWaterMask = true;
       that._requestWaterMask = true;
     } else if (data.format.indexOf("quantized-mesh-1.") !== 0) {
-      message =
-        'The tile format "' + data.format + '" is invalid or not supported.';
+      message = `The tile format "${data.format}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -216,9 +220,9 @@ function CesiumTerrainProvider(options) {
       return;
     }
 
-    var tileUrlTemplates = data.tiles;
+    const tileUrlTemplates = data.tiles;
 
-    var maxZoom = data.maxzoom;
+    const maxZoom = data.maxzoom;
     overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
     // Keeps track of which of the availablity containing tiles have been loaded
 
@@ -235,8 +239,7 @@ function CesiumTerrainProvider(options) {
         ellipsoid: that._ellipsoid,
       });
     } else {
-      message =
-        'The projection "' + data.projection + '" is invalid or not supported.';
+      message = `The projection "${data.projection}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -258,7 +261,7 @@ function CesiumTerrainProvider(options) {
     if (!data.scheme || data.scheme === "tms" || data.scheme === "slippyMap") {
       that._scheme = data.scheme;
     } else {
-      message = 'The scheme "' + data.scheme + '" is invalid or not supported.';
+      message = `The scheme "${data.scheme}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -272,7 +275,7 @@ function CesiumTerrainProvider(options) {
       return;
     }
 
-    var availabilityTilesLoaded;
+    let availabilityTilesLoaded;
 
     // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
     // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
@@ -305,29 +308,29 @@ function CesiumTerrainProvider(options) {
       hasMetadata = true;
     }
 
-    var availabilityLevels = data.metadataAvailability;
-    var availableTiles = data.available;
-    var availability;
+    const availabilityLevels = data.metadataAvailability;
+    const availableTiles = data.available;
+    let availability;
     if (defined(availableTiles) && !defined(availabilityLevels)) {
       availability = new TileAvailability(
         that._tilingScheme,
         availableTiles.length
       );
-      for (var level = 0; level < availableTiles.length; ++level) {
-        var rangesAtLevel = availableTiles[level];
-        var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+      for (let level = 0; level < availableTiles.length; ++level) {
+        const rangesAtLevel = availableTiles[level];
+        const yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
         if (!defined(overallAvailability[level])) {
           overallAvailability[level] = [];
         }
 
         for (
-          var rangeIndex = 0;
+          let rangeIndex = 0;
           rangeIndex < rangesAtLevel.length;
           ++rangeIndex
         ) {
-          var range = rangesAtLevel[rangeIndex];
-          var yStart = yTiles - range.endY - 1;
-          var yEnd = yTiles - range.startY - 1;
+          const range = rangesAtLevel[rangeIndex];
+          const yStart = yTiles - range.endY - 1;
+          const yEnd = yTiles - range.startY - 1;
           overallAvailability[level].push([
             range.startX,
             yStart,
@@ -379,13 +382,13 @@ function CesiumTerrainProvider(options) {
       })
     );
 
-    var parentUrl = data.parentUrl;
+    const parentUrl = data.parentUrl;
     if (defined(parentUrl)) {
       if (!defined(availability)) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return when.resolve();
+        return Promise.resolve();
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -394,16 +397,17 @@ function CesiumTerrainProvider(options) {
       layerJsonResource = lastResource.getDerivedResource({
         url: "layer.json",
       });
-      var parentMetadata = layerJsonResource.fetchJson();
-      return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
+      const parentMetadata = layerJsonResource.fetchJson();
+      return Promise.resolve(parentMetadata)
+        .then(parseMetadataSuccess)
+        .catch(parseMetadataFailure);
     }
 
-    return when.resolve();
+    return Promise.resolve();
   }
 
   function parseMetadataFailure(data) {
-    var message =
-      "An error occurred while accessing " + layerJsonResource.url + ".";
+    const message = `An error occurred while accessing ${layerJsonResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -422,16 +426,16 @@ function CesiumTerrainProvider(options) {
         return;
       }
 
-      var length = overallAvailability.length;
+      const length = overallAvailability.length;
       if (length > 0) {
-        var availability = (that._availability = new TileAvailability(
+        const availability = (that._availability = new TileAvailability(
           that._tilingScheme,
           overallMaxZoom
         ));
-        for (var level = 0; level < length; ++level) {
-          var levelRanges = overallAvailability[level];
-          for (var i = 0; i < levelRanges.length; ++i) {
-            var range = levelRanges[i];
+        for (let level = 0; level < length; ++level) {
+          const levelRanges = overallAvailability[level];
+          for (let i = 0; i < levelRanges.length; ++i) {
+            const range = levelRanges[i];
             availability.addAvailableTileRange(
               level,
               range[0],
@@ -444,7 +448,7 @@ function CesiumTerrainProvider(options) {
       }
 
       if (attribution.length > 0) {
-        var layerJsonCredit = new Credit(attribution);
+        const layerJsonCredit = new Credit(attribution);
 
         if (defined(that._tileCredits)) {
           that._tileCredits.push(layerJsonCredit);
@@ -474,9 +478,9 @@ function CesiumTerrainProvider(options) {
   }
 
   function requestLayerJson() {
-    when(layerJsonResource.fetchJson())
+    Promise.resolve(layerJsonResource.fetchJson())
       .then(metadataSuccess)
-      .otherwise(metadataFailure);
+      .catch(metadataFailure);
   }
 }
 
@@ -488,7 +492,7 @@ function CesiumTerrainProvider(options) {
  * @see CesiumTerrainProvider
  * @private
  */
-var QuantizedMeshExtensionIds = {
+const QuantizedMeshExtensionIds = {
   /**
    * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
    *
@@ -522,17 +526,14 @@ function getRequestHeader(extensionsList) {
         "application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01",
     };
   }
-  var extensions = extensionsList.join("-");
+  const extensions = extensionsList.join("-");
   return {
-    Accept:
-      "application/vnd.quantized-mesh;extensions=" +
-      extensions +
-      ",application/octet-stream;q=0.9,*/*;q=0.01",
+    Accept: `application/vnd.quantized-mesh;extensions=${extensions},application/octet-stream;q=0.9,*/*;q=0.01`,
   };
 }
 
 function createHeightmapTerrainData(provider, buffer, level, x, y) {
-  var heightBuffer = new Uint16Array(
+  const heightBuffer = new Uint16Array(
     buffer,
     0,
     provider._heightmapWidth * provider._heightmapWidth
@@ -553,34 +554,34 @@ function createHeightmapTerrainData(provider, buffer, level, x, y) {
 }
 
 function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
-  var littleEndianExtensionSize = layer.littleEndianExtensionSize;
-  var pos = 0;
-  var cartesian3Elements = 3;
-  var boundingSphereElements = cartesian3Elements + 1;
-  var cartesian3Length = Float64Array.BYTES_PER_ELEMENT * cartesian3Elements;
-  var boundingSphereLength =
+  const littleEndianExtensionSize = layer.littleEndianExtensionSize;
+  let pos = 0;
+  const cartesian3Elements = 3;
+  const boundingSphereElements = cartesian3Elements + 1;
+  const cartesian3Length = Float64Array.BYTES_PER_ELEMENT * cartesian3Elements;
+  const boundingSphereLength =
     Float64Array.BYTES_PER_ELEMENT * boundingSphereElements;
-  var encodedVertexElements = 3;
-  var encodedVertexLength =
+  const encodedVertexElements = 3;
+  const encodedVertexLength =
     Uint16Array.BYTES_PER_ELEMENT * encodedVertexElements;
-  var triangleElements = 3;
-  var bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
-  var triangleLength = bytesPerIndex * triangleElements;
+  const triangleElements = 3;
+  let bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
+  let triangleLength = bytesPerIndex * triangleElements;
 
-  var view = new DataView(buffer);
-  var center = new Cartesian3(
+  const view = new DataView(buffer);
+  const center = new Cartesian3(
     view.getFloat64(pos, true),
     view.getFloat64(pos + 8, true),
     view.getFloat64(pos + 16, true)
   );
   pos += cartesian3Length;
 
-  var minimumHeight = view.getFloat32(pos, true);
+  const minimumHeight = view.getFloat32(pos, true);
   pos += Float32Array.BYTES_PER_ELEMENT;
-  var maximumHeight = view.getFloat32(pos, true);
+  const maximumHeight = view.getFloat32(pos, true);
   pos += Float32Array.BYTES_PER_ELEMENT;
 
-  var boundingSphere = new BoundingSphere(
+  const boundingSphere = new BoundingSphere(
     new Cartesian3(
       view.getFloat64(pos, true),
       view.getFloat64(pos + 8, true),
@@ -590,16 +591,16 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += boundingSphereLength;
 
-  var horizonOcclusionPoint = new Cartesian3(
+  const horizonOcclusionPoint = new Cartesian3(
     view.getFloat64(pos, true),
     view.getFloat64(pos + 8, true),
     view.getFloat64(pos + 16, true)
   );
   pos += cartesian3Length;
 
-  var vertexCount = view.getUint32(pos, true);
+  const vertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var encodedVertexBuffer = new Uint16Array(buffer, pos, vertexCount * 3);
+  const encodedVertexBuffer = new Uint16Array(buffer, pos, vertexCount * 3);
   pos += vertexCount * encodedVertexLength;
 
   if (vertexCount > 64 * 1024) {
@@ -609,9 +610,9 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   }
 
   // Decode the vertex buffer.
-  var uBuffer = encodedVertexBuffer.subarray(0, vertexCount);
-  var vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
-  var heightBuffer = encodedVertexBuffer.subarray(
+  const uBuffer = encodedVertexBuffer.subarray(0, vertexCount);
+  const vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
+  const heightBuffer = encodedVertexBuffer.subarray(
     vertexCount * 2,
     3 * vertexCount
   );
@@ -623,9 +624,9 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     pos += bytesPerIndex - (pos % bytesPerIndex);
   }
 
-  var triangleCount = view.getUint32(pos, true);
+  const triangleCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var indices = IndexDatatype.createTypedArrayFromArrayBuffer(
+  const indices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
     pos,
@@ -636,19 +637,19 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
   // https://code.google.com/p/webgl-loader/source/browse/trunk/samples/loader.js?r=99#55
   // Copyright 2012 Google Inc., Apache 2.0 license.
-  var highest = 0;
-  var length = indices.length;
-  for (var i = 0; i < length; ++i) {
-    var code = indices[i];
+  let highest = 0;
+  const length = indices.length;
+  for (let i = 0; i < length; ++i) {
+    const code = indices[i];
     indices[i] = highest - code;
     if (code === 0) {
       ++highest;
     }
   }
 
-  var westVertexCount = view.getUint32(pos, true);
+  const westVertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var westIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
+  const westIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
     pos,
@@ -656,9 +657,9 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += westVertexCount * bytesPerIndex;
 
-  var southVertexCount = view.getUint32(pos, true);
+  const southVertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
+  const southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
     pos,
@@ -666,9 +667,9 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += southVertexCount * bytesPerIndex;
 
-  var eastVertexCount = view.getUint32(pos, true);
+  const eastVertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var eastIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
+  const eastIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
     pos,
@@ -676,9 +677,9 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += eastVertexCount * bytesPerIndex;
 
-  var northVertexCount = view.getUint32(pos, true);
+  const northVertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  var northIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
+  const northIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
     pos,
@@ -686,12 +687,12 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += northVertexCount * bytesPerIndex;
 
-  var encodedNormalBuffer;
-  var waterMaskBuffer;
+  let encodedNormalBuffer;
+  let waterMaskBuffer;
   while (pos < view.byteLength) {
-    var extensionId = view.getUint8(pos, true);
+    const extensionId = view.getUint8(pos, true);
     pos += Uint8Array.BYTES_PER_ELEMENT;
-    var extensionLength = view.getUint32(pos, littleEndianExtensionSize);
+    const extensionLength = view.getUint32(pos, littleEndianExtensionSize);
     pos += Uint32Array.BYTES_PER_ELEMENT;
 
     if (
@@ -708,30 +709,30 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
       extensionId === QuantizedMeshExtensionIds.METADATA &&
       provider._requestMetadata
     ) {
-      var stringLength = view.getUint32(pos, true);
+      const stringLength = view.getUint32(pos, true);
       if (stringLength > 0) {
-        var metadata = getJsonFromTypedArray(
+        const metadata = getJsonFromTypedArray(
           new Uint8Array(buffer),
           pos + Uint32Array.BYTES_PER_ELEMENT,
           stringLength
         );
-        var availableTiles = metadata.available;
+        const availableTiles = metadata.available;
         if (defined(availableTiles)) {
-          for (var offset = 0; offset < availableTiles.length; ++offset) {
-            var availableLevel = level + offset + 1;
-            var rangesAtLevel = availableTiles[offset];
-            var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(
+          for (let offset = 0; offset < availableTiles.length; ++offset) {
+            const availableLevel = level + offset + 1;
+            const rangesAtLevel = availableTiles[offset];
+            const yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(
               availableLevel
             );
 
             for (
-              var rangeIndex = 0;
+              let rangeIndex = 0;
               rangeIndex < rangesAtLevel.length;
               ++rangeIndex
             ) {
-              var range = rangesAtLevel[rangeIndex];
-              var yStart = yTiles - range.endY - 1;
-              var yEnd = yTiles - range.startY - 1;
+              const range = rangesAtLevel[rangeIndex];
+              const yStart = yTiles - range.endY - 1;
+              const yEnd = yTiles - range.startY - 1;
               provider.availability.addAvailableTileRange(
                 availableLevel,
                 range.startX,
@@ -755,15 +756,15 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     pos += extensionLength;
   }
 
-  var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
+  const skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
   // The skirt is not included in the OBB computation. If this ever
   // causes any rendering artifacts (cracks), they are expected to be
   // minor and in the corners of the screen. It's possible that this
   // might need to be changed - just change to `minimumHeight - skirtHeight`
   // A similar change might also be needed in `upsampleQuantizedTerrainMesh.js`.
-  var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
-  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+  const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+  const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     rectangle,
     minimumHeight,
     maximumHeight,
@@ -825,16 +826,16 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   }
   //>>includeEnd('debug');
 
-  var layers = this._layers;
-  var layerToUse;
-  var layerCount = layers.length;
+  const layers = this._layers;
+  let layerToUse;
+  const layerCount = layers.length;
 
   if (layerCount === 1) {
     // Optimized path for single layers
     layerToUse = layers[0];
   } else {
-    for (var i = 0; i < layerCount; ++i) {
-      var layer = layers[i];
+    for (let i = 0; i < layerCount; ++i) {
+      const layer = layers[i];
       if (
         !defined(layer.availability) ||
         layer.availability.isTileAvailable(level, x, y)
@@ -850,24 +851,24 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 
 function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   if (!defined(layerToUse)) {
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
-  var urlTemplates = layerToUse.tileUrlTemplates;
+  const urlTemplates = layerToUse.tileUrlTemplates;
   if (urlTemplates.length === 0) {
     return undefined;
   }
 
   // The TileMapService scheme counts from the bottom left
-  var terrainY;
+  let terrainY;
   if (!provider._scheme || provider._scheme === "tms") {
-    var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
+    const yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
     terrainY = yTiles - y - 1;
   } else {
     terrainY = y;
   }
 
-  var extensionList = [];
+  const extensionList = [];
   if (provider._requestVertexNormals && layerToUse.hasVertexNormals) {
     extensionList.push(
       layerToUse.littleEndianExtensionSize
@@ -882,11 +883,11 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     extensionList.push("metadata");
   }
 
-  var headers;
-  var query;
-  var url = urlTemplates[(x + terrainY + level) % urlTemplates.length];
+  let headers;
+  let query;
+  const url = urlTemplates[(x + terrainY + level) % urlTemplates.length];
 
-  var resource = layerToUse.resource;
+  const resource = layerToUse.resource;
   if (
     defined(resource._ionEndpoint) &&
     !defined(resource._ionEndpoint.externalType)
@@ -901,7 +902,7 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     headers = getRequestHeader(extensionList);
   }
 
-  var promise = resource
+  const promise = resource
     .getDerivedResource({
       url: url,
       templateValues: {
@@ -1191,10 +1192,10 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
     return false;
   }
 
-  var layers = this._layers;
-  var count = layers.length;
-  for (var i = 0; i < count; ++i) {
-    var layerResult = checkLayer(this, x, y, level, layers[i], i === 0);
+  const layers = this._layers;
+  const count = layers.length;
+  for (let i = 0; i < count; ++i) {
+    const layerResult = checkLayer(this, x, y, level, layers[i], i === 0);
     if (layerResult.result) {
       // There is a layer that may or may not have the tile
       return undefined;
@@ -1227,10 +1228,10 @@ CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
     return undefined;
   }
 
-  var layers = this._layers;
-  var count = layers.length;
-  for (var i = 0; i < count; ++i) {
-    var layerResult = checkLayer(this, x, y, level, layers[i], i === 0);
+  const layers = this._layers;
+  const count = layers.length;
+  for (let i = 0; i < count; ++i) {
+    const layerResult = checkLayer(this, x, y, level, layers[i], i === 0);
     if (defined(layerResult.promise)) {
       return layerResult.promise;
     }
@@ -1242,14 +1243,14 @@ function getAvailabilityTile(layer, x, y, level) {
     return;
   }
 
-  var availabilityLevels = layer.availabilityLevels;
-  var parentLevel =
+  const availabilityLevels = layer.availabilityLevels;
+  const parentLevel =
     level % availabilityLevels === 0
       ? level - availabilityLevels
       : ((level / availabilityLevels) | 0) * availabilityLevels;
-  var divisor = 1 << (level - parentLevel);
-  var parentX = (x / divisor) | 0;
-  var parentY = (y / divisor) | 0;
+  const divisor = 1 << (level - parentLevel);
+  const parentX = (x / divisor) | 0;
+  const parentY = (y / divisor) | 0;
 
   return {
     level: parentLevel,
@@ -1266,27 +1267,27 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
     };
   }
 
-  var cacheKey;
-  var deleteFromCache = function () {
+  let cacheKey;
+  const deleteFromCache = function () {
     delete layer.availabilityPromiseCache[cacheKey];
   };
-  var availabilityTilesLoaded = layer.availabilityTilesLoaded;
-  var availability = layer.availability;
+  const availabilityTilesLoaded = layer.availabilityTilesLoaded;
+  const availability = layer.availability;
 
-  var tile = getAvailabilityTile(layer, x, y, level);
+  let tile = getAvailabilityTile(layer, x, y, level);
   while (defined(tile)) {
     if (
       availability.isTileAvailable(tile.level, tile.x, tile.y) &&
       !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y)
     ) {
-      var requestPromise;
+      let requestPromise;
       if (!topLayer) {
-        cacheKey = tile.level + "-" + tile.x + "-" + tile.y;
+        cacheKey = `${tile.level}-${tile.x}-${tile.y}`;
         requestPromise = layer.availabilityPromiseCache[cacheKey];
         if (!defined(requestPromise)) {
           // For cutout terrain, if this isn't the top layer the availability tiles
           //  may never get loaded, so request it here.
-          var request = new Request({
+          const request = new Request({
             throttle: false,
             throttleByServer: true,
             type: RequestType.TERRAIN,

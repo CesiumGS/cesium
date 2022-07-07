@@ -1,7 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -26,9 +25,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var typedArray = options.typedArray;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const typedArray = options.typedArray;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(typedArray) === defined(resource)) {
@@ -42,7 +41,7 @@ export default function BufferLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -52,16 +51,16 @@ if (defined(Object.create)) {
 
 Object.defineProperties(BufferLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof BufferLoader.prototype
    *
-   * @type {Promise.<BufferLoader>}
+   * @type {Promise.<BufferLoader>|undefined}
    * @readonly
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -94,39 +93,47 @@ Object.defineProperties(BufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<BufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 BufferLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
-    this._promise.resolve(this);
-    return;
+    this._promise = Promise.resolve(this);
+  } else {
+    this._promise = loadExternalBuffer(this);
   }
-
-  loadExternalBuffer(this);
+  return this._promise;
 };
 
 function loadExternalBuffer(bufferLoader) {
-  var resource = bufferLoader._resource;
+  const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  resource
-    .fetchArrayBuffer()
+  return BufferLoader._fetchArrayBuffer(resource)
     .then(function (arrayBuffer) {
       if (bufferLoader.isDestroyed()) {
         return;
       }
       bufferLoader._typedArray = new Uint8Array(arrayBuffer);
       bufferLoader._state = ResourceLoaderState.READY;
-      bufferLoader._promise.resolve(bufferLoader);
+      return bufferLoader;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (bufferLoader.isDestroyed()) {
         return;
       }
       bufferLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load external buffer: " + resource.url;
-      bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
+      const errorMessage = `Failed to load external buffer: ${resource.url}`;
+      return Promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }
+
+/**
+ * Exposed for testing
+ * @private
+ */
+BufferLoader._fetchArrayBuffer = function (resource) {
+  return resource.fetchArrayBuffer();
+};
 
 /**
  * Unloads the resource.

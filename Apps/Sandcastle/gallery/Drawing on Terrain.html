@@ -43,10 +43,10 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           selectionIndicator: false,
           infoBox: false,
           terrainProvider: Cesium.createWorldTerrain(),
@@ -60,7 +60,7 @@
           Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
         );
         function createPoint(worldPosition) {
-          var point = viewer.entities.add({
+          const point = viewer.entities.add({
             position: worldPosition,
             point: {
               color: Cesium.Color.WHITE,
@@ -70,9 +70,9 @@
           });
           return point;
         }
-        var drawingMode = "line";
+        let drawingMode = "line";
         function drawShape(positionData) {
-          var shape;
+          let shape;
           if (drawingMode === "line") {
             shape = viewer.entities.add({
               polyline: {
@@ -93,20 +93,20 @@
           }
           return shape;
         }
-        var activeShapePoints = [];
-        var activeShape;
-        var floatingPoint;
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        let activeShapePoints = [];
+        let activeShape;
+        let floatingPoint;
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
         handler.setInputAction(function (event) {
           // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
           // we get the correct point when mousing over terrain.
-          var earthPosition = viewer.scene.pickPosition(event.position);
+          const earthPosition = viewer.scene.pickPosition(event.position);
           // `earthPosition` will be undefined if our mouse is not over the globe.
           if (Cesium.defined(earthPosition)) {
             if (activeShapePoints.length === 0) {
               floatingPoint = createPoint(earthPosition);
               activeShapePoints.push(earthPosition);
-              var dynamicPositions = new Cesium.CallbackProperty(function () {
+              const dynamicPositions = new Cesium.CallbackProperty(function () {
                 if (drawingMode === "polygon") {
                   return new Cesium.PolygonHierarchy(activeShapePoints);
                 }
@@ -121,7 +121,7 @@
 
         handler.setInputAction(function (event) {
           if (Cesium.defined(floatingPoint)) {
-            var newPosition = viewer.scene.pickPosition(event.endPosition);
+            const newPosition = viewer.scene.pickPosition(event.endPosition);
             if (Cesium.defined(newPosition)) {
               floatingPoint.position.setValue(newPosition);
               activeShapePoints.pop();
@@ -143,7 +143,7 @@
           terminateShape();
         }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
-        var options = [
+        const options = [
           {
             text: "Draw Lines",
             onselect: function () {
@@ -175,10 +175,10 @@
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -73,15 +73,15 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const globe = scene.globe;
         globe.terrainExaggeration = 2.0;
         globe.terrainExaggerationRelativeHeight = 2400.0;
 
@@ -111,14 +111,14 @@
           },
         });
 
-        var visualizeRelativeHeight = true;
+        let visualizeRelativeHeight = true;
 
         function updateMaterial() {
           if (visualizeRelativeHeight) {
-            var height = globe.terrainExaggerationRelativeHeight;
-            var exaggeration = globe.terrainExaggeration;
-            var alpha = Math.min(1.0, exaggeration * 0.25);
-            var layer = {
+            const height = globe.terrainExaggerationRelativeHeight;
+            const exaggeration = globe.terrainExaggeration;
+            const alpha = Math.min(1.0, exaggeration * 0.25);
+            const layer = {
               extendUpwards: true,
               extendDownwards: true,
               entries: [
@@ -154,7 +154,7 @@
         }
         updateMaterial();
 
-        var viewModel = {
+        const viewModel = {
           exaggeration: globe.terrainExaggeration,
           relativeHeight: globe.terrainExaggerationRelativeHeight,
         };
@@ -168,9 +168,9 @@
         }
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout
               .getObservable(viewModel, name)
@@ -193,10 +193,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

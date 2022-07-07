@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
@@ -42,7 +41,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @example
- * var viewer = new Cesium.Viewer("cesiumContainer", {
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrainProvider: new Cesium.CustomHeightmapTerrainProvider({
  *     width: 32,
  *     height: 32,
@@ -74,7 +73,7 @@ function CustomHeightmapTerrainProvider(options) {
 
   this._width = options.width;
   this._height = options.height;
-  var maxTileDimensions = Math.max(this._width, this._height);
+  const maxTileDimensions = Math.max(this._width, this._height);
 
   this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
     this._tilingScheme.ellipsoid,
@@ -84,13 +83,13 @@ function CustomHeightmapTerrainProvider(options) {
 
   this._errorEvent = new Event();
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
   this._credit = credit;
 
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
@@ -231,16 +230,16 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  var promise = this._callback(x, y, level);
+  const promise = this._callback(x, y, level);
   if (!defined(promise)) {
     return undefined;
   }
 
-  var width = this._width;
-  var height = this._height;
+  const width = this._width;
+  const height = this._height;
 
-  return when(promise).then(function (heightmapData) {
-    var buffer = heightmapData;
+  return Promise.resolve(promise).then(function (heightmapData) {
+    let buffer = heightmapData;
     if (Array.isArray(buffer)) {
       // HeightmapTerrainData expects a TypedArray, so convert from Number[] to Float64Array
       buffer = new Float64Array(buffer);

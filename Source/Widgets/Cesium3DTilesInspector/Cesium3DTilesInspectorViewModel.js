@@ -10,11 +10,12 @@ import Cesium3DTilePass from "../../Scene/Cesium3DTilePass.js";
 import Cesium3DTileset from "../../Scene/Cesium3DTileset.js";
 import Cesium3DTileStyle from "../../Scene/Cesium3DTileStyle.js";
 import PerformanceDisplay from "../../Scene/PerformanceDisplay.js";
+import ResourceCache from "../../Scene/ResourceCache.js";
 import knockout from "../../ThirdParty/knockout.js";
 
 function getPickTileset(viewModel) {
   return function (e) {
-    var pick = viewModel._scene.pick(e.position);
+    const pick = viewModel._scene.pick(e.position);
     if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
       viewModel.tileset = pick.primitive;
     }
@@ -25,7 +26,7 @@ function getPickTileset(viewModel) {
 function selectTilesetOnHover(viewModel, value) {
   if (value) {
     viewModel._eventHandler.setInputAction(function (e) {
-      var pick = viewModel._scene.pick(e.endPosition);
+      const pick = viewModel._scene.pick(e.endPosition);
       if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
         viewModel.tileset = pick.primitive;
       }
@@ -39,12 +40,12 @@ function selectTilesetOnHover(viewModel, value) {
   }
 }
 
-var stringOptions = {
+const stringOptions = {
   maximumFractionDigits: 3,
 };
 
 function formatMemoryString(memorySizeInBytes) {
-  var memoryInMegabytes = memorySizeInBytes / 1048576;
+  const memoryInMegabytes = memorySizeInBytes / 1048576;
   if (memoryInMegabytes < 1.0) {
     return memoryInMegabytes.toLocaleString(undefined, stringOptions);
   }
@@ -56,105 +57,88 @@ function getStatistics(tileset, isPick) {
     return "";
   }
 
-  var statistics = isPick
+  const statistics = isPick
     ? tileset._statisticsPerPass[Cesium3DTilePass.PICK]
     : tileset._statisticsPerPass[Cesium3DTilePass.RENDER];
 
   // Since the pick pass uses a smaller frustum around the pixel of interest,
   // the statistics will be different than the normal render pass.
-  var s = '<ul class="cesium-cesiumInspector-statistics">';
+  let s = '<ul class="cesium-cesiumInspector-statistics">';
   s +=
     // --- Rendering statistics
-    "<li><strong>Visited: </strong>" +
-    statistics.visited.toLocaleString() +
-    "</li>" +
+    `<li><strong>Visited: </strong>${statistics.visited.toLocaleString()}</li>` +
     // Number of commands returned is likely to be higher than the number of tiles selected
     // because of tiles that create multiple commands.
-    "<li><strong>Selected: </strong>" +
-    statistics.selected.toLocaleString() +
-    "</li>" +
+    `<li><strong>Selected: </strong>${statistics.selected.toLocaleString()}</li>` +
     // Number of commands executed is likely to be higher because of commands overlapping
     // multiple frustums.
-    "<li><strong>Commands: </strong>" +
-    statistics.numberOfCommands.toLocaleString() +
-    "</li>";
+    `<li><strong>Commands: </strong>${statistics.numberOfCommands.toLocaleString()}</li>`;
   s += "</ul>";
   if (!isPick) {
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Cache/loading statistics
-      "<li><strong>Requests: </strong>" +
-      statistics.numberOfPendingRequests.toLocaleString() +
-      "</li>" +
-      "<li><strong>Attempted: </strong>" +
-      statistics.numberOfAttemptedRequests.toLocaleString() +
-      "</li>" +
-      "<li><strong>Processing: </strong>" +
-      statistics.numberOfTilesProcessing.toLocaleString() +
-      "</li>" +
-      "<li><strong>Content Ready: </strong>" +
-      statistics.numberOfTilesWithContentReady.toLocaleString() +
-      "</li>" +
+      `<li><strong>Requests: </strong>${statistics.numberOfPendingRequests.toLocaleString()}</li>` +
+      `<li><strong>Attempted: </strong>${statistics.numberOfAttemptedRequests.toLocaleString()}</li>` +
+      `<li><strong>Processing: </strong>${statistics.numberOfTilesProcessing.toLocaleString()}</li>` +
+      `<li><strong>Content Ready: </strong>${statistics.numberOfTilesWithContentReady.toLocaleString()}</li>` +
       // Total number of tiles includes tiles without content, so "Ready" may never reach
       // "Total."  Total also will increase when a tile with a tileset JSON content is loaded.
-      "<li><strong>Total: </strong>" +
-      statistics.numberOfTilesTotal.toLocaleString() +
-      "</li>";
+      `<li><strong>Total: </strong>${statistics.numberOfTilesTotal.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Features statistics
-      "<li><strong>Features Selected: </strong>" +
-      statistics.numberOfFeaturesSelected.toLocaleString() +
-      "</li>" +
-      "<li><strong>Features Loaded: </strong>" +
-      statistics.numberOfFeaturesLoaded.toLocaleString() +
-      "</li>" +
-      "<li><strong>Points Selected: </strong>" +
-      statistics.numberOfPointsSelected.toLocaleString() +
-      "</li>" +
-      "<li><strong>Points Loaded: </strong>" +
-      statistics.numberOfPointsLoaded.toLocaleString() +
-      "</li>" +
-      "<li><strong>Triangles Selected: </strong>" +
-      statistics.numberOfTrianglesSelected.toLocaleString() +
-      "</li>";
+      `<li><strong>Features Selected: </strong>${statistics.numberOfFeaturesSelected.toLocaleString()}</li>` +
+      `<li><strong>Features Loaded: </strong>${statistics.numberOfFeaturesLoaded.toLocaleString()}</li>` +
+      `<li><strong>Points Selected: </strong>${statistics.numberOfPointsSelected.toLocaleString()}</li>` +
+      `<li><strong>Points Loaded: </strong>${statistics.numberOfPointsLoaded.toLocaleString()}</li>` +
+      `<li><strong>Triangles Selected: </strong>${statistics.numberOfTrianglesSelected.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Styling statistics
-      "<li><strong>Tiles styled: </strong>" +
-      statistics.numberOfTilesStyled.toLocaleString() +
-      "</li>" +
-      "<li><strong>Features styled: </strong>" +
-      statistics.numberOfFeaturesStyled.toLocaleString() +
-      "</li>";
+      `<li><strong>Tiles styled: </strong>${statistics.numberOfTilesStyled.toLocaleString()}</li>` +
+      `<li><strong>Features styled: </strong>${statistics.numberOfFeaturesStyled.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Optimization statistics
-      "<li><strong>Children Union Culled: </strong>" +
-      statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString() +
-      "</li>";
+      `<li><strong>Children Union Culled: </strong>${statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Memory statistics
-      "<li><strong>Geometry Memory (MB): </strong>" +
-      formatMemoryString(statistics.geometryByteLength) +
-      "</li>" +
-      "<li><strong>Texture Memory (MB): </strong>" +
-      formatMemoryString(statistics.texturesByteLength) +
-      "</li>" +
-      "<li><strong>Batch Table Memory (MB): </strong>" +
-      formatMemoryString(statistics.batchTableByteLength) +
-      "</li>";
+      `<li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
+        statistics.geometryByteLength
+      )}</li>` +
+      `<li><strong>Texture Memory (MB): </strong>${formatMemoryString(
+        statistics.texturesByteLength
+      )}</li>` +
+      `<li><strong>Batch Table Memory (MB): </strong>${formatMemoryString(
+        statistics.batchTableByteLength
+      )}</li>`;
     s += "</ul>";
   }
   return s;
 }
 
-var colorBlendModes = [
+function getResourceCacheStatistics() {
+  const statistics = ResourceCache.statistics;
+
+  return `
+  <ul class="cesium-cesiumInspector-statistics">
+    <li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
+      statistics.geometryByteLength
+    )}</li>
+    <li><strong>Texture Memory (MB): </strong>${formatMemoryString(
+      statistics.texturesByteLength
+    )}</li>
+  </ul>
+  `;
+}
+
+const colorBlendModes = [
   {
     text: "Highlight",
     value: Cesium3DTileColorBlendMode.HIGHLIGHT,
@@ -169,9 +153,9 @@ var colorBlendModes = [
   },
 ];
 
-var highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
-var scratchColor = new Color();
-var oldColor = new Color();
+const highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
+const scratchColor = new Color();
+const oldColor = new Color();
 
 /**
  * The view model for {@link Cesium3DTilesInspector}.
@@ -187,8 +171,8 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   Check.typeOf.object("performanceContainer", performanceContainer);
   //>>includeEnd('debug');
 
-  var that = this;
-  var canvas = scene.canvas;
+  const that = this;
+  const canvas = scene.canvas;
   this._eventHandler = new ScreenSpaceEventHandler(canvas);
   this._scene = scene;
   this._performanceContainer = performanceContainer;
@@ -200,6 +184,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   this._statisticsText = "";
   this._pickStatisticsText = "";
+  this._resourceCacheStatisticsText = "";
   this._editorError = "";
 
   /**
@@ -222,9 +207,18 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the flag to show pick statistics.  This property is observable.
    *
    * @type {Boolean}
-   * @default false
+   * @default true
    */
   this.showPickStatistics = true;
+
+  /**
+   * Gets or sets the flag to show resource cache statistics. This property is
+   * observable.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  this.showResourceCacheStatistics = false;
 
   /**
    * Gets or sets the flag to show the inspector.  This property is observable.
@@ -307,9 +301,11 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     "inspectorVisible",
     "_statisticsText",
     "_pickStatisticsText",
+    "_resourceCacheStatisticsText",
     "_editorError",
     "showPickStatistics",
     "showStatistics",
+    "showResourceCacheStatistics",
     "tilesetVisible",
     "displayVisible",
     "updateVisible",
@@ -330,9 +326,9 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.properties = [];
   knockout.defineProperty(this, "properties", function () {
-    var names = [];
-    var properties = that._properties();
-    for (var prop in properties) {
+    const names = [];
+    const properties = that._properties();
+    for (const prop in properties) {
       if (properties.hasOwnProperty(prop)) {
         names.push(prop);
       }
@@ -340,7 +336,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     return names;
   });
 
-  var dynamicScreenSpaceError = knockout.observable();
+  const dynamicScreenSpaceError = knockout.observable();
   knockout.defineProperty(this, "dynamicScreenSpaceError", {
     get: function () {
       return dynamicScreenSpaceError();
@@ -360,7 +356,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.dynamicScreenSpaceError = false;
 
-  var colorBlendMode = knockout.observable();
+  const colorBlendMode = knockout.observable();
   knockout.defineProperty(this, "colorBlendMode", {
     get: function () {
       return colorBlendMode();
@@ -381,8 +377,8 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
-  var showOnlyPickedTileDebugLabel = knockout.observable();
-  var picking = knockout.observable();
+  const showOnlyPickedTileDebugLabel = knockout.observable();
+  const picking = knockout.observable();
   knockout.defineProperty(this, "picking", {
     get: function () {
       return picking();
@@ -391,7 +387,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
       picking(value);
       if (value) {
         that._eventHandler.setInputAction(function (e) {
-          var picked = scene.pick(e.endPosition);
+          const picked = scene.pick(e.endPosition);
           if (picked instanceof Cesium3DTileFeature) {
             // Picked a feature
             that.feature = picked;
@@ -413,7 +409,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
             defined(picked) &&
             defined(picked.content)
           ) {
-            var position;
+            let position;
             if (scene.pickPositionSupported) {
               position = scene.pickPosition(e.endPosition);
               if (defined(position)) {
@@ -441,7 +437,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.picking = true;
 
-  var colorize = knockout.observable();
+  const colorize = knockout.observable();
   knockout.defineProperty(this, "colorize", {
     get: function () {
       return colorize();
@@ -462,7 +458,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.colorize = false;
 
-  var wireframe = knockout.observable();
+  const wireframe = knockout.observable();
   knockout.defineProperty(this, "wireframe", {
     get: function () {
       return wireframe();
@@ -483,7 +479,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.wireframe = false;
 
-  var showBoundingVolumes = knockout.observable();
+  const showBoundingVolumes = knockout.observable();
   knockout.defineProperty(this, "showBoundingVolumes", {
     get: function () {
       return showBoundingVolumes();
@@ -504,7 +500,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showBoundingVolumes = false;
 
-  var showContentBoundingVolumes = knockout.observable();
+  const showContentBoundingVolumes = knockout.observable();
   knockout.defineProperty(this, "showContentBoundingVolumes", {
     get: function () {
       return showContentBoundingVolumes();
@@ -525,7 +521,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showContentBoundingVolumes = false;
 
-  var showRequestVolumes = knockout.observable();
+  const showRequestVolumes = knockout.observable();
   knockout.defineProperty(this, "showRequestVolumes", {
     get: function () {
       return showRequestVolumes();
@@ -546,7 +542,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showRequestVolumes = false;
 
-  var freezeFrame = knockout.observable();
+  const freezeFrame = knockout.observable();
   knockout.defineProperty(this, "freezeFrame", {
     get: function () {
       return freezeFrame();
@@ -588,7 +584,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showOnlyPickedTileDebugLabel = false;
 
-  var showGeometricError = knockout.observable();
+  const showGeometricError = knockout.observable();
   knockout.defineProperty(this, "showGeometricError", {
     get: function () {
       return showGeometricError();
@@ -609,7 +605,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showGeometricError = false;
 
-  var showRenderingStatistics = knockout.observable();
+  const showRenderingStatistics = knockout.observable();
   knockout.defineProperty(this, "showRenderingStatistics", {
     get: function () {
       return showRenderingStatistics();
@@ -630,7 +626,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showRenderingStatistics = false;
 
-  var showMemoryUsage = knockout.observable();
+  const showMemoryUsage = knockout.observable();
   knockout.defineProperty(this, "showMemoryUsage", {
     get: function () {
       return showMemoryUsage();
@@ -651,7 +647,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showMemoryUsage = false;
 
-  var showUrl = knockout.observable();
+  const showUrl = knockout.observable();
   knockout.defineProperty(this, "showUrl", {
     get: function () {
       return showUrl();
@@ -672,7 +668,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.showUrl = false;
 
-  var maximumScreenSpaceError = knockout.observable();
+  const maximumScreenSpaceError = knockout.observable();
   knockout.defineProperty(this, "maximumScreenSpaceError", {
     get: function () {
       return maximumScreenSpaceError();
@@ -695,7 +691,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.maximumScreenSpaceError = 16;
 
-  var dynamicScreenSpaceErrorDensity = knockout.observable();
+  const dynamicScreenSpaceErrorDensity = knockout.observable();
   knockout.defineProperty(this, "dynamicScreenSpaceErrorDensity", {
     get: function () {
       return dynamicScreenSpaceErrorDensity();
@@ -736,7 +732,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     },
   });
 
-  var dynamicScreenSpaceErrorFactor = knockout.observable();
+  const dynamicScreenSpaceErrorFactor = knockout.observable();
   knockout.defineProperty(this, "dynamicScreenSpaceErrorFactor", {
     get: function () {
       return dynamicScreenSpaceErrorFactor();
@@ -759,8 +755,8 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.dynamicScreenSpaceErrorFactor = 4.0;
 
-  var pickTileset = getPickTileset(this);
-  var pickActive = knockout.observable();
+  const pickTileset = getPickTileset(this);
+  const pickActive = knockout.observable();
   knockout.defineProperty(this, "pickActive", {
     get: function () {
       return pickActive();
@@ -778,7 +774,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     },
   });
 
-  var pointCloudShading = knockout.observable();
+  const pointCloudShading = knockout.observable();
   knockout.defineProperty(this, "pointCloudShading", {
     get: function () {
       return pointCloudShading();
@@ -798,7 +794,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.pointCloudShading = false;
 
-  var geometricErrorScale = knockout.observable();
+  const geometricErrorScale = knockout.observable();
   knockout.defineProperty(this, "geometricErrorScale", {
     get: function () {
       return geometricErrorScale();
@@ -821,7 +817,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.geometricErrorScale = 1.0;
 
-  var maximumAttenuation = knockout.observable();
+  const maximumAttenuation = knockout.observable();
   knockout.defineProperty(this, "maximumAttenuation", {
     get: function () {
       return maximumAttenuation();
@@ -845,7 +841,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.maximumAttenuation = 0;
 
-  var baseResolution = knockout.observable();
+  const baseResolution = knockout.observable();
   knockout.defineProperty(this, "baseResolution", {
     get: function () {
       return baseResolution();
@@ -869,7 +865,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.baseResolution = 0;
 
-  var eyeDomeLighting = knockout.observable();
+  const eyeDomeLighting = knockout.observable();
   knockout.defineProperty(this, "eyeDomeLighting", {
     get: function () {
       return eyeDomeLighting();
@@ -889,7 +885,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.eyeDomeLighting = false;
 
-  var eyeDomeLightingStrength = knockout.observable();
+  const eyeDomeLightingStrength = knockout.observable();
   knockout.defineProperty(this, "eyeDomeLightingStrength", {
     get: function () {
       return eyeDomeLightingStrength();
@@ -912,7 +908,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.eyeDomeLightingStrength = 1.0;
 
-  var eyeDomeLightingRadius = knockout.observable();
+  const eyeDomeLightingRadius = knockout.observable();
   knockout.defineProperty(this, "eyeDomeLightingRadius", {
     get: function () {
       return eyeDomeLightingRadius();
@@ -943,7 +939,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.pickActive = false;
 
-  var skipLevelOfDetail = knockout.observable();
+  const skipLevelOfDetail = knockout.observable();
   knockout.defineProperty(this, "skipLevelOfDetail", {
     get: function () {
       return skipLevelOfDetail();
@@ -963,7 +959,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.skipLevelOfDetail = true;
 
-  var skipScreenSpaceErrorFactor = knockout.observable();
+  const skipScreenSpaceErrorFactor = knockout.observable();
   knockout.defineProperty(this, "skipScreenSpaceErrorFactor", {
     get: function () {
       return skipScreenSpaceErrorFactor();
@@ -985,7 +981,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.skipScreenSpaceErrorFactor = 16;
 
-  var baseScreenSpaceError = knockout.observable();
+  const baseScreenSpaceError = knockout.observable();
   knockout.defineProperty(this, "baseScreenSpaceError", {
     get: function () {
       return baseScreenSpaceError();
@@ -1007,7 +1003,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.baseScreenSpaceError = 1024;
 
-  var skipLevels = knockout.observable();
+  const skipLevels = knockout.observable();
   knockout.defineProperty(this, "skipLevels", {
     get: function () {
       return skipLevels();
@@ -1029,7 +1025,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.skipLevels = 1;
 
-  var immediatelyLoadDesiredLevelOfDetail = knockout.observable();
+  const immediatelyLoadDesiredLevelOfDetail = knockout.observable();
   knockout.defineProperty(this, "immediatelyLoadDesiredLevelOfDetail", {
     get: function () {
       return immediatelyLoadDesiredLevelOfDetail();
@@ -1049,7 +1045,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.immediatelyLoadDesiredLevelOfDetail = false;
 
-  var loadSiblings = knockout.observable();
+  const loadSiblings = knockout.observable();
   knockout.defineProperty(this, "loadSiblings", {
     get: function () {
       return loadSiblings();
@@ -1163,6 +1159,18 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   },
 
   /**
+   * Gets the resource cache statistics text. This property is observable.
+   * @memberof Cesium3DTilesInspectorViewModel.prototype
+   * @type {String}
+   * @readonly
+   */
+  resourceCacheStatisticsText: {
+    get: function () {
+      return this._resourceCacheStatisticsText;
+    },
+  },
+
+  /**
    * Gets the available blend modes
    * @memberof Cesium3DTilesInspectorViewModel.prototype
    * @type {Object[]}
@@ -1203,7 +1211,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
       this.tile = undefined;
 
       if (defined(tileset)) {
-        var that = this;
+        const that = this;
         tileset.readyPromise.then(function (t) {
           if (!that.isDestroyed()) {
             that._properties(t.properties);
@@ -1211,7 +1219,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
         });
 
         // update tileset with existing settings
-        var settings = [
+        const settings = [
           "colorize",
           "wireframe",
           "showBoundingVolumes",
@@ -1224,9 +1232,9 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
           "showMemoryUsage",
           "showUrl",
         ];
-        var length = settings.length;
-        for (var i = 0; i < length; ++i) {
-          var setting = settings[i];
+        const length = settings.length;
+        for (let i = 0; i < length; ++i) {
+          const setting = settings[i];
           //eslint-disable-next-line no-self-assign
           this[setting] = this[setting];
         }
@@ -1247,7 +1255,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
           tileset.immediatelyLoadDesiredLevelOfDetail;
         this.loadSiblings = tileset.loadSiblings;
 
-        var pointCloudShading = tileset.pointCloudShading;
+        const pointCloudShading = tileset.pointCloudShading;
         this.pointCloudShading = pointCloudShading.attenuation;
         this.geometricErrorScale = pointCloudShading.geometricErrorScale;
         this.maximumAttenuation = pointCloudShading.maximumAttenuation
@@ -1268,6 +1276,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 
       this._statisticsText = getStatistics(tileset, false);
       this._pickStatisticsText = getStatistics(tileset, true);
+      this._resourceCacheStatisticsText = getResourceCacheStatistics();
       selectTilesetOnHover(this, false);
     },
   },
@@ -1285,7 +1294,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
       if (this._feature === feature) {
         return;
       }
-      var currentFeature = this._feature;
+      const currentFeature = this._feature;
       if (defined(currentFeature) && !currentFeature.content.isDestroyed()) {
         // Restore original color to feature that is no longer selected
         if (!this.colorize && defined(this._style)) {
@@ -1320,7 +1329,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
       if (this._tile === tile) {
         return;
       }
-      var currentTile = this._tile;
+      const currentTile = this._tile;
 
       if (
         defined(currentTile) &&
@@ -1344,13 +1353,17 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 });
 
 function hasFeatures(content) {
+  if (!defined(content)) {
+    return false;
+  }
+
   if (content.featuresLength > 0) {
     return true;
   }
-  var innerContents = content.innerContents;
+  const innerContents = content.innerContents;
   if (defined(innerContents)) {
-    var length = innerContents.length;
-    for (var i = 0; i < length; ++i) {
+    const length = innerContents.length;
+    for (let i = 0; i < length; ++i) {
       if (!hasFeatures(innerContents[i])) {
         return false;
       }
@@ -1436,7 +1449,7 @@ Cesium3DTilesInspectorViewModel.prototype.trimTilesCache = function () {
  * Compiles the style in the style editor.
  */
 Cesium3DTilesInspectorViewModel.prototype.compileStyle = function () {
-  var tileset = this._tileset;
+  const tileset = this._tileset;
   if (!defined(tileset) || this.styleString === JSON.stringify(tileset.style)) {
     return;
   }
@@ -1467,17 +1480,17 @@ Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
   if (event.keyCode === 9) {
     //tab
     event.preventDefault();
-    var textArea = event.target;
-    var start = textArea.selectionStart;
-    var end = textArea.selectionEnd;
-    var newEnd = end;
-    var selected = textArea.value.slice(start, end);
-    var lines = selected.split("\n");
-    var length = lines.length;
-    var i;
+    const textArea = event.target;
+    const start = textArea.selectionStart;
+    const end = textArea.selectionEnd;
+    let newEnd = end;
+    const selected = textArea.value.slice(start, end);
+    const lines = selected.split("\n");
+    const length = lines.length;
+    let i;
     if (!event.shiftKey) {
       for (i = 0; i < length; ++i) {
-        lines[i] = "  " + lines[i];
+        lines[i] = `  ${lines[i]}`;
         newEnd += 2;
       }
     } else {
@@ -1493,7 +1506,7 @@ Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
         }
       }
     }
-    var newText = lines.join("\n");
+    const newText = lines.join("\n");
     textArea.value =
       textArea.value.slice(0, start) + newText + textArea.value.slice(end);
     textArea.selectionStart = start !== end ? start : newEnd;
@@ -1510,7 +1523,7 @@ Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
  * @private
  */
 Cesium3DTilesInspectorViewModel.prototype._update = function () {
-  var tileset = this._tileset;
+  const tileset = this._tileset;
 
   if (this.performance) {
     this._performanceDisplay.update();
@@ -1524,7 +1537,7 @@ Cesium3DTilesInspectorViewModel.prototype._update = function () {
       return;
     }
 
-    var style = tileset.style;
+    const style = tileset.style;
     if (this._style !== tileset.style) {
       if (this._shouldStyle) {
         tileset.style = this._style;
@@ -1538,6 +1551,7 @@ Cesium3DTilesInspectorViewModel.prototype._update = function () {
   if (this.showStatistics) {
     this._statisticsText = getStatistics(tileset, false);
     this._pickStatisticsText = getStatistics(tileset, true);
+    this._resourceCacheStatisticsText = getResourceCacheStatistics();
   }
 };
 
@@ -1556,7 +1570,7 @@ Cesium3DTilesInspectorViewModel.prototype.destroy = function () {
   this._eventHandler.destroy();
   this._removePostRenderEvent();
 
-  var that = this;
+  const that = this;
   this._definedProperties.forEach(function (property) {
     knockout.getObservable(that, property).dispose();
   });

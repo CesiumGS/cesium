@@ -3,7 +3,6 @@ import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapEncoding } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { TerrainData } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/HeightmapTerrainData", function () {
   it("conforms to TerrainData interface", function () {
@@ -43,7 +42,7 @@ describe("Core/HeightmapTerrainData", function () {
     });
 
     it("non-LERC encoded buffers sets correct buffer type", function () {
-      var data = new HeightmapTerrainData({
+      const data = new HeightmapTerrainData({
         buffer: new Uint16Array(25),
         width: 5,
         height: 5,
@@ -54,7 +53,7 @@ describe("Core/HeightmapTerrainData", function () {
     });
 
     it("LERC encoded buffers sets correct buffer type", function () {
-      var data = new HeightmapTerrainData({
+      const data = new HeightmapTerrainData({
         buffer: new Uint16Array(25),
         width: 5,
         height: 5,
@@ -67,8 +66,8 @@ describe("Core/HeightmapTerrainData", function () {
   });
 
   describe("createMesh", function () {
-    var data;
-    var tilingScheme;
+    let data;
+    let tilingScheme;
 
     function createSampleTerrainData() {
       return new HeightmapTerrainData({
@@ -123,51 +122,51 @@ describe("Core/HeightmapTerrainData", function () {
     });
 
     it("enables throttling for asynchronous tasks", function () {
-      var options = {
+      const options = {
         tilingScheme: tilingScheme,
         x: 0,
         y: 0,
         level: 0,
         throttle: true,
       };
-      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
-      var promises = new Array();
-      for (var i = 0; i < taskCount; i++) {
-        var tempData = createSampleTerrainData();
-        var promise = tempData.createMesh(options);
+      const taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      const promises = new Array();
+      for (let i = 0; i < taskCount; i++) {
+        const tempData = createSampleTerrainData();
+        const promise = tempData.createMesh(options);
         if (defined(promise)) {
           promises.push(promise);
         }
       }
       expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
-      return when.all(promises);
+      return Promise.all(promises);
     });
 
     it("disables throttling for asynchronous tasks", function () {
-      var options = {
+      const options = {
         tilingScheme: tilingScheme,
         x: 0,
         y: 0,
         level: 0,
         throttle: false,
       };
-      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
-      var promises = new Array();
-      for (var i = 0; i < taskCount; i++) {
-        var tempData = createSampleTerrainData();
-        var promise = tempData.createMesh(options);
+      const taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      const promises = new Array();
+      for (let i = 0; i < taskCount; i++) {
+        const tempData = createSampleTerrainData();
+        const promise = tempData.createMesh(options);
         if (defined(promise)) {
           promises.push(promise);
         }
       }
       expect(promises.length).toBe(taskCount);
-      return when.all(promises);
+      return Promise.all(promises);
     });
   });
 
   describe("upsample", function () {
-    var data;
-    var tilingScheme;
+    let data;
+    let tilingScheme;
 
     beforeEach(function () {
       tilingScheme = new GeographicTilingScheme();
@@ -763,7 +762,7 @@ describe("Core/HeightmapTerrainData", function () {
   });
 
   describe("isChildAvailable", function () {
-    var data;
+    let data;
 
     beforeEach(function () {
       data = new HeightmapTerrainData({

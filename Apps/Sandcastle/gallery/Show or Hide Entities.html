@@ -29,23 +29,23 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         //Set the random seed for reproducible random colors.
         Cesium.Math.setRandomNumberSeed(1234);
 
-        var viewer = new Cesium.Viewer("cesiumContainer", { infoBox: false });
-        var entities = viewer.entities;
+        const viewer = new Cesium.Viewer("cesiumContainer", { infoBox: false });
+        const entities = viewer.entities;
 
         //Create Entity "folders" to allow us to turn on/off entities as a group.
-        var spheres = entities.add(new Cesium.Entity());
-        var boxes = entities.add(new Cesium.Entity());
-        var ellipsoids = entities.add(new Cesium.Entity());
+        const spheres = entities.add(new Cesium.Entity());
+        const boxes = entities.add(new Cesium.Entity());
+        const ellipsoids = entities.add(new Cesium.Entity());
 
         //Create the entities and assign each entity's parent to the group to which it belongs.
-        for (var i = 0; i < 5; ++i) {
-          var height = 100000.0 + 200000.0 * i;
+        for (let i = 0; i < 5; ++i) {
+          const height = 100000.0 + 200000.0 * i;
           entities.add({
             parent: boxes,
             position: Cesium.Cartesian3.fromDegrees(-106.0, 45.0, height),
@@ -89,10 +89,10 @@
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

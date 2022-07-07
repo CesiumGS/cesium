@@ -6,7 +6,7 @@ import Expression from "./Expression.js";
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates a conditions expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * Implements the {@link StyleExpression} interface.
@@ -19,7 +19,7 @@ import Expression from "./Expression.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.ConditionsExpression({
+ * const expression = new Cesium.ConditionsExpression({
  *     conditions : [
  *         ['${Area} > 10, 'color("#FF0000")'],
  *         ['${id} !== "1"', 'color("#00FF00")'],
@@ -60,16 +60,16 @@ function Statement(condition, expression) {
 }
 
 function setRuntime(expression, defines) {
-  var runtimeConditions = [];
-  var conditions = expression._conditions;
+  const runtimeConditions = [];
+  const conditions = expression._conditions;
   if (!defined(conditions)) {
     return;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
-    var cond = String(statement[0]);
-    var condExpression = String(statement[1]);
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
+    const cond = String(statement[0]);
+    const condExpression = String(statement[1]);
     runtimeConditions.push(
       new Statement(
         new Expression(cond, defines),
@@ -83,7 +83,7 @@ function setRuntime(expression, defines) {
 /**
  * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
  * the expression in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
  * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
  * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -95,13 +95,13 @@ function setRuntime(expression, defines) {
  * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
  */
 ConditionsExpression.prototype.evaluate = function (feature, result) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions)) {
     return undefined;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     if (statement.condition.evaluate(feature)) {
       return statement.expression.evaluate(feature, result);
     }
@@ -118,13 +118,13 @@ ConditionsExpression.prototype.evaluate = function (feature, result) {
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
 ConditionsExpression.prototype.evaluateColor = function (feature, result) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions)) {
     return undefined;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     if (statement.condition.evaluate(feature)) {
       return statement.expression.evaluateColor(feature, result);
     }
@@ -150,50 +150,37 @@ ConditionsExpression.prototype.getShaderFunction = function (
   shaderState,
   returnType
 ) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
     return undefined;
   }
 
-  var shaderFunction = "";
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  let shaderFunction = "";
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
 
-    var condition = statement.condition.getShaderExpression(
+    const condition = statement.condition.getShaderExpression(
       variableSubstitutionMap,
       shaderState
     );
-    var expression = statement.expression.getShaderExpression(
+    const expression = statement.expression.getShaderExpression(
       variableSubstitutionMap,
       shaderState
     );
 
     // Build the if/else chain from the list of conditions
     shaderFunction +=
-      "    " +
-      (i === 0 ? "if" : "else if") +
-      " (" +
-      condition +
-      ")\n" +
-      "    {\n" +
-      "        return " +
-      expression +
-      ";\n" +
-      "    }\n";
+      `    ${i === 0 ? "if" : "else if"} (${condition})\n` +
+      `    {\n` +
+      `        return ${expression};\n` +
+      `    }\n`;
   }
 
   shaderFunction =
-    returnType +
-    " " +
-    functionSignature +
-    "\n" +
-    "{\n" +
-    shaderFunction +
-    "    return " +
-    returnType +
-    "(1.0);\n" + // Return a default value if no conditions are met
-    "}\n";
+    `${returnType} ${functionSignature}\n` +
+    `{\n${shaderFunction}    return ${returnType}(1.0);\n` + // Return a default value if no conditions are met
+    `}\n`;
 
   return shaderFunction;
 };
@@ -206,16 +193,16 @@ ConditionsExpression.prototype.getShaderFunction = function (
  * @private
  */
 ConditionsExpression.prototype.getVariables = function () {
-  var variables = [];
+  let variables = [];
 
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
     return variables;
   }
 
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     variables.push.apply(variables, statement.condition.getVariables());
     variables.push.apply(variables, statement.expression.getVariables());
   }

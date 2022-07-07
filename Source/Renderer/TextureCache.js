@@ -19,7 +19,7 @@ Object.defineProperties(TextureCache.prototype, {
 });
 
 TextureCache.prototype.getTexture = function (keyword) {
-  var cachedTexture = this._textures[keyword];
+  const cachedTexture = this._textures[keyword];
   if (!defined(cachedTexture)) {
     return undefined;
   }
@@ -32,14 +32,14 @@ TextureCache.prototype.getTexture = function (keyword) {
 };
 
 TextureCache.prototype.addTexture = function (keyword, texture) {
-  var cachedTexture = {
+  const cachedTexture = {
     texture: texture,
     count: 1,
   };
 
   texture.finalDestroy = texture.destroy;
 
-  var that = this;
+  const that = this;
   texture.destroy = function () {
     if (--cachedTexture.count === 0) {
       that._texturesToRelease[keyword] = cachedTexture;
@@ -51,11 +51,11 @@ TextureCache.prototype.addTexture = function (keyword, texture) {
 };
 
 TextureCache.prototype.destroyReleasedTextures = function () {
-  var texturesToRelease = this._texturesToRelease;
+  const texturesToRelease = this._texturesToRelease;
 
-  for (var keyword in texturesToRelease) {
+  for (const keyword in texturesToRelease) {
     if (texturesToRelease.hasOwnProperty(keyword)) {
-      var cachedTexture = texturesToRelease[keyword];
+      const cachedTexture = texturesToRelease[keyword];
       delete this._textures[keyword];
       cachedTexture.texture.finalDestroy();
       --this._numberOfTextures;
@@ -70,8 +70,8 @@ TextureCache.prototype.isDestroyed = function () {
 };
 
 TextureCache.prototype.destroy = function () {
-  var textures = this._textures;
-  for (var keyword in textures) {
+  const textures = this._textures;
+  for (const keyword in textures) {
     if (textures.hasOwnProperty(keyword)) {
       textures[keyword].texture.finalDestroy();
     }

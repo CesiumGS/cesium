@@ -29,15 +29,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw the outline of a polygon on the globe surface.
-        var positions = Cesium.Cartesian3.fromDegreesArray([
+        let positions = Cesium.Cartesian3.fromDegreesArray([
           -95,
           37.0,
           -95,
@@ -49,7 +49,7 @@
           -87,
           35.0,
         ]);
-        var polygonOutlineInstance = new Cesium.GeometryInstance({
+        const polygonOutlineInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonOutlineGeometry.fromPositions({
             positions: positions,
           }),
@@ -65,7 +65,7 @@
         // To draw a polygon with holes, create a nested position
         // hierarchy defining the positions of the polygon
         // edges and the positions of the holes.
-        var polygonHierarchy = {
+        const polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
             -108.0,
             30.0,
@@ -93,7 +93,7 @@
         };
         // To extrude, use the extrudedHeight option to specify the
         // height of the polygon.
-        var extrudedPolygonOutlineInstance = new Cesium.GeometryInstance({
+        const extrudedPolygonOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonOutlineGeometry({
             polygonHierarchy: polygonHierarchy,
             extrudedHeight: 500000.0,
@@ -119,7 +119,7 @@
         ]);
         // Set the perPositionHeight option to true for the polygon
         // to use the heights each position.
-        var perPositionPolygonOutlineInstance = new Cesium.GeometryInstance({
+        const perPositionPolygonOutlineInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonOutlineGeometry.fromPositions({
             positions: positions,
             perPositionHeight: true,
@@ -149,10 +149,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

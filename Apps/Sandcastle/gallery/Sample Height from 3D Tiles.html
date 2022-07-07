@@ -32,13 +32,13 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
         if (!scene.clampToHeightSupported) {
           window.alert(
@@ -46,7 +46,7 @@
           );
         }
 
-        var tileset = scene.primitives.add(
+        const tileset = scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(40866),
           })
@@ -73,21 +73,21 @@
         function sampleHeights() {
           viewer.entities.removeAll();
 
-          var cartesian1 = new Cesium.Cartesian3(
+          const cartesian1 = new Cesium.Cartesian3(
             1216390.063324395,
             -4736314.814479433,
             4081341.9787972216
           );
-          var cartesian2 = new Cesium.Cartesian3(
+          const cartesian2 = new Cesium.Cartesian3(
             1216329.5413318684,
             -4736272.029009798,
             4081407.9342479417
           );
 
-          var count = 30;
-          var cartesians = new Array(count);
-          for (var i = 0; i < count; ++i) {
-            var offset = i / (count - 1);
+          const count = 30;
+          const cartesians = new Array(count);
+          for (let i = 0; i < count; ++i) {
+            const offset = i / (count - 1);
             cartesians[i] = Cesium.Cartesian3.lerp(
               cartesian1,
               cartesian2,
@@ -99,7 +99,7 @@
           scene
             .clampToHeightMostDetailed(cartesians)
             .then(function (clampedCartesians) {
-              for (var i = 0; i < count; ++i) {
+              for (let i = 0; i < count; ++i) {
                 viewer.entities.add({
                   position: clampedCartesians[i],
                   ellipsoid: {
@@ -128,10 +128,10 @@
         }
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

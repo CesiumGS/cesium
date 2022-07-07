@@ -32,22 +32,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // 3 inch (0.08m) resolution imagery of Washington DC collected in 2017
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var imageryLayer = viewer.imageryLayers.addImageryProvider(
+        const imageryLayer = viewer.imageryLayers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3827 })
         );
         viewer.flyTo(imageryLayer);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

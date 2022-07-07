@@ -32,35 +32,35 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           selectionIndicator: false,
           shadows: true,
           shouldAnimate: true,
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
 
         if (!scene.sampleHeightSupported) {
           window.alert("This browser does not support sampleHeight.");
         }
 
-        var longitude = -2.1480545852753163;
-        var latitude = 0.7688240036937101;
-        var range = 0.000002;
-        var duration = 4.0;
+        const longitude = -2.1480545852753163;
+        const latitude = 0.7688240036937101;
+        const range = 0.000002;
+        const duration = 4.0;
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           position: Cesium.Cartesian3.fromRadians(longitude, latitude),
           model: {
             uri: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
           },
         });
 
-        var point = viewer.entities.add({
+        const point = viewer.entities.add({
           position: new Cesium.CallbackProperty(updatePosition, false),
           point: {
             pixelSize: 10,
@@ -78,22 +78,22 @@
           },
         });
 
-        var objectsToExclude = [point];
-        var cartographic = new Cesium.Cartographic();
+        const objectsToExclude = [point];
+        const cartographic = new Cesium.Cartographic();
 
         function updatePosition(time, result) {
-          var offset = (time.secondsOfDay % duration) / duration;
+          const offset = (time.secondsOfDay % duration) / duration;
           cartographic.longitude = longitude - range + offset * range * 2.0;
           cartographic.latitude = latitude;
 
-          var height;
+          let height;
           if (scene.sampleHeightSupported) {
             height = scene.sampleHeight(cartographic, objectsToExclude);
           }
 
           if (Cesium.defined(height)) {
             cartographic.height = height;
-            point.label.text = Math.abs(height).toFixed(2).toString() + " m";
+            point.label.text = `${Math.abs(height).toFixed(2).toString()} m`;
             point.label.show = true;
           } else {
             cartographic.height = 0.0;
@@ -109,10 +109,10 @@
         viewer.trackedEntity = entity;
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

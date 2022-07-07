@@ -1,4 +1,3 @@
-import { arrayFill } from "../../Source/Cesium.js";
 import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
 import { BoxOutlineGeometry } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
@@ -23,7 +22,7 @@ describe("Core/BoxOutlineGeometry", function () {
   });
 
   it("constructor creates positions", function () {
-    var m = BoxOutlineGeometry.createGeometry(
+    const m = BoxOutlineGeometry.createGeometry(
       new BoxOutlineGeometry({
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
@@ -35,7 +34,7 @@ describe("Core/BoxOutlineGeometry", function () {
   });
 
   it("computes offset attribute", function () {
-    var m = BoxOutlineGeometry.createGeometry(
+    const m = BoxOutlineGeometry.createGeometry(
       new BoxOutlineGeometry({
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
@@ -43,13 +42,12 @@ describe("Core/BoxOutlineGeometry", function () {
       })
     );
 
-    var numVertices = 8;
+    const numVertices = 8;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
-    var offset = m.attributes.applyOffset.values;
+    const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    var expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -68,7 +66,7 @@ describe("Core/BoxOutlineGeometry", function () {
   });
 
   it("fromDimensions", function () {
-    var m = BoxOutlineGeometry.createGeometry(
+    const m = BoxOutlineGeometry.createGeometry(
       BoxOutlineGeometry.fromDimensions({
         dimensions: new Cartesian3(1, 2, 3),
       })
@@ -85,9 +83,9 @@ describe("Core/BoxOutlineGeometry", function () {
   });
 
   it("fromAxisAlignedBoundingBox", function () {
-    var min = new Cartesian3(-1, -2, -3);
-    var max = new Cartesian3(1, 2, 3);
-    var m = BoxOutlineGeometry.fromAxisAlignedBoundingBox(
+    const min = new Cartesian3(-1, -2, -3);
+    const max = new Cartesian3(1, 2, 3);
+    const m = BoxOutlineGeometry.fromAxisAlignedBoundingBox(
       new AxisAlignedBoundingBox(min, max)
     );
     expect(m._min).toEqual(min);
@@ -95,12 +93,12 @@ describe("Core/BoxOutlineGeometry", function () {
   });
 
   it("undefined is returned if min and max are equal", function () {
-    var box = new BoxOutlineGeometry({
+    const box = new BoxOutlineGeometry({
       maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
       minimum: new Cartesian3(250000.0, 250000.0, 250000.0),
     });
 
-    var geometry = BoxOutlineGeometry.createGeometry(box);
+    const geometry = BoxOutlineGeometry.createGeometry(box);
 
     expect(geometry).toBeUndefined();
   });

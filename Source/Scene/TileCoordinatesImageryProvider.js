@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * @typedef {Object} TileCoordinatesImageryProvider.ConstructorOptions
@@ -39,7 +38,7 @@ function TileCoordinatesImageryProvider(options) {
   this._errorEvent = new Event();
   this._tileWidth = defaultValue(options.tileWidth, 256);
   this._tileHeight = defaultValue(options.tileHeight, 256);
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -328,10 +327,7 @@ TileCoordinatesImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
- *          undefined if there are too many active requests to the server, and the request
- *          should be retried later.  The resolved image may be either an
- *          Image or a Canvas DOM object.
+ * @returns {Promise.<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
  */
 TileCoordinatesImageryProvider.prototype.requestImage = function (
   x,
@@ -339,12 +335,12 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 256;
-  var context = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
-  var cssColor = this._color.toCssColorString();
+  const cssColor = this._color.toCssColorString();
 
   context.strokeStyle = cssColor;
   context.lineWidth = 2;
@@ -353,11 +349,11 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   context.font = "bold 25px Arial";
   context.textAlign = "center";
   context.fillStyle = cssColor;
-  context.fillText("L: " + level, 124, 86);
-  context.fillText("X: " + x, 124, 136);
-  context.fillText("Y: " + y, 124, 186);
+  context.fillText(`L: ${level}`, 124, 86);
+  context.fillText(`X: ${x}`, 124, 136);
+  context.fillText(`Y: ${y}`, 124, 186);
 
-  return canvas;
+  return Promise.resolve(canvas);
 };
 
 /**
@@ -369,10 +365,7 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- *                   It may also be undefined if picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 TileCoordinatesImageryProvider.prototype.pickFeatures = function (
   x,

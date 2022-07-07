@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var ArcType = {
+const ArcType = {
   /**
    * Straight line that does not conform to the surface of the ellipsoid.
    *

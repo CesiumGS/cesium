@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
@@ -12,7 +11,7 @@ import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import PrimitiveType from "./PrimitiveType.js";
 
-var diffScratch = new Cartesian3();
+const diffScratch = new Cartesian3();
 
 /**
  * A description of the outline of a cube centered at the origin.
@@ -29,17 +28,17 @@ var diffScratch = new Cartesian3();
  * @see Packable
  *
  * @example
- * var box = new Cesium.BoxOutlineGeometry({
+ * const box = new Cesium.BoxOutlineGeometry({
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  */
 function BoxOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var min = options.minimum;
-  var max = options.maximum;
+  const min = options.minimum;
+  const max = options.maximum;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("min", min);
@@ -71,16 +70,16 @@ function BoxOutlineGeometry(options) {
  *
  *
  * @example
- * var box = Cesium.BoxOutlineGeometry.fromDimensions({
+ * const box = Cesium.BoxOutlineGeometry.fromDimensions({
  *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  *
  * @see BoxOutlineGeometry.createGeometry
  */
 BoxOutlineGeometry.fromDimensions = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var dimensions = options.dimensions;
+  const dimensions = options.dimensions;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("dimensions", dimensions);
@@ -89,7 +88,7 @@ BoxOutlineGeometry.fromDimensions = function (options) {
   Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
   //>>includeEnd('debug');
 
-  var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+  const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
 
   return new BoxOutlineGeometry({
     minimum: Cartesian3.negate(corner, new Cartesian3()),
@@ -107,14 +106,14 @@ BoxOutlineGeometry.fromDimensions = function (options) {
  *
  *
  * @example
- * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+ * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
  *      -72.0, 40.0,
  *      -70.0, 35.0,
  *      -75.0, 30.0,
  *      -70.0, 30.0,
  *      -68.0, 40.0
  * ]));
- * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+ * const box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
  *
  *  @see BoxOutlineGeometry.createGeometry
  */
@@ -162,9 +161,9 @@ BoxOutlineGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchMin = new Cartesian3();
-var scratchMax = new Cartesian3();
-var scratchOptions = {
+const scratchMin = new Cartesian3();
+const scratchMax = new Cartesian3();
+const scratchOptions = {
   minimum: scratchMin,
   maximum: scratchMax,
   offsetAttribute: undefined,
@@ -185,13 +184,13 @@ BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var min = Cartesian3.unpack(array, startingIndex, scratchMin);
-  var max = Cartesian3.unpack(
+  const min = Cartesian3.unpack(array, startingIndex, scratchMin);
+  const max = Cartesian3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
     scratchMax
   );
-  var offsetAttribute = array[startingIndex + Cartesian3.packedLength * 2];
+  const offsetAttribute = array[startingIndex + Cartesian3.packedLength * 2];
 
   if (!defined(result)) {
     scratchOptions.offsetAttribute =
@@ -214,16 +213,16 @@ BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 BoxOutlineGeometry.createGeometry = function (boxGeometry) {
-  var min = boxGeometry._min;
-  var max = boxGeometry._max;
+  const min = boxGeometry._min;
+  const max = boxGeometry._max;
 
   if (Cartesian3.equals(min, max)) {
     return;
   }
 
-  var attributes = new GeometryAttributes();
-  var indices = new Uint16Array(12 * 2);
-  var positions = new Float64Array(8 * 3);
+  const attributes = new GeometryAttributes();
+  const indices = new Uint16Array(12 * 2);
+  const positions = new Float64Array(8 * 3);
 
   positions[0] = min.x;
   positions[1] = min.y;
@@ -289,15 +288,14 @@ BoxOutlineGeometry.createGeometry = function (boxGeometry) {
   indices[22] = 3;
   indices[23] = 7;
 
-  var diff = Cartesian3.subtract(max, min, diffScratch);
-  var radius = Cartesian3.magnitude(diff) * 0.5;
+  const diff = Cartesian3.subtract(max, min, diffScratch);
+  const radius = Cartesian3.magnitude(diff) * 0.5;
 
   if (defined(boxGeometry._offsetAttribute)) {
-    var length = positions.length;
-    var applyOffset = new Uint8Array(length / 3);
-    var offsetValue =
+    const length = positions.length;
+    const offsetValue =
       boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-    arrayFill(applyOffset, offsetValue);
+    const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 1,

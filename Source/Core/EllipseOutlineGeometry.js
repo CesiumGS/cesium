@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -15,11 +14,11 @@ import IndexDatatype from "./IndexDatatype.js";
 import CesiumMath from "./Math.js";
 import PrimitiveType from "./PrimitiveType.js";
 
-var scratchCartesian1 = new Cartesian3();
-var boundingSphereCenter = new Cartesian3();
+const scratchCartesian1 = new Cartesian3();
+let boundingSphereCenter = new Cartesian3();
 
 function computeEllipse(options) {
-  var center = options.center;
+  const center = options.center;
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
     options.height,
@@ -30,17 +29,17 @@ function computeEllipse(options) {
     boundingSphereCenter,
     boundingSphereCenter
   );
-  var boundingSphere = new BoundingSphere(
+  const boundingSphere = new BoundingSphere(
     boundingSphereCenter,
     options.semiMajorAxis
   );
-  var positions = EllipseGeometryLibrary.computeEllipsePositions(
+  const positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
     true
   ).outerPositions;
 
-  var attributes = new GeometryAttributes({
+  const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
       componentsPerAttribute: 3,
@@ -52,10 +51,10 @@ function computeEllipse(options) {
     }),
   });
 
-  var length = positions.length / 3;
-  var indices = IndexDatatype.createTypedArray(length, length * 2);
-  var index = 0;
-  for (var i = 0; i < length; ++i) {
+  const length = positions.length / 3;
+  const indices = IndexDatatype.createTypedArray(length, length * 2);
+  let index = 0;
+  for (let i = 0; i < length; ++i) {
     indices[index++] = i;
     indices[index++] = (i + 1) % length;
   }
@@ -67,13 +66,13 @@ function computeEllipse(options) {
   };
 }
 
-var topBoundingSphere = new BoundingSphere();
-var bottomBoundingSphere = new BoundingSphere();
+const topBoundingSphere = new BoundingSphere();
+const bottomBoundingSphere = new BoundingSphere();
 function computeExtrudedEllipse(options) {
-  var center = options.center;
-  var ellipsoid = options.ellipsoid;
-  var semiMajorAxis = options.semiMajorAxis;
-  var scaledNormal = Cartesian3.multiplyByScalar(
+  const center = options.center;
+  const ellipsoid = options.ellipsoid;
+  const semiMajorAxis = options.semiMajorAxis;
+  let scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1),
     options.height,
     scratchCartesian1
@@ -97,12 +96,12 @@ function computeExtrudedEllipse(options) {
   );
   bottomBoundingSphere.radius = semiMajorAxis;
 
-  var positions = EllipseGeometryLibrary.computeEllipsePositions(
+  let positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
     true
   ).outerPositions;
-  var attributes = new GeometryAttributes({
+  const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
       componentsPerAttribute: 3,
@@ -115,20 +114,20 @@ function computeExtrudedEllipse(options) {
   });
 
   positions = attributes.position.values;
-  var boundingSphere = BoundingSphere.union(
+  const boundingSphere = BoundingSphere.union(
     topBoundingSphere,
     bottomBoundingSphere
   );
-  var length = positions.length / 3;
+  let length = positions.length / 3;
 
   if (defined(options.offsetAttribute)) {
-    var applyOffset = new Uint8Array(length);
+    let applyOffset = new Uint8Array(length);
     if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
+      applyOffset = applyOffset.fill(1, 0, length / 2);
     } else {
-      var offsetValue =
+      const offsetValue =
         options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      applyOffset = arrayFill(applyOffset, offsetValue);
+      applyOffset = applyOffset.fill(offsetValue);
     }
 
     attributes.applyOffset = new GeometryAttribute({
@@ -138,21 +137,21 @@ function computeExtrudedEllipse(options) {
     });
   }
 
-  var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+  let numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
   numberOfVerticalLines = CesiumMath.clamp(
     numberOfVerticalLines,
     0,
     length / 2
   );
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     length,
     length * 2 + numberOfVerticalLines * 2
   );
 
   length /= 2;
-  var index = 0;
-  var i;
+  let index = 0;
+  let i;
   for (i = 0; i < length; ++i) {
     indices[index++] = i;
     indices[index++] = (i + 1) % length;
@@ -160,12 +159,12 @@ function computeExtrudedEllipse(options) {
     indices[index++] = ((i + 1) % length) + length;
   }
 
-  var numSide;
+  let numSide;
   if (numberOfVerticalLines > 0) {
-    var numSideLines = Math.min(numberOfVerticalLines, length);
+    const numSideLines = Math.min(numberOfVerticalLines, length);
     numSide = Math.round(length / numSideLines);
 
-    var maxI = Math.min(numSide * numberOfVerticalLines, length);
+    const maxI = Math.min(numSide * numberOfVerticalLines, length);
     for (i = 0; i < maxI; i += numSide) {
       indices[index++] = i;
       indices[index++] = i + length;
@@ -203,22 +202,22 @@ function computeExtrudedEllipse(options) {
  * @see EllipseOutlineGeometry.createGeometry
  *
  * @example
- * var ellipse = new Cesium.EllipseOutlineGeometry({
+ * const ellipse = new Cesium.EllipseOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   semiMajorAxis : 500000.0,
  *   semiMinorAxis : 300000.0,
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
- * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
+ * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  */
 function EllipseOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var center = options.center;
-  var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  var semiMajorAxis = options.semiMajorAxis;
-  var semiMinorAxis = options.semiMinorAxis;
-  var granularity = defaultValue(
+  const center = options.center;
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const semiMajorAxis = options.semiMajorAxis;
+  const semiMinorAxis = options.semiMinorAxis;
+  const granularity = defaultValue(
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
   );
@@ -243,8 +242,8 @@ function EllipseOutlineGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  var height = defaultValue(options.height, 0.0);
-  var extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = defaultValue(options.height, 0.0);
+  const extrudedHeight = defaultValue(options.extrudedHeight, height);
 
   this._center = Cartesian3.clone(center);
   this._semiMajorAxis = semiMajorAxis;
@@ -308,9 +307,9 @@ EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchCenter = new Cartesian3();
-var scratchEllipsoid = new Ellipsoid();
-var scratchOptions = {
+const scratchCenter = new Cartesian3();
+const scratchEllipsoid = new Ellipsoid();
+const scratchOptions = {
   center: scratchCenter,
   ellipsoid: scratchEllipsoid,
   semiMajorAxis: undefined,
@@ -340,20 +339,20 @@ EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var center = Cartesian3.unpack(array, startingIndex, scratchCenter);
+  const center = Cartesian3.unpack(array, startingIndex, scratchCenter);
   startingIndex += Cartesian3.packedLength;
 
-  var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+  const ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
   startingIndex += Ellipsoid.packedLength;
 
-  var semiMajorAxis = array[startingIndex++];
-  var semiMinorAxis = array[startingIndex++];
-  var rotation = array[startingIndex++];
-  var height = array[startingIndex++];
-  var granularity = array[startingIndex++];
-  var extrudedHeight = array[startingIndex++];
-  var numberOfVerticalLines = array[startingIndex++];
-  var offsetAttribute = array[startingIndex];
+  const semiMajorAxis = array[startingIndex++];
+  const semiMinorAxis = array[startingIndex++];
+  const rotation = array[startingIndex++];
+  const height = array[startingIndex++];
+  const granularity = array[startingIndex++];
+  const extrudedHeight = array[startingIndex++];
+  const numberOfVerticalLines = array[startingIndex++];
+  const offsetAttribute = array[startingIndex];
 
   if (!defined(result)) {
     scratchOptions.height = height;
@@ -398,9 +397,9 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     return;
   }
 
-  var height = ellipseGeometry._height;
-  var extrudedHeight = ellipseGeometry._extrudedHeight;
-  var extrude = !CesiumMath.equalsEpsilon(
+  const height = ellipseGeometry._height;
+  const extrudedHeight = ellipseGeometry._extrudedHeight;
+  const extrude = !CesiumMath.equalsEpsilon(
     height,
     extrudedHeight,
     0,
@@ -411,7 +410,7 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     ellipseGeometry._center,
     ellipseGeometry._center
   );
-  var options = {
+  const options = {
     center: ellipseGeometry._center,
     semiMajorAxis: ellipseGeometry._semiMajorAxis,
     semiMinorAxis: ellipseGeometry._semiMinorAxis,
@@ -421,7 +420,7 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     granularity: ellipseGeometry._granularity,
     numberOfVerticalLines: ellipseGeometry._numberOfVerticalLines,
   };
-  var geometry;
+  let geometry;
   if (extrude) {
     options.extrudedHeight = extrudedHeight;
     options.offsetAttribute = ellipseGeometry._offsetAttribute;
@@ -430,13 +429,12 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     geometry = computeEllipse(options);
 
     if (defined(ellipseGeometry._offsetAttribute)) {
-      var length = geometry.attributes.position.values.length;
-      var applyOffset = new Uint8Array(length / 3);
-      var offsetValue =
+      const length = geometry.attributes.position.values.length;
+      const offsetValue =
         ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       geometry.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

@@ -38,6 +38,8 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this._multiplier = defaultValue(options.multiplier, 1.0);
   this._reverse = defaultValue(options.reverse, false);
   this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
+  this._animationTime = options.animationTime;
+  this._prevAnimationDelta = undefined;
 
   /**
    * The event fired when this animation is started.  This can be used, for
@@ -51,7 +53,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
    *
    * @example
    * animation.start.addEventListener(function(model, animation) {
-   *   console.log('Animation started: ' + animation.name);
+   *   console.log(`Animation started: ${animation.name}`);
    * });
    */
   this.start = new Event();
@@ -70,7 +72,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
    *
    * @example
    * animation.update.addEventListener(function(model, animation, time) {
-   *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+   *   console.log(`Animation updated: ${animation.name}. glTF animation time: ${time}`);
    * });
    */
   this.update = new Event();
@@ -87,7 +89,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
    *
    * @example
    * animation.stop.addEventListener(function(model, animation) {
-   *   console.log('Animation stopped: ' + animation.name);
+   *   console.log(`Animation stopped: ${animation.name}`);
    * });
    */
   this.stop = new Event();
@@ -100,7 +102,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this._duration = undefined;
 
   // To avoid allocations in ModelAnimationCollection.update
-  var that = this;
+  const that = this;
   this._raiseStartEvent = function () {
     that.start.raiseEvent(model, that);
   };
@@ -229,5 +231,40 @@ Object.defineProperties(ModelAnimation.prototype, {
       return this._loop;
     },
   },
+
+  /**
+   * If this is defined, it will be used to compute the local animation time
+   * instead of the scene's time.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {ModelAnimation.AnimationTimeCallback}
+   * @default undefined
+   */
+  animationTime: {
+    get: function () {
+      return this._animationTime;
+    },
+  },
 });
+/**
+ * A function used to compute the local animation time for a ModelAnimation.
+ * @callback ModelAnimation.AnimationTimeCallback
+ *
+ * @param {Number} duration The animation's original duration in seconds.
+ * @param {Number} seconds The seconds since the animation started, in scene time.
+ * @returns {Number} Returns the local animation time.
+ *
+ * @example
+ * // Use real time for model animation (assuming animateWhilePaused was set to true)
+ * function animationTime(duration) {
+ *     return Date.now() / 1000 / duration;
+ * }
+ *
+ * @example
+ * // Offset the phase of the animation, so it starts halfway through its cycle.
+ * function animationTime(duration, seconds) {
+ *     return seconds / duration + 0.5;
+ * }
+ */
 export default ModelAnimation;

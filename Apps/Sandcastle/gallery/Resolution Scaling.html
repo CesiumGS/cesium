@@ -59,7 +59,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // When browser recommended resolution is enabled, the viewer renders at
@@ -75,17 +75,17 @@
         // the resolutionScale is 0.25, the canvas will be scaled
         // down to 250x250 pixels.
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var viewModel = {
+        const viewModel = {
           useBrowserRecommendedResolution: false,
           resolutionScale: 0.25,
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout.getObservable(viewModel, name).subscribe(update);
           }
@@ -95,7 +95,7 @@
           viewer.useBrowserRecommendedResolution =
             viewModel.useBrowserRecommendedResolution;
 
-          var resolutionScale = Number(viewModel.resolutionScale);
+          let resolutionScale = Number(viewModel.resolutionScale);
           resolutionScale = !isNaN(resolutionScale) ? resolutionScale : 1.0;
           resolutionScale = Cesium.Math.clamp(resolutionScale, 0.1, 2.0);
           viewer.resolutionScale = resolutionScale;
@@ -103,10 +103,10 @@
         update();
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -18,29 +17,29 @@ import CesiumMath from "./Math.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 
-var cartesian1 = new Cartesian3();
-var cartesian2 = new Cartesian3();
-var cartesian3 = new Cartesian3();
+const cartesian1 = new Cartesian3();
+const cartesian2 = new Cartesian3();
+const cartesian3 = new Cartesian3();
 
 function scaleToSurface(positions, ellipsoid) {
-  for (var i = 0; i < positions.length; i++) {
+  for (let i = 0; i < positions.length; i++) {
     positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
   }
   return positions;
 }
 
 function combine(computedPositions, cornerType) {
-  var wallIndices = [];
-  var positions = computedPositions.positions;
-  var corners = computedPositions.corners;
-  var endPositions = computedPositions.endPositions;
-  var attributes = new GeometryAttributes();
-  var corner;
-  var leftCount = 0;
-  var rightCount = 0;
-  var i;
-  var indicesLength = 0;
-  var length;
+  const wallIndices = [];
+  const positions = computedPositions.positions;
+  const corners = computedPositions.corners;
+  const endPositions = computedPositions.endPositions;
+  const attributes = new GeometryAttributes();
+  let corner;
+  let leftCount = 0;
+  let rightCount = 0;
+  let i;
+  let indicesLength = 0;
+  let length;
   for (i = 0; i < positions.length; i += 2) {
     length = positions[i].length - 3;
     leftCount += length; //subtracting 3 to account for duplicate points at corners
@@ -51,7 +50,7 @@ function combine(computedPositions, cornerType) {
   rightCount += 3;
   for (i = 0; i < corners.length; i++) {
     corner = corners[i];
-    var leftSide = corners[i].leftPositions;
+    const leftSide = corners[i].leftPositions;
     if (defined(leftSide)) {
       length = leftSide.length;
       leftCount += length;
@@ -63,8 +62,8 @@ function combine(computedPositions, cornerType) {
     }
   }
 
-  var addEndPositions = defined(endPositions);
-  var endPositionLength;
+  const addEndPositions = defined(endPositions);
+  let endPositionLength;
   if (addEndPositions) {
     endPositionLength = endPositions[0].length - 3;
     leftCount += endPositionLength;
@@ -72,16 +71,16 @@ function combine(computedPositions, cornerType) {
     endPositionLength /= 3;
     indicesLength += endPositionLength * 4;
   }
-  var size = leftCount + rightCount;
-  var finalPositions = new Float64Array(size);
-  var front = 0;
-  var back = size - 1;
-  var UL, LL, UR, LR;
-  var rightPos, leftPos;
-  var halfLength = endPositionLength / 2;
+  const size = leftCount + rightCount;
+  const finalPositions = new Float64Array(size);
+  let front = 0;
+  let back = size - 1;
+  let UL, LL, UR, LR;
+  let rightPos, leftPos;
+  const halfLength = endPositionLength / 2;
 
-  var indices = IndexDatatype.createTypedArray(size / 3, indicesLength + 4);
-  var index = 0;
+  const indices = IndexDatatype.createTypedArray(size / 3, indicesLength + 4);
+  let index = 0;
 
   indices[index++] = front / 3;
   indices[index++] = (back - 2) / 3;
@@ -90,7 +89,7 @@ function combine(computedPositions, cornerType) {
     wallIndices.push(front / 3);
     leftPos = cartesian1;
     rightPos = cartesian2;
-    var firstEndPositions = endPositions[0];
+    const firstEndPositions = endPositions[0];
     for (i = 0; i < halfLength; i++) {
       leftPos = Cartesian3.fromArray(
         firstEndPositions,
@@ -124,9 +123,9 @@ function combine(computedPositions, cornerType) {
     }
   }
 
-  var posIndex = 0;
-  var rightEdge = positions[posIndex++]; //add first two edges
-  var leftEdge = positions[posIndex++];
+  let posIndex = 0;
+  let rightEdge = positions[posIndex++]; //add first two edges
+  let leftEdge = positions[posIndex++];
   finalPositions.set(rightEdge, front);
   finalPositions.set(leftEdge, back - leftEdge.length + 1);
 
@@ -147,12 +146,12 @@ function combine(computedPositions, cornerType) {
   }
 
   for (i = 0; i < corners.length; i++) {
-    var j;
+    let j;
     corner = corners[i];
-    var l = corner.leftPositions;
-    var r = corner.rightPositions;
-    var start;
-    var outsidePoint = cartesian3;
+    const l = corner.leftPositions;
+    const r = corner.rightPositions;
+    let start;
+    let outsidePoint = cartesian3;
     if (defined(l)) {
       back -= 3;
       start = UR;
@@ -226,7 +225,7 @@ function combine(computedPositions, cornerType) {
     back -= 3;
     leftPos = cartesian1;
     rightPos = cartesian2;
-    var lastEndPositions = endPositions[1];
+    const lastEndPositions = endPositions[1];
     for (i = 0; i < halfLength; i++) {
       leftPos = Cartesian3.fromArray(
         lastEndPositions,
@@ -276,19 +275,19 @@ function combine(computedPositions, cornerType) {
 }
 
 function computePositionsExtruded(params) {
-  var ellipsoid = params.ellipsoid;
-  var computedPositions = CorridorGeometryLibrary.computePositions(params);
-  var attr = combine(computedPositions, params.cornerType);
-  var wallIndices = attr.wallIndices;
-  var height = params.height;
-  var extrudedHeight = params.extrudedHeight;
-  var attributes = attr.attributes;
-  var indices = attr.indices;
-  var positions = attributes.position.values;
-  var length = positions.length;
-  var extrudedPositions = new Float64Array(length);
+  const ellipsoid = params.ellipsoid;
+  const computedPositions = CorridorGeometryLibrary.computePositions(params);
+  const attr = combine(computedPositions, params.cornerType);
+  const wallIndices = attr.wallIndices;
+  const height = params.height;
+  const extrudedHeight = params.extrudedHeight;
+  const attributes = attr.attributes;
+  const indices = attr.indices;
+  let positions = attributes.position.values;
+  let length = positions.length;
+  let extrudedPositions = new Float64Array(length);
   extrudedPositions.set(positions);
-  var newPositions = new Float64Array(length * 2);
+  const newPositions = new Float64Array(length * 2);
 
   positions = PolygonPipeline.scaleToGeodeticHeight(
     positions,
@@ -306,13 +305,13 @@ function computePositionsExtruded(params) {
 
   length /= 3;
   if (defined(params.offsetAttribute)) {
-    var applyOffset = new Uint8Array(length * 2);
+    let applyOffset = new Uint8Array(length * 2);
     if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      applyOffset = arrayFill(applyOffset, 1, 0, length);
+      applyOffset = applyOffset.fill(1, 0, length);
     } else {
-      var applyOffsetValue =
+      const applyOffsetValue =
         params.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      applyOffset = arrayFill(applyOffset, applyOffsetValue);
+      applyOffset = applyOffset.fill(applyOffsetValue);
     }
 
     attributes.applyOffset = new GeometryAttribute({
@@ -322,23 +321,23 @@ function computePositionsExtruded(params) {
     });
   }
 
-  var i;
-  var iLength = indices.length;
-  var newIndices = IndexDatatype.createTypedArray(
+  let i;
+  const iLength = indices.length;
+  const newIndices = IndexDatatype.createTypedArray(
     newPositions.length / 3,
     (iLength + wallIndices.length) * 2
   );
   newIndices.set(indices);
-  var index = iLength;
+  let index = iLength;
   for (i = 0; i < iLength; i += 2) {
     // bottom indices
-    var v0 = indices[i];
-    var v1 = indices[i + 1];
+    const v0 = indices[i];
+    const v1 = indices[i + 1];
     newIndices[index++] = v0 + length;
     newIndices[index++] = v1 + length;
   }
 
-  var UL, LL;
+  let UL, LL;
   for (i = 0; i < wallIndices.length; i++) {
     //wall indices
     UL = wallIndices[i];
@@ -371,23 +370,23 @@ function computePositionsExtruded(params) {
  * @see CorridorOutlineGeometry.createGeometry
  *
  * @example
- * var corridor = new Cesium.CorridorOutlineGeometry({
+ * const corridor = new Cesium.CorridorOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
  *   width : 100000
  * });
  */
 function CorridorOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var positions = options.positions;
-  var width = options.width;
+  const positions = options.positions;
+  const width = options.width;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.positions", positions);
   Check.typeOf.number("options.width", width);
   //>>includeEnd('debug');
 
-  var height = defaultValue(options.height, 0.0);
-  var extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = defaultValue(options.height, 0.0);
+  const extrudedHeight = defaultValue(options.extrudedHeight, height);
 
   this._positions = positions;
   this._ellipsoid = Ellipsoid.clone(
@@ -429,11 +428,11 @@ CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var positions = value._positions;
-  var length = positions.length;
+  const positions = value._positions;
+  const length = positions.length;
   array[startingIndex++] = length;
 
-  for (var i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+  for (let i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     Cartesian3.pack(positions[i], array, startingIndex);
   }
 
@@ -450,8 +449,8 @@ CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-var scratchOptions = {
+const scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+const scratchOptions = {
   positions: undefined,
   ellipsoid: scratchEllipsoid,
   width: undefined,
@@ -477,22 +476,22 @@ CorridorOutlineGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var length = array[startingIndex++];
-  var positions = new Array(length);
+  const length = array[startingIndex++];
+  const positions = new Array(length);
 
-  for (var i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+  for (let i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     positions[i] = Cartesian3.unpack(array, startingIndex);
   }
 
-  var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+  const ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
   startingIndex += Ellipsoid.packedLength;
 
-  var width = array[startingIndex++];
-  var height = array[startingIndex++];
-  var extrudedHeight = array[startingIndex++];
-  var cornerType = array[startingIndex++];
-  var granularity = array[startingIndex++];
-  var offsetAttribute = array[startingIndex];
+  const width = array[startingIndex++];
+  const height = array[startingIndex++];
+  const extrudedHeight = array[startingIndex++];
+  const cornerType = array[startingIndex++];
+  const granularity = array[startingIndex++];
+  const offsetAttribute = array[startingIndex];
 
   if (!defined(result)) {
     scratchOptions.positions = positions;
@@ -526,12 +525,12 @@ CorridorOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
-  var positions = corridorOutlineGeometry._positions;
-  var width = corridorOutlineGeometry._width;
-  var ellipsoid = corridorOutlineGeometry._ellipsoid;
+  let positions = corridorOutlineGeometry._positions;
+  const width = corridorOutlineGeometry._width;
+  const ellipsoid = corridorOutlineGeometry._ellipsoid;
 
   positions = scaleToSurface(positions, ellipsoid);
-  var cleanPositions = arrayRemoveDuplicates(
+  const cleanPositions = arrayRemoveDuplicates(
     positions,
     Cartesian3.equalsEpsilon
   );
@@ -540,16 +539,16 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     return;
   }
 
-  var height = corridorOutlineGeometry._height;
-  var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
-  var extrude = !CesiumMath.equalsEpsilon(
+  const height = corridorOutlineGeometry._height;
+  const extrudedHeight = corridorOutlineGeometry._extrudedHeight;
+  const extrude = !CesiumMath.equalsEpsilon(
     height,
     extrudedHeight,
     0,
     CesiumMath.EPSILON2
   );
 
-  var params = {
+  const params = {
     ellipsoid: ellipsoid,
     positions: cleanPositions,
     width: width,
@@ -557,14 +556,14 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     granularity: corridorOutlineGeometry._granularity,
     saveAttributes: false,
   };
-  var attr;
+  let attr;
   if (extrude) {
     params.height = height;
     params.extrudedHeight = extrudedHeight;
     params.offsetAttribute = corridorOutlineGeometry._offsetAttribute;
     attr = computePositionsExtruded(params);
   } else {
-    var computedPositions = CorridorGeometryLibrary.computePositions(params);
+    const computedPositions = CorridorGeometryLibrary.computePositions(params);
     attr = combine(computedPositions, params.cornerType);
     attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
       attr.attributes.position.values,
@@ -573,14 +572,13 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     );
 
     if (defined(corridorOutlineGeometry._offsetAttribute)) {
-      var length = attr.attributes.position.values.length;
-      var applyOffset = new Uint8Array(length / 3);
-      var offsetValue =
+      const length = attr.attributes.position.values.length;
+      const offsetValue =
         corridorOutlineGeometry._offsetAttribute ===
         GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       attr.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,
@@ -588,8 +586,8 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
       });
     }
   }
-  var attributes = attr.attributes;
-  var boundingSphere = BoundingSphere.fromVertices(
+  const attributes = attr.attributes;
+  const boundingSphere = BoundingSphere.fromVertices(
     attributes.position.values,
     undefined,
     3

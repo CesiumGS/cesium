@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Draw a polygon or extruded polygon on the globe surface."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create the viewer.
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+
+        // Example 1: Small textured polygon.
+        let positions = Cesium.Cartesian3.fromDegreesArray([
+          -117.4,
+          37.4,
+          -117.4,
+          37,
+          -117.2,
+          37.1,
+          -117.0,
+          37,
+          -117.0,
+          37.4,
+        ]);
+        let textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+        };
+        const smallFlatInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonGeometry.fromPositions({
+            positions: positions,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            textureCoordinates: textureCoordinates,
+          }),
+        });
+
+        // Example 2: Small textured polygon with holes.
+        let polygonHierarchy = {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            -116.5,
+            37.5,
+            -116.5,
+            37,
+            -116,
+            37,
+            -116,
+            37.5,
+          ]),
+          holes: [
+            {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -116.1,
+                37.2,
+                -116.1,
+                37.15,
+                -116.05,
+                37.15,
+                -116.05,
+                37.2,
+              ]),
+            },
+            {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -116.35,
+                37.35,
+                -116.35,
+                37.15,
+                -116.15,
+                37.15,
+                -116.15,
+                37.35,
+              ]),
+              holes: [
+                {
+                  positions: Cesium.Cartesian3.fromDegreesArray([
+                    -116.3,
+                    37.3,
+                    -116.3,
+                    37.2,
+                    -116.2,
+                    37.2,
+                    -116.2,
+                    37.3,
+                  ]),
+                  holes: [
+                    {
+                      positions: Cesium.Cartesian3.fromDegreesArray([
+                        -116.27,
+                        37.27,
+                        -116.27,
+                        37.23,
+                        -116.23,
+                        37.23,
+                        -116.23,
+                        37.27,
+                      ]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(0.5, 1),
+          ],
+          holes: [
+            {
+              positions: [
+                new Cesium.Cartesian2(0.4, 0.4),
+                new Cesium.Cartesian2(0.4, 0.3),
+                new Cesium.Cartesian2(0.45, 0.3),
+                new Cesium.Cartesian2(0.45, 0.4),
+              ],
+            },
+            {
+              positions: [
+                new Cesium.Cartesian2(0.15, 0.7),
+                new Cesium.Cartesian2(0.15, 0.3),
+                new Cesium.Cartesian2(0.35, 0.3),
+                new Cesium.Cartesian2(0.35, 0.7),
+              ],
+              holes: [
+                {
+                  positions: [
+                    new Cesium.Cartesian2(0.2, 0.6),
+                    new Cesium.Cartesian2(0.2, 0.4),
+                    new Cesium.Cartesian2(0.3, 0.4),
+                    new Cesium.Cartesian2(0.3, 0.6),
+                  ],
+                  holes: [
+                    {
+                      positions: [
+                        new Cesium.Cartesian2(0.23, 0.54),
+                        new Cesium.Cartesian2(0.23, 0.46),
+                        new Cesium.Cartesian2(0.27, 0.46),
+                        new Cesium.Cartesian2(0.27, 0.54),
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+        const smallHoleyFlatInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: polygonHierarchy,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            textureCoordinates: textureCoordinates,
+          }),
+        });
+
+        // Example 3: Large (subdivided) textured polygon with perPositionHeights.
+        polygonHierarchy = {
+          positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+            -115,
+            38.0,
+            50000,
+            -115,
+            36.0,
+            30000,
+            -114,
+            36.5,
+            35000,
+            -113,
+            36.0,
+            30000,
+            -113,
+            38.0,
+            50000,
+          ]),
+          holes: [
+            {
+              positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -114.6,
+                37.6,
+                46000,
+                -114.6,
+                37.2,
+                42000,
+                -114.2,
+                37.2,
+                42000,
+                -114.2,
+                37.6,
+                46000,
+              ]),
+            },
+          ],
+        };
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+          holes: [
+            {
+              positions: [
+                new Cesium.Cartesian2(0.2, 0.8),
+                new Cesium.Cartesian2(0.2, 0.6),
+                new Cesium.Cartesian2(0.4, 0.6),
+                new Cesium.Cartesian2(0.4, 0.8),
+              ],
+            },
+          ],
+        };
+        const largeHeightedInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: polygonHierarchy,
+            perPositionHeight: true,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            textureCoordinates: textureCoordinates,
+          }),
+        });
+
+        // Example 4: Large (subdivided) textured polygon with RHUMB arc type.
+        positions = Cesium.Cartesian3.fromDegreesArray([
+          -112,
+          38,
+          -112,
+          36,
+          -111,
+          36.5,
+          -110,
+          36,
+          -110,
+          38,
+        ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+        };
+        const largeFlatInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonGeometry.fromPositions({
+            positions: positions,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            textureCoordinates: textureCoordinates,
+            arcType: Cesium.ArcType.RHUMB,
+          }),
+        });
+
+        // Example 5: Textured extruded polygon.
+        positions = Cesium.Cartesian3.fromDegreesArray([
+          -109.4,
+          37.4,
+          -109.4,
+          37,
+          -109.2,
+          37.1,
+          -109.0,
+          37,
+          -109.0,
+          37.4,
+        ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+        };
+        const extrudedInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonGeometry.fromPositions({
+            positions: positions,
+            extrudedHeight: 50000,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            textureCoordinates: textureCoordinates,
+          }),
+        });
+
+        // Example 6: Textured extruded polygon with perPositionHeights.
+        positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+          -108.4,
+          37.4,
+          50000,
+          -108.4,
+          37,
+          30000,
+          -108.2,
+          37.1,
+          35000,
+          -108.0,
+          37,
+          30000,
+          -108.0,
+          37.4,
+          50000,
+        ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+        };
+        const extrudedHeightedInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonGeometry.fromPositions({
+            positions: positions,
+            extrudedHeight: 0,
+            vertexFormat:
+              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            perPositionHeight: true,
+            textureCoordinates: textureCoordinates,
+          }),
+        });
+
+        // Add each polygon instance to primitives.
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              smallFlatInstance,
+              smallHoleyFlatInstance,
+              largeHeightedInstance,
+              largeFlatInstance,
+              extrudedInstance,
+              extrudedHeightedInstance,
+            ],
+            appearance: new Cesium.MaterialAppearance({
+              material: new Cesium.Material({
+                fabric: {
+                  type: "Image",
+                  uniforms: {
+                    image: "../images/Cesium_Logo_Color.jpg",
+                  },
+                },
+              }),
+              materialSupport:
+                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+              translucent: false,
+            }),
+          })
+        );
+
+        // Example 7: Ground primitive - custom texture coordinates are not expected to work, but the polygon should render.
+
+        positions = Cesium.Cartesian3.fromDegreesArray([
+          -105,
+          37.5,
+          -105,
+          37.0,
+          -100,
+          37.0,
+          -100,
+          37.5,
+        ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0.5, 1),
+            new Cesium.Cartesian2(0, 0.5),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0.5),
+          ],
+        };
+
+        scene.primitives.add(
+          new Cesium.GroundPrimitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.PolygonGeometry({
+                polygonHierarchy: { positions: positions },
+                textureCoordinates: textureCoordinates,
+              }),
+            }),
+            appearance: new Cesium.EllipsoidSurfaceAppearance({
+              aboveGround: false,
+              material: new Cesium.Material({
+                fabric: {
+                  type: "Image",
+                  uniforms: {
+                    image: "../images/Cesium_Logo_Color.jpg",
+                  },
+                },
+              }),
+            }),
+            classificationType: Cesium.ClassificationType.TERRAIN,
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

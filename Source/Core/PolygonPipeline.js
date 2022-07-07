@@ -1,4 +1,4 @@
-import earcut from "../ThirdParty/earcut-2.2.1.js";
+import earcut from "../ThirdParty/earcut.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
@@ -14,13 +14,13 @@ import CesiumMath from "./Math.js";
 import PrimitiveType from "./PrimitiveType.js";
 import WindingOrder from "./WindingOrder.js";
 
-var scaleToGeodeticHeightN = new Cartesian3();
-var scaleToGeodeticHeightP = new Cartesian3();
+const scaleToGeodeticHeightN = new Cartesian3();
+const scaleToGeodeticHeightP = new Cartesian3();
 
 /**
  * @private
  */
-var PolygonPipeline = {};
+const PolygonPipeline = {};
 
 /**
  * @exception {DeveloperError} At least three positions are required.
@@ -35,12 +35,12 @@ PolygonPipeline.computeArea2D = function (positions) {
   );
   //>>includeEnd('debug');
 
-  var length = positions.length;
-  var area = 0.0;
+  const length = positions.length;
+  let area = 0.0;
 
-  for (var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
-    var v0 = positions[i0];
-    var v1 = positions[i1];
+  for (let i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
+    const v0 = positions[i0];
+    const v1 = positions[i1];
 
     area += v0.x * v1.y - v1.x * v0.y;
   }
@@ -54,7 +54,7 @@ PolygonPipeline.computeArea2D = function (positions) {
  * @exception {DeveloperError} At least three positions are required.
  */
 PolygonPipeline.computeWindingOrder2D = function (positions) {
-  var area = PolygonPipeline.computeArea2D(positions);
+  const area = PolygonPipeline.computeArea2D(positions);
   return area > 0.0 ? WindingOrder.COUNTER_CLOCKWISE : WindingOrder.CLOCKWISE;
 };
 
@@ -70,17 +70,21 @@ PolygonPipeline.triangulate = function (positions, holes) {
   Check.defined("positions", positions);
   //>>includeEnd('debug');
 
-  var flattenedPositions = Cartesian2.packArray(positions);
+  const flattenedPositions = Cartesian2.packArray(positions);
   return earcut(flattenedPositions, holes, 2);
 };
 
-var subdivisionV0Scratch = new Cartesian3();
-var subdivisionV1Scratch = new Cartesian3();
-var subdivisionV2Scratch = new Cartesian3();
-var subdivisionS0Scratch = new Cartesian3();
-var subdivisionS1Scratch = new Cartesian3();
-var subdivisionS2Scratch = new Cartesian3();
-var subdivisionMidScratch = new Cartesian3();
+const subdivisionV0Scratch = new Cartesian3();
+const subdivisionV1Scratch = new Cartesian3();
+const subdivisionV2Scratch = new Cartesian3();
+const subdivisionS0Scratch = new Cartesian3();
+const subdivisionS1Scratch = new Cartesian3();
+const subdivisionS2Scratch = new Cartesian3();
+const subdivisionMidScratch = new Cartesian3();
+const subdivisionT0Scratch = new Cartesian2();
+const subdivisionT1Scratch = new Cartesian2();
+const subdivisionT2Scratch = new Cartesian2();
+const subdivisionTexcoordMidScratch = new Cartesian2();
 
 /**
  * Subdivides positions and raises points to the surface of the ellipsoid.
@@ -88,6 +92,7 @@ var subdivisionMidScratch = new Cartesian3();
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
+ * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
  * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  *
  * @exception {DeveloperError} At least three indices are required.
@@ -98,9 +103,12 @@ PolygonPipeline.computeSubdivision = function (
   ellipsoid,
   positions,
   indices,
+  texcoords,
   granularity
 ) {
   granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+  const hasTexcoords = defined(texcoords);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("ellipsoid", ellipsoid);
@@ -112,85 +120,113 @@ PolygonPipeline.computeSubdivision = function (
   //>>includeEnd('debug');
 
   // triangles that need (or might need) to be subdivided.
-  var triangles = indices.slice(0);
+  const triangles = indices.slice(0);
 
   // New positions due to edge splits are appended to the positions list.
-  var i;
-  var length = positions.length;
-  var subdividedPositions = new Array(length * 3);
-  var q = 0;
+  let i;
+  const length = positions.length;
+  const subdividedPositions = new Array(length * 3);
+  const subdividedTexcoords = new Array(length * 2);
+  let q = 0;
+  let p = 0;
   for (i = 0; i < length; i++) {
-    var item = positions[i];
+    const item = positions[i];
     subdividedPositions[q++] = item.x;
     subdividedPositions[q++] = item.y;
     subdividedPositions[q++] = item.z;
+
+    if (hasTexcoords) {
+      const texcoordItem = texcoords[i];
+      subdividedTexcoords[p++] = texcoordItem.x;
+      subdividedTexcoords[p++] = texcoordItem.y;
+    }
   }
 
-  var subdividedIndices = [];
+  const subdividedIndices = [];
 
   // Used to make sure shared edges are not split more than once.
-  var edges = {};
+  const edges = {};
 
-  var radius = ellipsoid.maximumRadius;
-  var minDistance = CesiumMath.chordLength(granularity, radius);
-  var minDistanceSqrd = minDistance * minDistance;
+  const radius = ellipsoid.maximumRadius;
+  const minDistance = CesiumMath.chordLength(granularity, radius);
+  const minDistanceSqrd = minDistance * minDistance;
 
   while (triangles.length > 0) {
-    var i2 = triangles.pop();
-    var i1 = triangles.pop();
-    var i0 = triangles.pop();
+    const i2 = triangles.pop();
+    const i1 = triangles.pop();
+    const i0 = triangles.pop();
 
-    var v0 = Cartesian3.fromArray(
+    const v0 = Cartesian3.fromArray(
       subdividedPositions,
       i0 * 3,
       subdivisionV0Scratch
     );
-    var v1 = Cartesian3.fromArray(
+    const v1 = Cartesian3.fromArray(
       subdividedPositions,
       i1 * 3,
       subdivisionV1Scratch
     );
-    var v2 = Cartesian3.fromArray(
+    const v2 = Cartesian3.fromArray(
       subdividedPositions,
       i2 * 3,
       subdivisionV2Scratch
     );
 
-    var s0 = Cartesian3.multiplyByScalar(
+    let t0, t1, t2;
+    if (hasTexcoords) {
+      t0 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i0 * 2,
+        subdivisionT0Scratch
+      );
+      t1 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i1 * 2,
+        subdivisionT1Scratch
+      );
+      t2 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i2 * 2,
+        subdivisionT2Scratch
+      );
+    }
+
+    const s0 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v0, subdivisionS0Scratch),
       radius,
       subdivisionS0Scratch
     );
-    var s1 = Cartesian3.multiplyByScalar(
+    const s1 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v1, subdivisionS1Scratch),
       radius,
       subdivisionS1Scratch
     );
-    var s2 = Cartesian3.multiplyByScalar(
+    const s2 = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(v2, subdivisionS2Scratch),
       radius,
       subdivisionS2Scratch
     );
 
-    var g0 = Cartesian3.magnitudeSquared(
+    const g0 = Cartesian3.magnitudeSquared(
       Cartesian3.subtract(s0, s1, subdivisionMidScratch)
     );
-    var g1 = Cartesian3.magnitudeSquared(
+    const g1 = Cartesian3.magnitudeSquared(
       Cartesian3.subtract(s1, s2, subdivisionMidScratch)
     );
-    var g2 = Cartesian3.magnitudeSquared(
+    const g2 = Cartesian3.magnitudeSquared(
       Cartesian3.subtract(s2, s0, subdivisionMidScratch)
     );
 
-    var max = Math.max(g0, g1, g2);
-    var edge;
-    var mid;
+    const max = Math.max(g0, g1, g2);
+    let edge;
+    let mid;
+    let midTexcoord;
 
     // if the max length squared of a triangle edge is greater than the chord length of squared
     // of the granularity, subdivide the triangle
     if (max > minDistanceSqrd) {
       if (g0 === max) {
-        edge = Math.min(i0, i1) + " " + Math.max(i0, i1);
+        edge = `${Math.min(i0, i1)} ${Math.max(i0, i1)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -199,12 +235,18 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t0, t1, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i0, i, i2);
         triangles.push(i, i1, i2);
       } else if (g1 === max) {
-        edge = Math.min(i1, i2) + " " + Math.max(i1, i2);
+        edge = `${Math.min(i1, i2)} ${Math.max(i1, i2)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -213,12 +255,18 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t1, t2, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i1, i, i0);
         triangles.push(i, i2, i0);
       } else if (g2 === max) {
-        edge = Math.min(i2, i0) + " " + Math.max(i2, i0);
+        edge = `${Math.min(i2, i0)} ${Math.max(i2, i0)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -227,6 +275,12 @@ PolygonPipeline.computeSubdivision = function (
           subdividedPositions.push(mid.x, mid.y, mid.z);
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t2, t0, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i2, i, i1);
@@ -239,7 +293,7 @@ PolygonPipeline.computeSubdivision = function (
     }
   }
 
-  return new Geometry({
+  const geometryOptions = {
     attributes: {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
@@ -249,13 +303,23 @@ PolygonPipeline.computeSubdivision = function (
     },
     indices: subdividedIndices,
     primitiveType: PrimitiveType.TRIANGLES,
-  });
+  };
+
+  if (hasTexcoords) {
+    geometryOptions.attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: subdividedTexcoords,
+    });
+  }
+
+  return new Geometry(geometryOptions);
 };
 
-var subdivisionC0Scratch = new Cartographic();
-var subdivisionC1Scratch = new Cartographic();
-var subdivisionC2Scratch = new Cartographic();
-var subdivisionCartographicScratch = new Cartographic();
+const subdivisionC0Scratch = new Cartographic();
+const subdivisionC1Scratch = new Cartographic();
+const subdivisionC2Scratch = new Cartographic();
+const subdivisionCartographicScratch = new Cartographic();
 
 /**
  * Subdivides positions on rhumb lines and raises points to the surface of the ellipsoid.
@@ -263,6 +327,7 @@ var subdivisionCartographicScratch = new Cartographic();
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
+ * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
  * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  *
  * @exception {DeveloperError} At least three indices are required.
@@ -273,9 +338,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   ellipsoid,
   positions,
   indices,
+  texcoords,
   granularity
 ) {
   granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+  const hasTexcoords = defined(texcoords);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("ellipsoid", ellipsoid);
@@ -287,74 +355,102 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
   //>>includeEnd('debug');
 
   // triangles that need (or might need) to be subdivided.
-  var triangles = indices.slice(0);
+  const triangles = indices.slice(0);
 
   // New positions due to edge splits are appended to the positions list.
-  var i;
-  var length = positions.length;
-  var subdividedPositions = new Array(length * 3);
-  var q = 0;
+  let i;
+  const length = positions.length;
+  const subdividedPositions = new Array(length * 3);
+  const subdividedTexcoords = new Array(length * 2);
+  let q = 0;
+  let p = 0;
   for (i = 0; i < length; i++) {
-    var item = positions[i];
+    const item = positions[i];
     subdividedPositions[q++] = item.x;
     subdividedPositions[q++] = item.y;
     subdividedPositions[q++] = item.z;
+
+    if (hasTexcoords) {
+      const texcoordItem = texcoords[i];
+      subdividedTexcoords[p++] = texcoordItem.x;
+      subdividedTexcoords[p++] = texcoordItem.y;
+    }
   }
 
-  var subdividedIndices = [];
+  const subdividedIndices = [];
 
   // Used to make sure shared edges are not split more than once.
-  var edges = {};
+  const edges = {};
 
-  var radius = ellipsoid.maximumRadius;
-  var minDistance = CesiumMath.chordLength(granularity, radius);
+  const radius = ellipsoid.maximumRadius;
+  const minDistance = CesiumMath.chordLength(granularity, radius);
 
-  var rhumb0 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
-  var rhumb1 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
-  var rhumb2 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+  const rhumb0 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+  const rhumb1 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+  const rhumb2 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
 
   while (triangles.length > 0) {
-    var i2 = triangles.pop();
-    var i1 = triangles.pop();
-    var i0 = triangles.pop();
+    const i2 = triangles.pop();
+    const i1 = triangles.pop();
+    const i0 = triangles.pop();
 
-    var v0 = Cartesian3.fromArray(
+    const v0 = Cartesian3.fromArray(
       subdividedPositions,
       i0 * 3,
       subdivisionV0Scratch
     );
-    var v1 = Cartesian3.fromArray(
+    const v1 = Cartesian3.fromArray(
       subdividedPositions,
       i1 * 3,
       subdivisionV1Scratch
     );
-    var v2 = Cartesian3.fromArray(
+    const v2 = Cartesian3.fromArray(
       subdividedPositions,
       i2 * 3,
       subdivisionV2Scratch
     );
 
-    var c0 = ellipsoid.cartesianToCartographic(v0, subdivisionC0Scratch);
-    var c1 = ellipsoid.cartesianToCartographic(v1, subdivisionC1Scratch);
-    var c2 = ellipsoid.cartesianToCartographic(v2, subdivisionC2Scratch);
+    let t0, t1, t2;
+    if (hasTexcoords) {
+      t0 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i0 * 2,
+        subdivisionT0Scratch
+      );
+      t1 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i1 * 2,
+        subdivisionT1Scratch
+      );
+      t2 = Cartesian2.fromArray(
+        subdividedTexcoords,
+        i2 * 2,
+        subdivisionT2Scratch
+      );
+    }
+
+    const c0 = ellipsoid.cartesianToCartographic(v0, subdivisionC0Scratch);
+    const c1 = ellipsoid.cartesianToCartographic(v1, subdivisionC1Scratch);
+    const c2 = ellipsoid.cartesianToCartographic(v2, subdivisionC2Scratch);
 
     rhumb0.setEndPoints(c0, c1);
-    var g0 = rhumb0.surfaceDistance;
+    const g0 = rhumb0.surfaceDistance;
     rhumb1.setEndPoints(c1, c2);
-    var g1 = rhumb1.surfaceDistance;
+    const g1 = rhumb1.surfaceDistance;
     rhumb2.setEndPoints(c2, c0);
-    var g2 = rhumb2.surfaceDistance;
+    const g2 = rhumb2.surfaceDistance;
 
-    var max = Math.max(g0, g1, g2);
-    var edge;
-    var mid;
-    var midHeight;
-    var midCartesian3;
+    const max = Math.max(g0, g1, g2);
+    let edge;
+    let mid;
+    let midHeight;
+    let midCartesian3;
+    let midTexcoord;
 
     // if the max length squared of a triangle edge is greater than granularity, subdivide the triangle
     if (max > minDistance) {
       if (g0 === max) {
-        edge = Math.min(i0, i1) + " " + Math.max(i0, i1);
+        edge = `${Math.min(i0, i1)} ${Math.max(i0, i1)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -377,12 +473,18 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t0, t1, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i0, i, i2);
         triangles.push(i, i1, i2);
       } else if (g1 === max) {
-        edge = Math.min(i1, i2) + " " + Math.max(i1, i2);
+        edge = `${Math.min(i1, i2)} ${Math.max(i1, i2)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -405,12 +507,18 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t1, t2, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i1, i, i0);
         triangles.push(i, i2, i0);
       } else if (g2 === max) {
-        edge = Math.min(i2, i0) + " " + Math.max(i2, i0);
+        edge = `${Math.min(i2, i0)} ${Math.max(i2, i0)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -433,6 +541,12 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
           );
           i = subdividedPositions.length / 3 - 1;
           edges[edge] = i;
+
+          if (hasTexcoords) {
+            midTexcoord = Cartesian2.add(t2, t0, subdivisionTexcoordMidScratch);
+            Cartesian2.multiplyByScalar(midTexcoord, 0.5, midTexcoord);
+            subdividedTexcoords.push(midTexcoord.x, midTexcoord.y);
+          }
         }
 
         triangles.push(i2, i, i1);
@@ -445,7 +559,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     }
   }
 
-  return new Geometry({
+  const geometryOptions = {
     attributes: {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
@@ -455,7 +569,17 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     },
     indices: subdividedIndices,
     primitiveType: PrimitiveType.TRIANGLES,
-  });
+  };
+
+  if (hasTexcoords) {
+    geometryOptions.attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: subdividedTexcoords,
+    });
+  }
+
+  return new Geometry(geometryOptions);
 };
 
 /**
@@ -475,16 +599,16 @@ PolygonPipeline.scaleToGeodeticHeight = function (
 ) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var n = scaleToGeodeticHeightN;
-  var p = scaleToGeodeticHeightP;
+  let n = scaleToGeodeticHeightN;
+  let p = scaleToGeodeticHeightP;
 
   height = defaultValue(height, 0.0);
   scaleToSurface = defaultValue(scaleToSurface, true);
 
   if (defined(positions)) {
-    var length = positions.length;
+    const length = positions.length;
 
-    for (var i = 0; i < length; i += 3) {
+    for (let i = 0; i < length; i += 3) {
       Cartesian3.fromArray(positions, i, p);
 
       if (scaleToSurface) {

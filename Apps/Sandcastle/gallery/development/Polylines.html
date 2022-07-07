@@ -29,14 +29,16 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         function createPrimitives(scene) {
-          var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+          const polylines = scene.primitives.add(
+            new Cesium.PolylineCollection()
+          );
 
           // A simple polyline with two points.
-          var polyline = polylines.add({
+          const polyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
                 -120.0,
@@ -52,7 +54,7 @@
           Sandcastle.declare(polyline); // For highlighting on mouseover in Sandcastle.
 
           // Apply a polyline outline material
-          var widePolyline = polylines.add({
+          const widePolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
                 -105.0,
@@ -76,7 +78,7 @@
           Sandcastle.declare(widePolyline); // For highlighting on mouseover in Sandcastle.
 
           // Apply a polyline glow material
-          var coloredPolyline = polylines.add({
+          const coloredPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
                 -95.0,
@@ -98,7 +100,7 @@
           Sandcastle.declare(coloredPolyline); // For highlighting on mouseover in Sandcastle.
 
           // A polyline loop
-          var loopPolyline = polylines.add({
+          const loopPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
                 -105.0,
@@ -118,15 +120,15 @@
 
           // Draw a line in a local reference frame
           // The arrow points to the east, i.e. along the local x-axis.
-          var localPolylines = scene.primitives.add(
+          const localPolylines = scene.primitives.add(
             new Cesium.PolylineCollection()
           );
-          var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
+          const center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
           localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             center
           );
 
-          var localPolyline = localPolylines.add({
+          const localPolyline = localPolylines.add({
             positions: [
               new Cesium.Cartesian3(0.0, 0.0, 0.0),
               new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
@@ -139,7 +141,7 @@
           Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
 
           //Polyline using the fade material
-          var fadingPolyline = polylines.add({
+          const fadingPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArrayHeights([
                 -75,
@@ -165,7 +167,7 @@
           Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
 
           // A rhumb line with two points.
-          var rhumbLine = polylines.add({
+          const rhumbLine = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianRhumbArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
                 -130.0,
@@ -182,19 +184,19 @@
           Sandcastle.declare(rhumbLine); // For highlighting on mouseover in Sandcastle.
         }
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.screenSpaceEventHandler.setInputAction(function (movement) {
-          var pickedPrimitive = viewer.scene.pick(movement.endPosition);
+          const pickedPrimitive = viewer.scene.pick(movement.endPosition);
           Sandcastle.highlight(pickedPrimitive);
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
         createPrimitives(viewer.scene);
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

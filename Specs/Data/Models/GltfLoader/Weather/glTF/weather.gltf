@@ -3,10 +3,11 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_feature_metadata"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_feature_metadata": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "weather": {
@@ -14,17 +15,18 @@
             "properties": {
               "airTemperature": {
                 "name": "Air Temperature",
-                "type": "FLOAT32"
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
               },
               "airPressure": {
                 "name": "Air Pressure",
-                "type": "FLOAT32"
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
               },
               "windVelocity": {
                 "name": "Wind Velocity",
-                "type": "ARRAY",
-                "componentType": "FLOAT32",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "FLOAT32"
               }
             }
           },
@@ -37,42 +39,45 @@
               },
               "population": {
                 "name": "Population",
-                "type": "UINT16"
+                "type": "SCALAR",
+                "componentType": "UINT16"
               }
             }
           }
         }
       },
-      "featureTables": {
-        "weatherTable": {
-          "class": "weather",
-          "count": 1000,
-          "properties": {
-            "airTemperature": {
-              "bufferView": 2
-            },
-            "airPressure": {
-              "bufferView": 3
-            },
-            "windVelocity": {
-              "bufferView": 4
-            }
-          }
-        },
-        "townTable": {
+      "propertyTables": [
+        {
+          "name": "Town",
           "class": "town",
           "count": 3,
           "properties": {
             "name": {
-              "bufferView": 5,
-              "stringOffsetBufferView": 6
+              "values": 5,
+              "stringOffsets": 6
             },
             "population": {
-              "bufferView": 7
+              "values": 7
+            }
+          }
+        },
+        {
+          "name": "Weather",
+          "class": "weather",
+          "count": 1000,
+          "properties": {
+            "airTemperature": {
+              "values": 2
+            },
+            "airPressure": {
+              "values": 3
+            },
+            "windVelocity": {
+              "values": 4
             }
           }
         }
-      }
+      ]
     }
   },
   "scene": 0,
@@ -101,20 +106,18 @@
           },
           "mode": 0,
           "extensions": {
-            "EXT_feature_metadata": {
-              "featureIdAttributes": [
+            "EXT_mesh_features": {
+              "featureIds": [
                 {
-                  "featureTable": "weatherTable",
-                  "featureIds": {
-                    "constant": 0,
-                    "divisor": 1
-                  }
+                  "label": "perPoint",
+                  "propertyTable": 1,
+                  "featureCount": 1000
                 },
                 {
-                  "featureTable": "townTable",
-                  "featureIds": {
-                    "attribute": "_FEATURE_ID_0"
-                  }
+                  "label": "town",
+                  "propertyTable": 0,
+                  "attribute": 0,
+                  "featureCount": 3
                 }
               ]
             }

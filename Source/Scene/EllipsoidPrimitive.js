@@ -22,7 +22,7 @@ import CullFace from "./CullFace.js";
 import Material from "./Material.js";
 import SceneMode from "./SceneMode.js";
 
-var attributeLocations = {
+const attributeLocations = {
   position: 0,
 };
 
@@ -96,7 +96,7 @@ function EllipsoidPrimitive(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -195,7 +195,7 @@ function EllipsoidPrimitive(options) {
     pickOnly: true,
   });
 
-  var that = this;
+  const that = this;
   this._uniforms = {
     u_radii: function () {
       return that.radii;
@@ -213,13 +213,13 @@ function EllipsoidPrimitive(options) {
 }
 
 function getVertexArray(context) {
-  var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
+  let vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
 
   if (defined(vertexArray)) {
     return vertexArray;
   }
 
-  var geometry = BoxGeometry.createGeometry(
+  const geometry = BoxGeometry.createGeometry(
     BoxGeometry.fromDimensions({
       dimensions: new Cartesian3(2.0, 2.0, 2.0),
       vertexFormat: VertexFormat.POSITION_ONLY,
@@ -238,7 +238,7 @@ function getVertexArray(context) {
   return vertexArray;
 }
 
-var logDepthExtension =
+const logDepthExtension =
   "#ifdef GL_EXT_frag_depth \n" +
   "#extension GL_EXT_frag_depth : enable \n" +
   "#endif \n\n";
@@ -269,9 +269,9 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
   }
   //>>includeEnd('debug');
 
-  var context = frameState.context;
-  var translucent = this.material.isTranslucent();
-  var translucencyChanged = this._translucent !== translucent;
+  const context = frameState.context;
+  const translucent = this.material.isTranslucent();
+  const translucencyChanged = this._translucent !== translucent;
 
   if (!defined(this._rs) || translucencyChanged) {
     this._translucent = translucent;
@@ -301,13 +301,13 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     this._va = getVertexArray(context);
   }
 
-  var boundingSphereDirty = false;
+  let boundingSphereDirty = false;
 
-  var radii = this.radii;
+  const radii = this.radii;
   if (!Cartesian3.equals(this._radii, radii)) {
     Cartesian3.clone(radii, this._radii);
 
-    var r = this._oneOverEllipsoidRadiiSquared;
+    const r = this._oneOverEllipsoidRadiiSquared;
     r.x = 1.0 / (radii.x * radii.x);
     r.y = 1.0 / (radii.y * radii.y);
     r.z = 1.0 / (radii.z * radii.z);
@@ -341,20 +341,20 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     );
   }
 
-  var materialChanged = this._material !== this.material;
+  const materialChanged = this._material !== this.material;
   this._material = this.material;
   this._material.update(context);
 
-  var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
+  const lightingChanged = this.onlySunLighting !== this._onlySunLighting;
   this._onlySunLighting = this.onlySunLighting;
 
-  var useLogDepth = frameState.useLogDepth;
-  var useLogDepthChanged = this._useLogDepth !== useLogDepth;
+  const useLogDepth = frameState.useLogDepth;
+  const useLogDepthChanged = this._useLogDepth !== useLogDepth;
   this._useLogDepth = useLogDepth;
 
-  var colorCommand = this._colorCommand;
-  var vs;
-  var fs;
+  const colorCommand = this._colorCommand;
+  let vs;
+  let fs;
 
   // Recompile shader when material, lighting, or translucency changes
   if (
@@ -396,8 +396,8 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     colorCommand.executeInClosestFrustum = translucent;
   }
 
-  var commandList = frameState.commandList;
-  var passes = frameState.passes;
+  const commandList = frameState.commandList;
+  const passes = frameState.passes;
 
   if (passes.render) {
     colorCommand.boundingVolume = this._boundingSphere;
@@ -409,7 +409,7 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
   }
 
   if (passes.pick) {
-    var pickCommand = this._pickCommand;
+    const pickCommand = this._pickCommand;
 
     if (!defined(this._pickId) || this._id !== this.id) {
       this._id = this.id;

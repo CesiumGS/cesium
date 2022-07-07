@@ -1,0 +1,68 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_metadata"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling"
+  ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "tile": {
+            "properties": {
+              "minimumHeight": {
+                "type": "SCALAR",
+                "componentType": "FLOAT64",
+                "semantic": "CONTENT_MINIMUM_HEIGHT"
+              },
+              "maximumHeight": {
+                "type": "SCALAR",
+                "componentType": "FLOAT64",
+                "semantic": "CONTENT_MAXIMUM_HEIGHT"
+              },
+              "boundingRegion": {
+                "type": "SCALAR",
+                "componentType": "FLOAT64",
+                "array": true,
+                "count": 6,
+                "semantic": "CONTENT_BOUNDING_REGION"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 4096.0,
+  "root": {
+    "geometricError": 2048.0,
+    "boundingVolume": {
+      "region": [
+        0,
+        0,
+        0.00314,
+        0.00314,
+        0,
+        10000
+      ]
+    },
+    "content": {
+      "uri": "empty.gltf"
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 3,
+        "availableLevels": 3,
+        "subtrees": {
+          "uri": "subtrees/1.0/{level}.{x}.{y}.json"
+        }
+      }
+    }
+  }
+}

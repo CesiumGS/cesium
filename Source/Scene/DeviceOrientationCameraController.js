@@ -25,10 +25,10 @@ function DeviceOrientationCameraController(scene) {
   this._beta = undefined;
   this._gamma = undefined;
 
-  var that = this;
+  const that = this;
 
   function callback(e) {
-    var alpha = e.alpha;
+    const alpha = e.alpha;
     if (!defined(alpha)) {
       that._alpha = undefined;
       that._beta = undefined;
@@ -48,24 +48,24 @@ function DeviceOrientationCameraController(scene) {
   };
 }
 
-var scratchQuaternion1 = new Quaternion();
-var scratchQuaternion2 = new Quaternion();
-var scratchMatrix3 = new Matrix3();
+const scratchQuaternion1 = new Quaternion();
+const scratchQuaternion2 = new Quaternion();
+const scratchMatrix3 = new Matrix3();
 
 function rotate(camera, alpha, beta, gamma) {
-  var direction = camera.direction;
-  var right = camera.right;
-  var up = camera.up;
+  const direction = camera.direction;
+  const right = camera.right;
+  const up = camera.up;
 
-  var bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
-  var gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
+  const bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
+  const gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
 
-  var rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
+  const rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
 
-  var aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
+  const aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
   Quaternion.multiply(aQuat, rotQuat, rotQuat);
 
-  var matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
+  const matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
   Matrix3.multiplyByVector(matrix, right, right);
   Matrix3.multiplyByVector(matrix, up, up);
   Matrix3.multiplyByVector(matrix, direction, direction);
@@ -82,9 +82,9 @@ DeviceOrientationCameraController.prototype.update = function () {
     this._lastGamma = this._gamma;
   }
 
-  var a = this._lastAlpha - this._alpha;
-  var b = this._lastBeta - this._beta;
-  var g = this._lastGamma - this._gamma;
+  const a = this._lastAlpha - this._alpha;
+  const b = this._lastBeta - this._beta;
+  const g = this._lastGamma - this._gamma;
 
   rotate(this._scene.camera, -a, b, g);
 

@@ -21,11 +21,11 @@ export default function ResourceLoader() {}
 
 Object.defineProperties(ResourceLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof ResourceLoader.prototype
    *
-   * @type {Promise.<ResourceLoader>}
+   * @type {Promise.<ResourceLoader>|undefined}
    * @readonly
    * @private
    */
@@ -54,6 +54,7 @@ Object.defineProperties(ResourceLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<ResourceLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 ResourceLoader.prototype.load = function () {
@@ -89,7 +90,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
   //>>includeEnd('debug');
 
   if (defined(error)) {
-    errorMessage += "\n" + error.message;
+    errorMessage += `\n${error.message}`;
   }
   return new RuntimeError(errorMessage);
 };

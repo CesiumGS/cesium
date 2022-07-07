@@ -1,4 +1,4 @@
-import { Cartesian3, Model, when } from "../../Source/Cesium.js";
+import { Cartesian3, Model } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import GltfBuilder from "./GltfBuilder.js";
@@ -6,8 +6,8 @@ import GltfBuilder from "./GltfBuilder.js";
 describe(
   "Scene/ModelOutlineLoader",
   function () {
-    var scene;
-    var primitives;
+    let scene;
+    let primitives;
 
     beforeAll(function () {
       scene = createScene();
@@ -19,14 +19,14 @@ describe(
     });
 
     it("does nothing if no primitives are outlined", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -37,8 +37,8 @@ describe(
 
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
 
-      var meshBuilder = builder.mesh();
-      var primitiveBuilder = meshBuilder.primitive();
+      const meshBuilder = builder.mesh();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -47,16 +47,16 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(4);
         expect(gltf.accessors[0].count).toBe(9);
@@ -71,15 +71,15 @@ describe(
     });
 
     it("duplicates vertices as needed and adds outline attribute", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createTrickyModel(vertices, indices, edges, 2, true, true, true);
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -91,8 +91,8 @@ describe(
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
       bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
 
-      var meshBuilder = builder.mesh();
-      var primitiveBuilder = meshBuilder.primitive();
+      const meshBuilder = builder.mesh();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -101,7 +101,7 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       gltf.extensionsUsed.push("CESIUM_primitive_outline");
       gltf.meshes[0].primitives[0].extensions = {
@@ -110,15 +110,15 @@ describe(
         },
       };
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
-        var primitive = gltf.meshes[0].primitives[0];
+        const gltf = model.gltfInternal;
+        const primitive = gltf.meshes[0].primitives[0];
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
         expect(gltf.accessors[1].count).toBeGreaterThan(9);
@@ -130,37 +130,38 @@ describe(
         expect(gltf.accessors[3].count).toBe(indices.length);
 
         // Make sure the outline coordinates match the edges.
-        var accessorId = primitive.attributes._OUTLINE_COORDINATES;
-        var accessor = gltf.accessors[accessorId];
-        var bufferView = gltf.bufferViews[accessor.bufferView];
-        var buffer = gltf.buffers[bufferView.buffer];
+        const accessorId = primitive.attributes._OUTLINE_COORDINATES;
+        const accessor = gltf.accessors[accessorId];
+        const bufferView = gltf.bufferViews[accessor.bufferView];
+        const buffer = gltf.buffers[bufferView.buffer];
 
-        var outlineCoordinates = new Float32Array(
+        const outlineCoordinates = new Float32Array(
           buffer.extras._pipeline.source,
           bufferView.byteOffset,
           accessor.count * 3
         );
 
-        var triangleAccessor = gltf.accessors.filter(function (accessor) {
+        const triangleAccessor = gltf.accessors.filter(function (accessor) {
           return accessor.name === "index";
         })[0];
-        var triangleBufferView = gltf.bufferViews[triangleAccessor.bufferView];
-        var triangleBuffer = gltf.buffers[triangleBufferView.buffer];
+        const triangleBufferView =
+          gltf.bufferViews[triangleAccessor.bufferView];
+        const triangleBuffer = gltf.buffers[triangleBufferView.buffer];
 
-        var triangleIndices = new Uint16Array(
+        const triangleIndices = new Uint16Array(
           triangleBuffer.extras._pipeline.source,
           triangleBufferView.byteOffset,
           triangleAccessor.count
         );
 
-        for (var i = 0; i < triangleIndices.length; i += 3) {
-          var i0 = triangleIndices[i];
-          var i1 = triangleIndices[i + 1];
-          var i2 = triangleIndices[i + 2];
+        for (let i = 0; i < triangleIndices.length; i += 3) {
+          const i0 = triangleIndices[i];
+          const i1 = triangleIndices[i + 1];
+          const i2 = triangleIndices[i + 2];
 
-          var i0Original = indices[i];
-          var i1Original = indices[i + 1];
-          var i2Original = indices[i + 2];
+          const i0Original = indices[i];
+          const i1Original = indices[i + 1];
+          const i2Original = indices[i + 2];
 
           expect(
             hasCoordinates(outlineCoordinates, i0, i1, i2, 1.0, 1.0, 0.0)
@@ -190,12 +191,12 @@ describe(
     });
 
     function hasEdge(edges, i0, i1) {
-      var min = Math.min(i0, i1);
-      var max = Math.max(i0, i1);
+      const min = Math.min(i0, i1);
+      const max = Math.max(i0, i1);
 
-      for (var i = 0; i < edges.length; i += 2) {
-        var low = Math.min(edges[i], edges[i + 1]);
-        var high = Math.max(edges[i], edges[i + 1]);
+      for (let i = 0; i < edges.length; i += 2) {
+        const low = Math.min(edges[i], edges[i + 1]);
+        const high = Math.max(edges[i], edges[i + 1]);
 
         if (low === min && high === max) {
           return true;
@@ -206,15 +207,15 @@ describe(
     }
 
     function hasCoordinates(outlineCoordinates, i0, i1, i2, o0, o1, o2) {
-      var a0 = outlineCoordinates[i0 * 3];
-      var b0 = outlineCoordinates[i0 * 3 + 1];
-      var c0 = outlineCoordinates[i0 * 3 + 2];
-      var a1 = outlineCoordinates[i1 * 3];
-      var b1 = outlineCoordinates[i1 * 3 + 1];
-      var c1 = outlineCoordinates[i1 * 3 + 2];
-      var a2 = outlineCoordinates[i2 * 3];
-      var b2 = outlineCoordinates[i2 * 3 + 1];
-      var c2 = outlineCoordinates[i2 * 3 + 2];
+      const a0 = outlineCoordinates[i0 * 3];
+      const b0 = outlineCoordinates[i0 * 3 + 1];
+      const c0 = outlineCoordinates[i0 * 3 + 2];
+      const a1 = outlineCoordinates[i1 * 3];
+      const b1 = outlineCoordinates[i1 * 3 + 1];
+      const c1 = outlineCoordinates[i1 * 3 + 2];
+      const a2 = outlineCoordinates[i2 * 3];
+      const b2 = outlineCoordinates[i2 * 3 + 1];
+      const c2 = outlineCoordinates[i2 * 3 + 2];
 
       return (
         (a0 === o0 && a1 === o1 && a2 === o2) ||
@@ -224,14 +225,14 @@ describe(
     }
 
     it("ignores extension on primitive if it's not in extensionsUsed", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -243,8 +244,8 @@ describe(
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
       bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
 
-      var meshBuilder = builder.mesh();
-      var primitiveBuilder = meshBuilder.primitive();
+      const meshBuilder = builder.mesh();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -253,7 +254,7 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       gltf.meshes[0].primitives[0].extensions = {
         CESIUM_primitive_outline: {
@@ -261,14 +262,14 @@ describe(
         },
       };
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(5);
         expect(gltf.accessors[0].count).toBe(9);
@@ -283,14 +284,14 @@ describe(
     });
 
     it("doesn't break if extensionsUsed lists the extension but it's not really used", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -301,8 +302,8 @@ describe(
 
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
 
-      var meshBuilder = builder.mesh();
-      var primitiveBuilder = meshBuilder.primitive();
+      const meshBuilder = builder.mesh();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -311,18 +312,18 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       gltf.extensionsUsed.push("CESIUM_primitive_outline");
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.buffers.length).toBe(1);
         expect(gltf.accessors.length).toBe(4);
         expect(gltf.accessors[0].count).toBe(9);
@@ -337,14 +338,14 @@ describe(
     });
 
     it("handles vertices that are shared between two outlined primitives", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -356,11 +357,11 @@ describe(
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
       bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
 
-      var meshBuilder = builder.mesh();
+      const meshBuilder = builder.mesh();
 
       // Create two primitives, both using the same vertex buffer, but the
       // second one only uses the positions.
-      var primitiveBuilder = meshBuilder.primitive();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -369,14 +370,14 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var secondPrimitiveBuilder = meshBuilder.primitive();
+      const secondPrimitiveBuilder = meshBuilder.primitive();
       secondPrimitiveBuilder
         .triangles()
         .material("default")
         .attribute("POSITION", "position")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       // Add the outline extension to both primitives.
       gltf.extensionsUsed.push("CESIUM_primitive_outline");
@@ -392,14 +393,14 @@ describe(
         },
       };
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
         expect(gltf.accessors[1].count).toBeGreaterThan(9);
@@ -407,11 +408,11 @@ describe(
         expect(gltf.accessors[0].count).toBe(gltf.accessors[1].count);
         expect(gltf.accessors[1].count).toBe(gltf.accessors[2].count);
 
-        var firstPrimitive = gltf.meshes[0].primitives[0];
+        const firstPrimitive = gltf.meshes[0].primitives[0];
         expect(Object.keys(firstPrimitive.attributes).length).toBe(4);
         expect(firstPrimitive.attributes._OUTLINE_COORDINATES).toBeDefined();
 
-        var secondPrimitive = gltf.meshes[0].primitives[1];
+        const secondPrimitive = gltf.meshes[0].primitives[1];
         expect(Object.keys(secondPrimitive.attributes).length).toBe(2);
         expect(secondPrimitive.attributes._OUTLINE_COORDINATES).toBeDefined();
 
@@ -421,14 +422,14 @@ describe(
     });
 
     it("handles vertices that are shared between an outlined and a non-outlined primitive", function () {
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
       createModel(vertices, indices, edges, 1, true, true, true);
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -440,11 +441,11 @@ describe(
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
       bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
 
-      var meshBuilder = builder.mesh();
+      const meshBuilder = builder.mesh();
 
       // Create two primitives, both using the same vertex buffer, but the
       // second one only uses the positions.
-      var primitiveBuilder = meshBuilder.primitive();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -453,14 +454,14 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var secondPrimitiveBuilder = meshBuilder.primitive();
+      const secondPrimitiveBuilder = meshBuilder.primitive();
       secondPrimitiveBuilder
         .triangles()
         .material("default")
         .attribute("POSITION", "position")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       // Add the outline extension only to the first primitive.
       gltf.extensionsUsed.push("CESIUM_primitive_outline");
@@ -470,14 +471,14 @@ describe(
         },
       };
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
+        const gltf = model.gltfInternal;
         expect(gltf.accessors.length).toBe(6);
         expect(gltf.accessors[0].count).toBeGreaterThan(9);
         expect(gltf.accessors[1].count).toBeGreaterThan(9);
@@ -485,11 +486,11 @@ describe(
         expect(gltf.accessors[0].count).toBe(gltf.accessors[1].count);
         expect(gltf.accessors[1].count).toBe(gltf.accessors[2].count);
 
-        var firstPrimitive = gltf.meshes[0].primitives[0];
+        const firstPrimitive = gltf.meshes[0].primitives[0];
         expect(Object.keys(firstPrimitive.attributes).length).toBe(4);
         expect(firstPrimitive.attributes._OUTLINE_COORDINATES).toBeDefined();
 
-        var secondPrimitive = gltf.meshes[0].primitives[1];
+        const secondPrimitive = gltf.meshes[0].primitives[1];
         expect(Object.keys(secondPrimitive.attributes).length).toBe(1);
         expect(secondPrimitive.attributes._OUTLINE_COORDINATES).toBeUndefined();
 
@@ -508,18 +509,18 @@ describe(
         return;
       }
 
-      var vertices = [];
-      var indices = [];
-      var edges = [];
+      const vertices = [];
+      const indices = [];
+      const edges = [];
 
       // Tricky model is 9 vertices. Add copies of it until we're just under 65636 vertices.
-      for (var i = 0; vertices.length / 7 + 9 <= 65535; ++i) {
+      for (let i = 0; vertices.length / 7 + 9 <= 65535; ++i) {
         createTrickyModel(vertices, indices, edges, 2, true, true, true);
       }
 
-      var builder = createGltfBuilder();
+      const builder = createGltfBuilder();
 
-      var bufferBuilder = builder.buffer();
+      const bufferBuilder = builder.buffer();
 
       bufferBuilder
         .vertexBuffer("vertices")
@@ -531,8 +532,8 @@ describe(
       bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
       bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
 
-      var meshBuilder = builder.mesh();
-      var primitiveBuilder = meshBuilder.primitive();
+      const meshBuilder = builder.mesh();
+      const primitiveBuilder = meshBuilder.primitive();
       primitiveBuilder
         .triangles()
         .material("default")
@@ -541,7 +542,7 @@ describe(
         .attribute("_BATCHID", "batchID")
         .indices("index");
 
-      var gltf = builder.toGltf();
+      const gltf = builder.toGltf();
 
       gltf.extensionsUsed.push("CESIUM_primitive_outline");
       gltf.meshes[0].primitives[0].extensions = {
@@ -550,40 +551,40 @@ describe(
         },
       };
 
-      var model = new Model({
+      const model = new Model({
         gltf: gltf,
       });
 
       primitives.add(model);
 
       return waitForReady(scene, model).then(function () {
-        var gltf = model.gltf;
-        var primitive = gltf.meshes[0].primitives[0];
-        var triangleIndexAccessor = gltf.accessors[primitive.indices];
+        const gltf = model.gltfInternal;
+        const primitive = gltf.meshes[0].primitives[0];
+        const triangleIndexAccessor = gltf.accessors[primitive.indices];
 
         // The accessor should now be 32-bit and reference higher-numbered vertices.
         expect(triangleIndexAccessor.componentType).toBe(5125); // UNSIGNED_INT
         expect(triangleIndexAccessor.max[0]).toBeGreaterThan(65536);
         expect(triangleIndexAccessor.byteOffset).toBe(0);
 
-        var bufferView = gltf.bufferViews[triangleIndexAccessor.bufferView];
-        var buffer = gltf.buffers[bufferView.buffer];
-        var data = buffer.extras._pipeline.source;
-        var indexBuffer = new Uint32Array(
+        const bufferView = gltf.bufferViews[triangleIndexAccessor.bufferView];
+        const buffer = gltf.buffers[bufferView.buffer];
+        const data = buffer.extras._pipeline.source;
+        const indexBuffer = new Uint32Array(
           data,
           data.byteOffset + bufferView.byteOffset,
           triangleIndexAccessor.count
         );
 
         // All the original indices should be the same.
-        for (var i = 0; i < indices.length; ++i) {
+        for (let i = 0; i < indices.length; ++i) {
           // All indices in the original range should match the original ones
           if (indexBuffer[i] < vertices.length / 7) {
             expect(indexBuffer[i]).toBe(indices[i]);
           }
         }
 
-        var rendererIndexBuffer =
+        const rendererIndexBuffer =
           model._rendererResources.buffers[triangleIndexAccessor.bufferView];
         expect(rendererIndexBuffer.bytesPerIndex).toBe(4);
 
@@ -595,7 +596,7 @@ describe(
 );
 
 function createGltfBuilder() {
-  var builder = new GltfBuilder();
+  const builder = new GltfBuilder();
 
   builder.material("default").json({
     pbrMetallicRoughness: {
@@ -617,12 +618,12 @@ function createModel(
   includeNormals,
   includeBatchID
 ) {
-  var vertexStride =
+  const vertexStride =
     (includePositions ? 3 : 0) +
     (includeNormals ? 3 : 0) +
     (includeBatchID ? 1 : 0);
 
-  var normal = new Cartesian3(0.0, 0.0, 1.0);
+  const normal = new Cartesian3(0.0, 0.0, 1.0);
 
   function addVertex(position) {
     if (includePositions) {
@@ -644,25 +645,25 @@ function createModel(
   // | / | \ |
   // 0---1---2
 
-  var p0 = new Cartesian3(-1.0, -1.0, 0.0);
-  var p1 = new Cartesian3(0.0, -1.0, 0.0);
-  var p2 = new Cartesian3(1.0, -1.0, 0.0);
-  var p3 = new Cartesian3(-1.0, 0.0, 0.0);
-  var p4 = new Cartesian3(0.0, 0.0, 0.0);
-  var p5 = new Cartesian3(1.0, 0.0, 0.0);
-  var p6 = new Cartesian3(-1.0, 1.0, 0.0);
-  var p7 = new Cartesian3(0.0, 1.0, 0.0);
-  var p8 = new Cartesian3(1.0, 1.0, 0.0);
+  const p0 = new Cartesian3(-1.0, -1.0, 0.0);
+  const p1 = new Cartesian3(0.0, -1.0, 0.0);
+  const p2 = new Cartesian3(1.0, -1.0, 0.0);
+  const p3 = new Cartesian3(-1.0, 0.0, 0.0);
+  const p4 = new Cartesian3(0.0, 0.0, 0.0);
+  const p5 = new Cartesian3(1.0, 0.0, 0.0);
+  const p6 = new Cartesian3(-1.0, 1.0, 0.0);
+  const p7 = new Cartesian3(0.0, 1.0, 0.0);
+  const p8 = new Cartesian3(1.0, 1.0, 0.0);
 
-  var i0 = addVertex(p0);
-  var i1 = addVertex(p1);
-  var i2 = addVertex(p2);
-  var i3 = addVertex(p3);
-  var i4 = addVertex(p4);
-  var i5 = addVertex(p5);
-  var i6 = addVertex(p6);
-  var i7 = addVertex(p7);
-  var i8 = addVertex(p8);
+  const i0 = addVertex(p0);
+  const i1 = addVertex(p1);
+  const i2 = addVertex(p2);
+  const i3 = addVertex(p3);
+  const i4 = addVertex(p4);
+  const i5 = addVertex(p5);
+  const i6 = addVertex(p6);
+  const i7 = addVertex(p7);
+  const i8 = addVertex(p8);
 
   indices.push(i0, i1, i4);
   indices.push(i0, i4, i3);
@@ -694,12 +695,12 @@ function createTrickyModel(
   // This model is carefully constructed to require tricky vertex duplication
   // for outlining.
 
-  var vertexStride =
+  const vertexStride =
     (includePositions ? 3 : 0) +
     (includeNormals ? 3 : 0) +
     (includeBatchID ? 1 : 0);
 
-  var normal = new Cartesian3(0.0, 0.0, 1.0);
+  const normal = new Cartesian3(0.0, 0.0, 1.0);
 
   function addVertex(position) {
     if (includePositions) {
@@ -725,25 +726,25 @@ function createTrickyModel(
   //    /   \
   //   7-----8
 
-  var p0 = new Cartesian3(-1.0, 1.0, 0.0);
-  var p1 = new Cartesian3(-2.0, 2.0, 0.0);
-  var p2 = new Cartesian3(-1.0, 2.0, 0.0);
-  var p3 = new Cartesian3(1.0, 1.0, 0.0);
-  var p4 = new Cartesian3(2.0, 2.0, 0.0);
-  var p5 = new Cartesian3(1.0, 2.0, 0.0);
-  var p6 = new Cartesian3(0.0, 0.0, 0.0);
-  var p7 = new Cartesian3(-1.0, -1.0, 0.0);
-  var p8 = new Cartesian3(-1.0, 1.0, 0.0);
+  const p0 = new Cartesian3(-1.0, 1.0, 0.0);
+  const p1 = new Cartesian3(-2.0, 2.0, 0.0);
+  const p2 = new Cartesian3(-1.0, 2.0, 0.0);
+  const p3 = new Cartesian3(1.0, 1.0, 0.0);
+  const p4 = new Cartesian3(2.0, 2.0, 0.0);
+  const p5 = new Cartesian3(1.0, 2.0, 0.0);
+  const p6 = new Cartesian3(0.0, 0.0, 0.0);
+  const p7 = new Cartesian3(-1.0, -1.0, 0.0);
+  const p8 = new Cartesian3(-1.0, 1.0, 0.0);
 
-  var i0 = addVertex(p0);
-  var i1 = addVertex(p1);
-  var i2 = addVertex(p2);
-  var i3 = addVertex(p3);
-  var i4 = addVertex(p4);
-  var i5 = addVertex(p5);
-  var i6 = addVertex(p6);
-  var i7 = addVertex(p7);
-  var i8 = addVertex(p8);
+  const i0 = addVertex(p0);
+  const i1 = addVertex(p1);
+  const i2 = addVertex(p2);
+  const i3 = addVertex(p3);
+  const i4 = addVertex(p4);
+  const i5 = addVertex(p5);
+  const i6 = addVertex(p6);
+  const i7 = addVertex(p7);
+  const i8 = addVertex(p8);
 
   indices.push(i0, i2, i1);
   indices.push(i3, i4, i5);
@@ -773,7 +774,7 @@ function waitForReady(scene, model) {
     .then(function () {
       return model;
     })
-    .otherwise(function () {
-      return when.reject(model);
+    .catch(function () {
+      return Promise.reject(model);
     });
 }

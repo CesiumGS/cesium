@@ -25,23 +25,23 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/ClassificationPrimitive",
   function () {
-    var scene;
+    let scene;
 
-    var ellipsoid;
-    var rectangle;
+    let ellipsoid;
+    let rectangle;
 
-    var depthColor;
-    var boxColor;
+    let depthColor;
+    let boxColor;
 
-    var boxInstance;
-    var primitive;
-    var globePrimitive;
-    var tilesetPrimitive;
-    var reusableGlobePrimitive;
-    var reusableTilesetPrimitive;
+    let boxInstance;
+    let primitive;
+    let globePrimitive;
+    let tilesetPrimitive;
+    let reusableGlobePrimitive;
+    let reusableTilesetPrimitive;
 
     function createPrimitive(rectangle, pass) {
-      var renderState;
+      let renderState;
       if (pass === Pass.CESIUM_3D_TILE) {
         renderState = RenderState.fromCache({
           stencilTest: StencilConstants.setCesium3DTileBit(),
@@ -51,7 +51,7 @@ describe(
           },
         });
       }
-      var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 0.0, 1.0, 1.0)
       );
       depthColor = depthColorAttribute.value;
@@ -86,12 +86,12 @@ describe(
         return;
       }
 
-      var commandList = frameState.commandList;
-      var startLength = commandList.length;
+      const commandList = frameState.commandList;
+      const startLength = commandList.length;
       this._primitive.update(frameState);
 
-      for (var i = startLength; i < commandList.length; ++i) {
-        var command = commandList[i];
+      for (let i = startLength; i < commandList.length; ++i) {
+        const command = commandList[i];
         command.pass = this._pass;
       }
     };
@@ -134,13 +134,13 @@ describe(
         Pass.CESIUM_3D_TILE
       );
 
-      var center = Rectangle.center(rectangle);
-      var origin = ellipsoid.cartographicToCartesian(center);
-      var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+      const center = Rectangle.center(rectangle);
+      const origin = ellipsoid.cartographicToCartesian(center);
+      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
 
-      var dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
+      const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
 
-      var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(1.0, 1.0, 0.0, 1.0)
       );
       boxColor = boxColorAttribute.value;
@@ -184,7 +184,7 @@ describe(
     });
 
     it("constructs with options", function () {
-      var geometryInstances = [];
+      const geometryInstances = [];
 
       primitive = new ClassificationPrimitive({
         geometryInstances: geometryInstances,
@@ -225,7 +225,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).not.toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -311,7 +313,7 @@ describe(
       );
       primitive.show = false;
 
-      var ready = false;
+      let ready = false;
       primitive.readyPromise.then(function () {
         ready = true;
       });
@@ -334,7 +336,7 @@ describe(
         asynchronous: false,
       });
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       frameState.passes.render = false;
       frameState.passes.pick = false;
 
@@ -439,29 +441,29 @@ describe(
         return;
       }
 
-      var neCarto = Rectangle.northeast(rectangle);
-      var nwCarto = Rectangle.northwest(rectangle);
+      const neCarto = Rectangle.northeast(rectangle);
+      const nwCarto = Rectangle.northwest(rectangle);
 
-      var ne = ellipsoid.cartographicToCartesian(neCarto);
-      var nw = ellipsoid.cartographicToCartesian(nwCarto);
+      const ne = ellipsoid.cartographicToCartesian(neCarto);
+      const nw = ellipsoid.cartographicToCartesian(nwCarto);
 
-      var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
-      var distance = Cartesian3.magnitude(direction) * 0.25;
+      const direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+      const distance = Cartesian3.magnitude(direction) * 0.25;
       Cartesian3.normalize(direction, direction);
       Cartesian3.multiplyByScalar(direction, distance, direction);
 
-      var center = Rectangle.center(rectangle);
-      var origin = ellipsoid.cartographicToCartesian(center);
+      const center = Rectangle.center(rectangle);
+      const origin = ellipsoid.cartographicToCartesian(center);
 
-      var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
 
-      var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+      const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
-      var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 1.0, 1.0, 1.0)
       );
-      var boxInstance1 = new GeometryInstance({
+      const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -473,10 +475,10 @@ describe(
       });
 
       Cartesian3.negate(direction, direction);
-      var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+      const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
       modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
 
-      var boxInstance2 = new GeometryInstance({
+      const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -511,7 +513,7 @@ describe(
 
       scene.camera.setView({ destination: rectangle });
 
-      var invertedColor = new Array(4);
+      const invertedColor = new Array(4);
       invertedColor[0] = Color.floatToByte(
         Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red
       );
@@ -556,7 +558,7 @@ describe(
 
       scene.camera.setView({ destination: rectangle });
 
-      var invertedColor = new Array(4);
+      const invertedColor = new Array(4);
       invertedColor[0] = Color.floatToByte(
         Color.byteToFloat(depthColor[0]) *
           scene.invertClassificationColor.red *
@@ -600,9 +602,9 @@ describe(
       scene.primitives.add(primitive);
       scene.camera.setView({ destination: rectangle });
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -621,9 +623,9 @@ describe(
       scene.primitives.add(primitive);
       scene.camera.setView({ destination: rectangle });
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -640,7 +642,7 @@ describe(
 
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
-      var attributes = primitive.getGeometryInstanceAttributes("box");
+      const attributes = primitive.getGeometryInstanceAttributes("box");
       expect(attributes.color).toBeDefined();
     });
 
@@ -664,8 +666,8 @@ describe(
       scene.primitives.removeAll();
       scene.primitives.destroyPrimitives = true;
 
-      var newColor = [255, 255, 255, 255];
-      var attributes = primitive.getGeometryInstanceAttributes("box");
+      const newColor = [255, 255, 255, 255];
+      const attributes = primitive.getGeometryInstanceAttributes("box");
       expect(attributes.color).toBeDefined();
       attributes.color = newColor;
 
@@ -694,7 +696,7 @@ describe(
       scene.primitives.removeAll();
       scene.primitives.destroyPrimitives = true;
 
-      var attributes = primitive.getGeometryInstanceAttributes("box");
+      const attributes = primitive.getGeometryInstanceAttributes("box");
       expect(attributes.show).toBeDefined();
       attributes.show = [0];
 
@@ -713,7 +715,7 @@ describe(
 
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
-      var attributes = primitive.getGeometryInstanceAttributes("box");
+      const attributes = primitive.getGeometryInstanceAttributes("box");
       expect(attributes.boundingSphere).toBeDefined();
     });
 
@@ -729,8 +731,8 @@ describe(
 
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
-      var attributes = primitive.getGeometryInstanceAttributes("box");
-      var attributes2 = primitive.getGeometryInstanceAttributes("box");
+      const attributes = primitive.getGeometryInstanceAttributes("box");
+      const attributes2 = primitive.getGeometryInstanceAttributes("box");
       expect(attributes).toBe(attributes2);
     });
 
@@ -848,29 +850,29 @@ describe(
         return;
       }
 
-      var neCarto = Rectangle.northeast(rectangle);
-      var nwCarto = Rectangle.northwest(rectangle);
+      const neCarto = Rectangle.northeast(rectangle);
+      const nwCarto = Rectangle.northwest(rectangle);
 
-      var ne = ellipsoid.cartographicToCartesian(neCarto);
-      var nw = ellipsoid.cartographicToCartesian(nwCarto);
+      const ne = ellipsoid.cartographicToCartesian(neCarto);
+      const nw = ellipsoid.cartographicToCartesian(nwCarto);
 
-      var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
-      var distance = Cartesian3.magnitude(direction) * 0.25;
+      const direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+      const distance = Cartesian3.magnitude(direction) * 0.25;
       Cartesian3.normalize(direction, direction);
       Cartesian3.multiplyByScalar(direction, distance, direction);
 
-      var center = Rectangle.center(rectangle);
-      var origin = ellipsoid.cartographicToCartesian(center);
+      const center = Rectangle.center(rectangle);
+      const origin = ellipsoid.cartographicToCartesian(center);
 
-      var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
 
-      var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+      const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
-      var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 1.0, 1.0, 1.0)
       );
-      var boxInstance1 = new GeometryInstance({
+      const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -884,10 +886,10 @@ describe(
       });
 
       Cartesian3.negate(direction, direction);
-      var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+      const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
       modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
 
-      var boxInstance2 = new GeometryInstance({
+      const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -915,29 +917,29 @@ describe(
         return;
       }
 
-      var neCarto = Rectangle.northeast(rectangle);
-      var nwCarto = Rectangle.northwest(rectangle);
+      const neCarto = Rectangle.northeast(rectangle);
+      const nwCarto = Rectangle.northwest(rectangle);
 
-      var ne = ellipsoid.cartographicToCartesian(neCarto);
-      var nw = ellipsoid.cartographicToCartesian(nwCarto);
+      const ne = ellipsoid.cartographicToCartesian(neCarto);
+      const nw = ellipsoid.cartographicToCartesian(nwCarto);
 
-      var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
-      var distance = Cartesian3.magnitude(direction) * 0.25;
+      const direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+      const distance = Cartesian3.magnitude(direction) * 0.25;
       Cartesian3.normalize(direction, direction);
       Cartesian3.multiplyByScalar(direction, distance, direction);
 
-      var center = Rectangle.center(rectangle);
-      var origin = ellipsoid.cartographicToCartesian(center);
+      const center = Rectangle.center(rectangle);
+      const origin = ellipsoid.cartographicToCartesian(center);
 
-      var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
 
-      var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+      const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
-      var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 1.0, 1.0, 1.0)
       );
-      var boxInstance1 = new GeometryInstance({
+      const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -951,10 +953,10 @@ describe(
       });
 
       Cartesian3.negate(direction, direction);
-      var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+      const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
       modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
 
-      var boxInstance2 = new GeometryInstance({
+      const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -977,26 +979,26 @@ describe(
         return;
       }
 
-      var neCarto = Rectangle.northeast(rectangle);
-      var nwCarto = Rectangle.northwest(rectangle);
+      const neCarto = Rectangle.northeast(rectangle);
+      const nwCarto = Rectangle.northwest(rectangle);
 
-      var ne = ellipsoid.cartographicToCartesian(neCarto);
-      var nw = ellipsoid.cartographicToCartesian(nwCarto);
+      const ne = ellipsoid.cartographicToCartesian(neCarto);
+      const nw = ellipsoid.cartographicToCartesian(nwCarto);
 
-      var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
-      var distance = Cartesian3.magnitude(direction) * 0.25;
+      const direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+      const distance = Cartesian3.magnitude(direction) * 0.25;
       Cartesian3.normalize(direction, direction);
       Cartesian3.multiplyByScalar(direction, distance, direction);
 
-      var center = Rectangle.center(rectangle);
-      var origin = ellipsoid.cartographicToCartesian(center);
+      const center = Rectangle.center(rectangle);
+      const origin = ellipsoid.cartographicToCartesian(center);
 
-      var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
 
-      var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+      const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
-      var boxInstance1 = new GeometryInstance({
+      const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
           dimensions: dimensions,
         }),
@@ -1010,7 +1012,7 @@ describe(
         appearance: new PerInstanceColorAppearance(),
       });
 
-      var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 1.0, 1.0, 1.0)
       );
 
@@ -1076,7 +1078,7 @@ describe(
 
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
-      var attributes = primitive.getGeometryInstanceAttributes("box");
+      const attributes = primitive.getGeometryInstanceAttributes("box");
 
       expect(function () {
         attributes.color = undefined;
@@ -1100,7 +1102,7 @@ describe(
         scene.renderForSpecs();
         return primitive.ready;
       }).then(function () {
-        var attributes = primitive.getGeometryInstanceAttributes("box");
+        const attributes = primitive.getGeometryInstanceAttributes("box");
         expect(function () {
           attributes.color = undefined;
         }).toThrowDeveloperError();

@@ -7,9 +7,9 @@ import { Plane } from "../../Source/Cesium.js";
 
 describe("Core/Plane", function () {
   it("constructs", function () {
-    var normal = Cartesian3.UNIT_X;
-    var distance = 1.0;
-    var plane = new Plane(normal, distance);
+    const normal = Cartesian3.UNIT_X;
+    const distance = 1.0;
+    const plane = new Plane(normal, distance);
     expect(plane.normal).toEqual(normal);
     expect(plane.distance).toEqual(distance);
   });
@@ -33,20 +33,20 @@ describe("Core/Plane", function () {
   });
 
   it("constructs from a point and a normal", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var point = new Cartesian3(4.0, 5.0, 6.0);
-    var plane = Plane.fromPointNormal(point, normal);
+    const point = new Cartesian3(4.0, 5.0, 6.0);
+    const plane = Plane.fromPointNormal(point, normal);
     expect(plane.normal).toEqual(normal);
     expect(plane.distance).toEqual(-Cartesian3.dot(normal, point));
   });
 
   it("constructs from a point and a normal with result", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var point = new Cartesian3(4.0, 5.0, 6.0);
+    const point = new Cartesian3(4.0, 5.0, 6.0);
 
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
     Plane.fromPointNormal(point, normal, plane);
 
     expect(plane.normal).toEqual(normal);
@@ -54,14 +54,14 @@ describe("Core/Plane", function () {
   });
 
   it("constructs from a Cartesian4 without result", function () {
-    var result = Plane.fromCartesian4(Cartesian4.UNIT_X);
+    const result = Plane.fromCartesian4(Cartesian4.UNIT_X);
 
     expect(result.normal).toEqual(Cartesian3.UNIT_X);
     expect(result.distance).toEqual(0.0);
   });
 
   it("constructs from a Cartesian4 with result", function () {
-    var result = new Plane(Cartesian3.UNIT_X, 0.0);
+    const result = new Plane(Cartesian3.UNIT_X, 0.0);
     Plane.fromCartesian4(Cartesian4.UNIT_X, result);
 
     expect(result.normal).toEqual(Cartesian3.UNIT_X);
@@ -99,10 +99,10 @@ describe("Core/Plane", function () {
   });
 
   it("gets the distance to a point", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var plane = new Plane(normal, 12.34);
-    var point = new Cartesian3(4.0, 5.0, 6.0);
+    const plane = new Plane(normal, 12.34);
+    const point = new Cartesian3(4.0, 5.0, 6.0);
 
     expect(Plane.getPointDistance(plane, point)).toEqual(
       Cartesian3.dot(plane.normal, point) + plane.distance
@@ -110,23 +110,23 @@ describe("Core/Plane", function () {
   });
 
   it("getPointDistance throws without a plane", function () {
-    var point = Cartesian3.ZERO;
+    const point = Cartesian3.ZERO;
     expect(function () {
       return Plane.getPointDistance(undefined, point);
     }).toThrowDeveloperError();
   });
 
   it("getPointDistance throws without a point", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(function () {
       return Plane.getPointDistance(plane, undefined);
     }).toThrowDeveloperError();
   });
 
   it("projects a point onto the plane", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
-    var point = new Cartesian3(1.0, 1.0, 0.0);
-    var result = Plane.projectPointOntoPlane(plane, point);
+    let plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const point = new Cartesian3(1.0, 1.0, 0.0);
+    let result = Plane.projectPointOntoPlane(plane, point);
     expect(result).toEqual(new Cartesian3(0.0, 1.0, 0.0));
 
     plane = new Plane(Cartesian3.UNIT_Y, 0.0);
@@ -135,10 +135,10 @@ describe("Core/Plane", function () {
   });
 
   it("projectPointOntoPlane uses result parameter", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
-    var point = new Cartesian3(1.0, 1.0, 0.0);
-    var result = new Cartesian3();
-    var returnedResult = Plane.projectPointOntoPlane(plane, point, result);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const point = new Cartesian3(1.0, 1.0, 0.0);
+    const result = new Cartesian3();
+    const returnedResult = Plane.projectPointOntoPlane(plane, point, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(new Cartesian3(0.0, 1.0, 0.0));
   });
@@ -163,23 +163,23 @@ describe("Core/Plane", function () {
   });
 
   it("clones a plane instance", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var distance = 4.0;
-    var plane = new Plane(normal, distance);
+    const distance = 4.0;
+    const plane = new Plane(normal, distance);
 
-    var result = Plane.clone(plane);
+    const result = Plane.clone(plane);
     expect(result.normal).toEqual(normal);
     expect(result.distance).toEqual(distance);
   });
 
-  it("clones a plane instance into a result paramter", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+  it("clones a plane instance into a result parameter", function () {
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var distance = 4.0;
-    var plane = new Plane(normal, distance);
+    const distance = 4.0;
+    const plane = new Plane(normal, distance);
 
-    var result = new Plane(Cartesian3.UNIT_X, 1.0);
+    const result = new Plane(Cartesian3.UNIT_X, 1.0);
 
     Plane.clone(plane, result);
     expect(result.normal).toEqual(normal);
@@ -187,8 +187,8 @@ describe("Core/Plane", function () {
   });
 
   it("equals returns true only if two planes are equal by normal and distance", function () {
-    var left = new Plane(Cartesian3.UNIT_X, 0.0);
-    var right = new Plane(Cartesian3.UNIT_Y, 1.0);
+    const left = new Plane(Cartesian3.UNIT_X, 0.0);
+    const right = new Plane(Cartesian3.UNIT_Y, 1.0);
 
     expect(Plane.equals(left, right)).toBe(false);
 
@@ -206,32 +206,32 @@ describe("Core/Plane", function () {
   });
 
   it("equals throws developer error is left is undefined", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(function () {
       return Plane.equals(undefined, plane);
     }).toThrowDeveloperError();
   });
 
   it("equals throws developer error is right is undefined", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(function () {
       return Plane.equals(plane, undefined);
     }).toThrowDeveloperError();
   });
 
   it("transforms a plane according to a transform", function () {
-    var normal = new Cartesian3(1.0, 2.0, 3.0);
+    let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
-    var plane = new Plane(normal, 12.34);
+    const plane = new Plane(normal, 12.34);
 
-    var transform = Matrix4.fromUniformScale(2.0);
+    let transform = Matrix4.fromUniformScale(2.0);
     transform = Matrix4.multiplyByMatrix3(
       transform,
       Matrix3.fromRotationY(Math.PI),
       transform
     );
 
-    var transformedPlane = Plane.transform(plane, transform);
+    const transformedPlane = Plane.transform(plane, transform);
     expect(transformedPlane.distance).toEqual(plane.distance * 2.0);
     expect(transformedPlane.normal.x).toEqualEpsilon(
       -plane.normal.x,
@@ -242,12 +242,12 @@ describe("Core/Plane", function () {
   });
 
   it("transforms a plane according to a non-uniform scale transform", function () {
-    var normal = new Cartesian3(1.0, 0.0, 1.0);
+    let normal = new Cartesian3(1.0, 0.0, 1.0);
     normal = Cartesian3.normalize(normal, normal);
-    var plane = new Plane(normal, 0.0);
-    var planeOrigin = new Cartesian3(0.0, 0.0, 0.0);
-    var planePosition = new Cartesian3(1.0, 0.0, -1.0);
-    var planeDiff = Cartesian3.subtract(
+    const plane = new Plane(normal, 0.0);
+    const planeOrigin = new Cartesian3(0.0, 0.0, 0.0);
+    const planePosition = new Cartesian3(1.0, 0.0, -1.0);
+    const planeDiff = Cartesian3.subtract(
       planePosition,
       planeOrigin,
       new Cartesian3()
@@ -257,12 +257,12 @@ describe("Core/Plane", function () {
       CesiumMath.EPSILON16
     );
 
-    var transform = Matrix4.fromScale(
+    const transform = Matrix4.fromScale(
       new Cartesian3(4.0, 1.0, 10.0),
       new Matrix4()
     );
-    var transformPlane = Plane.transform(plane, transform);
-    var transformPlaneDiff = Matrix4.multiplyByPointAsVector(
+    const transformPlane = Plane.transform(plane, transform);
+    const transformPlaneDiff = Matrix4.multiplyByPointAsVector(
       transform,
       planeDiff,
       new Cartesian3()
@@ -273,14 +273,14 @@ describe("Core/Plane", function () {
   });
 
   it("transform throws without a plane", function () {
-    var transform = Matrix4.IDENTITY;
+    const transform = Matrix4.IDENTITY;
     expect(function () {
       return Plane.transform(undefined, transform);
     }).toThrowDeveloperError();
   });
 
   it("transform throws without a transform", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    const plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(function () {
       return Plane.transform(plane, undefined);
     }).toThrowDeveloperError();

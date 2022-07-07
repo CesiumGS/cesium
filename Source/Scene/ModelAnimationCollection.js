@@ -27,7 +27,7 @@ function ModelAnimationCollection(model) {
    *
    * @example
    * model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
-   *   console.log('Animation added: ' + animation.name);
+   *   console.log(`Animation added: ${animation.name}`);
    * });
    */
   this.animationAdded = new Event();
@@ -41,10 +41,21 @@ function ModelAnimationCollection(model) {
    *
    * @example
    * model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
-   *   console.log('Animation removed: ' + animation.name);
+   *   console.log(`Animation removed: ${animation.name}`);
    * });
    */
   this.animationRemoved = new Event();
+
+  /**
+   * When true, the animation will play even when the scene time is paused. However,
+   * whether animation takes place will depend on the animationTime functions assigned
+   * to the model's animations. By default, this is based on scene time, so models using
+   * the default will not animate regardless of this setting.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  this.animateWhilePaused = false;
 
   this._model = model;
   this._scheduledAnimations = [];
@@ -68,10 +79,10 @@ Object.defineProperties(ModelAnimationCollection.prototype, {
 });
 
 function add(collection, index, options) {
-  var model = collection._model;
-  var animations = model._runtime.animations;
-  var animation = animations[index];
-  var scheduledAnimation = new ModelAnimation(options, model, animation);
+  const model = collection._model;
+  const animations = model._runtime.animations;
+  const animation = animations[index];
+  const scheduledAnimation = new ModelAnimation(options, model, animation);
   collection._scheduledAnimations.push(scheduledAnimation);
   collection.animationAdded.raiseEvent(model, scheduledAnimation);
   return scheduledAnimation;
@@ -93,6 +104,7 @@ function add(collection, index, options) {
  * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
  * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
+ * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelAnimation} The animation that was added to the collection.
  *
  * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
@@ -114,9 +126,9 @@ function add(collection, index, options) {
  *
  * @example
  * // Example 3. Add an animation and provide all properties and events
- * var startTime = Cesium.JulianDate.now();
+ * const startTime = Cesium.JulianDate.now();
  *
- * var animation = model.activeAnimations.add({
+ * const animation = model.activeAnimations.add({
  *   name : 'another animation name',
  *   startTime : startTime,
  *   delay : 0.0,                          // Play at startTime (default)
@@ -128,20 +140,20 @@ function add(collection, index, options) {
  * });
  *
  * animation.start.addEventListener(function(model, animation) {
- *   console.log('Animation started: ' + animation.name);
+ *   console.log(`Animation started: ${animation.name}`);
  * });
  * animation.update.addEventListener(function(model, animation, time) {
- *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+ *   console.log(`Animation updated:  ${animation.name}. glTF animation time: ${time}`);
  * });
  * animation.stop.addEventListener(function(model, animation) {
- *   console.log('Animation stopped: ' + animation.name);
+ *   console.log(`Animation stopped: ${animation.name}`);
  * });
  */
 ModelAnimationCollection.prototype.add = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var model = this._model;
-  var animations = model._runtime.animations;
+  const model = this._model;
+  const animations = model._runtime.animations;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(animations)) {
@@ -171,9 +183,9 @@ ModelAnimationCollection.prototype.add = function (options) {
   }
 
   // Find the index of the animation with the given name
-  var index;
-  var length = animations.length;
-  for (var i = 0; i < length; ++i) {
+  let index;
+  const length = animations.length;
+  for (let i = 0; i < length; ++i) {
     if (animations[i].name === options.name) {
       index = i;
       break;
@@ -204,6 +216,7 @@ ModelAnimationCollection.prototype.add = function (options) {
  * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
  * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
+ * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
  *
  * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
@@ -230,11 +243,11 @@ ModelAnimationCollection.prototype.addAll = function (options) {
   }
   //>>includeEnd('debug');
 
-  var scheduledAnimations = [];
-  var model = this._model;
-  var animations = model._runtime.animations;
-  var length = animations.length;
-  for (var i = 0; i < length; ++i) {
+  const scheduledAnimations = [];
+  const model = this._model;
+  const animations = model._runtime.animations;
+  const length = animations.length;
+  for (let i = 0; i < length; ++i) {
     scheduledAnimations.push(add(this, i, options));
   }
   return scheduledAnimations;
@@ -254,15 +267,15 @@ ModelAnimationCollection.prototype.addAll = function (options) {
  * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
  *
  * @example
- * var a = model.activeAnimations.add({
+ * const a = model.activeAnimations.add({
  *   name : 'animation name'
  * });
  * model.activeAnimations.remove(a); // Returns true
  */
 ModelAnimationCollection.prototype.remove = function (animation) {
   if (defined(animation)) {
-    var animations = this._scheduledAnimations;
-    var i = animations.indexOf(animation);
+    const animations = this._scheduledAnimations;
+    const i = animations.indexOf(animation);
     if (i !== -1) {
       animations.splice(i, 1);
       this.animationRemoved.raiseEvent(this._model, animation);
@@ -281,13 +294,13 @@ ModelAnimationCollection.prototype.remove = function (animation) {
  * </p>
  */
 ModelAnimationCollection.prototype.removeAll = function () {
-  var model = this._model;
-  var animations = this._scheduledAnimations;
-  var length = animations.length;
+  const model = this._model;
+  const animations = this._scheduledAnimations;
+  const length = animations.length;
 
   this._scheduledAnimations = [];
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     this.animationRemoved.raiseEvent(model, animations[i]);
   }
 };
@@ -317,9 +330,9 @@ ModelAnimationCollection.prototype.contains = function (animation) {
  *
  * @example
  * // Output the names of all the animations in the collection.
- * var animations = model.activeAnimations;
- * var length = animations.length;
- * for (var i = 0; i < length; ++i) {
+ * const animations = model.activeAnimations;
+ * const length = animations.length;
+ * for (let i = 0; i < length; ++i) {
  *   console.log(animations.get(i).name);
  * }
  */
@@ -334,14 +347,14 @@ ModelAnimationCollection.prototype.get = function (index) {
 };
 
 function animateChannels(runtimeAnimation, localAnimationTime) {
-  var channelEvaluators = runtimeAnimation.channelEvaluators;
-  var length = channelEvaluators.length;
-  for (var i = 0; i < length; ++i) {
+  const channelEvaluators = runtimeAnimation.channelEvaluators;
+  const length = channelEvaluators.length;
+  for (let i = 0; i < length; ++i) {
     channelEvaluators[i](localAnimationTime);
   }
 }
 
-var animationsToRemove = [];
+const animationsToRemove = [];
 
 function createAnimationRemovedFunction(
   modelAnimationCollection,
@@ -357,8 +370,8 @@ function createAnimationRemovedFunction(
  * @private
  */
 ModelAnimationCollection.prototype.update = function (frameState) {
-  var scheduledAnimations = this._scheduledAnimations;
-  var length = scheduledAnimations.length;
+  const scheduledAnimations = this._scheduledAnimations;
+  let length = scheduledAnimations.length;
 
   if (length === 0) {
     // No animations - quick return for performance
@@ -366,19 +379,21 @@ ModelAnimationCollection.prototype.update = function (frameState) {
     return false;
   }
 
-  if (JulianDate.equals(frameState.time, this._previousTime)) {
-    // Animations are currently only time-dependent so do not animate when paused or picking
+  if (
+    !this.animateWhilePaused &&
+    JulianDate.equals(frameState.time, this._previousTime)
+  ) {
     return false;
   }
   this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
 
-  var animationOccured = false;
-  var sceneTime = frameState.time;
-  var model = this._model;
+  let animationOccured = false;
+  const sceneTime = frameState.time;
+  const model = this._model;
 
-  for (var i = 0; i < length; ++i) {
-    var scheduledAnimation = scheduledAnimations[i];
-    var runtimeAnimation = scheduledAnimation._runtimeAnimation;
+  for (let i = 0; i < length; ++i) {
+    const scheduledAnimation = scheduledAnimations[i];
+    const runtimeAnimation = scheduledAnimation._runtimeAnimation;
 
     if (!defined(scheduledAnimation._computedStartTime)) {
       scheduledAnimation._computedStartTime = JulianDate.addSeconds(
@@ -393,40 +408,50 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         runtimeAnimation.stopTime * (1.0 / scheduledAnimation.multiplier);
     }
 
-    var startTime = scheduledAnimation._computedStartTime;
-    var duration = scheduledAnimation._duration;
-    var stopTime = scheduledAnimation.stopTime;
+    const startTime = scheduledAnimation._computedStartTime;
+    const duration = scheduledAnimation._duration;
+    const stopTime = scheduledAnimation.stopTime;
+
+    const pastStartTime = JulianDate.lessThanOrEquals(startTime, sceneTime);
+    const pastStopTime =
+      defined(stopTime) && JulianDate.greaterThan(sceneTime, stopTime);
 
     // [0.0, 1.0] normalized local animation time
-    var delta =
-      duration !== 0.0
-        ? JulianDate.secondsDifference(sceneTime, startTime) / duration
-        : 0.0;
-
-    // Clamp delta to stop time, if defined.
-    if (
-      duration !== 0.0 &&
-      defined(stopTime) &&
-      JulianDate.greaterThan(sceneTime, stopTime)
-    ) {
-      delta = JulianDate.secondsDifference(stopTime, startTime) / duration;
+    let delta = 0.0;
+    if (duration !== 0.0) {
+      const seconds = JulianDate.secondsDifference(
+        pastStopTime ? stopTime : sceneTime,
+        startTime
+      );
+      delta = defined(scheduledAnimation._animationTime)
+        ? scheduledAnimation._animationTime(duration, seconds)
+        : seconds / duration;
     }
-
-    var pastStartTime = delta >= 0.0;
 
     // Play animation if
     // * we are after the start time or the animation is being repeated, and
     // * before the end of the animation's duration or the animation is being repeated, and
     // * we did not reach a user-provided stop time.
 
-    var repeat =
+    const repeat =
       scheduledAnimation.loop === ModelAnimationLoop.REPEAT ||
       scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT;
 
-    var play =
+    const play =
       (pastStartTime || (repeat && !defined(scheduledAnimation.startTime))) &&
       (delta <= 1.0 || repeat) &&
-      (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
+      !pastStopTime;
+
+    if (delta === scheduledAnimation._prevAnimationDelta) {
+      const animationStopped =
+        scheduledAnimation._state === ModelAnimationState.STOPPED;
+      // no change to delta, and no change to the animation state means we can
+      // skip the update this time around.
+      if (play !== animationStopped) {
+        continue;
+      }
+    }
+    scheduledAnimation._prevAnimationDelta = delta;
 
     // If it IS, or WAS, animating...
     if (play || scheduledAnimation._state === ModelAnimationState.ANIMATING) {
@@ -444,9 +469,9 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       } else if (
         scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT
       ) {
-        var floor = Math.floor(delta);
-        var fract = delta - floor;
-        // When even use (1.0 - fract) to mirror repeat
+        const floor = Math.floor(delta);
+        const fract = delta - floor;
+        // When odd use (1.0 - fract) to mirror repeat
         delta = floor % 2 === 1.0 ? 1.0 - fract : fract;
       }
 
@@ -454,7 +479,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         delta = 1.0 - delta;
       }
 
-      var localAnimationTime = delta * duration * scheduledAnimation.multiplier;
+      let localAnimationTime = delta * duration * scheduledAnimation.multiplier;
       // Clamp in case floating-point roundoff goes outside the animation's first or last keyframe
       localAnimationTime = CesiumMath.clamp(
         localAnimationTime,
@@ -486,8 +511,8 @@ ModelAnimationCollection.prototype.update = function (frameState) {
 
   // Remove animations that stopped
   length = animationsToRemove.length;
-  for (var j = 0; j < length; ++j) {
-    var animationToRemove = animationsToRemove[j];
+  for (let j = 0; j < length; ++j) {
+    const animationToRemove = animationsToRemove[j];
     scheduledAnimations.splice(
       scheduledAnimations.indexOf(animationToRemove),
       1

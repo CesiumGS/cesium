@@ -29,16 +29,16 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         function addPointPrimitive() {
           Sandcastle.declare(addPointPrimitive);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -50,7 +50,7 @@
         function setPointPrimitiveProperties() {
           Sandcastle.declare(setPointPrimitiveProperties);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -66,13 +66,13 @@
         function changePointPrimitiveProperties() {
           Sandcastle.declare(changePointPrimitiveProperties);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
 
           // add() returns a PointPrimitive object containing functions to change
           // the pointPrimitive's position and appearance.
-          var p = pointPrimitives.add({
+          const p = pointPrimitives.add({
             pixelSize: 2,
           });
 
@@ -88,7 +88,7 @@
         function addMultiplePointPrimitives() {
           Sandcastle.declare(addMultiplePointPrimitives);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -111,7 +111,7 @@
         function scaleByDistance() {
           Sandcastle.declare(scaleByDistance);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -126,7 +126,7 @@
         function fadeByDistance() {
           Sandcastle.declare(fadeByDistance);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
           pointPrimitives.add({
@@ -144,10 +144,10 @@
         function inReferenceFrame() {
           Sandcastle.declare(inReferenceFrame);
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
-          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
           pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             center
           );
@@ -181,17 +181,17 @@
         function add100kPoints() {
           Sandcastle.declare(add100kPoints);
 
-          var numPoints = 100000;
+          const numPoints = 100000;
 
-          var pointPrimitives = scene.primitives.add(
+          const pointPrimitives = scene.primitives.add(
             new Cesium.PointPrimitiveCollection()
           );
-          var base = scene.globe.ellipsoid.radii.x;
-          var color = Cesium.Color.LIGHTSKYBLUE;
-          var outlineColor = Cesium.Color.BLACK;
+          const base = scene.globe.ellipsoid.radii.x;
+          const color = Cesium.Color.LIGHTSKYBLUE;
+          const outlineColor = Cesium.Color.BLACK;
 
-          for (var j = 0; j < numPoints; ++j) {
-            var position = new Cesium.Cartesian3(
+          for (let j = 0; j < numPoints; ++j) {
+            const position = new Cesium.Cartesian3(
               16000000 * Math.random() - 8000000,
               -((4000000 * j) / numPoints + base),
               2000000 * Math.random() - 1000000
@@ -272,10 +272,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

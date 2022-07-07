@@ -1,7 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import MetadataSchema from "./MetadataSchema.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -28,9 +27,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var schema = options.schema;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const schema = options.schema;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -44,7 +43,7 @@ export default function MetadataSchemaLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = undefined;
 }
 
 if (defined(Object.create)) {
@@ -54,17 +53,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(MetadataSchemaLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
    *
    * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {Promise.<MetadataSchemaLoader>}
+   * @type {Promise.<MetadataSchemaLoader>|undefined}
    * @readonly
    * @private
    */
   promise: {
     get: function () {
-      return this._promise.promise;
+      return this._promise;
     },
   },
   /**
@@ -99,21 +98,23 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @returns {Promise.<MetadataSchemaLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 MetadataSchemaLoader.prototype.load = function () {
   if (defined(this._schema)) {
-    this._promise.resolve(this);
-    return;
+    this._promise = Promise.resolve(this);
+  } else {
+    this._promise = loadExternalSchema(this);
   }
 
-  loadExternalSchema(this);
+  return this._promise;
 };
 
 function loadExternalSchema(schemaLoader) {
-  var resource = schemaLoader._resource;
+  const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
-  resource
+  return resource
     .fetchJson()
     .then(function (json) {
       if (schemaLoader.isDestroyed()) {
@@ -121,15 +122,15 @@ function loadExternalSchema(schemaLoader) {
       }
       schemaLoader._schema = new MetadataSchema(json);
       schemaLoader._state = ResourceLoaderState.READY;
-      schemaLoader._promise.resolve(schemaLoader);
+      return schemaLoader;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (schemaLoader.isDestroyed()) {
         return;
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load schema: " + resource.url;
-      schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
+      const errorMessage = `Failed to load schema: ${resource.url}`;
+      return Promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }
 

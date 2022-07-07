@@ -68,11 +68,11 @@ Object.defineProperties(Heap.prototype, {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
       //>>includeEnd('debug');
-      var originalLength = this._length;
+      const originalLength = this._length;
       if (value < originalLength) {
-        var array = this._array;
+        const array = this._array;
         // Remove trailing references
-        for (var i = value; i < originalLength; ++i) {
+        for (let i = value; i < originalLength; ++i) {
           array[i] = undefined;
         }
         this._length = value;
@@ -97,7 +97,7 @@ Object.defineProperties(Heap.prototype, {
 });
 
 function swap(array, a, b) {
-  var temp = array[a];
+  const temp = array[a];
   array[a] = array[b];
   array[b] = temp;
 }
@@ -119,15 +119,15 @@ Heap.prototype.reserve = function (length) {
  */
 Heap.prototype.heapify = function (index) {
   index = defaultValue(index, 0);
-  var length = this._length;
-  var comparator = this._comparator;
-  var array = this._array;
-  var candidate = -1;
-  var inserting = true;
+  const length = this._length;
+  const comparator = this._comparator;
+  const array = this._array;
+  let candidate = -1;
+  let inserting = true;
 
   while (inserting) {
-    var right = 2 * (index + 1);
-    var left = right - 1;
+    const right = 2 * (index + 1);
+    const left = right - 1;
 
     if (left < length && comparator(array[left], array[index]) < 0) {
       candidate = left;
@@ -151,8 +151,8 @@ Heap.prototype.heapify = function (index) {
  * Resort the heap.
  */
 Heap.prototype.resort = function () {
-  var length = this._length;
-  for (var i = Math.ceil(length / 2); i >= 0; --i) {
+  const length = this._length;
+  for (let i = Math.ceil(length / 2); i >= 0; --i) {
     this.heapify(i);
   }
 };
@@ -170,11 +170,11 @@ Heap.prototype.insert = function (element) {
   Check.defined("element", element);
   //>>includeEnd('debug');
 
-  var array = this._array;
-  var comparator = this._comparator;
-  var maximumLength = this._maximumLength;
+  const array = this._array;
+  const comparator = this._comparator;
+  const maximumLength = this._maximumLength;
 
-  var index = this._length++;
+  let index = this._length++;
   if (index < array.length) {
     array[index] = element;
   } else {
@@ -182,7 +182,7 @@ Heap.prototype.insert = function (element) {
   }
 
   while (index !== 0) {
-    var parent = Math.floor((index - 1) / 2);
+    const parent = Math.floor((index - 1) / 2);
     if (comparator(array[index], array[parent]) < 0) {
       swap(array, index, parent);
       index = parent;
@@ -191,7 +191,7 @@ Heap.prototype.insert = function (element) {
     }
   }
 
-  var removedElement;
+  let removedElement;
 
   if (defined(maximumLength) && this._length > maximumLength) {
     removedElement = array[maximumLength];
@@ -216,8 +216,8 @@ Heap.prototype.pop = function (index) {
   Check.typeOf.number.lessThan("index", index, this._length);
   //>>includeEnd('debug');
 
-  var array = this._array;
-  var root = array[index];
+  const array = this._array;
+  const root = array[index];
   swap(array, index, --this._length);
   this.heapify(index);
   array[this._length] = undefined; // Remove trailing reference

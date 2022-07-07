@@ -48,8 +48,7 @@
     {
       "application/json": ["czml", "json", "geojson", "topojson"],
       "application/wasm": ["wasm"],
-      "image/crn": ["crn"],
-      "image/ktx": ["ktx"],
+      "image/ktx2": ["ktx2"],
       "model/gltf+json": ["gltf"],
       "model/gltf-binary": ["bgltf", "glb"],
       "application/octet-stream": [
@@ -112,7 +111,7 @@
     if (remoteUrl) {
       // add http:// to the URL if no protocol is present
       if (!/^https?:\/\//.test(remoteUrl)) {
-        remoteUrl = "http://" + remoteUrl;
+        remoteUrl = `http://${remoteUrl}`;
       }
       remoteUrl = url.parse(remoteUrl);
       // copy query string

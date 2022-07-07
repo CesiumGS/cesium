@@ -54,10 +54,10 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         if (!viewer.scene.specularEnvironmentMapsSupported) {
           window.alert(
@@ -65,75 +65,79 @@
           );
         }
 
-        var environmentMapURL =
-          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx";
-        var modelURL = "../../SampleData/models/Pawns/Pawns.glb";
+        const environmentMapURL =
+          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
+        const modelURL = "../../SampleData/models/Pawns/Pawns.glb";
 
-        // This environment map was processed using Google's Filament project. To process your own:
+        // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
+        // 1 - Download and build the Khronos glTF IBL Sampler (https://github.com/KhronosGroup/glTF-IBL-Sampler).
+        // 2 - Run `cli -inputPath /path/to/image.hdr -outCubeMap /path/to/output.ktx2`. Run `cli -h` for all options.
+
+        // To generate the spherical harmonic coefficients below, use Google's Filament project:
         // 1 - Download the Filament release (https://github.com/google/filament/releases).
         // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
-        // 3 - Take the generated coefficients and the KTX file and load them in CesiumJS as shown below.
+        // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
 
-        var L00 = new Cesium.Cartesian3(
-          0.170455150831422,
-          0.163151083190219,
-          0.196966760289763
+        const L00 = new Cesium.Cartesian3(
+          1.234709620475769,
+          1.221461296081543,
+          1.273156881332397
         );
-        var L1_1 = new Cesium.Cartesian3(
-          -0.066550267689383,
-          -0.022088055746048,
-          0.078835009246127
+        const L1_1 = new Cesium.Cartesian3(
+          1.135921120643616,
+          1.171217799186707,
+          1.287644743919373
         );
-        var L10 = new Cesium.Cartesian3(
-          0.038364097478591,
-          0.045714300098753,
-          0.063498904606215
+        const L10 = new Cesium.Cartesian3(
+          1.245193719863892,
+          1.245591878890991,
+          1.282818794250488
         );
-        var L11 = new Cesium.Cartesian3(
-          -0.01436536331281,
-          -0.026490613715151,
-          -0.05018940406602
+        const L11 = new Cesium.Cartesian3(
+          -1.106930732727051,
+          -1.112522482872009,
+          -1.153198838233948
         );
-        var L2_2 = new Cesium.Cartesian3(
-          -0.05153278691789,
-          -0.050777795729986,
-          -0.056449044453032
+        const L2_2 = new Cesium.Cartesian3(
+          -1.086226940155029,
+          -1.079731941223145,
+          -1.101912498474121
         );
-        var L2_1 = new Cesium.Cartesian3(
-          0.043454596136534,
-          0.046672590104157,
-          0.05753010764661
+        const L2_1 = new Cesium.Cartesian3(
+          1.189834713935852,
+          1.185906887054443,
+          1.214385271072388
         );
-        var L20 = new Cesium.Cartesian3(
-          -0.00164046627411,
-          0.001286638231156,
-          0.007228908989616
+        const L20 = new Cesium.Cartesian3(
+          0.01778045296669,
+          0.02013735473156,
+          0.025313569232821
         );
-        var L21 = new Cesium.Cartesian3(
-          -0.042260855700641,
-          -0.046394335094707,
-          -0.057562936365585
+        const L21 = new Cesium.Cartesian3(
+          -1.086826920509338,
+          -1.084611177444458,
+          -1.111204028129578
         );
-        var L22 = new Cesium.Cartesian3(
-          -0.004953478914091,
-          -0.000479681664876,
-          0.008508150106928
+        const L22 = new Cesium.Cartesian3(
+          -0.05241484940052,
+          -0.048303380608559,
+          -0.041960217058659
         );
-        var coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+        const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
-        var height = 0.0;
-        var hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        var origin = Cesium.Cartesian3.fromDegrees(
+        const height = 0.0;
+        const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
+        const origin = Cesium.Cartesian3.fromDegrees(
           -123.0744619,
           44.0503706,
           height
         );
-        var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
           hpr
         );
 
-        var model = viewer.scene.primitives.add(
+        const model = viewer.scene.primitives.add(
           Cesium.Model.fromGltf({
             url: modelURL,
             modelMatrix: modelMatrix,
@@ -143,46 +147,47 @@
 
         model.readyPromise
           .then(function (model) {
-            var camera = viewer.camera;
+            const camera = viewer.camera;
 
             // Zoom to model
-            var controller = viewer.scene.screenSpaceCameraController;
-            var r =
+            const controller = viewer.scene.screenSpaceCameraController;
+            const r =
               2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
 
-            var center = Cesium.Matrix4.multiplyByPoint(
+            const center = Cesium.Matrix4.multiplyByPoint(
               model.modelMatrix,
               model.boundingSphere.center,
               new Cesium.Cartesian3()
             );
-            var heading = Cesium.Math.toRadians(230.0);
-            var pitch = Cesium.Math.toRadians(-20.0);
+            const heading = Cesium.Math.toRadians(230.0);
+            const pitch = Cesium.Math.toRadians(-20.0);
             camera.lookAt(
               center,
               new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
             );
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-            model.sphericalHarmonicCoefficients = coefficients;
-            model.specularEnvironmentMaps = environmentMapURL;
+            const ibl = model.imageBasedLighting;
+            ibl.sphericalHarmonicCoefficients = coefficients;
+            ibl.specularEnvironmentMaps = environmentMapURL;
 
             // The viewModel tracks the state of our mini application.
-            var viewModel = {
-              luminanceAtZenith: model.luminanceAtZenith,
+            const viewModel = {
+              luminanceAtZenith: ibl.luminanceAtZenith,
             };
             // Convert the viewModel members into knockout observables.
             Cesium.knockout.track(viewModel);
 
             // Bind the viewModel to the DOM elements of the UI that call for it.
-            var toolbar = document.getElementById("toolbar");
+            const toolbar = document.getElementById("toolbar");
             Cesium.knockout.applyBindings(viewModel, toolbar);
 
             function subscribeParameter(name) {
               Cesium.knockout
                 .getObservable(viewModel, name)
                 .subscribe(function (newValue) {
-                  model[name] = newValue;
+                  ibl[name] = newValue;
                 });
             }
 
@@ -193,24 +198,24 @@
               false,
               function (checked) {
                 if (!checked) {
-                  model.sphericalHarmonicCoefficients = coefficients;
-                  model.specularEnvironmentMaps = environmentMapURL;
+                  ibl.sphericalHarmonicCoefficients = coefficients;
+                  ibl.specularEnvironmentMaps = environmentMapURL;
                 } else {
-                  model.sphericalHarmonicCoefficients = undefined;
-                  model.specularEnvironmentMaps = undefined;
+                  ibl.sphericalHarmonicCoefficients = undefined;
+                  ibl.specularEnvironmentMaps = undefined;
                 }
               }
             );
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           });
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

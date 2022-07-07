@@ -1,4 +1,3 @@
-import { arrayFill } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { EllipseGeometry } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -58,7 +57,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("computes positions", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         ellipsoid: Ellipsoid.WGS84,
@@ -75,7 +74,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("compute all vertex attributes", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.ALL,
         ellipsoid: Ellipsoid.WGS84,
@@ -86,8 +85,8 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 16;
-    var numTriangles = 22;
+    const numVertices = 16;
+    const numTriangles = 22;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.st.values.length).toEqual(numVertices * 2);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -97,7 +96,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("compute texture coordinates with rotation", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_AND_ST,
         ellipsoid: Ellipsoid.WGS84,
@@ -109,12 +108,12 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var positions = m.attributes.position.values;
-    var st = m.attributes.st.values;
-    var length = st.length;
+    const positions = m.attributes.position.values;
+    const st = m.attributes.st.values;
+    const length = st.length;
 
-    var numVertices = 16;
-    var numTriangles = 22;
+    const numVertices = 16;
+    const numTriangles = 22;
     expect(positions.length).toEqual(numVertices * 3);
     expect(length).toEqual(numVertices * 2);
     expect(m.indices.length).toEqual(numTriangles * 3);
@@ -124,7 +123,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("computes positions extruded", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         ellipsoid: Ellipsoid.WGS84,
@@ -136,14 +135,14 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 48; // 16 top + 16 bottom + 8 top edge + 8 bottom edge
-    var numTriangles = 60; // 22 top fill + 22 bottom fill + 2 triangles * 8 sides
+    const numVertices = 48; // 16 top + 16 bottom + 8 top edge + 8 bottom edge
+    const numTriangles = 60; // 22 top fill + 22 bottom fill + 2 triangles * 8 sides
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.indices.length).toEqual(numTriangles * 3);
   });
 
   it("computes offset attribute", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         ellipsoid: Ellipsoid.WGS84,
@@ -155,18 +154,17 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 16;
+    const numVertices = 16;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
-    var offset = m.attributes.applyOffset.values;
+    const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    var expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
   it("computes offset attribute extruded for top vertices", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         ellipsoid: Ellipsoid.WGS84,
@@ -179,20 +177,20 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 48;
+    const numVertices = 48;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
-    var offset = m.attributes.applyOffset.values;
+    const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    var expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 16);
-    expected = arrayFill(expected, 1, 32, 40);
+    const expected = new Array(offset.length)
+      .fill(0)
+      .fill(1, 0, 16)
+      .fill(1, 32, 40);
     expect(offset).toEqual(expected);
   });
 
   it("computes offset attribute extruded for all vertices", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         ellipsoid: Ellipsoid.WGS84,
@@ -205,18 +203,17 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 48;
+    const numVertices = 48;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
-    var offset = m.attributes.applyOffset.values;
+    const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    var expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
   it("compute all vertex attributes extruded", function () {
-    var m = EllipseGeometry.createGeometry(
+    const m = EllipseGeometry.createGeometry(
       new EllipseGeometry({
         vertexFormat: VertexFormat.ALL,
         ellipsoid: Ellipsoid.WGS84,
@@ -228,8 +225,8 @@ describe("Core/EllipseGeometry", function () {
       })
     );
 
-    var numVertices = 48;
-    var numTriangles = 60;
+    const numVertices = 48;
+    const numTriangles = 60;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.st.values.length).toEqual(numVertices * 2);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -239,31 +236,31 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("undefined is returned if the minor axis is equal to or less than zero", function () {
-    var ellipse0 = new EllipseGeometry({
+    const ellipse0 = new EllipseGeometry({
       center: Cartesian3.fromDegrees(-75.59777, 40.03883),
       semiMajorAxis: 300000.0,
       semiMinorAxis: 0.0,
     });
-    var ellipse1 = new EllipseGeometry({
+    const ellipse1 = new EllipseGeometry({
       center: Cartesian3.fromDegrees(-75.59777, 40.03883),
       semiMajorAxis: 0.0,
       semiMinorAxis: -1.0,
     });
-    var ellipse2 = new EllipseGeometry({
+    const ellipse2 = new EllipseGeometry({
       center: Cartesian3.fromDegrees(-75.59777, 40.03883),
       semiMajorAxis: 300000.0,
       semiMinorAxis: -10.0,
     });
-    var ellipse3 = new EllipseGeometry({
+    const ellipse3 = new EllipseGeometry({
       center: Cartesian3.fromDegrees(-75.59777, 40.03883),
       semiMajorAxis: -1.0,
       semiMinorAxis: -2.0,
     });
 
-    var geometry0 = EllipseGeometry.createGeometry(ellipse0);
-    var geometry1 = EllipseGeometry.createGeometry(ellipse1);
-    var geometry2 = EllipseGeometry.createGeometry(ellipse2);
-    var geometry3 = EllipseGeometry.createGeometry(ellipse3);
+    const geometry0 = EllipseGeometry.createGeometry(ellipse0);
+    const geometry1 = EllipseGeometry.createGeometry(ellipse1);
+    const geometry2 = EllipseGeometry.createGeometry(ellipse2);
+    const geometry3 = EllipseGeometry.createGeometry(ellipse3);
 
     expect(geometry0).toBeUndefined();
     expect(geometry1).toBeUndefined();
@@ -272,7 +269,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("createShadowVolume uses properties from geometry", function () {
-    var m = new EllipseGeometry({
+    const m = new EllipseGeometry({
       center: Cartesian3.fromDegrees(-75.59777, 40.03883),
       semiMajorAxis: 3000.0,
       semiMinorAxis: 1500.0,
@@ -285,15 +282,15 @@ describe("Core/EllipseGeometry", function () {
       vertexFormat: VertexFormat.ALL,
     });
 
-    var minHeightFunc = function () {
+    const minHeightFunc = function () {
       return 100;
     };
 
-    var maxHeightFunc = function () {
+    const maxHeightFunc = function () {
       return 1000;
     };
 
-    var sv = EllipseGeometry.createShadowVolume(
+    const sv = EllipseGeometry.createShadowVolume(
       m,
       minHeightFunc,
       maxHeightFunc
@@ -320,14 +317,14 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("computing rectangle property", function () {
-    var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
-    var ellipse = new EllipseGeometry({
+    let center = Cartesian3.fromDegrees(-75.59777, 40.03883);
+    let ellipse = new EllipseGeometry({
       center: center,
       semiMajorAxis: 2000.0,
       semiMinorAxis: 1000.0,
     });
 
-    var r = ellipse.rectangle;
+    let r = ellipse.rectangle;
     expect(r.north).toEqualEpsilon(0.6989665987920752, CesiumMath.EPSILON7);
     expect(r.south).toEqualEpsilon(0.6986522252554146, CesiumMath.EPSILON7);
     expect(r.east).toEqualEpsilon(-1.3190209903056758, CesiumMath.EPSILON7);
@@ -352,7 +349,7 @@ describe("Core/EllipseGeometry", function () {
   });
 
   it("computeRectangle", function () {
-    var options = {
+    const options = {
       center: Cartesian3.fromDegrees(-30, 33),
       semiMajorAxis: 2000.0,
       semiMinorAxis: 1000.0,
@@ -360,33 +357,33 @@ describe("Core/EllipseGeometry", function () {
       granularity: 0.5,
       ellipsoid: Ellipsoid.UNIT_SPHERE,
     };
-    var geometry = new EllipseGeometry(options);
+    const geometry = new EllipseGeometry(options);
 
-    var expected = geometry.rectangle;
-    var result = EllipseGeometry.computeRectangle(options);
+    const expected = geometry.rectangle;
+    const result = EllipseGeometry.computeRectangle(options);
 
     expect(result).toEqual(expected);
   });
 
   it("computeRectangle with result parameter", function () {
-    var options = {
+    const options = {
       center: Cartesian3.fromDegrees(30, -33),
       semiMajorAxis: 500.0,
       semiMinorAxis: 200.0,
     };
-    var geometry = new EllipseGeometry(options);
+    const geometry = new EllipseGeometry(options);
 
-    var result = new Rectangle();
-    var expected = geometry.rectangle;
-    var returned = EllipseGeometry.computeRectangle(options, result);
+    const result = new Rectangle();
+    const expected = geometry.rectangle;
+    const returned = EllipseGeometry.computeRectangle(options, result);
 
     expect(returned).toEqual(expected);
     expect(returned).toBe(result);
   });
 
   it("computing textureCoordinateRotationPoints property", function () {
-    var center = Cartesian3.fromDegrees(0, 0);
-    var ellipse = new EllipseGeometry({
+    const center = Cartesian3.fromDegrees(0, 0);
+    let ellipse = new EllipseGeometry({
       center: center,
       semiMajorAxis: 2000.0,
       semiMinorAxis: 1000.0,
@@ -394,7 +391,7 @@ describe("Core/EllipseGeometry", function () {
     });
 
     // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
-    var textureCoordinateRotationPoints =
+    let textureCoordinateRotationPoints =
       ellipse.textureCoordinateRotationPoints;
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
@@ -457,9 +454,9 @@ describe("Core/EllipseGeometry", function () {
     );
   });
 
-  var center = Cartesian3.fromDegrees(0, 0);
-  var ellipsoid = Ellipsoid.WGS84;
-  var packableInstance = new EllipseGeometry({
+  const center = Cartesian3.fromDegrees(0, 0);
+  const ellipsoid = Ellipsoid.WGS84;
+  const packableInstance = new EllipseGeometry({
     vertexFormat: VertexFormat.POSITION_AND_ST,
     ellipsoid: ellipsoid,
     center: center,
@@ -468,7 +465,7 @@ describe("Core/EllipseGeometry", function () {
     semiMinorAxis: 1.0,
     stRotation: CesiumMath.PI_OVER_TWO,
   });
-  var packedInstance = [
+  const packedInstance = [
     center.x,
     center.y,
     center.z,

@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var HeightmapEncoding = {
+const HeightmapEncoding = {
   /**
    * No encoding
    *

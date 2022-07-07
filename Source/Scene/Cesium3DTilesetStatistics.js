@@ -29,7 +29,7 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.batchTableByteLength = 0;
+  this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {
@@ -46,13 +46,13 @@ Cesium3DTilesetStatistics.prototype.clear = function () {
 };
 
 function updatePointAndFeatureCounts(statistics, content, decrement, load) {
-  var contents = content.innerContents;
-  var pointsLength = content.pointsLength;
-  var trianglesLength = content.trianglesLength;
-  var featuresLength = content.featuresLength;
-  var geometryByteLength = content.geometryByteLength;
-  var texturesByteLength = content.texturesByteLength;
-  var batchTableByteLength = content.batchTableByteLength;
+  const contents = content.innerContents;
+  const pointsLength = content.pointsLength;
+  const trianglesLength = content.trianglesLength;
+  const featuresLength = content.featuresLength;
+  const geometryByteLength = content.geometryByteLength;
+  const texturesByteLength = content.texturesByteLength;
+  const batchTableByteLength = content.batchTableByteLength;
 
   if (load) {
     statistics.numberOfFeaturesLoaded += decrement
@@ -81,8 +81,8 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
   }
 
   if (defined(contents)) {
-    var length = contents.length;
-    for (var i = 0; i < length; ++i) {
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
       updatePointAndFeatureCounts(statistics, contents[i], decrement, load);
     }
   }

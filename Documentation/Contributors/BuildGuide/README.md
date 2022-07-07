@@ -1,9 +1,37 @@
 # Build Guide
 
-- [Get the Code](#get-the-code)
-- [Build the Code](#build-the-code)
-- [Build Scripts](#build-scripts)
-- [Travis and Continuous Integration](#travis-and-continuous-integration)
+- [Build Guide](#build-guide)
+  - [Quickstart](#quickstart)
+  - [Get the Code](#get-the-code)
+  - [Build the Code](#build-the-code)
+  - [Build Scripts](#build-scripts)
+  - [Travis and Continuous Integration](#travis-and-continuous-integration)
+    - [Configure a Different S3 Bucket](#configure-a-different-s3-bucket)
+    - [Configure S3 Credentials](#configure-s3-credentials)
+    - [Configure Statuses](#configure-statuses)
+
+## Quickstart
+
+1. [Clone the repository](#get-the-code)
+
+2. [Build](#build-the-code)
+
+   ```bash
+    npm install
+    npm run build
+   ```
+
+3. Start the server
+
+   ```bash
+   npm start
+   ```
+
+4. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
+
+_NOTE: If you change branches, you might have to rebuild._
+
+---
 
 ## Get the Code
 
@@ -12,12 +40,11 @@
   - Make sure your SSH keys are configured ([linux](https://help.github.com/articles/generating-ssh-keys#platform-linux) | [mac](https://help.github.com/articles/generating-ssh-keys#platform-mac) | [windows](https://help.github.com/articles/generating-ssh-keys#platform-windows)).
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
   - Recommended Git settings:
-    - `git config --global pull.rebase preserve` - when pulling remote changes, rebase your local changes on top of the remote changes, to avoid unnecessary merge commits.
     - `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
-- Have [commit access](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
+- Have [commit access](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
   - No
     - Fork [cesium](https://github.com/CesiumGS/cesium).
-    - Use the [GitHub website](https://github.com/CesiumGS/cesium/branches/all) to delete all branches in your fork except `master`.
+    - Use the [GitHub website](https://github.com/CesiumGS/cesium/branches/all) to delete all branches in your fork except `main`.
     - Clone your fork, e.g., `git clone git@github.com:yourusername/cesium.git`.
     - Make changes in a branch, e.g., `git checkout -b my-feature`.
   - Yes
@@ -32,28 +59,28 @@ Prerequisites:
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
-```
+```bash
 npm install
 ```
 
 Once all modules have been installed, run `npm run build` to actually build the code:
 
-```
+```bash
 npm run build
 ```
 
 Cesium ships with a simple HTTP server for testing, run `npm start` after building to use it:
 
-```
+```bash
 npm start
 ```
 
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
-- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/docs/tutorials/quick-start/)
+- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
 - **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
-- **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
-- **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
+- **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/TestingGuide/README.md#testing-guide)
+- **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
 Cesium can be used in two different ways. Cesium can be either a set of modules using [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
 
@@ -65,13 +92,13 @@ Read the complete list of build scripts below for more details.
 By default, the server only allows connections from your local machine. To allow connections from other machines, pass
 the `--public` option to npm. Note the extra `--` is intentional and required by npm.
 
-```
+```bash
 npm start -- --public
 ```
 
 The development server has a few other options as well, which you can see by pasing the `--help` parameter:
 
-```
+```bash
 npm start -- --help
 ```
 
@@ -85,7 +112,7 @@ Cesium uses [gulp](http://gulpjs.com/) for build tasks, but they are all abstrac
 
 Specify the target(s) at the command line:
 
-```
+```bash
 npm run [target-name]
 ```
 
@@ -95,18 +122,19 @@ Here's the full set of scripts and what they do.
   - `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`). Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. This runs automatically when saving files in Eclipse.
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed.
   - `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that exposes the entire Cesium API attached to a single global `Cesium` object. This version is useful if you don't want to use the modules directly with a standard AMD loader.
-  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
+  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js.
   - `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
   - `minifyRelease` - Runs `minify`, and removes debugging code.
   - `requirejs` - Used internally by the build system and can not be called directly.
-  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
-  - `release` - A full release build that creates a shippable product, including building apps and generating documentation.
+  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory. This script requires a release build of Cesium, run the `release` script to build one if needed.
+  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/main/Documentation/Contributors/DocumentationGuide).
+  - `release` - A full release build that creates a shippable product, including generating documentation.
   - `makeZipFile` - Builds a zip file containing all release files. This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
 - **Utility scripts** -- code coverage, static code analysis, and other utilities
   - `coverage` - Runs coverage and opens the default browser with the results.
   - `eslint` - Runs [ESLint](http://eslint.org/), a static code analysis tool, on the entire source tree.
   - `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.
+  - `markdownlint` - Runs [markdownlint](https://github.com/DavidAnson/markdownlint) on the Markdown files used for documentation.
   - `clean` - Removes all generated build artifacts.
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
 - **Testing scripts** -- build and run the unit tests
@@ -142,15 +170,16 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 
 - In `travis.yml`, edit the following line:
 
-```
+```bash
 - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
 ```
 
 - Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
 - In `gulpfile.cjs`, edit the following line:
 
-```
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+```javascript
+const travisDeployUrl =
+  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in `travis.yml`

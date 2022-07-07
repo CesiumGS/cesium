@@ -1,8 +1,9 @@
+import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
+import defaultValue from "./defaultValue.js";
+import DeveloperError from "./DeveloperError.js";
+import Quaternion from "./Quaternion.js";
 
 /**
  * Creates a curve parameterized and evaluated by time. This type describes an interface
@@ -12,9 +13,10 @@ import CesiumMath from "./Math.js";
  * @constructor
  *
  * @see CatmullRomSpline
- * @see HermiteSpline
  * @see LinearSpline
+ * @see HermiteSpline
  * @see QuaternionSpline
+ * @see MorphWeightSpline
  */
 function Spline() {
   /**
@@ -33,6 +35,35 @@ function Spline() {
 
   DeveloperError.throwInstantiationError();
 }
+
+/**
+ * Gets the type of the point. This helps a spline determine how to interpolate
+ * and return its values.
+ *
+ * @param {Number|Cartesian3|Quaternion} point
+ * @returns {*} The type of the point.
+ *
+ * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or Number.
+ *
+ * @private
+ */
+Spline.getPointType = function (point) {
+  if (typeof point === "number") {
+    return Number;
+  }
+  if (point instanceof Cartesian3) {
+    return Cartesian3;
+  }
+  if (point instanceof Quaternion) {
+    return Quaternion;
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "point must be a Cartesian3, Quaternion, or Number."
+  );
+  //>>includeEnd('debug');
+};
 
 /**
  * Evaluates the curve at a given time.
@@ -61,13 +92,11 @@ Spline.prototype.evaluate = DeveloperError.throwInstantiationError;
  *                             in the array <code>times</code>.
  */
 Spline.prototype.findTimeInterval = function (time, startIndex) {
-  var times = this.times;
-  var length = times.length;
+  const times = this.times;
+  const length = times.length;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(time)) {
-    throw new DeveloperError("time is required.");
-  }
+  Check.typeOf.number("time", time);
   if (time < times[0] || time > times[length - 1]) {
     throw new DeveloperError("time is out of range.");
   }
@@ -91,7 +120,7 @@ Spline.prototype.findTimeInterval = function (time, startIndex) {
   // length of the list is less than 10. In the future, if there is a bottle neck,
   // it might be here.
 
-  var i;
+  let i;
   if (time > times[startIndex]) {
     for (i = startIndex; i < length - 1; ++i) {
       if (time >= times[i] && time < times[i + 1]) {
@@ -125,11 +154,11 @@ Spline.prototype.wrapTime = function (time) {
   Check.typeOf.number("time", time);
   //>>includeEnd('debug');
 
-  var times = this.times;
-  var timeEnd = times[times.length - 1];
-  var timeStart = times[0];
-  var timeStretch = timeEnd - timeStart;
-  var divs;
+  const times = this.times;
+  const timeEnd = times[times.length - 1];
+  const timeStart = times[0];
+  const timeStretch = timeEnd - timeStart;
+  let divs;
   if (time < timeStart) {
     divs = Math.floor((timeStart - time) / timeStretch) + 1;
     time += divs * timeStretch;
@@ -153,7 +182,8 @@ Spline.prototype.clampTime = function (time) {
   Check.typeOf.number("time", time);
   //>>includeEnd('debug');
 
-  var times = this.times;
+  const times = this.times;
   return CesiumMath.clamp(time, times[0], times[times.length - 1]);
 };
+
 export default Spline;

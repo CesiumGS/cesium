@@ -10,7 +10,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/BoxGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       show: true,
       fill: false,
@@ -22,7 +22,7 @@ describe("DataSources/BoxGraphics", function () {
       distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
     };
 
-    var box = new BoxGraphics(options);
+    const box = new BoxGraphics(options);
     expect(box.material).toBeInstanceOf(ColorMaterialProperty);
     expect(box.show).toBeInstanceOf(ConstantProperty);
     expect(box.fill).toBeInstanceOf(ConstantProperty);
@@ -47,7 +47,7 @@ describe("DataSources/BoxGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new BoxGraphics();
+    const source = new BoxGraphics();
     source.material = new ColorMaterialProperty();
     source.show = new ConstantProperty();
     source.fill = new ConstantProperty();
@@ -60,7 +60,7 @@ describe("DataSources/BoxGraphics", function () {
       new DistanceDisplayCondition(10.0, 100.0)
     );
 
-    var target = new BoxGraphics();
+    const target = new BoxGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -77,19 +77,19 @@ describe("DataSources/BoxGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new BoxGraphics();
+    const source = new BoxGraphics();
 
-    var material = new ColorMaterialProperty();
-    var show = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var dimensions = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const show = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const dimensions = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
 
-    var target = new BoxGraphics();
+    const target = new BoxGraphics();
     target.material = material;
     target.show = show;
     target.fill = fill;
@@ -114,7 +114,7 @@ describe("DataSources/BoxGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new BoxGraphics();
+    const source = new BoxGraphics();
     source.material = new ColorMaterialProperty();
     source.show = new ConstantProperty();
     source.fill = new ConstantProperty();
@@ -125,7 +125,7 @@ describe("DataSources/BoxGraphics", function () {
     source.shadows = new ConstantProperty();
     source.distanceDisplayCondition = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.show).toBe(source.show);
     expect(result.fill).toBe(source.fill);
@@ -140,14 +140,14 @@ describe("DataSources/BoxGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new BoxGraphics();
+    const target = new BoxGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new BoxGraphics();
+    const property = new BoxGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(property, "fill", false, true);

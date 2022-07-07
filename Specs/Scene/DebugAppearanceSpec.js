@@ -13,9 +13,9 @@ import createScene from "../createScene.js";
 describe(
   "Scene/DebugAppearance",
   function () {
-    var scene;
-    var primitive;
-    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+    let scene;
+    let primitive;
+    const rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
     beforeAll(function () {
       scene = createScene();
@@ -52,7 +52,7 @@ describe(
     });
 
     it("default construct with normal, bitangent, or tangent attribute name", function () {
-      var a = new DebugAppearance({
+      const a = new DebugAppearance({
         attributeName: "normal",
         perInstanceAttribute: false,
       });
@@ -75,7 +75,7 @@ describe(
     });
 
     it("default construct with st attribute name", function () {
-      var a = new DebugAppearance({
+      const a = new DebugAppearance({
         attributeName: "st",
         perInstanceAttribute: false,
       });
@@ -98,7 +98,7 @@ describe(
     });
 
     it("debug appearance with float attribute name", function () {
-      var a = new DebugAppearance({
+      const a = new DebugAppearance({
         attributeName: "rotation",
         glslDatatype: "float",
         perInstanceAttribute: true,
@@ -122,7 +122,7 @@ describe(
     });
 
     it("debug appearance with vec3 attribute name", function () {
-      var a = new DebugAppearance({
+      const a = new DebugAppearance({
         attributeName: "str",
         glslDatatype: "vec3",
         perInstanceAttribute: false,
@@ -146,7 +146,7 @@ describe(
     });
 
     it("debug appearance with vec4 attribute name", function () {
-      var a = new DebugAppearance({
+      const a = new DebugAppearance({
         attributeName: "quaternion",
         glslDatatype: "vec4",
         perInstanceAttribute: true,
@@ -182,7 +182,7 @@ describe(
     });
 
     it("renders normal", function () {
-      var vertexFormat = new VertexFormat({
+      const vertexFormat = new VertexFormat({
         position: true,
         normal: true,
       });
@@ -203,7 +203,7 @@ describe(
     });
 
     it("renders bitangent", function () {
-      var vertexFormat = new VertexFormat({
+      const vertexFormat = new VertexFormat({
         position: true,
         normal: true,
         bitangent: true,
@@ -225,7 +225,7 @@ describe(
     });
 
     it("renders tangent", function () {
-      var vertexFormat = new VertexFormat({
+      const vertexFormat = new VertexFormat({
         position: true,
         normal: true,
         tangent: true,
@@ -247,7 +247,7 @@ describe(
     });
 
     it("renders st", function () {
-      var vertexFormat = new VertexFormat({
+      const vertexFormat = new VertexFormat({
         position: true,
         st: true,
       });
@@ -268,7 +268,7 @@ describe(
     });
 
     it("renders float", function () {
-      var rectangleInstance = createInstance();
+      const rectangleInstance = createInstance();
       rectangleInstance.attributes = {
         debug: new GeometryInstanceAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -293,7 +293,7 @@ describe(
     });
 
     it("renders vec2", function () {
-      var rectangleInstance = createInstance();
+      const rectangleInstance = createInstance();
       rectangleInstance.attributes = {
         debug: new GeometryInstanceAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -318,7 +318,7 @@ describe(
     });
 
     it("renders vec3", function () {
-      var rectangleInstance = createInstance();
+      const rectangleInstance = createInstance();
       rectangleInstance.attributes = {
         debug: new GeometryInstanceAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -343,7 +343,7 @@ describe(
     });
 
     it("renders vec4", function () {
-      var rectangleInstance = createInstance();
+      const rectangleInstance = createInstance();
       rectangleInstance.attributes = {
         debug: new GeometryInstanceAttribute({
           componentDatatype: ComponentDatatype.FLOAT,

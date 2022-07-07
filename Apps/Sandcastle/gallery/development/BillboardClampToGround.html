@@ -34,49 +34,49 @@
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
-        var ellipsoid = viewer.scene.globe.ellipsoid;
-        var billboardCollection = viewer.scene.primitives.add(
+        const ellipsoid = viewer.scene.globe.ellipsoid;
+        const billboardCollection = viewer.scene.primitives.add(
           new Cesium.BillboardCollection({
             scene: viewer.scene,
           })
         );
 
         // seneca
-        var centerLongitude = -1.385205433269729;
-        var centerLatitude = 0.6777926580888163;
+        const centerLongitude = -1.385205433269729;
+        const centerLatitude = 0.6777926580888163;
 
-        var gridWidth = Math.floor(Math.random() * 100.0);
-        var gridHeight = Math.floor(Math.random() * 100.0);
-        var rectangleHalfSize = 0.0005;
+        const gridWidth = Math.floor(Math.random() * 100.0);
+        const gridHeight = Math.floor(Math.random() * 100.0);
+        const rectangleHalfSize = 0.0005;
 
-        var e = new Cesium.Rectangle(
+        const e = new Cesium.Rectangle(
           centerLongitude - rectangleHalfSize,
           centerLatitude - rectangleHalfSize,
           centerLongitude + rectangleHalfSize,
           centerLatitude + rectangleHalfSize
         );
 
-        for (var y = 0; y < gridHeight; ++y) {
-          for (var x = 0; x < gridWidth; ++x) {
-            var longitude = Cesium.Math.lerp(
+        for (let y = 0; y < gridHeight; ++y) {
+          for (let x = 0; x < gridWidth; ++x) {
+            const longitude = Cesium.Math.lerp(
               e.west,
               e.east,
               x / (gridWidth - 1)
             );
-            var latitude = Cesium.Math.lerp(
+            const latitude = Cesium.Math.lerp(
               e.south,
               e.north,
               y / (gridHeight - 1)
             );
-            var position = new Cesium.Cartographic(longitude, latitude);
+            const position = new Cesium.Cartographic(longitude, latitude);
 
             billboardCollection.add({
               position: ellipsoid.cartographicToCartesian(position),
@@ -86,7 +86,7 @@
           }
         }
 
-        var billboard;
+        let billboard;
 
         Sandcastle.addToolbarButton("Add billboard", function () {
           if (!Cesium.defined(billboard)) {
@@ -137,11 +137,11 @@
           },
         ]);
 
-        var lonGran = 0.00005;
+        const lonGran = 0.00005;
 
         Sandcastle.addToolbarButton("Increase longitude", function () {
           if (Cesium.defined(billboard)) {
-            var cartographic = ellipsoid.cartesianToCartographic(
+            const cartographic = ellipsoid.cartesianToCartographic(
               billboard.position
             );
             cartographic.longitude += lonGran;
@@ -153,7 +153,7 @@
 
         Sandcastle.addToolbarButton("Decrease longitude", function () {
           if (Cesium.defined(billboard)) {
-            var cartographic = ellipsoid.cartesianToCartographic(
+            const cartographic = ellipsoid.cartesianToCartographic(
               billboard.position
             );
             cartographic.longitude -= lonGran;
@@ -165,10 +165,10 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

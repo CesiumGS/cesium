@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * @private
  */
-var TextureWrap = {
+const TextureWrap = {
   CLAMP_TO_EDGE: WebGLConstants.CLAMP_TO_EDGE,
   REPEAT: WebGLConstants.REPEAT,
   MIRRORED_REPEAT: WebGLConstants.MIRRORED_REPEAT,

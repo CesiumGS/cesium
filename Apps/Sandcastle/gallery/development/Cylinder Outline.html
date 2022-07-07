@@ -29,20 +29,20 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Create a cyliner outline and position on the globe
         // surface using a model matrix.
 
         // Create the model matrix.
-        var length = 400000.0;
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        const length = 400000.0;
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
+        const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
           new Cesium.Matrix4()
@@ -50,14 +50,14 @@
         // Create the cylinder outline geometry.  The numberOfVerticalLines
         // option can be used to specify the number of lines connecting
         // the top and bottom of the cylinder.
-        var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+        const cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
           length: length,
           topRadius: 150000.0,
           bottomRadius: 150000.0,
           numberOfVerticalLines: 16,
         });
         // Create a geometry instance using the geometry.
-        var cylinderOutline = new Cesium.GeometryInstance({
+        const cylinderOutline = new Cesium.GeometryInstance({
           geometry: cylinderOutlineGeometry,
           modelMatrix: modelMatrix,
           attributes: {
@@ -80,10 +80,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

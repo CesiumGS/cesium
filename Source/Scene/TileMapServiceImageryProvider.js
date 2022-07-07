@@ -1,6 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -10,7 +11,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
@@ -58,7 +58,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @see UrlTemplateImageryProvider
  *
  * @example
- * var tms = new Cesium.TileMapServiceImageryProvider({
+ * const tms = new Cesium.TileMapServiceImageryProvider({
  *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
  *    fileExtension: 'png',
  *    maximumLevel: 4,
@@ -78,7 +78,7 @@ function TileMapServiceImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  var deferred = when.defer();
+  const deferred = defer();
   UrlTemplateImageryProvider.call(this, deferred.promise);
 
   this._tmsResource = undefined;
@@ -91,9 +91,9 @@ function TileMapServiceImageryProvider(options) {
   this._metadataFailure = this._metadataFailure.bind(this);
   this._requestMetadata = this._requestMetadata.bind(this);
 
-  var resource;
-  var that = this;
-  when(options.url)
+  let resource;
+  const that = this;
+  Promise.resolve(options.url)
     .then(function (url) {
       resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
@@ -105,7 +105,7 @@ function TileMapServiceImageryProvider(options) {
 
       that._requestMetadata();
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       deferred.reject(e);
     });
 }
@@ -122,7 +122,7 @@ TileMapServiceImageryProvider.prototype._requestMetadata = function () {
   this._xmlResource
     .fetchXML()
     .then(this._metadataSuccess)
-    .otherwise(this._metadataFailure);
+    .catch(this._metadataFailure);
 };
 
 /**
@@ -153,15 +153,15 @@ function calculateSafeMinimumDetailLevel(
   // Check the number of tiles at the minimum level.  If it's more than four,
   // try requesting the lower levels anyway, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
-  var swTile = tilingScheme.positionToTileXY(
+  const swTile = tilingScheme.positionToTileXY(
     Rectangle.southwest(rectangle),
     minimumLevel
   );
-  var neTile = tilingScheme.positionToTileXY(
+  const neTile = tilingScheme.positionToTileXY(
     Rectangle.northeast(rectangle),
     minimumLevel
   );
-  var tileCount =
+  const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   if (tileCount > 4) {
     return 0;
@@ -170,29 +170,29 @@ function calculateSafeMinimumDetailLevel(
 }
 
 TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
-  var tileFormatRegex = /tileformat/i;
-  var tileSetRegex = /tileset/i;
-  var tileSetsRegex = /tilesets/i;
-  var bboxRegex = /boundingbox/i;
-  var format, bbox, tilesets;
-  var tilesetsList = []; //list of TileSets
-  var xmlResource = this._xmlResource;
-  var metadataError = this._metadataError;
-  var deferred = this._deferred;
-  var requestMetadata = this._requestMetadata;
+  const tileFormatRegex = /tileformat/i;
+  const tileSetRegex = /tileset/i;
+  const tileSetsRegex = /tilesets/i;
+  const bboxRegex = /boundingbox/i;
+  let format, bbox, tilesets;
+  const tilesetsList = []; //list of TileSets
+  const xmlResource = this._xmlResource;
+  let metadataError = this._metadataError;
+  const deferred = this._deferred;
+  const requestMetadata = this._requestMetadata;
 
   // Allowing options properties (already copied to that) to override XML values
 
   // Iterate XML Document nodes for properties
-  var nodeList = xml.childNodes[0].childNodes;
-  for (var i = 0; i < nodeList.length; i++) {
+  const nodeList = xml.childNodes[0].childNodes;
+  for (let i = 0; i < nodeList.length; i++) {
     if (tileFormatRegex.test(nodeList.item(i).nodeName)) {
       format = nodeList.item(i);
     } else if (tileSetsRegex.test(nodeList.item(i).nodeName)) {
       tilesets = nodeList.item(i); // Node list of TileSets
-      var tileSetNodes = nodeList.item(i).childNodes;
+      const tileSetNodes = nodeList.item(i).childNodes;
       // Iterate the nodes to find all TileSets
-      for (var j = 0; j < tileSetNodes.length; j++) {
+      for (let j = 0; j < tileSetNodes.length; j++) {
         if (tileSetRegex.test(tileSetNodes.item(j).nodeName)) {
           // Add them to tilesets list
           tilesetsList.push(tileSetNodes.item(j));
@@ -203,12 +203,9 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
     }
   }
 
-  var message;
+  let message;
   if (!defined(tilesets) || !defined(bbox)) {
-    message =
-      "Unable to find expected tilesets or bbox attributes in " +
-      xmlResource.url +
-      ".";
+    message = `Unable to find expected tilesets or bbox attributes in ${xmlResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       this,
@@ -226,29 +223,29 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
     return;
   }
 
-  var options = this._options;
-  var fileExtension = defaultValue(
+  const options = this._options;
+  const fileExtension = defaultValue(
     options.fileExtension,
     format.getAttribute("extension")
   );
-  var tileWidth = defaultValue(
+  const tileWidth = defaultValue(
     options.tileWidth,
     parseInt(format.getAttribute("width"), 10)
   );
-  var tileHeight = defaultValue(
+  const tileHeight = defaultValue(
     options.tileHeight,
     parseInt(format.getAttribute("height"), 10)
   );
-  var minimumLevel = defaultValue(
+  let minimumLevel = defaultValue(
     options.minimumLevel,
     parseInt(tilesetsList[0].getAttribute("order"), 10)
   );
-  var maximumLevel = defaultValue(
+  const maximumLevel = defaultValue(
     options.maximumLevel,
     parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10)
   );
-  var tilingSchemeName = tilesets.getAttribute("profile");
-  var tilingScheme = options.tilingScheme;
+  const tilingSchemeName = tilesets.getAttribute("profile");
+  let tilingScheme = options.tilingScheme;
 
   if (!defined(tilingScheme)) {
     if (
@@ -266,11 +263,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
         ellipsoid: options.ellipsoid,
       });
     } else {
-      message =
-        xmlResource.url +
-        "specifies an unsupported profile attribute, " +
-        tilingSchemeName +
-        ".";
+      message = `${xmlResource.url}specifies an unsupported profile attribute, ${tilingSchemeName}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         this,
@@ -290,17 +283,17 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
   }
 
   // rectangle handling
-  var rectangle = Rectangle.clone(options.rectangle);
+  let rectangle = Rectangle.clone(options.rectangle);
 
   if (!defined(rectangle)) {
-    var sw;
-    var ne;
-    var swXY;
-    var neXY;
+    let sw;
+    let ne;
+    let swXY;
+    let neXY;
 
     // In older versions of gdal x and y values were flipped, which is why we check for an option to flip
     // the values here as well. Unfortunately there is no way to autodetect whether flipping is needed.
-    var flipXY = defaultValue(options.flipXY, false);
+    const flipXY = defaultValue(options.flipXY, false);
     if (flipXY) {
       swXY = new Cartesian2(
         parseFloat(bbox.getAttribute("miny")),
@@ -325,7 +318,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
     // uses 'mercator' and 'geodetic' profiles, or by a tool compliant with the TMS standard, which is
     // 'global-mercator' and 'global-geodetic' profiles. In the gdal2Tiles case, X and Y are always in
     // geodetic degrees.
-    var isGdal2tiles =
+    const isGdal2tiles =
       tilingSchemeName === "geodetic" || tilingSchemeName === "mercator";
     if (
       tilingScheme.projection instanceof GeographicProjection ||
@@ -334,7 +327,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
       sw = Cartographic.fromDegrees(swXY.x, swXY.y);
       ne = Cartographic.fromDegrees(neXY.x, neXY.y);
     } else {
-      var projection = tilingScheme.projection;
+      const projection = tilingScheme.projection;
       sw = projection.unproject(swXY);
       ne = projection.unproject(neXY);
     }
@@ -356,8 +349,8 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
     minimumLevel
   );
 
-  var templateResource = this._tmsResource.getDerivedResource({
-    url: "{z}/{x}/{reverseY}." + fileExtension,
+  const templateResource = this._tmsResource.getDerivedResource({
+    url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
   deferred.resolve({
@@ -375,28 +368,28 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
 
 TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
   // Can't load XML, still allow options and defaults
-  var options = this._options;
-  var fileExtension = defaultValue(options.fileExtension, "png");
-  var tileWidth = defaultValue(options.tileWidth, 256);
-  var tileHeight = defaultValue(options.tileHeight, 256);
-  var maximumLevel = options.maximumLevel;
-  var tilingScheme = defined(options.tilingScheme)
+  const options = this._options;
+  const fileExtension = defaultValue(options.fileExtension, "png");
+  const tileWidth = defaultValue(options.tileWidth, 256);
+  const tileHeight = defaultValue(options.tileHeight, 256);
+  const maximumLevel = options.maximumLevel;
+  const tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
-  var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  let rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
   // The rectangle must not be outside the bounds allowed by the tiling scheme.
   rectangle = confineRectangleToTilingScheme(rectangle, tilingScheme);
 
   // make sure we use a safe minimum detail level, so we don't request a ridiculous number of tiles
-  var minimumLevel = calculateSafeMinimumDetailLevel(
+  const minimumLevel = calculateSafeMinimumDetailLevel(
     tilingScheme,
     rectangle,
-    options.maximumLevel
+    options.minimumLevel
   );
 
-  var templateResource = this._tmsResource.getDerivedResource({
-    url: "{z}/{x}/{reverseY}." + fileExtension,
+  const templateResource = this._tmsResource.getDerivedResource({
+    url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
   this._deferred.resolve({

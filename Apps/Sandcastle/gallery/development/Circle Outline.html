@@ -29,22 +29,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a circle outline on the globe surface.
         // Create the circle outline geometry.
-        var circleOutlineGeometry = new Cesium.CircleOutlineGeometry({
+        let circleOutlineGeometry = new Cesium.CircleOutlineGeometry({
           center: Cesium.Cartesian3.fromDegrees(-100.0, 40.0),
           radius: 200000.0,
         });
         // Create a geometry instance using the circle outline
         // created above.
-        var circleOutlineInstance = new Cesium.GeometryInstance({
+        let circleOutlineInstance = new Cesium.GeometryInstance({
           geometry: circleOutlineGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -100,10 +100,10 @@
         );
         //Sandcastle_End
         Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium);
       }
     </script>
   </body>

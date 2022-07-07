@@ -1,4 +1,5 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -19,7 +20,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
   });
 
   it("returns undefined with less than 3 unique positions", function () {
-    var geometry = CoplanarPolygonGeometry.createGeometry(
+    const geometry = CoplanarPolygonGeometry.createGeometry(
       CoplanarPolygonGeometry.fromPositions({
         positions: Cartesian3.fromDegreesArrayHeights([
           49.0,
@@ -41,7 +42,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
   });
 
   it("returns undefined when positions are linear", function () {
-    var geometry = CoplanarPolygonGeometry.createGeometry(
+    const geometry = CoplanarPolygonGeometry.createGeometry(
       CoplanarPolygonGeometry.fromPositions({
         positions: Cartesian3.fromDegreesArrayHeights([
           0.0,
@@ -60,7 +61,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
   });
 
   it("createGeometry returns undefined due to duplicate hierarchy positions", function () {
-    var hierarchy = {
+    const hierarchy = {
       positions: Cartesian3.fromDegreesArray([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
       holes: [
         {
@@ -76,14 +77,14 @@ describe("Core/CoplanarPolygonGeometry", function () {
       ],
     };
 
-    var geometry = CoplanarPolygonGeometry.createGeometry(
+    const geometry = CoplanarPolygonGeometry.createGeometry(
       new CoplanarPolygonGeometry({ polygonHierarchy: hierarchy })
     );
     expect(geometry).toBeUndefined();
   });
 
   it("computes positions", function () {
-    var p = CoplanarPolygonGeometry.createGeometry(
+    const p = CoplanarPolygonGeometry.createGeometry(
       CoplanarPolygonGeometry.fromPositions({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArrayHeights([
@@ -108,7 +109,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
   });
 
   it("computes all attributes", function () {
-    var p = CoplanarPolygonGeometry.createGeometry(
+    const p = CoplanarPolygonGeometry.createGeometry(
       CoplanarPolygonGeometry.fromPositions({
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
@@ -128,8 +129,8 @@ describe("Core/CoplanarPolygonGeometry", function () {
       })
     );
 
-    var numVertices = 4;
-    var numTriangles = 2;
+    const numVertices = 4;
+    const numTriangles = 2;
     expect(p.attributes.position.values.length).toEqual(numVertices * 3);
     expect(p.attributes.st.values.length).toEqual(numVertices * 2);
     expect(p.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -139,7 +140,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
   });
 
   it("flips normal to roughly match surface normal", function () {
-    var p = CoplanarPolygonGeometry.createGeometry(
+    const p = CoplanarPolygonGeometry.createGeometry(
       CoplanarPolygonGeometry.fromPositions({
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
@@ -159,15 +160,17 @@ describe("Core/CoplanarPolygonGeometry", function () {
       })
     );
 
-    var center = Cartesian3.fromDegrees(91.0, 0.0);
-    var expectedNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(center);
+    const center = Cartesian3.fromDegrees(91.0, 0.0);
+    const expectedNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(center);
 
-    var actual = Cartesian3.unpack(p.attributes.normal.values);
+    const actual = Cartesian3.unpack(p.attributes.normal.values);
 
     expect(expectedNormal).toEqualEpsilon(actual, CesiumMath.EPSILON6);
   });
 
-  var positions = Cartesian3.fromDegreesArray([
+  // pack without explicit texture coordinates
+
+  const positions = Cartesian3.fromDegreesArray([
     -12.4,
     3.5,
     -12.0,
@@ -175,7 +178,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
     -12.0,
     4.0,
   ]);
-  var holePositions0 = Cartesian3.fromDegreesArray([
+  const holePositions0 = Cartesian3.fromDegreesArray([
     -12.2,
     3.5,
     -12.2,
@@ -183,7 +186,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
     -12.3,
     3.6,
   ]);
-  var holePositions1 = Cartesian3.fromDegreesArray([
+  const holePositions1 = Cartesian3.fromDegreesArray([
     -12.2,
     3.5,
     -12.25,
@@ -191,7 +194,7 @@ describe("Core/CoplanarPolygonGeometry", function () {
     -12.25,
     3.55,
   ]);
-  var hierarchy = {
+  const hierarchy = {
     positions: positions,
     holes: [
       {
@@ -206,18 +209,24 @@ describe("Core/CoplanarPolygonGeometry", function () {
     ],
   };
 
-  var polygon = new CoplanarPolygonGeometry({
+  const polygon = new CoplanarPolygonGeometry({
     vertexFormat: VertexFormat.POSITION_ONLY,
     polygonHierarchy: hierarchy,
   });
 
   function addPositions(array, positions) {
-    for (var i = 0; i < positions.length; ++i) {
+    for (let i = 0; i < positions.length; ++i) {
       array.push(positions[i].x, positions[i].y, positions[i].z);
     }
   }
 
-  var packedInstance = [3.0, 1.0];
+  function addPositions2D(array, positions) {
+    for (let i = 0; i < positions.length; ++i) {
+      array.push(positions[i].x, positions[i].y);
+    }
+  }
+
+  const packedInstance = [3.0, 1.0];
   addPositions(packedInstance, positions);
   packedInstance.push(3.0, 1.0);
   addPositions(packedInstance, holePositions0);
@@ -228,6 +237,50 @@ describe("Core/CoplanarPolygonGeometry", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z
   );
-  packedInstance.push(1, 0, 0, 0, 0, 0, 0, 44);
+  packedInstance.push(1, 0, 0, 0, 0, 0, 0, -1, 45);
   createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
+
+  // pack with explicit texture coordinates
+
+  const textureCoordinates = {
+    positions: [
+      new Cartesian2(0, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(0, 1),
+      new Cartesian2(0.1, 0.1),
+      new Cartesian2(0.5, 0.1),
+      new Cartesian2(0.1, 0.5),
+      new Cartesian2(0.2, 0.2),
+      new Cartesian2(0.3, 0.2),
+      new Cartesian2(0.2, 0.3),
+    ],
+    holes: undefined,
+  };
+
+  const polygonTextured = new CoplanarPolygonGeometry({
+    vertexFormat: VertexFormat.POSITION_ONLY,
+    polygonHierarchy: hierarchy,
+    textureCoordinates: textureCoordinates,
+  });
+
+  const packedInstanceTextured = [3.0, 1.0];
+  addPositions(packedInstanceTextured, positions);
+  packedInstanceTextured.push(3.0, 1.0);
+  addPositions(packedInstanceTextured, holePositions0);
+  packedInstanceTextured.push(3.0, 0.0);
+  addPositions(packedInstanceTextured, holePositions1);
+  packedInstanceTextured.push(
+    Ellipsoid.WGS84.radii.x,
+    Ellipsoid.WGS84.radii.y,
+    Ellipsoid.WGS84.radii.z
+  );
+  packedInstanceTextured.push(1, 0, 0, 0, 0, 0, 0);
+  packedInstanceTextured.push(9.0, 0.0);
+  addPositions2D(packedInstanceTextured, textureCoordinates.positions);
+  packedInstanceTextured.push(64);
+  createPackableSpecs(
+    CoplanarPolygonGeometry,
+    polygonTextured,
+    packedInstanceTextured
+  );
 });

@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
@@ -13,7 +12,7 @@ import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 
-var diffScratch = new Cartesian3();
+const diffScratch = new Cartesian3();
 
 /**
  * Describes a cube centered at the origin.
@@ -33,18 +32,18 @@ var diffScratch = new Cartesian3();
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
  *
  * @example
- * var box = new Cesium.BoxGeometry({
+ * const box = new Cesium.BoxGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxGeometry.createGeometry(box);
  */
 function BoxGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var min = options.minimum;
-  var max = options.maximum;
+  const min = options.minimum;
+  const max = options.maximum;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("min", min);
@@ -59,7 +58,7 @@ function BoxGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
   this._minimum = Cartesian3.clone(min);
   this._maximum = Cartesian3.clone(max);
@@ -80,17 +79,17 @@ function BoxGeometry(options) {
  *
  *
  * @example
- * var box = Cesium.BoxGeometry.fromDimensions({
+ * const box = Cesium.BoxGeometry.fromDimensions({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.BoxGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxGeometry.createGeometry(box);
  *
  * @see BoxGeometry.createGeometry
  */
 BoxGeometry.fromDimensions = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var dimensions = options.dimensions;
+  const dimensions = options.dimensions;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("dimensions", dimensions);
@@ -99,7 +98,7 @@ BoxGeometry.fromDimensions = function (options) {
   Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
   //>>includeEnd('debug');
 
-  var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+  const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
 
   return new BoxGeometry({
     minimum: Cartesian3.negate(corner, new Cartesian3()),
@@ -118,14 +117,14 @@ BoxGeometry.fromDimensions = function (options) {
  *
  *
  * @example
- * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+ * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
  *      -72.0, 40.0,
  *      -70.0, 35.0,
  *      -75.0, 30.0,
  *      -70.0, 30.0,
  *      -68.0, 40.0
  * ]));
- * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
+ * const box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
  *
  * @see BoxGeometry.createGeometry
  */
@@ -182,10 +181,10 @@ BoxGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchMin = new Cartesian3();
-var scratchMax = new Cartesian3();
-var scratchVertexFormat = new VertexFormat();
-var scratchOptions = {
+const scratchMin = new Cartesian3();
+const scratchMax = new Cartesian3();
+const scratchVertexFormat = new VertexFormat();
+const scratchOptions = {
   minimum: scratchMin,
   maximum: scratchMax,
   vertexFormat: scratchVertexFormat,
@@ -207,18 +206,18 @@ BoxGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var min = Cartesian3.unpack(array, startingIndex, scratchMin);
-  var max = Cartesian3.unpack(
+  const min = Cartesian3.unpack(array, startingIndex, scratchMin);
+  const max = Cartesian3.unpack(
     array,
     startingIndex + Cartesian3.packedLength,
     scratchMax
   );
-  var vertexFormat = VertexFormat.unpack(
+  const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex + 2 * Cartesian3.packedLength,
     scratchVertexFormat
   );
-  var offsetAttribute =
+  const offsetAttribute =
     array[
       startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength
     ];
@@ -245,17 +244,17 @@ BoxGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 BoxGeometry.createGeometry = function (boxGeometry) {
-  var min = boxGeometry._minimum;
-  var max = boxGeometry._maximum;
-  var vertexFormat = boxGeometry._vertexFormat;
+  const min = boxGeometry._minimum;
+  const max = boxGeometry._maximum;
+  const vertexFormat = boxGeometry._vertexFormat;
 
   if (Cartesian3.equals(min, max)) {
     return;
   }
 
-  var attributes = new GeometryAttributes();
-  var indices;
-  var positions;
+  const attributes = new GeometryAttributes();
+  let indices;
+  let positions;
 
   if (
     vertexFormat.position &&
@@ -360,7 +359,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     }
 
     if (vertexFormat.normal) {
-      var normals = new Float32Array(6 * 4 * 3);
+      const normals = new Float32Array(6 * 4 * 3);
 
       // +z face
       normals[0] = 0.0;
@@ -454,7 +453,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     }
 
     if (vertexFormat.st) {
-      var texCoords = new Float32Array(6 * 4 * 2);
+      const texCoords = new Float32Array(6 * 4 * 2);
 
       // +z face
       texCoords[0] = 0.0;
@@ -524,7 +523,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     }
 
     if (vertexFormat.tangent) {
-      var tangents = new Float32Array(6 * 4 * 3);
+      const tangents = new Float32Array(6 * 4 * 3);
 
       // +z face
       tangents[0] = 1.0;
@@ -618,7 +617,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     }
 
     if (vertexFormat.bitangent) {
-      var bitangents = new Float32Array(6 * 4 * 3);
+      const bitangents = new Float32Array(6 * 4 * 3);
 
       // +z face
       bitangents[0] = 0.0;
@@ -848,15 +847,14 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     indices[35] = 4;
   }
 
-  var diff = Cartesian3.subtract(max, min, diffScratch);
-  var radius = Cartesian3.magnitude(diff) * 0.5;
+  const diff = Cartesian3.subtract(max, min, diffScratch);
+  const radius = Cartesian3.magnitude(diff) * 0.5;
 
   if (defined(boxGeometry._offsetAttribute)) {
-    var length = positions.length;
-    var applyOffset = new Uint8Array(length / 3);
-    var offsetValue =
+    const length = positions.length;
+    const offsetValue =
       boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-    arrayFill(applyOffset, offsetValue);
+    const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 1,
@@ -873,7 +871,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
   });
 };
 
-var unitBoxGeometry;
+let unitBoxGeometry;
 
 /**
  * Returns the geometric representation of a unit box, including its vertices, indices, and a bounding sphere.

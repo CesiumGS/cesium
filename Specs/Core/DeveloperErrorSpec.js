@@ -1,10 +1,10 @@
 import { DeveloperError } from "../../Source/Cesium.js";
 
 describe("Core/DeveloperError", function () {
-  var name = "DeveloperError";
-  var testMessage = "Testing";
+  const name = "DeveloperError";
+  const testMessage = "Testing";
 
-  var e;
+  let e;
   beforeEach(function () {
     e = new DeveloperError(testMessage);
   });
@@ -26,9 +26,9 @@ describe("Core/DeveloperError", function () {
   });
 
   it("has a working toString", function () {
-    var str = new DeveloperError(testMessage).toString();
+    const str = new DeveloperError(testMessage).toString();
 
-    expect(str).toContain(name + ": " + testMessage);
+    expect(str).toContain(`${name}: ${testMessage}`);
 
     if (window.specsUsingRelease) {
       expect(str).toContain("Specs.js");
