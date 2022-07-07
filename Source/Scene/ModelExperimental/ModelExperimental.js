@@ -188,7 +188,7 @@ export default function ModelExperimental(options) {
   this._idDirty = false;
 
   const color = options.color;
-  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._color = defined(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -199,6 +199,11 @@ export default function ModelExperimental(options) {
   this._silhouetteColor = Color.clone(silhouetteColor);
   this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
   this._silhouetteDirty = false;
+
+  // If silhouettes are used for the model, this will be set to the number
+  // of the stencil buffer used for rendering the silhouette. This is set
+  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
+  this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -404,7 +409,12 @@ function selectFeatureTableId(components, model) {
   }
 }
 
-// Returns whether the color alpha state has changed between invisible, translucent, or opaque
+/**
+ *  Returns whether the alpha state has changed between invisible,
+ *  translucent, or opaque.
+ *
+ *  @private
+ */
 function isColorAlphaDirty(currentColor, previousColor) {
   if (!defined(currentColor) && !defined(previousColor)) {
     return false;
@@ -886,7 +896,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
-      if (!Color.equals(this._color, value)) {
+      if (isColorAlphaDirty(value, this._color)) {
         this.resetDrawCommands();
       }
       this._color = Color.clone(value, this._color);
