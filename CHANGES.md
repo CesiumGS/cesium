@@ -1,5 +1,12 @@
 # Change Log
 
+### 1.96 - 2022-08-01
+
+##### Fixes :wrench:
+
+- Fixed a crash in the 3D Tiles Feature Styling sandcastle that occurred when using `ModelExperimental`. [#10514](https://github.com/CesiumGS/cesium/pull/10514)
+- Fixed improper handling of double-sided materials in `ModelExperimental`. [#10507](https://github.com/CesiumGS/cesium/pull/10507)
+
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:
@@ -30,6 +37,7 @@
 - Warn if `Cesium3DTile` content.uri property is empty, and load empty tile. [#7263](https://github.com/CesiumGS/cesium/issues/7263)
 - Updated text highlighting for code examples in documentation. [#10051](https://github.com/CesiumGS/cesium/issues/10051)
 - Updated ModelExperimental shader defaults to match glTF spec. [#9992](https://github.com/CesiumGS/cesium/issues/9992)
+- Fixed shadow rendering artifacts that appeared in `ModelExperimental`. [#10501](https://github.com/CesiumGS/cesium/pull/10501/)
 
 ##### Deprecated :hourglass_flowing_sand:
 
