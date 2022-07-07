@@ -46,7 +46,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * });
  *
  * // Caller must update the indices (the data type may have been upgraded!)
- * primitive.indices.typedArray = outlineGenerator.triangleIndices;
+ * primitive.indices.typedArray = outlineGenerator.updatedTriangleIndices;
  * primitive.indices.indexDatatype =
  *  IndexDatatype.fromTypedArray(primitive.indices.typedArray);
  *
@@ -117,7 +117,8 @@ export default function PrimitiveOutlineGenerator(options) {
   this._outlineCoordinatesTypedArray = undefined;
 
   /**
-   * Array of indices of vertices that must be copied and appended to the list.
+   * Array containing the indices of any vertices that must be copied and
+   * appended to the list.
    *
    * @type {Number[]}
    *
@@ -203,8 +204,8 @@ function initialize(outlineGenerator) {
     // Attempt to compute outline coordinates If no consistent ordering of
     // edges can be computed (due to constraints from adjacent faces), the
     // first attempt may fail. In such cases, make a copy of a vertex and
-    // try again. This has the effect of relaxing the constraints, so the
-    // while loop will eventually finish.
+    // try again. This relaxes the constraints, so the while loop will
+    // eventually finish.
     let unmatchableVertexIndex = matchAndStoreCoordinates(
       outlineCoordinates,
       i0,
@@ -675,6 +676,8 @@ function EdgeSet(edgeIndices, originalVertexCount) {
  * @param {Number} a The first index
  * @param {Number} b The second index
  * @returns {Boolean} true if there is an edge between a and b
+ *
+ * @private
  */
 EdgeSet.prototype.hasEdge = function (a, b) {
   const small = Math.min(a, b);

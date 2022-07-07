@@ -20,7 +20,7 @@ PrimitiveOutlinePipelineStage.name = "PrimitiveOutlinePipelineStage";
  * resources:
  * <ul>
  *  <li>Declares a new attribute for the outline (texture) coordinates</li>
- *  <li>Adds shader code to overlay the outlines over the result of lighting calculations</li>
+ *  <li>Adds shader code to overlay outlines on the primitive after lighting computations</li>
  *  <li>Add uniforms for showing the outline and changing its color</li>
  * </ul>
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive

@@ -51,7 +51,7 @@ const SpecularGlossiness = ModelComponents.SpecularGlossiness;
 const Material = ModelComponents.Material;
 
 /**
- * States of the glTF loading process. These states also apply to texture
+ * States of the glTF loading process. These states also apply to
  * asynchronous texture loading unless otherwise noted
  *
  * @enum {Number}
@@ -60,7 +60,7 @@ const Material = ModelComponents.Material;
  */
 const GltfLoaderState = {
   /**
-   * The initial state of the glTF loader before load() is called
+   * The initial state of the glTF loader before load() is called.
    *
    * @type {Number}
    * @constant
@@ -70,6 +70,7 @@ const GltfLoaderState = {
   UNLOADED: 0,
   /**
    * The state of the loader while waiting for the glTF JSON loader promise
+   * to resolve.
    *
    * @type {Number}
    * @constant
@@ -79,7 +80,7 @@ const GltfLoaderState = {
   LOADING: 1,
   /**
    * The state of the loader once the glTF JSON is loaded but before
-   * process() is called
+   * process() is called.
    *
    * @type {Number}
    * @constant
@@ -98,7 +99,7 @@ const GltfLoaderState = {
    * must be modified after it is loaded. The post-processing state handles
    * any geometry modification (if needed).
    * <p>
-   * This state is not used for asynchronous texture loading
+   * This state is not used for asynchronous texture loading.
    * </p>
    *
    * @type {Number}
@@ -123,7 +124,7 @@ const GltfLoaderState = {
    */
   READY: 6,
   /**
-   * If an error occurs at any point, the loader switches to the failed state
+   * If an error occurs at any point, the loader switches to the failed state.
    *
    * @type {Number}
    * @constant
