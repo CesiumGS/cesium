@@ -201,13 +201,11 @@
         handler.setInputAction(function (movement) {
           const feature = inspectorViewModel.feature;
           if (Cesium.defined(feature)) {
-            const propertyNames = feature.getPropertyNames();
-            const length = propertyNames.length;
+            const propertyIds = feature.getPropertyIds();
+            const length = propertyIds.length;
             for (let i = 0; i < length; ++i) {
-              const propertyName = propertyNames[i];
-              console.log(
-                `${propertyName}: ${feature.getProperty(propertyName)}`
-              );
+              const propertyId = propertyIds[i];
+              console.log(`${propertyId}: ${feature.getProperty(propertyId)}`);
             }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);

@@ -1,4 +1,3 @@
-import arrayFill from "../Core/arrayFill.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -197,8 +196,7 @@ function getBatchValues(batchTexture) {
   if (!defined(batchTexture._batchValues)) {
     // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
     const byteLength = getByteLength(batchTexture);
-    const bytes = new Uint8Array(byteLength);
-    arrayFill(bytes, 255);
+    const bytes = new Uint8Array(byteLength).fill(255);
     batchTexture._batchValues = bytes;
   }
 
@@ -208,9 +206,8 @@ function getBatchValues(batchTexture) {
 function getShowAlphaProperties(batchTexture) {
   if (!defined(batchTexture._showAlphaProperties)) {
     const byteLength = 2 * batchTexture._featuresLength;
-    const bytes = new Uint8Array(byteLength);
+    const bytes = new Uint8Array(byteLength).fill(255);
     // [Show = true, Alpha = 255]
-    arrayFill(bytes, 255);
     batchTexture._showAlphaProperties = bytes;
   }
   return batchTexture._showAlphaProperties;

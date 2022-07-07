@@ -39,7 +39,7 @@ WireframePipelineStage.process = function (
     renderResources.indices,
     frameState
   );
-  model._resources.push(wireframeIndexBuffer);
+  model._pipelineResources.push(wireframeIndexBuffer);
   renderResources.wireframeIndexBuffer = wireframeIndexBuffer;
 
   // We only need to count memory for the generated buffer. In WebGL 1, the CPU

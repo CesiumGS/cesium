@@ -345,12 +345,14 @@ describe(
       return waitForLoaderProcess(structuralMetadataLoader, scene).then(
         function (structuralMetadataLoader) {
           loaderProcess(structuralMetadataLoader, scene); // Check that calling process after load doesn't break anything
+
           const structuralMetadata =
             structuralMetadataLoader.structuralMetadata;
           const buildingsTable = structuralMetadata.getPropertyTable(0);
           expect(buildingsTable.id).toBe(0);
           const treesTable = structuralMetadata.getPropertyTable(1);
           expect(treesTable.id).toBe(1);
+
           const mapTexture = structuralMetadata.getPropertyTexture(0);
           expect(mapTexture.id).toBe(0);
           const orthoTexture = structuralMetadata.getPropertyTexture(1);

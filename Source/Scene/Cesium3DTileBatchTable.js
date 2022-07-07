@@ -364,10 +364,7 @@ Cesium3DTileBatchTable.prototype.hasPropertyBySemantic = function () {
   return false;
 };
 
-Cesium3DTileBatchTable.prototype.getPropertyNames = function (
-  batchId,
-  results
-) {
+Cesium3DTileBatchTable.prototype.getPropertyIds = function (batchId, results) {
   //>>includeStart('debug', pragmas.debug);
   checkBatchId(batchId, this.featuresLength);
   //>>includeEnd('debug');
@@ -375,13 +372,13 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   results = defined(results) ? results : [];
   results.length = 0;
 
-  const scratchPropertyNames = Object.keys(this._properties);
-  results.push.apply(results, scratchPropertyNames);
+  const scratchPropertyIds = Object.keys(this._properties);
+  results.push.apply(results, scratchPropertyIds);
 
   if (defined(this._batchTableHierarchy)) {
     results.push.apply(
       results,
-      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyNames)
+      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyIds)
     );
   }
 

@@ -10,6 +10,7 @@ import Cesium3DTilePass from "../../Scene/Cesium3DTilePass.js";
 import Cesium3DTileset from "../../Scene/Cesium3DTileset.js";
 import Cesium3DTileStyle from "../../Scene/Cesium3DTileStyle.js";
 import PerformanceDisplay from "../../Scene/PerformanceDisplay.js";
+import ResourceCache from "../../Scene/ResourceCache.js";
 import knockout from "../../ThirdParty/knockout.js";
 
 function getPickTileset(viewModel) {
@@ -122,6 +123,21 @@ function getStatistics(tileset, isPick) {
   return s;
 }
 
+function getResourceCacheStatistics() {
+  const statistics = ResourceCache.statistics;
+
+  return `
+  <ul class="cesium-cesiumInspector-statistics">
+    <li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
+      statistics.geometryByteLength
+    )}</li>
+    <li><strong>Texture Memory (MB): </strong>${formatMemoryString(
+      statistics.texturesByteLength
+    )}</li>
+  </ul>
+  `;
+}
+
 const colorBlendModes = [
   {
     text: "Highlight",
@@ -168,6 +184,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   this._statisticsText = "";
   this._pickStatisticsText = "";
+  this._resourceCacheStatisticsText = "";
   this._editorError = "";
 
   /**
@@ -190,9 +207,18 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the flag to show pick statistics.  This property is observable.
    *
    * @type {Boolean}
-   * @default false
+   * @default true
    */
   this.showPickStatistics = true;
+
+  /**
+   * Gets or sets the flag to show resource cache statistics. This property is
+   * observable.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  this.showResourceCacheStatistics = false;
 
   /**
    * Gets or sets the flag to show the inspector.  This property is observable.
@@ -275,9 +301,11 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     "inspectorVisible",
     "_statisticsText",
     "_pickStatisticsText",
+    "_resourceCacheStatisticsText",
     "_editorError",
     "showPickStatistics",
     "showStatistics",
+    "showResourceCacheStatistics",
     "tilesetVisible",
     "displayVisible",
     "updateVisible",
@@ -1131,6 +1159,18 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   },
 
   /**
+   * Gets the resource cache statistics text. This property is observable.
+   * @memberof Cesium3DTilesInspectorViewModel.prototype
+   * @type {String}
+   * @readonly
+   */
+  resourceCacheStatisticsText: {
+    get: function () {
+      return this._resourceCacheStatisticsText;
+    },
+  },
+
+  /**
    * Gets the available blend modes
    * @memberof Cesium3DTilesInspectorViewModel.prototype
    * @type {Object[]}
@@ -1236,6 +1276,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 
       this._statisticsText = getStatistics(tileset, false);
       this._pickStatisticsText = getStatistics(tileset, true);
+      this._resourceCacheStatisticsText = getResourceCacheStatistics();
       selectTilesetOnHover(this, false);
     },
   },
@@ -1312,6 +1353,10 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 });
 
 function hasFeatures(content) {
+  if (!defined(content)) {
+    return false;
+  }
+
   if (content.featuresLength > 0) {
     return true;
   }
@@ -1506,6 +1551,7 @@ Cesium3DTilesInspectorViewModel.prototype._update = function () {
   if (this.showStatistics) {
     this._statisticsText = getStatistics(tileset, false);
     this._pickStatisticsText = getStatistics(tileset, true);
+    this._resourceCacheStatisticsText = getResourceCacheStatistics();
   }
 };
 

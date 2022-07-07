@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -295,11 +294,11 @@ function computeTopBottomAttributes(positions, options, extrude) {
   if (extrude && defined(options.offsetAttribute)) {
     let offsetAttribute = new Uint8Array(size);
     if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+      offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
     } else {
       const offsetValue =
         options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+      offsetAttribute = offsetAttribute.fill(offsetValue);
     }
 
     attributes.applyOffset = new GeometryAttribute({
@@ -705,11 +704,11 @@ function computeWallAttributes(positions, options) {
   if (defined(options.offsetAttribute)) {
     let offsetAttribute = new Uint8Array(size);
     if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+      offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
     } else {
       const offsetValue =
         options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+      offsetAttribute = offsetAttribute.fill(offsetValue);
     }
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -1204,12 +1203,11 @@ EllipseGeometry.createGeometry = function (ellipseGeometry) {
 
     if (defined(ellipseGeometry._offsetAttribute)) {
       const length = geometry.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
       const offsetValue =
         ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       geometry.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

@@ -83,7 +83,7 @@ describe(
         model: {
           // pointer to the global resources so they can be cleaned up
           // in afterEach()
-          _resources: resources,
+          _pipelineResources: resources,
           statistics: new ModelExperimentalStatistics(),
         },
         attributes: [
