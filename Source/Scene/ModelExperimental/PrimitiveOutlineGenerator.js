@@ -201,7 +201,7 @@ function initialize(outlineGenerator) {
     const hasEdge12 = all || edges.hasEdge(i1, i2);
     const hasEdge20 = all || edges.hasEdge(i2, i0);
 
-    // Attempt to compute outline coordinates If no consistent ordering of
+    // Attempt to compute outline coordinates. If no consistent ordering of
     // edges can be computed (due to constraints from adjacent faces), the
     // first attempt may fail. In such cases, make a copy of a vertex and
     // try again. This relaxes the constraints, so the while loop will
