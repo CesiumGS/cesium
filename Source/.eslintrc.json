@@ -8,7 +8,6 @@
         "es"
     ],
     "rules": {
-        "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
-        "no-loss-of-precision": "off"
+        "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
     }
 }

@@ -495,7 +495,9 @@ describe("Core/Math", function () {
       2432902008176640000,
       51090942171709440000,
       1124000727777607680000,
+      // eslint-disable-next-line no-loss-of-precision
       25852016738884976640000,
+      // eslint-disable-next-line no-loss-of-precision
       620448401733239439360000,
     ];
 
