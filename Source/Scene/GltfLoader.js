@@ -50,15 +50,84 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 const SpecularGlossiness = ModelComponents.SpecularGlossiness;
 const Material = ModelComponents.Material;
 
-// TODO: Document these
+/**
+ * States of the glTF loading process. These states also apply to texture
+ * asynchronous texture loading unless otherwise noted
+ *
+ * @enum {Number}
+ *
+ * @private
+ */
 const GltfLoaderState = {
+  /**
+   * The initial state of the glTF loader before load() is called
+   *
+   * @type {Number}
+   * @constant
+   *
+   * @private
+   */
   UNLOADED: 0,
+  /**
+   * The state of the loader while waiting for the glTF JSON loader promise
+   *
+   * @type {Number}
+   * @constant
+   *
+   * @private
+   */
   LOADING: 1,
+  /**
+   * The state of the loader once the glTF JSON is loaded but before
+   * process() is called
+   *
+   * @type {Number}
+   * @constant
+   */
   LOADED: 2,
+  /**
+   * The state of the loader while parsing the glTF and creating GPU resources
+   * as needed.
+   *
+   * @type {Number}
+   * @constant
+   */
   PROCESSING: 3,
+  /**
+   * For some features like handling CESIUM_primitive_outlines, the geometry
+   * must be modified after it is loaded. The post-processing state handles
+   * any geometry modification (if needed).
+   * <p>
+   * This state is not used for asynchronous texture loading
+   * </p>
+   *
+   * @type {Number}
+   * @constant
+   */
   POST_PROCESSING: 4,
+  /**
+   * Once the processing/post-processing states are finished, the loader
+   * enters the processed state (sometimes from a promise chain). The next
+   * call to process() will advance to the ready state.
+   *
+   * @type {Number}
+   * @constant
+   */
   PROCESSED: 5,
+  /**
+   * When the loader reaches the ready state, the loaders' promise will be
+   * resolved.
+   *
+   * @type {Number}
+   * @constant
+   */
   READY: 6,
+  /**
+   * If an error occurs at any point, the loader switches to the failed state
+   *
+   * @type {Number}
+   * @constant
+   */
   FAILED: 7,
 };
 
