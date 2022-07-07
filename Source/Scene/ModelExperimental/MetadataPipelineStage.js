@@ -2,7 +2,6 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/ModelExperimental/MetadataStageVS.js";
-import MetadataClassTypes from "../../Shaders/ModelExperimental/MetadataClassTypes.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -34,7 +33,10 @@ MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
 // Metadata class info: only two fields supported for now
-MetadataPipelineStage.CLASSINFO_FIELDS = ["noData", "default"];
+MetadataPipelineStage.CLASSINFO_FIELDS = [
+  { specName: "noData", shaderName: "noData" },
+  { specName: "default", shaderName: "default_val" },
+];
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -59,6 +61,7 @@ MetadataPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Always declare structs, even if not used
+  declareClassInfoStructs(shaderBuilder);
   declareStructsAndFunctions(shaderBuilder);
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
@@ -72,6 +75,32 @@ MetadataPipelineStage.process = function (
   processPropertyTextures(renderResources, structuralMetadata);
 };
 
+function declareClassInfoStructs(shaderBuilder) {
+  const classInfoTypes = [
+    "int",
+    "ivec2",
+    "ivec3",
+    "ivec4",
+    "float",
+    "vec2",
+    "vec3",
+    "vec4",
+  ];
+  for (const classInfoType of classInfoTypes) {
+    const structName = `ClassInfo_${classInfoType}`;
+    const structIdVs = `${structName}VS`;
+    const structIdFs = `${structName}FS`;
+    // Declare the struct in both vertex and fragment shaders
+    shaderBuilder.addStruct(structIdVs, structName, ShaderDestination.VERTEX);
+    shaderBuilder.addStruct(structIdFs, structName, ShaderDestination.FRAGMENT);
+    // Add fields
+    for (const { shaderName } of MetadataPipelineStage.CLASSINFO_FIELDS) {
+      shaderBuilder.addStructField(structIdVs, classInfoType, shaderName);
+      shaderBuilder.addStructField(structIdFs, classInfoType, shaderName);
+    }
+  }
+}
+
 function declareStructsAndFunctions(shaderBuilder) {
   // Declare the Metadata struct.
   shaderBuilder.addStruct(
@@ -84,10 +113,6 @@ function declareStructsAndFunctions(shaderBuilder) {
     MetadataPipelineStage.STRUCT_NAME_METADATA,
     ShaderDestination.FRAGMENT
   );
-
-  // Add ClassInfo structs for each metadata type
-  shaderBuilder.addVertexLines([MetadataClassTypes]);
-  shaderBuilder.addFragmentLines([MetadataClassTypes]);
 
   // Declare the MetadataClassInfo struct
   shaderBuilder.addStruct(
@@ -236,12 +261,15 @@ function addPropertyAttributeProperty(
   );
 
   // Add lines to set values in the classInfo struct
-  for (const fieldName of MetadataPipelineStage.CLASSINFO_FIELDS) {
-    const fieldValue = property.classProperty[fieldName];
+  for (const {
+    specName,
+    shaderName,
+  } of MetadataPipelineStage.CLASSINFO_FIELDS) {
+    const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${fieldName} = ${fieldValue}`;
+    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${fieldValue}`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
       [fieldLine]
@@ -338,12 +366,15 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     [initializationLine]
   );
   // Add lines to set values in the classInfo struct
-  for (const fieldName of MetadataPipelineStage.CLASSINFO_FIELDS) {
-    const fieldValue = property.classProperty[fieldName];
+  for (const {
+    specName,
+    shaderName,
+  } of MetadataPipelineStage.CLASSINFO_FIELDS) {
+    const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${fieldName} = ${fieldValue}`;
+    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${fieldValue}`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
       [fieldLine]

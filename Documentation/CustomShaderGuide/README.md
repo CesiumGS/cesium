@@ -203,6 +203,8 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class information. See the MetadataClassInfo Struct section below.
+    MetadataClassInfo classInfo;
 };
 ```
 
@@ -219,6 +221,8 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class information. See the MetadataClassInfo Struct section below.
+    MetadataClassInfo classInfo;
 };
 ```
 
@@ -673,6 +677,57 @@ In the shader, `(vsInput|fsInput).metadata.temperatureCelsius` will be a `float`
 with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
+
+## `MetadataClassInfo` struct
+
+This struct contains constants for each metadata property, as defined
+in the class schema.
+
+Regardless of the source of metadata, the properties are collected into a single
+struct by property ID. For example, if the metadata class looked like this:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        "temperature": {
+          "name": "Surface Temperature",
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "noData": -9999.0,
+          "default": 72.0,
+        }
+      }
+    }
+  }
+}
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct ClassInfo_float {
+  float noData;
+  float default_val; // 'default' is a reserved word in GLSL
+}
+struct MetadataClassInfo {
+  ClassInfo_float temperature;
+}
+```
+
+The sub-struct for each property will be chosen such that the individual properties
+(such as `noData` and `default_val`) will have the same type as the actual values of the
+property.
+
+Now the noData and default values can be accessed as follows in the vertex shader:
+
+```glsl
+float noData = vsInput.classInfo.temperature.noData;           // == -9999.0
+float defaultTemp = vsInput.classInfo.temperature.default_val; // == 72.0
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
 
 ## `czm_modelVertexOutput` struct
 

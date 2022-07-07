@@ -48,7 +48,8 @@ void main()
     featureIdStage(featureIds, attributes);
 
     Metadata metadata;
-    metadataStage(metadata, attributes);
+    MetadataClassInfo classInfo;
+    metadataStage(metadata, classInfo, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
