@@ -760,14 +760,24 @@ function Cesium3DTileset(options) {
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
+   * <p>
+   * When enableModelExperimental is set to true, this property can be toggled
+   * at runtime. However, when enableModelExperimental is false, this property
+   * is readonly (it can only be set in the constructor).
+   * </p>
    *
    * @type {Boolean}
-   * @readonly
-   *
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
+  /**
+   * The color to use when rendering outlines. This option is only used
+   * when enableModelExperimental is set to true.
+   *
+   * @type {Color}
+   * @default Color.BLACK
+   */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
   /**
