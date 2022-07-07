@@ -707,12 +707,12 @@ struct by property ID. For example, if the metadata class looked like this:
 This will show up in the shader in the struct field as follows:
 
 ```glsl
-struct ClassInfo_float {
+struct floatClassInfo {
   float noData;
-  float default_val; // 'default' is a reserved word in GLSL
+  float defaultValue; // 'default' is a reserved word in GLSL
 }
 struct MetadataClassInfo {
-  ClassInfo_float temperature;
+  floatClassInfo temperature;
 }
 ```
 
@@ -723,8 +723,8 @@ property.
 Now the noData and default values can be accessed as follows in the vertex shader:
 
 ```glsl
-float noData = vsInput.classInfo.temperature.noData;           // == -9999.0
-float defaultTemp = vsInput.classInfo.temperature.default_val; // == 72.0
+float noData = vsInput.classInfo.temperature.noData;            // == -9999.0
+float defaultTemp = vsInput.classInfo.temperature.defaultValue; // == 72.0
 ```
 
 or similarly from the `fsInput` struct in the fragment shader.

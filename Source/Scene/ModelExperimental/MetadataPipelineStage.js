@@ -35,7 +35,7 @@ MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
 // Metadata class info: only two fields supported for now
 MetadataPipelineStage.CLASSINFO_FIELDS = [
   { specName: "noData", shaderName: "noData" },
-  { specName: "default", shaderName: "default_val" },
+  { specName: "default", shaderName: "defaultValue" },
 ];
 
 /**
@@ -87,7 +87,7 @@ function declareClassInfoStructs(shaderBuilder) {
     "vec4",
   ];
   for (const classInfoType of classInfoTypes) {
-    const structName = `ClassInfo_${classInfoType}`;
+    const structName = `${classInfoType}ClassInfo`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;
     // Declare the struct in both vertex and fragment shaders
@@ -221,7 +221,7 @@ function addPropertyAttributeProperty(
   // struct MetadataClassInfo {
   //   ClassInfo_float property;
   // }
-  const classInfoType = `ClassInfo_${glslType}`;
+  const classInfoType = `${glslType}ClassInfo`;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_VS,
     classInfoType,
@@ -330,7 +330,7 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
   // struct MetadataClassInfo {
   //   ClassInfo_float property;
   // }
-  const classInfoType = `ClassInfo_${glslType}`;
+  const classInfoType = `${glslType}ClassInfo`;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_FS,
     classInfoType,
