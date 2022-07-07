@@ -402,7 +402,9 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const provider = new TileMapServiceImageryProvider({
       url: "http://server.invalid?query=1",
     });
-    provider.readyPromise.catch(() => {});
+    provider.readyPromise.catch((e) => {
+      expect(e.message).toContain("An error occurred while accessing");
+    });
 
     return requestMetadata.promise.then(function (url) {
       expect(/\?query=1$/.test(url)).toEqual(true);
