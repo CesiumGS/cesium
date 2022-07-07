@@ -155,8 +155,13 @@ PntsLoader.prototype.load = function () {
   this._promise = new Promise(function (resolve, reject) {
     loader._process = function (frameState) {
       if (loader._state === ResourceLoaderState.PROCESSING) {
-        if (!defined(loader._decodePromise)) {
-          decodeDraco(loader, frameState.context).then(resolve).catch(reject);
+        if (defined(loader._decodePromise)) {
+          return;
+        }
+
+        const decodePromise = decodeDraco(loader, frameState.context);
+        if (defined(decodePromise)) {
+          decodePromise.then(resolve).catch(reject);
         }
       }
     };
