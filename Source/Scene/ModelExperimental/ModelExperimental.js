@@ -411,6 +411,8 @@ function selectFeatureTableId(components, model) {
 /**
  *  Returns whether the alpha state has changed between invisible,
  *  translucent, or opaque.
+ *
+ *  @private
  */
 function isColorAlphaDirty(currentColor, previousColor) {
   if (!defined(currentColor) && !defined(previousColor)) {
