@@ -120,6 +120,20 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   },
 
   /**
+   * The properties inherited from this property's class
+   *
+   * @memberof PropertyAttributeProperty.prototype
+   * @type {MetadataClassProperty}
+   * @readonly
+   * @private
+   */
+  classProperty: {
+    get: function () {
+      return this._classProperty;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof PropertyAttributeProperty.prototype
