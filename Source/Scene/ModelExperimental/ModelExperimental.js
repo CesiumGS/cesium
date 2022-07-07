@@ -70,6 +70,9 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
@@ -188,7 +191,7 @@ export default function ModelExperimental(options) {
   this._idDirty = false;
 
   const color = options.color;
-  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._color = defined(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -199,6 +202,11 @@ export default function ModelExperimental(options) {
   this._silhouetteColor = Color.clone(silhouetteColor);
   this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
   this._silhouetteDirty = false;
+
+  // If silhouettes are used for the model, this will be set to the number
+  // of the stencil buffer used for rendering the silhouette. This is set
+  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
+  this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -302,6 +310,7 @@ export default function ModelExperimental(options) {
     options.enableDebugWireframe,
     false
   );
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
   // Credit specified by the user.
@@ -325,6 +334,28 @@ export default function ModelExperimental(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+
+  /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The color to use when rendering outlines.
+   *
+   * @type {Color}
+   *
+   * @default Color.BLACK
+   */
+  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
   this._statistics = new ModelExperimentalStatistics();
 
@@ -404,7 +435,12 @@ function selectFeatureTableId(components, model) {
   }
 }
 
-// Returns whether the color alpha state has changed between invisible, translucent, or opaque
+/**
+ *  Returns whether the alpha state has changed between invisible,
+ *  translucent, or opaque.
+ *
+ *  @private
+ */
 function isColorAlphaDirty(currentColor, previousColor) {
   if (!defined(currentColor) && !defined(previousColor)) {
     return false;
@@ -886,7 +922,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
-      if (!Color.equals(this._color, value)) {
+      if (isColorAlphaDirty(value, this._color)) {
         this.resetDrawCommands();
       }
       this._color = Color.clone(value, this._color);
@@ -2258,6 +2294,9 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
@@ -2293,6 +2332,7 @@ ModelExperimental.fromGltf = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const basePath = defaultValue(options.basePath, "");
@@ -2340,6 +2380,7 @@ ModelExperimental.fromB3dm = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -2388,6 +2429,7 @@ ModelExperimental.fromI3dm = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
   const loader = new I3dmLoader(loaderOptions);
 
@@ -2478,6 +2520,9 @@ function makeModelOptions(loader, modelType, options) {
     colorBlendMode: options.colorBlendMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
+    enableShowOutline: options.enableShowOutline,
+    showOutline: options.showOutline,
+    outlineColor: options.outlineColor,
     clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,

@@ -17,6 +17,7 @@ import {
   PickingPipelineStage,
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
+  PrimitiveOutlinePipelineStage,
   PrimitiveStatisticsPipelineStage,
   PrimitiveType,
   SceneMode,
@@ -817,6 +818,69 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     ];
 
     primitive.configurePipeline(mockFrameState3DOnly);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("adds outline stage for CESIUM_primitive_outline", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+        outlineCoordinates: {},
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+        _enableShowOutline: true,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      PrimitiveOutlinePipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("does not add outline stage if outlines are disabled", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+        outlineCoordinates: {},
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+        _enableShowOutline: false,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });

@@ -33,6 +33,7 @@ const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
 
+const scratchColor = new Color();
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
@@ -179,7 +180,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._silhouetteColor,
       time,
       defaultSilhouetteColor,
-      model._silhouetteColor
+      scratchColor
     );
     model.silhouetteSize = Property.getValueOrDefault(
       modelGraphics._silhouetteSize,
@@ -190,7 +191,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._color,
       time,
       defaultColor,
-      model._color
+      scratchColor
     );
     model.colorBlendMode = Property.getValueOrDefault(
       modelGraphics._colorBlendMode,
