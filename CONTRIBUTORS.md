@@ -328,3 +328,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuri Chen](https://github.com/yurichen17)
 - [David Ferguson](https://github.com/jdfwarrior)
 - [Karthik Vaithin](https://github.com/kvaithin)
+- [Jonathan Meerson](https://github.com/yonzmeer)
