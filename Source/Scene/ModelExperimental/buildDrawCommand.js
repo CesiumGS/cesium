@@ -34,7 +34,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   const model = primitiveRenderResources.model;
   const context = frameState.context;
 
-  const indexBuffer = getIndexBuffer(primitiveRenderResources, frameState);
+  const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
     context: context,
@@ -42,10 +42,10 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     attributes: primitiveRenderResources.attributes,
   });
 
-  model._resources.push(vertexArray);
+  model._pipelineResources.push(vertexArray);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-  model._resources.push(shaderProgram);
+  model._pipelineResources.push(shaderProgram);
 
   const pass = primitiveRenderResources.alphaOptions.pass;
   const sceneGraph = model.sceneGraph;
@@ -122,7 +122,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
 /**
  * @private
  */
-function getIndexBuffer(primitiveRenderResources, frameState) {
+function getIndexBuffer(primitiveRenderResources) {
   const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
   if (defined(wireframeIndexBuffer)) {
     return wireframeIndexBuffer;

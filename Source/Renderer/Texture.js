@@ -977,8 +977,8 @@ Texture.prototype.copyFromFramebuffer = function (
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
  * @exception {DeveloperError} hint is invalid.
- * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
- * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
+ * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap() in a WebGL1 context.
+ * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap() in a WebGL1 context.
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
@@ -995,15 +995,17 @@ Texture.prototype.generateMipmap = function (hint) {
       "Cannot call generateMipmap with a compressed pixel format."
     );
   }
-  if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
-    throw new DeveloperError(
-      "width must be a power of two to call generateMipmap()."
-    );
-  }
-  if (this._height > 1 && !CesiumMath.isPowerOfTwo(this._height)) {
-    throw new DeveloperError(
-      "height must be a power of two to call generateMipmap()."
-    );
+  if (!this._context.webgl2) {
+    if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
+      throw new DeveloperError(
+        "width must be a power of two to call generateMipmap() in a WebGL1 context."
+      );
+    }
+    if (this._height > 1 && !CesiumMath.isPowerOfTwo(this._height)) {
+      throw new DeveloperError(
+        "height must be a power of two to call generateMipmap() in a WebGL1 context."
+      );
+    }
   }
   if (!MipmapHint.validate(hint)) {
     throw new DeveloperError("hint is invalid.");

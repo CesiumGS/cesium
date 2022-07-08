@@ -665,7 +665,7 @@ function processTransformAttributes(
 
     const transformsTypedArray = transformsToTypedArray(transforms);
     const buffer = createVertexBuffer(transformsTypedArray, frameState);
-    renderResources.model._resources.push(buffer);
+    renderResources.model._pipelineResources.push(buffer);
 
     processMatrixAttributes(
       renderResources,
@@ -695,7 +695,7 @@ function processTransformAttributes(
           translationAttribute.packedTypedArray,
           frameState
         );
-        renderResources.model._resources.push(buffer);
+        renderResources.model._pipelineResources.push(buffer);
 
         byteOffset = 0;
         byteStride = undefined;
@@ -735,7 +735,7 @@ function processTransformAttributes(
           scaleAttribute.packedTypedArray,
           frameState
         );
-        renderResources.model._resources.push(buffer);
+        renderResources.model._pipelineResources.push(buffer);
 
         byteOffset = 0;
         byteStride = undefined;
@@ -953,7 +953,7 @@ function processFeatureIdAttributes(
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;
-    model._resources.push(vertexBuffer);
+    model._pipelineResources.push(vertexBuffer);
 
     // Packed typed arrays are omitted from statistics because they don't
     // necessarily correspond to the size of the GPU buffer containing

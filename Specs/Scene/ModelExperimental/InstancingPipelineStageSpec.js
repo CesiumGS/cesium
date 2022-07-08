@@ -75,7 +75,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         model: {
           _modelResources: [],
-          _resources: [],
+          _pipelineResources: [],
           statistics: new ModelExperimentalStatistics(),
         },
         runtimeNode: {},
@@ -91,7 +91,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         model: {
           _modelResources: [],
-          _resources: [],
+          _pipelineResources: [],
           statistics: new ModelExperimentalStatistics(),
           _projectTo2D: true,
           sceneGraph: {
@@ -231,7 +231,7 @@ describe(
 
         // The model has feature IDs, so a resource will also be created
         // for those.
-        expect(renderResources.model._resources.length).toEqual(2);
+        expect(renderResources.model._pipelineResources.length).toEqual(2);
         expect(renderResources.model._modelResources.length).toEqual(0);
 
         // Matrices are stored as 3 vec4s, so this is
@@ -276,7 +276,7 @@ describe(
           "attribute vec4 a_instancingTransformRow2;",
         ]);
 
-        expect(renderResources.model._resources.length).toEqual(1);
+        expect(renderResources.model._pipelineResources.length).toEqual(1);
         expect(renderResources.model._modelResources.length).toEqual(0);
 
         // Matrices are stored as 3 vec4s, so this is
@@ -348,7 +348,7 @@ describe(
         expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
 
         expect(runtimeNode.instancingTransformsBuffer2D).toBeDefined();
-        expect(renderResources.model._resources.length).toEqual(2);
+        expect(renderResources.model._pipelineResources.length).toEqual(2);
         expect(renderResources.model._modelResources.length).toEqual(1);
 
         // The 2D buffer will be counted by NodeStatisticsPipelineStage,
@@ -472,7 +472,7 @@ describe(
         ]);
 
         // No additional buffer was created
-        expect(renderResources.model._resources.length).toEqual(0);
+        expect(renderResources.model._pipelineResources.length).toEqual(0);
         expect(renderResources.model._modelResources.length).toEqual(0);
 
         // Attributes with buffers already loaded in will be counted
@@ -536,7 +536,7 @@ describe(
         expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
 
         expect(runtimeNode.instancingTranslationBuffer2D).toBeDefined();
-        expect(renderResources.model._resources.length).toEqual(0);
+        expect(renderResources.model._pipelineResources.length).toEqual(0);
         expect(renderResources.model._modelResources.length).toEqual(1);
 
         // Both resources will be counted in NodeStatisticsPipelineStage
@@ -552,7 +552,7 @@ describe(
         instancingTranslationMin: undefined,
         shaderBuilder: new ShaderBuilder(),
         model: {
-          _resources: [],
+          _pipelineResources: [],
           _modelResources: [],
           statistics: new ModelExperimentalStatistics(),
           modelMatrix: Matrix4.fromUniformScale(2.0),

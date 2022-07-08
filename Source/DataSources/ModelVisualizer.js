@@ -5,11 +5,13 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
 import Model from "../Scene/Model.js";
+import ModelExperimental from "../Scene/ModelExperimental/ModelExperimental.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -31,6 +33,7 @@ const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
 
+const scratchColor = new Color();
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
@@ -113,7 +116,12 @@ ModelVisualizer.prototype.update = function (time) {
         primitives.removeAndDestroy(model);
         delete modelHash[entity.id];
       }
-      model = Model.fromGltf({
+
+      const ModelType = ExperimentalFeatures.enableModelExperimental
+        ? ModelExperimental
+        : Model;
+
+      model = ModelType.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,
@@ -172,7 +180,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._silhouetteColor,
       time,
       defaultSilhouetteColor,
-      model._silhouetteColor
+      scratchColor
     );
     model.silhouetteSize = Property.getValueOrDefault(
       modelGraphics._silhouetteSize,
@@ -183,7 +191,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._color,
       time,
       defaultColor,
-      model._color
+      scratchColor
     );
     model.colorBlendMode = Property.getValueOrDefault(
       modelGraphics._colorBlendMode,
@@ -362,6 +370,13 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   if (!model.ready) {
     return BoundingSphereState.PENDING;
+  }
+
+  if (ExperimentalFeatures.enableModelExperimental) {
+    // ModelExperimental's bounding sphere is already in world space, it does
+    // not need to be transformed.
+    BoundingSphere.clone(model.boundingSphere, result);
+    return BoundingSphereState.DONE;
   }
 
   if (model.heightReference === HeightReference.NONE) {

@@ -233,6 +233,21 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
 
   const contentPromises = [];
 
+  // For caching purposes, models within the composite tile must be
+  // distinguished. To do this, add a query parameter ?compositeIndex=i.
+  // Since composite tiles may contain other composite tiles, check for an
+  // existing prefix and separate them with underscores. e.g.
+  // ?compositeIndex=0_1_1
+  const resource = content._resource;
+  let prefix = resource.queryParameters.compositeIndex;
+  if (defined(prefix)) {
+    // We'll be adding another value at the end, so add an underscore.
+    prefix = `${prefix}_`;
+  } else {
+    // no prefix
+    prefix = "";
+  }
+
   for (let i = 0; i < tilesLength; ++i) {
     const tileType = getMagic(uint8Array, byteOffset);
 
@@ -241,11 +256,19 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
 
     const contentFactory = factory[tileType];
 
+    // Label which content within the composite this is
+    const compositeIndex = `${prefix}${i}`;
+    const childResource = resource.getDerivedResource({
+      queryParameters: {
+        compositeIndex: compositeIndex,
+      },
+    });
+
     if (defined(contentFactory)) {
       const innerContent = contentFactory(
         content._tileset,
         content._tile,
-        content._resource,
+        childResource,
         arrayBuffer,
         byteOffset
       );
