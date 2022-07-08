@@ -126,13 +126,13 @@ describe("Scene/GlobeSurfaceTile", function () {
     });
 
     it("prints error message when a root tile fails to load", function () {
-      spyOn(TileProviderError, "handleError").and.callThrough();
+      spyOn(TileProviderError, "reportError").and.callThrough();
       mockTerrain.requestTileGeometryWillFail(rootTile);
 
       return processor.process([rootTile]).then(function () {
-        expect(TileProviderError.handleError.calls.count()).toBe(1);
+        expect(TileProviderError.reportError.calls.count()).toBe(1);
         // Test that message argument is defined.
-        expect(TileProviderError.handleError.calls.argsFor(0)[3]).toContain(
+        expect(TileProviderError.reportError.calls.argsFor(0)[3]).toContain(
           "RuntimeError: requestTileGeometry failed as requested."
         );
       });

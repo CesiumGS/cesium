@@ -259,6 +259,8 @@ describe("Scene/IonImageryProvider", function () {
     expect(function () {
       return provider.getTileCredits(1, 2, 3);
     }).toThrowDeveloperError();
+
+    return provider.readyPromise;
   });
 
   it("handles server-sent credits", function () {
