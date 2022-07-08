@@ -6,7 +6,7 @@
   const express = require("express");
   const compression = require("compression");
   const fs = require("fs");
-  const url = require("url");
+  const { URL } = require("url");
   const request = require("request");
 
   const gzipHeader = Buffer.from("1F8B08", "hex");
@@ -76,7 +76,8 @@
   });
 
   function checkGzipAndNext(req, res, next) {
-    const reqUrl = url.URL(req.url, true);
+    const baseURL = `${req.protocol}://${req.headers.host}/`;
+    const reqUrl = new URL(req.url, baseURL);
     const filePath = reqUrl.pathname.substring(1);
 
     const readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
@@ -113,9 +114,10 @@
       if (!/^https?:\/\//.test(remoteUrl)) {
         remoteUrl = `http://${remoteUrl}`;
       }
-      remoteUrl = url.URL(remoteUrl);
+      remoteUrl = new URL(remoteUrl);
       // copy query string
-      remoteUrl.search = url.URL(req.url).search;
+      const baseURL = `${req.protocol}://${req.headers.host}/`;
+      remoteUrl.search = new URL(req.url, baseURL).search;
     }
     return remoteUrl;
   }
@@ -148,7 +150,8 @@
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
       remoteUrl = Object.keys(req.query)[0];
       if (remoteUrl) {
-        remoteUrl = url.URL(remoteUrl);
+        const baseURL = `${req.protocol}://${req.headers.host}/`;
+        remoteUrl = new URL(remoteUrl, baseURL);
       }
     }
 
@@ -169,7 +172,7 @@
 
     request.get(
       {
-        url: url.format(remoteUrl),
+        url: remoteUrl.toString(),
         headers: filterHeaders(req, req.headers),
         encoding: null,
         proxy: proxy,
