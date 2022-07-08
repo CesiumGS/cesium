@@ -2,6 +2,10 @@
 
 ### 1.96 - 2022-08-01
 
+##### Breaking Changes :mega:
+
+- Tilesets and entities now use `ModelExperimental` by default. This can still be changed by setting `ExperimentalFeatures.enableModelExperimental = false`. [#10530](https://github.com/CesiumGS/cesium/pull/10530)
+
 ##### Additions :tada:
 
 - Models and tilesets that use the `CESIUM_primitive_outline` extension can now toggle outlines at runtime with the `showOutline` property. Furthermore, the color of the outlines can now be controlled by the `outlineColor` property. [#10506](https://github.com/CesiumGS/cesium/pull/10506)
