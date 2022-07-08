@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 
 /**
@@ -482,6 +483,51 @@ PropertyTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   }
 
   return undefined;
+};
+
+function checkFeatureId(featureId, featuresLength) {
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      `featureId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
+        +")."
+    );
+  }
+}
+
+PropertyTable.prototype.isClass = function (featureId, className) {
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  Check.typeOf.string("className", className);
+  //>>includeEnd('debug');
+
+  const hierarchy = this._batchTableHierarchy;
+  if (!defined(hierarchy)) {
+    return false;
+  }
+
+  return hierarchy.isClass(featureId, className);
+};
+
+PropertyTable.prototype.isExactClass = function (featureId, className) {
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  Check.typeOf.string("className", className);
+  //>>includeEnd('debug');
+
+  return this.getExactClassName(featureId) === className;
+};
+
+PropertyTable.prototype.getExactClassName = function (featureId) {
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  //>>includeEnd('debug');
+
+  const hierarchy = this._batchTableHierarchy;
+  if (!defined(hierarchy)) {
+    return undefined;
+  }
+
+  return hierarchy.getClassName(featureId);
 };
 
 export default PropertyTable;

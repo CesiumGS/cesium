@@ -238,6 +238,18 @@ ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
   return this._propertyTable.setProperty(featureId, name, value);
 };
 
+ModelFeatureTable.prototype.isClass = function (featureId, className) {
+  return this._propertyTable.isClass(featureId, className);
+};
+
+ModelFeatureTable.prototype.isExactClass = function (featureId, className) {
+  return this._propertyTable.isExactClass(featureId, className);
+};
+
+ModelFeatureTable.prototype.getExactClassName = function (featureId) {
+  return this._propertyTable.getExactClassName(featureId);
+};
+
 const scratchColor = new Color();
 /**
  * @private
