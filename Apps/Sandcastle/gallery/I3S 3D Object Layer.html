@@ -35,16 +35,16 @@
     </div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.createWorldTerrain({}),
           animation: false,
           timeline: false,
         });
         //More datasets to tour can be added here..
-        let tours = {
+        const tours = {
           "San Francisco":
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer",
         };
@@ -52,24 +52,24 @@
         // height systems (cesium world terrain).
         // If this is not specified, or the URL is invalid no geoid conversion will be applied.
         // The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
-        var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+        const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
           url:
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
         });
         // Create i3s and cesiumTileset options to pass optional parameters useful for debuging and visualizing
-        let i3sOptions = {
+        const i3sOptions = {
           traceFetches: false, // for tracing I3S fetches
           autoCenterCameraOnStart: true, // auto center to the location of the i3s
           geoidTiledTerrainProvider: geoidService, // pass the geoid service
         };
 
-        let cesiumTilesetOptions = {
+        const cesiumTilesetOptions = {
           show: true,
           skipLevelOfDetail: false,
           debugShowBoundingVolume: false,
         };
         //Create I3S data provider. autoCenterCameraOnStart i3s option autocenters the camera to the I3S layers' extent
-        let i3sProvider = new Cesium.I3SDataProvider(
+        const i3sProvider = new Cesium.I3SDataProvider(
           "",
           viewer.scene,
           i3sOptions,
@@ -82,9 +82,9 @@
         //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;
-          startup(Cesium);
+          window.startup(Cesium);
         }
-      }
+      };
     </script>
   </body>
 </html>

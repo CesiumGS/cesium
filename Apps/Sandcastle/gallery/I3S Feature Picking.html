@@ -35,95 +35,102 @@
     </div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.createWorldTerrain({}),
           animation: false,
           timeline: false,
         });
         //More datasets to tour can be added here..
-        let tours = {
-          "San Francisco":
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer",
+        const tours = {
+          "New York":
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/NYC_Attributed_v17/SceneServer",
         };
         // Initialize a terrain provider which provides geoid conversion between gravity releated (typically I3S datasets) and ellipsoidiaL based
         // height systems (cesium world terrain).
         // If this is not specified, or the URL is invalid no geoid conversion will be applied.
         // The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
-        var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+        const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
           url:
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
         });
         // Create i3s and cesiumTileset options to pass optional parameters useful for debuging and visualizing
-        let i3sOptions = {
+        const i3sOptions = {
           traceFetches: false, // for tracing I3S fetches
           autoCenterCameraOnStart: true, // auto center to the location of the i3s
           geoidTiledTerrainProvider: geoidService, // pass the geoid service
         };
 
-        let cesiumTilesetOptions = {
+        const cesiumTilesetOptions = {
           show: true,
           skipLevelOfDetail: false,
           debugShowBoundingVolume: false,
         };
         //Create I3S data provider. autoCenterCameraOnStart i3s option autocenters the camera to the I3S layers' extent
-        let i3sProvider = new Cesium.I3SDataProvider(
+        const i3sProvider = new Cesium.I3SDataProvider(
           "",
           viewer.scene,
           i3sOptions,
           cesiumTilesetOptions
         );
         i3sProvider.camera = viewer.camera; // for debug
-        i3sProvider.loadUrl(tours["San Francisco"]).then(function () {});
+        i3sProvider.loadUrl(tours["New York"]).then(function () {});
         //add the i3s layer provider as a primitive data type
         viewer.scene.primitives.add(i3sProvider);
         // An entity object which will hold info about the currently selected feature for infobox display
-        var selectedEntity = new Cesium.Entity();
+        const selectedEntity = new Cesium.Entity();
         // Silhouette a feature on selection and show metadata in the InfoBox.
         viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
           movement
         ) {
           // Pick a new feature
-          var pickedFeature = viewer.scene.pick(movement.position);
+          const pickedFeature = viewer.scene.pick(movement.position);
           if (!Cesium.defined(pickedFeature)) {
             return;
           }
 
-          var pickedPosition = viewer.scene.pickPosition(movement.position);
+          const pickedPosition = viewer.scene.pickPosition(movement.position);
 
           if (
             pickedFeature &&
             pickedFeature.content &&
-            pickedFeature.content.i3sNode
+            pickedFeature.content.tile.i3sNode
           ) {
-            var i3sNode = pickedFeature.content.i3sNode;
+            const i3sNode = pickedFeature.content.tile.i3sNode;
             i3sNode.loadFields().then(function () {
-              var geometry = i3sNode.geometryData[0];
+              const geometry = i3sNode.geometryData[0];
               if (pickedPosition) {
-                var location = geometry.getClosestPointIndexOnTriangle(
+                const location = geometry.getClosestPointIndexOnTriangle(
                   pickedPosition.x,
                   pickedPosition.y,
                   pickedPosition.z
                 );
-                var description = "No attributes";
-                var name = "";
+                let description = "No attributes";
+                let name = "";
                 if (
                   location.index !== -1 &&
                   geometry.customAttributes["feature-index"]
                 ) {
-                  var featureIndex =
+                  console.log("Location", location);
+                  const featureIndex =
                     geometry.customAttributes["feature-index"][location.index];
                   if (Object.keys(i3sNode.fields).length > 0) {
                     description =
                       '<table class="cesium-infoBox-defaultTable"><tbody>';
-                    for (var fieldName in i3sNode.fields) {
+                    for (const fieldName in i3sNode.fields) {
                       if (fieldName) {
-                        var field = i3sNode.fields[fieldName];
-                        description += "<tr><th>" + field.name + "</th><td>";
+                        const field = i3sNode.fields[fieldName];
                         description +=
-                          field.values[featureIndex] + "</td></tr>";
+                          `<tr><th>` + `${field.name}` + `</th><td>`;
+                        description +=
+                          `${field.values[featureIndex]}` + `</td></tr>`;
+                        console.log(
+                          `${field.name}` +
+                            `: ` +
+                            `${field.values[featureIndex]}`
+                        );
                         if (
                           (!name || 0 === name.length) &&
                           isNameProperty(field.name)
@@ -132,7 +139,7 @@
                         }
                       }
                     }
-                    description += "</tbody></table>";
+                    description += `</tbody></table>`;
                   }
                 }
                 if (!name || 0 === name.length) {
@@ -148,7 +155,7 @@
         Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         function isNameProperty(propertyName) {
-          var name = propertyName.toLowerCase();
+          const name = propertyName.toLowerCase();
           if (
             name.localeCompare("name") === 0 ||
             name.localeCompare("objname") === 0
@@ -157,13 +164,12 @@
           }
           return false;
         }
-
         //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;
-          startup(Cesium);
+          window.startup(Cesium);
         }
-      }
+      };
     </script>
   </body>
 </html>
