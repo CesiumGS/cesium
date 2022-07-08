@@ -399,13 +399,17 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
+    let errorListenerCalled = false;
     const errorMatcher = function (event) {
       expect(event.message).toContain("format is not specified");
+      errorListenerCalled = true;
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
+    provider.errorEvent.addEventListener(errorMatcher);
+
     return provider.readyPromise.then(fail).catch((e) => {
-      provider.errorEvent.addEventListener(errorMatcher);
+      expect(errorListenerCalled).toBe(true);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -417,13 +421,17 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
+    let errorListenerCalled = false;
     const errorMatcher = function (event) {
       expect(event.message).toContain("invalid or not supported");
+      errorListenerCalled = true;
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
+    provider.errorEvent.addEventListener(errorMatcher);
+
     return provider.readyPromise.then(fail).catch((e) => {
-      provider.errorEvent.addEventListener(errorMatcher);
+      expect(errorListenerCalled).toBe(true);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -435,13 +443,17 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
+    let errorListenerCalled = false;
     const errorMatcher = function (event) {
       expect(event.message).toContain("invalid or not supported");
+      errorListenerCalled = true;
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
+    provider.errorEvent.addEventListener(errorMatcher);
+
     return provider.readyPromise.then(fail).catch((e) => {
-      provider.errorEvent.addEventListener(errorMatcher);
+      expect(errorListenerCalled).toBe(true);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -470,15 +482,19 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
+    let errorListenerCalled = false;
     const errorMatcher = function (event) {
       expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
+      errorListenerCalled = true;
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
+    provider.errorEvent.addEventListener(errorMatcher);
+
     return provider.readyPromise.then(fail).catch((e) => {
-      provider.errorEvent.addEventListener(errorMatcher);
+      expect(errorListenerCalled).toBe(true);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -490,15 +506,19 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
+    let errorListenerCalled = false;
     const errorMatcher = function (event) {
       expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
+      errorListenerCalled = true;
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
+    provider.errorEvent.addEventListener(errorMatcher);
+
     return provider.readyPromise.then(fail).catch((e) => {
-      provider.errorEvent.addEventListener(errorMatcher);
+      expect(errorListenerCalled).toBe(true);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
