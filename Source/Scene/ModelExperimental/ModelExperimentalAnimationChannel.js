@@ -21,7 +21,7 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.AnimationChannel} options.channel The corresponding animation channel components from the 3D model.
  * @param {ModelExperimentalAnimation} options.runtimeAnimation The runtime animation containing this channel.
- * @param {ModelExperimentalNode} options.runtimeNode The runtime node that this channel will animate.
+ * @param {ModelExperimentalRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
  *
  * @alias ModelExperimentalAnimationChannel
  * @constructor
@@ -90,7 +90,7 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
    *
    * @memberof ModelExperimentalAnimationChannel.prototype
    *
-   * @type {ModelExperimentalNode}
+   * @type {ModelExperimentalRuntimeNode}
    * @readonly
    *
    * @private

@@ -10,7 +10,7 @@ import {
   Matrix4,
   ModelComponents,
   ModelExperimentalAnimationChannel,
-  ModelExperimentalNode,
+  ModelExperimentalRuntimeNode,
   SteppedSpline,
   Quaternion,
   QuaternionSpline,
@@ -79,7 +79,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   }
 
   beforeEach(function () {
-    runtimeNode = new ModelExperimentalNode({
+    runtimeNode = new ModelExperimentalRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,

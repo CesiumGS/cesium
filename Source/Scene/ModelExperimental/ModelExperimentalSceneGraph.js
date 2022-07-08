@@ -9,8 +9,8 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalArticulation from "./ModelExperimentalArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
-import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
-import ModelExperimentalNode from "./ModelExperimentalNode.js";
+import ModelExperimentalRuntimePrimitive from "./ModelExperimentalRuntimePrimitive.js";
+import ModelExperimentalRuntimeNode from "./ModelExperimentalRuntimeNode.js";
 import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
@@ -86,7 +86,7 @@ export default function ModelExperimentalSceneGraph(options) {
   /**
    * The runtime nodes that make up the scene graph
    *
-   * @type {ModelExperimentalNode[]}
+   * @type {ModelExperimentalRuntimeNode[]}
    * @readonly
    *
    * @private
@@ -399,7 +399,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   }
 
   // Process node and mesh primitives.
-  const runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalRuntimeNode({
     node: node,
     transform: transform,
     transformToRoot: transformToRoot,
@@ -410,7 +410,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     runtimeNode.runtimePrimitives.push(
-      new ModelExperimentalPrimitive({
+      new ModelExperimentalRuntimePrimitive({
         primitive: node.primitives[i],
         node: node,
         model: sceneGraph._model,
