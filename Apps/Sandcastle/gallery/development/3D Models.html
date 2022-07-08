@@ -157,7 +157,7 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendAmount")
           .subscribe(function (newValue) {
-            model.colorBlendAmount = newValue;
+            model.colorBlendAmount = Number(newValue);
           });
 
         function createModel(url, height, heading, pitch, roll) {

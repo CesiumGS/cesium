@@ -41,11 +41,6 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     mapProjection: scratchProjection,
   };
 
-  afterEach(function () {
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
-  });
-
   function mockRenderResources(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -69,6 +64,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
         },
         silhouetteSize: silhouetteSize,
         silhouetteColor: silhouetteColor,
+        _silhouetteId: 1,
       },
       runtimePrimitive: {
         primitive: {
@@ -135,7 +131,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     return result;
   }
 
-  // Creates a ModelExperimentalDrawCommand with the specified derived commands.
+  // Creates a ModelExperimentalDrawCommand with the specified
+  // derived commands.
   function createModelExperimentalDrawCommand(options) {
     const deriveTranslucent = options.deriveTranslucent;
     const derive2D = options.derive2D;
@@ -297,8 +294,11 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
     // No other commands should be derived.
     expect(drawCommand._translucentCommand).toBeUndefined();
-    expect(drawCommand._commandList2D.length).toEqual(0);
     expect(drawCommand._useSilhouetteCommands).toBe(false);
+
+    expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("constructs with silhouette commands", function () {
@@ -318,27 +318,35 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand.modelMatrix).not.toBe(command.modelMatrix);
 
     expect(drawCommand._useSilhouetteCommands).toBe(true);
-    expect(drawCommand._commandList.length).toEqual(2);
 
-    const silhouetteModelCommand = drawCommand._commandList[0];
+    const commands = drawCommand._commandList;
+    const silhouetteCommands = drawCommand._silhouetteCommandList;
+    expect(commands.length).toEqual(1);
+    expect(silhouetteCommands.length).toEqual(1);
+
+    const silhouetteModelCommand = commands[0];
     expect(silhouetteModelCommand).not.toBe(command);
 
     const stencilReference = 1;
+    const modelIsInvisible = false;
     verifySilhouetteModelCommand(
       silhouetteModelCommand,
       stencilReference,
-      false
+      modelIsInvisible
     );
-    const silhouetteColorCommand = drawCommand._commandList[1];
+
+    const silhouetteColorCommand = silhouetteCommands[0];
+    const silhouetteIsTranslucent = false;
     verifySilhouetteColorCommand(
       silhouetteColorCommand,
       stencilReference,
-      false
+      silhouetteIsTranslucent
     );
 
     // No other commands should be derived.
     expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("constructs silhouette commands correctly for translucent model", function () {
@@ -352,23 +360,32 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       useSilhouetteCommands: true,
     });
 
+    // Model is already translucent, so no translucent command should be derived
+    expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._useSilhouetteCommands).toBe(true);
-    expect(drawCommand._commandList.length).toEqual(2);
 
-    const silhouetteModelCommand = drawCommand._commandList[0];
+    const commands = drawCommand._commandList;
+    const silhouetteCommands = drawCommand._silhouetteCommandList;
+    expect(commands.length).toEqual(1);
+    expect(silhouetteCommands.length).toEqual(1);
+
+    const silhouetteModelCommand = commands[0];
     expect(silhouetteModelCommand).not.toBe(command);
 
     const stencilReference = 1;
+    const modelIsInvisible = false;
     verifySilhouetteModelCommand(
       silhouetteModelCommand,
       stencilReference,
-      false
+      modelIsInvisible
     );
-    const silhouetteColorCommand = drawCommand._commandList[1];
+
+    const silhouetteColorCommand = silhouetteCommands[0];
+    const silhouetteIsTranslucent = true;
     verifySilhouetteColorCommand(
       silhouetteColorCommand,
       stencilReference,
-      true
+      silhouetteIsTranslucent
     );
   });
 
@@ -384,26 +401,30 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     });
 
     expect(drawCommand._useSilhouetteCommands).toBe(true);
-    expect(drawCommand._commandList.length).toEqual(2);
 
-    const silhouetteModelCommand = drawCommand._commandList[0];
+    const commands = drawCommand._commandList;
+    const silhouetteCommands = drawCommand._silhouetteCommandList;
+    expect(commands.length).toEqual(1);
+    expect(silhouetteCommands.length).toEqual(1);
+
+    const silhouetteModelCommand = commands[0];
     expect(silhouetteModelCommand).not.toBe(command);
 
     const stencilReference = 1;
+    const modelIsInvisible = true;
     verifySilhouetteModelCommand(
       silhouetteModelCommand,
       stencilReference,
-      true
+      modelIsInvisible
     );
-    const silhouetteColorCommand = drawCommand._commandList[1];
+
+    const silhouetteColorCommand = silhouetteCommands[0];
+    const silhouetteIsTranslucent = false;
     verifySilhouetteColorCommand(
       silhouetteColorCommand,
       stencilReference,
-      false
+      silhouetteIsTranslucent
     );
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("constructs silhouette commands correctly for translucent silhouette color", function () {
@@ -419,26 +440,30 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     });
 
     expect(drawCommand._useSilhouetteCommands).toBe(true);
-    expect(drawCommand._commandList.length).toEqual(2);
 
-    const silhouetteModelCommand = drawCommand._commandList[0];
+    const commands = drawCommand._commandList;
+    const silhouetteCommands = drawCommand._silhouetteCommandList;
+    expect(commands.length).toEqual(1);
+    expect(silhouetteCommands.length).toEqual(1);
+
+    const silhouetteModelCommand = commands[0];
     expect(silhouetteModelCommand).not.toBe(command);
 
     const stencilReference = 1;
+    const modelIsInvisible = false;
     verifySilhouetteModelCommand(
       silhouetteModelCommand,
       stencilReference,
-      false
+      modelIsInvisible
     );
-    const silhouetteColorCommand = drawCommand._commandList[1];
+
+    const silhouetteColorCommand = silhouetteCommands[0];
+    const silhouetteIsTranslucent = true;
     verifySilhouetteColorCommand(
       silhouetteColorCommand,
       stencilReference,
-      true
+      silhouetteIsTranslucent
     );
-
-    // Reset so this doesn't interfere with other tests.
-    ModelExperimentalDrawCommand.silhouettesLength = 0;
   });
 
   it("uses opaque command only", function () {
@@ -454,6 +479,10 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList.length).toEqual(1);
     expect(drawCommand._commandList[0]).toBe(command);
     expect(drawCommand._translucentCommand).toBeUndefined();
+
+    expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("derives translucent command, draws translucent only", function () {
@@ -488,6 +517,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(renderState.blending).toEqual(expectedBlending);
 
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("derives translucent command, draws opaque and translucent", function () {
@@ -522,6 +553,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(renderState.blending).toEqual(expectedBlending);
 
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("doesn't derive translucent command if original command is translucent", function () {
@@ -541,6 +574,8 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
     expect(drawCommand._translucentCommand).toBeUndefined();
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("getCommands works for original command", function () {
@@ -581,6 +616,29 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(result[1]).toBe(translucentCommand);
   });
 
+  it("getCommands doesn't return silhouette commands", function () {
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+    });
+    const command = createDrawCommand();
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+      useSilhouetteCommands: true,
+    });
+
+    expect(drawCommand._commandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(2);
+
+    const result = drawCommand.getCommands(mockFrameState);
+    expect(result.length).toEqual(2);
+
+    const stencilReference = 1;
+    const modelIsInvisible = false;
+    verifySilhouetteModelCommand(result[0], stencilReference, modelIsInvisible);
+    verifySilhouetteModelCommand(result[1], stencilReference, modelIsInvisible);
+  });
+
   it("getCommands derives 2D commands if primitive is near IDL", function () {
     const modelMatrix = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(180, 0),
@@ -612,6 +670,44 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     expect(drawCommand._commandList2D.length).toEqual(2);
   });
 
+  it("getCommands derives 2D commands for silhouettes if primitive is near IDL", function () {
+    const modelMatrix = Matrix4.fromTranslation(
+      Cartesian3.fromDegrees(180, 0),
+      scratchModelMatrix
+    );
+    const modelMatrix2D = Transforms.basisTo2D(
+      mockFrameState2D.mapProjection,
+      modelMatrix,
+      modelMatrix
+    );
+    const renderResources = mockRenderResources({
+      styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
+      boundingSphere2DTransform: modelMatrix2D,
+    });
+    const command = createDrawCommand({
+      modelMatrix: modelMatrix2D,
+    });
+    const drawCommand = new ModelExperimentalDrawCommand({
+      primitiveRenderResources: renderResources,
+      command: command,
+      useSilhouetteCommands: true,
+    });
+
+    // 2D commands aren't derived until getCommands is called
+    expect(drawCommand._commandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(2);
+    expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
+
+    // Silhouette commands are generated for 2D, but only the
+    // non-silhouette commands are retrieved.
+    const result = drawCommand.getCommands(mockFrameState2D);
+    expect(result.length).toEqual(4);
+
+    expect(drawCommand._commandList2D.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(2);
+  });
+
   it("getCommands doesn't derive 2D commands if primitive is not near IDL", function () {
     const modelMatrix = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(100, 250),
@@ -632,14 +728,18 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const drawCommand = new ModelExperimentalDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
+      useSilhouetteCommands: true,
     });
 
     expect(drawCommand._commandList.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
 
     const result = drawCommand.getCommands(mockFrameState2D);
     expect(result.length).toEqual(2);
     expect(drawCommand._commandList2D.length).toEqual(0);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(0);
   });
 
   it("getCommands updates model matrix for 2D commands", function () {
@@ -657,11 +757,15 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
     const commandList = drawCommand._commandList;
     const commandList2D = drawCommand._commandList2D;
-    expect(commandList.length).toEqual(4);
-    expect(commandList2D.length).toEqual(4);
+    const silhouetteCommandList = drawCommand._silhouetteCommandList;
+    const silhouetteCommandList2D = drawCommand._silhouetteCommandList2D;
+    expect(commandList.length).toEqual(2);
+    expect(commandList2D.length).toEqual(2);
+    expect(silhouetteCommandList.length).toEqual(2);
+    expect(silhouetteCommandList2D.length).toEqual(2);
 
     const result = drawCommand.getCommands(mockFrameState2D);
-    expect(result.length).toEqual(8);
+    expect(result.length).toEqual(4);
 
     const expectedModelMatrix = computeExpected2DMatrix(
       modelMatrix2D,
@@ -673,19 +777,111 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       scratchExpectedTranslation
     );
 
-    // The first four commands should be drawn with the given model matrix
-    for (let i = 0; i < 4; i++) {
+    // The first two commands should be drawn with the given model matrix
+    for (let i = 0; i < 2; i++) {
       const command = result[i];
       expect(command.modelMatrix).toEqual(modelMatrix2D);
       expect(command.boundingVolume.center).toEqual(translation);
     }
 
-    // The last four commands are the 2D commands derived from the original ones
-    for (let i = 4; i < 8; i++) {
+    // The last two commands are the 2D commands derived from the original ones
+    for (let i = 2; i < 4; i++) {
       const command2D = result[i];
       expect(command2D.modelMatrix).toEqual(expectedModelMatrix);
       expect(command2D.boundingVolume.center).toEqual(expectedTranslation);
     }
+
+    // The silhouette commands should be affected in the same way.
+    for (let i = 0; i < 2; i++) {
+      const command = silhouetteCommandList[i];
+      expect(command.modelMatrix).toEqual(modelMatrix2D);
+      expect(command.boundingVolume.center).toEqual(translation);
+
+      const command2D = silhouetteCommandList2D[i];
+      expect(command2D.modelMatrix).toEqual(expectedModelMatrix);
+      expect(command2D.boundingVolume.center).toEqual(expectedTranslation);
+    }
+  });
+
+  it("getSilhouetteCommands returns silhouette-pass commands", function () {
+    const drawCommand = createModelExperimentalDrawCommand({
+      deriveTranslucent: true,
+      deriveSilhouette: true,
+    });
+
+    expect(drawCommand._commandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(2);
+
+    const result = drawCommand.getCommands(mockFrameState);
+    expect(result.length).toEqual(2);
+
+    const silhouetteResult = drawCommand.getSilhouetteCommands(mockFrameState);
+    expect(silhouetteResult.length).toEqual(2);
+
+    expect(silhouetteResult[0]).not.toEqual(result[0]);
+    expect(silhouetteResult[1]).not.toEqual(result[1]);
+
+    const stencilReference = 1;
+    const silhouetteIsTranslucent = false;
+    verifySilhouetteColorCommand(
+      silhouetteResult[0],
+      stencilReference,
+      silhouetteIsTranslucent
+    );
+    verifySilhouetteColorCommand(
+      silhouetteResult[1],
+      stencilReference,
+      silhouetteIsTranslucent
+    );
+  });
+
+  it("getSilhouetteCommands returns 2D silhouette-pass commands", function () {
+    const drawCommand = createModelExperimentalDrawCommand({
+      deriveTranslucent: true,
+      derive2D: true,
+      deriveSilhouette: true,
+    });
+
+    expect(drawCommand._commandList.length).toEqual(2);
+    expect(drawCommand._commandList2D.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList2D.length).toEqual(2);
+
+    const result = drawCommand.getCommands(mockFrameState2D);
+    expect(result.length).toEqual(4);
+
+    const silhouetteResult = drawCommand.getSilhouetteCommands(
+      mockFrameState2D
+    );
+    expect(silhouetteResult.length).toEqual(4);
+
+    const stencilReference = 1;
+    const silhouetteIsTranslucent = false;
+
+    const length = silhouetteResult.length;
+    for (let i = 0; i < length; i++) {
+      expect(silhouetteResult[i]).not.toEqual(result[i]);
+      verifySilhouetteColorCommand(
+        silhouetteResult[i],
+        stencilReference,
+        silhouetteIsTranslucent
+      );
+    }
+  });
+
+  it("getSilhouetteCommands returns empty if model doesn't have silhouette", function () {
+    const drawCommand = createModelExperimentalDrawCommand({
+      deriveTranslucent: true,
+    });
+
+    expect(drawCommand._commandList.length).toEqual(2);
+    expect(drawCommand._silhouetteCommandList.length).toEqual(0);
+
+    const result = drawCommand.getCommands(mockFrameState);
+    expect(result.length).toEqual(2);
+
+    const silhouetteResult = drawCommand.getSilhouetteCommands(mockFrameState);
+    expect(silhouetteResult.length).toEqual(0);
   });
 
   it("updates model matrix", function () {
@@ -735,15 +931,17 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     });
 
     const commandList = drawCommand._commandList;
-    const length = commandList.length;
-    expect(length).toEqual(4);
+    const silhouetteCommandList = drawCommand._silhouetteCommandList;
+    expect(commandList.length).toEqual(2);
+    expect(silhouetteCommandList.length).toEqual(2);
 
     // Derive the 2D commands
     drawCommand.getCommands(mockFrameState2D);
 
     const commandList2D = drawCommand._commandList2D;
-    const length2D = commandList2D.length;
-    expect(length2D).toEqual(4);
+    const silhouetteCommandList2D = drawCommand._silhouetteCommandList2D;
+    expect(commandList2D.length).toEqual(2);
+    expect(silhouetteCommandList2D.length).toEqual(2);
 
     let modelMatrix2D = Matrix4.fromTranslation(
       Cartesian3.fromDegrees(100, 25),
@@ -763,10 +961,15 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     drawCommand.modelMatrix = modelMatrix2D;
     expect(drawCommand.modelMatrix).toEqual(modelMatrix2D);
 
+    const length = commandList.length;
     for (let i = 0; i < length; i++) {
       const command = commandList[i];
       expect(command.modelMatrix).toEqual(modelMatrix2D);
       expect(command.boundingVolume.center).toEqual(translation);
+
+      const silhouetteCommand = silhouetteCommandList[i];
+      expect(silhouetteCommand.modelMatrix).toEqual(modelMatrix2D);
+      expect(silhouetteCommand.boundingVolume.center).toEqual(translation);
     }
 
     // Update the model matrix for the 2D commands
@@ -781,10 +984,17 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       scratchExpectedTranslation
     );
 
+    const length2D = commandList2D.length;
     for (let i = 0; i < length2D; i++) {
       const command = commandList2D[i];
       expect(command.modelMatrix).toEqual(expectedModelMatrix);
       expect(command.boundingVolume.center).toEqual(expectedTranslation);
+
+      const silhouetteCommand = silhouetteCommandList2D[i];
+      expect(silhouetteCommand.modelMatrix).toEqual(expectedModelMatrix);
+      expect(silhouetteCommand.boundingVolume.center).toEqual(
+        expectedTranslation
+      );
     }
   });
 
@@ -795,7 +1005,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       deriveSilhouette: true,
     });
 
-    let result = drawCommand.getCommands(mockFrameState2D);
+    let result = drawCommand.getAllCommands();
     const length = result.length;
     expect(length).toEqual(8);
 
@@ -806,7 +1016,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     drawCommand.shadows = ShadowMode.ENABLED;
-    result = drawCommand.getCommands(mockFrameState2D);
+    result = drawCommand.getAllCommands();
 
     for (let i = 0; i < length; i++) {
       const command = result[i];
@@ -860,7 +1070,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       deriveSilhouette: true,
     });
 
-    let result = drawCommand.getCommands(mockFrameState2D);
+    let result = drawCommand.getAllCommands();
     const length = result.length;
     expect(length).toEqual(8);
 
@@ -870,7 +1080,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     drawCommand.backFaceCulling = true;
-    result = drawCommand.getCommands(mockFrameState2D);
+    result = drawCommand.getAllCommands();
 
     for (let i = 0; i < length; i++) {
       const command = result[i];
@@ -885,7 +1095,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       deriveSilhouette: true,
     });
 
-    let result = drawCommand.getCommands(mockFrameState2D);
+    let result = drawCommand.getAllCommands();
     const length = result.length;
     expect(length).toEqual(8);
 
@@ -895,7 +1105,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     drawCommand.cullFace = CullFace.FRONT;
-    result = drawCommand.getCommands(mockFrameState2D);
+    result = drawCommand.getAllCommands();
 
     for (let i = 0; i < length; i++) {
       const command = result[i];
@@ -910,7 +1120,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       deriveSilhouette: true,
     });
 
-    let result = drawCommand.getCommands(mockFrameState2D);
+    let result = drawCommand.getAllCommands();
     const length = result.length;
     expect(length).toEqual(8);
 
@@ -920,7 +1130,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     }
 
     drawCommand.debugShowBoundingVolume = true;
-    result = drawCommand.getCommands(mockFrameState2D);
+    result = drawCommand.getAllCommands();
 
     for (let i = 0; i < length; i++) {
       const command = result[i];
