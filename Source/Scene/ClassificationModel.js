@@ -352,7 +352,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
