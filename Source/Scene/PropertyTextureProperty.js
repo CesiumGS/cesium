@@ -37,10 +37,11 @@ function PropertyTextureProperty(options) {
   //>>includeEnd('debug');
 
   // in EXT_structural_metadata, the property is a valid glTF textureInfo
+  const channels = defined(property.channels) ? property.channels : [0];
   const textureInfo = property;
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
-    channels: reformatChannels(defaultValue(property.channels, [0])),
+    channels: reformatChannels(channels),
     texture: textures[textureInfo.index],
   });
 

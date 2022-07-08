@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-* Fixed crash when loading glTF models with the `EXT_mesh_features` and `EXT_structural_metadata` extensions without `channels` property. [#10511](https://github.com/CesiumGS/cesium/pull/10511)
+- Fixed crash when loading glTF models with the `EXT_mesh_features` and `EXT_structural_metadata` extensions without `channels` property. [#10511](https://github.com/CesiumGS/cesium/pull/10511)
 
 ### 1.95 - 2022-07-01
 
