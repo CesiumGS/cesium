@@ -2401,6 +2401,7 @@ ModelExperimental.fromPnts = function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
+    loadAttributesFor2D: options.projectTo2D,
   };
   const loader = new PntsLoader(loaderOptions);
 

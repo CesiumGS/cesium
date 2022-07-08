@@ -12,6 +12,7 @@
 - Fixed a crash in the 3D Tiles Feature Styling sandcastle that occurred when using `ModelExperimental`. [#10514](https://github.com/CesiumGS/cesium/pull/10514)
 - Fixed improper handling of double-sided materials in `ModelExperimental`. [#10507](https://github.com/CesiumGS/cesium/pull/10507)
 - Fixed a bug where the alpha component of `model.color` would not update in the 3D Models Coloring sandcastle when using `ModelExperimental`. [#10519](https://github.com/CesiumGS/cesium/pull/10519)
+- Fixed a crash in the 3D Tiles Formats sandcastle when loading draco-compressed point clouds with `ModelExperimental`. [#10521](https://github.com/CesiumGS/cesium/pull/10521)
 
 ### 1.95 - 2022-07-01
 
