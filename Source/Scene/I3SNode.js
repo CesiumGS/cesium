@@ -924,9 +924,9 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
         !sameSide(position, v0, v1, v2) ||
         !sameSide(position, v1, v0, v2) ||
         !sameSide(position, v2, v0, v1)
-      )
+      ) {
         continue;
-
+      }
       //Because of precision issues, we can't always reliably tell if the point lands directly on the face, so the most robust way is just to find the closest one
       const v0v1 = {},
         v0v2 = {},
@@ -937,8 +937,9 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
       Cartesian3.cross(v0v1, v0v2, crossProd);
 
       //Skip "triangles" with 3 colinear points
-      if (Cartesian3.magnitude(crossProd) === 0) continue;
-
+      if (Cartesian3.magnitude(crossProd) === 0) {
+        continue;
+      }
       Cartesian3.normalize(crossProd, normal);
 
       const v0p = {},
