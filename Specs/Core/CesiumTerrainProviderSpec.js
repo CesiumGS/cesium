@@ -404,9 +404,8 @@ describe("Core/CesiumTerrainProvider", function () {
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
-    provider.errorEvent.addEventListener(errorMatcher);
-
     return provider.readyPromise.then(fail).catch((e) => {
+      provider.errorEvent.addEventListener(errorMatcher);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -423,9 +422,8 @@ describe("Core/CesiumTerrainProvider", function () {
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
-    provider.errorEvent.addEventListener(errorMatcher);
-
     return provider.readyPromise.then(fail).catch((e) => {
+      provider.errorEvent.addEventListener(errorMatcher);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -442,9 +440,8 @@ describe("Core/CesiumTerrainProvider", function () {
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
-    provider.errorEvent.addEventListener(errorMatcher);
-
     return provider.readyPromise.then(fail).catch((e) => {
+      provider.errorEvent.addEventListener(errorMatcher);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -480,9 +477,8 @@ describe("Core/CesiumTerrainProvider", function () {
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
-    provider.errorEvent.addEventListener(errorMatcher);
-
     return provider.readyPromise.then(fail).catch((e) => {
+      provider.errorEvent.addEventListener(errorMatcher);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
@@ -501,9 +497,8 @@ describe("Core/CesiumTerrainProvider", function () {
       provider.errorEvent.removeEventListener(errorMatcher);
     };
 
-    provider.errorEvent.addEventListener(errorMatcher);
-
     return provider.readyPromise.then(fail).catch((e) => {
+      provider.errorEvent.addEventListener(errorMatcher);
       expect(e.message).toContain("An error occurred while accessing");
     });
   });
