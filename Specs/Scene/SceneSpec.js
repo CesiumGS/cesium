@@ -44,6 +44,7 @@ import { Sun } from "../../Source/Cesium.js";
 import { GroundPrimitive } from "../../Source/Cesium.js";
 import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
 import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
+import { Resource } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -89,6 +90,33 @@ describe(
     afterAll(function () {
       scene.destroyForSpecs();
     });
+
+    function returnTileJson(path) {
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          path,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+    }
+
+    function returnQuantizedMeshTileJson() {
+      return returnTileJson(
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json"
+      );
+    }
 
     function createRectangle(rectangle, height) {
       return new Primitive({
@@ -1513,22 +1541,32 @@ describe(
     });
 
     it("Sets terrainProvider", function () {
+      returnQuantizedMeshTileJson();
+
       const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       scene.terrainProvider = new CesiumTerrainProvider({
         url: "//terrain/tiles",
       });
 
-      expect(scene.terrainProvider).toBe(globe.terrainProvider);
-
-      scene.globe = undefined;
-      expect(function () {
-        scene.terrainProvider = new CesiumTerrainProvider({
-          url: "//newTerrain/tiles",
+      return scene.terrainProvider.readyPromise
+        .then(() => {
+          expect(scene.terrainProvider).toBe(globe.terrainProvider);
+          scene.globe = undefined;
+          const newProvider = new CesiumTerrainProvider({
+            url: "//newTerrain/tiles",
+          });
+          return newProvider.readyPromise.then(() => {
+            expect(function () {
+              scene.terrainProvider = newProvider;
+            }).not.toThrow();
+          });
+        })
+        .finally(() => {
+          scene.destroyForSpecs();
+          Resource._Implementations.loadWithXhr =
+            Resource._DefaultImplementations.loadWithXhr;
         });
-      }).not.toThrow();
-
-      scene.destroyForSpecs();
     });
 
     it("Gets terrainProviderChanged", function () {

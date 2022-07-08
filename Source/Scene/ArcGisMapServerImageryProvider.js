@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -228,7 +227,6 @@ function ArcGisMapServerImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = defer();
 
   // Grab the details of this MapServer.
   const that = this;
@@ -255,20 +253,19 @@ function ArcGisMapServerImageryProvider(options) {
         });
       } else {
         const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
-        metadataError = TileProviderError.handleError(
+        metadataError = TileProviderError.reportError(
           metadataError,
           that,
           that._errorEvent,
           message,
           undefined,
           undefined,
-          undefined,
-          requestMetadata
+          undefined
         );
-        if (!metadataError.retry) {
-          that._readyPromise.reject(new RuntimeError(message));
+        if (metadataError.retry) {
+          return requestMetadata();
         }
-        return;
+        return Promise.reject(new RuntimeError(message));
       }
       that._maximumLevel = data.tileInfo.lods.length - 1;
 
@@ -324,20 +321,19 @@ function ArcGisMapServerImageryProvider(options) {
             );
           } else {
             const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
-            metadataError = TileProviderError.handleError(
+            metadataError = TileProviderError.reportError(
               metadataError,
               that,
               that._errorEvent,
               extentMessage,
               undefined,
               undefined,
-              undefined,
-              requestMetadata
+              undefined
             );
-            if (!metadataError.retry) {
-              that._readyPromise.reject(new RuntimeError(extentMessage));
+            if (metadataError.retry) {
+              return requestMetadata();
             }
-            return;
+            return Promise.reject(new RuntimeError(extentMessage));
           }
         }
       } else {
@@ -368,46 +364,37 @@ function ArcGisMapServerImageryProvider(options) {
     }
 
     that._ready = true;
-    that._readyPromise.resolve(true);
-    TileProviderError.handleSuccess(metadataError);
+    TileProviderError.reportSuccess(metadataError);
+    return Promise.resolve(true);
   }
 
   function metadataFailure(e) {
     const message = `An error occurred while accessing ${that._resource.url}.`;
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
       message,
       undefined,
       undefined,
-      undefined,
-      requestMetadata
+      undefined
     );
-    that._readyPromise.reject(new RuntimeError(message));
+    return Promise.reject(new RuntimeError(message));
   }
-
   function requestMetadata() {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
         f: "json",
       },
     });
-    resource
-      .fetchJsonp()
-      .then(function (result) {
-        metadataSuccess(result);
-      })
-      .catch(function (e) {
-        metadataFailure(e);
-      });
+    return resource.fetchJsonp().then(metadataSuccess).catch(metadataFailure);
   }
 
   if (this._useTiles) {
-    requestMetadata();
+    this._readyPromise = requestMetadata();
   } else {
     this._ready = true;
-    this._readyPromise.resolve(true);
+    this._readyPromise = Promise.resolve(true);
   }
 }
 
@@ -677,7 +664,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

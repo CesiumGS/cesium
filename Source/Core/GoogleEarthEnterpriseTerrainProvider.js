@@ -143,7 +143,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
         const e = new RuntimeError(
           `The server ${metadata.url} doesn't have terrain`
         );
-        metadataError = TileProviderError.handleError(
+        metadataError = TileProviderError.reportError(
           metadataError,
           that,
           that._errorEvent,
@@ -156,12 +156,12 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
         return Promise.reject(e);
       }
 
-      TileProviderError.handleSuccess(metadataError);
+      TileProviderError.reportSuccess(metadataError);
       that._ready = result;
       return result;
     })
     .catch(function (e) {
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
