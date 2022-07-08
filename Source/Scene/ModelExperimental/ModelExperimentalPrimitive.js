@@ -17,6 +17,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import PrimitiveOutlinePipelineStage from "./PrimitiveOutlinePipelineStage.js";
 import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage.js";
 import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
@@ -181,6 +182,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
+  const hasOutlines =
+    model._enableShowOutline && defined(primitive.outlineCoordinates);
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
@@ -234,6 +237,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function (frameState) {
 
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
+  }
+
+  if (hasOutlines) {
+    pipelineStages.push(PrimitiveOutlinePipelineStage);
   }
 
   pipelineStages.push(AlphaPipelineStage);
