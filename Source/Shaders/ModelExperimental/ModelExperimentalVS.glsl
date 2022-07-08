@@ -28,6 +28,10 @@ void main()
     skinningStage(attributes);
     #endif
 
+    #ifdef HAS_PRIMITIVE_OUTLINE
+    primitiveOutlineStage();
+    #endif
+
     // Compute the bitangent according to the formula in the glTF spec.
     // Normal and tangents can be affected by morphing and skinning, so
     // the bitangent should not be computed until their values are finalized.
@@ -57,7 +61,6 @@ void main()
     mat4 modelView = czm_modelView;
     mat3 normal = czm_normal;
     #endif
-    
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
