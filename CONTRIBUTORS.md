@@ -328,8 +328,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuri Chen](https://github.com/yurichen17)
 - [David Ferguson](https://github.com/jdfwarrior)
 - [Karthik Vaithin](https://github.com/kvaithin)
-<<<<<<< support-cross-origin-isolate
-- [Jiang Heng](https://github.com/jiangheng90)
-=======
 - [Jonathan Meerson](https://github.com/yonzmeer)
->>>>>>> main
+- [Jiang Heng](https://github.com/jiangheng90)
+
