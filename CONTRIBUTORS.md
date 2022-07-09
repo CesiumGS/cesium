@@ -330,4 +330,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Karthik Vaithin](https://github.com/kvaithin)
 - [Jonathan Meerson](https://github.com/yonzmeer)
 - [Jiang Heng](https://github.com/jiangheng90)
-
