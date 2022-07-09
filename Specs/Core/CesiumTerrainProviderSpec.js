@@ -1,5 +1,4 @@
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -254,8 +253,12 @@ describe("Core/CesiumTerrainProvider", function () {
     const provider = new CesiumTerrainProvider({
       url: "made/up/url",
     });
-    expect(provider.errorEvent).toBeDefined();
-    expect(provider.errorEvent).toBe(provider.errorEvent);
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider.errorEvent).toBeDefined();
+      expect(provider.errorEvent).toBe(provider.errorEvent);
+    });
   });
 
   it("returns reasonable geometric error for various levels", function () {
@@ -265,9 +268,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
       expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
         provider.getLevelMaximumGeometricError(1) * 2.0,
@@ -398,14 +399,18 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    let errorListenerCalled = false;
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("format is not specified");
+      errorListenerCalled = true;
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("format is not specified");
+    return provider.readyPromise.then(fail).catch((e) => {
+      expect(errorListenerCalled).toBe(true);
+      expect(e.message).toContain("An error occurred while accessing");
     });
   });
 
@@ -416,14 +421,18 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    let errorListenerCalled = false;
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("invalid or not supported");
+      errorListenerCalled = true;
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("invalid or not supported");
+    return provider.readyPromise.then(fail).catch((e) => {
+      expect(errorListenerCalled).toBe(true);
+      expect(e.message).toContain("An error occurred while accessing");
     });
   });
 
@@ -434,14 +443,18 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    let errorListenerCalled = false;
+    const errorMatcher = function (event) {
+      expect(event.message).toContain("invalid or not supported");
+      errorListenerCalled = true;
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
 
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
+    provider.errorEvent.addEventListener(errorMatcher);
 
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain("invalid or not supported");
+    return provider.readyPromise.then(fail).catch((e) => {
+      expect(errorListenerCalled).toBe(true);
+      expect(e.message).toContain("An error occurred while accessing");
     });
   });
 
@@ -469,16 +482,20 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain(
+    let errorListenerCalled = false;
+    const errorMatcher = function (event) {
+      expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
+      errorListenerCalled = true;
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
+
+    provider.errorEvent.addEventListener(errorMatcher);
+
+    return provider.readyPromise.then(fail).catch((e) => {
+      expect(errorListenerCalled).toBe(true);
+      expect(e.message).toContain("An error occurred while accessing");
     });
   });
 
@@ -489,16 +506,20 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
-
-    provider.errorEvent.addEventListener(function (e) {
-      deferred.resolve(e);
-    });
-
-    return deferred.promise.then(function (error) {
-      expect(error.message).toContain(
+    let errorListenerCalled = false;
+    const errorMatcher = function (event) {
+      expect(event.message).toContain(
         "does not specify any tile URL templates"
       );
+      errorListenerCalled = true;
+      provider.errorEvent.removeEventListener(errorMatcher);
+    };
+
+    provider.errorEvent.addEventListener(errorMatcher);
+
+    return provider.readyPromise.then(fail).catch((e) => {
+      expect(errorListenerCalled).toBe(true);
+      expect(e.message).toContain("An error occurred while accessing");
     });
   });
 
@@ -1040,12 +1061,16 @@ describe("Core/CesiumTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-          promise = terrainProvider.requestTileGeometry(
-            0,
-            0,
-            0,
-            createRequest()
-          );
+          const request = new Request({
+            throttle: true,
+            throttleByServer: true,
+          });
+          promise = terrainProvider
+            .requestTileGeometry(0, 0, 0, request)
+            .then(fail)
+            .catch((e) => {
+              expect(e.message).toContain("Mesh buffer doesn't exist.");
+            });
         }
         RequestScheduler.update();
         expect(promise).toBeDefined();

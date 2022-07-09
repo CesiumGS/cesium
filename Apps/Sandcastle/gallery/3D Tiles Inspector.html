@@ -48,6 +48,7 @@
 
         const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(75343),
+          enableDebugWireframe: true,
         });
         viewer.scene.primitives.add(tileset);
 

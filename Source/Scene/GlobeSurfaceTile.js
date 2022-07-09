@@ -709,16 +709,18 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = undefined;
 
     const message = `Failed to obtain terrain tile X: ${x} Y: ${y} Level: ${level}. Error message: "${error}"`;
-    terrainProvider._requestError = TileProviderError.handleError(
+    terrainProvider._requestError = TileProviderError.reportError(
       terrainProvider._requestError,
       terrainProvider,
       terrainProvider.errorEvent,
       message,
       x,
       y,
-      level,
-      doRequest
+      level
     );
+    if (terrainProvider._requestError.retry) {
+      doRequest();
+    }
   }
 
   function doRequest() {

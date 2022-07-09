@@ -914,6 +914,7 @@ Quaternion.squad = function (q0, q1, s0, s1, t, result) {
 };
 
 const fastSlerpScratchQuaternion = new Quaternion();
+// eslint-disable-next-line no-loss-of-precision
 const opmu = 1.90110745351730037;
 const u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 const v = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];

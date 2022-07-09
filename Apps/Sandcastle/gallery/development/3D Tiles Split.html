@@ -12,7 +12,7 @@
       name="description"
       content="Show 3D Tiles in various formats on only one side of the screen."
     />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -196,6 +196,7 @@
             tileset = viewer.scene.primitives.add(
               new Cesium.Cesium3DTileset({
                 url: options.resource,
+                enableDebugWireframe: true,
               })
             );
 
@@ -235,7 +236,7 @@
                   });
                 }
               })
-              .otherwise(function (error) {
+              .catch(function (error) {
                 throw error;
               });
           });

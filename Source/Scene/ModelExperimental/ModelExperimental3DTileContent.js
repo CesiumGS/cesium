@@ -201,6 +201,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
   model.splitDirection = tileset.splitDirection;
   model.debugWireframe = tileset.debugWireframe;
+  model.showOutline = tileset.showOutline;
+  model.outlineColor = tileset.outlineColor;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;
@@ -383,6 +385,9 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
     projectTo2D: tileset._projectTo2D,
+    enableShowOutline: tileset._enableShowOutline,
+    showOutline: tileset.showOutline,
+    outlineColor: tileset.outlineColor,
   };
 
   return combine(additionalOptions, mainOptions);
