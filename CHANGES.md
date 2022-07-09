@@ -6,6 +6,7 @@
 
 - Models and tilesets that use the `CESIUM_primitive_outline` extension can now toggle outlines at runtime with the `showOutline` property. Furthermore, the color of the outlines can now be controlled by the `outlineColor` property. [#10506](https://github.com/CesiumGS/cesium/pull/10506)
 - Added optional `blurActiveElementOnCanvasFocus` option to set the behavior of blurring the active element when interacting with the canvas. [#10518](https://github.com/CesiumGS/cesium/pull/10518)
+- Added cross-origin isloated config for development server by using `npm run startCrossOriginIsolated`. [#10515](https://github.com/CesiumGS/cesium/pull/10515)
 
 ##### Fixes :wrench:
 
@@ -16,7 +17,7 @@
 - Fixed a bug where .cmpt files were not cached correctly in `ModelExperimental`. [#10524](https://github.com/CesiumGS/cesium/pull/10524)
 - Fixed a crash in the 3D Tiles Formats sandcastle when loading draco-compressed point clouds with `ModelExperimental`. [#10521](https://github.com/CesiumGS/cesium/pull/10521)
 - Fixed a bug where per-feature post-processing was not working with `ModelExperimental`. [#10528](https://github.com/CesiumGS/cesium/pull/10528)
-- Fixed error in `loadAndExecuteScript` when cesium was running in cross-origin isloated evironment.[#10515](https://github.com/CesiumGS/cesium/pull/10515)
+- Fixed error in `loadAndExecuteScript` and favorite icon request fail in sandcaslte when CesiumJS was running in cross-origin isloated evironment.[#10515](https://github.com/CesiumGS/cesium/pull/10515)
 
 ### 1.95 - 2022-07-01
 

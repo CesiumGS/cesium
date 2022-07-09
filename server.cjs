@@ -33,6 +33,10 @@
       type: "boolean",
       description: "Show this help.",
     },
+    "cross-origin-isloated": {
+      type: "boolean",
+      description: "Run server in cross-origin isolated environment.",
+    },
   });
   const argv = yargs.argv;
 
@@ -72,6 +76,12 @@
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept"
     );
+
+    if (argv.corssOriginIsolated) {
+      res.header("Cross-Origin-Opener-Policy", "same-origin");
+      res.header("Cross-Origin-Embedder-Policy", "require-corp");
+    }
+
     next();
   });
 
