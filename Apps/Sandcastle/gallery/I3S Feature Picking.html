@@ -44,6 +44,7 @@
           timeline: false,
         });
         //More datasets to tour can be added here..
+        //I3SDataProvider.loadurl api supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a scene Scene SceneServer.
         const tours = {
           "New York":
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/NYC_Attributed_v17/SceneServer",
@@ -65,7 +66,7 @@
 
         const cesiumTilesetOptions = {
           show: true,
-          skipLevelOfDetail: false,
+          skipLevelOfDetail: true,
           debugShowBoundingVolume: false,
         };
         //Create I3S data provider. autoCenterCameraOnStart i3s option autocenters the camera to the I3S layers' extent

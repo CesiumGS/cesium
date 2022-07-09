@@ -1,39 +1,51 @@
-/**
- * This code implements support for I3S 1.6 and 1.7 in the Cesium viewer. It allows the user
- * to access a scene server URL and load it inside of the Cesium viewer.
+/*
+* Esri Contribution: This code implements support for I3S (Indexed 3D Scene Layers), an OGC Community Standard.
+* Co-authored-by: Alexandre Jean-Claude ajeanclaude@spiria.com
+* Co-authored-by: Anthony Mirabeau anthony.mirabeau@presagis.com
+* Co-authored-by: Elizabeth Rudkin elizabeth.rudkin@presagis.com
+* Co-authored-by: Tamrat Belayneh tbelayneh@esri.com
+
+ * The I3S format has been developed by Esri and is shared under an Apache 2.0 license and is maintained @ https://github.com/Esri/i3s-spec.
+ * This implementation supports loading, displaying, and querying an I3S layer (supported versions include Esri github I3S versions 1.6, 1.7/1.8 -
+ * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the Cesium viewer.
+ * It enables the user to access an I3S layer via its URL and load it inside of the Cesium viewer.
  *
- * When the scene server is initialized, and the loadURL function invoked, it do the following:
+ * When a scene layer is initialized, and the I3SDataProvider.loadURL function is invoked, it accomplishes the following:
  *
- * Load the data at the scene server level
- * Load all layers data
- * For each layer, create a Cesium 3D Tile Set and load the root node
- *  When the root node is imported, it creates a Cesium 3D tile that is parented to the Cesium 3D tile set
- *  Load all children of the root node
+ * It processes the 3D Scene Layer  resource (https://github.com/Esri/i3s-spec/blob/master/docs/1.8/3DSceneLayer.cmn.md) of an I3S dataset
+ * and loads the layers data. It does so by creating a Cesium 3D Tile Set for the given i3s layer and loads the root node.
+ * When the root node is imported, it creates a Cesium 3D tile that is parented to the Cesium 3D tile set
+ * and loads all children of the root node:
  *  for each children
- *   Create a place holder 3D tile so that the LOD display can know about it and display as needed
- *   When the LOD display decides that a Cesium 3D tile is visible, it invokes requestContent on it
+ *   Create a place holder 3D tile so that the LOD display can use the nodes' selection criteria (maximumScreenSpaceError) to select the appropriate node
+ *   based on the current LOD display & evaluation. If the Cesium 3D tile is visible, it invokes requestContent on it.
  *   At that moment, we intercept the call to requestContent, and we load the geometry in I3S format
  *   That geometry is transcoded on the fly to gltf format and ingested by Cesium
  *   When the geometry is loaded, we then load all children of this node as placeholders so that the LOD
- *   can know about them too
+ *   can know about them too.
  *
  * About transcoding:
  *
- * We use web workers to transcode I3S geometries into Cesium GLTF
+ * We use web workers to transcode I3S geometries into glTF
  * The steps are:
  *
- * Decode geometry attributes (positions, normals, etc..) either from DRACO or Binary format
- * Convert heights for all vertices from Orthometric to Ellipsoidal
- * Transform vertex coordinates from LONG/LAT/HEIGHT to Cartesian in local space and
+ * Decode geometry attributes (positions, normals, etc..) either from DRACO or Binary format.
+ * If requested, (when creating an I3SDataProvider the user has the option to specify a tiled elevation terrain provider
+ * (geoidTiledTerrainProvider) such as the one shown in the sandbox example based on ArcGISTiledElevationTerrainProvider, that allows
+ * conversion of heights for all vertices & bounding boxes of an I3S layer from (typically) gravity related (Orthometric) heights to Ellipsoidal.
+ * This step is essential when fusing data with varying height sources (as is the case when fusing the I3S dataset (gravity related) in the sandcastle examples with the cesium world terrain (ellipsoidal)).
+ * We then transform vertex coordinates from LONG/LAT/HEIGHT to Cartesian in local space and
  * scale appropriately if specified in the attribute metadata
  * Crop UVs if UV regions are defined in the attribute metadata
- * Create a GLTF document in memory that will be ingested as part of a glb payload
+ * Create a glTF document in memory that will be ingested as part of a glb payload
  *
  * About GEOID data:
  *
- * We provide the ability to use GEOID data to convert heights from orthometric to ellipsoidal.
- * The i3S data source uses a tiled elevation terrain provider to access the geoid tiles.
- * The sandcastle example below shows how to set the terrain provider service if required.
+ * We provide the ability to use GEOID data to convert heights from gravity related (orthometric) height systems to ellipsoidal.
+ * We employ a service architecture to get the conversion factor for a given long lat values, leveraging existing implementation based on ArcGISTiledElevationTerrainProvider
+ * to avoid requiring bloated look up files. The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on
+ * EGM2008 Gravity Model. The Sandbox examples show how to set the terrain provider service if required.
+ *
  *
  */
 
@@ -46,7 +58,8 @@ let viewer = new Cesium.Viewer("cesiumContainer", {
 });
 viewer.clock.shouldAnimate = false;
 let tours = {
-    "Frankfurt": "https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer"
+    "Frankfurt": "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0;
+/layers/0"
     };
 // Initialize the terrain provider which provides the geoid conversion
 // If this is not specified, or the URL is invalid no geoid conversion will be applied.
@@ -136,12 +149,11 @@ if (_tracecode) {
 }
 
 /**
- * This class implements using an I3S scene server as a Cesium data source. The URL
+ * This class implements using an I3S Scene Layer as a Cesium data source. The URL
  * that is used for loadUrl should return a scene object. Currently supported I3S
- * versions are 1.6 and 1.7. I3SDataProvider is the main public class for I3S support.
- * All other classes in this source file implement the Object Model for the I3S entities,
- * which may at some point have more public interfaces if further introspection or
- * customization need to be added.
+ * versions are 1.6 and 1.7/1.8 (OGC I3S 1.2). An I3SDataProvider is the main public class for I3S support.
+ * I3SFeature and I3SNode classes implement the Object Model for I3S entities, with public interfaces
+
  * @alias I3SDataProvider
  * @constructor
  *
@@ -152,7 +164,8 @@ if (_tracecode) {
  *
  * @example
  * let i3sData = new I3SDataProvider();
- * i3sData.loadUrl('https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer');
+
+ * i3sData.loadUrl('https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
  * viewer.scene.primitives.add(i3sData);
  *
  * @example
@@ -310,8 +323,8 @@ I3SDataProvider.prototype.loadUrl = function (url) {
   this._query = parts[1];
   this._completeUrl = url;
 
-  this._sceneServer = new I3SSceneServer(this);
-  return this._sceneServer.load(this._completeUrl);
+  this._sceneLayer = new I3SSceneLayer(this);
+  return this._sceneLayer.load(this._completeUrl);
 };
 
 /**
@@ -343,11 +356,11 @@ I3SDataProvider.prototype.load = function (data) {
 };
 
 /**
- * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * Destroys the WebGL resources held by this object. Destroying an object allows for deterministic
  * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
  * <p>
  * Once an object is destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception. Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
  *
@@ -356,8 +369,8 @@ I3SDataProvider.prototype.load = function (data) {
  * @see Primitive#isDestroyed
  */
 I3SDataProvider.prototype.destroy = function () {
-  for (let i = 0; i < this._sceneServer._layerCollection.length; i++) {
-    this._sceneServer._layerCollection[i]._tileset.destroy();
+  for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
+    this._sceneLayer._layerCollection[i]._tileset.destroy();
   }
 };
 
@@ -373,8 +386,8 @@ I3SDataProvider.prototype.destroy = function () {
  * @see Primitive#destroy
  */
 I3SDataProvider.prototype.isDestroyed = function () {
-  if (this._sceneServer._layerCollection.length !== 0) {
-    return this._sceneServer._layerCollection[0]._tileset.isDestroyed();
+  if (this._sceneLayer._layerCollection.length !== 0) {
+    return this._sceneLayer._layerCollection[0]._tileset.isDestroyed();
   }
 
   return false;
@@ -394,12 +407,12 @@ I3SDataProvider.prototype.isDestroyed = function () {
  * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
  */
 I3SDataProvider.prototype.update = function (frameState) {
-  for (let i = 0; i < this._sceneServer._layerCollection.length; i++) {
+  for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
     if (
-      typeof this._sceneServer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneServer._layerCollection[i]._tileset.ready
+      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
+      this._sceneLayer._layerCollection[i]._tileset.ready
     ) {
-      this._sceneServer._layerCollection[i]._tileset.update(frameState);
+      this._sceneLayer._layerCollection[i]._tileset.update(frameState);
     }
   }
 };
@@ -408,14 +421,12 @@ I3SDataProvider.prototype.update = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
-  for (let i = 0; i < this._sceneServer._layerCollection.length; i++) {
+  for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
     if (
-      typeof this._sceneServer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneServer._layerCollection[i]._tileset.ready
+      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
+      this._sceneLayer._layerCollection[i]._tileset.ready
     ) {
-      this._sceneServer._layerCollection[i]._tileset.prePassesUpdate(
-        frameState
-      );
+      this._sceneLayer._layerCollection[i]._tileset.prePassesUpdate(frameState);
     }
   }
 };
@@ -424,12 +435,12 @@ I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
-  for (let i = 0; i < this._sceneServer._layerCollection.length; i++) {
+  for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
     if (
-      typeof this._sceneServer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneServer._layerCollection[i]._tileset.ready
+      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
+      this._sceneLayer._layerCollection[i]._tileset.ready
     ) {
-      this._sceneServer._layerCollection[i]._tileset.postPassesUpdate(
+      this._sceneLayer._layerCollection[i]._tileset.postPassesUpdate(
         frameState
       );
     }
@@ -440,12 +451,12 @@ I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
-  for (let i = 0; i < this._sceneServer._layerCollection.length; i++) {
+  for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
     if (
-      typeof this._sceneServer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneServer._layerCollection[i]._tileset.ready
+      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
+      this._sceneLayer._layerCollection[i]._tileset.ready
     ) {
-      this._sceneServer._layerCollection[i]._tileset.updateForPass(
+      this._sceneLayer._layerCollection[i]._tileset.updateForPass(
         frameState,
         passState
       );
@@ -586,24 +597,24 @@ function longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
 }
 
 /**
- * This class implements an I3S scene server
+ * This class implements an I3S scene layer
  * @private
- * @alias I3SSceneServer
+ * @alias I3SSceneLayer
  * @param {I3SDataProvider} [dataProvider] The data source that is the
- * owner of this scene server
+ * owner of this scene layer
  * @constructor
  */
-function I3SSceneServer(dataProvider) {
+function I3SSceneLayer(dataProvider) {
   this._dataProvider = dataProvider;
   this._entities = {};
   this._layerCollection = [];
   this._uri = "";
 }
 
-Object.defineProperties(I3SSceneServer.prototype, {
+Object.defineProperties(I3SSceneLayer.prototype, {
   /**
    * Gets the collection of Layers.
-   * @memberof I3SSceneServer.prototype
+   * @memberof I3SSceneLayer.prototype
    * @type {Array}
    */
   layers: {
@@ -612,8 +623,8 @@ Object.defineProperties(I3SSceneServer.prototype, {
     },
   },
   /**
-   * Gets the URI of the scene server.
-   * @memberof I3SSceneServer.prototype
+   * Gets the URI of the scene layer.
+   * @memberof I3SSceneLayer.prototype
    * @type {String}
    */
   uri: {
@@ -623,7 +634,7 @@ Object.defineProperties(I3SSceneServer.prototype, {
   },
   /**
    * Gets the I3S data for this object.
-   * @memberof I3SSceneServer.prototype
+   * @memberof I3SSceneLayer.prototype
    * @type {Object}
    */
   data: {
@@ -634,10 +645,10 @@ Object.defineProperties(I3SSceneServer.prototype, {
 });
 
 /**
- * Loads the provided data on the server.
+ * Loads the data from the provided I3S Scene layer.
  * @param {String} [uri] The uri where to fetch the data from.
  */
-I3SSceneServer.prototype.load = function (uri) {
+I3SSceneLayer.prototype.load = function (uri) {
   const that = this;
   this._uri = uri;
   return this._dataProvider._loadJson(
@@ -646,20 +657,25 @@ I3SSceneServer.prototype.load = function (uri) {
       // Success
       that._data = data;
       const layerPromises = [];
-      for (
-        let layerIndex = 0;
-        layerIndex < that._data.layers.length;
-        layerIndex++
-      ) {
-        const newLayer = new I3SLayer(
-          that,
-          that._data.layers[layerIndex],
-          layerIndex
-        );
+      if (that._data.layers) {
+        for (
+          let layerIndex = 0;
+          layerIndex < that._data.layers.length;
+          layerIndex++
+        ) {
+          const newLayer = new I3SLayer(
+            that,
+            that._data.layers[layerIndex],
+            layerIndex
+          );
+          that._layerCollection.push(newLayer);
+          layerPromises.push(newLayer.load());
+        }
+      } else {
+        const newLayer = new I3SLayer(that, that._data, that._data.id);
         that._layerCollection.push(newLayer);
         layerPromises.push(newLayer.load());
       }
-
       Promise.all(layerPromises).then(function () {
         that._computeExtent();
 
@@ -682,7 +698,7 @@ I3SSceneServer.prototype.load = function (uri) {
  * Or 1000m when in oblique.
  * @param {String} [mode] Use "topdown" to set the camera be top down, otherwise, the camera is set with a pitch 0f 0.2 radians.
  */
-I3SSceneServer.prototype.centerCamera = function (mode) {
+I3SSceneLayer.prototype.centerCamera = function (mode) {
   if (mode === "topdown") {
     this._dataProvider.camera.setView({
       destination: wgs84ToCartesian(
@@ -743,7 +759,7 @@ function computeExtent(minLongitude, minLatitude, maxLongitude, maxLatitude) {
 /**
  * @private
  */
-I3SSceneServer.prototype._computeExtent = function () {
+I3SSceneLayer.prototype._computeExtent = function () {
   let minLongitude = Number.MAX_VALUE;
   let maxLongitude = -Number.MAX_VALUE;
   let minLatitude = Number.MAX_VALUE;
@@ -756,39 +772,50 @@ I3SSceneServer.prototype._computeExtent = function () {
     layerIndex++
   ) {
     if (
-      this._layerCollection[layerIndex]._data.store &&
-      this._layerCollection[layerIndex]._data.store.extent
+      (this._layerCollection[layerIndex]._data.store &&
+        this._layerCollection[layerIndex]._data.store.extent) ||
+      this._layerCollection[layerIndex]._data.fullExtent
     ) {
-      const layerExtent = this._layerCollection[layerIndex]._data.store.extent;
-      minLongitude = Math.min(minLongitude, layerExtent[0]);
-      minLatitude = Math.min(minLatitude, layerExtent[1]);
-      maxLongitude = Math.max(maxLongitude, layerExtent[2]);
-      maxLatitude = Math.max(maxLatitude, layerExtent[3]);
+      const layerExtent = this._layerCollection[layerIndex]._data.fullExtent
+        ? this._layerCollection[layerIndex]._data.fullExtent
+        : this._layerCollection[layerIndex]._data.store.extent;
+      if (layerExtent && this._layerCollection[layerIndex]._data.fullExtent) {
+        minLongitude = Math.min(minLongitude, layerExtent.xmin);
+        minLatitude = Math.min(minLatitude, layerExtent.ymin);
+        maxLongitude = Math.max(maxLongitude, layerExtent.xmax);
+        maxLatitude = Math.max(maxLatitude, layerExtent.ymax);
+      } else if (
+        layerExtent &&
+        this._layerCollection[layerIndex]._data.store.extent
+      ) {
+        minLongitude = Math.min(minLongitude, layerExtent[0]);
+        minLatitude = Math.min(minLatitude, layerExtent[1]);
+        maxLongitude = Math.max(maxLongitude, layerExtent[2]);
+        maxLatitude = Math.max(maxLatitude, layerExtent[3]);
+      }
     }
+    this._extent = computeExtent(
+      minLongitude,
+      minLatitude,
+      maxLongitude,
+      maxLatitude
+    );
   }
-  this._extent = computeExtent(
-    minLongitude,
-    minLatitude,
-    maxLongitude,
-    maxLatitude
-  );
 };
-
 /**
  * This class implements an I3S layer, in Cesium, each I3SLayer
  * creates a Cesium3DTileset
  * @private
  * @alias I3SLayer
  * @constructor
- * @param {I3SSceneServer} [sceneServer] The scene server that is the
- * container for this layer
+ * @param {I3SSceneLayer} [sceneLayer] The scene layer
  * @param {object} [layerData] The layer data that is loaded from the scene
- * server
+ * layer
  * @param {number} [index] The index of the layer to be reflected
  */
-function I3SLayer(sceneServer, layerData, index) {
-  this._parent = sceneServer;
-  this._dataProvider = sceneServer._dataProvider;
+function I3SLayer(sceneLayer, layerData, index) {
+  this._parent = sceneLayer;
+  this._dataProvider = sceneLayer._dataProvider;
 
   if (layerData.href === undefined) {
     // assign a default layer
@@ -800,9 +827,17 @@ function I3SLayer(sceneServer, layerData, index) {
   if (this._dataProvider._query && this._dataProvider._query !== "") {
     query = `?${this._dataProvider._query}`;
   }
-  this._completeUriWithoutQuery = `${sceneServer._dataProvider._url}/${this._uri}`;
+  let tilesetUrl = "";
+  if (`${sceneLayer._dataProvider._url}`.match(/layers\/\d/)) {
+    tilesetUrl = `${sceneLayer._dataProvider._url}`.replace(/\/+$/, "");
+  } else {
+    // Add '/' to url if needed + `${this._uri}` if tileseturl not already in ../layers/[id] foramt
+    tilesetUrl = `${sceneLayer._dataProvider._url}`
+      .replace(/\/?$/, "/")
+      .concat(`${this._uri}`);
+  }
+  this._completeUriWithoutQuery = tilesetUrl;
   this._completeUri = this._completeUriWithoutQuery + query;
-
   this._data = layerData;
   this._entities = {};
   this._rootNode = null;
@@ -1233,13 +1268,24 @@ I3SLayer.prototype._loadNodePage = function (page) {
  * @private
  */
 I3SLayer.prototype._computeExtent = function () {
-  const layerExtent = this._data.store.extent;
-  this._extent = computeExtent(
-    layerExtent[0],
-    layerExtent[1],
-    layerExtent[2],
-    layerExtent[3]
-  );
+  const layerExtent = this._data.fullExtent
+    ? this._data.fullExtent
+    : this._data.store.extent;
+  if (layerExtent && this._data.fullExtent) {
+    this._extent = computeExtent(
+      layerExtent.xmin,
+      layerExtent.ymin,
+      layerExtent.xmax,
+      layerExtent.ymax
+    );
+  } else if (layerExtent && this._data.store.extent) {
+    this._extent = computeExtent(
+      layerExtent[0],
+      layerExtent[1],
+      layerExtent[2],
+      layerExtent[3]
+    );
+  }
 };
 
 /**

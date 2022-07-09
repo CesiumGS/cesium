@@ -43,10 +43,11 @@
           animation: false,
           timeline: false,
         });
-        //More datasets to tour can be added here..
+        //More datasets to tour can be added here...
+        //I3SDataProvider.loadurl api supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a scene Scene SceneServer.
         const tours = {
           "San Francisco":
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer",
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer/layers/0",
         };
         // Initialize a terrain provider which provides geoid conversion between gravity releated (typically I3S datasets) and ellipsoidiaL based
         // height systems (cesium world terrain).
@@ -65,7 +66,7 @@
 
         const cesiumTilesetOptions = {
           show: true,
-          skipLevelOfDetail: false,
+          skipLevelOfDetail: true,
           debugShowBoundingVolume: false,
         };
         //Create I3S data provider. autoCenterCameraOnStart i3s option autocenters the camera to the I3S layers' extent
@@ -79,6 +80,91 @@
         i3sProvider.loadUrl(tours["San Francisco"]).then(function () {});
         //add the i3s layer provider as a primitive data type
         viewer.scene.primitives.add(i3sProvider);
+        // An entity object which will hold info about the currently selected feature for infobox display
+        const selectedEntity = new Cesium.Entity();
+        // Silhouette a feature on selection and show metadata in the InfoBox.
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
+          movement
+        ) {
+          // Pick a new feature
+          const pickedFeature = viewer.scene.pick(movement.position);
+          if (!Cesium.defined(pickedFeature)) {
+            return;
+          }
+
+          const pickedPosition = viewer.scene.pickPosition(movement.position);
+
+          if (
+            pickedFeature &&
+            pickedFeature.content &&
+            pickedFeature.content.tile.i3sNode
+          ) {
+            const i3sNode = pickedFeature.content.tile.i3sNode;
+            i3sNode.loadFields().then(function () {
+              const geometry = i3sNode.geometryData[0];
+              if (pickedPosition) {
+                const location = geometry.getClosestPointIndexOnTriangle(
+                  pickedPosition.x,
+                  pickedPosition.y,
+                  pickedPosition.z
+                );
+                let description = "No attributes";
+                let name = "";
+                if (
+                  location.index !== -1 &&
+                  geometry.customAttributes["feature-index"]
+                ) {
+                  console.log("Location", location);
+                  const featureIndex =
+                    geometry.customAttributes["feature-index"][location.index];
+                  if (Object.keys(i3sNode.fields).length > 0) {
+                    description =
+                      '<table class="cesium-infoBox-defaultTable"><tbody>';
+                    for (const fieldName in i3sNode.fields) {
+                      if (fieldName) {
+                        const field = i3sNode.fields[fieldName];
+                        description +=
+                          `<tr><th>` + `${field.name}` + `</th><td>`;
+                        description +=
+                          `${field.values[featureIndex]}` + `</td></tr>`;
+                        console.log(
+                          `${field.name}` +
+                            `: ` +
+                            `${field.values[featureIndex]}`
+                        );
+                        if (
+                          (!name || 0 === name.length) &&
+                          isNameProperty(field.name)
+                        ) {
+                          name = field.values[featureIndex];
+                        }
+                      }
+                    }
+                    description += `</tbody></table>`;
+                  }
+                }
+                if (!name || 0 === name.length) {
+                  name = "unknown";
+                }
+                selectedEntity.name = name;
+                selectedEntity.description = description;
+                viewer.selectedEntity = selectedEntity;
+              }
+            });
+          }
+        },
+        Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        function isNameProperty(propertyName) {
+          const name = propertyName.toLowerCase();
+          if (
+            name.localeCompare("name") === 0 ||
+            name.localeCompare("objname") === 0
+          ) {
+            return true;
+          }
+          return false;
+        }
         //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;

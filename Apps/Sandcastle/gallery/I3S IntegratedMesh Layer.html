@@ -45,9 +45,10 @@
           timeline: false,
         });
         //More datasets to tour can be added here..
+        //I3SDataProvider.loadurl api supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a scene Scene SceneServer.
         const tours = {
           Frankfurt:
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer",
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0",
         };
         // Initialize a terrain provider which provides geoid conversion between gravity releated (typically I3S datasets) and ellipsoidiaL based
         // height systems (cesium world terrain).
