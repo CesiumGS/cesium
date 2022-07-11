@@ -903,9 +903,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      if (value !== this._style) {
-        this.applyStyle(value);
-      }
+      this.applyStyle(value);
       this._style = value;
     },
   },
