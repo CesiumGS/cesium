@@ -20,43 +20,41 @@ function TerrainTileProcessor(
 TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
   const that = this;
 
+  function getState(tile) {
+    return [
+      tile.state,
+      tile.data ? tile.data.terrainState : undefined,
+      tile.data && tile.data.imagery
+        ? tile.data.imagery.map(function (imagery) {
+            return [
+              imagery.readyImagery ? imagery.readyImagery.state : undefined,
+              imagery.loadingImagery ? imagery.loadingImagery.state : undefined,
+            ];
+          })
+        : [],
+    ];
+  }
+
+  function statesAreSame(a, b) {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    let same = true;
+    for (let i = 0; i < a.length; ++i) {
+      if (Array.isArray(a[i]) && Array.isArray(b[i])) {
+        same = same && statesAreSame(a[i], b[i]);
+      } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
+        same = false;
+      } else {
+        same = same && a[i] === b[i];
+      }
+    }
+
+    return same;
+  }
+
   return new Promise((resolve) => {
-    function getState(tile) {
-      return [
-        tile.state,
-        tile.data ? tile.data.terrainState : undefined,
-        tile.data && tile.data.imagery
-          ? tile.data.imagery.map(function (imagery) {
-              return [
-                imagery.readyImagery ? imagery.readyImagery.state : undefined,
-                imagery.loadingImagery
-                  ? imagery.loadingImagery.state
-                  : undefined,
-              ];
-            })
-          : [],
-      ];
-    }
-
-    function statesAreSame(a, b) {
-      if (a.length !== b.length) {
-        return false;
-      }
-
-      let same = true;
-      for (let i = 0; i < a.length; ++i) {
-        if (Array.isArray(a[i]) && Array.isArray(b[i])) {
-          same = same && statesAreSame(a[i], b[i]);
-        } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
-          same = false;
-        } else {
-          same = same && a[i] === b[i];
-        }
-      }
-
-      return same;
-    }
-
     let iterations = 0;
 
     function next() {
