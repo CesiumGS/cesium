@@ -16,6 +16,7 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
+  combine,
   ContextLimits,
   Credit,
   CullFace,
@@ -3860,10 +3861,16 @@ describe(
     });
 
     it("creates duplicate backface commands", function () {
+      // Disable ModelExperimental here because ModelFeatureTable doesn't handle
+      // the creation of backface commands yet.
+      const options = combine(
+        { enableModelExperimental: false },
+        skipLevelOfDetailOptions
+      );
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,
-        skipLevelOfDetailOptions
+        options
       ).then(function (tileset) {
         const statistics = tileset._statistics;
         const root = tileset.root;
