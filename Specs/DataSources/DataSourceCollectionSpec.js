@@ -1,4 +1,4 @@
-import { DataSourceCollection, defer } from "../../Source/Cesium.js";
+import { DataSourceCollection } from "../../Source/Cesium.js";
 import MockDataSource from "../MockDataSource.js";
 
 describe("DataSources/DataSourceCollection", function () {
@@ -109,18 +109,17 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("add works with promise", function () {
-    const deferred = defer();
     const source = new MockDataSource();
+    const sourcePromise = Promise.resolve(source);
     const collection = new DataSourceCollection();
 
     const addSpy = jasmine.createSpy("dataSourceAdded");
     collection.dataSourceAdded.addEventListener(addSpy);
-    const promise = collection.add(deferred.promise);
+    const promise = collection.add(sourcePromise);
 
     expect(collection.length).toEqual(0);
     expect(addSpy).not.toHaveBeenCalled();
 
-    deferred.resolve(source);
     return promise.then(function () {
       expect(addSpy).toHaveBeenCalledWith(collection, source);
       expect(collection.length).toEqual(1);
@@ -128,19 +127,18 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("promise does not get added if not resolved before removeAll", function () {
-    const deferred = defer();
     const source = new MockDataSource();
+    const sourcePromise = Promise.resolve(source);
     const collection = new DataSourceCollection();
 
     const addSpy = jasmine.createSpy("dataSourceAdded");
     collection.dataSourceAdded.addEventListener(addSpy);
-    const promise = collection.add(deferred.promise);
+    const promise = collection.add(sourcePromise);
     expect(collection.length).toEqual(0);
 
     expect(addSpy).not.toHaveBeenCalled();
     collection.removeAll();
 
-    deferred.resolve(source);
     return promise.then(function () {
       expect(addSpy).not.toHaveBeenCalled();
       expect(collection.length).toEqual(0);
