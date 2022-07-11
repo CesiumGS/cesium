@@ -1,10 +1,8 @@
-import Matrix4 from "../../Core/Matrix4.js";
-
 /**
- * A model node with a transform for user-defined animations. A glTF asset can
- * contain animations that target a node's transform. This class allows users
- * to change a node's transform externally such that animation can be driven by
- * another source, not just an animation in the glTF asset.
+ * A model node with a modifiable transform to allow users to define their own
+ * animations. While a glTF can contain animations that target a node's transform,
+ * this class allows users to change a node's transform externally. In this way,
+ * animation can be driven by another source, not just by the glTF itself.
  * <p>
  * Use {@link ModelExperimental#getNode} to get an instance from a loaded model.
  * </p>
@@ -22,14 +20,8 @@ import Matrix4 from "../../Core/Matrix4.js";
 function ModelExperimentalNode(model, runtimeNode) {
   this._model = model;
   this._runtimeNode = runtimeNode;
-  this._name = runtimeNode.name;
-  this._id = runtimeNode.id;
-
-  /* const transform = runtimeNode.transform;
-
-  this._show = true;
-  this._matrix = Matrix4.clone(matrix);
-  this._originalMatrix = Matrix4.clone(matrix);*/
+  this._name = runtimeNode._name;
+  this._id = runtimeNode._id;
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -71,13 +63,10 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   show: {
     get: function () {
-      return this._show;
+      return this._runtimeNode.show;
     },
     set: function (value) {
-      if (this._show !== value) {
-        this._show = value;
-        this._model._perNodeShowDirty = true;
-      }
+      this._runtimeNode.show = value;
     },
   },
 
@@ -89,44 +78,32 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    * setting individual elements of the matrix will not work.
    * </p>
    *
-   * @memberof ModelNode.prototype
+   * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
    */
   matrix: {
     get: function () {
-      return this._matrix;
+      return this._runtimeNode.transform;
     },
     set: function (value) {
-      this._matrix = Matrix4.clone(value, this._matrix);
-      this.useMatrix = true;
-
-      const model = this._model;
-      model._cesiumAnimationsDirty = true;
-      this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
+      this._runtimeNode.transform = value;
+      this._model._userAnimationDirty = true;
     },
   },
 
   /**
-   * Gets the node's original 4x4 matrix transform from its local coordinates to
-   * its parent's, without any node transformations or articulations applied.
+   * Gets the node's original 4x4 matrix transform from its local
+   * coordinates to its parent's, without any node transformations
+   * or articulations applied.
    *
-   * @memberof ModelNode.prototype
+   * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
    */
   originalMatrix: {
     get: function () {
-      return this._originalMatrix;
+      return this._runtimeNode.originalTransform;
     },
   },
 });
-
-/**
- * @private
- */
-ModelExperimentalNode.prototype.setMatrix = function (matrix) {
-  // Update matrix but do not set the dirty flag since this is used internally
-  // to keep the matrix in-sync during a glTF animation.
-  Matrix4.clone(matrix, this._matrix);
-};
 
 export default ModelExperimentalNode;

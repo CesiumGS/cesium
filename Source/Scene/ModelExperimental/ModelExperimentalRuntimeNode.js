@@ -10,16 +10,12 @@ import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
-// rename to ModelExperimentalRuntimeNode
-// ModelExperimentalRuntimePrimitive
 // public node should point to the private node
 // model.getNode
 // public nodes be stored at the ModelExperimental level
 //
-//
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
- *
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model.

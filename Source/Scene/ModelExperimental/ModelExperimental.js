@@ -187,6 +187,10 @@ export default function ModelExperimental(options) {
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
+  // This flag is true when the Cesium API, not a glTF animation, changes
+  // the transform of a node in the model.
+  this._userAnimationDirty = false;
+
   this._id = options.id;
   this._idDirty = false;
 
@@ -365,6 +369,9 @@ export default function ModelExperimental(options) {
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
+
+  this._sceneGraph = undefined;
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -1454,6 +1461,32 @@ Object.defineProperties(ModelExperimental.prototype, {
 });
 
 /**
+ * Returns the node with the given <code>name</code> in the glTF. This is used to
+ * modify a node's transform for user-defined animation.
+ *
+ * @param {String} name The name of the node in the glTF.
+ * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
+ *
+ * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+ *
+ * @example
+ * // Apply non-uniform scale to node LOD3sp
+ * const node = model.getNode('LOD3sp');
+ * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ */
+ModelExperimental.prototype.getNode = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+
+  return this._nodesByName[name];
+};
+
+/**
  * Sets the current value of an articulation stage.  After setting one or
  * multiple stage values, call ModelExperimental.applyArticulations() to
  * cause the node matrices to be recalculated.
@@ -1892,8 +1925,11 @@ function updateSceneGraph(model, frameState) {
     model._debugShowBoundingVolumeDirty = false;
   }
 
-  const updateForAnimations = model._activeAnimations.update(frameState);
+  const updateForAnimations =
+    model._userAnimationDirty || model._activeAnimations.update(frameState);
+
   sceneGraph.update(frameState, updateForAnimations);
+  model._userAnimationDirty = false;
 }
 
 function updateShowCreditsOnScreen(model) {
