@@ -1104,7 +1104,7 @@ describe(
       });
     });
 
-    xit("verify memory usage statistics for shared resources", function () {
+    it("verify memory usage statistics for shared resources", function () {
       // Six tiles total:
       // * Two b3dm tiles - no shared resources
       // * Two i3dm tiles with embedded glTF - no shared resources
