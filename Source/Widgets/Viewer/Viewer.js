@@ -2192,41 +2192,45 @@ function updateZoomTarget(viewer) {
 
   // If zoomTarget was Cesium3DTileset
   if (target instanceof Cesium3DTileset) {
-    return target.readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
+    return target.readyPromise
+      .then(function () {
+        const boundingSphere = target.boundingSphere;
+        // If offset was originally undefined then give it base value instead of empty object
+        if (!defined(zoomOptions.offset)) {
+          zoomOptions.offset = new HeadingPitchRange(
+            0.0,
+            -0.5,
+            boundingSphere.radius
+          );
+        }
 
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
+        options = {
+          offset: zoomOptions.offset,
+          duration: zoomOptions.duration,
+          maximumHeight: zoomOptions.maximumHeight,
+          complete: function () {
+            viewer._completeZoom(true);
+          },
+          cancel: function () {
+            viewer._completeZoom(false);
+          },
+        };
+
+        if (viewer._zoomIsFlight) {
+          camera.flyToBoundingSphere(target.boundingSphere, options);
+        } else {
+          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+          camera.lookAtTransform(Matrix4.IDENTITY);
+
+          // Finish the promise
           viewer._completeZoom(true);
-        },
-        cancel: function () {
-          viewer._completeZoom(false);
-        },
-      };
+        }
 
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(target.boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
-
-        // Finish the promise
-        viewer._completeZoom(true);
-      }
-
-      clearZoom(viewer);
-    });
+        clearZoom(viewer);
+      })
+      .catch((e) => {
+        cancelZoom(viewer);
+      });
   }
 
   // If zoomTarget was TimeDynamicPointCloud
