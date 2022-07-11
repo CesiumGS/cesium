@@ -32,10 +32,12 @@ MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA =
 MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
-// Metadata class info: only two fields supported for now
+// Metadata class info: some fields must be renamed to avoid reserved words
 MetadataPipelineStage.CLASSINFO_FIELDS = [
   { specName: "noData", shaderName: "noData" },
   { specName: "default", shaderName: "defaultValue" },
+  { specName: "min", shaderName: "minValue" },
+  { specName: "max", shaderName: "maxValue" },
 ];
 
 /**
@@ -219,7 +221,7 @@ function addPropertyAttributeProperty(
   );
   // For MetadataClassInfo, prefix to get the appropriate ClassInfo struct
   // struct MetadataClassInfo {
-  //   ClassInfo_float property;
+  //   floatClassInfo property;
   // }
   const classInfoType = `${glslType}ClassInfo`;
   shaderBuilder.addStructField(
@@ -328,7 +330,7 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
   );
   // For MetadataClassInfo, prefix to get the appropriate ClassInfo struct
   // struct MetadataClassInfo {
-  //   ClassInfo_float property;
+  //   floatClassInfo property;
   // }
   const classInfoType = `${glslType}ClassInfo`;
   shaderBuilder.addStructField(

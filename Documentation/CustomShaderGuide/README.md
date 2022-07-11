@@ -697,6 +697,8 @@ struct by property ID. For example, if the metadata class looked like this:
           "componentType": "FLOAT32",
           "noData": -9999.0,
           "default": 72.0,
+          "min": -40.0,
+          "max": 500.0,
         }
       }
     }
@@ -710,6 +712,8 @@ This will show up in the shader in the struct field as follows:
 struct floatClassInfo {
   float noData;
   float defaultValue; // 'default' is a reserved word in GLSL
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
 }
 struct MetadataClassInfo {
   floatClassInfo temperature;
@@ -717,7 +721,7 @@ struct MetadataClassInfo {
 ```
 
 The sub-struct for each property will be chosen such that the individual properties
-(such as `noData` and `default_val`) will have the same type as the actual values of the
+(such as `noData` and `defaultValue`) will have the same type as the actual values of the
 property.
 
 Now the noData and default values can be accessed as follows in the vertex shader:
@@ -725,6 +729,8 @@ Now the noData and default values can be accessed as follows in the vertex shade
 ```glsl
 float noData = vsInput.classInfo.temperature.noData;            // == -9999.0
 float defaultTemp = vsInput.classInfo.temperature.defaultValue; // == 72.0
+float minTemp = vsInput.classInfo.temperature.minValue;         // == -40.0
+float maxTemp = vsInput.classInfo.temperature.maxValue;         // == 500.0
 ```
 
 or similarly from the `fsInput` struct in the fragment shader.
