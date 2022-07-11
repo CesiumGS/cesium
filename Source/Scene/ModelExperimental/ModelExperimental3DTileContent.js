@@ -3,6 +3,7 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Pass from "../../Renderer/Pass.js";
+import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelExperimental from "./ModelExperimental.js";
 
 /**
@@ -256,7 +257,15 @@ ModelExperimental3DTileContent.fromGltf = function (
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromGltf(modelOptions);
+
+  const model = ModelExperimental.fromGltf(modelOptions);
+  model.readyPromise.then(function (model) {
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+  });
+  content._model = model;
+
   return content;
 };
 
@@ -281,7 +290,15 @@ ModelExperimental3DTileContent.fromB3dm = function (
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromB3dm(modelOptions);
+
+  const model = ModelExperimental.fromB3dm(modelOptions);
+  model.readyPromise.then(function (model) {
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+  });
+  content._model = model;
+
   return content;
 };
 
@@ -306,7 +323,15 @@ ModelExperimental3DTileContent.fromI3dm = function (
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromI3dm(modelOptions);
+
+  const model = ModelExperimental.fromI3dm(modelOptions);
+  model.readyPromise.then(function (model) {
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+  });
+  content._model = model;
+
   return content;
 };
 
