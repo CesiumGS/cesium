@@ -903,9 +903,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      if (value !== this._style) {
-        this.applyStyle(value);
-      }
+      this.applyStyle(value);
       this._style = value;
     },
   },
@@ -1449,21 +1447,6 @@ Object.defineProperties(ModelExperimental.prototype, {
         this.resetDrawCommands();
       }
       this._splitDirection = value;
-    },
-  },
-
-  /**
-   * Reference to the pick IDs. This is used only in internal code such as
-   * per-feature post-processing in {@link PostProcessStage}
-   *
-   * @type {PickId[]}
-   * @readonly
-   *
-   * @private
-   */
-  pickIds: {
-    get: function () {
-      return this._pickIds;
     },
   },
 });
@@ -2416,7 +2399,6 @@ ModelExperimental.fromPnts = function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
-    loadAttributesFor2D: options.projectTo2D,
   };
   const loader = new PntsLoader(loaderOptions);
 
