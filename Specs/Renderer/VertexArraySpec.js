@@ -867,7 +867,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when instanceDivisor is greater than zero instancing is disabled", function () {
+    it("throws when instanceDivisor is greater than zero and instancing is disabled", function () {
       // disable extension
       const instancedArrays = context._instancedArrays;
       context._instancedArrays = undefined;
