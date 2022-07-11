@@ -39,11 +39,6 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-      // This is set to true to guarantee that buffers / typed arrays
-      // are loaded in as expected for instanced models. If this is false,
-      // instanced attributes will always load in as typed arrays, which
-      // will cause several tests to fail.
-      scene.context._instancedArrays = true;
 
       scene2D = createScene();
       scene2D.morphTo2D(0.0);
