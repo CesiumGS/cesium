@@ -1,8 +1,10 @@
-import { clone } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { DeveloperError } from "../Source/Cesium.js";
-import { WebGLConstants } from "../Source/Cesium.js";
+import {
+  clone,
+  defaultValue,
+  defined,
+  DeveloperError,
+  WebGLConstants,
+} from "../Source/Cesium.js";
 
 function getWebGLStub(canvas, options) {
   const stub = clone(WebGLConstants);
@@ -198,8 +200,21 @@ function getErrorStub() {
 }
 
 function getExtensionStub(name) {
-  // No extensions are stubbed.
+  // Many 3D Tiles tests rely on instanced arrays
+  if (name === "ANGLE_instanced_arrays") {
+    return getInstancingStub();
+  }
+
+  // No other extensions are stubbed.
   return null;
+}
+
+function getInstancingStub() {
+  return {
+    drawElementsInstancedANGLE: noop,
+    drawArraysInstancedANGLE: noop,
+    vertexAttribDivisorANGLE: noop,
+  };
 }
 
 function getParameterStub(options) {
