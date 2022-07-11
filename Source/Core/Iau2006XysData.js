@@ -269,8 +269,6 @@ function requestXysChunk(xysData, chunkIndex) {
     for (let i = 0, len = newSamples.length; i < len; ++i) {
       samples[startIndex + i] = newSamples[i];
     }
-
-    return Promise.resolve();
   });
   xysData._chunkDownloadsInProgress[chunkIndex] = promise;
 
