@@ -153,6 +153,13 @@ function getWebGLStub(canvas, options) {
   return stub;
 }
 
+// ANGLE_instanced_arrays
+const instancedArraysStub = {
+  drawElementsInstancedANGLE: noop,
+  drawArraysInstancedANGLE: noop,
+  vertexAttribDivisorANGLE: noop,
+};
+
 function noop() {}
 
 function createStub() {
@@ -202,19 +209,11 @@ function getErrorStub() {
 function getExtensionStub(name) {
   // Many 3D Tiles tests rely on instanced arrays
   if (name === "ANGLE_instanced_arrays") {
-    return getInstancingStub();
+    return instancedArraysStub;
   }
 
   // No other extensions are stubbed.
   return null;
-}
-
-function getInstancingStub() {
-  return {
-    drawElementsInstancedANGLE: noop,
-    drawArraysInstancedANGLE: noop,
-    vertexAttribDivisorANGLE: noop,
-  };
 }
 
 function getParameterStub(options) {
