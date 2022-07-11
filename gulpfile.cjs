@@ -32,6 +32,7 @@ const istanbul = require("istanbul-lib-instrument");
 
 const {
   createCesiumJs,
+  copyAssets,
   buildCesiumJs,
   buildWorkers,
   glslToJavaScript,
@@ -40,7 +41,6 @@ const {
   createGalleryList,
   createJsHintOptions,
   esbuildBaseConfig,
-  stripPragmaPlugin,
 } = require("./build.cjs");
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -95,6 +95,7 @@ const workerSourceFiles = ["Source/WorkersES6/**"];
 const watchedSpecFiles = [
   "Specs/**/*Spec.js",
   "Specs/*.js",
+  "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
 const shaderFiles = [
@@ -170,9 +171,7 @@ async function build(options) {
     createGalleryList(noDevelopmentGallery),
     buildSpecs()
   ).then(() => {
-    return copyAssets({
-      outputDirectory: outputDirectory,
-    });
+    return copyAssets(outputDirectory);
   });
 }
 
@@ -236,7 +235,13 @@ gulp.task(
       }
     });
 
-    gulp.watch(sourceFiles, async () => {
+
+    gulp.watch([ 
+      ...sourceFiles,
+      // Shader results are generated in the previous watch task; no need to rebuilt twice
+       "!Source/Shaders/**"
+      ], async () => {
+      createJsHintOptions();
       esmResult = await esmResult.rebuild();
 
       if (iifeResult) {
@@ -1157,30 +1162,6 @@ gulp.task("test", function (done) {
   karma.start();
 });
 
-/**
- * Copies non-js assets to the output directory
- *
- * @param {Object} options
- * @param {String} options.outputDirectory
- * @returns
- */
-function copyAssets(options) {
-  const outputDirectory = options.outputDirectory;
-  const everythingElse = [
-    "Source/**",
-    "!**/*.js",
-    "!**/*.glsl",
-    "!**/*.css",
-    "!**/*.md",
-  ];
-
-  const stream = gulp
-    .src(everythingElse, { nodir: true })
-    .pipe(gulp.dest(outputDirectory));
-
-  return streamToPromise(stream);
-}
-
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
   child_process.execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
@@ -1530,7 +1511,6 @@ async function buildCesiumViewer() {
     format: "iife",
     inject: ["Apps/CesiumViewer/index.js"],
     external: ["https", "http", "zlib"],
-    plugins: [stripPragmaPlugin],
     outdir: cesiumViewerOutputDirectory,
     outbase: "Apps/CesiumViewer",
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones

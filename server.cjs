@@ -1,44 +1,139 @@
 /*eslint-env node*/
 /* eslint-disable no-unused-vars */
-/* eslint-disable global-require */
 "use strict";
-(function () {
-  const express = require("express");
-  const compression = require("compression");
-  const fs = require("fs");
-  const { URL } = require("url");
-  const request = require("request");
 
-  const gzipHeader = Buffer.from("1F8B08", "hex");
+const fs = require("fs");
+const path = require("path");
+const { performance } = require("perf_hooks");
+const request = require("request");
+const { URL } = require("url");
 
-  const yargs = require("yargs").options({
-    port: {
-      default: 8080,
-      description: "Port to listen on.",
-    },
-    public: {
-      type: "boolean",
-      description: "Run a public server that listens on all interfaces.",
-    },
-    "upstream-proxy": {
-      description:
-        'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
-    },
-    "bypass-upstream-proxy-hosts": {
-      description:
-        'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
-    },
-    help: {
-      alias: "h",
-      type: "boolean",
-      description: "Show this help.",
-    },
+const chokidar = require("chokidar");
+const compression = require("compression");
+const express = require("express");
+const mkdirp = require("mkdirp");
+const rimraf = require("rimraf");
+const yargs = require("yargs").options({
+  port: {
+    default: 8080,
+    description: "Port to listen on.",
+  },
+  public: {
+    type: "boolean",
+    description: "Run a public server that listens on all interfaces.",
+  },
+  "upstream-proxy": {
+    description:
+      'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
+  },
+  "bypass-upstream-proxy-hosts": {
+    description:
+      'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
+  },
+  help: {
+    alias: "h",
+    type: "boolean",
+    description: "Show this help.",
+  },
+});
+
+const {
+  buildCesiumJs,
+  buildSpecs,
+  buildWorkers,
+  copyAssets,
+  createCesiumJs,
+  createGalleryList,
+  createJsHintOptions,
+  createSpecList,
+  glslToJavaScript,
+} = require("./build.cjs");
+
+const sourceFiles = [
+  "Source/**/*.js",
+  "!Source/*.js",
+  "!Source/Shaders/**",
+  "!Source/Workers/**",
+  "!Source/WorkersES6/**",
+  "Source/WorkersES6/createTaskProcessorWorker.js",
+  "!Source/ThirdParty/Workers/**",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/_*",
+];
+const specFiles = [
+  "Specs/**/*Spec.js",
+  "Specs/*.js",
+  "!Specs/SpecList.js",
+  "Specs/TestWorkers/*.js",
+];
+const shaderFiles = ["Source/Shaders/**/*.glsl"];
+const workerSourceFiles = ["Source/WorkersES6/*.js"];
+
+const outputDirectory = path.join("Build", "Cesium");
+
+function formatTimeSince(start) {
+  return Math.ceil((performance.now() - start) / 100) / 10;
+}
+
+async function buildDev() {
+  console.log("Building Cesium...");
+  const start = performance.now();
+
+  mkdirp.sync("Build");
+  rimraf.sync(outputDirectory);
+
+  fs.writeFileSync(
+    "Build/package.json",
+    JSON.stringify({
+      type: "commonjs",
+    }),
+    "utf8"
+  );
+
+  glslToJavaScript(false, "Build/minifyShaders.state");
+  createCesiumJs();
+  createSpecList();
+  createJsHintOptions();
+
+  const [esmResult, iifeResult] = await buildCesiumJs({
+    iife: true,
+    sourcemap: true,
+    path: outputDirectory,
+    incremental: true,
   });
+
+  await buildWorkers({
+    sourcemap: true,
+    path: outputDirectory,
+    incremental: true,
+  });
+
+  await createGalleryList();
+
+  const specResult = await buildSpecs({
+    incremental: true,
+  });
+
+  console.log(`Cesium built in ${formatTimeSince(start)} seconds.`);
+
+  await copyAssets(outputDirectory);
+
+  return {
+    esmResult,
+    iifeResult,
+    specResult,
+  };
+}
+
+(async function () {
+  const gzipHeader = Buffer.from("1F8B08", "hex");
   const argv = yargs.argv;
 
   if (argv.help) {
     return yargs.showHelp();
   }
+
+  let { esmResult, iifeResult, specResult } = await buildDev();
 
   // eventually this mime type configuration will need to change
   // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
@@ -190,6 +285,57 @@
     );
   });
 
+  const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
+  glslWatcher.on("all", async (e) => {
+    const start = performance.now();
+    glslToJavaScript(false, "Build/minifyShaders.state");
+    esmResult = await esmResult.rebuild();
+    iifeResult = await iifeResult.rebuild();
+    console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
+  });
+
+  const sourceCodeWatcher = chokidar.watch(sourceFiles, {
+    ignoreInitial: true,
+  });
+  sourceCodeWatcher.on("all", async (event) => {
+    if (event !== "add" && event !== "change" && event !== "unlink") {
+      return;
+    }
+
+    const start = performance.now();
+
+    if (event !== "add" || event !== "unlink") {
+      createCesiumJs();
+    }
+
+    createJsHintOptions();
+    esmResult = await esmResult.rebuild();
+    iifeResult = await iifeResult.rebuild();
+    console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
+  });
+
+  const workerWatcher = chokidar.watch(workerSourceFiles, {
+    ignoreInitial: true,
+  });
+  workerWatcher.on("all", async () => {
+    const start = performance.now();
+    await buildWorkers({
+      path: outputDirectory,
+      sourcemap: true,
+    });
+    console.log(`Rebuilt Workers/* in ${formatTimeSince(start)} seconds.`);
+  });
+
+  const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
+  specWatcher.on("all", async (event) => {
+    const start = performance.now();
+    if (event === "add" || event === "unlink") {
+      createSpecList();
+    }
+    specResult = await specResult.rebuild();
+    console.log(`Rebuilt Specs/* in ${formatTimeSince(start)} seconds.`);
+  });
+
   const server = app.listen(
     argv.port,
     argv.public ? undefined : "localhost",
@@ -239,6 +385,9 @@
       server.close(function () {
         process.exit(0);
       });
+      esmResult.rebuild.dispose();
+      iifeResult.rebuild.dispose();
+      specResult.rebuild.dispose();
       isFirstSig = false;
     } else {
       console.log("Cesium development server force kill.");

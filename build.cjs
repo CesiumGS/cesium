@@ -9,12 +9,14 @@ const path = require("path");
 const esbuild = require("esbuild");
 const globby = require("globby");
 const glslStripComments = require("glsl-strip-comments");
+const gulp = require("gulp");
 const rimraf = require("rimraf");
 const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginTerser = require("rollup-plugin-terser");
 const rollupCommonjs = require("@rollup/plugin-commonjs");
 const rollupResolve = require("@rollup/plugin-node-resolve").default;
+const streamToPromise = require("stream-to-promise");
 
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -467,9 +469,111 @@ const externalResolvePlugin = {
   },
 };
 
+/**
+   * Creates a template html file in the Sandcastle app listing the gallery of demos
+   * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
+   * @returns {Promise.<*>}
+   */
+ function createGalleryList(noDevelopmentGallery) {
+  const demoObjects = [];
+  const demoJSONs = [];
+  const output = path.join(
+    "Apps",
+    "Sandcastle",
+    "gallery",
+    "gallery-index.js"
+  );
+
+  const fileList = ["Apps/Sandcastle/gallery/**/*.html"];
+  if (noDevelopmentGallery) {
+    fileList.push("!Apps/Sandcastle/gallery/development/**/*.html");
+  }
+
+  // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+  // We need to extract just the Major.Minor version
+  const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+  const major = majorMinor[1];
+  const minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
+  const tagVersion = `${major}.${minor}`;
+
+  // Get an array of demos that were added since the last release.
+  // This includes newly staged local demos as well.
+  let newDemos = [];
+  try {
+    newDemos = child_process
+      .execSync(
+        `git diff --name-only --diff-filter=A ${tagVersion} Apps/Sandcastle/gallery/*.html`,
+        { stdio: ["pipe", "pipe", "ignore"] }
+      )
+      .toString()
+      .trim()
+      .split("\n");
+  } catch (e) {
+    // On a Cesium fork, tags don't exist so we can't generate the list.
+  }
+
+  let helloWorld;
+  globby.sync(fileList).forEach(function (file) {
+    const demo = filePathToModuleId(
+      path.relative("Apps/Sandcastle/gallery", file)
+    );
+
+    const demoObject = {
+      name: demo,
+      isNew: newDemos.includes(file),
+    };
+
+    if (fs.existsSync(`${file.replace(".html", "")}.jpg`)) {
+      demoObject.img = `${demo}.jpg`;
+    }
+
+    demoObjects.push(demoObject);
+
+    if (demo === "Hello World") {
+      helloWorld = demoObject;
+    }
+  });
+
+  demoObjects.sort(function (a, b) {
+    if (a.name < b.name) {
+      return -1;
+    } else if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  });
+
+  const helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
+
+  for (let i = 0; i < demoObjects.length; ++i) {
+    demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
+  }
+
+  const contents = `\
+// This file is automatically rebuilt by the Cesium build process.\n\
+const hello_world_index = ${helloWorldIndex};\n\
+const VERSION = '${version}';\n\
+const gallery_demos = [${demoJSONs.join(", ")}];\n\
+const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
+
+  fs.writeFileSync(output, contents);
+
+  // Compile CSS for Sandcastle
+  return esbuild.build({
+    entryPoints: [
+      path.join("Apps", "Sandcastle", "templates", "bucketRaw.css"),
+    ],
+    minify: true,
+    banner: {
+      css:
+        "/* This file is automatically rebuilt by the Cesium build process. */\n",
+    },
+    outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
+  });
+};
+
 module.exports = {
   esbuildBaseConfig,
-  stripPragmaPlugin,
   createCesiumJs,
   buildCesiumJs,
   buildWorkers,
@@ -495,6 +599,27 @@ module.exports = {
 
     return results;
   },
+  /**
+ * Copies non-js assets to the output directory
+ *
+ * @param {String} outputDirectory
+ * @returns Promise.<*>
+ */
+copyAssets: (outputDirectory) => {
+  const everythingElse = [
+    "Source/**",
+    "!**/*.js",
+    "!**/*.glsl",
+    "!**/*.css",
+    "!**/*.md",
+  ];
+
+  const stream = gulp
+    .src(everythingElse, { nodir: true })
+    .pipe(gulp.dest(outputDirectory));
+
+  return streamToPromise(stream);
+},
   createJsHintOptions: () => {
     const jshintrc = JSON.parse(
       fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")
@@ -509,106 +634,5 @@ module.exports = {
       contents
     );
   },
-  /**
-   * Creates a template html file in the Sandcastle app listing the gallery of demos
-   * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
-   * @returns {Promise.<*>}
-   */
-  createGalleryList: (noDevelopmentGallery) => {
-    const demoObjects = [];
-    const demoJSONs = [];
-    const output = path.join(
-      "Apps",
-      "Sandcastle",
-      "gallery",
-      "gallery-index.js"
-    );
-
-    const fileList = ["Apps/Sandcastle/gallery/**/*.html"];
-    if (noDevelopmentGallery) {
-      fileList.push("!Apps/Sandcastle/gallery/development/**/*.html");
-    }
-
-    // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
-    // We need to extract just the Major.Minor version
-    const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
-    const major = majorMinor[1];
-    const minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
-    const tagVersion = `${major}.${minor}`;
-
-    // Get an array of demos that were added since the last release.
-    // This includes newly staged local demos as well.
-    let newDemos = [];
-    try {
-      newDemos = child_process
-        .execSync(
-          `git diff --name-only --diff-filter=A ${tagVersion} Apps/Sandcastle/gallery/*.html`,
-          { stdio: ["pipe", "pipe", "ignore"] }
-        )
-        .toString()
-        .trim()
-        .split("\n");
-    } catch (e) {
-      // On a Cesium fork, tags don't exist so we can't generate the list.
-    }
-
-    let helloWorld;
-    globby.sync(fileList).forEach(function (file) {
-      const demo = filePathToModuleId(
-        path.relative("Apps/Sandcastle/gallery", file)
-      );
-
-      const demoObject = {
-        name: demo,
-        isNew: newDemos.includes(file),
-      };
-
-      if (fs.existsSync(`${file.replace(".html", "")}.jpg`)) {
-        demoObject.img = `${demo}.jpg`;
-      }
-
-      demoObjects.push(demoObject);
-
-      if (demo === "Hello World") {
-        helloWorld = demoObject;
-      }
-    });
-
-    demoObjects.sort(function (a, b) {
-      if (a.name < b.name) {
-        return -1;
-      } else if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
-
-    const helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
-
-    for (let i = 0; i < demoObjects.length; ++i) {
-      demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
-    }
-
-    const contents = `\
-  // This file is automatically rebuilt by the Cesium build process.\n\
-  const hello_world_index = ${helloWorldIndex};\n\
-  const VERSION = '${version}';\n\
-  const gallery_demos = [${demoJSONs.join(", ")}];\n\
-  const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
-
-    fs.writeFileSync(output, contents);
-
-    // Compile CSS for Sandcastle
-    return esbuild.build({
-      entryPoints: [
-        path.join("Apps", "Sandcastle", "templates", "bucketRaw.css"),
-      ],
-      minify: true,
-      banner: {
-        css:
-          "/* This file is automatically rebuilt by the Cesium build process. */\n",
-      },
-      outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
-    });
-  },
+  createGalleryList
 };
