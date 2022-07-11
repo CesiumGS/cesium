@@ -1199,6 +1199,17 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("zoomTo returns false if Cesium3DTileset fails to load", function () {
+      viewer = createViewer(container);
+      const tileset = new Cesium3DTileset({
+        url: "foo/bar",
+      });
+
+      return viewer.zoomTo(tileset).then((result) => {
+        expect(result).toBe(false);
+      });
+    });
+
     it("zoomTo zooms to Cesium3DTileset with default offset when offset not defined", function () {
       viewer = createViewer(container);
 

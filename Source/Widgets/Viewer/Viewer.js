@@ -2228,7 +2228,7 @@ function updateZoomTarget(viewer) {
 
         clearZoom(viewer);
       })
-      .catch((e) => {
+      .catch(() => {
         cancelZoom(viewer);
       });
   }
