@@ -235,23 +235,25 @@ gulp.task(
       }
     });
 
+    gulp.watch(
+      [
+        ...sourceFiles,
+        // Shader results are generated in the previous watch task; no need to rebuilt twice
+        "!Source/Shaders/**",
+      ],
+      async () => {
+        createJsHintOptions();
+        esmResult = await esmResult.rebuild();
 
-    gulp.watch([ 
-      ...sourceFiles,
-      // Shader results are generated in the previous watch task; no need to rebuilt twice
-       "!Source/Shaders/**"
-      ], async () => {
-      createJsHintOptions();
-      esmResult = await esmResult.rebuild();
+        if (iifeResult) {
+          iifeResult = await iifeResult.rebuild();
+        }
 
-      if (iifeResult) {
-        iifeResult = await iifeResult.rebuild();
+        if (cjsResult) {
+          cjsResult = await cjsResult.rebuild();
+        }
       }
-
-      if (cjsResult) {
-        cjsResult = await cjsResult.rebuild();
-      }
-    });
+    );
 
     gulp.watch(
       watchedSpecFiles,

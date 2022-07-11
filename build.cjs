@@ -470,19 +470,14 @@ const externalResolvePlugin = {
 };
 
 /**
-   * Creates a template html file in the Sandcastle app listing the gallery of demos
-   * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
-   * @returns {Promise.<*>}
-   */
- function createGalleryList(noDevelopmentGallery) {
+ * Creates a template html file in the Sandcastle app listing the gallery of demos
+ * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
+ * @returns {Promise.<*>}
+ */
+function createGalleryList(noDevelopmentGallery) {
   const demoObjects = [];
   const demoJSONs = [];
-  const output = path.join(
-    "Apps",
-    "Sandcastle",
-    "gallery",
-    "gallery-index.js"
-  );
+  const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
 
   const fileList = ["Apps/Sandcastle/gallery/**/*.html"];
   if (noDevelopmentGallery) {
@@ -570,7 +565,7 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
     },
     outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
   });
-};
+}
 
 module.exports = {
   esbuildBaseConfig,
@@ -600,26 +595,26 @@ module.exports = {
     return results;
   },
   /**
- * Copies non-js assets to the output directory
- *
- * @param {String} outputDirectory
- * @returns Promise.<*>
- */
-copyAssets: (outputDirectory) => {
-  const everythingElse = [
-    "Source/**",
-    "!**/*.js",
-    "!**/*.glsl",
-    "!**/*.css",
-    "!**/*.md",
-  ];
+   * Copies non-js assets to the output directory
+   *
+   * @param {String} outputDirectory
+   * @returns Promise.<*>
+   */
+  copyAssets: (outputDirectory) => {
+    const everythingElse = [
+      "Source/**",
+      "!**/*.js",
+      "!**/*.glsl",
+      "!**/*.css",
+      "!**/*.md",
+    ];
 
-  const stream = gulp
-    .src(everythingElse, { nodir: true })
-    .pipe(gulp.dest(outputDirectory));
+    const stream = gulp
+      .src(everythingElse, { nodir: true })
+      .pipe(gulp.dest(outputDirectory));
 
-  return streamToPromise(stream);
-},
+    return streamToPromise(stream);
+  },
   createJsHintOptions: () => {
     const jshintrc = JSON.parse(
       fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")
@@ -634,5 +629,5 @@ copyAssets: (outputDirectory) => {
       contents
     );
   },
-  createGalleryList
+  createGalleryList,
 };
