@@ -73,7 +73,7 @@ describe(
           expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
+          expect(batchTable.featuresLength).toBe(10);
         }
       );
     });
@@ -84,7 +84,7 @@ describe(
           expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
+          expect(batchTable.featuresLength).toBe(10);
         }
       );
     });

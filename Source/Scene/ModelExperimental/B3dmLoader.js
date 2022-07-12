@@ -51,6 +51,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
  * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -76,6 +77,7 @@ function B3dmLoader(options) {
     options.loadIndicesForWireframe,
     false
   );
+  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -96,6 +98,7 @@ function B3dmLoader(options) {
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._loadPrimitiveOutline = loadPrimitiveOutline;
 
   this._state = B3dmLoaderState.UNLOADED;
 
@@ -228,6 +231,7 @@ B3dmLoader.prototype.load = function () {
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
     loadAttributesFor2D: this._loadAttributesFor2D,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
+    loadPrimitiveOutline: this._loadPrimitiveOutline,
     renameBatchIdSemantic: true,
   });
 

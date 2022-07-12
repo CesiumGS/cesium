@@ -7,6 +7,10 @@ function loadAndExecuteScript(url) {
   script.src = url;
 
   return new Promise((resolve, reject) => {
+    if (window.crossOriginIsolated) {
+      script.setAttribute("crossorigin", "anonymous");
+    }
+
     const head = document.getElementsByTagName("head")[0];
     script.onload = function () {
       script.onload = undefined;

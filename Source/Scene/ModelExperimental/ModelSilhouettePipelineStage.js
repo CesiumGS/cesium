@@ -1,4 +1,5 @@
 import combine from "../../Core/combine.js";
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelSilhouetteStageFS from "../../Shaders/ModelExperimental/ModelSilhouetteStageFS.js";
 import ModelSilhouetteStageVS from "../../Shaders/ModelExperimental/ModelSilhouetteStageVS.js";
@@ -14,9 +15,19 @@ const ModelSilhouettePipelineStage = {};
 ModelSilhouettePipelineStage.name = "ModelSilhouettePipelineStage"; // Helps with debugging
 
 /**
+ * Tracks how many silhouettes have been created. This value is used to
+ * assign a reference number to the stencil.
+ *
+ * @type {Number}
+ * @private
+ */
+ModelSilhouettePipelineStage.silhouettesLength = 0;
+
+/**
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
+ *  <li>defines the silhouette ID for the model, if it doesn't yet exist
  *  <li>adds a define to the shaders to indicate that the model uses silhouettes</li>
  *  <li>adds a function to the vertex shader to create the silhouette around the model</li>
  *  <li>adds a function to the fragment shader to apply color to the silhouette</li>
@@ -40,6 +51,10 @@ ModelSilhouettePipelineStage.process = function (
   model,
   frameState
 ) {
+  if (!defined(model._silhouetteId)) {
+    model._silhouetteId = ++ModelSilhouettePipelineStage.silhouettesLength;
+  }
+
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_SILHOUETTE", undefined, ShaderDestination.BOTH);
 

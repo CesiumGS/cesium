@@ -1371,10 +1371,6 @@ describe(
     });
 
     it("renders more than 16K billboards", function () {
-      if (!context.instancedArrays) {
-        return;
-      }
-
       for (let i = 0; i < 16 * 1024; ++i) {
         billboards.add({
           position: Cartesian3.ZERO,
