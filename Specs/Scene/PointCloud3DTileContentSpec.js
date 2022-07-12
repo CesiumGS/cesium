@@ -11,6 +11,7 @@ import {
   ContentMetadata,
   defined,
   DracoLoader,
+  ExperimentalFeatures,
   Expression,
   HeadingPitchRange,
   HeadingPitchRoll,
@@ -80,10 +81,15 @@ describe(
     beforeAll(function () {
       scene = createScene();
       scene.frameState.passes.render = true;
+
+      // This class is only used with Model
+      ExperimentalFeatures.enableModelExperimental = false;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+
+      ExperimentalFeatures.enableModelExperimental = true;
     });
 
     beforeEach(function () {
