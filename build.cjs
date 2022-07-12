@@ -124,6 +124,7 @@ const esbuildBaseConfig = {
  * @param {Boolean} [options.iife=false] true if an IIFE style module should be built
  * @param {Boolean} [options.node=false] true if a CJS style node module should be built
  * @param {Boolean} [options.incremental=false] true if build output should be cached for repeated builds
+ * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns
  */
 async function buildCesiumJs(options) {
@@ -138,6 +139,7 @@ async function buildCesiumJs(options) {
     external: ["https", "http", "url", "zlib"],
     plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
     incremental: options.incremental,
+    write: options.write,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   };
 
@@ -590,6 +592,7 @@ module.exports = {
       outdir: path.join("Build", "Specs"),
       plugins: [externalResolvePlugin],
       incremental: options.incremental,
+      write: options.write
     });
 
     return results;
