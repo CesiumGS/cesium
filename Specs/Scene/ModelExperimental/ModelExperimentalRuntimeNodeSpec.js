@@ -15,14 +15,20 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   const mockNode = {
     matrix: Matrix4.IDENTITY,
   };
-  const mockChildNode = {
+
+  const mockRuntimeNode = {
     transform: Matrix4.IDENTITY,
   };
+
+  const mockChildRuntimeNode = {
+    transform: Matrix4.IDENTITY,
+  };
+
   const transform = Matrix4.clone(Matrix4.IDENTITY);
   const transformToRoot = Matrix4.clone(Matrix4.IDENTITY);
   const mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
-    runtimeNodes: [mockChildNode, mockNode],
+    _runtimeNodes: [mockChildRuntimeNode, mockRuntimeNode],
     components: {
       upAxis: Axis.Y,
       forwardAxis: Axis.Z,
@@ -130,6 +136,9 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
     expect(node.children.length).toEqual(0);
 
     verifyTransforms(transform, transformToRoot, node);
+
+    expect(node.show).toBe(true);
+    expect(node.userAnimated).toBe(false);
 
     node.configurePipeline();
     expect(node.pipelineStages).toEqual([NodeStatisticsPipelineStage]);

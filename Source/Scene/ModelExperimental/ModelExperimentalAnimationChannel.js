@@ -262,11 +262,12 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   const splines = this._splines;
   const path = this._path;
   const model = this._runtimeAnimation.model;
+  const runtimeNode = this._runtimeNode;
 
   // Weights are handled differently than the other properties because
   // they need to be updated in place.
   if (path === AnimatedPropertyType.WEIGHTS) {
-    const morphWeights = this._runtimeNode.morphWeights;
+    const morphWeights = runtimeNode.morphWeights;
     const length = morphWeights.length;
     for (let i = 0; i < length; i++) {
       const spline = splines[i];
@@ -275,6 +276,9 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
         : spline.wrapTime(time);
       morphWeights[i] = spline.evaluate(localAnimationTime);
     }
+  } else if (runtimeNode.userAnimated) {
+    // If the node is being animated externally, ignore the glTF animation.
+    return;
   } else {
     const spline = splines[0];
     const localAnimationTime = model.clampAnimations
@@ -282,10 +286,7 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
       : spline.wrapTime(time);
 
     // This sets the translate, rotate, and scale properties.
-    this._runtimeNode[path] = spline.evaluate(
-      localAnimationTime,
-      scratchVariable
-    );
+    runtimeNode[path] = spline.evaluate(localAnimationTime, scratchVariable);
   }
 };
 

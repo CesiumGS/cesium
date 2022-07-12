@@ -27,6 +27,7 @@ describe(
       "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
     const boxArticulationsUrl =
       "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+    const duckUrl = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
 
     let scene;
 
@@ -367,6 +368,39 @@ describe(
         model.customShader = new CustomShader();
         model.update(scene.frameState);
         expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("getDrawCommands ignores hidden nodes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: duckUrl,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const rootNode = sceneGraph._runtimeNodes[0];
+        const meshNode = sceneGraph._runtimeNodes[2];
+
+        expect(rootNode.show).toBe(true);
+        expect(meshNode.show).toBe(true);
+
+        let drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        const originalLength = drawCommands.length;
+        expect(originalLength).not.toEqual(0);
+
+        meshNode.show = false;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(0);
+
+        meshNode.show = true;
+        rootNode.show = false;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(0);
+
+        rootNode.show = true;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(originalLength);
       });
     });
 

@@ -1481,6 +1481,9 @@ ModelExperimental.prototype.getNode = function (name) {
       "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
     );
   }
+  if (!defined(name)) {
+    throw new DeveloperError("name is required.");
+  }
   //>>includeEnd('debug');
 
   return this._nodesByName[name];

@@ -73,9 +73,23 @@ export default function ModelExperimentalRuntimeNode(options) {
    *
    * @type {Boolean}
    *
+   * @default true
+   *
    * @private
    */
   this.show = true;
+
+  /**
+   * Whether or not this node is animated by the user. This is set by the
+   * corresponding {@link ModelExperimentalNode} when the user supplies their
+   * own transform. If this is true, the node will ignore animations in the
+   * model's asset.
+   *
+   * @type {Boolean}
+   *
+   * @private
+   */
+  this.userAnimated = false;
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -137,6 +151,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The internal node this runtime node represents.
    *
+   * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {ModelComponents.Node}
    * @readonly
    *
@@ -150,6 +165,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The scene graph this node belongs to.
    *
+   * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {ModelExperimentalSceneGraph}
    * @readonly
    *
@@ -164,8 +180,11 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The indices of the children of this node in the scene graph.
    *
+   * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Number[]}
    * @readonly
+   *
+   * @private
    */
   children: {
     get: function () {
@@ -174,24 +193,20 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   },
 
   /**
-   * The node's local space transform. This can be changed externally so animation
-   * can be driven by another source, not just an animation in the model's asset.
-   * <p>
-   * For changes to take effect, this property must be assigned to;
-   * setting individual elements of the matrix will not work.
-   * </p>
+   * The node's local space transform. This can be changed externally via
+   * the corresponding ModelExperimentalNode, such that animation can be
+   * driven by another source, not just an animation in the model's asset.
    *
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Matrix4}
+   *
+   * @private
    */
   transform: {
     get: function () {
       return this._transform;
     },
     set: function (value) {
-      if (Matrix4.equals(this._transform, value)) {
-        return;
-      }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
     },
@@ -206,6 +221,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
+   *
+   * @private
    */
   transformToRoot: {
     get: function () {
@@ -220,6 +237,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
+   *
+   * @private
    */
   computedTransform: {
     get: function () {
@@ -228,11 +247,14 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   },
 
   /**
-   * The node's original transform, as specified in the model. Does not include transformations from the node's ancestors.
+   * The node's original transform, as specified in the model.
+   * Does not include transformations from the node's ancestors.
    *
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
+   *
+   * @private
    */
   originalTransform: {
     get: function () {
@@ -250,7 +272,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Cartesian3}
    *
-   * @exception {DeveloperError} The translation of a node cannot be set if it was defined using a matrix in the model.
+   * @exception {DeveloperError} The translation of a node cannot be set if it was defined using a matrix in the model's asset.
    *
    * @private
    */
@@ -294,7 +316,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Quaternion}
    *
-   * @exception {DeveloperError} The rotation of a node cannot be set if it was defined using a matrix in the model.
+   * @exception {DeveloperError} The rotation of a node cannot be set if it was defined using a matrix in the model's asset.
    *
    * @private
    */
@@ -338,7 +360,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Cartesian3}
    *
-   * @exception {DeveloperError} The scale of a node cannot be set if it was defined using a matrix in the model.
+   * @exception {DeveloperError} The scale of a node cannot be set if it was defined using a matrix in the model's asset.
    * @private
    */
   scale: {
@@ -404,6 +426,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {ModelExperimentalSkin}
    * @readonly
+   *
+   * @private
    */
   runtimeSkin: {
     get: function () {
@@ -417,6 +441,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @memberof ModelExperimentalRuntimeNode.prototype
    * @type {Matrix4[]}
    * @readonly
+   *
+   * @privates
    */
   computedJointMatrices: {
     get: function () {
@@ -484,6 +510,8 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
  * {
  *   const childNode = runtimeNode.getChild(i);
  * }
+ *
+ * @private
  */
 ModelExperimentalRuntimeNode.prototype.getChild = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -495,7 +523,7 @@ ModelExperimentalRuntimeNode.prototype.getChild = function (index) {
   }
   //>>includeEnd('debug');
 
-  return this.sceneGraph.runtimeNodes[this.children[index]];
+  return this.sceneGraph._runtimeNodes[this.children[index]];
 };
 
 /**

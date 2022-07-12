@@ -1,8 +1,12 @@
+import Check from "../../Core/Check.js";
+import defined from "../../Core/defined.js";
+
 /**
- * A model node with a modifiable transform to allow users to define their own
- * animations. While a glTF can contain animations that target a node's transform,
- * this class allows users to change a node's transform externally. In this way,
- * animation can be driven by another source, not just by the glTF itself.
+ * A model node with a modifiable transform to allow users to define their
+ * own animations. While a model's asset can contain animations that target
+ * a node's transform, this class allows users to change a node's transform
+ * externally. In this way, animation can be driven by another source, not
+ * just by the model's asset.
  * <p>
  * Use {@link ModelExperimental#getNode} to get an instance from a loaded model.
  * </p>
@@ -17,11 +21,14 @@
  *
  * @see ModelExperimental#getNode
  */
-function ModelExperimentalNode(model, runtimeNode) {
+export default function ModelExperimentalNode(model, runtimeNode) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  Check.typeOf.object("runtimeNode", runtimeNode);
+  //>>includeEnd('debug')
+
   this._model = model;
   this._runtimeNode = runtimeNode;
-  this._name = runtimeNode._name;
-  this._id = runtimeNode._id;
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -35,7 +42,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   name: {
     get: function () {
-      return this._name;
+      return this._runtimeNode._name;
     },
   },
 
@@ -49,7 +56,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   id: {
     get: function () {
-      return this._id;
+      return this._runtimeNode._id;
     },
   },
 
@@ -72,7 +79,9 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * The node's 4x4 matrix transform from its local coordinates to
-   * its parent's.
+   * its parent's. Setting the matrix to undefined will restore the
+   * node's original transform, and allow the node to be animated by
+   * any animations in the model again.
    * <p>
    * For changes to take effect, this property must be assigned to;
    * setting individual elements of the matrix will not work.
@@ -86,8 +95,14 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       return this._runtimeNode.transform;
     },
     set: function (value) {
-      this._runtimeNode.transform = value;
-      this._model._userAnimationDirty = true;
+      if (defined(value)) {
+        this._runtimeNode.transform = value;
+        this._runtimeNode.userAnimated = true;
+        this._model._userAnimationDirty = true;
+      } else {
+        this._runtimeNode.transform = this.originalMatrix;
+        this._runtimeNode.userAnimated = false;
+      }
     },
   },
 
@@ -105,5 +120,3 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
   },
 });
-
-export default ModelExperimentalNode;
