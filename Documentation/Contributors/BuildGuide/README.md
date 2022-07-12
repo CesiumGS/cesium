@@ -113,7 +113,7 @@ Cesium offers a few different distributions. When developing, make sure to pick 
 
 In much of our documentation, we use IIFE as it can be easily loaded with a CDN and defines a global _Cesium_ variable with all modules attached.
 
-For a production app, we recommend using the the `Source` modules directly which will allow your build tool of choice to reduce the final release's size using tree shaking.
+For a production app, we recommend using the `Source` modules directly which will allow your build tool of choice to reduce the final release's size using tree shaking.
 
 Read the complete list of build scripts and options below for more details.
 
