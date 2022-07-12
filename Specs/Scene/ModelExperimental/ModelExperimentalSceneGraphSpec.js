@@ -26,7 +26,7 @@ describe(
     const simpleSkinGltfUrl =
       "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
     const boxArticulationsUrl =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
     const duckUrl = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
 
     let scene;

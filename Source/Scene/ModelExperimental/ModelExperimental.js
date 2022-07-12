@@ -472,6 +472,12 @@ function initialize(model) {
   loader.load();
 
   const loaderPromise = loader.promise.then(function (loader) {
+    // If the model is destroyed before the promise resolves, then
+    // the loader will have been destroyed as well. Return early.
+    if (!defined(loader)) {
+      return;
+    }
+
     const components = loader.components;
     const structuralMetadata = components.structuralMetadata;
 

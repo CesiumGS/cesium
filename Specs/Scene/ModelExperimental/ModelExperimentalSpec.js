@@ -77,7 +77,7 @@ describe(
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const boxArticulationsUrl =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
