@@ -122,7 +122,6 @@
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "startPublic": "node server.cjs --public",
-    "startCrossOriginIsolated": "node server.cjs --corss-origin-isolated",
     "build": "gulp build",
     "build-watch": "gulp build-watch",
     "build-ts": "gulp build-ts",

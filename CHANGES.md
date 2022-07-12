@@ -6,7 +6,6 @@
 
 - Models and tilesets that use the `CESIUM_primitive_outline` extension can now toggle outlines at runtime with the `showOutline` property. Furthermore, the color of the outlines can now be controlled by the `outlineColor` property. [#10506](https://github.com/CesiumGS/cesium/pull/10506)
 - Added optional `blurActiveElementOnCanvasFocus` option to set the behavior of blurring the active element when interacting with the canvas. [#10518](https://github.com/CesiumGS/cesium/pull/10518)
-- Added cross-origin isloated config for development server by using `npm run startCrossOriginIsolated`. [#10515](https://github.com/CesiumGS/cesium/pull/10515)
 
 ##### Fixes :wrench:
 
