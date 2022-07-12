@@ -620,4 +620,34 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       Matrix4.fromTranslation(expected, scratchTransform)
     );
   });
+
+  it("doesn't modify node that is animated by user", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: translationPoints,
+    };
+
+    const mockChannel = createMockChannel(
+      mockNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    runtimeNode.userAnimated = true;
+
+    const time = 10.0;
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+  });
 });

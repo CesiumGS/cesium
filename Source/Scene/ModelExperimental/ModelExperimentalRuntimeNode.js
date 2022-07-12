@@ -10,10 +10,6 @@ import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
-// public node should point to the private node
-// model.getNode
-// public nodes be stored at the ModelExperimental level
-//
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
  *
@@ -47,7 +43,7 @@ export default function ModelExperimentalRuntimeNode(options) {
   //>>includeEnd('debug');
 
   this._node = node;
-  this._name = node.name; // Helps with debugging
+  this._name = node.name;
   this._id = node.index;
   this._sceneGraph = sceneGraph;
   this._children = children;
@@ -92,9 +88,9 @@ export default function ModelExperimentalRuntimeNode(options) {
   this.userAnimated = false;
 
   /**
-   * Pipeline stages to apply across all the mesh primitives of this node. This
-   * is an array of classes, each with a static method called
-   * <code>process()</code>
+   * Pipeline stages to apply across all the mesh primitives of this node.
+   * This is an array of classes, each with a static method called
+   * <code>process()</code>.
    *
    * @type {Object[]}
    * @readonly
@@ -442,7 +438,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * @type {Matrix4[]}
    * @readonly
    *
-   * @privates
+   * @private
    */
   computedJointMatrices: {
     get: function () {

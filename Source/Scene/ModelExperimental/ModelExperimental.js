@@ -1486,7 +1486,7 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @param {String} name The name of the node in the glTF.
  * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
- * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+ * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
  *
  * @example
  * // Apply non-uniform scale to node LOD3sp
@@ -1500,9 +1500,7 @@ ModelExperimental.prototype.getNode = function (name) {
       "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
     );
   }
-  if (!defined(name)) {
-    throw new DeveloperError("name is required.");
-  }
+  Check.typeOf.string("name", name);
   //>>includeEnd('debug');
 
   return this._nodesByName[name];

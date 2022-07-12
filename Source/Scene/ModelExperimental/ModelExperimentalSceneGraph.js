@@ -266,8 +266,7 @@ function initialize(sceneGraph) {
     const rootNodeIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       rootNode,
-      transformToRoot,
-      model
+      transformToRoot
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -373,12 +372,11 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
- * @param {ModelExperimental} model The model that the scene graph belongs to.
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot, model) {
+function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelExperimentalUtility.getNodeTransform(node);
@@ -396,8 +394,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot, model) {
     const childIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       childNode,
-      childNodeTransformToRoot,
-      model
+      childNodeTransformToRoot
     );
     childrenIndices.push(childIndex);
   }
@@ -429,6 +426,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot, model) {
   }
 
   // Create and store the public version of the runtime node.
+  const model = sceneGraph._model;
   const publicNode = new ModelExperimentalNode(model, runtimeNode);
   const name = publicNode.name;
   model._nodesByName[name] = publicNode;
