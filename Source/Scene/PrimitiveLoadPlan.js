@@ -43,22 +43,13 @@ function AttributeLoadPlan(attribute) {
   this.loadBuffer = false;
 
   /**
-   * Whether the attribute will be loaded as a typed array copy of the GPU
-   * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
-   *
-   * @type {Boolean}
-   * @private
-   */
-  this.loadTypedArray = false;
-
-  /**
    * Whether the attribute will be loaded as a packed typed array by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
    *
    * @type {Boolean}
    * @private
    */
-  this.loadPackedTypedArray = false;
+  this.loadTypedArray = false;
 }
 
 /**
@@ -107,7 +98,7 @@ function IndicesLoadPlan(indices) {
 
 /**
  * Primitives may need post-processing steps after their attributes and indices
- * hae loaded, such as generating outlines for the CESIUM_primitive_outline glTF
+ * have loaded, such as generating outlines for the CESIUM_primitive_outline glTF
  * extension. This object tracks what indices and attributes need to be
  * post-processed.
  *
@@ -210,7 +201,6 @@ function generateOutlines(loadPlan) {
   const outlineCoordinatesPlan = new AttributeLoadPlan(outlineCoordinates);
   outlineCoordinatesPlan.loadBuffer = true;
   outlineCoordinatesPlan.loadTypedArray = false;
-  outlineCoordinatesPlan.loadPackedTypedArray = false;
   loadPlan.attributePlans.push(outlineCoordinatesPlan);
   primitive.outlineCoordinates = outlineCoordinatesPlan.attribute;
 
@@ -220,16 +210,14 @@ function generateOutlines(loadPlan) {
   const attributesLength = loadPlan.attributePlans.length;
   for (let i = 0; i < attributesLength; i++) {
     const attribute = attributePlans[i].attribute;
-    attribute.packedTypedArray = generator.updateAttribute(
-      attribute.packedTypedArray
-    );
+    attribute.typedArray = generator.updateAttribute(attribute.typedArray);
   }
 }
 
 function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   const attribute = new ModelComponents.Attribute();
   attribute.name = "_OUTLINE_COORDINATES";
-  attribute.packedTypedArray = outlineCoordinatesTypedArray;
+  attribute.typedArray = outlineCoordinatesTypedArray;
   attribute.componentDatatype = ComponentDatatype.FLOAT;
   attribute.type = AttributeType.VEC3;
   attribute.normalized = false;
@@ -251,11 +239,11 @@ function generateAttributeBuffers(attributePlans, context) {
   for (let i = 0; i < attributesLength; i++) {
     const attributePlan = attributePlans[i];
     const attribute = attributePlan.attribute;
-    const packedTypedArray = attribute.packedTypedArray;
+    const typedArray = attribute.typedArray;
 
     if (attributePlan.loadBuffer) {
       const buffer = Buffer.createVertexBuffer({
-        typedArray: packedTypedArray,
+        typedArray: typedArray,
         context: context,
         usage: BufferUsage.STATIC_DRAW,
       });
@@ -263,18 +251,8 @@ function generateAttributeBuffers(attributePlans, context) {
       attribute.buffer = buffer;
     }
 
-    if (attributePlan.loadTypedArray) {
-      // ModelComponents.typedArray expects a Uint8Array, not an arbitrary
-      // typed array
-      attribute.typedArray = new Uint8Array(
-        packedTypedArray.buffer,
-        packedTypedArray.byteOffset,
-        packedTypedArray.byteLength
-      );
-    }
-
-    if (!attributePlan.loadPackedTypedArray) {
-      attribute.packedTypedArray = undefined;
+    if (!attributePlan.loadTypedArray) {
+      attribute.typedArray = undefined;
     }
   }
 }
