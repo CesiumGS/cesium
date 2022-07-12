@@ -120,12 +120,6 @@ describe(
     beforeAll(function () {
       scene = createScene();
 
-      // This is set to true in order to test that buffers / typed arrays
-      // are loaded in correctly for instanced models. If this is false,
-      // instanced attributes will always load in as typed arrays, which
-      // will cause several tests to fail.
-      scene.context._instancedArrays = true;
-
       sceneWithWebgl2 = createScene();
       sceneWithWebgl2.context._webgl2 = true;
     });

@@ -35,6 +35,8 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = false;
+
         // Power Plant design model provided by Bentley Systems
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;

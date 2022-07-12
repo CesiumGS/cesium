@@ -45,6 +45,7 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {Object} options An object containing the following properties
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
  * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+ * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -58,6 +59,7 @@ export default function PntsLoader(options) {
 
   this._arrayBuffer = arrayBuffer;
   this._byteOffset = byteOffset;
+  this._loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
 
   this._parsedContent = undefined;
   this._decodePromise = undefined;
@@ -153,8 +155,13 @@ PntsLoader.prototype.load = function () {
   this._promise = new Promise(function (resolve, reject) {
     loader._process = function (frameState) {
       if (loader._state === ResourceLoaderState.PROCESSING) {
-        if (!defined(loader._decodePromise)) {
-          decodeDraco(loader, frameState.context).then(resolve).catch(reject);
+        if (defined(loader._decodePromise)) {
+          return;
+        }
+
+        const decodePromise = decodeDraco(loader, frameState.context);
+        if (defined(decodePromise)) {
+          decodePromise.then(resolve).catch(reject);
         }
       }
     };
@@ -374,6 +381,14 @@ function makeAttribute(loader, attributeInfo, context) {
     buffer.vertexArrayDestroyable = false;
     loader._buffers.push(buffer);
     attribute.buffer = buffer;
+  }
+
+  const loadAttributesFor2D = loader._loadAttributesFor2D;
+  if (
+    attribute.semantic === VertexAttributeSemantic.POSITION &&
+    loadAttributesFor2D
+  ) {
+    attribute.typedArray = typedArray;
   }
 
   return attribute;

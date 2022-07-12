@@ -5,7 +5,6 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -73,14 +72,14 @@ ExternalFileHandler.prototype.texture = function (texture) {
   }
 
   if (texture instanceof HTMLCanvasElement) {
-    const deferred = defer();
-    this._promises.push(deferred.promise);
-
     filename = `texture_${++this._count}.png`;
-    texture.toBlob(function (blob) {
-      that._files[filename] = blob;
-      deferred.resolve();
+    const promise = new Promise((resolve) => {
+      texture.toBlob(function (blob) {
+        that._files[filename] = blob;
+        resolve();
+      });
     });
+    this._promises.push(promise);
 
     return filename;
   }

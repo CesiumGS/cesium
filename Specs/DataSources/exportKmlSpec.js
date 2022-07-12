@@ -4,7 +4,6 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Iso8601 } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
@@ -505,18 +504,17 @@ describe("DataSources/exportKml", function () {
         expect(result.externalFiles).toBeUndefined();
         expect(result.kmz).toBeDefined();
 
-        const deferred = defer();
-        const fileReader = new FileReader();
-        fileReader.onload = function (event) {
-          // Verify its a zip archive
-          expect(new DataView(event.target.result).getUint32(0, false)).toBe(
-            0x504b0304
-          );
-          deferred.resolve();
-        };
-        fileReader.readAsArrayBuffer(result.kmz);
-
-        return deferred.promise;
+        return new Promise((resolve) => {
+          const fileReader = new FileReader();
+          fileReader.onload = function (event) {
+            // Verify its a zip archive
+            expect(new DataView(event.target.result).getUint32(0, false)).toBe(
+              0x504b0304
+            );
+            resolve();
+          };
+          fileReader.readAsArrayBuffer(result.kmz);
+        });
       });
     });
   });

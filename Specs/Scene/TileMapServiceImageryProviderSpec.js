@@ -7,6 +7,7 @@ import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";
+import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { WebMercatorProjection } from "../../Source/Cesium.js";
@@ -68,7 +69,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
       setTimeout(function () {
-        deferred.reject(new Error("whoops; rejecting xhr request"));
+        deferred.reject(new RequestErrorEvent(404));
       }, 1);
     };
   }
@@ -89,6 +90,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       url: "made/up/tms/server/",
     });
     expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
+    return provider.readyPromise;
   });
 
   it("resolves readyPromise", function () {
@@ -394,17 +396,20 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       overrideMimeType
     ) {
       requestMetadata.resolve(url);
-      deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+      deferred.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
     });
 
     const provider = new TileMapServiceImageryProvider({
       url: "http://server.invalid?query=1",
     });
 
-    return requestMetadata.promise.then(function (url) {
-      expect(/\?query=1$/.test(url)).toEqual(true);
-    });
-    /*eslint-enable no-unused-vars*/
+    return requestMetadata.promise
+      .then(function (url) {
+        expect(/\?query=1$/.test(url)).toEqual(true);
+      })
+      .then(() => {
+        return provider.readyPromise;
+      });
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {

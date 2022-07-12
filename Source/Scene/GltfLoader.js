@@ -1308,7 +1308,8 @@ function loadFeatureIdTexture(
   // Though the new channel index is more future-proof, this implementation
   // only supports RGBA textures. At least for now, the string representation
   // is more useful for generating shader code.
-  const channelString = textureInfo.channels
+  const channels = defined(textureInfo.channels) ? textureInfo.channels : [0];
+  const channelString = channels
     .map(function (channelIndex) {
       return "rgba".charAt(channelIndex);
     })
