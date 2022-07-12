@@ -12,7 +12,7 @@ import B3dmParser from "./B3dmParser.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
-import ClassificationModel from "./ClassificationModel.js";
+import ClassificationModelExperimental from "./ClassificationModelExperimental.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 import ModelUtility from "./ModelUtility.js";
@@ -337,7 +337,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
     // For a list of limitations on the input glTF, see the documentation for classificationType of Cesium3DTileset.
-    content._model = new ClassificationModel({
+    content._model = new ClassificationModelExperimental({
       gltf: gltfView,
       cull: false, // The model is already culled by 3D Tiles
       basePath: resource,

@@ -107,7 +107,7 @@ function IndicesLoadPlan(indices) {
 
 /**
  * Primitives may need post-processing steps after their attributes and indices
- * hae loaded, such as generating outlines for the CESIUM_primitive_outline glTF
+ * have loaded, such as generating outlines for the CESIUM_primitive_outline glTF
  * extension. This object tracks what indices and attributes need to be
  * post-processed.
  *
