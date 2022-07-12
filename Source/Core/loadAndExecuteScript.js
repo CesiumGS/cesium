@@ -9,9 +9,9 @@ function loadAndExecuteScript(url) {
   script.async = true;
   script.src = url;
 
-  if (window.crossOriginIsolated) {
-    script.setAttribute("crossorigin", "anonymous");
-  }
+  // if (window.crossOriginIsolated) {
+  //   script.setAttribute("crossorigin", "anonymous");
+  // }
 
   const head = document.getElementsByTagName("head")[0];
   script.onload = function () {
