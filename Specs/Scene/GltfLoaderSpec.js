@@ -1,4 +1,5 @@
 import {
+  ArticulationStageType,
   AttributeType,
   Axis,
   Cartesian2,
@@ -105,6 +106,12 @@ describe(
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const boxArticulations =
+      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+    const boxWithPrimitiveOutline =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+    const boxWithPrimitiveOutlineSharedVertices =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -112,12 +119,6 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-
-      // This is set to true in order to test that buffers / typed arrays
-      // are loaded in correctly for instanced models. If this is false,
-      // instanced attributes will always load in as typed arrays, which
-      // will cause several tests to fail.
-      scene.context._instancedArrays = true;
 
       sceneWithWebgl2 = createScene();
       sceneWithWebgl2.context._webgl2 = true;
@@ -3065,6 +3066,96 @@ describe(
       });
     });
 
+    it("loads BoxArticulations", function () {
+      return loadGltf(boxArticulations).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        expect(rootNode.articulationName).toEqual("SampleArticulation");
+
+        const articulations = components.articulations;
+        expect(articulations.length).toEqual(1);
+
+        const articulation = articulations[0];
+        expect(articulation.name).toEqual("SampleArticulation");
+
+        const stages = articulation.stages;
+        expect(stages.length).toEqual(10);
+
+        const xTranslateStage = stages[0];
+        expect(xTranslateStage.name).toEqual("MoveX");
+        expect(xTranslateStage.type).toEqual(ArticulationStageType.XTRANSLATE);
+        expect(xTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(xTranslateStage.maximumValue).toEqual(1000.0);
+        expect(xTranslateStage.initialValue).toEqual(0.0);
+
+        const yTranslateStage = stages[1];
+        expect(yTranslateStage.name).toEqual("MoveY");
+        expect(yTranslateStage.type).toEqual(ArticulationStageType.YTRANSLATE);
+        expect(yTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(yTranslateStage.maximumValue).toEqual(1000.0);
+        expect(yTranslateStage.initialValue).toEqual(0.0);
+
+        const zTranslateStage = stages[2];
+        expect(zTranslateStage.name).toEqual("MoveZ");
+        expect(zTranslateStage.type).toEqual(ArticulationStageType.ZTRANSLATE);
+        expect(zTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(zTranslateStage.maximumValue).toEqual(1000.0);
+        expect(zTranslateStage.initialValue).toEqual(0.0);
+
+        const yRotateStage = stages[3];
+        expect(yRotateStage.name).toEqual("Yaw");
+        expect(yRotateStage.type).toEqual(ArticulationStageType.YROTATE);
+        expect(yRotateStage.minimumValue).toEqual(-360.0);
+        expect(yRotateStage.maximumValue).toEqual(360.0);
+        expect(yRotateStage.initialValue).toEqual(0.0);
+
+        const xRotateStage = stages[4];
+        expect(xRotateStage.name).toEqual("Pitch");
+        expect(xRotateStage.type).toEqual(ArticulationStageType.XROTATE);
+        expect(xRotateStage.minimumValue).toEqual(-360.0);
+        expect(xRotateStage.maximumValue).toEqual(360.0);
+        expect(xRotateStage.initialValue).toEqual(0.0);
+
+        const zRotateStage = stages[5];
+        expect(zRotateStage.name).toEqual("Roll");
+        expect(zRotateStage.type).toEqual(ArticulationStageType.ZROTATE);
+        expect(zRotateStage.minimumValue).toEqual(-360.0);
+        expect(zRotateStage.maximumValue).toEqual(360.0);
+        expect(zRotateStage.initialValue).toEqual(0.0);
+
+        const uniformScaleStage = stages[6];
+        expect(uniformScaleStage.name).toEqual("Size");
+        expect(uniformScaleStage.type).toEqual(
+          ArticulationStageType.UNIFORMSCALE
+        );
+        expect(uniformScaleStage.minimumValue).toEqual(0.0);
+        expect(uniformScaleStage.maximumValue).toEqual(1.0);
+        expect(uniformScaleStage.initialValue).toEqual(1.0);
+
+        const xScaleStage = stages[7];
+        expect(xScaleStage.name).toEqual("SizeX");
+        expect(xScaleStage.type).toEqual(ArticulationStageType.XSCALE);
+        expect(xScaleStage.minimumValue).toEqual(0.0);
+        expect(xScaleStage.maximumValue).toEqual(1.0);
+        expect(xScaleStage.initialValue).toEqual(1.0);
+
+        const yScaleStage = stages[8];
+        expect(yScaleStage.name).toEqual("SizeY");
+        expect(yScaleStage.type).toEqual(ArticulationStageType.YSCALE);
+        expect(yScaleStage.minimumValue).toEqual(0.0);
+        expect(yScaleStage.maximumValue).toEqual(1.0);
+        expect(yScaleStage.initialValue).toEqual(1.0);
+
+        const zScaleStage = stages[9];
+        expect(zScaleStage.name).toEqual("SizeZ");
+        expect(zScaleStage.type).toEqual(ArticulationStageType.ZSCALE);
+        expect(zScaleStage.minimumValue).toEqual(0.0);
+        expect(zScaleStage.maximumValue).toEqual(1.0);
+        expect(zScaleStage.initialValue).toEqual(1.0);
+      });
+    });
+
     it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
       return loadGltf(triangle, {
         loadIndicesForWireframe: true,
@@ -3785,6 +3876,140 @@ describe(
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline", function () {
+      return loadGltf(boxWithPrimitiveOutline).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        expect(outlineCoordinates.count).toBe(24);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline with shared vertices", function () {
+      return loadGltf(boxWithPrimitiveOutlineSharedVertices).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).not.toBeDefined();
+        expect(texCoordAttribute).not.toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        // the model originally had 8 vertices, but some are duplicated
+        // when generating outlines
+        expect(outlineCoordinates.count).toBe(16);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
+      });
+    });
+
+    it("does not load CESIUM_primitive_outline if loadPrimitiveOutline is false", function () {
+      const options = {
+        loadPrimitiveOutline: false,
+      };
+      return loadGltf(boxWithPrimitiveOutline, options).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).not.toBeDefined();
       });
     });
 

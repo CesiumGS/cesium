@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -803,12 +802,13 @@ function computePositionsExtruded(params, vertexFormat) {
   if (defined(params.offsetAttribute)) {
     let applyOffset = new Uint8Array(size * 6);
     if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      applyOffset = arrayFill(applyOffset, 1, 0, size); // top face
-      applyOffset = arrayFill(applyOffset, 1, size * 2, size * 4); // top wall
+      applyOffset = applyOffset
+        .fill(1, 0, size) // top face
+        .fill(1, size * 2, size * 4); // top wall
     } else {
       const applyOffsetValue =
         params.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      applyOffset = arrayFill(applyOffset, applyOffsetValue);
+      applyOffset = applyOffset.fill(applyOffsetValue);
     }
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -1329,8 +1329,7 @@ CorridorGeometry.createGeometry = function (corridorGeometry) {
           ? 0
           : 1;
       const length = attr.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
-      arrayFill(applyOffset, applyOffsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(applyOffsetValue);
       attr.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

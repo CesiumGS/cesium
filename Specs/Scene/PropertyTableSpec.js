@@ -552,5 +552,93 @@ describe("Scene/PropertyTable", function () {
         batchTableJsonOnly.getPropertyTypedArrayBySemantic("PRIORITY")
       ).not.toBeDefined();
     });
+
+    it("isClass throws without featureId", function () {
+      expect(function () {
+        return batchTable.isClass(undefined, "Wheels");
+      }).toThrowDeveloperError();
+    });
+
+    it("isClass throws for out-of-bounds featureId", function () {
+      expect(function () {
+        return batchTable.isClass(-1, "Wheels");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return batchTable.isClass(10, "Wheels");
+      }).toThrowDeveloperError();
+    });
+
+    it("isClass throws without className", function () {
+      expect(function () {
+        return batchTable.isClass(0, undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("isClass works for batch table hierarchy", function () {
+      expect(batchTable.isClass(0, "Wheels")).toBe(true);
+      expect(batchTable.isClass(0, "Car")).toBe(true);
+      expect(batchTable.isClass(0, "Wings")).toBe(false);
+    });
+
+    it("isClass returns false without batch table hierarchy", function () {
+      expect(batchTableJsonOnly.isClass(0, "Wheels")).toBe(false);
+    });
+
+    it("isExactClass throws without featureId", function () {
+      expect(function () {
+        return batchTable.isExactClass(undefined, "Wheels");
+      }).toThrowDeveloperError();
+    });
+
+    it("isExactClass throws for out-of-bounds featureId", function () {
+      expect(function () {
+        return batchTable.isExactClass(-1, "Wheels");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return batchTable.isExactClass(10, "Wheels");
+      }).toThrowDeveloperError();
+    });
+
+    it("isExactClass throws without className", function () {
+      expect(function () {
+        return batchTable.isExactClass(0, undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("isExactClass works for batch table hierarchy", function () {
+      expect(batchTable.isExactClass(0, "Wheels")).toBe(true);
+      expect(batchTable.isExactClass(0, "Car")).toBe(false);
+      expect(batchTable.isExactClass(0, "Wings")).toBe(false);
+      expect(batchTable.isExactClass(2, "Wheels")).toBe(false);
+      expect(batchTable.isExactClass(2, "Car")).toBe(true);
+    });
+
+    it("isExactClass returns false without batch table hierarchy", function () {
+      expect(batchTableJsonOnly.isExactClass(0, "Wheels")).toBe(false);
+    });
+
+    it("getExactClassName throws without featureId", function () {
+      expect(function () {
+        return batchTable.getExactClassName(undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("getExactClassName throws for out-of-bounds featureId", function () {
+      expect(function () {
+        return batchTable.getExactClassName(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        return batchTable.getExactClassName(10);
+      }).toThrowDeveloperError();
+    });
+
+    it("getExactClassName works for batch table hierarchy", function () {
+      expect(batchTable.getExactClassName(0)).toBe("Wheels");
+      expect(batchTable.getExactClassName(2)).toBe("Car");
+    });
+
+    it("getExactClassName returns undefined without batch table hierarchy", function () {
+      expect(batchTableJsonOnly.getExactClassName(0)).toBe(undefined);
+    });
   });
 });

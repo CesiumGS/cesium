@@ -762,7 +762,6 @@ gulp.task(
         "Specs/**",
         "Specs/**/.eslintrc.json",
         "ThirdParty/**",
-        "Tools/eslint-config-cesium/**",
         "favicon.ico",
         ".eslintignore",
         ".eslintrc.json",

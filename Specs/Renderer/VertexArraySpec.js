@@ -867,35 +867,38 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.", function () {
-      if (!context.instancedArrays) {
-        const buffer = Buffer.createVertexBuffer({
+    it("throws when instanceDivisor is greater than zero and instancing is disabled", function () {
+      // disable extension
+      const instancedArrays = context._instancedArrays;
+      context._instancedArrays = undefined;
+
+      const buffer = Buffer.createVertexBuffer({
+        context: context,
+        sizeInBytes: 3,
+        usage: BufferUsage.STATIC_DRAW,
+      });
+
+      const attributes = [
+        {
+          index: 0,
+          vertexBuffer: buffer,
+          componentsPerAttribute: 3,
+        },
+        {
+          index: 1,
+          vertexBuffer: buffer,
+          componentsPerAttribute: 3,
+          instanceDivisor: 1,
+        },
+      ];
+
+      expect(function () {
+        return new VertexArray({
           context: context,
-          sizeInBytes: 3,
-          usage: BufferUsage.STATIC_DRAW,
+          attributes: attributes,
         });
-
-        const attributes = [
-          {
-            index: 0,
-            vertexBuffer: buffer,
-            componentsPerAttribute: 3,
-          },
-          {
-            index: 1,
-            vertexBuffer: buffer,
-            componentsPerAttribute: 3,
-            instanceDivisor: 1,
-          },
-        ];
-
-        expect(function () {
-          return new VertexArray({
-            context: context,
-            attributes: attributes,
-          });
-        }).toThrowDeveloperError();
-      }
+      }).toThrowDeveloperError();
+      context._instancedArrays = instancedArrays;
     });
   },
   "WebGL"

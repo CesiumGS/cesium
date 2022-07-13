@@ -34,7 +34,7 @@
     },
     "geometricError": 0,
     "content": {
-      "uri": "pointCloudWithUnicodePropertyNames.pnts"
+      "uri": "pointCloudWithUnicodePropertyIds.pnts"
     }
   }
 }

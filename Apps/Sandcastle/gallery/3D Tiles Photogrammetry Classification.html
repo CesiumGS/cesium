@@ -36,6 +36,8 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = false;
+
         // An example of using a b3dm tilset to classify another b3dm tileset.
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),

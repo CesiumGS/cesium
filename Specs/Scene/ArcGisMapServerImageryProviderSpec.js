@@ -658,10 +658,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
-      expect(error.message.indexOf("WKID") >= 0).toEqual(true);
-      ++tries;
-      if (tries < 3) {
-        error.retry = true;
+      const isWKIDError = error.message.indexOf("WKID") >= 0;
+      if (isWKIDError) {
+        ++tries;
+        if (tries < 3) {
+          error.retry = true;
+        }
       }
     });
 
@@ -1013,10 +1015,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
-      expect(error.message.indexOf("WKID") >= 0).toEqual(true);
-      ++tries;
-      if (tries < 3) {
-        error.retry = true;
+      const isWKIDError = error.message.indexOf("WKID") >= 0;
+      if (isWKIDError) {
+        ++tries;
+        if (tries < 3) {
+          error.retry = true;
+        }
       }
     });
 

@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
@@ -237,29 +236,23 @@ function createPrimitive(geometries) {
       // Copy because they may be the views on the same buffer.
       let length = 0;
       if (defined(geometries._boxes)) {
-        boxes = geometries._boxes = arraySlice(boxes);
-        boxBatchIds = geometries._boxBatchIds = arraySlice(boxBatchIds);
+        boxes = geometries._boxes = boxes.slice();
+        boxBatchIds = geometries._boxBatchIds = boxBatchIds.slice();
         length += boxBatchIds.length;
       }
       if (defined(geometries._cylinders)) {
-        cylinders = geometries._cylinders = arraySlice(cylinders);
-        cylinderBatchIds = geometries._cylinderBatchIds = arraySlice(
-          cylinderBatchIds
-        );
+        cylinders = geometries._cylinders = cylinders.slice();
+        cylinderBatchIds = geometries._cylinderBatchIds = cylinderBatchIds.slice();
         length += cylinderBatchIds.length;
       }
       if (defined(geometries._ellipsoids)) {
-        ellipsoids = geometries._ellipsoids = arraySlice(ellipsoids);
-        ellipsoidBatchIds = geometries._ellipsoidBatchIds = arraySlice(
-          ellipsoidBatchIds
-        );
+        ellipsoids = geometries._ellipsoids = ellipsoids.slice();
+        ellipsoidBatchIds = geometries._ellipsoidBatchIds = ellipsoidBatchIds.slice();
         length += ellipsoidBatchIds.length;
       }
       if (defined(geometries._spheres)) {
-        spheres = geometries._sphere = arraySlice(spheres);
-        sphereBatchIds = geometries._sphereBatchIds = arraySlice(
-          sphereBatchIds
-        );
+        spheres = geometries._sphere = spheres.slice();
+        sphereBatchIds = geometries._sphereBatchIds = sphereBatchIds.slice();
         length += sphereBatchIds.length;
       }
 

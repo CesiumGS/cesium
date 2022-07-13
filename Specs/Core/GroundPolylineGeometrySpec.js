@@ -1,6 +1,5 @@
 import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
 import { ArcType } from "../../Source/Cesium.js";
-import { arraySlice } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -24,11 +23,11 @@ describe("Core/GroundPolylineGeometry", function () {
     const values = attribute.values;
     const componentsPerAttribute = attribute.componentsPerAttribute;
     const vertexCount = values.length / componentsPerAttribute;
-    const firstVertex = arraySlice(values, 0, componentsPerAttribute);
+    const firstVertex = values.slice(0, componentsPerAttribute);
     let identical = true;
     for (let i = 1; i < vertexCount; i++) {
       const index = i * componentsPerAttribute;
-      const vertex = arraySlice(values, index, index + componentsPerAttribute);
+      const vertex = values.slice(index, index + componentsPerAttribute);
       for (let j = 0; j < componentsPerAttribute; j++) {
         if (vertex[j] !== firstVertex[j]) {
           identical = false;

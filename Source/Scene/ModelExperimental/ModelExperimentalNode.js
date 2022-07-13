@@ -51,22 +51,12 @@ export default function ModelExperimentalNode(options) {
   this._transform = Matrix4.clone(transform, this._transform);
   this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  const computedTransform = Matrix4.multiply(
-    transformToRoot,
-    transform,
-    new Matrix4()
-  );
-  this._computedTransform = computedTransform;
+  this._computedTransform = new Matrix4(); // Computed in initialize()
   this._transformDirty = false;
 
   // Used for animation
-  this._transformParameters = defined(node.matrix)
-    ? undefined
-    : new TranslationRotationScale(node.translation, node.rotation, node.scale);
-  this._morphWeights = defined(node.morphWeights)
-    ? node.morphWeights.slice()
-    : [];
+  this._transformParameters = undefined;
+  this._morphWeights = [];
 
   // Will be set by the scene graph after the skins have been created
   this._runtimeSkin = undefined;
@@ -124,6 +114,8 @@ export default function ModelExperimentalNode(options) {
    * @private
    */
   this.instancingTranslationBuffer2D = undefined;
+
+  initialize(this);
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -417,6 +409,43 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
     },
   },
 });
+
+function initialize(runtimeNode) {
+  const transform = runtimeNode.transform;
+  const transformToRoot = runtimeNode.transformToRoot;
+  const computedTransform = runtimeNode._computedTransform;
+  runtimeNode._computedTransform = Matrix4.multiply(
+    transformToRoot,
+    transform,
+    computedTransform
+  );
+
+  const node = runtimeNode.node;
+  if (!defined(node.matrix)) {
+    runtimeNode._transformParameters = new TranslationRotationScale(
+      node.translation,
+      node.rotation,
+      node.scale
+    );
+  }
+
+  if (defined(node.morphWeights)) {
+    runtimeNode._morphWeights = node.morphWeights.slice();
+  }
+
+  // If this node is affected by an articulation from the AGI_articulations
+  // extension, add this node to its list of affected nodes.
+  const articulationName = node.articulationName;
+  if (defined(articulationName)) {
+    const sceneGraph = runtimeNode.sceneGraph;
+    const runtimeArticulations = sceneGraph._runtimeArticulations;
+
+    const runtimeArticulation = runtimeArticulations[articulationName];
+    if (defined(runtimeArticulation)) {
+      runtimeArticulation.runtimeNodes.push(runtimeNode);
+    }
+  }
+}
 
 function updateTransformFromParameters(runtimeNode, transformParameters) {
   runtimeNode._transformDirty = true;

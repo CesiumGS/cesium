@@ -54,6 +54,7 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
   /**
    * The scene graph this skin belongs to.
    *
+   * @memberof ModelExperimentalSkin.prototype
    * @type {ModelExperimentalSceneGraph}
    * @readonly
    *

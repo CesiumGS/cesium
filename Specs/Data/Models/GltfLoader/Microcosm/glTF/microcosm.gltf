@@ -55,8 +55,7 @@
           "properties": {
             "vegetationDensity": {
               "index": 1,
-              "texCoord": 0,
-              "channels": [0]
+              "texCoord": 0
             }
           }
         }
@@ -110,8 +109,7 @@
                   "label": "landCover",
                   "texture": {
                     "index": 2,
-                    "texCoord": 0,
-                    "channels": [0] 
+                    "texCoord": 0
                   }
                 }
               ]

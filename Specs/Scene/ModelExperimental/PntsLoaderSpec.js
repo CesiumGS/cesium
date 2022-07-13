@@ -2,6 +2,7 @@ import {
   AttributeType,
   Color,
   ComponentDatatype,
+  defaultValue,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
@@ -46,8 +47,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/pointCloudBatched.pnts";
   const pointCloudWithPerPointPropertiesUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/pointCloudWithPerPointProperties.pnts";
-  const pointCloudWithUnicodePropertyNamesUrl =
-    "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/pointCloudWithUnicodePropertyNames.pnts";
+  const pointCloudWithUnicodePropertyIdsUrl =
+    "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/pointCloudWithUnicodePropertyIds.pnts";
 
   let scene;
   const pntsLoaders = [];
@@ -71,19 +72,23 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
-  function loadPntsArrayBuffer(arrayBuffer) {
+  function loadPntsArrayBuffer(arrayBuffer, options) {
+    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
     const loader = new PntsLoader({
       arrayBuffer: arrayBuffer,
+      loadAttributesFor2D: options.loadAttributesFor2D,
     });
     pntsLoaders.push(loader);
     loader.load();
     return waitForLoaderProcess(loader, scene);
   }
 
-  function loadPnts(pntsPath) {
+  function loadPnts(pntsPath, options) {
     return Resource.fetchArrayBuffer({
       url: pntsPath,
-    }).then(loadPntsArrayBuffer);
+    }).then(function (arrayBuffer) {
+      return loadPntsArrayBuffer(arrayBuffer, options);
+    });
   }
 
   function expectLoadError(arrayBuffer) {
@@ -524,8 +529,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     });
   });
 
-  it("loads PointCloudWithUnicodePropertyNames", function () {
-    return loadPnts(pointCloudWithUnicodePropertyNamesUrl).then(function (
+  it("loads PointCloudWithUnicodePropertyIds", function () {
+    return loadPnts(pointCloudWithUnicodePropertyIdsUrl).then(function (
       loader
     ) {
       const components = loader.components;
@@ -551,6 +556,51 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
     });
+  });
+
+  it("loads attributes for 2D", function () {
+    return loadPnts(pointCloudRGBUrl, { loadAttributesFor2D: true }).then(
+      function (loader) {
+        const components = loader.components;
+        expect(components).toBeDefined();
+        expectEmptyMetadata(components.structuralMetadata);
+
+        const primitive = components.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        expect(attributes.length).toBe(2);
+
+        const positionAttribute = attributes[0];
+        expectPosition(positionAttribute);
+        expect(positionAttribute.typedArray).toBeDefined();
+
+        expectColorRGB(attributes[1]);
+      }
+    );
+  });
+
+  it("loads attributes for 2D with Draco", function () {
+    return loadPnts(pointCloudDracoUrl, { loadAttributesFor2D: true }).then(
+      function (loader) {
+        const components = loader.components;
+        expect(components).toBeDefined();
+        expectEmptyMetadata(components.structuralMetadata);
+
+        const primitive = components.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        expect(attributes.length).toBe(3);
+
+        const positionAttribute = attributes[0];
+        expectPositionQuantized(positionAttribute);
+        expect(positionAttribute.typedArray).toBeDefined();
+
+        expectNormalOctEncoded(
+          attributes[1],
+          ComponentDatatype.UNSIGNED_BYTE,
+          true
+        );
+        expectColorRGB(attributes[2]);
+      }
+    );
   });
 
   it("throws with invalid version", function () {
