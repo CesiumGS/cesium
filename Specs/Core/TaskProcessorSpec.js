@@ -46,32 +46,6 @@ describe("Core/TaskProcessor", function () {
     expect(taskProcessor.isDestroyed()).toEqual(true);
   });
 
-  it("can transfer array buffer", function () {
-    taskProcessor = new TaskProcessor(
-      absolutize("../Specs/TestWorkers/returnByteLength.js")
-    );
-
-    const byteLength = 100;
-    const parameters = new ArrayBuffer(byteLength);
-    expect(parameters.byteLength).toEqual(byteLength);
-
-    return Promise.resolve(TaskProcessor._canTransferArrayBuffer).then(
-      function (canTransferArrayBuffer) {
-        const promise = taskProcessor.scheduleTask(parameters, [parameters]);
-
-        // the worker should see the array with proper byte length
-        return promise.then(function (result) {
-          if (canTransferArrayBuffer) {
-            // array buffer should be neutered when transferred
-            expect(parameters.byteLength).toEqual(0);
-          }
-
-          expect(result).toEqual(byteLength);
-        });
-      }
-    );
-  });
-
   it("can transfer array buffer back from worker", function () {
     taskProcessor = new TaskProcessor(
       absolutize("../Specs/TestWorkers/transferArrayBuffer.js")

@@ -77,10 +77,6 @@ function createTaskProcessorWorker(workerFunction) {
           postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
         }
 
-        if (!data.canTransferArrayBuffer) {
-          transferableObjects.length = 0;
-        }
-
         try {
           postMessage(responseMessage, transferableObjects);
         } catch (e) {

@@ -62,7 +62,7 @@ function canTransferArrayBuffer() {
 
 const taskCompletedEvent = new Event();
 
-function completeTask(processor, data) {
+function completeTask(processor, data, resolve, reject) {
   --processor._activeTasks;
 
   const id = data.id;
@@ -70,9 +70,6 @@ function completeTask(processor, data) {
     // This is not one of ours.
     return;
   }
-
-  const deferreds = processor._deferreds;
-  const deferred = deferreds[id];
 
   if (defined(data.error)) {
     let error = data.error;
@@ -84,13 +81,11 @@ function completeTask(processor, data) {
       error.stack = data.error.stack;
     }
     taskCompletedEvent.raiseEvent(error);
-    deferred.reject(error);
+    reject(error);
   } else {
     taskCompletedEvent.raiseEvent();
-    deferred.resolve(data.result);
+    resolve(data.result);
   }
-
-  delete deferreds[id];
 }
 
 function getWorkerUrl(moduleID) {
@@ -149,9 +144,6 @@ function createWorker(processor) {
   };
 
   worker.postMessage(bootstrapMessage);
-  worker.onmessage = function (event) {
-    completeTask(processor, event.data);
-  };
 
   return worker;
 }
@@ -268,8 +260,12 @@ TaskProcessor.prototype.scheduleTask = function (
     }
 
     const id = processor._nextID++;
-    const deferred = defer();
-    processor._deferreds[id] = deferred;
+
+    const promise = new Promise((resolve, reject) => {
+      processor._worker.onmessage = function (event) {
+        completeTask(processor, event.data, resolve, reject);
+      };
+    });
 
     processor._worker.postMessage(
       {
@@ -280,7 +276,7 @@ TaskProcessor.prototype.scheduleTask = function (
       transferableObjects
     );
 
-    return deferred.promise;
+    return promise;
   });
 };
 
@@ -300,10 +296,9 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
     this._worker = createWorker(this);
   }
 
-  const deferred = defer();
-  const processor = this;
   const worker = this._worker;
-  getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
+
+  return getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
     wasmConfig
   ) {
     return Promise.resolve(canTransferArrayBuffer()).then(function (
@@ -315,22 +310,20 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
         transferableObjects = [binary];
       }
 
-      worker.onmessage = function (event) {
+      const compilePromise = new Promise((resolve) => {
         worker.onmessage = function (event) {
-          completeTask(processor, event.data);
+          resolve(event.data);
         };
-
-        deferred.resolve(event.data);
-      };
+      });
 
       worker.postMessage(
         { webAssemblyConfig: wasmConfig },
         transferableObjects
       );
+
+      return compilePromise;
     });
   });
-
-  return deferred.promise;
 };
 
 /**
