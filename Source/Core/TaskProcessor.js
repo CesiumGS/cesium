@@ -1,7 +1,6 @@
 import Uri from "../ThirdParty/Uri.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -10,55 +9,6 @@ import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
-
-function canTransferArrayBuffer() {
-  if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-    const worker = new Worker(
-      getWorkerUrl("Workers/transferTypedArrayTest.js")
-    );
-    worker.postMessage = defaultValue(
-      worker.webkitPostMessage,
-      worker.postMessage
-    );
-
-    const value = 99;
-    const array = new Int8Array([value]);
-
-    try {
-      // postMessage might fail with a DataCloneError
-      // if transferring array buffers is not supported.
-      worker.postMessage(
-        {
-          array: array,
-        },
-        [array.buffer]
-      );
-    } catch (e) {
-      TaskProcessor._canTransferArrayBuffer = false;
-      return TaskProcessor._canTransferArrayBuffer;
-    }
-
-    const deferred = defer();
-
-    worker.onmessage = function (event) {
-      const array = event.data.array;
-
-      // some versions of Firefox silently fail to transfer typed arrays.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=841904
-      // Check to make sure the value round-trips successfully.
-      const result = defined(array) && array[0] === value;
-      deferred.resolve(result);
-
-      worker.terminate();
-
-      TaskProcessor._canTransferArrayBuffer = result;
-    };
-
-    TaskProcessor._canTransferArrayBuffer = deferred.promise;
-  }
-
-  return TaskProcessor._canTransferArrayBuffer;
-}
 
 const taskCompletedEvent = new Event();
 
@@ -250,34 +200,28 @@ TaskProcessor.prototype.scheduleTask = function (
   ++this._activeTasks;
 
   const processor = this;
-  return Promise.resolve(canTransferArrayBuffer()).then(function (
-    canTransferArrayBuffer
-  ) {
-    if (!defined(transferableObjects)) {
-      transferableObjects = emptyTransferableObjectArray;
-    } else if (!canTransferArrayBuffer) {
-      transferableObjects.length = 0;
-    }
 
-    const id = processor._nextID++;
+  if (!defined(transferableObjects)) {
+    transferableObjects = emptyTransferableObjectArray;
+  }
 
-    const promise = new Promise((resolve, reject) => {
-      processor._worker.onmessage = function (event) {
-        completeTask(processor, event.data, resolve, reject);
-      };
-    });
+  const id = processor._nextID++;
 
-    processor._worker.postMessage(
-      {
-        id: id,
-        parameters: parameters,
-        canTransferArrayBuffer: canTransferArrayBuffer,
-      },
-      transferableObjects
-    );
-
-    return promise;
+  const promise = new Promise((resolve, reject) => {
+    processor._worker.onmessage = function (event) {
+      completeTask(processor, event.data, resolve, reject);
+    };
   });
+
+  processor._worker.postMessage(
+    {
+      id: id,
+      parameters: parameters,
+    },
+    transferableObjects
+  );
+
+  return promise;
 };
 
 /**
@@ -301,28 +245,21 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
   return getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
     wasmConfig
   ) {
-    return Promise.resolve(canTransferArrayBuffer()).then(function (
-      canTransferArrayBuffer
-    ) {
-      let transferableObjects;
-      const binary = wasmConfig.wasmBinary;
-      if (defined(binary) && canTransferArrayBuffer) {
-        transferableObjects = [binary];
-      }
+    let transferableObjects;
+    const binary = wasmConfig.wasmBinary;
+    if (defined(binary)) {
+      transferableObjects = [binary];
+    }
 
-      const compilePromise = new Promise((resolve) => {
-        worker.onmessage = function (event) {
-          resolve(event.data);
-        };
-      });
-
-      worker.postMessage(
-        { webAssemblyConfig: wasmConfig },
-        transferableObjects
-      );
-
-      return compilePromise;
+    const compilePromise = new Promise((resolve) => {
+      worker.onmessage = function (event) {
+        resolve(event.data);
+      };
     });
+
+    worker.postMessage({ webAssemblyConfig: wasmConfig }, transferableObjects);
+
+    return compilePromise;
   });
 };
 
