@@ -1489,8 +1489,8 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
  *
  * @example
- * // Apply non-uniform scale to node LOD3sp
- * const node = model.getNode('LOD3sp');
+ * // Apply non-uniform scale to node "Hand"
+ * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 ModelExperimental.prototype.getNode = function (name) {

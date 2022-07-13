@@ -367,7 +367,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
 
 /**
  * Recursively traverse through the nodes in the scene graph to create
- * their runtime versions, using depth-first post-order traversal.
+ * their runtime versions, using a post-order depth-first traversal.
  *
  * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
@@ -426,10 +426,12 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   }
 
   // Create and store the public version of the runtime node.
-  const model = sceneGraph._model;
-  const publicNode = new ModelExperimentalNode(model, runtimeNode);
-  const name = publicNode.name;
-  model._nodesByName[name] = publicNode;
+  const name = node.name;
+  if (defined(name)) {
+    const model = sceneGraph._model;
+    const publicNode = new ModelExperimentalNode(model, runtimeNode);
+    model._nodesByName[name] = publicNode;
+  }
 
   return index;
 }
@@ -681,7 +683,7 @@ ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
 
 /**
  * Recursively traverse through the runtime nodes in the scene graph
- * using depth-first post-order traversal to perform a callback on
+ * using a post-order depth-first traversal to perform a callback on
  * their runtime primitives.
  *
  * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph.

@@ -16,7 +16,7 @@ import defined from "../../Core/defined.js";
  * @class
  *
  * @example
- * const node = model.getNode('LOD3sp');
+ * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  *
  * @see ModelExperimental#getNode

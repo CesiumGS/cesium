@@ -44,22 +44,17 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   ) {
     originalTransform = defaultValue(originalTransform, transform);
 
-    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(
-      Matrix4.equals(runtimeNode.originalTransform, originalTransform)
-    ).toBe(true);
-    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
-      true
-    );
+    expect(runtimeNode.transform).toEqual(transform);
+    expect(runtimeNode.originalTransform).toEqual(originalTransform);
+    expect(runtimeNode.transformToRoot).toEqual(transformToRoot);
 
     const computedTransform = Matrix4.multiplyTransformation(
       transformToRoot,
       transform,
       scratchMatrix
     );
-    expect(
-      Matrix4.equals(runtimeNode.computedTransform, computedTransform)
-    ).toBe(true);
+
+    expect(runtimeNode.computedTransform).toEqual(computedTransform);
   }
 
   it("throws for undefined node", function () {
