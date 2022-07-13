@@ -3,7 +3,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Clock from "../../Core/Clock.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -2076,8 +2075,12 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   //We can't actually perform the zoom until all visualization is ready and
   //bounding spheres have been computed.  Therefore we create and return
   //a deferred which will be resolved as part of the post-render step in the
-  //frame that actually performs the zoom
-  const zoomPromise = defer();
+  //frame that actually performs the zoom.
+  const zoomPromise = new Promise((resolve) => {
+    that._completeZoom = function (value) {
+      resolve(value);
+    };
+  });
   that._zoomPromise = zoomPromise;
   that._zoomIsFlight = isFlight;
   that._zoomOptions = options;
@@ -2153,7 +2156,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   });
 
   that.scene.requestRender();
-  return zoomPromise.promise;
+  return zoomPromise;
 }
 
 function clearZoom(viewer) {
@@ -2166,7 +2169,7 @@ function cancelZoom(viewer) {
   const zoomPromise = viewer._zoomPromise;
   if (defined(zoomPromise)) {
     clearZoom(viewer);
-    zoomPromise.resolve(false);
+    viewer._completeZoom(false);
   }
 }
 
@@ -2186,47 +2189,50 @@ function updateZoomTarget(viewer) {
 
   const scene = viewer.scene;
   const camera = scene.camera;
-  const zoomPromise = viewer._zoomPromise;
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
 
   // If zoomTarget was Cesium3DTileset
   if (target instanceof Cesium3DTileset) {
-    return target.readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
+    return target.readyPromise
+      .then(function () {
+        const boundingSphere = target.boundingSphere;
+        // If offset was originally undefined then give it base value instead of empty object
+        if (!defined(zoomOptions.offset)) {
+          zoomOptions.offset = new HeadingPitchRange(
+            0.0,
+            -0.5,
+            boundingSphere.radius
+          );
+        }
 
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          zoomPromise.resolve(true);
-        },
-        cancel: function () {
-          zoomPromise.resolve(false);
-        },
-      };
+        options = {
+          offset: zoomOptions.offset,
+          duration: zoomOptions.duration,
+          maximumHeight: zoomOptions.maximumHeight,
+          complete: function () {
+            viewer._completeZoom(true);
+          },
+          cancel: function () {
+            viewer._completeZoom(false);
+          },
+        };
 
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(target.boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
+        if (viewer._zoomIsFlight) {
+          camera.flyToBoundingSphere(target.boundingSphere, options);
+        } else {
+          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+          camera.lookAtTransform(Matrix4.IDENTITY);
 
-        // Finish the promise
-        zoomPromise.resolve(true);
-      }
+          // Finish the promise
+          viewer._completeZoom(true);
+        }
 
-      clearZoom(viewer);
-    });
+        clearZoom(viewer);
+      })
+      .catch(() => {
+        cancelZoom(viewer);
+      });
   }
 
   // If zoomTarget was TimeDynamicPointCloud
@@ -2247,10 +2253,10 @@ function updateZoomTarget(viewer) {
         duration: zoomOptions.duration,
         maximumHeight: zoomOptions.maximumHeight,
         complete: function () {
-          zoomPromise.resolve(true);
+          viewer._completeZoom(true);
         },
         cancel: function () {
-          zoomPromise.resolve(false);
+          viewer._completeZoom(false);
         },
       };
 
@@ -2261,7 +2267,7 @@ function updateZoomTarget(viewer) {
         camera.lookAtTransform(Matrix4.IDENTITY);
 
         // Finish the promise
-        zoomPromise.resolve(true);
+        viewer._completeZoom(true);
       }
 
       clearZoom(viewer);
@@ -2277,10 +2283,10 @@ function updateZoomTarget(viewer) {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        zoomPromise.resolve(true);
+        viewer._completeZoom(true);
       },
       cancel: function () {
-        zoomPromise.resolve(false);
+        viewer._completeZoom(false);
       },
     };
 
@@ -2288,7 +2294,7 @@ function updateZoomTarget(viewer) {
       camera.flyTo(options);
     } else {
       camera.setView(options);
-      zoomPromise.resolve(true);
+      viewer._completeZoom(true);
     }
     clearZoom(viewer);
     return;
@@ -2325,17 +2331,17 @@ function updateZoomTarget(viewer) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
     camera.lookAtTransform(Matrix4.IDENTITY);
     clearZoom(viewer);
-    zoomPromise.resolve(true);
+    viewer._completeZoom(true);
   } else {
     clearZoom(viewer);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        zoomPromise.resolve(true);
+        viewer._completeZoom(true);
       },
       cancel: function () {
-        zoomPromise.resolve(false);
+        viewer._completeZoom(false);
       },
       offset: zoomOptions.offset,
     });
