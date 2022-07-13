@@ -23,6 +23,7 @@ Thumbs.db
 /Source/Workers/**
 !/Source/Workers/cesiumWorkerBootstrapper.js
 !/Source/Workers/transferTypedArrayTest.js
+!/Source/Workers/package.json
 
 Source/ThirdParty/_commonjsHelpers*
 Source/ThirdParty/draco_decoder.wasm

@@ -99,7 +99,7 @@ async function buildDev() {
     sourcemap: true,
     path: outputDirectory,
     incremental: true,
-    write: false
+    write: false,
   });
 
   await buildWorkers({
@@ -112,7 +112,7 @@ async function buildDev() {
 
   const specResult = await buildSpecs({
     incremental: true,
-    write: false
+    write: false,
   });
 
   console.log(`Cesium built in ${formatTimeSince(start)} seconds.`);
@@ -221,7 +221,7 @@ const serveResult = (result, fileName, res, next) => {
   ];
   app.get(knownTilesetFormats, checkGzipAndNext);
 
-  // Set up file watcher for more expensive operations which would block during 
+  // Set up file watcher for more expensive operations which would block during
   // "just in time" compilation
   const workerWatcher = chokidar.watch(workerSourceFiles, {
     ignoreInitial: true,
@@ -249,8 +249,13 @@ const serveResult = (result, fileName, res, next) => {
       }
     }
   });
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Build/CesiumUnminified/Cesium.js.map", async function (req, res, next) {
+
+  app.get("/Build/CesiumUnminified/Cesium.js.map", async function (
+    //eslint-disable-next-line no-unused-vars
+    req,
+    res,
+    next
+  ) {
     if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
@@ -279,8 +284,12 @@ const serveResult = (result, fileName, res, next) => {
 
     return serveResult(esmResult, "index.js", res, next);
   });
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Build/CesiumUnminified/index.js.map", async function (req, res, next) {
+  app.get("/Build/CesiumUnminified/index.js.map", async function (
+    //eslint-disable-next-line no-unused-vars
+    req,
+    res,
+    next
+  ) {
     if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
