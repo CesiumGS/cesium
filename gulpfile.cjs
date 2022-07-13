@@ -180,28 +180,28 @@ function handleBuildWarnings(result) {
   }
 }
 
-const esbuildBaseConfig = {
-  target: "es2020",
-  legalComments: "inline",
-  banner: {
-    js: copyrightHeader,
-  },
+const esbuildBaseConfig = () => {
+  return {
+    target: "es2020",
+    legalComments: "inline",
+    banner: {
+      js: copyrightHeader,
+    },
+  };
 };
 
 async function buildCesiumJs(options) {
   const css = globby.sync(cssFiles);
 
-  const buildConfig = {
-    ...esbuildBaseConfig,
-    entryPoints: ["Source/Cesium.js"],
-    bundle: true,
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    external: ["https", "http", "url", "zlib"],
-    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-    incremental: options.incremental,
-    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
-  };
+  const buildConfig = esbuildBaseConfig();
+  buildConfig.entryPoints = ["Source/Cesium.js"];
+  buildConfig.bundle = true;
+  buildConfig.minify = options.minify;
+  buildConfig.sourcemap = options.sourcemap;
+  buildConfig.external = ["https", "http", "url", "zlib"];
+  buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
+  buildConfig.incremental = options.incremental;
+  buildConfig.ogLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
 
   // Build ESM
   const result = await esbuild.build({
@@ -215,20 +215,19 @@ async function buildCesiumJs(options) {
   const results = [result];
 
   // Copy and minify CSS and third party
-  await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: [
-      "Source/ThirdParty/google-earth-dbroot-parser.js",
-      ...css, // Load and optionally minify css
-    ],
-    loader: {
-      ".gif": "text",
-      ".png": "text",
-    },
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    outdir: options.path,
-  });
+  const config = esbuildBaseConfig();
+  config.entryPoints = [
+    "Source/ThirdParty/google-earth-dbroot-parser.js",
+    ...css, // Load and optionally minify css
+  ];
+  config.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  config.minify = options.minify;
+  config.sourcemap = options.sourcemap;
+  config.outdir = options.path;
+  await esbuild.build(config);
 
   // Build IIFE
   if (options.iife) {
@@ -284,13 +283,12 @@ async function buildWorkers(options) {
     "Source/ThirdParty/Workers/**",
   ]);
 
-  await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: workers,
-    outdir: options.path,
-    outbase: "Source", // Maintain existing file paths
-    minify: options.minify,
-  });
+  const config = esbuildBaseConfig();
+  config.entryPoints = workers;
+  config.outdir = options.path;
+  config.outbase = "Source"; // Maintain existing file paths
+  config.minify = options.minify;
+  await esbuild.build(config);
 
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
@@ -2021,27 +2019,24 @@ async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
-  const result = await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: [
-      "Apps/CesiumViewer/CesiumViewer.js",
-      "Apps/CesiumViewer/CesiumViewer.css",
-    ],
-    bundle: true, // Tree-shaking is enabled automatically
-    minify: true,
-    loader: {
-      ".gif": "text",
-      ".png": "text",
-    },
-    format: "iife",
-    inject: ["Apps/CesiumViewer/index.js"],
-    external: ["https", "http", "zlib"],
-    plugins: [stripPragmaPlugin],
-    outdir: cesiumViewerOutputDirectory,
-    outbase: "Apps/CesiumViewer",
-    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
-  });
-
+  const config = esbuildBaseConfig();
+  config.entryPoints = [
+    "Apps/CesiumViewer/CesiumViewer.js",
+    "Apps/CesiumViewer/CesiumViewer.css",
+  ];
+  config.bundle = true; // Tree-shaking is enabled automatically
+  config.minify = true;
+  config.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  config.format = "iife";
+  config.inject = ["Apps/CesiumViewer/index.js"];
+  config.external = ["https", "http", "zlib"];
+  config.outdir = cesiumViewerOutputDirectory;
+  config.outbase = "Apps/CesiumViewer";
+  config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
+  const result = await esbuild.build(config);
   handleBuildWarnings(result);
 
   await esbuild.build({
