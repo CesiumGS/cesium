@@ -3,6 +3,7 @@
 
 const child_process = require("child_process");
 const fs = require("fs");
+const { readFile } = require("fs/promises");
 const os = require("os");
 const path = require("path");
 
@@ -54,7 +55,6 @@ const pragmas = {
 const stripPragmaPlugin = {
   name: "strip-pragmas",
   setup: (build) => {
-    const readFile = Promise.promisify(fs.readFile);
     build.onLoad({ filter: /\.js$/ }, async (args) => {
       let source = await readFile(args.path, "utf8");
 
@@ -106,12 +106,14 @@ function handleBuildWarnings(result) {
 }
 
 const cssFiles = "Source/**/*.css";
-const esbuildBaseConfig = {
-  target: "es2020",
-  legalComments: "inline",
-  banner: {
-    js: copyrightHeader,
-  },
+const esbuildBaseConfig = () => {
+  return {
+    target: "es2020",
+    legalComments: "inline",
+    banner: {
+      js: copyrightHeader,
+    },
+  };
 };
 
 /**
@@ -130,18 +132,17 @@ const esbuildBaseConfig = {
 async function buildCesiumJs(options) {
   const css = globby.sync(cssFiles);
 
-  const buildConfig = {
-    ...esbuildBaseConfig,
-    entryPoints: ["Source/Cesium.js"],
-    bundle: true,
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    external: ["https", "http", "url", "zlib"],
-    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
-    incremental: options.incremental,
-    write: options.write,
-    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
-  };
+  const buildConfig = esbuildBaseConfig();
+  buildConfig.entryPoints = ["Source/Cesium.js"];
+  buildConfig.bundle = true;
+  buildConfig.minify = options.minify;
+  buildConfig.sourcemap = options.sourcemap;
+  buildConfig.external = ["https", "http", "url", "zlib"];
+  buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
+  buildConfig.incremental = options.incremental;
+  buildConfig.write = options.write;
+  // print errors immediately, and collect warnings so we can filter out known ones
+  buildConfig.logLevel = "error";
 
   // Build ESM
   const result = await esbuild.build({
@@ -154,21 +155,20 @@ async function buildCesiumJs(options) {
 
   const results = [result];
 
-  // Copy and minify CSS and third party
-  await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: [
-      "Source/ThirdParty/google-earth-dbroot-parser.js",
-      ...css, // Load and optionally minify css
-    ],
-    loader: {
-      ".gif": "text",
-      ".png": "text",
-    },
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    outdir: options.path,
-  });
+  // Copy and minify non-bundled CSS and JS
+  const cssAndThirdPartyConfig = esbuildBaseConfig();
+  cssAndThirdPartyConfig.entryPoints = [
+    "Source/ThirdParty/google-earth-dbroot-parser.js",
+    ...css, // Load and optionally minify css
+  ];
+  cssAndThirdPartyConfig.minify = options.minify;
+  cssAndThirdPartyConfig.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  cssAndThirdPartyConfig.sourcemap = options.sourcemap;
+  cssAndThirdPartyConfig.outdir = options.path;
+  await esbuild.build(cssAndThirdPartyConfig);
 
   // Build IIFE
   if (options.iife) {
@@ -278,13 +278,12 @@ async function buildWorkers(options) {
     "Source/ThirdParty/Workers/**",
   ]);
 
-  await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: workers,
-    outdir: options.path,
-    outbase: "Source", // Maintain existing file paths
-    minify: options.minify,
-  });
+  const workerConfig = esbuildBaseConfig();
+  workerConfig.entryPoints = workers;
+  workerConfig.outdir = options.path;
+  workerConfig.outbase = "Source"; // Maintain existing file paths
+  workerConfig.minify = options.minify;
+  await esbuild.build(workerConfig);
 
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
@@ -576,6 +575,13 @@ module.exports = {
   buildWorkers,
   glslToJavaScript,
   createSpecList,
+  /**
+   * Bundles
+   * @param {Object} options
+   * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
+   * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+   * @returns
+   */
   buildSpecs: async (options) => {
     options = options || {};
 
@@ -592,7 +598,7 @@ module.exports = {
       outdir: path.join("Build", "Specs"),
       plugins: [externalResolvePlugin],
       incremental: options.incremental,
-      write: options.write
+      write: options.write,
     });
 
     return results;
@@ -618,6 +624,9 @@ module.exports = {
 
     return streamToPromise(stream);
   },
+  /**
+   * Creates .jshintrc for use in Sandcastle
+   */
   createJsHintOptions: () => {
     const jshintrc = JSON.parse(
       fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")

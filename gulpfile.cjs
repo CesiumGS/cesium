@@ -1498,25 +1498,24 @@ async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
-  const result = await esbuild.build({
-    ...esbuildBaseConfig,
-    entryPoints: [
-      "Apps/CesiumViewer/CesiumViewer.js",
-      "Apps/CesiumViewer/CesiumViewer.css",
-    ],
-    bundle: true, // Tree-shaking is enabled automatically
-    minify: true,
-    loader: {
-      ".gif": "text",
-      ".png": "text",
-    },
-    format: "iife",
-    inject: ["Apps/CesiumViewer/index.js"],
-    external: ["https", "http", "zlib"],
-    outdir: cesiumViewerOutputDirectory,
-    outbase: "Apps/CesiumViewer",
-    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
-  });
+  const config = esbuildBaseConfig();
+  config.entryPoints = [
+    "Apps/CesiumViewer/CesiumViewer.js",
+    "Apps/CesiumViewer/CesiumViewer.css",
+  ];
+  config.bundle = true; // Tree-shaking is enabled automatically
+  config.minify = true;
+  config.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  config.format = "iife";
+  config.inject = ["Apps/CesiumViewer/index.js"];
+  config.external = ["https", "http", "zlib"];
+  config.outdir = cesiumViewerOutputDirectory;
+  config.outbase = "Apps/CesiumViewer";
+  config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
+  const result = await esbuild.build(config);
 
   handleBuildWarnings(result);
 
