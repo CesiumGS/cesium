@@ -5842,7 +5842,11 @@ describe(
       it("renders implicit tileset with multiple contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl
+          implicitMultipleContentsUrl,
+          {
+            // See https://github.com/CesiumGS/cesium/issues/10551
+            enableModelExperimental: false,
+          }
         ).then(function (tileset) {
           scene.renderForSpecs();
           const statistics = tileset._statistics;
@@ -6169,7 +6173,11 @@ describe(
       it("renders implicit tileset with multiple contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyUrl
+          implicitMultipleContentsLegacyUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
+          {
+            enableModelExperimental: false,
+          }
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
