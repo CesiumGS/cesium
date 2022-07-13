@@ -274,7 +274,7 @@ function addPropertyAttributeProperty(
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${fieldValue}`;
+    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
       [fieldLine]
@@ -379,7 +379,7 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${fieldValue}`;
+    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
       [fieldLine]
@@ -392,38 +392,34 @@ function addPropertyTextureUniform(
   uniformName,
   textureReader
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
+  const { shaderBuilder, uniformMap } = renderResources;
   shaderBuilder.addUniform(
     "sampler2D",
     uniformName,
     ShaderDestination.FRAGMENT
   );
 
-  const uniformMap = renderResources.uniformMap;
-  uniformMap[uniformName] = function () {
-    return textureReader.texture;
-  };
+  uniformMap[uniformName] = () => textureReader.texture;
 }
 
 function addValueTransformUniforms(valueExpression, options) {
-  const metadataVariable = options.metadataVariable;
+  const {
+    metadataVariable,
+    renderResources: { shaderBuilder, uniformMap },
+    glslType,
+    shaderDestination,
+    offset,
+    scale,
+  } = options;
+
   const offsetUniformName = `u_${metadataVariable}_offset`;
   const scaleUniformName = `u_${metadataVariable}_scale`;
 
-  const renderResources = options.renderResources;
-  const shaderBuilder = renderResources.shaderBuilder;
-  const glslType = options.glslType;
-  const shaderDestination = options.shaderDestination;
   shaderBuilder.addUniform(glslType, offsetUniformName, shaderDestination);
   shaderBuilder.addUniform(glslType, scaleUniformName, shaderDestination);
 
-  const uniformMap = renderResources.uniformMap;
-  uniformMap[offsetUniformName] = function () {
-    return options.offset;
-  };
-  uniformMap[scaleUniformName] = function () {
-    return options.scale;
-  };
+  uniformMap[offsetUniformName] = () => offset;
+  uniformMap[scaleUniformName] = () => scale;
 
   return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
