@@ -243,11 +243,12 @@ const serveResult = (result, fileName, res, next) => {
         createCesiumJs();
         iifeResult = await iifeResult.rebuild();
         console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
-        return serveResult(iifeResult, "Cesium.js", res, next);
       } catch (e) {
         next(e);
       }
     }
+
+    return serveResult(iifeResult, "Cesium.js", res, next);
   });
 
   app.get("/Build/CesiumUnminified/Cesium.js.map", async function (
@@ -262,11 +263,12 @@ const serveResult = (result, fileName, res, next) => {
         createCesiumJs();
         iifeResult = await iifeResult.rebuild();
         console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
-        return serveResult(iifeResult, "Cesium.js.map", res, next);
       } catch (e) {
         next(e);
       }
     }
+
+    return serveResult(iifeResult, "Cesium.js.map", res, next);
   });
 
   //eslint-disable-next-line no-unused-vars
@@ -311,18 +313,25 @@ const serveResult = (result, fileName, res, next) => {
     iifeResult.outputFiles = [];
   });
 
+  let jsHintOptionsCache;
   const sourceCodeWatcher = chokidar.watch(sourceFiles, {
     ignoreInitial: true,
   });
   sourceCodeWatcher.on("all", () => {
     esmResult.outputFiles = [];
     iifeResult.outputFiles = [];
+    jsHintOptionsCache = undefined;
   });
 
   //eslint-disable-next-line no-unused-vars
   app.get("/Apps/Sandcastle/jsHintOptions.js", async function (req, res, next) {
-    createJsHintOptions();
-    next();
+    if (!jsHintOptionsCache) {
+      jsHintOptionsCache = createJsHintOptions();
+    }
+
+    res.append("Cache-Control", "max-age=0");
+    res.append("Content-Type", "application/javascript");
+    res.send(jsHintOptionsCache);
   });
 
   //eslint-disable-next-line no-unused-vars

@@ -640,6 +640,8 @@ module.exports = {
       path.join("Apps", "Sandcastle", "jsHintOptions.js"),
       contents
     );
+
+    return contents;
   },
   createGalleryList,
 };
