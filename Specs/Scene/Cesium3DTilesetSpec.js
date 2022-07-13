@@ -940,6 +940,8 @@ describe(
           expect(statistics.numberOfPointsSelected).toEqual(0);
           expect(statistics.numberOfPointsLoaded).toEqual(0);
           expect(statistics.numberOfTrianglesSelected).toEqual(0);
+
+          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
         }
       );
     }
@@ -5568,6 +5570,7 @@ describe(
             expect(statistics.numberOfPendingRequests).toBe(0);
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(1);
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
           }
         );
       });
@@ -5642,6 +5645,7 @@ describe(
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
             RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
           }
         );
       });
@@ -5947,6 +5951,7 @@ describe(
           expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
           RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
+          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
         });
       });
 
