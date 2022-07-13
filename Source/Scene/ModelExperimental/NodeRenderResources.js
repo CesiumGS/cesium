@@ -54,7 +54,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.uniformMap = clone(modelRenderResources.uniformMap);
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the model
+   * Options for configuring the alpha stage such as pass and alpha cutoff. Inherited from the model
    * render resources.
    *
    * @type {ModelAlphaOptions}

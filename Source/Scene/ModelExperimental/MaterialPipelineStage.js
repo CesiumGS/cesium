@@ -107,13 +107,10 @@ MaterialPipelineStage.process = function (
   renderResources.renderStateOptions.cull.enabled = cull;
 
   const alphaOptions = renderResources.alphaOptions;
-  if (!defined(alphaOptions.alphaMode)) {
-    alphaOptions.alphaMode = material.alphaMode;
-    if (material.alphaMode === AlphaMode.BLEND) {
-      alphaOptions.pass = Pass.TRANSLUCENT;
-    } else if (material.alphaMode === AlphaMode.MASK) {
-      alphaOptions.alphaCutoff = material.alphaCutoff;
-    }
+  if (material.alphaMode === AlphaMode.BLEND) {
+    alphaOptions.pass = Pass.TRANSLUCENT;
+  } else if (material.alphaMode === AlphaMode.MASK) {
+    alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);

@@ -1,4 +1,3 @@
-import AlphaMode from "../AlphaMode.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import combine from "../../Core/combine.js";
 import ModelColorStageFS from "../../Shaders/ModelExperimental/ModelColorStageFS.js";
@@ -55,7 +54,6 @@ ModelColorPipelineStage.process = function (
 
   if (color.alpha < 1.0) {
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
-    renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
   }
 
   shaderBuilder.addUniform(

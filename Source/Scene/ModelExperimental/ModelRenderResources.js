@@ -50,7 +50,7 @@ export default function ModelRenderResources(model) {
   this.uniformMap = {};
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha mode.
+   * Options for configuring the alpha stage such as pass and alpha cutoff.
    *
    * @type {ModelAlphaOptions}
    * @readonly
