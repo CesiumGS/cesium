@@ -2,10 +2,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
-import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
-import BlendingState from "../BlendingState.js";
-import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
@@ -269,13 +266,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.renderStateOptions = combine(nodeRenderResources.renderStateOptions, {
-    depthTest: {
-      enabled: true,
-      func: DepthFunction.LESS_OR_EQUAL,
-    },
-    blending: BlendingState.DISABLED,
-  });
+  this.renderStateOptions = clone(nodeRenderResources.renderStateOptions);
 
   /**
    * An enum describing the types of draw commands needed, based on the style.
