@@ -5843,7 +5843,7 @@ describe(
         );
       });
 
-      it("renders implicit tileset with multiple contents", function () {
+      xit("renders implicit tileset with multiple contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
