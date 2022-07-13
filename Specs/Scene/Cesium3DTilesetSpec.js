@@ -5844,6 +5844,7 @@ describe(
           scene,
           implicitMultipleContentsUrl
         ).then(function (tileset) {
+          scene.renderForSpecs();
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
           expect(statistics.visited).toEqual(6);
