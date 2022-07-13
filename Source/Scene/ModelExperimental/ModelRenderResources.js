@@ -1,5 +1,7 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
+import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 
 /**
@@ -67,5 +69,5 @@ export default function ModelRenderResources(model) {
    *
    * @private
    */
-  this.renderStateOptions = {};
+  this.renderStateOptions = clone(RenderState.fromCache(), true);
 }

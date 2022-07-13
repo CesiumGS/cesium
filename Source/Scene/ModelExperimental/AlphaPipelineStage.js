@@ -23,9 +23,9 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
 
   const renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {
+    renderStateOptions.cull.enabled = false;
+    renderStateOptions.depthMask = false;
     renderStateOptions.blending = BlendingState.ALPHA_BLEND;
-  } else {
-    renderStateOptions.blending = BlendingState.DISABLED;
   }
 
   const shaderBuilder = renderResources.shaderBuilder;
