@@ -4,6 +4,7 @@ import {
   Cesium3DContentGroup,
   ContentMetadata,
   Color,
+  ExperimentalFeatures,
   HeadingPitchRange,
   HeadingPitchRoll,
   Matrix4,
@@ -59,10 +60,15 @@ describe(
 
       // Keep the error from logging to the console when running tests
       spyOn(B3dmParser, "_deprecationWarning");
+
+      // This class is only used with Model
+      ExperimentalFeatures.enableModelExperimental = false;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+
+      ExperimentalFeatures.enableModelExperimental = true;
     });
 
     beforeEach(function () {

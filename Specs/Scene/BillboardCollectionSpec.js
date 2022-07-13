@@ -5,7 +5,6 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { createGuid } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { NearFarScalar } from "../../Source/Cesium.js";
@@ -2283,26 +2282,24 @@ describe(
       return pollToPromise(function () {
         return one.ready;
       }).then(function () {
-        const deferred = defer();
+        return new Promise((resolve) => {
+          // render and yield control several times to make sure the
+          // green image doesn't clobber the blue
+          let iterations = 10;
 
-        // render and yield control several times to make sure the
-        // green image doesn't clobber the blue
-        let iterations = 10;
+          function renderAndCheck() {
+            expect(scene).toRender([0, 0, 255, 255]);
 
-        function renderAndCheck() {
-          expect(scene).toRender([0, 0, 255, 255]);
-
-          if (iterations > 0) {
-            --iterations;
-            setTimeout(renderAndCheck, 1);
-          } else {
-            deferred.resolve();
+            if (iterations > 0) {
+              --iterations;
+              setTimeout(renderAndCheck, 1);
+            } else {
+              resolve();
+            }
           }
-        }
 
-        renderAndCheck();
-
-        return deferred.promise;
+          renderAndCheck();
+        });
       });
     });
 
@@ -2323,26 +2320,24 @@ describe(
       expect(one.ready).toEqual(false);
       expect(one.image).toBeUndefined();
 
-      const deferred = defer();
+      return new Promise((resolve) => {
+        // render and yield control several times to make sure the
+        // green image never loads
+        let iterations = 10;
 
-      // render and yield control several times to make sure the
-      // green image never loads
-      let iterations = 10;
+        function renderAndCheck() {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-      function renderAndCheck() {
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        if (iterations > 0) {
-          --iterations;
-          setTimeout(renderAndCheck, 1);
-        } else {
-          deferred.resolve();
+          if (iterations > 0) {
+            --iterations;
+            setTimeout(renderAndCheck, 1);
+          } else {
+            resolve();
+          }
         }
-      }
 
-      renderAndCheck();
-
-      return deferred.promise;
+        renderAndCheck();
+      });
     });
 
     it("does not crash when removing a billboard that is loading", function () {
@@ -2354,26 +2349,24 @@ describe(
 
       billboards.remove(one);
 
-      const deferred = defer();
+      return new Promise((resolve) => {
+        // render and yield control several times to make sure the
+        // green image doesn't crash when it loads
+        let iterations = 10;
 
-      // render and yield control several times to make sure the
-      // green image doesn't crash when it loads
-      let iterations = 10;
+        function renderAndCheck() {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-      function renderAndCheck() {
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        if (iterations > 0) {
-          --iterations;
-          setTimeout(renderAndCheck, 1);
-        } else {
-          deferred.resolve();
+          if (iterations > 0) {
+            --iterations;
+            setTimeout(renderAndCheck, 1);
+          } else {
+            resolve();
+          }
         }
-      }
 
-      renderAndCheck();
-
-      return deferred.promise;
+        renderAndCheck();
+      });
     });
 
     it("can add a billboard without a globe", function () {

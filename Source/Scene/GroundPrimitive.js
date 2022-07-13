@@ -4,7 +4,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -212,7 +211,24 @@ function GroundPrimitive(options) {
   this._boundingVolumes2D = [];
 
   this._ready = false;
-  this._readyPromise = defer();
+
+  const groundPrimitive = this;
+  this._readyPromise = new Promise((resolve, reject) => {
+    groundPrimitive._completeLoad = () => {
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
+
+      const error = this._error;
+      if (!defined(error)) {
+        resolve(this);
+      } else {
+        reject(error);
+      }
+    };
+  });
 
   this._primitive = undefined;
 
@@ -371,7 +387,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -905,20 +921,7 @@ GroundPrimitive.prototype.update = function (frameState) {
     };
 
     this._primitive = new ClassificationPrimitive(primitiveOptions);
-    this._primitive.readyPromise.then(function (primitive) {
-      that._ready = true;
-
-      if (that.releaseGeometryInstances) {
-        that.geometryInstances = undefined;
-      }
-
-      const error = primitive._error;
-      if (!defined(error)) {
-        that._readyPromise.resolve(that);
-      } else {
-        that._readyPromise.reject(error);
-      }
-    });
+    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   this._primitive.appearance = this.appearance;

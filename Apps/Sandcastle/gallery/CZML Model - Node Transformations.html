@@ -33,6 +33,8 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = false;
+
         const czml = [
           {
             id: "document",

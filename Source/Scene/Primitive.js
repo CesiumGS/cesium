@@ -8,7 +8,6 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -349,7 +348,24 @@ function Primitive(options) {
 
   this._createGeometryResults = undefined;
   this._ready = false;
-  this._readyPromise = defer();
+
+  const primitive = this;
+  this._readyPromise = new Promise((resolve, reject) => {
+    primitive._completeLoad = (frameState, state, error) => {
+      this._error = error;
+      this._state = state;
+      frameState.afterRender.push(function () {
+        primitive._ready =
+          primitive._state === PrimitiveState.COMPLETE ||
+          primitive._state === PrimitiveState.FAILED;
+        if (!defined(error)) {
+          resolve(primitive);
+        } else {
+          reject(error);
+        }
+      });
+    };
+  });
 
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
@@ -485,7 +501,7 @@ Object.defineProperties(Primitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -2515,17 +2531,6 @@ Primitive.prototype.destroy = function () {
 };
 
 function setReady(primitive, frameState, state, error) {
-  primitive._error = error;
-  primitive._state = state;
-  frameState.afterRender.push(function () {
-    primitive._ready =
-      primitive._state === PrimitiveState.COMPLETE ||
-      primitive._state === PrimitiveState.FAILED;
-    if (!defined(error)) {
-      primitive._readyPromise.resolve(primitive);
-    } else {
-      primitive._readyPromise.reject(error);
-    }
-  });
+  primitive._completeLoad(frameState, state, error);
 }
 export default Primitive;
