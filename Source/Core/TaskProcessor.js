@@ -12,7 +12,7 @@ import RuntimeError from "./RuntimeError.js";
 
 const taskCompletedEvent = new Event();
 
-function completeTask(processor, data, resolve, reject) {
+function completeTask(processor, data) {
   --processor._activeTasks;
 
   const id = data.id;
@@ -20,6 +20,8 @@ function completeTask(processor, data, resolve, reject) {
     // This is not one of ours.
     return;
   }
+
+  const promise = processor._promises[id];
 
   if (defined(data.error)) {
     let error = data.error;
@@ -31,11 +33,13 @@ function completeTask(processor, data, resolve, reject) {
       error.stack = data.error.stack;
     }
     taskCompletedEvent.raiseEvent(error);
-    reject(error);
+    promise.reject(error);
   } else {
     taskCompletedEvent.raiseEvent();
-    resolve(data.result);
+    promise.resolve(data.result);
   }
+
+  delete processor._promises[id];
 }
 
 function getWorkerUrl(moduleID) {
@@ -94,6 +98,9 @@ function createWorker(processor) {
   };
 
   worker.postMessage(bootstrapMessage);
+  worker.onmessage = function (event) {
+    completeTask(processor, event.data);
+  };
 
   return worker;
 }
@@ -153,7 +160,9 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
     Number.POSITIVE_INFINITY
   );
   this._activeTasks = 0;
-  this._deferreds = {};
+
+  this._promises = {};
+
   this._nextID = 0;
 }
 
@@ -199,21 +208,17 @@ TaskProcessor.prototype.scheduleTask = function (
 
   ++this._activeTasks;
 
-  const processor = this;
-
   if (!defined(transferableObjects)) {
     transferableObjects = emptyTransferableObjectArray;
   }
 
-  const id = processor._nextID++;
+  const id = this._nextID++;
 
   const promise = new Promise((resolve, reject) => {
-    processor._worker.onmessage = function (event) {
-      completeTask(processor, event.data, resolve, reject);
-    };
+    this._promises[id] = { resolve, reject };
   });
 
-  processor._worker.postMessage(
+  this._worker.postMessage(
     {
       id: id,
       parameters: parameters,
@@ -251,8 +256,12 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
       transferableObjects = [binary];
     }
 
+    const processor = this;
     const compilePromise = new Promise((resolve) => {
       worker.onmessage = function (event) {
+        worker.onmessage = function (event) {
+          completeTask(processor, event.data);
+        };
         resolve(event.data);
       };
     });
