@@ -797,6 +797,56 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
   return semanticInfo;
 }
 
+function finalizeDracoAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray
+) {
+  // The accessor's byteOffset and byteStride should be ignored for draco.
+  // Each attribute is tightly packed in its own buffer after decode.
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+  attribute.quantization = vertexBufferLoader.quantization;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      vertexBufferLoader.quantization.componentDatatype,
+      vertexBufferLoader.typedArray.buffer
+    );
+  }
+}
+
+function finalizeAttribute(
+  gltf,
+  accessor,
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray
+) {
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray) {
+    // The accessor's byteOffset and byteStride should be ignored since values
+    // are tightly packed in a typed array
+    const bufferViewTypedArray = vertexBufferLoader.typedArray;
+    attribute.typedArray = getPackedTypedArray(
+      gltf,
+      accessor,
+      bufferViewTypedArray
+    );
+    attribute.byteOffset = 0;
+    attribute.byteStride = undefined;
+  }
+}
+
 function loadAttribute(
   loader,
   gltf,
@@ -853,38 +903,21 @@ function loadAttribute(
       defined(draco.attributes) &&
       defined(draco.attributes[gltfSemantic])
     ) {
-      // The accessor's byteOffset and byteStride should be ignored for draco.
-      // Each attribute is tightly packed in its own buffer after decode.
-      attribute.byteOffset = 0;
-      attribute.byteStride = undefined;
-      attribute.quantization = vertexBufferLoader.quantization;
-
-      if (loadBuffer) {
-        attribute.buffer = vertexBufferLoader.buffer;
-      }
-
-      if (loadTypedArray) {
-        attribute.typedArray = ComponentDatatype.createArrayBufferView(
-          vertexBufferLoader.quantization.componentDatatype,
-          vertexBufferLoader.typedArray.buffer
-        );
-      }
+      finalizeDracoAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray
+      );
     } else {
-      if (loadBuffer) {
-        attribute.buffer = vertexBufferLoader.buffer;
-      }
-      if (loadTypedArray) {
-        // The accessor's byteOffset and byteStride should be ignored since values
-        // are tightly packed in a typed array
-        const bufferViewTypedArray = vertexBufferLoader.typedArray;
-        attribute.typedArray = getPackedTypedArray(
-          gltf,
-          accessor,
-          bufferViewTypedArray
-        );
-        attribute.byteOffset = 0;
-        attribute.byteStride = undefined;
-      }
+      finalizeAttribute(
+        gltf,
+        accessor,
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray
+      );
     }
   });
 
