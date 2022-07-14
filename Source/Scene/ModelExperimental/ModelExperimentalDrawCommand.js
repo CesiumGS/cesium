@@ -16,7 +16,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
- * A wrapper around the draw commands used to render a {@link ModelExperimentalPrimitive}.
+ * A wrapper around the draw commands used to render a {@link ModelExperimentalRuntimePrimitive}.
  * This manages the derived commands and returns only the necessary commands depending
  * on the given frame state.
  *
@@ -135,7 +135,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    * The runtime primitive that the draw command belongs to.
    *
    * @memberof ModelExperimentalDrawCommand.prototype
-   * @type {ModelExperimentalPrimitive}
+   * @type {ModelExperimentalRuntimePrimitive}
    *
    * @readonly
    * @private

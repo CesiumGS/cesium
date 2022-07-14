@@ -107,7 +107,7 @@ describe(
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
     const boxArticulations =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
     const boxWithPrimitiveOutline =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =

@@ -11,7 +11,7 @@ import {
   LightingPipelineStage,
   MaterialPipelineStage,
   MetadataPipelineStage,
-  ModelExperimentalPrimitive,
+  ModelExperimentalRuntimePrimitive,
   ModelExperimentalType,
   MorphTargetsPipelineStage,
   PickingPipelineStage,
@@ -28,7 +28,7 @@ import {
   WireframePipelineStage,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
+describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function () {
   const mockPrimitive = {
     featureIds: [],
     attributes: [],
@@ -81,7 +81,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
   it("throws for undefined primitive", function () {
     expect(function () {
-      return new ModelExperimentalPrimitive({
+      return new ModelExperimentalRuntimePrimitive({
         primitive: undefined,
         node: mockNode,
         model: mockModel,
@@ -91,7 +91,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
   it("throws for undefined node", function () {
     expect(function () {
-      return new ModelExperimentalPrimitive({
+      return new ModelExperimentalRuntimePrimitive({
         primitive: mockPrimitive,
         node: undefined,
         model: mockModel,
@@ -101,7 +101,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
   it("throws for undefined model", function () {
     expect(function () {
-      return new ModelExperimentalPrimitive({
+      return new ModelExperimentalRuntimePrimitive({
         primitive: mockPrimitive,
         node: mockNode,
         model: undefined,
@@ -110,7 +110,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("constructs", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: mockModel,
@@ -122,7 +122,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures the pipeline stages for model picking", function () {
-    let primitive = new ModelExperimentalPrimitive({
+    let primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: mockModel,
@@ -141,7 +141,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
-    primitive = new ModelExperimentalPrimitive({
+    primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
@@ -166,7 +166,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures the pipeline stages for instance feature picking", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: {
         instances: {
@@ -209,7 +209,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures the pipeline stages for feature picking", function () {
-    let primitive = new ModelExperimentalPrimitive({
+    let primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [
           {
@@ -253,7 +253,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
-    primitive = new ModelExperimentalPrimitive({
+    primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [
           { positionalLabel: "featureId_0" },
@@ -275,7 +275,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures dequantization", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -308,7 +308,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures the pipeline stages for custom shaders", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
@@ -338,7 +338,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
@@ -368,7 +368,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not disable the material stage if the custom shader has no fragment shader", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
@@ -401,7 +401,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const pointCloudShading = new PointCloudShading({
       attenuation: true,
     });
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -440,7 +440,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const pointCloudShading = new PointCloudShading({
       attenuation: true,
     });
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -474,7 +474,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const pointCloudShading = new PointCloudShading({
       attenuation: false,
     });
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -504,7 +504,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("skips point cloud attenuation if point cloud shading is not set", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -534,7 +534,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures the pipeline stages for morph targets", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         morphTargets: [{}],
         morphWeights: [0.0],
@@ -576,7 +576,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       skin: mockSkin,
     };
 
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -607,7 +607,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures pipeline for debugWireframe (WebGL 1)", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -639,7 +639,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not include wireframe stage if model.enableDebugWireframe is false (WebGL 1)", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -670,7 +670,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures pipeline for debugWireframe (WebGL 2)", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -701,7 +701,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not include wireframe stage for non-triangle primitives", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -731,7 +731,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("configures pipeline for projectTo2D", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -762,7 +762,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not add scenemode 2D stage if scene is 3D", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -792,7 +792,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not add scenemode 2D stage if scene is 3D only", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -822,7 +822,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("adds outline stage for CESIUM_primitive_outline", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -854,7 +854,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   });
 
   it("does not add outline stage if outlines are disabled", function () {
-    const primitive = new ModelExperimentalPrimitive({
+    const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],

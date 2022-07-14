@@ -67,7 +67,7 @@ const GltfLoaderState = {
    *
    * @private
    */
-  UNLOADED: 0,
+  NOT_LOADED: 0,
   /**
    * The state of the loader while waiting for the glTF JSON loader promise
    * to resolve.
@@ -130,6 +130,13 @@ const GltfLoaderState = {
    * @constant
    */
   FAILED: 7,
+  /**
+   * If unload() is called, the loader switches to the unloaded state.
+   *
+   * @type {Number}
+   * @constant
+   */
+  UNLOADED: 8,
 };
 
 /**
@@ -216,8 +223,8 @@ export default function GltfLoader(options) {
   this._sortedFeatureTextureIds = undefined;
 
   this._gltfJsonLoader = undefined;
-  this._state = GltfLoaderState.UNLOADED;
-  this._textureState = GltfLoaderState.UNLOADED;
+  this._state = GltfLoaderState.NOT_LOADED;
+  this._textureState = GltfLoaderState.NOT_LOADED;
   this._promise = undefined;
   this._texturesLoadedPromise = undefined;
   this._process = function (loader, frameState) {};
@@ -2334,6 +2341,14 @@ function unloadStructuralMetadata(loader) {
 }
 
 /**
+ * Returns whether the resource has been unloaded.
+ * @private
+ */
+GltfLoader.prototype.isUnloaded = function () {
+  return this._state === GltfLoaderState.UNLOADED;
+};
+
+/**
  * Unloads the resource.
  * @private
  */
@@ -2350,4 +2365,5 @@ GltfLoader.prototype.unload = function () {
   unloadStructuralMetadata(this);
 
   this._components = undefined;
+  this._state = GltfLoaderState.UNLOADED;
 };

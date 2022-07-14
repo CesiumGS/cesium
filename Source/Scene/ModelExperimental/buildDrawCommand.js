@@ -16,7 +16,7 @@ import StencilConstants from "../StencilConstants.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
- * Builds the {@link ModelExperimentalDrawCommand} for a {@link ModelExperimentalPrimitive}
+ * Builds the {@link ModelExperimentalDrawCommand} for a {@link ModelExperimentalRuntimePrimitive}
  * using its render resources.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
