@@ -131,7 +131,7 @@ const GltfLoaderState = {
    */
   FAILED: 7,
   /**
-   * If the loader gets unloaded, it switches to the destroyed state.
+   * If unload() is called, the loader switches to the unloaded state.
    *
    * @type {Number}
    * @constant
