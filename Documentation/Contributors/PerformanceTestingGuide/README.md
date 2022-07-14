@@ -64,7 +64,7 @@ When creating the `Viewer`, turn off the globe and sky box, to avoid extra
 network requests that may impact the load time of your tileset.
 
 ```js
-const viewer = Cesium.Viewer("cesiumContainer", {
+const viewer = new Cesium.Viewer("cesiumContainer", {
   globe: false,
   skybox: false,
 });
