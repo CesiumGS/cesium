@@ -278,8 +278,8 @@ export default function ModelExperimental(options) {
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.

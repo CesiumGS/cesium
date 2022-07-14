@@ -6,7 +6,7 @@ import {
   Matrix4,
   ModelExperimentalType,
   OrthographicFrustum,
-  PointCloudAttenuationPipelineStage,
+  PointCloudStylingPipelineStage,
   PointCloudShading,
   ShaderBuilder,
   VertexAttributeSemantic,
@@ -15,7 +15,7 @@ import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
-  "Scene/ModelExperimental/PointCloudAttenuationPipelineStage",
+  "Scene/ModelExperimental/PointCloudStylingPipelineStage",
   function () {
     let scene;
     const mockPrimitive = {
@@ -59,7 +59,7 @@ describe(
         },
       };
 
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         scene.frameState
@@ -93,7 +93,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -128,7 +128,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -163,7 +163,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -190,7 +190,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -222,7 +222,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -255,7 +255,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -289,7 +289,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -317,7 +317,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -345,7 +345,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -374,7 +374,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -404,7 +404,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
@@ -436,7 +436,7 @@ describe(
       };
 
       const frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
+      PointCloudStylingPipelineStage.process(
         renderResources,
         mockPrimitive,
         frameState
