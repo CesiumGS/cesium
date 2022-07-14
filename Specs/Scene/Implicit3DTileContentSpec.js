@@ -1,4 +1,5 @@
 import {
+  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTile,
@@ -23,7 +24,6 @@ import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
-import Batched3DModel3DTileContent from "../../Source/Scene/Batched3DModel3DTileContent.js";
 
 describe(
   "Scene/Implicit3DTileContent",
