@@ -127,10 +127,10 @@ const esbuildBaseConfig = () => {
  * @param {Boolean} [options.node=false] true if a CJS style node module should be built
  * @param {Boolean} [options.incremental=false] true if build output should be cached for repeated builds
  * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
- * @returns
+ * @returns {Promise.<Array>}
  */
 async function buildCesiumJs(options) {
-  const css = globby.sync(cssFiles);
+  const css = await globby(cssFiles);
 
   const buildConfig = esbuildBaseConfig();
   buildConfig.entryPoints = ["Source/Cesium.js"];
@@ -217,6 +217,7 @@ const sourceFiles = [
 
 /**
  * Creates a single entry point file, Cesium.js, which imports all individual modules exported from the Cesium API.
+ * @returns {Buffer} contents
  */
 function createCesiumJs() {
   let contents = `export const VERSION = '${version}';\n`;
@@ -235,10 +236,13 @@ function createCesiumJs() {
   });
 
   fs.writeFileSync("Source/Cesium.js", contents);
+
+  return contents;
 }
 
 /**
  * Creates a single entry point file, SpecList.js, which imports all individual spec files.
+ * @returns {Buffer} contents
  */
 function createSpecList() {
   const files = globby.sync(["Specs/**/*Spec.js"]);
@@ -252,6 +256,8 @@ function createSpecList() {
   });
 
   fs.writeFileSync(path.join("Specs", "SpecList.js"), contents);
+
+  return contents;
 }
 
 function rollupWarning(message) {
@@ -270,10 +276,11 @@ function rollupWarning(message) {
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
  * @param {String} options.path output directory
+ * @returns Promise.<*>
  */
 async function buildWorkers(options) {
   // Copy existing workers
-  const workers = globby.sync([
+  const workers = await globby([
     "Source/Workers/**",
     "Source/ThirdParty/Workers/**",
   ]);
@@ -288,36 +295,33 @@ async function buildWorkers(options) {
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
   // 2) They can be built using code-splitting, resulting in smaller modules
-  return globby(["Source/WorkersES6/*.js"]).then(function (files) {
-    const plugins = [rollupResolve(), rollupCommonjs()];
+  const files = await globby(["Source/WorkersES6/*.js"]);
+  const plugins = [rollupResolve(), rollupCommonjs()];
 
-    if (options.removePragmas) {
-      plugins.push(
-        rollupPluginStripPragma({
-          pragmas: ["debug"],
-        })
-      );
-    }
-
-    if (options.minify) {
-      plugins.push(rollupPluginTerser.terser());
-    }
-
-    return rollup
-      .rollup({
-        input: files,
-        plugins: plugins,
-        onwarn: rollupWarning,
+  if (options.removePragmas) {
+    plugins.push(
+      rollupPluginStripPragma({
+        pragmas: ["debug"],
       })
-      .then(function (bundle) {
-        return bundle.write({
-          dir: path.join(options.path, "Workers"),
-          format: "amd",
-          // Rollup cannot generate a sourcemap
-          sourcemap: options.sourcemap && !options.removePragmas,
-          banner: copyrightHeader,
-        });
-      });
+    );
+  }
+
+  if (options.minify) {
+    plugins.push(rollupPluginTerser.terser());
+  }
+
+  const bundle = await rollup.rollup({
+    input: files,
+    plugins: plugins,
+    onwarn: rollupWarning,
+  });
+
+  return bundle.write({
+    dir: path.join(options.path, "Workers"),
+    format: "amd",
+    // Rollup cannot generate a sourcemap
+    sourcemap: options.sourcemap && !options.removePragmas,
+    banner: copyrightHeader,
   });
 }
 
@@ -580,7 +584,7 @@ module.exports = {
    * @param {Object} options
    * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
    * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
-   * @returns
+   * @returns {Promise.<*>}
    */
   buildSpecs: async (options) => {
     options = options || {};
@@ -607,7 +611,7 @@ module.exports = {
    * Copies non-js assets to the output directory
    *
    * @param {String} outputDirectory
-   * @returns Promise.<*>
+   * @returns {Promise.<*>}
    */
   copyAssets: (outputDirectory) => {
     const everythingElse = [
@@ -626,6 +630,7 @@ module.exports = {
   },
   /**
    * Creates .jshintrc for use in Sandcastle
+   * @returns {Buffer} contents
    */
   createJsHintOptions: () => {
     const jshintrc = JSON.parse(

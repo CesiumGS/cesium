@@ -70,7 +70,7 @@ const workerSourceFiles = ["Source/WorkersES6/*.js"];
 
 const outputDirectory = path.join("Build", "CesiumUnminified");
 
-function formatTimeSince(start) {
+function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
 }
 
@@ -115,7 +115,7 @@ async function buildDev() {
     write: false,
   });
 
-  console.log(`Cesium built in ${formatTimeSince(start)} seconds.`);
+  console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
 
   await copyAssets(outputDirectory);
 
@@ -232,7 +232,9 @@ const serveResult = (result, fileName, res, next) => {
       path: outputDirectory,
       sourcemap: true,
     });
-    console.log(`Rebuilt Workers/* in ${formatTimeSince(start)} seconds.`);
+    console.log(
+      `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+    );
   });
 
   //eslint-disable-next-line no-unused-vars
@@ -242,7 +244,9 @@ const serveResult = (result, fileName, res, next) => {
         const start = performance.now();
         createCesiumJs();
         iifeResult = await iifeResult.rebuild();
-        console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
+        console.log(
+          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
       } catch (e) {
         next(e);
       }
@@ -262,7 +266,9 @@ const serveResult = (result, fileName, res, next) => {
         const start = performance.now();
         createCesiumJs();
         iifeResult = await iifeResult.rebuild();
-        console.log(`Rebuilt Cesium.js in ${formatTimeSince(start)} seconds.`);
+        console.log(
+          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
       } catch (e) {
         next(e);
       }
@@ -278,7 +284,9 @@ const serveResult = (result, fileName, res, next) => {
         const start = performance.now();
         createCesiumJs();
         esmResult = await esmResult.rebuild();
-        console.log(`Rebuilt index.js in ${formatTimeSince(start)} seconds.`);
+        console.log(
+          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
       } catch (e) {
         next(e);
       }
@@ -297,7 +305,9 @@ const serveResult = (result, fileName, res, next) => {
         const start = performance.now();
         createCesiumJs();
         esmResult = await esmResult.rebuild();
-        console.log(`Rebuilt index.js in ${formatTimeSince(start)} seconds.`);
+        console.log(
+          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
       } catch (e) {
         next(e);
       }
@@ -340,7 +350,9 @@ const serveResult = (result, fileName, res, next) => {
       try {
         const start = performance.now();
         specResult = await specResult.rebuild();
-        console.log(`Rebuilt Specs/* in ${formatTimeSince(start)} seconds.`);
+        console.log(
+          `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
       } catch (e) {
         next(e);
       }

@@ -131,7 +131,7 @@ function handleBuildWarnings(result) {
   }
 }
 
-async function build(options) {
+function build(options) {
   options = options || {};
   mkdirp.sync("Build");
 
@@ -153,7 +153,7 @@ async function build(options) {
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(
+  return Promise.all(
     buildCesiumJs({
       minify: options.minify,
       iife: true,
