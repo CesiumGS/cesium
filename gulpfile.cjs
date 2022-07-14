@@ -238,7 +238,7 @@ gulp.task(
     gulp.watch(
       [
         ...sourceFiles,
-        // Shader results are generated in the previous watch task; no need to rebuilt twice
+        // Shader results are generated in the previous watch task; no need to rebuild twice
         "!Source/Shaders/**",
       ],
       async () => {
