@@ -327,6 +327,7 @@ byteOffset += sizeOfUint32; // Skip length field
 
 - `TODO` comments need to be removed or addressed before the code is merged into main. Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
 - Remove commented out code before merging into main.
+- Modern language features may provide handy shortcuts and cleaner syntax, but they should be used with consideration for their performance implications, especially in code that is invoked per-frame.
 
 ## Functions
 

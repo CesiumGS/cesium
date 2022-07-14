@@ -19,7 +19,7 @@ describe(
       const position = new ModelComponents.Attribute();
       position.count = 4;
       // prettier-ignore
-      position.packedTypedArray = new Float32Array([
+      position.typedArray = new Float32Array([
         0, 0, 0,
         1, 0, 0,
         1, 1, 0,
@@ -71,7 +71,6 @@ describe(
     function expectOutlineCoordinates(primitive, outlineCoordinatesPlan) {
       expect(outlineCoordinatesPlan.loadBuffer).toBe(true);
       expect(outlineCoordinatesPlan.loadTypedArray).toBe(false);
-      expect(outlineCoordinatesPlan.loadPackedTypedArray).toBe(false);
 
       const attribute = outlineCoordinatesPlan.attribute;
       expect(attribute.name).toBe("_OUTLINE_COORDINATES");
@@ -113,7 +112,6 @@ describe(
       expect(attributePlan.attribute).toBe(attribute);
       expect(attributePlan.loadBuffer).toBe(false);
       expect(attributePlan.loadTypedArray).toBe(false);
-      expect(attributePlan.loadPackedTypedArray).toBe(false);
     });
 
     it("IndicesLoadPlan throws for undefined indices", function () {
@@ -192,7 +190,6 @@ describe(
       expect(attribute.buffer).toBeDefined();
       buffers.push(attribute.buffer);
       expect(attribute.typedArray).not.toBeDefined();
-      expect(attribute.packedTypedArray).not.toBeDefined();
 
       const indices = indicesPlan.indices;
       expect(indices.buffer).toBeDefined();
@@ -206,13 +203,12 @@ describe(
       const indicesPlan = loadPlan.indicesPlan;
 
       // These will be modified by the outline generation step so save a copy
-      const originalPositions = positionPlan.attribute.packedTypedArray.slice();
+      const originalPositions = positionPlan.attribute.typedArray.slice();
 
       loadPlan.needsOutlines = true;
       loadPlan.outlineIndices = mockOutlineIndices;
 
       positionPlan.loadTypedArray = true;
-      positionPlan.loadPackedTypedArray = true;
       indicesPlan.loadTypedArray = true;
       loadPlan.postProcess(context);
 
@@ -227,7 +223,6 @@ describe(
 
       const attribute = positionPlan.attribute;
       expect(attribute.buffer).not.toBeDefined();
-      const typedArray = attribute.typedArray;
 
       // The outline generation process will copy vertex 0
       const originalLength = originalPositions.length;
@@ -237,8 +232,7 @@ describe(
       expectedPositions[originalLength + 1] = originalPositions[1];
       expectedPositions[originalLength + 2] = originalPositions[2];
 
-      expect(typedArray).toEqual(new Uint8Array(expectedPositions.buffer));
-      expect(attribute.packedTypedArray).toEqual(expectedPositions);
+      expect(attribute.typedArray).toEqual(expectedPositions);
 
       const indices = indicesPlan.indices;
       expect(indices.buffer).not.toBeDefined();
@@ -257,14 +251,13 @@ describe(
       const indicesPlan = loadPlan.indicesPlan;
 
       // These will be modified by the outline generation step so save a copy
-      const originalPositions = positionPlan.attribute.packedTypedArray.slice();
+      const originalPositions = positionPlan.attribute.typedArray.slice();
 
       loadPlan.needsOutlines = true;
       loadPlan.outlineIndices = mockOutlineIndices;
 
       positionPlan.loadBuffer = true;
       positionPlan.loadTypedArray = true;
-      positionPlan.loadPackedTypedArray = true;
       indicesPlan.loadBuffer = true;
       indicesPlan.loadTypedArray = true;
       loadPlan.postProcess(context);
@@ -281,7 +274,6 @@ describe(
       const attribute = positionPlan.attribute;
       expect(attribute.buffer).toBeDefined();
       buffers.push(attribute.buffer);
-      const typedArray = attribute.typedArray;
 
       // The outline generation process will copy vertex 0
       const originalLength = originalPositions.length;
@@ -291,8 +283,7 @@ describe(
       expectedPositions[originalLength + 1] = originalPositions[1];
       expectedPositions[originalLength + 2] = originalPositions[2];
 
-      expect(typedArray).toEqual(new Uint8Array(expectedPositions.buffer));
-      expect(attribute.packedTypedArray).toEqual(expectedPositions);
+      expect(attribute.typedArray).toEqual(expectedPositions);
 
       const indices = indicesPlan.indices;
       expect(indices.buffer).toBeDefined();
