@@ -247,29 +247,31 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
 
   const worker = this._worker;
 
-  return getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
-    wasmConfig
-  ) {
-    let transferableObjects;
-    const binary = wasmConfig.wasmBinary;
-    if (defined(binary)) {
-      transferableObjects = [binary];
-    }
+  return getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(
+    (wasmConfig) => {
+      let transferableObjects;
+      const binary = wasmConfig.wasmBinary;
+      if (defined(binary)) {
+        transferableObjects = [binary];
+      }
 
-    const processor = this;
-    const compilePromise = new Promise((resolve) => {
-      worker.onmessage = function (event) {
-        worker.onmessage = function (event) {
-          completeTask(processor, event.data);
+      const compilePromise = new Promise((resolve) => {
+        worker.onmessage = (event) => {
+          worker.onmessage = (event) => {
+            completeTask(this, event.data);
+          };
+          resolve(event.data);
         };
-        resolve(event.data);
-      };
-    });
+      });
 
-    worker.postMessage({ webAssemblyConfig: wasmConfig }, transferableObjects);
+      worker.postMessage(
+        { webAssemblyConfig: wasmConfig },
+        transferableObjects
+      );
 
-    return compilePromise;
-  });
+      return compilePromise;
+    }
+  );
 };
 
 /**
