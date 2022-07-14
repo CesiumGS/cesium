@@ -29,6 +29,7 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
@@ -479,6 +480,14 @@ function initialize(model) {
     }
 
     const components = loader.components;
+    if (!defined(components)) {
+      if (loader.isUnloaded()) {
+        return;
+      }
+
+      throw new RuntimeError("Failed to load model.");
+    }
+
     const structuralMetadata = components.structuralMetadata;
 
     if (
