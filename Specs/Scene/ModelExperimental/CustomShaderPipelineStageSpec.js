@@ -318,7 +318,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -329,7 +329,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -408,7 +408,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -419,7 +419,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -499,7 +499,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -510,7 +510,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -586,7 +586,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -597,7 +597,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -673,7 +673,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
   });
@@ -728,7 +728,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -739,7 +739,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -809,7 +809,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -820,7 +820,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 
@@ -995,7 +995,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
-        "    MetadataClassInfo classInfo;",
+        "    MetadataClass metadataClass;",
       ]
     );
 

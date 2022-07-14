@@ -203,8 +203,8 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClassInfo Struct section below.
-    MetadataClassInfo classInfo;
+    // Metadata class information. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
 };
 ```
 
@@ -221,8 +221,8 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClassInfo Struct section below.
-    MetadataClassInfo classInfo;
+    // Metadata class information. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
 };
 ```
 
@@ -678,7 +678,7 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
-## `MetadataClassInfo` struct
+## `MetadataClass` struct
 
 This struct contains constants for each metadata property, as defined
 in the class schema.
@@ -709,14 +709,14 @@ struct by property ID. For example, if the metadata class looked like this:
 This will show up in the shader in the struct field as follows:
 
 ```glsl
-struct floatClassInfo {
+struct floatMetadataClass {
   float noData;
   float defaultValue; // 'default' is a reserved word in GLSL
   float minValue; // 'min' is a reserved word in GLSL
   float maxValue; // 'max' is a reserved word in GLSL
 }
-struct MetadataClassInfo {
-  floatClassInfo temperature;
+struct MetadataClass {
+  floatMetadataClass temperature;
 }
 ```
 
@@ -727,10 +727,10 @@ property.
 Now the noData and default values can be accessed as follows in the vertex shader:
 
 ```glsl
-float noData = vsInput.classInfo.temperature.noData;            // == -9999.0
-float defaultTemp = vsInput.classInfo.temperature.defaultValue; // == 72.0
-float minTemp = vsInput.classInfo.temperature.minValue;         // == -40.0
-float maxTemp = vsInput.classInfo.temperature.maxValue;         // == 500.0
+float noData = vsInput.metadataClass.temperature.noData;            // == -9999.0
+float defaultTemp = vsInput.metadataClass.temperature.defaultValue; // == 72.0
+float minTemp = vsInput.metadataClass.temperature.minValue;         // == -40.0
+float maxTemp = vsInput.metadataClass.temperature.maxValue;         // == 500.0
 ```
 
 or similarly from the `fsInput` struct in the fragment shader.

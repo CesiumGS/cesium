@@ -3,7 +3,7 @@ void customShaderStage(
     ProcessedAttributes attributes,
     FeatureIds featureIds,
     Metadata metadata,
-    MetadataClassInfo classInfo
+    MetadataClass metadataClass
 ) {
     // FragmentInput and initializeInputStruct() are dynamically generated in JS, 
     // see CustomShaderPipelineStage.js
@@ -11,6 +11,6 @@ void customShaderStage(
     initializeInputStruct(fsInput, attributes);
     fsInput.featureIds = featureIds;
     fsInput.metadata = metadata;
-    fsInput.classInfo = classInfo;
+    fsInput.metadataClass = metadataClass;
     fragmentMain(fsInput, material);
 }

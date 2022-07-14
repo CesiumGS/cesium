@@ -3,7 +3,7 @@ void customShaderStage(
     inout ProcessedAttributes attributes, 
     FeatureIds featureIds,
     Metadata metadata,
-    MetadataClassInfo classInfo
+    MetadataClass metadataClass
 ) {
     // VertexInput and initializeInputStruct() are dynamically generated in JS, 
     // see CustomShaderPipelineStage.js
@@ -11,7 +11,7 @@ void customShaderStage(
     initializeInputStruct(vsInput, attributes);
     vsInput.featureIds = featureIds;
     vsInput.metadata = metadata;
-    vsInput.classInfo = classInfo;
+    vsInput.metadataClass = metadataClass;
     vertexMain(vsInput, vsOutput);
     attributes.positionMC = vsOutput.positionMC;
 }

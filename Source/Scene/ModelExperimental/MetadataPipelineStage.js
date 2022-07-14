@@ -20,20 +20,20 @@ MetadataPipelineStage.name = "MetadataPipelineStage";
 MetadataPipelineStage.STRUCT_ID_METADATA_VS = "MetadataVS";
 MetadataPipelineStage.STRUCT_ID_METADATA_FS = "MetadataFS";
 MetadataPipelineStage.STRUCT_NAME_METADATA = "Metadata";
-MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_VS = "MetadataClassInfoVS";
-MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_FS = "MetadataClassInfoFS";
-MetadataPipelineStage.STRUCT_NAME_METADATACLASSINFO = "MetadataClassInfo";
+MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS = "MetadataClassVS";
+MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS = "MetadataClassFS";
+MetadataPipelineStage.STRUCT_NAME_METADATACLASS = "MetadataClass";
 MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS =
   "initializeMetadataVS";
 MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS =
   "initializeMetadataFS";
 MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA =
-  "void initializeMetadata(out Metadata metadata, out MetadataClassInfo classInfo, ProcessedAttributes attributes)";
+  "void initializeMetadata(out Metadata metadata, out MetadataClass metadataClass, ProcessedAttributes attributes)";
 MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
 // Metadata class info: some fields must be renamed to avoid reserved words
-MetadataPipelineStage.CLASSINFO_FIELDS = [
+MetadataPipelineStage.METADATACLASS_FIELDS = [
   { specName: "noData", shaderName: "noData" },
   { specName: "default", shaderName: "defaultValue" },
   { specName: "min", shaderName: "minValue" },
@@ -63,7 +63,7 @@ MetadataPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Always declare structs, even if not used
-  declareClassInfoStructs(shaderBuilder);
+  declareMetadataClassStructs(shaderBuilder);
   declareStructsAndFunctions(shaderBuilder);
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
@@ -77,8 +77,8 @@ MetadataPipelineStage.process = function (
   processPropertyTextures(renderResources, structuralMetadata);
 };
 
-function declareClassInfoStructs(shaderBuilder) {
-  const classInfoTypes = [
+function declareMetadataClassStructs(shaderBuilder) {
+  const metadataTypes = [
     "int",
     "ivec2",
     "ivec3",
@@ -91,17 +91,17 @@ function declareClassInfoStructs(shaderBuilder) {
     "mat3",
     "mat4",
   ];
-  for (const classInfoType of classInfoTypes) {
-    const structName = `${classInfoType}ClassInfo`;
+  for (const metadataType of metadataTypes) {
+    const structName = `${metadataType}MetadataClass`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;
     // Declare the struct in both vertex and fragment shaders
     shaderBuilder.addStruct(structIdVs, structName, ShaderDestination.VERTEX);
     shaderBuilder.addStruct(structIdFs, structName, ShaderDestination.FRAGMENT);
     // Add fields
-    for (const { shaderName } of MetadataPipelineStage.CLASSINFO_FIELDS) {
-      shaderBuilder.addStructField(structIdVs, classInfoType, shaderName);
-      shaderBuilder.addStructField(structIdFs, classInfoType, shaderName);
+    for (const { shaderName } of MetadataPipelineStage.METADATACLASS_FIELDS) {
+      shaderBuilder.addStructField(structIdVs, metadataType, shaderName);
+      shaderBuilder.addStructField(structIdFs, metadataType, shaderName);
     }
   }
 }
@@ -119,15 +119,15 @@ function declareStructsAndFunctions(shaderBuilder) {
     ShaderDestination.FRAGMENT
   );
 
-  // Declare the MetadataClassInfo struct
+  // Declare the MetadataClass struct
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_VS,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASSINFO,
+    MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
+    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
     ShaderDestination.VERTEX
   );
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_FS,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASSINFO,
+    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
     ShaderDestination.FRAGMENT
   );
 
@@ -222,19 +222,19 @@ function addPropertyAttributeProperty(
     glslType,
     metadataVariable
   );
-  // For MetadataClassInfo, prefix to get the appropriate ClassInfo struct
-  // struct MetadataClassInfo {
-  //   floatClassInfo property;
+  // For MetadataClass, prefix to get the appropriate MetadataClass struct
+  // struct MetadataClass {
+  //   floatMetadataClass property;
   // }
-  const classInfoType = `${glslType}ClassInfo`;
+  const metadataType = `${glslType}MetadataClass`;
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_VS,
-    classInfoType,
+    MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
+    metadataType,
     metadataVariable
   );
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_FS,
-    classInfoType,
+    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+    metadataType,
     metadataVariable
   );
 
@@ -265,16 +265,16 @@ function addPropertyAttributeProperty(
     [initializationLine]
   );
 
-  // Add lines to set values in the classInfo struct
+  // Add lines to set values in the metadataClass struct
   for (const {
     specName,
     shaderName,
-  } of MetadataPipelineStage.CLASSINFO_FIELDS) {
+  } of MetadataPipelineStage.METADATACLASS_FIELDS) {
     const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
+    const fieldLine = `metadataClass.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
       [fieldLine]
@@ -331,14 +331,14 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     glslType,
     metadataVariable
   );
-  // For MetadataClassInfo, prefix to get the appropriate ClassInfo struct
-  // struct MetadataClassInfo {
-  //   floatClassInfo property;
+  // For MetadataClass, prefix to get the appropriate MetadataClass struct
+  // struct MetadataClass {
+  //   floatMetadataClass property;
   // }
-  const classInfoType = `${glslType}ClassInfo`;
+  const metadataType = `${glslType}MetadataClass`;
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASSINFO_FS,
-    classInfoType,
+    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+    metadataType,
     metadataVariable
   );
 
@@ -370,16 +370,16 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
     [initializationLine]
   );
-  // Add lines to set values in the classInfo struct
+  // Add lines to set values in the metadataClass struct
   for (const {
     specName,
     shaderName,
-  } of MetadataPipelineStage.CLASSINFO_FIELDS) {
+  } of MetadataPipelineStage.METADATACLASS_FIELDS) {
     const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
     }
-    const fieldLine = `classInfo.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
+    const fieldLine = `metadataClass.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
     shaderBuilder.addFunctionLines(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
       [fieldLine]
