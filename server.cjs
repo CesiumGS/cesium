@@ -68,7 +68,7 @@ const specFiles = [
 const shaderFiles = ["Source/Shaders/**/*.glsl"];
 const workerSourceFiles = ["Source/WorkersES6/*.js"];
 
-const outputDirectory = path.join("Build", "Cesium");
+const outputDirectory = path.join("Build", "CesiumUnminified");
 
 function formatTimeSince(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
