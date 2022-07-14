@@ -367,6 +367,8 @@ export default function ModelExperimental(options) {
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
 
+  this._skipLevelOfDetail = false;
+
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
@@ -1610,6 +1612,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   updatePointCloudAttenuation(this);
   updateSilhouette(this, frameState);
+  updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
   updateFeatureTableId(this);
@@ -1683,6 +1686,14 @@ function updateSilhouette(model, frameState) {
     }
 
     model._silhouetteDirty = false;
+  }
+}
+
+function updateSkipLevelOfDetail(model, frameState) {
+  const skipLevelOfDetail = model.hasSkipLevelOfDetail(frameState);
+  if (skipLevelOfDetail !== model._skipLevelOfDetail) {
+    model.resetDrawCommands();
+    model._skipLevelOfDetail = skipLevelOfDetail;
   }
 }
 
@@ -2157,7 +2168,7 @@ function addCreditsToCreditDisplay(model, frameState) {
  * If the model color's alpha is equal to zero, then it is considered invisible,
  * not translucent.
  *
- * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is translucent, otherwise <code>false</code>.
  * @private
  */
 ModelExperimental.prototype.isTranslucent = function () {
@@ -2169,7 +2180,7 @@ ModelExperimental.prototype.isTranslucent = function () {
  * Gets whether or not the model is invisible, i.e. if the model color's alpha
  * is equal to zero.
  *
- * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is invisible, otherwise <code>false</code>.
  * @private
  */
 ModelExperimental.prototype.isInvisible = function () {
@@ -2185,7 +2196,8 @@ function supportsSilhouettes(frameState) {
  * Gets whether or not the model has a silhouette. This accounts for whether
  * silhouettes are supported (i.e. the context supports stencil buffers).
  *
- * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
+ * @param {FrameState} The frame state.
+ * @returns {Boolean} <code>true</code> if the model has silhouettes, otherwise <code>false</code>.
  * @private
  */
 ModelExperimental.prototype.hasSilhouette = function (frameState) {
@@ -2194,6 +2206,29 @@ ModelExperimental.prototype.hasSilhouette = function (frameState) {
     this._silhouetteSize > 0.0 &&
     this._silhouetteColor.alpha > 0.0
   );
+};
+
+function supportsSkipLevelOfDetail(frameState) {
+  return frameState.context.stencilBuffer;
+}
+
+/**
+ * Gets whether or not the model is part of a tileset that uses the skipLevelOfDetail
+ * optimization. This accounts for whether skipLevelOfDetail is supported (i.e. the
+ * context supports stencil buffers).
+ *
+ * @param {FrameState} The frame state.
+ * @returns {Boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, otherwise <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.hasSkipLevelOfDetail = function (frameState) {
+  const is3DTiles = ModelExperimentalType.is3DTiles(this.type);
+  if (!is3DTiles) {
+    return false;
+  }
+
+  const tileset = this._content.tileset;
+  return tileset.skipLevelOfDetail && supportsSkipLevelOfDetail(frameState);
 };
 
 /**

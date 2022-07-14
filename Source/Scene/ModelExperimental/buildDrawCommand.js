@@ -8,11 +8,9 @@ import ModelExperimentalDrawCommand from "./ModelExperimentalDrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
-import StencilConstants from "../StencilConstants.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
@@ -78,12 +76,6 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     true
   );
 
-  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
-    // Set stencil values for classification on 3D Tiles
-    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
   renderState.cull.face = ModelExperimentalUtility.getCullFace(
     modelMatrix,
     primitiveRenderResources.primitiveType
@@ -110,12 +102,10 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
   });
 
-  const useSilhouetteCommands = model.hasSilhouette(frameState);
-
   return new ModelExperimentalDrawCommand({
+    frameState: frameState,
     primitiveRenderResources: primitiveRenderResources,
     command: command,
-    useSilhouetteCommands: useSilhouetteCommands,
   });
 }
 
