@@ -1,4 +1,4 @@
-void geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal) 
+vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal) 
 {
     vec4 computedPosition;
 

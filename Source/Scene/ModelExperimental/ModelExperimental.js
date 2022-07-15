@@ -2541,6 +2541,13 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  // Styling is applied on the GPU for 3D Tiles point clouds.
+  if (this.type === ModelExperimentalType.TILE_PNTS) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
   if (
@@ -2552,8 +2559,6 @@ ModelExperimental.prototype.applyStyle = function (style) {
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {

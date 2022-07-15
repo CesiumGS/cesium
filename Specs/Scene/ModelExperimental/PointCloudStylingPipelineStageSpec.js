@@ -2,6 +2,7 @@ import {
   Camera,
   Cartesian3,
   Cesium3DTileRefine,
+  defaultValue,
   Math as CesiumMath,
   Matrix4,
   ModelExperimentalType,
@@ -9,6 +10,7 @@ import {
   PointCloudStylingPipelineStage,
   PointCloudShading,
   ShaderBuilder,
+  _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -30,8 +32,30 @@ describe(
     };
 
     const mockRuntimeNode = {
-      transform: new Matrix4(2, 0, 0, 1, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1),
+      // prettier-ignore
+      transform: new Matrix4(2, 0, 0, 1,
+                             0, 2, 0, 0,
+                             0, 0, 2, 0,
+                             0, 0, 0, 1),
     };
+
+    function mockRenderResources(options) {
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const mockModel = {
+        type: ModelExperimentalType.GLTF,
+        style: options.style,
+        pointCloudShading: options.pointCloudShading,
+      };
+
+      return {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
+        model: mockModel,
+      };
+    }
 
     beforeAll(function () {
       scene = createScene();
@@ -47,17 +71,39 @@ describe(
       scene.renderForSpecs();
     });
 
-    it("adds uniform and define to the shader", function () {
-      const shaderBuilder = new ShaderBuilder();
-      const uniformMap = {};
-      const renderResources = {
-        shaderBuilder: shaderBuilder,
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-        },
-      };
+    it("adds common uniform and code to the shader", function () {
+      const renderResources = mockRenderResources();
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudAttenuation;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersPointCloudStylingStageVS,
+      ]);
+    });
+
+    it("adds attenuation define to the shader", function () {
+      const renderResources = mockRenderResources({
+        pointCloudShading: new PointCloudShading({
+          attenuation: true,
+        }),
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
 
       PointCloudStylingPipelineStage.process(
         renderResources,
@@ -66,14 +112,19 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-        "USE_POINT_CLOUD_ATTENUATION",
+        "HAS_POINT_CLOUD_ATTENUATION",
       ]);
+
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec3 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudAttenuation;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
       expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersPointCloudStylingStageVS,
+      ]);
     });
 
     it("point size is determined by maximumAttenuation", function () {

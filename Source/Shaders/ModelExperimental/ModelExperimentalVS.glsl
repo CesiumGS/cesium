@@ -110,12 +110,14 @@ void main()
     float show = 1.0;
     #endif
 
-    // TODO: update documentation to state that custom shader
-    // takes precedence over styling
+    #ifdef HAS_POINT_CLOUD_COLOR_STYLE
+    v_pointCloudColor = pointCloudColorStylingStage(attributes);
+    #endif
+
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
         gl_PointSize = vsOutput.pointSize;
-        #elif defined(HAS_POINT_CLOUD_STYLING)
+        #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
         gl_PointSize = pointCloudPointSizeStylingStage(attributes);
         #else
         gl_PointSize = 1.0;

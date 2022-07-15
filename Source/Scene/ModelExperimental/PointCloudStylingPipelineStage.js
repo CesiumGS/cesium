@@ -53,34 +53,34 @@ PointCloudStylingPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const pointCloudShading = model.pointCloudShading;
 
-  shaderBuilder.addDefine(
-    "HAS_POINT_CLOUD_STYLING",
-    undefined,
-    ShaderDestination.VERTEX
-  );
+  const style = model.style;
+  if (defined(style)) {
+    const shaderFunctionInfo = getStyleShaderFunctionInfo(style);
+    addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
 
-  const shaderFunctionInfo = getStyleShaderFunctionInfo(model.style);
-  addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
+    const propertyNames = getPropertyNames(shaderFunctionInfo);
 
-  const propertyNames = getPropertyNames(shaderFunctionInfo);
-
-  const usesNormalSemantic = propertyNames.indexOf("NORMAL") >= 0;
-  const usesColorSemantic = propertyNames.indexOf("COLOR") >= 0;
-  const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.NORMAL
-  );
-
-  if (usesNormalSemantic && !hasNormals) {
-    throw new RuntimeError(
-      "Style references the NORMAL semantic but the point cloud does not have normals"
+    const usesNormalSemantic = propertyNames.indexOf("normalMC") >= 0;
+    const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.NORMAL
     );
+
+    if (usesNormalSemantic && !hasNormals) {
+      throw new RuntimeError(
+        "Style references the NORMAL semantic but the point cloud does not have normals"
+      );
+    }
   }
 
-  if (usesColorSemantic) {
-    shaderBuilder.addVarying("vec4", "v_pointCloudColor");
+  const pointCloudShading = model.pointCloudShading;
+  if (model._attenuation) {
+    shaderBuilder.addDefine(
+      "HAS_POINT_CLOUD_ATTENUATION",
+      undefined,
+      ShaderDestination.VERTEX
+    );
   }
 
   let content;
@@ -102,7 +102,6 @@ PointCloudStylingPipelineStage.process = function (
   shaderBuilder.addVertexLines([PointCloudStylingStageVS]);
 
   const uniformMap = {};
-
   uniformMap.model_pointCloudAttenuation = function () {
     const vec4 = scratchUniform;
 
@@ -248,9 +247,13 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_COLOR_STYLE",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.BOTH
     );
     shaderBuilder.addVertexLines([colorStyleFunction]);
+
+    // The point cloud may not necessarily have a color attribute.
+    // Use a custom varying to account for this.
+    shaderBuilder.addVarying("vec4", "v_pointCloudColor");
   }
 
   const showStyleFunction = shaderFunctionInfo.showStyleFunction;
@@ -296,13 +299,6 @@ function getBuiltinPropertyNames(source, propertyNames) {
     matches = regex.exec(source);
   }
 }
-
-// WHAT IF POINT CLOUDS DON'T HAVE A COLOR
-// BUT THEY MODIFY COLORS....
-
-// new varying: v_pointCloudColor
-// fragment shader just needs a small constant function that
-// sets the color to that
 
 function getPropertyNames(shaderFunctionInfo) {
   const colorStyleFunction = shaderFunctionInfo.colorStyleFunction;

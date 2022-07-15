@@ -685,7 +685,8 @@ This struct contains the output of the custom vertex shader. This includes:
   `vsInput.attributes.positionMC`. The custom shader may modify this, and the
   result is used to compute `gl_Position`.
 - `pointSize` - corresponds to `gl_PointSize`. This is only applied for models
-  rendered as `gl.POINTS`, and ignored otherwise.
+  rendered as `gl.POINTS`, and ignored otherwise. This overrides any point size
+  style that is applied to the model by `Cesium3DTileStyle`.
 
 > **Implementation Note**: `positionMC` does not modify the primitive's bounding
 > sphere. If vertices are moved outside the bounding sphere, the primitive may
