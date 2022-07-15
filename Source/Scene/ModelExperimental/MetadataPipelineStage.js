@@ -32,6 +32,20 @@ MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA =
 MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
+// Allowed types for metadata
+MetadataPipelineStage.METADATA_TYPES = [
+  "int",
+  "ivec2",
+  "ivec3",
+  "ivec4",
+  "float",
+  "vec2",
+  "vec3",
+  "vec4",
+  "mat2",
+  "mat3",
+  "mat4",
+];
 // Metadata class info: some fields must be renamed to avoid reserved words
 MetadataPipelineStage.METADATACLASS_FIELDS = [
   { specName: "noData", shaderName: "noData" },
@@ -78,20 +92,7 @@ MetadataPipelineStage.process = function (
 };
 
 function declareMetadataClassStructs(shaderBuilder) {
-  const metadataTypes = [
-    "int",
-    "ivec2",
-    "ivec3",
-    "ivec4",
-    "float",
-    "vec2",
-    "vec3",
-    "vec4",
-    "mat2",
-    "mat3",
-    "mat4",
-  ];
-  for (const metadataType of metadataTypes) {
+  for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
     const structName = `${metadataType}MetadataClass`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;

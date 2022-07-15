@@ -322,6 +322,34 @@ describe(
         MetadataPipelineStage.process(renderResources, primitive, frameState);
 
         const shaderBuilder = renderResources.shaderBuilder;
+
+        // Check for MetadataClass sub-structs: one for each metadata type.
+        // These are constructed in both vertex and fragment shaders,
+        // regardless of whether they are used or not
+        for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
+          const structName = `${metadataType}MetadataClass`;
+          const structIdVs = `${structName}VS`;
+          const structIdFs = `${structName}FS`;
+          const structFields = [
+            `    ${metadataType} noData;`,
+            `    ${metadataType} defaultValue;`,
+            `    ${metadataType} minValue;`,
+            `    ${metadataType} maxValue;`,
+          ];
+          ShaderBuilderTester.expectHasVertexStruct(
+            shaderBuilder,
+            structIdVs,
+            structName,
+            structFields
+          );
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            structIdFs,
+            structName,
+            structFields
+          );
+        }
+
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_VS,
@@ -340,12 +368,30 @@ describe(
             "    vec2 valueTransformProperty;",
           ]
         );
+
+        // Check for the MetadataClass struct, containing the specific fields
+        // required by this test dataset
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          [
+            "    vec2MetadataClass vec2Property;",
+            "    intMetadataClass uint8Property;",
+            "    ivec3MetadataClass uint8vec3Property;",
+            "    vec3MetadataClass arrayProperty;",
+            "    vec2MetadataClass valueTransformProperty;",
+          ]
+        );
+
         ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           []
         );
+
+        // Check that the correct values are assigned to the metadata and metadataClass structs
         ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
@@ -356,6 +402,10 @@ describe(
             "    metadata.uint8vec3Property = ivec3(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb);",
             "    metadata.arrayProperty = texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb;",
             "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture2D(u_propertyTexture_1, attributes.texCoord_0).rg);",
+            "    metadataClass.uint8vec3Property.defaultValue = ivec3(255,0,0);",
+            "    metadataClass.uint8vec3Property.maxValue = ivec3(30,17,50);",
+            "    metadataClass.uint8vec3Property.minValue = ivec3(10,10,10);",
+            "    metadataClass.uint8vec3Property.noData = ivec3(19,13,50);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunctionUnordered(

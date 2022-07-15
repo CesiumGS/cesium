@@ -47,6 +47,7 @@ describe("Scene/PropertyAttributeProperty", function () {
     expect(propertyAttributeProperty.scale).toBe(1);
     expect(propertyAttributeProperty.extras).toBe(extras);
     expect(propertyAttributeProperty.extensions).toBe(extensions);
+    expect(propertyAttributeProperty.classProperty).toBe(classProperty);
   });
 
   it("constructor throws without property", function () {

@@ -19,7 +19,7 @@ describe(
     let propertyTextureProperty;
 
     beforeAll(function () {
-      const classProperty = new MetadataClassProperty({
+      classProperty = new MetadataClassProperty({
         id: "color",
         property: {
           array: true,
@@ -97,6 +97,7 @@ describe(
     it("creates property texture property", function () {
       expect(propertyTextureProperty.extras).toBe(extras);
       expect(propertyTextureProperty.extensions).toBe(extensions);
+      expect(propertyTextureProperty.classProperty).toBe(classProperty);
 
       // prettier-ignore
       const expectedTransform = new Matrix3(
