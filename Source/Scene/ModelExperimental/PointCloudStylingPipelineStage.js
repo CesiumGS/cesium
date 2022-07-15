@@ -3,7 +3,6 @@ import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
 import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import clone from "../../Core/clone.js";
-import combine from "../../Core/combine.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -101,7 +100,7 @@ PointCloudStylingPipelineStage.process = function (
 
   shaderBuilder.addVertexLines([PointCloudStylingStageVS]);
 
-  const uniformMap = {};
+  const uniformMap = renderResources.uniformMap;
   uniformMap.model_pointCloudAttenuation = function () {
     const vec4 = scratchUniform;
 
@@ -118,9 +117,6 @@ PointCloudStylingPipelineStage.process = function (
     );
     vec4.x *= frameState.pixelRatio;
 
-    // Time
-    vec4.y = content.tileset.timeSinceLoad;
-
     // Geometric error
     const geometricError = getGeometricError(
       renderResources,
@@ -128,7 +124,7 @@ PointCloudStylingPipelineStage.process = function (
       pointCloudShading,
       content
     );
-    vec4.z = geometricError * pointCloudShading.geometricErrorScale;
+    vec4.y = geometricError * pointCloudShading.geometricErrorScale;
 
     const context = frameState.context;
     const frustum = frameState.camera.frustum;
@@ -146,12 +142,15 @@ PointCloudStylingPipelineStage.process = function (
     }
 
     // Depth multiplier
-    vec4.w = depthMultiplier;
+    vec4.z = depthMultiplier;
+
+    // Time
+    if (is3DTiles) {
+      vec4.w = content.tileset.timeSinceLoad;
+    }
 
     return vec4;
   };
-
-  renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
 const scratchDimensions = new Cartesian3();

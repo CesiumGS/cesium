@@ -2,7 +2,8 @@ import {
   Camera,
   Cartesian3,
   Cesium3DTileRefine,
-  defaultValue,
+  Cesium3DTileStyle,
+  defined,
   Math as CesiumMath,
   Matrix4,
   ModelExperimentalType,
@@ -39,14 +40,41 @@ describe(
                              0, 0, 0, 1),
     };
 
-    function mockRenderResources(options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    function mockGltfRenderResources(pointCloudShading) {
+      const attenuation = defined(pointCloudShading)
+        ? pointCloudShading.attenuation
+        : false;
+
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
         type: ModelExperimentalType.GLTF,
+        pointCloudShading: pointCloudShading,
+        _attenuation: attenuation,
+      };
+
+      return {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
+        model: mockModel,
+      };
+    }
+
+    function mockPntsRenderResources(options) {
+      const pointCloudShading = options.pointCloudShading;
+      const attenuation = defined(pointCloudShading)
+        ? pointCloudShading.attenuation
+        : false;
+
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const mockModel = {
+        type: ModelExperimentalType.TILE_PNTS,
+        content: options.content,
         style: options.style,
-        pointCloudShading: options.pointCloudShading,
+        pointCloudShading: pointCloudShading,
+        _attenuation: attenuation,
       };
 
       return {
@@ -72,7 +100,7 @@ describe(
     });
 
     it("adds common uniform and code to the shader", function () {
-      const renderResources = mockRenderResources();
+      const renderResources = mockGltfRenderResources();
       const shaderBuilder = renderResources.shaderBuilder;
       const uniformMap = renderResources.uniformMap;
 
@@ -96,12 +124,137 @@ describe(
       ]);
     });
 
-    it("adds attenuation define to the shader", function () {
-      const renderResources = mockRenderResources({
-        pointCloudShading: new PointCloudShading({
-          attenuation: true,
+    it("applies color style in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: 'color("red")',
         }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
       });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec4 v_pointCloudColor;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudAttenuation;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "vec4 getColorFromStyle(ProcessedAttribute attributes)"
+      );
+    });
+
+    it("applies point size style in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          pointSize: 5.0,
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudAttenuation;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "float getPointSizeFromStyle(ProcessedAttribute attributes)"
+      );
+    });
+
+    it("applies point size style in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          pointSize: 5.0,
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudAttenuation;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "float getPointSizeFromStyle(ProcessedAttribute attributes)"
+      );
+    });
+
+    it("adds attenuation define to the shader", function () {
+      const pointCloudShading = new PointCloudShading({
+        attenuation: true,
+      });
+      const renderResources = mockGltfRenderResources(pointCloudShading);
       const shaderBuilder = renderResources.shaderBuilder;
       const uniformMap = renderResources.uniformMap;
 
@@ -128,20 +281,12 @@ describe(
     });
 
     it("point size is determined by maximumAttenuation", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         maximumAttenuation: 4,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -155,28 +300,22 @@ describe(
     });
 
     it("point size defaults to 5dp for 3D Tiles with additive refinement", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         maximumAttenuation: undefined,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          pointCloudShading: pointCloudShading,
-          content: {
-            tile: {
-              refine: Cesium3DTileRefine.ADD,
-            },
-            tileset: {
-              maximumScreenSpaceError: 16,
-            },
+      const renderResources = mockPntsRenderResources({
+        pointCloudShading: pointCloudShading,
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
           },
         },
-      };
+      });
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -190,28 +329,22 @@ describe(
     });
 
     it("point size defaults to tileset.maximumScreenSpaceError for 3D Tiles with replace refinement", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         maximumAttenuation: undefined,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          pointCloudShading: pointCloudShading,
-          content: {
-            tile: {
-              refine: Cesium3DTileRefine.REPLACE,
-            },
-            tileset: {
-              maximumScreenSpaceError: 16,
-            },
+      const renderResources = mockPntsRenderResources({
+        pointCloudShading: pointCloudShading,
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.REPLACE,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
           },
         },
-      };
+      });
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -225,20 +358,12 @@ describe(
     });
 
     it("point size defaults to 1dp when maximumAttenuation is not defined", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         maximumAttenuation: undefined,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -252,25 +377,21 @@ describe(
     });
 
     it("scales geometricError", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         geometricErrorScale: 2,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          pointCloudShading: pointCloudShading,
-          content: {
-            tile: {
-              geometricError: 3,
-              refine: Cesium3DTileRefine.ADD,
-            },
+      const renderResources = mockPntsRenderResources({
+        pointCloudShading: pointCloudShading,
+        content: {
+          tile: {
+            geometricError: 3,
+            refine: Cesium3DTileRefine.ADD,
           },
+          tileset: {},
         },
-      };
+      });
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -284,26 +405,21 @@ describe(
     });
 
     it("uses tile geometric error when available", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         geometricErrorScale: 1,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          pointCloudShading: pointCloudShading,
-          content: {
-            tile: {
-              geometricError: 3,
-              refine: Cesium3DTileRefine.ADD,
-            },
+      const renderResources = mockPntsRenderResources({
+        pointCloudShading: pointCloudShading,
+        content: {
+          tile: {
+            geometricError: 3,
+            refine: Cesium3DTileRefine.ADD,
           },
+          tileset: {},
         },
-      };
+      });
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -317,27 +433,22 @@ describe(
     });
 
     it("uses baseResolution when tile geometric error is 0", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         geometricErrorScale: 1,
         baseResolution: 4,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          pointCloudShading: pointCloudShading,
-          content: {
-            tile: {
-              geometricError: 0,
-              refine: Cesium3DTileRefine.ADD,
-            },
+      const renderResources = mockPntsRenderResources({
+        pointCloudShading: pointCloudShading,
+        content: {
+          tile: {
+            geometricError: 0,
+            refine: Cesium3DTileRefine.ADD,
           },
+          tileset: {},
         },
-      };
+      });
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -351,21 +462,13 @@ describe(
     });
 
     it("uses baseResolution for glTF models", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         geometricErrorScale: 1,
         baseResolution: 4,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -379,21 +482,13 @@ describe(
     });
 
     it("estimates geometric error when baseResolution is not available", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
         geometricErrorScale: 1,
         baseResolution: undefined,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -410,19 +505,12 @@ describe(
     });
 
     it("computes depth multiplier from drawing buffer and frustum", function () {
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -440,19 +528,11 @@ describe(
     it("depth multiplier is set to positive infinity when in 2D mode", function () {
       scene.morphTo2D(0.0);
       scene.renderForSpecs();
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
@@ -472,19 +552,11 @@ describe(
         scene.drawingBufferWidth / scene.drawingBufferHeight;
       camera.frustum.width = camera.positionCartographic.height;
       scene.renderForSpecs();
-      const uniformMap = {};
       const pointCloudShading = new PointCloudShading({
         attenuation: true,
       });
-      const renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const uniformMap = renderResources.uniformMap;
 
       const frameState = scene.frameState;
       PointCloudStylingPipelineStage.process(
