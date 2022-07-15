@@ -10,7 +10,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
-import PointCloudCPUStylingStageVS from "../../Shaders/ModelExperimental/PointCloudCPUStylingStageVS.js";
+import PointCloudStylingStageVS from "../../Shaders/ModelExperimental/PointCloudStylingStageVS.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -67,6 +67,7 @@ PointCloudStylingPipelineStage.process = function (
   const propertyNames = getPropertyNames(shaderFunctionInfo);
 
   const usesNormalSemantic = propertyNames.indexOf("NORMAL") >= 0;
+  const usesColorSemantic = propertyNames.indexOf("COLOR") >= 0;
   const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.NORMAL
@@ -76,6 +77,10 @@ PointCloudStylingPipelineStage.process = function (
     throw new RuntimeError(
       "Style references the NORMAL semantic but the point cloud does not have normals"
     );
+  }
+
+  if (usesColorSemantic) {
+    shaderBuilder.addVarying("vec4", "v_pointCloudColor");
   }
 
   let content;
@@ -94,7 +99,7 @@ PointCloudStylingPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([PointCloudCPUStylingStageVS]);
+  shaderBuilder.addVertexLines([PointCloudStylingStageVS]);
 
   const uniformMap = {};
 
@@ -280,7 +285,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
  */
 function getBuiltinPropertyNames(source, propertyNames) {
   source = source.slice(source.indexOf("\n"));
-  const regex = /czm_3dtiles_builtin_property_(\w+)/g;
+  const regex = /attributes\.(\w+)/g;
   let matches = regex.exec(source);
   while (matches !== null) {
     const name = matches[1];

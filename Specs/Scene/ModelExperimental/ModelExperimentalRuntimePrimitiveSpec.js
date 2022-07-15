@@ -15,8 +15,8 @@ import {
   ModelExperimentalType,
   MorphTargetsPipelineStage,
   PickingPipelineStage,
-  PointCloudAttenuationPipelineStage,
   PointCloudShading,
+  PointCloudStylingPipelineStage,
   PrimitiveOutlinePipelineStage,
   PrimitiveStatisticsPipelineStage,
   PrimitiveType,
@@ -423,7 +423,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
     const expectedStages = [
       GeometryPipelineStage,
-      PointCloudAttenuationPipelineStage,
+      PointCloudStylingPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
@@ -457,7 +457,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
     const expectedStages = [
       GeometryPipelineStage,
-      PointCloudAttenuationPipelineStage,
+      PointCloudStylingPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
