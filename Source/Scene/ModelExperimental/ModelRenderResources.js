@@ -1,5 +1,4 @@
 import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
@@ -70,13 +69,12 @@ export default function ModelRenderResources(model) {
    *
    * @private
    */
-  this.renderStateOptions = clone(
+  this.renderStateOptions = RenderState.getState(
     RenderState.fromCache({
       depthTest: {
         enabled: true,
         func: DepthFunction.LESS_OR_EQUAL,
       },
-    }),
-    true
+    })
   );
 }

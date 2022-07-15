@@ -3,7 +3,6 @@ import {
   Axis,
   BlendingState,
   Cartesian3,
-  clone,
   ComponentDatatype,
   DepthFunction,
   LightingModel,
@@ -83,14 +82,13 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const defaultRenderState = clone(
+  const defaultRenderState = RenderState.getState(
     RenderState.fromCache({
       depthTest: {
         enabled: true,
         func: DepthFunction.LESS_OR_EQUAL,
       },
-    }),
-    true
+    })
   );
 
   let runtimePrimitive;

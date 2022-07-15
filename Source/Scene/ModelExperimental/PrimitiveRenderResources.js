@@ -266,7 +266,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.renderStateOptions = clone(nodeRenderResources.renderStateOptions);
+  this.renderStateOptions = clone(nodeRenderResources.renderStateOptions, true);
 
   /**
    * An enum describing the types of draw commands needed, based on the style.

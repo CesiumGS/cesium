@@ -52,7 +52,7 @@ ModelColorPipelineStage.process = function (
   // Pass the model's color as a uniform. Set the pass type to translucent, if needed.
   const color = model.color;
 
-  if (color.alpha === 0.0) {
+  if (color.alpha === 0.0 && !model.hasSilhouette(frameState)) {
     renderResources.renderStateOptions.colorMask = {
       red: false,
       green: false,

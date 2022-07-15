@@ -78,11 +78,11 @@ CPUStylingPipelineStage.process = function (
     featureTable.batchTexture.translucentFeaturesLength
   );
 
-  renderResources.styleCommandsNeeded = styleCommandsNeeded;
-
   if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
   }
+
+  renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
 
 export default CPUStylingPipelineStage;

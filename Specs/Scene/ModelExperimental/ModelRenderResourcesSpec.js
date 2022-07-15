@@ -1,5 +1,4 @@
 import {
-  clone,
   DepthFunction,
   ModelRenderResources,
   RenderState,
@@ -23,14 +22,13 @@ describe("Scene/ModelExperimental/ModelRenderResources", function () {
   it("constructs", function () {
     const modelResources = new ModelRenderResources(mockModel);
 
-    const defaultRenderState = clone(
+    const defaultRenderState = RenderState.getState(
       RenderState.fromCache({
         depthTest: {
           enabled: true,
           func: DepthFunction.LESS_OR_EQUAL,
         },
-      }),
-      true
+      })
     );
 
     expect(modelResources.model).toBe(mockModel);

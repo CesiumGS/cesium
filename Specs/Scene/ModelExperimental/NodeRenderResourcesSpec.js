@@ -1,7 +1,6 @@
 import {
   Axis,
   Cartesian3,
-  clone,
   DepthFunction,
   Matrix4,
   ModelExperimentalRuntimeNode,
@@ -52,14 +51,13 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
-    const defaultRenderState = clone(
+    const defaultRenderState = RenderState.getState(
       RenderState.fromCache({
         depthTest: {
           enabled: true,
           func: DepthFunction.LESS_OR_EQUAL,
         },
-      }),
-      true
+      })
     );
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);

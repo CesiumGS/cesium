@@ -1,5 +1,4 @@
 import {
-  clone,
   Color,
   ColorBlendMode,
   ModelAlphaOptions,
@@ -103,7 +102,7 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       uniformMap: {},
       model: mockModel,
       alphaOptions: defaultAlphaOptions,
-      renderStateOptions: clone(RenderState.fromCache(), true),
+      renderStateOptions: RenderState.getState(RenderState.fromCache()),
     };
     ModelColorPipelineStage.process(renderResources, mockModel);
 

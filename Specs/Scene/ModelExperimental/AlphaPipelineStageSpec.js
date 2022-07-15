@@ -1,6 +1,5 @@
 import {
   AlphaPipelineStage,
-  clone,
   ModelAlphaOptions,
   Pass,
   RenderState,
@@ -20,7 +19,7 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
-      renderStateOptions: clone(RenderState.fromCache(), true),
+      renderStateOptions: RenderState.getState(RenderState.fromCache()),
     };
 
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
@@ -37,7 +36,7 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
-      renderStateOptions: clone(RenderState.fromCache(), true),
+      renderStateOptions: RenderState.getState(RenderState.fromCache()),
     };
     const cutoff = 0.6;
     renderResources.alphaOptions.alphaCutoff = cutoff;

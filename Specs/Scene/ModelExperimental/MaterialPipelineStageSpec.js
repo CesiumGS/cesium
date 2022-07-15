@@ -10,14 +10,13 @@ import {
   ModelExperimentalStatistics,
   ModelLightingOptions,
   Pass,
+  RenderState,
   Resource,
   ResourceCache,
   ShaderBuilder,
   Cartesian4,
   Cartesian3,
-  clone,
 } from "../../../Source/Cesium.js";
-import RenderState from "../../../Source/Renderer/RenderState.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
@@ -112,7 +111,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -143,7 +142,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -193,7 +192,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: {
             statistics: new ModelExperimentalStatistics(),
           },
@@ -244,7 +243,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -295,7 +294,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -346,7 +345,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -396,7 +395,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -419,7 +418,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -442,7 +441,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -465,7 +464,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -488,7 +487,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -514,7 +513,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -542,7 +541,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
           pass: Pass.OPAQUE,
         };
@@ -563,7 +562,9 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = clone(RenderState.fromCache(), true);
+        const renderStateOptions = RenderState.getState(
+          RenderState.fromCache()
+        );
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -590,7 +591,9 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = clone(RenderState.fromCache(), true);
+        const renderStateOptions = RenderState.getState(
+          RenderState.fromCache()
+        );
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -617,7 +620,9 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = clone(RenderState.fromCache(), true);
+        const renderStateOptions = RenderState.getState(
+          RenderState.fromCache()
+        );
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -651,7 +656,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -680,7 +685,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: {
             statistics: new ModelExperimentalStatistics(),
             debugWireframe: true,
@@ -710,7 +715,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: clone(RenderState.fromCache(), true),
+          renderStateOptions: RenderState.getState(RenderState.fromCache()),
           model: {
             statistics: new ModelExperimentalStatistics(),
             debugWireframe: true,
