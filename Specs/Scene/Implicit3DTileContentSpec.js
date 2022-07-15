@@ -932,6 +932,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
@@ -951,6 +952,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
@@ -978,6 +980,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsLegacyUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
@@ -997,6 +1000,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsLegacyWithContentUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
@@ -1016,6 +1020,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsLegacyUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
@@ -1034,6 +1039,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsLegacyWithContentUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
@@ -1080,6 +1086,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsLegacyUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
           { enableModelExperimental: false }
         ).then(function (tileset) {
           // the placeholder tile does not have any extensions.
@@ -1282,7 +1289,9 @@ describe(
       it("multiple content metadata views get transcoded correctly", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsMetadataUrl
+          implicitMultipleContentsMetadataUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
+          { enableModelExperimental: false }
         ).then(function (tileset) {
           const expectedHeights = [10, 20, 30, 40, 50];
           const expectedColors = [
@@ -1768,7 +1777,9 @@ describe(
       it("multiple content metadata views get transcoded correctly (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsMetadataLegacyUrl
+          implicitMultipleContentsMetadataLegacyUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
+          { enableModelExperimental: false }
         ).then(function (tileset) {
           const expectedHeights = [10, 20, 30, 40, 50];
           const expectedColors = [
