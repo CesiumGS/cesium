@@ -1,4 +1,9 @@
-import { ModelRenderResources } from "../../../Source/Cesium.js";
+import {
+  clone,
+  DepthFunction,
+  ModelRenderResources,
+  RenderState,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelRenderResources", function () {
   const mockModel = {};
@@ -18,9 +23,19 @@ describe("Scene/ModelExperimental/ModelRenderResources", function () {
   it("constructs", function () {
     const modelResources = new ModelRenderResources(mockModel);
 
+    const defaultRenderState = clone(
+      RenderState.fromCache({
+        depthTest: {
+          enabled: true,
+          func: DepthFunction.LESS_OR_EQUAL,
+        },
+      }),
+      true
+    );
+
     expect(modelResources.model).toBe(mockModel);
     expect(modelResources.shaderBuilder).toBeDefined();
-    expect(modelResources.renderStateOptions).toEqual({});
+    expect(modelResources.renderStateOptions).toEqual(defaultRenderState);
     checkShaderDefines(modelResources.shaderBuilder, []);
   });
 });

@@ -3,7 +3,6 @@ import clone from "../../Core/clone.js";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
-import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 
 /**
@@ -77,7 +76,6 @@ export default function ModelRenderResources(model) {
         enabled: true,
         func: DepthFunction.LESS_OR_EQUAL,
       },
-      blending: BlendingState.DISABLED,
     }),
     true
   );

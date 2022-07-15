@@ -1,5 +1,4 @@
 import {
-  AlphaMode,
   AttributeType,
   CustomShader,
   CustomShaderPipelineStage,
@@ -212,7 +211,6 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
-    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
   });
 
   it("sets alpha options for translucent custom shader", function () {
@@ -234,7 +232,6 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
-    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
   });
 
   it("unlit and translucency work even if no shader code is present", function () {
@@ -255,7 +252,6 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
-    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
 
     expect(renderResources.lightingOptions.lightingModel).toBe(
       LightingModel.PBR

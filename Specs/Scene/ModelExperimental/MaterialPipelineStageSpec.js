@@ -15,8 +15,9 @@ import {
   ShaderBuilder,
   Cartesian4,
   Cartesian3,
-  Color,
+  clone,
 } from "../../../Source/Cesium.js";
+import RenderState from "../../../Source/Renderer/RenderState.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
@@ -111,7 +112,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -142,7 +143,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -192,7 +193,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: {
             statistics: new ModelExperimentalStatistics(),
           },
@@ -243,7 +244,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -294,7 +295,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -345,7 +346,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -395,7 +396,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -418,7 +419,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -441,7 +442,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -464,7 +465,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -477,7 +478,7 @@ describe(
       });
     });
 
-    it("handles alphaMode = OPAQUE", function () {
+    it("handles opaque material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
@@ -487,7 +488,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -498,12 +499,11 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).not.toBeDefined();
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
         expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
 
-    it("handles alphaMode = MASK", function () {
+    it("handles alpha mask material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
@@ -514,7 +514,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -528,12 +528,11 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).not.toBeDefined();
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.MASK);
         expect(renderResources.alphaOptions.alphaCutoff).toBe(cutoff);
       });
     });
 
-    it("handles alphaMode = BLEND", function () {
+    it("handles translucent material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
@@ -543,7 +542,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
           pass: Pass.OPAQUE,
         };
@@ -556,7 +555,6 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
         expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
@@ -565,7 +563,7 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
+        const renderStateOptions = clone(RenderState.fromCache(), true);
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -584,11 +582,7 @@ describe(
           primitive,
           mockFrameState
         );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(false);
       });
     });
 
@@ -596,7 +590,7 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
+        const renderStateOptions = clone(RenderState.fromCache(), true);
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -615,11 +609,7 @@ describe(
           primitive,
           mockFrameState
         );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: true,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(true);
       });
     });
 
@@ -627,7 +617,7 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
+        const renderStateOptions = clone(RenderState.fromCache(), true);
         const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
@@ -647,43 +637,7 @@ describe(
           mockFrameState
         );
 
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
-      });
-    });
-
-    it("disables back-face culling if model color is translucent", function () {
-      return loadGltf(boxUnlit).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: renderStateOptions,
-          model: {
-            statistics: new ModelExperimentalStatistics(),
-            color: new Color(0, 0, 1, 0.5),
-            backFaceCulling: true,
-          },
-          cull: true,
-        };
-
-        MaterialPipelineStage.process(
-          renderResources,
-          primitive,
-          mockFrameState
-        );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(false);
       });
     });
 
@@ -697,7 +651,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: { statistics: new ModelExperimentalStatistics() },
         };
 
@@ -726,7 +680,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: {
             statistics: new ModelExperimentalStatistics(),
             debugWireframe: true,
@@ -756,7 +710,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
+          renderStateOptions: clone(RenderState.fromCache(), true),
           model: {
             statistics: new ModelExperimentalStatistics(),
             debugWireframe: true,

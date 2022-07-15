@@ -1,10 +1,11 @@
 import {
-  AlphaMode,
+  clone,
   Color,
   ColorBlendMode,
   ModelAlphaOptions,
   ModelColorPipelineStage,
   Pass,
+  RenderState,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
@@ -75,7 +76,6 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
     ]);
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
-    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
 
     const uniformMap = renderResources.uniformMap;
     expect(uniformMap.model_color()).toEqual(mockModel.color);
@@ -103,7 +103,7 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       uniformMap: {},
       model: mockModel,
       alphaOptions: defaultAlphaOptions,
-      renderStateOptions: {},
+      renderStateOptions: clone(RenderState.fromCache(), true),
     };
     ModelColorPipelineStage.process(renderResources, mockModel);
 
@@ -114,6 +114,5 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       blue: false,
       alpha: false,
     });
-    expect(renderStateOptions.depthMask).toEqual(false);
   });
 });

@@ -79,6 +79,10 @@ CPUStylingPipelineStage.process = function (
   );
 
   renderResources.styleCommandsNeeded = styleCommandsNeeded;
+
+  if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+  }
 };
 
 export default CPUStylingPipelineStage;
