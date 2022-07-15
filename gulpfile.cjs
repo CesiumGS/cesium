@@ -201,7 +201,7 @@ async function buildCesiumJs(options) {
   buildConfig.external = ["https", "http", "url", "zlib"];
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.incremental = options.incremental;
-  buildConfig.ogLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
+  buildConfig.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
 
   // Build ESM
   const result = await esbuild.build({
