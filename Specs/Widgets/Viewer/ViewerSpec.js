@@ -1207,7 +1207,7 @@ describe(
 
       return tileset.readyPromise
         .catch(function (e) {
-          expect(e.message).toEqual("Request has failed. Status Code: 404");
+          expect(e.toString()).toEqual("Request has failed. Status Code: 404");
         })
         .then(function () {
           return viewer.zoomTo(tileset);
