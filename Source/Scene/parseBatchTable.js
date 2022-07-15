@@ -1,15 +1,20 @@
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
+import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import StructuralMetadata from "./StructuralMetadata.js";
+import PropertyAttribute from "./PropertyAttribute.js";
 import PropertyTable from "./PropertyTable.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
+import ModelComponents from "./ModelComponents.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -22,6 +27,8 @@ import MetadataTable from "./MetadataTable.js";
  * @param {Number} options.count The number of features in the batch table.
  * @param {Object} options.batchTable The batch table JSON
  * @param {Uint8Array} [options.binaryBody] The batch table binary body
+ * @param {Boolean} [options.parseAsPropertyAttributes=false] If true, binary properties are parsed as property attributes instead of a property table. This is used for .pnts models for GPU styling.
+ * @param {ModelComponents.Attribute[]} [options.customAttributeOutput] Pass in an empty array here and this method will populate it with a list of custom attributes that will store the values of the property attributes. The attributes will be created with typed arrays, the caller is responsible for uploading them to the GPU. This option is required when options.parseAsPropertyAttributes is true.
  * @return {StructuralMetadata} A transcoded structural metadata object
  *
  * @private
@@ -36,6 +43,19 @@ export default function parseBatchTable(options) {
   const featureCount = options.count;
   const batchTable = options.batchTable;
   const binaryBody = options.binaryBody;
+  const parseAsPropertyAttributes = defaultValue(
+    options.parseAsPropertyAttributes,
+    false
+  );
+  const customAttributeOutput = options.customAttributeOutput;
+
+  //>>includeStart('debug', pragmas.debug);
+  if (parseAsPropertyAttributes && !defined(customAttributeOutput)) {
+    throw new DeveloperError(
+      "customAttributeOutput is required when parsing batch table as property attributes"
+    );
+  }
+  //>>includeEnd('debug');
 
   // divide properties into binary, json and hierarchy
   const partitionResults = partitionProperties(batchTable);
@@ -49,37 +69,59 @@ export default function parseBatchTable(options) {
 
   const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
-  const binaryResults = transcodeBinaryProperties(
-    featureCount,
-    className,
-    partitionResults.binaryProperties,
-    binaryBody
-  );
+  let metadataTable;
+  let propertyAttributes;
+  let transcodedSchema;
+  if (parseAsPropertyAttributes) {
+    const attributeResults = transcodeBinaryPropertiesAsPropertyAttributes(
+      featureCount,
+      className,
+      partitionResults.binaryProperties,
+      binaryBody,
+      customAttributeOutput
+    );
+    transcodedSchema = attributeResults.transcodedSchema;
+    const propertyAttribute = new PropertyAttribute({
+      propertyAttribute: attributeResults.propertyAttributeJson,
+      class: attributeResults.transcodedClass,
+    });
 
-  const featureTableJson = binaryResults.featureTableJson;
-
-  const metadataTable = new MetadataTable({
-    count: featureTableJson.count,
-    properties: featureTableJson.properties,
-    class: binaryResults.transcodedClass,
-    bufferViews: binaryResults.bufferViewsU8,
-  });
+    propertyAttributes = [propertyAttribute];
+  } else {
+    const binaryResults = transcodeBinaryProperties(
+      featureCount,
+      className,
+      partitionResults.binaryProperties,
+      binaryBody
+    );
+    transcodedSchema = binaryResults.transcodedSchema;
+    const featureTableJson = binaryResults.featureTableJson;
+    metadataTable = new MetadataTable({
+      count: featureTableJson.count,
+      properties: featureTableJson.properties,
+      class: binaryResults.transcodedClass,
+      bufferViews: binaryResults.bufferViewsU8,
+    });
+  }
 
   const propertyTable = new PropertyTable({
     id: 0,
     name: "Batch Table",
-    count: featureTableJson.count,
+    count: featureCount,
     metadataTable: metadataTable,
     jsonMetadataTable: jsonMetadataTable,
     batchTableHierarchy: hierarchy,
   });
 
-  return new StructuralMetadata({
-    schema: binaryResults.transcodedSchema,
+  const metadataOptions = {
+    schema: transcodedSchema,
     propertyTables: [propertyTable],
+    propertyAttributes: propertyAttributes,
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
-  });
+  };
+
+  return new StructuralMetadata(metadataOptions);
 }
 
 /**
@@ -157,7 +199,7 @@ function transcodeBinaryProperties(
 ) {
   const classProperties = {};
   const featureTableProperties = {};
-  const bufferViewsU8 = {};
+  const bufferViewsTypedArrays = {};
   let bufferViewCount = 0;
   for (const propertyId in binaryProperties) {
     if (!binaryProperties.hasOwnProperty(propertyId)) {
@@ -179,7 +221,9 @@ function transcodeBinaryProperties(
 
     classProperties[propertyId] = transcodePropertyType(property);
 
-    bufferViewsU8[bufferViewCount] = binaryAccessor.createArrayBufferView(
+    bufferViewsTypedArrays[
+      bufferViewCount
+    ] = binaryAccessor.createArrayBufferView(
       binaryBody.buffer,
       binaryBody.byteOffset + property.byteOffset,
       featureCount
@@ -205,7 +249,88 @@ function transcodeBinaryProperties(
 
   return {
     featureTableJson: featureTableJson,
-    bufferViewsU8: bufferViewsU8,
+    bufferViewsTypedArrays: bufferViewsTypedArrays,
+    transcodedSchema: transcodedSchema,
+    transcodedClass: transcodedSchema.classes[className],
+  };
+}
+
+function transcodeBinaryPropertiesAsPropertyAttributes(
+  featureCount,
+  className,
+  binaryProperties,
+  binaryBody,
+  customAttributeOutput
+) {
+  const classProperties = {};
+  const propertyAttributeProperties = {};
+  for (const propertyId in binaryProperties) {
+    if (!binaryProperties.hasOwnProperty(propertyId)) {
+      continue;
+    }
+
+    if (!defined(binaryBody)) {
+      throw new RuntimeError(
+        `Property ${propertyId} requires a batch table binary.`
+      );
+    }
+
+    // Since property attributes will be used in a GLSL shader, sanitize
+    // the property ID to only use alphanumeric characters
+    const alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "_");
+    // TODO: What if multiple strings map to the same value?
+
+    const property = binaryProperties[propertyId];
+    const binaryAccessor = getBinaryAccessor(property);
+
+    classProperties[propertyId] = transcodePropertyType(property);
+
+    // Extract the typed array and create a custom attribute as a typed array.
+    // The caller must add the results to the ModelComponents, and upload the
+    // typed array to the GPU.
+    // The attribute name is converted to all capitals and underscores.
+    // E.g. if the original property ID was 'Temperature °C', the result is
+    // _TEMPERATURE__C (note that special characters are converted to
+    // underscores above)
+    const customAttributeName = `_${alphanumericPropertyId.toUpperCase()}`;
+    const attributeTypedArray = binaryAccessor.createArrayBufferView(
+      binaryBody.buffer,
+      binaryBody.byteOffset + property.byteOffset,
+      featureCount
+    );
+
+    const attribute = new ModelComponents.Attribute();
+    attribute.name = customAttributeName;
+    attribute.count = featureCount;
+    attribute.type = property.type;
+    attribute.componentDatatype = ComponentDatatype.fromTypedArray(
+      attributeTypedArray
+    );
+    attribute.typedArray = attributeTypedArray;
+    customAttributeOutput.push(attribute);
+
+    // Refer to the custom attribute name from the property attribute
+    propertyAttributeProperties[alphanumericPropertyId] = {
+      attribute: customAttributeName,
+    };
+  }
+
+  const schemaJson = {
+    classes: {},
+  };
+  schemaJson.classes[className] = {
+    properties: classProperties,
+  };
+
+  const transcodedSchema = new MetadataSchema(schemaJson);
+
+  const propertyAttributeJson = {
+    properties: propertyAttributeProperties,
+  };
+
+  return {
+    class: className,
+    propertyAttributeJson: propertyAttributeJson,
     transcodedSchema: transcodedSchema,
     transcodedClass: transcodedSchema.classes[className],
   };

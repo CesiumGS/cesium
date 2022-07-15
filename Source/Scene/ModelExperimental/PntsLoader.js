@@ -490,7 +490,7 @@ function makeAttributes(loader, parsedContent, context) {
   return attributes;
 }
 
-function makeStructuralMetadata(parsedContent) {
+function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   const batchLength = parsedContent.batchLength;
   const pointsLength = parsedContent.pointsLength;
   const batchTableBinary = parsedContent.batchTableBinary;
@@ -501,6 +501,8 @@ function makeStructuralMetadata(parsedContent) {
       count: count,
       batchTable: parsedContent.batchTableJson,
       binaryBody: batchTableBinary,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput,
     });
   }
 
@@ -560,7 +562,22 @@ function makeComponents(loader, context) {
   const components = new Components();
   components.scene = scene;
   components.nodes = [node];
-  components.structuralMetadata = makeStructuralMetadata(parsedContent);
+
+  // Since point clouds often have a large number of features, they will be
+  // parsed as property attributes and handled on the GPU rather than using
+  // a property table. Property attributes refer to a custom attribute that will
+  // store the values; such attributes will be populated in this array.
+  const customAttributeOutput = [];
+  components.structuralMetadata = makeStructuralMetadata(
+    parsedContent,
+    customAttributeOutput
+  );
+  addPropertyAttributesToPrimitive(
+    loader,
+    primitive,
+    customAttributeOutput,
+    context
+  );
 
   if (defined(parsedContent.rtcCenter)) {
     components.transform = Matrix4.multiplyByTranslation(
@@ -585,6 +602,37 @@ function makeComponents(loader, context) {
 
   // Free the parsed content so we don't hold onto the large typed arrays.
   loader._parsedContent = undefined;
+}
+
+function addPropertyAttributesToPrimitive(
+  loader,
+  primitive,
+  customAttributes,
+  context
+) {
+  const attributes = primitive.attributes;
+
+  const length = customAttributes.length;
+  for (let i = 0; i < length; i++) {
+    const customAttribute = customAttributes[i];
+
+    // Upload the typed array to the GPU and free the CPU copy.
+    const buffer = Buffer.createVertexBuffer({
+      typedArray: customAttribute.typedArray,
+      context: context,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    buffer.vertexArrayDestroyable = false;
+    loader._buffers.push(buffer);
+    customAttribute.buffer = buffer;
+    customAttribute.typedArray = undefined;
+
+    attributes.push(customAttribute);
+  }
+
+  // The batch table is always transcoded as a single property attribute, so
+  // it will always be index 0
+  primitive.propertyAttributeIds = [0];
 }
 
 PntsLoader.prototype.unload = function () {
