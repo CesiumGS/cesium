@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  ComponentDatatype,
   parseBatchTable,
   MetadataClass,
   MetadataComponentType,
@@ -13,6 +14,18 @@ describe("Scene/parseBatchTable", function () {
   const batchTableJson = {};
   const count = 3;
   const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+
+  function sortByName(a, b) {
+    if (a.name < b.name) {
+      return -1;
+    }
+
+    if (a.name > b.name) {
+      return 1;
+    }
+
+    return 0;
+  }
 
   it("throws without count", function () {
     expect(function () {
@@ -400,5 +413,94 @@ describe("Scene/parseBatchTable", function () {
         binaryBody: undefined,
       });
     }).toThrowError(RuntimeError);
+  });
+
+  it("throws if parseAsPropertyAttributes is true and customAttributeOutput is not provided", function () {
+    const binaryBatchTable = {
+      height: {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+    };
+
+    const heightValues = new Float32Array([10.0, 15.0, 25.0]);
+    const binaryBody = new Uint8Array(heightValues.buffer);
+
+    expect(function () {
+      return parseBatchTable({
+        count: 3,
+        batchTable: binaryBatchTable,
+        binaryBody: binaryBody,
+        parseAsPropertyAttributes: true,
+        customAttributeOutput: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("parses batch table as property attributes", function () {
+    const binaryBatchTable = {
+      height: {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+      windDirection: {
+        byteOffset: 12,
+        componentType: "FLOAT",
+        type: "VEC2",
+      },
+    };
+
+    // prettier-ignore
+    const values = new Float32Array([
+      // height values (float)
+      10.0, 15.0, 25.0,
+      // wind direction values (vec2)
+      1.0, 0.0,
+      1.1, 0.4,
+      0.3, 0.2,
+    ]);
+    const binaryBody = new Uint8Array(values.buffer);
+
+    const customAttributes = [];
+    const metadata = parseBatchTable({
+      count: 3,
+      batchTable: binaryBatchTable,
+      binaryBody: binaryBody,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput: customAttributes,
+    });
+
+    expect(customAttributes.length).toBe(2);
+
+    // Since the original properties is an unordered collection, sort
+    // to be sure of the order
+    const [heightAttribute, windDirectionAttribute] = customAttributes.sort(
+      sortByName
+    );
+    expect(heightAttribute.name).toBe("_HEIGHT");
+    expect(heightAttribute.count).toBe(3);
+    expect(heightAttribute.type).toBe("SCALAR");
+    expect(heightAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+    expect(heightAttribute.typedArray).toEqual(values.slice(0, 3));
+
+    expect(windDirectionAttribute.name).toBe("_WINDDIRECTION");
+    expect(windDirectionAttribute.count).toBe(3);
+    expect(windDirectionAttribute.type).toBe("VEC2");
+    expect(windDirectionAttribute.componentDatatype).toBe(
+      ComponentDatatype.FLOAT
+    );
+    expect(windDirectionAttribute.typedArray).toEqual(values.slice(3));
+
+    // A property table wil still be defined, but since we didn't have JSON
+    // or batch table hierarchy, it will be empty.
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable).toBeDefined();
+    expect(propertyTable._jsonMetadataTable).not.toBeDefined();
+    expect(propertyTable._metadataTable).not.toBeDefined();
+    expect(propertyTable._batchTableHierarchy).not.toBeDefined();
+
+    fail();
   });
 });

@@ -100,7 +100,7 @@ export default function parseBatchTable(options) {
       count: featureTableJson.count,
       properties: featureTableJson.properties,
       class: binaryResults.transcodedClass,
-      bufferViews: binaryResults.bufferViewsU8,
+      bufferViews: binaryResults.bufferViewsTypedArrays,
     });
   }
 
