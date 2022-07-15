@@ -249,7 +249,7 @@ function Attribute() {
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
-  this.packedTypedArray = undefined;
+  this.typedArray = undefined;
 
   /**
    * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
@@ -258,16 +258,6 @@ function Attribute() {
    * @private
    */
   this.buffer = undefined;
-
-  /**
-   * A typed array containing a CPU copy of the vertex buffer for further
-   * processing. Since GPU buffers may have padding, attribute values are
-   * accessed using byteOffset and byteStride.
-   *
-   * @type {Uint8Array}
-   * @private
-   */
-  this.typedArray = undefined;
 
   /**
    * The byte offset of elements in the buffer.

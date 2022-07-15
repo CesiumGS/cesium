@@ -53,13 +53,13 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * // Create a new attribute for the generated outline coordinates
  * primitive.outlineCoordinates = new ModelComponents.Attribute();
  * // ... initialize as a vec3 attribute
- * primitive.outlineCoordinates.packedTypedArray =
+ * primitive.outlineCoordinates.typedArray =
  *   outlineGenerator.outlineCoordinates;
  *
  * // Updating an attribute
  * const attribute = primitive.attributes[i];
- * attribute.packedTypedArray = outlineGenerator.updateAttribute(
- *   attribute.packedTypedArray
+ * attribute.typedArray = outlineGenerator.updateAttribute(
+ *   attribute.typedArray
  * );
  *
  * @private

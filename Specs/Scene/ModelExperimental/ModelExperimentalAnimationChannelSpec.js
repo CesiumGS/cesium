@@ -10,7 +10,7 @@ import {
   Matrix4,
   ModelComponents,
   ModelExperimentalAnimationChannel,
-  ModelExperimentalNode,
+  ModelExperimentalRuntimeNode,
   SteppedSpline,
   Quaternion,
   QuaternionSpline,
@@ -79,7 +79,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   }
 
   beforeEach(function () {
-    runtimeNode = new ModelExperimentalNode({
+    runtimeNode = new ModelExperimentalRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -619,5 +619,35 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
     expect(runtimeNode.transform).toEqual(
       Matrix4.fromTranslation(expected, scratchTransform)
     );
+  });
+
+  it("doesn't modify node that is animated by user", function () {
+    const mockSampler = {
+      input: times,
+      interpolation: InterpolationType.LINEAR,
+      output: translationPoints,
+    };
+
+    const mockChannel = createMockChannel(
+      mockNode,
+      mockSampler,
+      AnimatedPropertyType.TRANSLATION
+    );
+
+    const runtimeChannel = new ModelExperimentalAnimationChannel({
+      channel: mockChannel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
+
+    runtimeNode.userAnimated = true;
+
+    const time = 10.0;
+    runtimeChannel.animate(time);
+    expect(runtimeNode.translation).toEqual(Cartesian3.ZERO);
+    expect(runtimeNode.transform).toEqual(Matrix4.IDENTITY);
   });
 });
