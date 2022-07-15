@@ -277,13 +277,13 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
 
     // Since property attributes will be used in a GLSL shader, sanitize
     // the property ID to only use alphanumeric characters
-    const alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "_");
-    // TODO: What if multiple strings map to the same value?
+    const alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "");
+    // TODO: What if multiple strings map to the same value? or if the name vanishes?
 
     const property = binaryProperties[propertyId];
     const binaryAccessor = getBinaryAccessor(property);
 
-    classProperties[propertyId] = transcodePropertyType(property);
+    classProperties[alphanumericPropertyId] = transcodePropertyType(property);
 
     // Extract the typed array and create a custom attribute as a typed array.
     // The caller must add the results to the ModelComponents, and upload the
