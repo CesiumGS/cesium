@@ -206,7 +206,7 @@ function decodeDraco(loader, context) {
     .catch(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load Draco";
+      const errorMessage = "Failed to load pnts";
       return Promise.reject(loader.getError(errorMessage, error));
     });
 }
