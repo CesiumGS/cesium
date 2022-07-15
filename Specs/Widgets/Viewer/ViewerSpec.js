@@ -1205,9 +1205,16 @@ describe(
         url: "foo/bar",
       });
 
-      return viewer.zoomTo(tileset).then((result) => {
-        expect(result).toBe(false);
-      });
+      return tileset.readyPromise
+        .catch(function (e) {
+          expect(e.message).toEqual("Request has failed. Status Code: 404");
+        })
+        .then(function () {
+          return viewer.zoomTo(tileset);
+        })
+        .then((result) => {
+          expect(result).toBe(false);
+        });
     });
 
     it("zoomTo zooms to Cesium3DTileset with default offset when offset not defined", function () {
