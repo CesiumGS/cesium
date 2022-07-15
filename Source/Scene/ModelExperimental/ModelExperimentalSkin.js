@@ -4,7 +4,7 @@ import defaultValue from "../../Core/defaultValue.js";
 
 /**
  * An in-memory representation of a skin that affects nodes in the {@link ModelExperimentalSceneGraph}.
- * Skins should only be initialized after all of the {@link ModelExperimentalNode}s have been instantiated
+ * Skins should only be initialized after all of the {@link ModelExperimentalRuntimeNode}s have been instantiated
  * by the scene graph.
  *
  * @param {Object} options An object containing the following options:
@@ -85,7 +85,7 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
    * The joints of the skin.
    *
    * @memberof ModelExperimentalSkin.prototype
-   * @type {ModelExperimentalNode[]}
+   * @type {ModelExperimentalRuntimeNode[]}
    * @readonly
    *
    * @private

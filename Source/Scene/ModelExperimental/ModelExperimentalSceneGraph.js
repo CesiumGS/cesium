@@ -9,8 +9,9 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalArticulation from "./ModelExperimentalArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
-import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
+import ModelExperimentalRuntimeNode from "./ModelExperimentalRuntimeNode.js";
+import ModelExperimentalRuntimePrimitive from "./ModelExperimentalRuntimePrimitive.js";
 import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
@@ -86,7 +87,7 @@ export default function ModelExperimentalSceneGraph(options) {
   /**
    * The runtime nodes that make up the scene graph
    *
-   * @type {ModelExperimentalNode[]}
+   * @type {ModelExperimentalRuntimeNode[]}
    * @readonly
    *
    * @private
@@ -226,10 +227,11 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 function initialize(sceneGraph) {
   const components = sceneGraph._components;
   const scene = components.scene;
+  const model = sceneGraph._model;
 
   // If the model has a height reference that modifies the model matrix,
   // it will be accounted for in updateModelMatrix.
-  const modelMatrix = sceneGraph._model.modelMatrix;
+  const modelMatrix = model.modelMatrix;
   computeModelMatrix(sceneGraph, modelMatrix);
 
   const articulations = components.articulations;
@@ -261,7 +263,7 @@ function initialize(sceneGraph) {
   for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
-    const rootNodeIndex = traverseSceneGraph(
+    const rootNodeIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       rootNode,
       transformToRoot
@@ -364,18 +366,17 @@ function computeModelMatrix2D(sceneGraph, frameState) {
 }
 
 /**
- * Recursively traverse through the nodes in the scene graph, using depth-first
- * post-order traversal.
+ * Recursively traverse through the nodes in the scene graph to create
+ * their runtime versions, using a post-order depth-first traversal.
  *
- * @param {ModelSceneGraph} sceneGraph The scene graph
+ * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
- *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, transformToRoot) {
+function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelExperimentalUtility.getNodeTransform(node);
@@ -390,7 +391,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
       new Matrix4()
     );
 
-    const childIndex = traverseSceneGraph(
+    const childIndex = traverseAndCreateSceneGraph(
       sceneGraph,
       childNode,
       childNodeTransformToRoot
@@ -399,7 +400,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   }
 
   // Process node and mesh primitives.
-  const runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalRuntimeNode({
     node: node,
     transform: transform,
     transformToRoot: transformToRoot,
@@ -410,7 +411,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     runtimeNode.runtimePrimitives.push(
-      new ModelExperimentalPrimitive({
+      new ModelExperimentalRuntimePrimitive({
         primitive: node.primitives[i],
         node: node,
         model: sceneGraph._model,
@@ -422,6 +423,14 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   sceneGraph._runtimeNodes[index] = runtimeNode;
   if (defined(node.skin)) {
     sceneGraph._skinnedNodes.push(index);
+  }
+
+  // Create and store the public version of the runtime node.
+  const name = node.name;
+  if (defined(name)) {
+    const model = sceneGraph._model;
+    const publicNode = new ModelExperimentalNode(model, runtimeNode);
+    model._nodesByName[name] = publicNode;
   }
 
   return index;
@@ -672,13 +681,54 @@ ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
   }
 };
 
-function forEachRuntimePrimitive(sceneGraph, callback) {
-  for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
-    const runtimeNode = sceneGraph._runtimeNodes[i];
-    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      callback(runtimePrimitive);
-    }
+/**
+ * Recursively traverse through the runtime nodes in the scene graph
+ * using a post-order depth-first traversal to perform a callback on
+ * their runtime primitives.
+ *
+ * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph.
+ * @param {ModelExperimentalRuntimeNode} runtimeNode The current runtime node.
+ * @param {Boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
+ * @param {Function} callback The callback to perform on the runtime primitives of the node.
+ *
+ * @private
+ */
+function traverseSceneGraph(
+  sceneGraph,
+  runtimeNode,
+  visibleNodesOnly,
+  callback
+) {
+  if (visibleNodesOnly && !runtimeNode.show) {
+    return;
+  }
+
+  const childrenLength = runtimeNode.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    const childRuntimeNode = runtimeNode.getChild(i);
+    traverseSceneGraph(
+      sceneGraph,
+      childRuntimeNode,
+      visibleNodesOnly,
+      callback
+    );
+  }
+
+  const runtimePrimitives = runtimeNode.runtimePrimitives;
+  const runtimePrimitivesLength = runtimePrimitives.length;
+  for (let j = 0; j < runtimePrimitivesLength; j++) {
+    const runtimePrimitive = runtimePrimitives[j];
+    callback(runtimePrimitive);
+  }
+}
+
+function forEachRuntimePrimitive(sceneGraph, visibleNodesOnly, callback) {
+  const rootNodes = sceneGraph._rootNodes;
+  const rootNodesLength = rootNodes.length;
+  for (let i = 0; i < rootNodesLength; i++) {
+    const rootNodeIndex = rootNodes[i];
+    const runtimeNode = sceneGraph._runtimeNodes[rootNodeIndex];
+    traverseSceneGraph(sceneGraph, runtimeNode, visibleNodesOnly, callback);
   }
 }
 
@@ -692,7 +742,7 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
   backFaceCulling
 ) {
-  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.backFaceCulling = backFaceCulling;
   });
@@ -706,7 +756,7 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
  * @private
  */
 ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
-  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.shadows = shadowMode;
   });
@@ -722,7 +772,7 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
 ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
   debugShowBoundingVolume
 ) {
-  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
   });
@@ -748,7 +798,7 @@ ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
 
   const hasSilhouette = this._model.hasSilhouette(frameState);
 
-  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+  forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
     const primitiveDrawCommand = runtimePrimitive.drawCommand;
 
     const result = primitiveDrawCommand.getCommands(frameState);

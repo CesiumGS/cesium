@@ -77,7 +77,15 @@ describe(
     const pointCloudUrl =
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const boxArticulationsUrl =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+
+    // prettier-ignore
+    const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
+      1, 0, 0, 0,
+      0, 0, 1, 0,
+      0, -1, 0, 0,
+      0, 0, 0, 1
+    ]);
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -2810,6 +2818,39 @@ describe(
       });
     });
 
+    it("setArticulationStage throws when model is not ready", function () {
+      const model = ModelExperimental.fromGltf({
+        url: boxArticulationsUrl,
+      });
+
+      expect(function () {
+        model.setArticulationStage("SampleArticulation MoveX", 10.0);
+      }).toThrowDeveloperError();
+    });
+
+    it("setArticulationStage throws with invalid value", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.setArticulationStage("SampleArticulation MoveX", "bad");
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("applyArticulations throws when model is not ready", function () {
+      const model = ModelExperimental.fromGltf({
+        url: boxArticulationsUrl,
+      });
+
+      expect(function () {
+        model.applyArticulations();
+      }).toThrowDeveloperError();
+    });
+
     it("applies articulations", function () {
       return loadAndZoomToModelExperimental(
         {
@@ -2834,6 +2875,110 @@ describe(
         model.setArticulationStage("SampleArticulation Size", 1.0);
         model.applyArticulations();
         verifyRender(model, true);
+      });
+    });
+
+    it("getNode throws when model is not ready", function () {
+      const model = ModelExperimental.fromGltf({
+        url: boxArticulationsUrl,
+      });
+
+      expect(function () {
+        model.getNode("Root");
+      }).toThrowDeveloperError();
+    });
+
+    it("getNode throws when name is undefined", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.getNode();
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("getNode returns undefined for nonexistent node", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        const node = model.getNode("I don't exist");
+        expect(node).toBeUndefined();
+      });
+    });
+
+    it("getNode returns a node", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        const node = model.getNode("Root");
+
+        expect(node).toBeDefined();
+        expect(node.name).toEqual("Root");
+        expect(node.id).toEqual(0);
+        expect(node.show).toEqual(true);
+        expect(node.matrix).toEqual(boxArticulationsMatrix);
+        expect(node.originalMatrix).toEqual(boxArticulationsMatrix);
+      });
+    });
+
+    it("changing node.show works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+        const node = model.getNode("Root");
+        expect(node.show).toEqual(true);
+
+        node.show = false;
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing node.show works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+        const node = model.getNode("Root");
+        expect(node.show).toEqual(true);
+
+        node.show = false;
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing node.matrix works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+        const node = model.getNode("Root");
+        expect(node.matrix).toEqual(boxArticulationsMatrix);
+        expect(node.originalMatrix).toEqual(boxArticulationsMatrix);
+
+        node.matrix = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
+        // The model's bounding sphere doesn't account for animations,
+        // so the camera will not account for the node's new transform.
+        verifyRender(model, false);
       });
     });
 
