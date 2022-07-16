@@ -346,6 +346,13 @@
             options[0].onselect();
             Sandcastle.addToolbarMenu(options);
 
+            // This only affects nodes that draw primitives. Setting this value
+            // for a joint node will have no effect.
+            Sandcastle.addToggleButton("Show Node", true, function (value) {
+              const node = model.getNode(viewModel.nodeName);
+              node.show = value;
+            });
+
             // respond to viewmodel changes by applying the computed matrix
             Cesium.knockout
               .getObservable(viewModel, "matrix")

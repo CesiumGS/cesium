@@ -71,7 +71,7 @@ describe(
     const boxWithUnusedMaterial =
       "./Data/Models/BoxWithUnusedMaterial/Box.gltf";
     const boxArticulationsUrl =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
 
     const cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
     const cesiumAir_0_8Url = "./Data/Models/CesiumAir/Cesium_Air_0_8.gltf";
