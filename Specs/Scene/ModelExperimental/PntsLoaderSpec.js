@@ -101,7 +101,6 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(structuralMetadata).toBeDefined();
     expect(structuralMetadata.schema).toEqual({});
     expect(structuralMetadata.propertyTableCount).toBe(1);
-    expect(structuralMetadata.propertyAttributes.length).toBe(0);
     const propertyTable = structuralMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0)).toEqual([]);
   }
@@ -114,9 +113,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
     expect(structuralMetadata.propertyTableCount).toEqual(1);
     const propertyTable = structuralMetadata.getPropertyTable(0);
-    expect(propertyTable.getPropertyIds(0).sort()).toEqual(
-      Object.keys(expectedProperties).sort()
-    );
+
+    const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
+
+    const tablePropertyNames = [];
+    const attributePropertyNames = [];
 
     for (const propertyName in expectedProperties) {
       if (expectedProperties.hasOwnProperty(propertyName)) {
@@ -127,15 +128,24 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           // If the batch table had JSON properties, the property will not
           // be in the schema, so check if we can access it.
           expect(propertyTable.getProperty(0, propertyName)).toBeDefined();
+          tablePropertyNames.push(propertyName);
         } else {
           // Check the property declaration is expected
           expect(property.type).toEqual(expectedProperty.type);
           expect(property.componentType).toEqual(
             expectedProperty.componentType
           );
+          attributePropertyNames.push(propertyName);
         }
       }
     }
+
+    expect(propertyTable.getPropertyIds(0).sort()).toEqual(
+      tablePropertyNames.sort()
+    );
+    expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
+      attributePropertyNames.sort()
+    );
   }
 
   function expectPosition(attribute) {
@@ -446,7 +456,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(4);
+      // 4 geometry attributes + 2 metadata attributes
+      expect(attributes.length).toBe(6);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
         attributes[1],
@@ -493,7 +504,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(4);
+      // 4 geometry attributes + 2 metadata attributes
+      expect(attributes.length).toBe(6);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
       expectDefaultColor(attributes[2]);
@@ -524,7 +536,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
+      // 2 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(5);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
     });
@@ -537,7 +550,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       const components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.structuralMetadata, {
-        "temperature ℃": {
+        // Originally "temperature ℃", but sanitized for GLSL
+        temperature: {
           type: MetadataType.SCALAR,
           componentType: MetadataComponentType.FLOAT32,
         },
@@ -553,7 +567,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
+      // 2 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(5);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
     });
