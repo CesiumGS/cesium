@@ -102,6 +102,7 @@ export default function parseBatchTable(options) {
       class: binaryResults.transcodedClass,
       bufferViews: binaryResults.bufferViewsTypedArrays,
     });
+    propertyAttributes = [];
   }
 
   const propertyTable = new PropertyTable({
@@ -264,6 +265,8 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
 ) {
   const classProperties = {};
   const propertyAttributeProperties = {};
+  let nextPlaceholderId = 0;
+
   for (const propertyId in binaryProperties) {
     if (!binaryProperties.hasOwnProperty(propertyId)) {
       continue;
@@ -275,15 +278,39 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       );
     }
 
-    // Since property attributes will be used in a GLSL shader, sanitize
-    // the property ID to only use alphanumeric characters
-    const alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "");
-    // TODO: What if multiple strings map to the same value? or if the name vanishes?
+    // Since property attributes will be used in a GLSL shader,
+    // remove all non-alphanumeric characters
+    let alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "");
+
+    // The prefix gl_ is reserved in GLSL, so remove it.
+    // e.g. gl_customProperty -> customProperty
+    alphanumericPropertyId = alphanumericPropertyId.replace(/^gl_/, "");
+
+    // identifiers can't start with a digit, so prefix with an underscore
+    // e.g. 1234 -> _1234
+    if (/^\d/.test(alphanumericPropertyId)) {
+      alphanumericPropertyId = `_${alphanumericPropertyId}`;
+    }
+
+    // If the sanitized string is empty or a duplicate, use a placeholder
+    // name instead. This will work for styling, but it may lead to undefined
+    // behavior in CustomShader since different tiles may pick a different
+    // placeholder ID due to the unordered collection or because different
+    // tiles may have different number of properties.
+    if (
+      alphanumericPropertyId === "" ||
+      classProperties.hasOwnProperty(alphanumericPropertyId)
+    ) {
+      alphanumericPropertyId = `property_${nextPlaceholderId}`;
+      nextPlaceholderId++;
+    }
 
     const property = binaryProperties[propertyId];
     const binaryAccessor = getBinaryAccessor(property);
 
-    classProperties[alphanumericPropertyId] = transcodePropertyType(property);
+    const classProperty = transcodePropertyType(property);
+    classProperty.name = propertyId;
+    classProperties[alphanumericPropertyId] = classProperty;
 
     // Extract the typed array and create a custom attribute as a typed array.
     // The caller must add the results to the ModelComponents, and upload the
@@ -292,7 +319,11 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     // E.g. if the original property ID was 'Temperature °C', the result is
     // _TEMPERATURE__C (note that special characters are converted to
     // underscores above)
-    const customAttributeName = `_${alphanumericPropertyId.toUpperCase()}`;
+    let customAttributeName = alphanumericPropertyId.toUpperCase();
+    if (!customAttributeName.startsWith("_")) {
+      customAttributeName = `_${customAttributeName}`;
+    }
+
     const attributeTypedArray = binaryAccessor.createArrayBufferView(
       binaryBody.buffer,
       binaryBody.byteOffset + property.byteOffset,

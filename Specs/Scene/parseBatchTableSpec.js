@@ -497,10 +497,181 @@ describe("Scene/parseBatchTable", function () {
     // or batch table hierarchy, it will be empty.
     const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable).toBeDefined();
-    expect(propertyTable._jsonMetadataTable).not.toBeDefined();
+    // An empty table is created
+    expect(propertyTable._jsonMetadataTable).toBeDefined();
     expect(propertyTable._metadataTable).not.toBeDefined();
     expect(propertyTable._batchTableHierarchy).not.toBeDefined();
 
-    fail();
+    expect(metadata.propertyAttributes.length).toBe(1);
+    const [propertyAttribute] = metadata.propertyAttributes;
+    const metadataClass = propertyAttribute.class;
+    expect(metadataClass.id).toBe(MetadataClass.BATCH_TABLE_CLASS_NAME);
+    const heightClassProperty = metadataClass.properties.height;
+    expect(heightClassProperty.name).toBe("height");
+    expect(heightClassProperty.type).toBe(MetadataType.SCALAR);
+    expect(heightClassProperty.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    const windClassProperty = metadataClass.properties["windDirection"];
+    expect(windClassProperty.name).toBe("windDirection");
+    expect(windClassProperty.type).toBe(MetadataType.VEC2);
+    expect(windClassProperty.componentType).toBe(MetadataComponentType.FLOAT32);
+
+    const properties = propertyAttribute.properties;
+    const heightProperty = properties.height;
+    expect(heightProperty.attribute).toBe("_HEIGHT");
+    const windProperty = properties.windDirection;
+    expect(windProperty.attribute).toBe("_WINDDIRECTION");
+  });
+
+  it("sanitizes property attribute property IDs for use in GLSL", function () {
+    const binaryBatchTable = {
+      // will be converted to Height
+      "Height ⛰️": {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+      // gl_ prefix is reserved in GLSL and will be removed.
+      // this leaves 1234, which starts with a number, so a _ prefix will be
+      // added. Result: _1234
+      gl_1234: {
+        byteOffset: 12,
+        componentType: "FLOAT",
+        type: "VEC2",
+      },
+    };
+
+    // prettier-ignore
+    const values = new Float32Array([
+      10.0, 15.0, 25.0,
+      1.0, 0.0,
+      1.1, 0.4,
+      0.3, 0.2,
+    ]);
+    const binaryBody = new Uint8Array(values.buffer);
+
+    const customAttributes = [];
+    const metadata = parseBatchTable({
+      count: 3,
+      batchTable: binaryBatchTable,
+      binaryBody: binaryBody,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput: customAttributes,
+    });
+
+    expect(customAttributes.length).toBe(2);
+
+    // Since the original properties is an unordered collection, sort
+    // to be sure of the order.
+    const [numericAttribute, unicodeAttribute] = customAttributes.sort(
+      sortByName
+    );
+
+    // Attributes are converted to upper-case like glTF attributes.
+    expect(numericAttribute.name).toBe("_1234");
+    expect(unicodeAttribute.name).toBe("_HEIGHT");
+
+    // In the schema, the IDs are valid GLSL identifiers, while the name
+    // is the original property ID which may contain unicode.
+    const [propertyAttribute] = metadata.propertyAttributes;
+    const metadataClass = propertyAttribute.class;
+    const numericClassProperty = metadataClass.properties["_1234"];
+    expect(numericClassProperty.name).toBe("gl_1234");
+    const unicodeClassProperty = metadataClass.properties["Height"];
+    expect(unicodeClassProperty.name).toBe("Height ⛰️");
+
+    const properties = propertyAttribute.properties;
+    const numericProperty = properties["_1234"];
+    expect(numericProperty.attribute).toBe("_1234");
+    const unicodeProperty = properties["Height"];
+    expect(unicodeProperty.attribute).toBe("_HEIGHT");
+  });
+
+  it("creates placeholder IDs for invalid GLSL identifiers", function () {
+    const binaryBatchTable = {
+      // all characters will be removed, which would lead to an invalid
+      // identifier.
+      "✖️✖️✖️": {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+      temperature: {
+        byteOffset: 12,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+      // gl_ prefix will be removed, leading to a name collision with
+      // "temperature
+      gl_temperature: {
+        byteOffset: 24,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+    };
+
+    // prettier-ignore
+    const values = new Float32Array([
+      10.0, 15.0, 25.0,
+      20.0, 30.0, 15.0,
+      25.0, 20.0, 20.0,
+    ]);
+    const binaryBody = new Uint8Array(values.buffer);
+
+    const customAttributes = [];
+    const metadata = parseBatchTable({
+      count: 3,
+      batchTable: binaryBatchTable,
+      binaryBody: binaryBody,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput: customAttributes,
+    });
+
+    expect(customAttributes.length).toBe(3);
+
+    // Attributes are processed in a non-deterministic order (due to looping
+    // over a dictionary), but the set of results is constant.
+    const attributeNames = customAttributes.map(function (attribute) {
+      return attribute.name;
+    });
+    expect(attributeNames.sort()).toEqual([
+      "_PROPERTY_0",
+      "_PROPERTY_1",
+      "_TEMPERATURE",
+    ]);
+
+    const [propertyAttribute] = metadata.propertyAttributes;
+    const metadataClass = propertyAttribute.class;
+    const classProperties = [
+      metadataClass.properties.property_0,
+      metadataClass.properties.property_1,
+      metadataClass.properties.temperature,
+    ];
+
+    // Again, the order is non-deterministic, but the attribute names will
+    // always be the original names
+    const classPropertyNames = classProperties.map(function (classProperty) {
+      return classProperty.name;
+    });
+    expect(classPropertyNames.sort()).toEqual(
+      Object.keys(binaryBatchTable).sort()
+    );
+
+    const properties = propertyAttribute.properties;
+    expect(Object.keys(properties).sort()).toEqual([
+      "property_0",
+      "property_1",
+      "temperature",
+    ]);
+
+    const semantics = Object.values(properties).map(function (property) {
+      return property.attribute;
+    });
+    expect(semantics.sort()).toEqual([
+      "_PROPERTY_0",
+      "_PROPERTY_1",
+      "_TEMPERATURE",
+    ]);
   });
 });
