@@ -1,3 +1,4 @@
+import AlphaMode from "../AlphaMode.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
@@ -9,6 +10,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
+import Pass from "../../Renderer/Pass.js";
 import PointCloudStylingStageVS from "../../Shaders/ModelExperimental/PointCloudStylingStageVS.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
@@ -70,6 +72,19 @@ PointCloudStylingPipelineStage.process = function (
       throw new RuntimeError(
         "Style references the NORMAL semantic but the point cloud does not have normals"
       );
+    }
+
+    shaderBuilder.addDefine(
+      "COMPUTE_POSITION_WC_STYLE",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+
+    // If the style is translucent, the alpha options must be adjusted.
+    const styleTranslucent = shaderFunctionInfo.styleTranslucent;
+    if (styleTranslucent) {
+      renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+      renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
     }
   }
 

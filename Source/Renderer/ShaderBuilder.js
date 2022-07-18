@@ -361,29 +361,6 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 };
 
 /**
- * Check if a varying declaration has been added vertex and fragment shaders.
- *
- * @param {String} type The GLSL type of the varying
- * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
- *
- * @example
- * // checks if the line "varying vec3 v_color;" already exists in the shaders
- * const hasColor = shaderBuilder.hasVarying("vec3", "v_color");
- */
-ShaderBuilder.prototype.hasVarying = function (type, identifier) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  Check.typeOf.string("identifier", identifier);
-  //>>includeEnd('debug');
-
-  const line = `varying ${type} ${identifier};`;
-  // Both the vertex and fragment shader should have the varying,
-  // so only one of them needs to be checked.
-  const lines = this._vertexShaderParts.varyingLines;
-  return lines.indexOf(line) !== -1;
-};
-
-/**
  * Add a varying declaration to both the vertex and fragment shaders.
  *
  * @param {String} type The GLSL type of the varying

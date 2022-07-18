@@ -1,4 +1,5 @@
 import {
+  AlphaMode,
   Camera,
   Cartesian3,
   Cesium3DTileRefine,
@@ -8,6 +9,7 @@ import {
   Matrix4,
   ModelExperimentalType,
   OrthographicFrustum,
+  Pass,
   PointCloudStylingPipelineStage,
   PointCloudShading,
   ShaderBuilder,
@@ -82,6 +84,7 @@ describe(
         uniformMap: uniformMap,
         runtimeNode: mockRuntimeNode,
         model: mockModel,
+        alphaOptions: {},
       };
     }
 
@@ -153,6 +156,7 @@ describe(
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_POINT_CLOUD_COLOR_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
       ]);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_POINT_CLOUD_COLOR_STYLE",
@@ -168,6 +172,56 @@ describe(
         shaderBuilder,
         "vec4 getColorFromStyle(ProcessedAttribute attributes)"
       );
+    });
+
+    it("adjusts render options for translucent color style", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "rgba(255, 0, 0, 0.005)",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec4 v_pointCloudColor;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudAttenuation;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "vec4 getColorFromStyle(ProcessedAttribute attributes)"
+      );
+
+      expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
+      expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
     });
 
     it("applies point size style in shader", function () {
@@ -195,6 +249,7 @@ describe(
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
       ]);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
@@ -235,6 +290,7 @@ describe(
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
       ]);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
