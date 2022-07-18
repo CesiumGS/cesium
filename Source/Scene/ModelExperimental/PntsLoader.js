@@ -361,19 +361,21 @@ function transcodeAttributeType(componentsPerAttribute) {
 function transcodeComponentType(value) {
   switch (value) {
     case WebGLConstants.BYTE:
-      return ComponentDatatype.BYTE;
+      return "BYTE";
     case WebGLConstants.UNSIGNED_BYTE:
-      return ComponentDatatype.UNSIGNED_BYTE;
+      return "UNSIGNED_BYTE";
     case WebGLConstants.SHORT:
-      return ComponentDatatype.SHORT;
+      return "SHORT";
     case WebGLConstants.UNSIGNED_SHORT:
-      return ComponentDatatype.UNSIGNED_SHORT;
+      return "UNSIGNED_SHORT";
     case WebGLConstants.INT:
-      return ComponentDatatype.INT;
+      return "INT";
     case WebGLConstants.UNSIGNED_INT:
-      return ComponentDatatype.UNSIGNED_INT;
+      return "UNSIGNED_INT";
     case WebGLConstants.DOUBLE:
-      return ComponentDatatype.DOUBLE;
+      return "DOUBLE";
+    case WebGLConstants.FLOAT:
+      return "FLOAT";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("value is not a valid WebGL constant");
