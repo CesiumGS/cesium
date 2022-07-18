@@ -199,7 +199,6 @@ function decodeDraco(loader, context) {
       if (defined(decodeDracoResult)) {
         processDracoAttributes(loader, draco, decodeDracoResult);
       }
-      // here
       makeComponents(loader, context);
       loader._state = ResourceLoaderState.READY;
       return loader;

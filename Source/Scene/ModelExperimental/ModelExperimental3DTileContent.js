@@ -178,7 +178,6 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
   // the setter will call model.applyStyle()
-  console.log("APPLYING");
   this._model.style = style;
 };
 
