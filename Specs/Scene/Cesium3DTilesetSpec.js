@@ -6679,7 +6679,9 @@ describe(
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataUrl
+          tilesetWithImplicitMultipleContentsMetadataUrl,
+          // See https://github.com/CesiumGS/cesium/issues/10551
+          { enableModelExperimental: false }
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
@@ -7137,7 +7139,9 @@ describe(
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataLegacyUrl
+          tilesetWithImplicitMultipleContentsMetadataLegacyUrl,
+
+          { enableModelExperimental: false }
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
