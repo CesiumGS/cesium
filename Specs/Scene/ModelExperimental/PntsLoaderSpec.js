@@ -105,7 +105,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(propertyTable.getPropertyIds(0)).toEqual([]);
   }
 
-  function expectMetadata(structuralMetadata, expectedProperties) {
+  function expectMetadata(structuralMetadata, expectedProperties, isBatched) {
     expect(structuralMetadata).toBeDefined();
     const schema = structuralMetadata.schema;
     const batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
@@ -135,7 +135,13 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           expect(property.componentType).toEqual(
             expectedProperty.componentType
           );
-          attributePropertyNames.push(propertyName);
+
+          // if batched, binary properties will appear in the property table.
+          // Otherwise, they are per-point and parsed as a property attribute
+          const nameList = isBatched
+            ? tablePropertyNames
+            : attributePropertyNames;
+          nameList.push(propertyName);
         }
       }
     }
@@ -143,9 +149,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(propertyTable.getPropertyIds(0).sort()).toEqual(
       tablePropertyNames.sort()
     );
-    expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
-      attributePropertyNames.sort()
-    );
+
+    if (!isBatched) {
+      expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
+        attributePropertyNames.sort()
+      );
+    }
   }
 
   function expectPosition(attribute) {
@@ -439,25 +448,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        dimensions: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = true;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          dimensions: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          name: {
+            type: MetadataType.SCALAR,
+            isJson: true,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT32,
+          },
         },
-        name: {
-          type: MetadataType.SCALAR,
-          isJson: true,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT32,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      // 4 geometry attributes + 2 metadata attributes
-      expect(attributes.length).toBe(6);
+      // 4 geometry attributes. No metadata attributes
+      expect(attributes.length).toBe(4);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
         attributes[1],
@@ -487,25 +501,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        dimensions: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = true;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          dimensions: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          name: {
+            type: MetadataType.SCALAR,
+            isJson: true,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT32,
+          },
         },
-        name: {
-          type: MetadataType.SCALAR,
-          isJson: true,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT32,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      // 4 geometry attributes + 2 metadata attributes
-      expect(attributes.length).toBe(6);
+      // 4 geometry attributes, no metadata attributes
+      expect(attributes.length).toBe(4);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
       expectDefaultColor(attributes[2]);
@@ -519,20 +538,25 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        temperature: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          temperature: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
         },
-        secondaryColor: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT16,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -549,21 +573,26 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        // Originally "temperature ℃", but sanitized for GLSL
-        temperature: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          // Originally "temperature ℃", but sanitized for GLSL
+          temperature: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
         },
-        secondaryColor: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT16,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
