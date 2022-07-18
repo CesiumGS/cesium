@@ -674,4 +674,94 @@ describe("Scene/parseBatchTable", function () {
       "_TEMPERATURE",
     ]);
   });
+
+  it("handles typed arrays decoded from Draco pnts", function () {
+    const binaryBatchTable = {
+      height: {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+        // when decoding Draco, each property is stored in a separate typed
+        // array.
+        typedArray: new Float32Array([10.0, 15.0, 25.0]),
+      },
+      windDirection: {
+        byteOffset: 12,
+        componentType: "FLOAT",
+        type: "VEC2",
+        // prettier-ignore
+        typedArray: new Float32Array([
+          1.0, 0.0,
+          1.1, 0.4,
+          0.3, 0.2,
+        ]),
+      },
+    };
+    // simulate the common case where everything is Draco-compressed.
+    const binaryBody = undefined;
+
+    const customAttributes = [];
+    const metadata = parseBatchTable({
+      count: 3,
+      batchTable: binaryBatchTable,
+      binaryBody: binaryBody,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput: customAttributes,
+    });
+
+    expect(customAttributes.length).toBe(2);
+
+    // Since the original properties is an unordered collection, sort
+    // to be sure of the order
+    const [heightAttribute, windDirectionAttribute] = customAttributes.sort(
+      sortByName
+    );
+    expect(heightAttribute.name).toBe("_HEIGHT");
+    expect(heightAttribute.count).toBe(3);
+    expect(heightAttribute.type).toBe("SCALAR");
+    expect(heightAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+    expect(heightAttribute.typedArray).toEqual(
+      binaryBatchTable.height.typedArray
+    );
+
+    expect(windDirectionAttribute.name).toBe("_WINDDIRECTION");
+    expect(windDirectionAttribute.count).toBe(3);
+    expect(windDirectionAttribute.type).toBe("VEC2");
+    expect(windDirectionAttribute.componentDatatype).toBe(
+      ComponentDatatype.FLOAT
+    );
+    expect(windDirectionAttribute.typedArray).toEqual(
+      binaryBatchTable.windDirection.typedArray
+    );
+
+    // A property table wil still be defined, but since we didn't have JSON
+    // or batch table hierarchy, it will be empty.
+    const propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable).toBeDefined();
+    // An empty table is created
+    expect(propertyTable._jsonMetadataTable).toBeDefined();
+    expect(propertyTable._metadataTable).not.toBeDefined();
+    expect(propertyTable._batchTableHierarchy).not.toBeDefined();
+
+    expect(metadata.propertyAttributes.length).toBe(1);
+    const [propertyAttribute] = metadata.propertyAttributes;
+    const metadataClass = propertyAttribute.class;
+    expect(metadataClass.id).toBe(MetadataClass.BATCH_TABLE_CLASS_NAME);
+    const heightClassProperty = metadataClass.properties.height;
+    expect(heightClassProperty.name).toBe("height");
+    expect(heightClassProperty.type).toBe(MetadataType.SCALAR);
+    expect(heightClassProperty.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    const windClassProperty = metadataClass.properties["windDirection"];
+    expect(windClassProperty.name).toBe("windDirection");
+    expect(windClassProperty.type).toBe(MetadataType.VEC2);
+    expect(windClassProperty.componentType).toBe(MetadataComponentType.FLOAT32);
+
+    const properties = propertyAttribute.properties;
+    const heightProperty = properties.height;
+    expect(heightProperty.attribute).toBe("_HEIGHT");
+    const windProperty = properties.windDirection;
+    expect(windProperty.attribute).toBe("_WINDDIRECTION");
+  });
 });
