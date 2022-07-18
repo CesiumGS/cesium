@@ -204,7 +204,6 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.showOutline = tileset.showOutline;
   model.outlineColor = tileset.outlineColor;
   model.pointCloudShading = tileset.pointCloudShading;
-  model.time = tileset.timeSinceLoad;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;

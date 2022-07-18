@@ -565,7 +565,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
-  it("skips point cloud styling stage if no style", function () {
+  it("skips point cloud styling stage without a style", function () {
     const primitive = new ModelExperimentalRuntimePrimitive({
       primitive: {
         featureIds: [],

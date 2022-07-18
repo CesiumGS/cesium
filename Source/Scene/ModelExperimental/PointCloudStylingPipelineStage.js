@@ -20,10 +20,11 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 const scratchUniform = new Cartesian4();
 
 /**
- * The point cloud CPU styling stage is responsible for applying color,
+ * The point cloud styling stage is responsible for applying color,
  * size, and show styles to point clouds at runtime. It also handles
  * point cloud shading provided by either the model or the tileset that
- * owns it, which is used if no style is provided.
+ * owns it. Point cloud shading is only applied if no point size style
+ * is provided.
  *
  * @namespace PointCloudStylingPipelineStage
  *
@@ -33,12 +34,19 @@ const PointCloudStylingPipelineStage = {};
 PointCloudStylingPipelineStage.name = "PointCloudStylingPipelineStage"; // Helps with debugging
 
 /**
- * Processes a primitive. This modifies the following parts of the render resources:
+ * Processes a primitive. If the model that owns it has a style, then
+ * this stage modifies the following parts of the render resources:
+ * <ul>
+ *  <li>adds the styling functions to the vertex shaders</li>
+ *  <li>adds a define to compute the position in world coordinates</li>
+ *  <li>adds a varying to compute point cloud color</li>
+ * </ul>
+ *
+ * If the model has point cloud shading, then this stage modifies the following
+ * part of the render resources:
  * <ul>
  *  <li>adds vertex shader code to compute attenuation and update gl_PointSize</li>
  *  <li>updates the uniform map to pass in point cloud parameters</li>
- *  <li>adds the styling code to both the vertex and fragment shaders</li>
- *  <li>adds the define to trigger the stage's shader functions</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -109,14 +117,14 @@ PointCloudStylingPipelineStage.process = function (
 
   shaderBuilder.addUniform(
     "vec4",
-    "model_pointCloudAttenuation",
+    "model_pointCloudParameters",
     ShaderDestination.VERTEX
   );
 
   shaderBuilder.addVertexLines([PointCloudStylingStageVS]);
 
   const uniformMap = renderResources.uniformMap;
-  uniformMap.model_pointCloudAttenuation = function () {
+  uniformMap.model_pointCloudParameters = function () {
     const vec4 = scratchUniform;
 
     // Point size
@@ -271,7 +279,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
   }
 
   const showStyleFunction = shaderFunctionInfo.showStyleFunction;
-  if (defined(shaderFunctionInfo.showStyleFunction)) {
+  if (defined(showStyleFunction)) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_SHOW_STYLE",
       undefined,
@@ -293,7 +301,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
 
 /**
  * Gets all the built-in property names used by the given style
- * function, ignoring the function signature.
+ * function.
  *
  * @param {Function} source The style function.
  * @param {String[]} propertyNames The array of property names to add to.
@@ -301,7 +309,6 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
  * @private
  */
 function getBuiltinPropertyNames(source, propertyNames) {
-  source = source.slice(source.indexOf("\n"));
   const regex = /attributes\.(\w+)/g;
   let matches = regex.exec(source);
   while (matches !== null) {

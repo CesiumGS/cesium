@@ -36,10 +36,12 @@ describe(
 
     const mockRuntimeNode = {
       // prettier-ignore
-      transform: new Matrix4(2, 0, 0, 1,
-                             0, 2, 0, 0,
-                             0, 0, 2, 0,
-                             0, 0, 0, 1),
+      transform: new Matrix4(
+        2, 0, 0, 1,
+        0, 2, 0, 0,
+        0, 0, 2, 0,
+        0, 0, 0, 1
+      ),
     };
 
     function mockGltfRenderResources(pointCloudShading) {
@@ -117,10 +119,10 @@ describe(
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersPointCloudStylingStageVS,
@@ -163,10 +165,10 @@ describe(
       ]);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
@@ -210,10 +212,10 @@ describe(
       ]);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
@@ -254,10 +256,10 @@ describe(
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
@@ -295,10 +297,10 @@ describe(
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
@@ -326,10 +328,10 @@ describe(
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform vec4 model_pointCloudAttenuation;",
+        "uniform vec4 model_pointCloudParameters;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-      expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersPointCloudStylingStageVS,
@@ -351,7 +353,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.x).toEqual(4 * frameState.pixelRatio);
     });
 
@@ -380,7 +382,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.x).toEqual(5 * frameState.pixelRatio);
     });
 
@@ -409,7 +411,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.x).toEqual(16 * frameState.pixelRatio);
     });
 
@@ -428,7 +430,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.x).toEqual(frameState.pixelRatio);
     });
 
@@ -456,7 +458,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.y).toEqual(6);
     });
 
@@ -484,7 +486,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.y).toEqual(3);
     });
 
@@ -513,7 +515,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.y).toEqual(4);
     });
 
@@ -533,7 +535,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.y).toEqual(4);
     });
 
@@ -553,7 +555,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       const volume = 8;
       const pointsLength = 64;
       const expected = CesiumMath.cbrt(volume / pointsLength);
@@ -575,7 +577,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       const expected =
         scene.context.drawingBufferHeight / scene.camera.frustum.sseDenominator;
       expect(attenuation.z).toEqual(expected);
@@ -597,7 +599,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.z).toEqual(Number.POSITIVE_INFINITY);
     });
 
@@ -621,7 +623,7 @@ describe(
         frameState
       );
 
-      const attenuation = uniformMap.model_pointCloudAttenuation();
+      const attenuation = uniformMap.model_pointCloudParameters();
       expect(attenuation.z).toBe(Number.POSITIVE_INFINITY);
     });
   },
