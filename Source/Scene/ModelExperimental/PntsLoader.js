@@ -495,13 +495,17 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   const pointsLength = parsedContent.pointsLength;
   const batchTableBinary = parsedContent.batchTableBinary;
 
+  // If there are batch IDs, parse as a property table. Otherwise, parse
+  // as property attributes.
+  const parseAsPropertyAttributes = !defined(parsedContent.batchIds);
+
   if (defined(batchTableBinary)) {
     const count = defaultValue(batchLength, pointsLength);
     return parseBatchTable({
       count: count,
       batchTable: parsedContent.batchTableJson,
       binaryBody: batchTableBinary,
-      parseAsPropertyAttributes: true,
+      parseAsPropertyAttributes: parseAsPropertyAttributes,
       customAttributeOutput,
     });
   }
@@ -563,21 +567,27 @@ function makeComponents(loader, context) {
   components.scene = scene;
   components.nodes = [node];
 
-  // Since point clouds often have a large number of features, they will be
-  // parsed as property attributes and handled on the GPU rather than using
-  // a property table. Property attributes refer to a custom attribute that will
-  // store the values; such attributes will be populated in this array.
+  // Per-point features will be parsed as property attributes and handled on
+  // the GPU since CPU styling would be too expensive. However, if batch IDs
+  // exist, features will be parsed as a property table.
+  //
+  // Property attributes refer to a custom attribute that will
+  // store the values; such attributes will be populated in this array
+  // as needed.
   const customAttributeOutput = [];
   components.structuralMetadata = makeStructuralMetadata(
     parsedContent,
     customAttributeOutput
   );
-  addPropertyAttributesToPrimitive(
-    loader,
-    primitive,
-    customAttributeOutput,
-    context
-  );
+
+  if (customAttributeOutput.length > 0) {
+    addPropertyAttributesToPrimitive(
+      loader,
+      primitive,
+      customAttributeOutput,
+      context
+    );
+  }
 
   if (defined(parsedContent.rtcCenter)) {
     components.transform = Matrix4.multiplyByTranslation(

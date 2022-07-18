@@ -674,10 +674,10 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
-### Note about Unicode property IDs for 3D Tiles 1.0 point clouds
+### Note about Unicode property IDs for .pnts per-point properties
 
-When using the Point Cloud (`.pnts`) format in `ModelExperimental`, the batch
-table is transcoded as property attributes. Since GLSL only supports
+When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
+properties are transcoded as property attributes. Since GLSL only supports
 alphanumeric identifiers (not starting with a number or the reserved prefix
 `gl_`), property IDs are modified as follows:
 
