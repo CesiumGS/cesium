@@ -298,9 +298,10 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
 
     // If the sanitized string is empty or a duplicate, use a placeholder
     // name instead. This will work for styling, but it may lead to undefined
-    // behavior in CustomShader since different tiles may pick a different
-    // placeholder ID due to the unordered collection or because different
-    // tiles may have different number of properties.
+    // behavior in CustomShader, since
+    // - different tiles may pick a different placeholder ID due to the
+    //    collection being unordered
+    // - different tiles may have different number of properties.
     if (
       alphanumericPropertyId === "" ||
       classProperties.hasOwnProperty(alphanumericPropertyId)
@@ -315,11 +316,11 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
 
     // Extract the typed array and create a custom attribute as a typed array.
     // The caller must add the results to the ModelComponents, and upload the
-    // typed array to the GPU.
-    // The attribute name is converted to all capitals and underscores.
-    // E.g. if the original property ID was 'Temperature °C', the result is
-    // _TEMPERATURE__C (note that special characters are converted to
-    // underscores above)
+    // typed array to the GPU. The attribute name is converted to all capitals
+    // and underscores, like a glTF custom attribute.
+    //
+    // For example, if the original property ID was 'Temperature ℃', the result
+    // is _TEMPERATURE
     let customAttributeName = alphanumericPropertyId.toUpperCase();
     if (!customAttributeName.startsWith("_")) {
       customAttributeName = `_${customAttributeName}`;

@@ -208,7 +208,7 @@ function decodeDraco(loader, context) {
     .catch(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load pnts";
+      const errorMessage = "Failed to load Draco pnts";
       return Promise.reject(loader.getError(errorMessage, error));
     });
 }
@@ -353,8 +353,10 @@ function transcodeAttributeType(componentsPerAttribute) {
       return "VEC4";
     //>>includeStart('debug', pragmas.debug);
     default:
-      throw new DeveloperError("value is not a valid WebGL constant");
-    //>>includeEnd('debug');ComponentDatatype.fromWebGlConstant
+      throw new DeveloperError(
+        "componentsPerAttribute must be a number from 1-4"
+      );
+    //>>includeEnd('debug');
   }
 }
 
@@ -379,7 +381,7 @@ function transcodeComponentType(value) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("value is not a valid WebGL constant");
-    //>>includeEnd('debug');ComponentDatatype.fromWebGlConstant
+    //>>includeEnd('debug');
   }
 }
 
@@ -564,11 +566,13 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
       batchTable: parsedContent.batchTableJson,
       binaryBody: batchTableBinary,
       parseAsPropertyAttributes: parseAsPropertyAttributes,
-      customAttributeOutput,
+      customAttributeOutput: customAttributeOutput,
     });
   }
 
-  // If batch table is not defined, create a property table without any properties.
+  // If there are no binary properties create a property table without any
+  // properties. For example, if the batch table only has JSON properties,
+  // those are handled separately, so the property table is empty.
   const emptyPropertyTable = new PropertyTable({
     name: MetadataClass.BATCH_TABLE_CLASS_NAME,
     count: pointsLength,

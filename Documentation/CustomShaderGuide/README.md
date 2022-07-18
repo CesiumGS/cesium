@@ -690,7 +690,7 @@ the custom shader in the `(vsInput|fsInput).metadata` struct:
 
 - `temperature ℃` -> `metadata.temperature`
 - `gl_customProperty` -> `metadata.customProperty`
-- `1245` -> `metadata._12345`
+- `12345` -> `metadata._12345`
 - `gl_12345` -> `metadata._12345`
 
 If the above results in an empty string or a name collision with other
