@@ -272,7 +272,11 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       continue;
     }
 
-    if (!defined(binaryBody)) {
+    // For draco-compressed attributes from .pnts files, the results will be
+    // stored in separate typed arrays. These will be used in place of the
+    // binary body
+    const property = binaryProperties[propertyId];
+    if (!defined(binaryBody) && !defined(property.typedArray)) {
       throw new RuntimeError(
         `Property ${propertyId} requires a batch table binary.`
       );
@@ -305,9 +309,6 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       nextPlaceholderId++;
     }
 
-    const property = binaryProperties[propertyId];
-    const binaryAccessor = getBinaryAccessor(property);
-
     const classProperty = transcodePropertyType(property);
     classProperty.name = propertyId;
     classProperties[alphanumericPropertyId] = classProperty;
@@ -324,11 +325,17 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       customAttributeName = `_${customAttributeName}`;
     }
 
-    const attributeTypedArray = binaryAccessor.createArrayBufferView(
-      binaryBody.buffer,
-      binaryBody.byteOffset + property.byteOffset,
-      featureCount
-    );
+    // for .pnts with draco compression, property.typedArray is used
+    // instead of the binary body.
+    let attributeTypedArray = property.typedArray;
+    if (!defined(attributeTypedArray)) {
+      const binaryAccessor = getBinaryAccessor(property);
+      attributeTypedArray = binaryAccessor.createArrayBufferView(
+        binaryBody.buffer,
+        binaryBody.byteOffset + property.byteOffset,
+        featureCount
+      );
+    }
 
     const attribute = new ModelComponents.Attribute();
     attribute.name = customAttributeName;

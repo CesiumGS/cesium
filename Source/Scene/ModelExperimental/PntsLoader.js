@@ -5,8 +5,10 @@ import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import WebGLConstants from "../../Core/WebGLConstants.js";
 import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
@@ -308,21 +310,75 @@ function processDracoAttributes(loader, draco, result) {
     };
   }
 
-  let styleableProperties = parsedContent.styleableProperties;
+  let batchTableJson = parsedContent.batchTableJson;
+
   const batchTableProperties = draco.batchTableProperties;
   for (const name in batchTableProperties) {
     if (batchTableProperties.hasOwnProperty(name)) {
       const property = result[name];
-      if (!defined(styleableProperties)) {
-        styleableProperties = {};
+
+      if (!defined(batchTableJson)) {
+        batchTableJson = {};
       }
-      styleableProperties[name] = {
+
+      parsedContent.hasDracoBatchTable = true;
+
+      const data = property.data;
+      batchTableJson[name] = {
+        byteOffset: data.byteOffset,
+        // Draco returns the results like glTF values, but here
+        // we want to transcode to a batch table. It's redundant
+        // but necessary to use parseBatchTable()
+        type: transcodeAttributeType(data.componentsPerAttribute),
+        componentType: transcodeComponentType(data.componentDatatype),
+        // Each property is stored as a separate typed array, so
+        // store it here. parseBatchTable() will check for this
+        // instead of the entire binary body.
         typedArray: property.array,
-        componentCount: property.data.componentsPerAttribute,
       };
     }
   }
-  parsedContent.styleableProperties = styleableProperties;
+  parsedContent.batchTableJson = batchTableJson;
+}
+
+function transcodeAttributeType(componentsPerAttribute) {
+  switch (componentsPerAttribute) {
+    case 1:
+      return "SCALAR";
+    case 2:
+      return "VEC2";
+    case 3:
+      return "VEC3";
+    case 4:
+      return "VEC4";
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("value is not a valid WebGL constant");
+    //>>includeEnd('debug');ComponentDatatype.fromWebGlConstant
+  }
+}
+
+function transcodeComponentType(value) {
+  switch (value) {
+    case WebGLConstants.BYTE:
+      return ComponentDatatype.BYTE;
+    case WebGLConstants.UNSIGNED_BYTE:
+      return ComponentDatatype.UNSIGNED_BYTE;
+    case WebGLConstants.SHORT:
+      return ComponentDatatype.SHORT;
+    case WebGLConstants.UNSIGNED_SHORT:
+      return ComponentDatatype.UNSIGNED_SHORT;
+    case WebGLConstants.INT:
+      return ComponentDatatype.INT;
+    case WebGLConstants.UNSIGNED_INT:
+      return ComponentDatatype.UNSIGNED_INT;
+    case WebGLConstants.DOUBLE:
+      return ComponentDatatype.DOUBLE;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("value is not a valid WebGL constant");
+    //>>includeEnd('debug');ComponentDatatype.fromWebGlConstant
+  }
 }
 
 function makeAttribute(loader, attributeInfo, context) {
@@ -499,7 +555,7 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   // as property attributes.
   const parseAsPropertyAttributes = !defined(parsedContent.batchIds);
 
-  if (defined(batchTableBinary)) {
+  if (defined(batchTableBinary) || parsedContent.hasDracoBatchTable) {
     const count = defaultValue(batchLength, pointsLength);
     return parseBatchTable({
       count: count,
