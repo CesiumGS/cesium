@@ -674,6 +674,32 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
+### Note about Unicode property IDs for .pnts per-point properties
+
+When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
+properties are transcoded as property attributes. Since GLSL only supports
+alphanumeric identifiers (not starting with a number or the reserved prefix
+`gl_`), property IDs are modified as follows:
+
+1. Remove all characters except `[A-Za-z0-9_]`.
+2. Remove the reserved `gl_` prefix if present
+3. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
+
+Here are a couple examples of property ID and the resulting variable name in
+the custom shader in the `(vsInput|fsInput).metadata` struct:
+
+- `temperature ℃` -> `metadata.temperature`
+- `gl_customProperty` -> `metadata.customProperty`
+- `12345` -> `metadata._12345`
+- `gl_12345` -> `metadata._12345`
+
+If the above results in an empty string or a name collision with other
+property IDs, the behavior is undefined. For example:
+
+- `✖️✖️✖️` maps to the empty string, so the behavior is undefined.
+- Two properties with names `temperature ℃` and `temperature ℉` would both
+  map to `metadata.temperature`, so the behavior is undefined
+
 ## `czm_modelVertexOutput` struct
 
 This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
