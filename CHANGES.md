@@ -2,13 +2,16 @@
 
 ### 1.96 - 2022-08-01
 
+##### Major Announcements :loudspeaker:
+- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](TODO) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
+  - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
+  - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
+  - Using ESM from `Source` will require a bundler to resolve third party node dependencies. 
+  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
+
 ##### Breaking Changes :mega:
 
 - Tilesets and entities now use `ModelExperimental` by default. This can still be changed by setting `ExperimentalFeatures.enableModelExperimental = false`. [#10530](https://github.com/CesiumGS/cesium/pull/10530)
-- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](TODO) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
-  - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
-  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
-  - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
 
 ##### Additions :tada:
 
