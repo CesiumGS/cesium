@@ -152,6 +152,17 @@ ShaderBuilderTester.expectHasFragmentFunctionUnordered = function (
   expectEqualUnordered(func.body, bodyLines);
 };
 
+ShaderBuilderTester.expectVertexLinesContains = function (
+  shaderBuilder,
+  expectedString
+) {
+  const lines = shaderBuilder._vertexShaderParts.shaderLines;
+  for (let i = 0; i < lines; i++) {
+    const line = lines[i];
+    expect(line.indexOf(expectedString)).toBeGreaterThan(-1);
+  }
+};
+
 ShaderBuilderTester.expectVertexLinesEqual = function (
   shaderBuilder,
   expectedVertexLines
@@ -159,6 +170,17 @@ ShaderBuilderTester.expectVertexLinesEqual = function (
   expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual(
     expectedVertexLines
   );
+};
+
+ShaderBuilderTester.expectFragmentLinesContains = function (
+  shaderBuilder,
+  expectedString
+) {
+  const lines = shaderBuilder._fragmentShaderParts.shaderLines;
+  for (let i = 0; i < lines; i++) {
+    const line = lines[i];
+    expect(line.indexOf(expectedString)).toBeGreaterThan(-1);
+  }
 };
 
 ShaderBuilderTester.expectFragmentLinesEqual = function (
