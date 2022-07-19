@@ -54,14 +54,14 @@ void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     // pass all other properties so further stages have access to them.
     vec3 color = vec3(0.0);
 
-    #if defined(LIGHTING_PBR)
+    #ifdef LIGHTING_PBR
     color = computePbrLighting(material, attributes);
     #else // unlit
     color = material.diffuse;
     #endif
 
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
-    // Colors resulting from point cloud styles are handled differently.
+    // The colors resulting from point cloud styles are adjusted differently.
     color = czm_gammaCorrect(color);
     #elif !defined(HDR)
     // If HDR is not enabled, the frame buffer stores sRGB colors rather than

@@ -64,8 +64,8 @@ PointCloudStylingPipelineStage.process = function (
   const model = renderResources.model;
   const style = model.style;
 
-  // Point cloud styling will only be appleid on the GPU if
-  // there is no batch table. If a batch table exists, then
+  // Point cloud styling will only be applied on the GPU if there is
+  // no batch table. If a batch table exists, then:
   //  - the property attribute will not be defined
   //  - the model will be using a feature table
 

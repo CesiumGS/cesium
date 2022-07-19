@@ -2548,7 +2548,7 @@ ModelExperimental.prototype.applyStyle = function (style) {
     this.featureTables[this.featureTableId].featuresLength > 0;
 
   if (this.type === ModelExperimentalType.TILE_PNTS) {
-    // Point clouds will use GPU styling unless they contain
+    // Point clouds will be styled on the GPU unless they contain
     // a batch table. That is, CPU styling will not be applied if
     // - points have no metadata at all, or
     // - points have metadata stored as a property attribute
