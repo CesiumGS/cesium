@@ -82,6 +82,35 @@ describe(
       };
     }
 
+    function checkMetadataClassStructs(shaderBuilder) {
+      // Check for MetadataClass sub-structs: one for each metadata type.
+      // These are constructed in both vertex and fragment shaders,
+      // regardless of whether they are used or not
+      for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
+        const structName = `${metadataType}MetadataClass`;
+        const structIdVs = `${structName}VS`;
+        const structIdFs = `${structName}FS`;
+        const structFields = [
+          `    ${metadataType} noData;`,
+          `    ${metadataType} defaultValue;`,
+          `    ${metadataType} minValue;`,
+          `    ${metadataType} maxValue;`,
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          structIdVs,
+          structName,
+          structFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          structIdFs,
+          structName,
+          structFields
+        );
+      }
+    }
+
     it("Handles primitives without metadata gracefully", function () {
       return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -143,6 +172,9 @@ describe(
         MetadataPipelineStage.process(renderResources, primitive, frameState);
 
         const shaderBuilder = renderResources.shaderBuilder;
+
+        checkMetadataClassStructs(shaderBuilder);
+
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_VS,
@@ -323,32 +355,7 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
 
-        // Check for MetadataClass sub-structs: one for each metadata type.
-        // These are constructed in both vertex and fragment shaders,
-        // regardless of whether they are used or not
-        for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
-          const structName = `${metadataType}MetadataClass`;
-          const structIdVs = `${structName}VS`;
-          const structIdFs = `${structName}FS`;
-          const structFields = [
-            `    ${metadataType} noData;`,
-            `    ${metadataType} defaultValue;`,
-            `    ${metadataType} minValue;`,
-            `    ${metadataType} maxValue;`,
-          ];
-          ShaderBuilderTester.expectHasVertexStruct(
-            shaderBuilder,
-            structIdVs,
-            structName,
-            structFields
-          );
-          ShaderBuilderTester.expectHasFragmentStruct(
-            shaderBuilder,
-            structIdFs,
-            structName,
-            structFields
-          );
-        }
+        checkMetadataClassStructs(shaderBuilder);
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,

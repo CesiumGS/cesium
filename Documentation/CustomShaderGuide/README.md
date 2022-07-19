@@ -575,7 +575,7 @@ The following types of metadata are currently supported:
   types with `componentType: UINT8` are currently supported.
 
 Regardless of the source of metadata, the properties are collected into a single
-struct by property ID. For example, if the metadata class looked like this:
+struct by property ID. Consider the following metadata class:
 
 ```jsonc
 "schema": {
