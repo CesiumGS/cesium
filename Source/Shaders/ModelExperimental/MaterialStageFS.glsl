@@ -87,7 +87,9 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     baseColorWithAlpha = u_baseColorFactor;
     #endif
 
-    #ifdef HAS_COLOR_0
+    #ifdef HAS_POINT_CLOUD_COLOR_STYLE
+    baseColorWithAlpha = v_pointCloudColor;
+    #elif defined(HAS_COLOR_0)
     vec4 color = attributes.color_0;
         // .pnts files store colors in the sRGB color space
         #ifdef HAS_SRGB_COLOR

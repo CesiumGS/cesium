@@ -508,7 +508,6 @@ gulp.task(
         "Build/CesiumUnminified/**",
         "Build/Documentation/**",
         "Build/package.json",
-        // TODO: Include built specs? Shouldn't be too big
       ],
       {
         base: ".",
