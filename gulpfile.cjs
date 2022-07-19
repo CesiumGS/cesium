@@ -249,6 +249,10 @@ async function buildCesiumJs(options) {
       format: "cjs",
       platform: "node",
       sourcemap: false,
+      define: {
+        // TransformStream is a browser-only implementation depended on by zip.js
+        TransformStream: "null",
+      },
       outfile: path.join(options.path, "index.cjs"),
     });
 
