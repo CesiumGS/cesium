@@ -61,7 +61,7 @@ void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #endif
 
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
-    // The color resulting from a point cloud style is handled differently.
+    // Colors resulting from point cloud styles are handled differently.
     color = czm_gammaCorrect(color);
     #elif !defined(HDR)
     // If HDR is not enabled, the frame buffer stores sRGB colors rather than

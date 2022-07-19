@@ -156,11 +156,18 @@ ShaderBuilderTester.expectVertexLinesContains = function (
   shaderBuilder,
   expectedString
 ) {
+  let hasLine = false;
   const lines = shaderBuilder._vertexShaderParts.shaderLines;
-  for (let i = 0; i < lines; i++) {
+  const length = lines.length;
+  for (let i = 0; i < length; i++) {
     const line = lines[i];
-    expect(line.indexOf(expectedString)).toBeGreaterThan(-1);
+    if (line.indexOf(expectedString) > -1) {
+      hasLine = true;
+      break;
+    }
   }
+
+  expect(hasLine).toBe(true);
 };
 
 ShaderBuilderTester.expectVertexLinesEqual = function (

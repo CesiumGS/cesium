@@ -985,8 +985,7 @@ describe(
       options.url = pointCloudUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
 
-      // In ModelExperimental, points are also counted as features.
-      return checkPointAndFeatureCounts(tileset, 1000, 1000, 0);
+      return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
     it("verify triangle statistics", function () {

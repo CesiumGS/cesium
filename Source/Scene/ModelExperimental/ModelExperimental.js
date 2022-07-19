@@ -2543,17 +2543,31 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
 ModelExperimental.prototype.applyStyle = function (style) {
   this.resetDrawCommands();
 
-  // Styling is applied on the GPU for 3D Tiles point clouds.
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
   if (this.type === ModelExperimentalType.TILE_PNTS) {
-    return;
+    // Point clouds will use GPU styling unless they contain
+    // a batch table. That is, CPU styling will not be applied if
+    // - points have no metadata at all, or
+    // - points have metadata stored as a property attribute
+    if (!hasFeatureTable) {
+      return;
+    }
+
+    const propertyAttributes = defined(this.structuralMetadata)
+      ? this.structuralMetadata.propertyAttributes
+      : undefined;
+
+    if (defined(propertyAttributes) && defined(propertyAttributes[0])) {
+      return;
+    }
   }
 
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {

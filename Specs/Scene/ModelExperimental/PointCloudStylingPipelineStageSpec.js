@@ -5,6 +5,7 @@ import {
   Cesium3DTileRefine,
   Cesium3DTileStyle,
   defined,
+  defaultValue,
   Math as CesiumMath,
   Matrix4,
   ModelExperimentalType,
@@ -12,6 +13,7 @@ import {
   Pass,
   PointCloudStylingPipelineStage,
   PointCloudShading,
+  RuntimeError,
   ShaderBuilder,
   _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
@@ -28,6 +30,23 @@ describe(
         {
           semantic: VertexAttributeSemantic.POSITION,
           min: new Cartesian3(0, 0, 0),
+          max: new Cartesian3(1, 1, 1),
+          count: 64,
+        },
+      ],
+    };
+
+    const mockPrimitiveWithNormals = {
+      attributes: [
+        {
+          semantic: VertexAttributeSemantic.POSITION,
+          min: new Cartesian3(0, 0, 0),
+          max: new Cartesian3(1, 1, 1),
+          count: 64,
+        },
+        {
+          semantic: VertexAttributeSemantic.NORMAL,
+          min: new Cartesian3(-1, -1, -1),
           max: new Cartesian3(1, 1, 1),
           count: 64,
         },
@@ -66,7 +85,10 @@ describe(
     }
 
     function mockPntsRenderResources(options) {
-      const pointCloudShading = options.pointCloudShading;
+      const pointCloudShading = defaultValue(
+        options.pointCloudShading,
+        new PointCloudShading()
+      );
       const attenuation = defined(pointCloudShading)
         ? pointCloudShading.attenuation
         : false;
@@ -79,6 +101,9 @@ describe(
         style: options.style,
         pointCloudShading: pointCloudShading,
         _attenuation: attenuation,
+        structuralMetadata: options.structuralMetadata,
+        featureTableId: options.featureTableId,
+        featureTables: options.featureTables,
       };
 
       return {
@@ -89,6 +114,13 @@ describe(
         alphaOptions: {},
       };
     }
+
+    const functionParameterList =
+      "(" +
+      "ProcessedAttributes attributes, " +
+      "Metadata metadata, " +
+      "float czm_builtinTime" +
+      ")";
 
     beforeAll(function () {
       scene = createScene();
@@ -172,7 +204,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "vec4 getColorFromStyle(ProcessedAttribute attributes)"
+        `vec4 getColorFromStyle${functionParameterList}`
       );
     });
 
@@ -219,7 +251,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "vec4 getColorFromStyle(ProcessedAttribute attributes)"
+        `vec4 getColorFromStyle${functionParameterList}`
       );
 
       expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
@@ -263,14 +295,14 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "float getPointSizeFromStyle(ProcessedAttribute attributes)"
+        `float getPointSizeFromStyle${functionParameterList}`
       );
     });
 
-    it("applies point size style in shader", function () {
+    it("applies show style in shader", function () {
       const renderResources = mockPntsRenderResources({
         style: new Cesium3DTileStyle({
-          pointSize: 5.0,
+          show: false,
         }),
         content: {
           tile: {
@@ -291,7 +323,7 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-        "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+        "HAS_POINT_CLOUD_SHOW_STYLE",
         "COMPUTE_POSITION_WC_STYLE",
       ]);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
@@ -304,8 +336,323 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "float getPointSizeFromStyle(ProcessedAttribute attributes)"
+        `bool getShowFromStyle${functionParameterList}`
       );
+    });
+
+    it("substitutes position name in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          show: "${POSITION}[0] > 0.5",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_SHOW_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `bool getShowFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "attributes.positionMC"
+      );
+    });
+
+    it("substitutes absolute position name in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(${POSITION_ABSOLUTE} / 100000.0, 1.0)",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `vec4 getColorFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "v_positionWC"
+      );
+    });
+
+    it("substitutes normal name in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(${NORMAL}, 1.0)",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitiveWithNormals,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `vec4 getColorFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "attributes.normalMC"
+      );
+    });
+
+    it("substitutes color name in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(${COLOR}[0], 0.0, 1.0, 1.0)",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `vec4 getColorFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "attributes.color_0"
+      );
+    });
+
+    it("throws if style uses normals but primitive has none", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(${NORMAL}, 1.0)",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+      });
+
+      expect(function () {
+        PointCloudStylingPipelineStage.process(
+          renderResources,
+          mockPrimitive,
+          scene.frameState
+        );
+      }).toThrowError(RuntimeError);
+    });
+
+    it("substitutes metadata name in shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(${temperature}, 0.0, 0.0, 1.0)",
+          show: "${id} > 5",
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+        structuralMetadata: {
+          propertyAttributes: [
+            {
+              properties: { temperature: {}, id: {} },
+            },
+          ],
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "HAS_POINT_CLOUD_SHOW_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `bool getShowFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        `vec4 getColorFromStyle${functionParameterList}`
+      );
+
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "metadata.temperature"
+      );
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
+        "metadata.id"
+      );
+    });
+
+    it("propogates tileset time to the shader", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          color: "vec4(fract(${tiles3d_tileset_time}), 0.0, 0.0, 1.0)",
+          pointSize: 5.0,
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+            timeSinceLoad: 5.0,
+          },
+        },
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_COLOR_STYLE",
+        "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
+        "COMPUTE_POSITION_WC_STYLE",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudParameters;",
+      ]);
+
+      const parameters = uniformMap.model_pointCloudParameters();
+      expect(parameters.w).toBe(5.0);
+    });
+
+    it("does not apply style if model has feature table", function () {
+      const renderResources = mockPntsRenderResources({
+        style: new Cesium3DTileStyle({
+          show: false,
+        }),
+        content: {
+          tile: {
+            refine: Cesium3DTileRefine.ADD,
+          },
+          tileset: {
+            maximumScreenSpaceError: 16,
+          },
+        },
+        featureTableId: 0,
+        featureTables: [
+          {
+            featuresLength: 1,
+          },
+        ],
+      });
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudParameters;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
+
+      // No additional functions from the style should have been added.
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersPointCloudStylingStageVS,
+      ]);
     });
 
     it("adds attenuation define to the shader", function () {

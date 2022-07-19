@@ -62,13 +62,27 @@ PointCloudStylingPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const structuralMetadata = model.structuralMetadata;
-
   const style = model.style;
-  if (defined(style)) {
+
+  // Point cloud styling will only be appleid on the GPU if
+  // there is no batch table. If a batch table exists, then
+  //  - the property attribute will not be defined
+  //  - the model will be using a feature table
+
+  const structuralMetadata = model.structuralMetadata;
+  const propertyAttributes = defined(structuralMetadata)
+    ? structuralMetadata.propertyAttributes
+    : undefined;
+
+  const hasFeatureTable =
+    defined(model.featureTableId) &&
+    model.featureTables[model.featureTableId].featuresLength > 0;
+
+  const hasBatchTable = !defined(propertyAttributes) && hasFeatureTable;
+
+  if (defined(style) && !hasBatchTable) {
     const variableSubstitutionMap = getVariableSubstitutionMap(
-      primitive,
-      structuralMetadata
+      propertyAttributes
     );
     const shaderFunctionInfo = getStyleShaderFunctionInfo(
       style,
@@ -241,11 +255,8 @@ const builtinVariableSubstitutionMap = {
   NORMAL: "attributes.normalMC",
 };
 
-function getVariableSubstitutionMap(primitive, structuralMetadata) {
+function getVariableSubstitutionMap(propertyAttributes) {
   const variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
-  const propertyAttributes = defined(structuralMetadata)
-    ? structuralMetadata.propertyAttributes
-    : undefined;
 
   if (!defined(propertyAttributes)) {
     return variableSubstitutionMap;
