@@ -139,7 +139,7 @@ Here's the full set of scripts and what they do.
     - `--removePragmas` - Optimizes the output by removing debugging code that validates function input and throws `DeveloperError`s. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
-  - `minify` - Bundles bundles the source modules, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>), to produce an all-in-one files in the `Build/Cesium` directory.
+  - `minify` - Bundles the source modules and [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) to produce an all-in-one files in the `Build/Cesium` directory.
   - `combineRelease` - Bundles plus removes debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
   - `minifyRelease` - Bundles, minifies, and removes debugging code.
   - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.

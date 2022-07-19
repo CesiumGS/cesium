@@ -2,6 +2,7 @@
 "use strict";
 
 const fs = require("fs");
+const { readFile } = require("fs/promises");
 const path = require("path");
 const os = require("os");
 const child_process = require("child_process");
@@ -129,7 +130,6 @@ const pragmas = {
 const stripPragmaPlugin = {
   name: "strip-pragmas",
   setup: (build) => {
-    const readFile = Promise.promisify(fs.readFile);
     build.onLoad({ filter: /\.js$/ }, async (args) => {
       let source = await readFile(args.path, "utf8");
 
@@ -318,7 +318,7 @@ async function buildWorkers(options) {
         return bundle.write({
           dir: path.join(options.path, "Workers"),
           format: "amd",
-          // Rollup cannot generate a sourcemap
+          // Rollup cannot generate a sourcemap when pragmas are removed
           sourcemap: options.sourcemap && !options.removePragmas,
           banner: copyrightHeader,
         });
