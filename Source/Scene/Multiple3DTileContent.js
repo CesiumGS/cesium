@@ -42,6 +42,7 @@ export default function Multiple3DTileContent(
   this._tile = tile;
   this._tilesetResource = tilesetResource;
   this._contents = [];
+  this._contentsCreated = false;
 
   // An older version of 3DTILES_multiple_contents used "content" instead of "contents"
   const contentHeaders = defined(contentsJson.contents)
@@ -232,8 +233,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    */
   readyPromise: {
     get: function () {
-      // The contents haven't been created yet, short-circuit
-      if (this._contents.length < this._innerContentHeaders.length) {
+      // The contents haven't been created yet, short-circuit. The tile
+      // will handle this as a special case
+      if (!this._contentsCreated) {
         return undefined;
       }
 
@@ -521,13 +523,16 @@ function createInnerContents(multipleContents) {
     const contents = arrayBuffers.map(function (arrayBuffer, i) {
       if (!defined(arrayBuffer)) {
         // Content was not fetched. The error was handled in
-        // the fetch promise
+        // the fetch promise. Return undefined to indicate partial failure.
         return undefined;
       }
 
       return createInnerContent(multipleContents, arrayBuffer, i);
     });
 
+    // Even if we had a partial success, mark that we finished creating
+    // contents
+    multipleContents._contentsCreated = true;
     multipleContents._contents = contents.filter(defined);
   });
 }

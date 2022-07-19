@@ -5669,7 +5669,7 @@ describe(
 
             tileset.root.contentReadyToProcessPromise
               .then(function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfAttemptedRequests).toBe(2);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(1);
                 expect(statistics.numberOfTilesWithContentReady).toBe(0);
@@ -5976,7 +5976,7 @@ describe(
 
           tileset.root.contentReadyToProcessPromise
             .then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
+              expect(statistics.numberOfAttemptedRequests).toBe(2);
               expect(statistics.numberOfPendingRequests).toBe(0);
               expect(statistics.numberOfTilesProcessing).toBe(1);
               expect(statistics.numberOfTilesWithContentReady).toBe(0);
