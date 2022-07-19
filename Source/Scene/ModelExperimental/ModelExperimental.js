@@ -2090,7 +2090,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     clampedModelMatrix[13] = clampedPosition.y;
     clampedModelMatrix[14] = clampedPosition.z;
 
-    model._heightChanged = true;
+    model._heightDirty = true;
   };
 }
 
