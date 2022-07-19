@@ -62,10 +62,18 @@ PointCloudStylingPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
+  const structuralMetadata = model.structuralMetadata;
 
   const style = model.style;
   if (defined(style)) {
-    const shaderFunctionInfo = getStyleShaderFunctionInfo(style);
+    const variableSubstitutionMap = getVariableSubstitutionMap(
+      primitive,
+      structuralMetadata
+    );
+    const shaderFunctionInfo = getStyleShaderFunctionInfo(
+      style,
+      variableSubstitutionMap
+    );
     addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
 
     const propertyNames = getPropertyNames(shaderFunctionInfo);
@@ -233,11 +241,43 @@ const builtinVariableSubstitutionMap = {
   NORMAL: "attributes.normalMC",
 };
 
-const parameterList = "ProcessedAttributes attributes";
-
-function getStyleShaderFunctionInfo(style) {
-  const info = scratchShaderFunctionInfo;
+function getVariableSubstitutionMap(primitive, structuralMetadata) {
   const variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
+  const propertyAttributes = defined(structuralMetadata)
+    ? structuralMetadata.propertyAttributes
+    : undefined;
+
+  if (!defined(propertyAttributes)) {
+    return variableSubstitutionMap;
+  }
+
+  for (let i = 0; i < propertyAttributes.length; i++) {
+    const propertyAttribute = propertyAttributes[i];
+    const properties = propertyAttribute.properties;
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const variableName = sanitizeGlslIdentifier(propertyId);
+        variableSubstitutionMap[variableName] = `metadata.${variableName}`;
+      }
+    }
+  }
+
+  return variableSubstitutionMap;
+}
+
+function sanitizeGlslIdentifier(identifier) {
+  // For use in the shader, the property ID must be a valid GLSL identifier,
+  // so replace invalid characters with _
+  return identifier.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
+}
+
+const parameterList =
+  "ProcessedAttributes attributes, " +
+  "Metadata metadata, " +
+  "float czm_builtinTime";
+
+function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
+  const info = scratchShaderFunctionInfo;
   const shaderState = {
     translucent: false,
   };

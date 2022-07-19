@@ -3905,7 +3905,7 @@ describe("Scene/Expression", function () {
   it("gets shader expression for tiles3d_tileset_time", function () {
     const expression = new Expression("${tiles3d_tileset_time}");
     const shaderExpression = expression.getShaderExpression({}, {});
-    const expected = "u_time";
+    const expected = "czm_builtinTime";
     expect(shaderExpression).toEqual(expected);
   });
 

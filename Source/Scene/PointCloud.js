@@ -960,7 +960,7 @@ function createShaders(pointCloud, frameState, style) {
     "uniform vec4 u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier; \n" +
     "uniform vec4 u_constantColor; \n" +
     "uniform vec4 u_highlightColor; \n";
-  vs += "float u_pointSize; \n" + "float u_time; \n";
+  vs += "float u_pointSize; \n" + "float czm_builtinTime; \n";
 
   if (attenuation) {
     vs += "float u_geometricError; \n" + "float u_depthMultiplier; \n";
@@ -1016,7 +1016,7 @@ function createShaders(pointCloud, frameState, style) {
     "void main() \n" +
     "{ \n" +
     "    u_pointSize = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.x; \n" +
-    "    u_time = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.y; \n";
+    "    czm_builtinTime = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.y; \n";
 
   if (attenuation) {
     vs +=

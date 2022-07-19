@@ -101,9 +101,9 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
 
-    #ifdef USE_CPU_STYLING
+    /*#ifdef USE_CPU_STYLING
     material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
-    #endif
+    #endif*/
 
     #ifdef HAS_OCCLUSION_TEXTURE
     vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;
