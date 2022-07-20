@@ -55,7 +55,7 @@
     "meshoptimizer": "^0.16.1",
     "nosleep.js": "^0.9.0",
     "pako": "^1.0.4",
-    "protobufjs": "6.7.0",
+    "protobufjs": "7.0.0",
     "rbush": "^3.0.1",
     "topojson-client": "^3.1.0",
     "tween.js": "^16.6.0",
