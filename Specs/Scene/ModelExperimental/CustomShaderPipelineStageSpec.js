@@ -690,7 +690,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
-      "COMPUTE_POSITION_WC",
+      "COMPUTE_POSITION_WC_CUSTOM_SHADER",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
 
@@ -959,7 +959,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "COMPUTE_POSITION_WC",
+      "COMPUTE_POSITION_WC_CUSTOM_SHADER",
     ]);
 
     expect(shaderBuilder._vertexShaderParts.structIds).toEqual([]);

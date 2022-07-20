@@ -103,7 +103,7 @@ CustomShaderPipelineStage.process = function (
   // the input to the fragment shader may include a low-precision ECEF position
   if (generatedCode.shouldComputePositionWC) {
     shaderBuilder.addDefine(
-      "COMPUTE_POSITION_WC",
+      "COMPUTE_POSITION_WC_CUSTOM_SHADER",
       undefined,
       ShaderDestination.BOTH
     );
