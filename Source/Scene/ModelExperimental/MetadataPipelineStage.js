@@ -92,15 +92,22 @@ MetadataPipelineStage.process = function (
 };
 
 function declareMetadataClassStructs(shaderBuilder) {
-  for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
+  const metadataTypes = MetadataPipelineStage.METADATA_TYPES;
+  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
+
+  for (let i = 0; i < metadataTypes.length; i++) {
+    const metadataType = metadataTypes[i];
+
     const structName = `${metadataType}MetadataClass`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;
     // Declare the struct in both vertex and fragment shaders
     shaderBuilder.addStruct(structIdVs, structName, ShaderDestination.VERTEX);
     shaderBuilder.addStruct(structIdFs, structName, ShaderDestination.FRAGMENT);
+
     // Add fields
-    for (const { shaderName } of MetadataPipelineStage.METADATACLASS_FIELDS) {
+    for (let j = 0; j < classFields.length; j++) {
+      const shaderName = classFields[j].shaderName;
       shaderBuilder.addStructField(structIdVs, metadataType, shaderName);
       shaderBuilder.addStructField(structIdFs, metadataType, shaderName);
     }
@@ -267,10 +274,10 @@ function addPropertyAttributeProperty(
   );
 
   // Add lines to set values in the metadataClass struct
-  for (const {
-    specName,
-    shaderName,
-  } of MetadataPipelineStage.METADATACLASS_FIELDS) {
+  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
+  for (let i = 0; i < classFields.length; i++) {
+    const { specName, shaderName } = classFields[i];
+
     const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
@@ -372,10 +379,10 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     [initializationLine]
   );
   // Add lines to set values in the metadataClass struct
-  for (const {
-    specName,
-    shaderName,
-  } of MetadataPipelineStage.METADATACLASS_FIELDS) {
+  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
+  for (let i = 0; i < classFields.length; i++) {
+    const { specName, shaderName } = classFields[i];
+
     const fieldValue = property.classProperty[specName];
     if (!defined(fieldValue)) {
       continue;
@@ -404,23 +411,18 @@ function addPropertyTextureUniform(
 }
 
 function addValueTransformUniforms(valueExpression, options) {
-  const {
-    metadataVariable,
-    renderResources: { shaderBuilder, uniformMap },
-    glslType,
-    shaderDestination,
-    offset,
-    scale,
-  } = options;
-
+  const metadataVariable = options.metadataVariable;
   const offsetUniformName = `u_${metadataVariable}_offset`;
   const scaleUniformName = `u_${metadataVariable}_scale`;
 
+  const { shaderBuilder, uniformMap } = options.renderResources;
+  const glslType = options.glslType;
+  const shaderDestination = options.shaderDestination;
   shaderBuilder.addUniform(glslType, offsetUniformName, shaderDestination);
   shaderBuilder.addUniform(glslType, scaleUniformName, shaderDestination);
 
-  uniformMap[offsetUniformName] = () => offset;
-  uniformMap[scaleUniformName] = () => scale;
+  uniformMap[offsetUniformName] = () => options.offset;
+  uniformMap[scaleUniformName] = () => options.scale;
 
   return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
