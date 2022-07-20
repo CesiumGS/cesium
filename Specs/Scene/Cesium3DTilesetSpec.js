@@ -1014,11 +1014,9 @@ describe(
 
       viewNothing();
 
-      // Disable ModelExperimental until ModelExperimentalStatistics
-      // are refactored to properly count batch textures.
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
-        enableModelExperimental: false,
-      }).then(function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
         const statistics = tileset._statistics;
 
         // No tiles loaded
@@ -1110,7 +1108,6 @@ describe(
       // * Two i3dm tiles with external glTF - shared resources
       // Expect to see some saving with memory usage since two of the tiles share resources
       // All tiles reference the same external texture but texture caching is not supported yet
-      // TODO : tweak test when #5051 is in
 
       const b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
       const i3dmGeometryMemory = 840;
