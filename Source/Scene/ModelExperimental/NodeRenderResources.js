@@ -75,7 +75,10 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    *
    * @private
    */
-  this.renderStateOptions = clone(modelRenderResources.renderStateOptions);
+  this.renderStateOptions = clone(
+    modelRenderResources.renderStateOptions,
+    true
+  );
 
   // Other properties.
   /**

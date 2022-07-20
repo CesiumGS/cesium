@@ -154,7 +154,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       LightingModel.UNLIT
     );
     expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
-      RenderState.getState(defaultRenderState)
+      defaultRenderState
     );
   });
 
@@ -186,7 +186,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       LightingModel.UNLIT
     );
     expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
-      RenderState.getState(defaultRenderState)
+      defaultRenderState
     );
   });
 
