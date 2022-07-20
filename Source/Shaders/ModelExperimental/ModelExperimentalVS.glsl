@@ -98,10 +98,10 @@ void main()
 
     // Compute the final position in each coordinate system needed.
     // This returns the value that will be assigned to gl_Position.
-    vec4 computedPosition = geometryStage(attributes, modelView, normal);    
+    vec4 positionClip = geometryStage(attributes, modelView, normal);    
 
     #ifdef HAS_SILHOUETTE
-    silhouetteStage(attributes);
+    silhouetteStage(attributes, positionClip);
     #endif
 
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
@@ -126,5 +126,5 @@ void main()
         gl_PointSize *= show;
     #endif
 
-    gl_Position = show * computedPosition;
+    gl_Position = show * positionClip;
 }
