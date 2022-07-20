@@ -1,10 +1,10 @@
 import {
-  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  Cesium3DTilesetStatistics,
   Ellipsoid,
   HeadingPitchRange,
   Implicit3DTileContent,
@@ -14,6 +14,7 @@ import {
   Matrix3,
   Matrix4,
   MetadataClass,
+  ModelExperimental3DTileContent,
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
@@ -34,6 +35,7 @@ describe(
 
     const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
+      statistics: new Cesium3DTilesetStatistics(),
     };
     let metadataSchema; // intentionally left undefined
 
@@ -147,6 +149,7 @@ describe(
 
     let mockPlaceholderTile;
     beforeEach(function () {
+      mockTileset.statistics.numberOfTilesTotal = 0;
       mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
         geometricError: 400,
         boundingVolume: {
@@ -182,6 +185,7 @@ describe(
         for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
         }
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -203,6 +207,7 @@ describe(
         for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
         }
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -301,6 +306,10 @@ describe(
 
         expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
         expect(getBoundingBoxArray(childTile)).toEqual(childBox);
+
+        const tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 2, 4, tiles);
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -497,7 +506,7 @@ describe(
         ];
         const templateUri = implicitTileset.subtreeUriTemplate;
         const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
+        let tiles = [];
         gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
         expect(expectedCoordinates.length).toEqual(tiles.length);
@@ -520,6 +529,10 @@ describe(
           expect(placeholderTile.implicitTileset).toBeDefined();
           expect(placeholderTile.implicitCoordinates).toBeDefined();
         }
+
+        tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -931,15 +944,13 @@ describe(
       it("a single content is transcoded as a regular tile", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsUrl
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
+            ModelExperimental3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
@@ -951,9 +962,7 @@ describe(
       it("multiple contents are transcoded to a tile", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsUrl
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
           for (let i = 0; i < childTiles.length; i++) {
@@ -979,15 +988,13 @@ describe(
       it("a single content is transcoded as a regular tile (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
+            ModelExperimental3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
@@ -999,15 +1006,13 @@ describe(
       it("a single content is transcoded as a regular tile (legacy with 'content')", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyWithContentUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsLegacyWithContentUrl
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
+            ModelExperimental3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
@@ -1019,9 +1024,7 @@ describe(
       it("multiple contents are transcoded to a tile (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
           for (let i = 0; i < childTiles.length; i++) {
@@ -1038,9 +1041,7 @@ describe(
       it("multiple contents are transcoded to a tile (legacy with 'content')", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyWithContentUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsLegacyWithContentUrl
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
           for (let i = 0; i < childTiles.length; i++) {
@@ -1085,9 +1086,7 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           // the placeholder tile does not have any extensions.
           const placeholderTile = tileset.root;
@@ -1289,9 +1288,7 @@ describe(
       it("multiple content metadata views get transcoded correctly", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsMetadataUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsMetadataUrl
         ).then(function (tileset) {
           const expectedHeights = [10, 20, 30, 40, 50];
           const expectedColors = [
@@ -1777,9 +1774,7 @@ describe(
       it("multiple content metadata views get transcoded correctly (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsMetadataLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          implicitMultipleContentsMetadataLegacyUrl
         ).then(function (tileset) {
           const expectedHeights = [10, 20, 30, 40, 50];
           const expectedColors = [
