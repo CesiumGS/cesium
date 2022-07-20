@@ -985,8 +985,7 @@ describe(
       options.url = pointCloudUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
 
-      // In ModelExperimental, points are also counted as features.
-      return checkPointAndFeatureCounts(tileset, 1000, 1000, 0);
+      return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
     it("verify triangle statistics", function () {
@@ -2040,11 +2039,11 @@ describe(
       });
     });
 
-    function checkDebugColorizeTiles(url, enableModelExperimental) {
+    function checkDebugColorizeTiles(url) {
       CesiumMath.setRandomNumberSeed(0);
-      return Cesium3DTilesTester.loadTileset(scene, url, {
-        enableModelExperimental: enableModelExperimental,
-      }).then(function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
         // Get initial color
         let color;
         Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
@@ -2089,11 +2088,7 @@ describe(
 
     it("debugColorizeTiles for pnts without batch table", function () {
       viewPointCloud();
-
-      // This unit test fails for ModelExperimental because points are counted
-      // as features, which interferes with how debug color is applied.
-      const enableModelExperimental = false;
-      return checkDebugColorizeTiles(pointCloudUrl, enableModelExperimental);
+      return checkDebugColorizeTiles(pointCloudUrl);
     });
 
     it("debugColorizeTiles for glTF", function () {

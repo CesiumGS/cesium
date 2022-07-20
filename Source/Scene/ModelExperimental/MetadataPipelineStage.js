@@ -146,7 +146,9 @@ function addPropertyAttributeProperty(
   propertyId,
   property
 ) {
-  const metadataVariable = sanitizeGlslIdentifier(propertyId);
+  const metadataVariable = ModelExperimentalUtility.sanitizeGlslIdentifier(
+    propertyId
+  );
   const attributeVariable = attributeInfo.variableName;
 
   // in WebGL 1, attributes must have floating point components, so it's safe
@@ -235,7 +237,9 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     );
   }
 
-  const metadataVariable = sanitizeGlslIdentifier(propertyId);
+  const metadataVariable = ModelExperimentalUtility.sanitizeGlslIdentifier(
+    propertyId
+  );
   const glslType = property.getGlslType();
 
   const shaderBuilder = renderResources.shaderBuilder;
@@ -314,12 +318,6 @@ function addValueTransformUniforms(valueExpression, options) {
   };
 
   return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
-}
-
-function sanitizeGlslIdentifier(identifier) {
-  // for use in the shader, the property ID must be a valid GLSL identifier,
-  // so replace invalid characters with _
-  return identifier.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
 }
 
 export default MetadataPipelineStage;
