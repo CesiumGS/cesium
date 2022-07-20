@@ -219,10 +219,10 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface with one slight
-   * difference: <code>Multiple3DTileContent</code> sometimes returns undefined
-   * if the inner contents have not yet been created. This is handled as a
-   * special case in {@link Cesium3DTile}.
+   * Part of the {@link Cesium3DTileContent} interface. This behaves
+   * differently for <code>Multiple3DTileContent</code>: it returns
+   * undefined if the inner contents have not yet been created. This
+   * is handled specially in {@link Cesium3DTile}.
    *
    * @memberof Multiple3DTileContent.prototype
    *
