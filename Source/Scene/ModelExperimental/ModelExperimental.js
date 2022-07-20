@@ -2552,15 +2552,13 @@ ModelExperimental.prototype.applyStyle = function (style) {
     // a batch table. That is, CPU styling will not be applied if
     // - points have no metadata at all, or
     // - points have metadata stored as a property attribute
-    if (!hasFeatureTable) {
-      return;
-    }
-
     const propertyAttributes = defined(this.structuralMetadata)
       ? this.structuralMetadata.propertyAttributes
       : undefined;
+    const hasPropertyAttributes =
+      defined(propertyAttributes) && defined(propertyAttributes[0]);
 
-    if (defined(propertyAttributes) && defined(propertyAttributes[0])) {
+    if (!hasFeatureTable || hasPropertyAttributes) {
       return;
     }
   }

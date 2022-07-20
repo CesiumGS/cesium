@@ -119,7 +119,7 @@ describe(
       "(" +
       "ProcessedAttributes attributes, " +
       "Metadata metadata, " +
-      "float czm_builtinTime" +
+      "float tiles3d_tileset_time" +
       ")";
 
     beforeAll(function () {

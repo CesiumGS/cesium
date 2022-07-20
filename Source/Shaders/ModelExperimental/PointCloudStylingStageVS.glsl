@@ -10,22 +10,22 @@ float getPointSizeFromAttenuation(vec3 positionEC) {
 
 #ifdef HAS_POINT_CLOUD_SHOW_STYLE
 float pointCloudShowStylingStage(in ProcessedAttributes attributes, in Metadata metadata) {
-  float czm_builtinTime = model_pointCloudParameters.w;
-  return float(getShowFromStyle(attributes, metadata, czm_builtinTime));
+  float tiles3d_tileset_time = model_pointCloudParameters.w;
+  return float(getShowFromStyle(attributes, metadata, tiles3d_tileset_time));
 }
 #endif
 
 #ifdef HAS_POINT_CLOUD_COLOR_STYLE
 vec4 pointCloudColorStylingStage(in ProcessedAttributes attributes, in Metadata metadata) {
-  float czm_builtinTime = model_pointCloudParameters.w;
-  return getColorFromStyle(attributes, metadata, czm_builtinTime);
+  float tiles3d_tileset_time = model_pointCloudParameters.w;
+  return getColorFromStyle(attributes, metadata, tiles3d_tileset_time);
 }
 #endif
 
 #ifdef HAS_POINT_CLOUD_POINT_SIZE_STYLE
 float pointCloudPointSizeStylingStage(in ProcessedAttributes attributes, in Metadata metadata) {
-  float czm_builtinTime = model_pointCloudParameters.w;
-  return float(getPointSizeFromStyle(attributes, metadata, czm_builtinTime));
+  float tiles3d_tileset_time = model_pointCloudParameters.w;
+  return float(getPointSizeFromStyle(attributes, metadata, tiles3d_tileset_time));
 }
 #elif defined(HAS_POINT_CLOUD_ATTENUATION)
 float pointCloudPointSizeStylingStage(in ProcessedAttributes attributes, in Metadata metadata) {

@@ -266,26 +266,20 @@ function getVariableSubstitutionMap(propertyAttributes) {
     const propertyAttribute = propertyAttributes[i];
     const properties = propertyAttribute.properties;
     for (const propertyId in properties) {
+      // This will have already been sanitized for GLSL by
+      // the point cloud loader.
       if (properties.hasOwnProperty(propertyId)) {
-        const variableName = sanitizeGlslIdentifier(propertyId);
-        variableSubstitutionMap[variableName] = `metadata.${variableName}`;
+        variableSubstitutionMap[propertyId] = `metadata.${propertyId}`;
       }
     }
   }
 
   return variableSubstitutionMap;
 }
-
-function sanitizeGlslIdentifier(identifier) {
-  // For use in the shader, the property ID must be a valid GLSL identifier,
-  // so replace invalid characters with _
-  return identifier.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
-}
-
 const parameterList =
   "ProcessedAttributes attributes, " +
   "Metadata metadata, " +
-  "float czm_builtinTime";
+  "float tiles3d_tileset_time";
 
 function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
   const info = scratchShaderFunctionInfo;

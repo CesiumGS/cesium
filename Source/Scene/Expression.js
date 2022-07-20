@@ -2160,7 +2160,7 @@ Node.prototype.getShaderExpression = function (
       return Expression.NULL_SENTINEL;
     case ExpressionNodeType.BUILTIN_VARIABLE:
       if (value === "tiles3d_tileset_time") {
-        return "czm_builtinTime";
+        return value;
       }
   }
 };
