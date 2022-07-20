@@ -1,5 +1,4 @@
 import {
-  combine,
   Cartesian2,
   GltfLoader,
   MetadataPipelineStage,
@@ -52,19 +51,11 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function getOptions(gltfPath, options) {
-      const resource = new Resource({
-        url: gltfPath,
+    function loadGltf(gltfPath) {
+      const gltfLoader = new GltfLoader({
+        gltfResource: new Resource({ url: gltfPath }),
+        incrementallyLoadTextures: false,
       });
-
-      return combine(options, {
-        gltfResource: resource,
-        incrementallyLoadTextures: false, // Default to false if not supplied
-      });
-    }
-
-    function loadGltf(gltfPath, options) {
-      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
