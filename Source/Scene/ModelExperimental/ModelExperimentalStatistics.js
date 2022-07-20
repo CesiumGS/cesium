@@ -72,6 +72,8 @@ export default function ModelExperimentalStatistics() {
 Object.defineProperties(ModelExperimentalStatistics.prototype, {
   /**
    * Total size of the batch textures used for picking and styling.
+   * Batch textures are created asynchronously, so this iterates
+   * over the textures to ensure their memory values are accurate.
    *
    * @memberof ModelExperimentalStatistics.prototype
    *

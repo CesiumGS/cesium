@@ -1109,7 +1109,7 @@ describe(
       // * Two i3dm tiles with external glTF - shared resources
       // Expect to see some saving with memory usage since two of the tiles share resources
       // All tiles reference the same external texture but texture caching is not supported yet
-      // TODO : tweak test when #5051 is in
+
       const b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
       const i3dmGeometryMemory = 840;
       // Texture is 128x128 RGBA bytes, not mipmapped
