@@ -12,7 +12,7 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
         positionMC *= 0.0;
         #endif
     }
-    // If the current pass is not the transluceny pass and the style is not translucent, don't render the feature.
+    // If the current pass is not the translucent pass and the style is not translucent, don't render the feature.
     else if (czm_pass != czm_passTranslucent && styleTranslucent)
     {
         positionMC *= 0.0;

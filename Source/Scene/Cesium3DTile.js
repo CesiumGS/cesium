@@ -1105,8 +1105,12 @@ function requestMultipleContents(tile) {
   tile._contentState = Cesium3DTileContentState.LOADING;
   const contentReadyToProcessPromise = multipleContents.contentsFetchedPromise.then(
     function () {
-      if (tile._contentState !== Cesium3DTileContentState.LOADING) {
-        // tile was canceled, short circuit.
+      if (
+        tile._contentState !== Cesium3DTileContentState.LOADING ||
+        !defined(multipleContents.readyPromise)
+      ) {
+        // The tile or one of the inner content requests was canceled,
+        // short circuit.
         return;
       }
 

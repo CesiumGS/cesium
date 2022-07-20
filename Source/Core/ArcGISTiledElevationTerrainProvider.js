@@ -185,7 +185,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
     })
     .catch(function (error) {
       const message = `An error occurred while accessing ${that._resource.url}.`;
-      TileProviderError.handleError(undefined, that, that._errorEvent, message);
+      TileProviderError.reportError(undefined, that, that._errorEvent, message);
       return Promise.reject(error);
     });
 

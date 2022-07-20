@@ -113,6 +113,17 @@ describe(
       expect(modelTextureReader.channels).toBe("rgb");
     });
 
+    it("creates property texture property with default channels", function () {
+      const property = makeProperty({
+        property: {
+          type: "SCALAR",
+          componentType: "UINT8",
+          normalized: true,
+        },
+      });
+      expect(property.textureReader.channels).toBe("r");
+    });
+
     it("constructor throws without property", function () {
       expect(function () {
         return new PropertyTextureProperty({

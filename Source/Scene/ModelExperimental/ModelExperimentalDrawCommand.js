@@ -16,7 +16,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
- * A wrapper around the draw commands used to render a {@link ModelExperimentalPrimitive}.
+ * A wrapper around the draw commands used to render a {@link ModelExperimentalRuntimePrimitive}.
  * This manages the derived commands and returns only the necessary commands depending
  * on the given frame state.
  *
@@ -46,8 +46,8 @@ function ModelExperimentalDrawCommand(options) {
 
   this._command = command;
 
-  // Only derived if the original command wasn't translucent and the model's style
-  // has translucency.
+  // Only derived if the original command wasn't translucent and
+  // the model's style has translucency.
   this._translucentCommand = undefined;
 
   this._modelMatrix = Matrix4.clone(command.modelMatrix, new Matrix4());
@@ -64,8 +64,22 @@ function ModelExperimentalDrawCommand(options) {
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
   this._useSilhouetteCommands = useSilhouetteCommands;
 
+  // The command list contains one or more of the following commands:
+  // - the original draw command
+  // - the translucent derived command
+  //
+  // When silhouettes are enabled, these are replaced by derived commands
+  // that render the primitive to the stencil buffer.
   this._commandList = [];
+
+  // The above commands are duplicated for rendering over the IDL in 2D.
   this._commandList2D = [];
+
+  // These commands are only derived if the model uses silhouettes.
+  // They are stored separately so that the entire model can be drawn
+  // before the silhouette is rendered.
+  this._silhouetteCommandList = [];
+  this._silhouetteCommandList2D = [];
 
   this._runtimePrimitive = renderResources.runtimePrimitive;
   this._model = renderResources.model;
@@ -121,7 +135,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    * The runtime primitive that the draw command belongs to.
    *
    * @memberof ModelExperimentalDrawCommand.prototype
-   * @type {ModelExperimentalPrimitive}
+   * @type {ModelExperimentalRuntimePrimitive}
    *
    * @readonly
    * @private
@@ -334,21 +348,17 @@ function buildCommandList(drawCommand) {
         command,
         model
       );
-      silhouetteCommands.push(silhouetteModelCommand);
+
+      // Replace the original command with the derived one.
+      commandList[i] = silhouetteModelCommand;
+
+      // Store the silhouette-pass commands separately.
       silhouetteCommands.push(silhouetteColorCommand);
     }
 
-    // Replace the original command list.
-    commandList.length = 0;
-    commandList.push.apply(commandList, silhouetteCommands);
+    const silhouetteCommandList = drawCommand._silhouetteCommandList;
+    silhouetteCommandList.push.apply(silhouetteCommandList, silhouetteCommands);
   }
-}
-
-function getAllCommands(drawCommand) {
-  const commandList = [];
-  commandList.push.apply(commandList, drawCommand._commandList);
-  commandList.push.apply(commandList, drawCommand._commandList2D);
-  return commandList;
 }
 
 const scratchMatrix2D = new Matrix4();
@@ -368,12 +378,31 @@ function updateModelMatrix(drawCommand) {
       command.boundingVolume
     );
   }
+
+  if (!drawCommand._useSilhouetteCommands) {
+    return;
+  }
+
+  const silhouetteCommandList = drawCommand._silhouetteCommandList;
+  for (let i = 0; i < length; i++) {
+    const silhouetteCommand = silhouetteCommandList[i];
+    silhouetteCommand.modelMatrix = Matrix4.clone(
+      modelMatrix,
+      silhouetteCommand.modelMatrix
+    );
+    silhouetteCommand.boundingVolume = BoundingSphere.transform(
+      boundingSphere,
+      silhouetteCommand.modelMatrix,
+      silhouetteCommand.boundingVolume
+    );
+  }
 }
 
 function updateModelMatrix2D(drawCommand, frameState) {
   const modelMatrix = drawCommand.modelMatrix;
   const boundingSphere = drawCommand.runtimePrimitive.boundingSphere;
   const commandList2D = drawCommand._commandList2D;
+
   const length2D = commandList2D.length;
   if (length2D === 0) {
     return;
@@ -398,6 +427,24 @@ function updateModelMatrix2D(drawCommand, frameState) {
       command.boundingVolume
     );
   }
+
+  if (!drawCommand._useSilhouetteCommands) {
+    return;
+  }
+
+  const silhouetteCommandList2D = drawCommand._silhouetteCommandList2D;
+  for (let i = 0; i < length2D; i++) {
+    const silhouetteCommand = silhouetteCommandList2D[i];
+    silhouetteCommand.modelMatrix = Matrix4.clone(
+      modelMatrix2D,
+      silhouetteCommand.modelMatrix
+    );
+    silhouetteCommand.boundingVolume = BoundingSphere.transform(
+      boundingSphere,
+      silhouetteCommand.modelMatrix,
+      silhouetteCommand.boundingVolume
+    );
+  }
 }
 
 function updateShadows(drawCommand) {
@@ -405,7 +452,7 @@ function updateShadows(drawCommand) {
   const castShadows = ShadowMode.castShadows(shadows);
   const receiveShadows = ShadowMode.receiveShadows(shadows);
 
-  const commandList = getAllCommands(drawCommand);
+  const commandList = drawCommand.getAllCommands();
   const commandLength = commandList.length;
   for (let i = 0; i < commandLength; i++) {
     const command = commandList[i];
@@ -430,7 +477,7 @@ function updateBackFaceCulling(drawCommand) {
   backFaceCulling =
     backFaceCulling && !doubleSided && !translucent && !useSilhouetteCommands;
 
-  const commandList = getAllCommands(drawCommand);
+  const commandList = drawCommand.getAllCommands();
   const commandLength = commandList.length;
   for (let i = 0; i < commandLength; i++) {
     const command = commandList[i];
@@ -449,7 +496,7 @@ function updateBackFaceCulling(drawCommand) {
 
 function updateCullFace(drawCommand) {
   const cullFace = drawCommand.cullFace;
-  const commandList = getAllCommands(drawCommand);
+  const commandList = drawCommand.getAllCommands();
   const commandLength = commandList.length;
 
   for (let i = 0; i < commandLength; i++) {
@@ -463,7 +510,7 @@ function updateCullFace(drawCommand) {
 function updateShowBoundingVolume(drawCommand) {
   const debugShowBoundingVolume = drawCommand.debugShowBoundingVolume;
 
-  const commandList = getAllCommands(drawCommand);
+  const commandList = drawCommand.getAllCommands();
   const commandLength = commandList.length;
   for (let i = 0; i < commandLength; i++) {
     const command = commandList[i];
@@ -473,6 +520,7 @@ function updateShowBoundingVolume(drawCommand) {
 
 /**
  * Returns an array of the draw commands necessary to render the primitive.
+ * This does not include the draw commands that render its silhouette.
  *
  * @param {FrameState} frameState The frame state.
  *
@@ -493,6 +541,17 @@ ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
       commandList2D.push(command2D);
     }
 
+    // Derive 2D silhouette commands here to avoid duplicate
+    // computation in getSilhouetteCommands.
+    if (this._useSilhouetteCommands) {
+      const silhouetteCommands = this._silhouetteCommandList;
+      const silhouetteCommands2D = this._silhouetteCommandList2D;
+      for (let i = 0; i < length; i++) {
+        const silhouetteCommand2D = derive2DCommand(silhouetteCommands[i]);
+        silhouetteCommands2D.push(silhouetteCommand2D);
+      }
+    }
+
     this._modelMatrix2DDirty = true;
   }
 
@@ -507,6 +566,67 @@ ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
   if (use2D) {
     commands.push.apply(commands, commandList2D);
   }
+
+  return commands;
+};
+
+/**
+ * Returns an array of the draw commands necessary to render the silhouette.
+ * These should be added to the command list after the draw commands of all
+ * primitives in the model have been added. This way, the silhouette won't
+ * render on top of the model.
+ *
+ * This should only be called after getCommands() has been invoked for
+ * the ModelExperimentalDrawCommand this frame. Otherwise, the silhouette
+ * commands may not have been derived for 2D. The model matrix will also
+ * not have been updated for 2D commands.
+ *
+ * @param {FrameState} frameState The frame state.
+ *
+ * @returns {DrawCommand[]} The draw commands.
+ *
+ * @private
+ */
+ModelExperimentalDrawCommand.prototype.getSilhouetteCommands = function (
+  frameState
+) {
+  if (!this._useSilhouetteCommands) {
+    return [];
+  }
+
+  const commands = [];
+  const commandList = this._silhouetteCommandList;
+  const commandList2D = this._silhouetteCommandList2D;
+
+  commands.push.apply(commands, commandList);
+
+  // Assumes that 2D commands were already generated / updated
+  // in getCommands()
+  if (shouldUse2DCommands(this, frameState)) {
+    commands.push.apply(commands, commandList2D);
+  }
+
+  return commands;
+};
+
+/**
+ * Returns an array of all the draw commands currently managed by the
+ * ModelExperimentalDrawCommand. This only includes commands that are
+ * in a command list, so it may exclude the original draw command.
+ * This is used internally for updating all derived commands, and for
+ * testing.
+ *
+ * @returns {DrawCommand[]} The draw commands.
+ *
+ * @private
+ */
+ModelExperimentalDrawCommand.prototype.getAllCommands = function () {
+  const commands = [];
+
+  commands.push.apply(commands, this._commandList);
+  commands.push.apply(commands, this._commandList2D);
+  commands.push.apply(commands, this._silhouetteCommandList);
+  commands.push.apply(commands, this._silhouetteCommandList2D);
 
   return commands;
 };
@@ -549,20 +669,10 @@ function derive2DCommand(command) {
   return derivedCommand;
 }
 
-/**
- * Tracks how many silhouettes have been created. This value is used to
- * assign a reference number to the stencil.
- *
- * @type {Number}
- * @private
- */
-ModelExperimentalDrawCommand.silhouettesLength = 0;
-
 function deriveSilhouetteModelCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
-  const stencilReference =
-    ++ModelExperimentalDrawCommand.silhouettesLength % 255;
+  const stencilReference = model._silhouetteId % 255;
   const silhouetteModelCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState, true);
 
@@ -606,7 +716,7 @@ function deriveSilhouetteModelCommand(command, model) {
 function deriveSilhouetteColorCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
-  const stencilReference = ModelExperimentalDrawCommand.silhouettesLength % 255;
+  const stencilReference = model._silhouetteId % 255;
   const silhouetteColorCommand = DrawCommand.shallowClone(command);
   let renderState = clone(command.renderState, true);
   renderState.depthTest.enabled = true;

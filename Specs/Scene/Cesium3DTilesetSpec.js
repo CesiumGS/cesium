@@ -1,43 +1,46 @@
-import { Axis } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Credit } from "../../Source/Cesium.js";
-import { CullingVolume } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { findTileMetadata } from "../../Source/Cesium.js";
-import { findContentMetadata } from "../../Source/Cesium.js";
-import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { getJsonFromTypedArray } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { ResourceCache } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { Cesium3DTile } from "../../Source/Cesium.js";
-import { Cesium3DTileColorBlendMode } from "../../Source/Cesium.js";
-import { Cesium3DTileContentState } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { Cesium3DTilePassState } from "../../Source/Cesium.js";
-import { Cesium3DTileRefine } from "../../Source/Cesium.js";
-import { Cesium3DTileset } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { CullFace } from "../../Source/Cesium.js";
+import {
+  Axis,
+  Camera,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Cesium3DTile,
+  Cesium3DTileColorBlendMode,
+  Cesium3DTileContentState,
+  Cesium3DTilePass,
+  Cesium3DTilePassState,
+  Cesium3DTileRefine,
+  Cesium3DTileset,
+  Cesium3DTileStyle,
+  ClearCommand,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  Color,
+  combine,
+  ContextLimits,
+  Credit,
+  CullFace,
+  CullingVolume,
+  defer,
+  defined,
+  findTileMetadata,
+  findContentMetadata,
+  getAbsoluteUri,
+  getJsonFromTypedArray,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  PerspectiveFrustum,
+  PrimitiveType,
+  Ray,
+  RequestScheduler,
+  Resource,
+  ResourceCache,
+  Transforms,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
@@ -982,7 +985,8 @@ describe(
       options.url = pointCloudUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
 
-      return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
+      // In ModelExperimental, points are also counted as features.
+      return checkPointAndFeatureCounts(tileset, 1000, 1000, 0);
     });
 
     it("verify triangle statistics", function () {
@@ -1010,9 +1014,12 @@ describe(
       const tilesLength = 5;
 
       viewNothing();
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
+
+      // Disable ModelExperimental until ModelExperimentalStatistics
+      // are refactored to properly count batch textures.
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enableModelExperimental: false,
+      }).then(function (tileset) {
         const statistics = tileset._statistics;
 
         // No tiles loaded
@@ -1116,9 +1123,14 @@ describe(
         b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
       const expectedTextureMemory = texturesByteLength * 5;
 
+      // Disable ModelExperimental until ModelExperimentalStatistics
+      // are refactored to properly count shared resources.
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithExternalResourcesUrl
+        tilesetWithExternalResourcesUrl,
+        {
+          enableModelExperimental: false,
+        }
       ).then(function (tileset) {
         const statistics = tileset._statistics;
         expect(statistics.geometryByteLength).toBe(expectedGeometryMemory);
@@ -2028,11 +2040,11 @@ describe(
       });
     });
 
-    function checkDebugColorizeTiles(url) {
+    function checkDebugColorizeTiles(url, enableModelExperimental) {
       CesiumMath.setRandomNumberSeed(0);
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
+      return Cesium3DTilesTester.loadTileset(scene, url, {
+        enableModelExperimental: enableModelExperimental,
+      }).then(function (tileset) {
         // Get initial color
         let color;
         Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
@@ -2077,7 +2089,11 @@ describe(
 
     it("debugColorizeTiles for pnts without batch table", function () {
       viewPointCloud();
-      return checkDebugColorizeTiles(pointCloudUrl);
+
+      // This unit test fails for ModelExperimental because points are counted
+      // as features, which interferes with how debug color is applied.
+      const enableModelExperimental = false;
+      return checkDebugColorizeTiles(pointCloudUrl, enableModelExperimental);
     });
 
     it("debugColorizeTiles for glTF", function () {
@@ -3853,10 +3869,16 @@ describe(
     });
 
     it("creates duplicate backface commands", function () {
+      // Disable ModelExperimental here because ModelFeatureTable doesn't handle
+      // the creation of backface commands yet.
+      const options = combine(
+        { enableModelExperimental: false },
+        skipLevelOfDetailOptions
+      );
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,
-        skipLevelOfDetailOptions
+        options
       ).then(function (tileset) {
         const statistics = tileset._statistics;
         const root = tileset.root;
@@ -5647,7 +5669,7 @@ describe(
 
             tileset.root.contentReadyToProcessPromise
               .then(function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfAttemptedRequests).toBe(2);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(1);
                 expect(statistics.numberOfTilesWithContentReady).toBe(0);
@@ -5822,6 +5844,7 @@ describe(
           scene,
           implicitMultipleContentsUrl
         ).then(function (tileset) {
+          scene.renderForSpecs();
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
           expect(statistics.visited).toEqual(6);
@@ -5953,7 +5976,7 @@ describe(
 
           tileset.root.contentReadyToProcessPromise
             .then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
+              expect(statistics.numberOfAttemptedRequests).toBe(2);
               expect(statistics.numberOfPendingRequests).toBe(0);
               expect(statistics.numberOfTilesProcessing).toBe(1);
               expect(statistics.numberOfTilesWithContentReady).toBe(0);
@@ -7102,7 +7125,9 @@ describe(
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataLegacyUrl
+          tilesetWithImplicitMultipleContentsMetadataLegacyUrl,
+
+          { enableModelExperimental: false }
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 

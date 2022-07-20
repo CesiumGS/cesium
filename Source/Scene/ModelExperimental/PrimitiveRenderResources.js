@@ -14,7 +14,7 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * at the primitive level. Again, properties are inherited from the parent.
  *
  * @param {NodeRenderResources} nodeRenderResources The node resources to inherit from
- * @param {ModelExperimentalPrimitive} runtimePrimitive The primitive.
+ * @param {ModelExperimentalRuntimePrimitive} runtimePrimitive The primitive.
  *
  * @private
  */
@@ -40,7 +40,7 @@ export default function PrimitiveRenderResources(
   /**
    * A reference to the runtime node. Inherited from the node render resources.
    *
-   * @type {ModelExperimentalNode}
+   * @type {ModelExperimentalRuntimeNode}
    * @readonly
    *
    * @private
@@ -80,7 +80,7 @@ export default function PrimitiveRenderResources(
 
   /**
    * Whether or not this primitive has a property table for storing metadata.
-   * When present, picking and styling can use this
+   * When present, picking and styling can use this.
    *
    * @type {Boolean}
    * @default false
@@ -134,9 +134,9 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * A reference to the runtime primitive
+   * A reference to the runtime primitive.
    *
-   * @type {ModelExperimentalPrimitive}
+   * @type {ModelExperimentalRuntimePrimitive}
    * @readonly
    *
    * @private
@@ -169,7 +169,7 @@ export default function PrimitiveRenderResources(
         .count;
 
   /**
-   * The indices for this primitive
+   * The indices for this primitive.
    *
    * @type {ModelComponents.Indices}
    * @readonly
@@ -179,7 +179,7 @@ export default function PrimitiveRenderResources(
   this.indices = primitive.indices;
 
   /**
-   * Additional index buffer for wireframe mode (if enabled)
+   * Additional index buffer for wireframe mode (if enabled).
    *
    * @type {Buffer}
    * @readonly
@@ -189,7 +189,7 @@ export default function PrimitiveRenderResources(
   this.wireframeIndexBuffer = undefined;
 
   /**
-   * The primitive type such as TRIANGLES or POINTS
+   * The primitive type such as TRIANGLES or POINTS.
    *
    * @type {PrimitiveType}
    * @readonly

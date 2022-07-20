@@ -33,7 +33,15 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
     if (defined(error)) {
       message += `\n${error.message}`;
     }
-    return Promise.reject(new RuntimeError(message));
+
+    const runtimeError = new RuntimeError(message);
+    if (defined(error)) {
+      // the original call stack is often more useful than the new error's stack,
+      // so add the information here
+      runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
+    }
+
+    return Promise.reject(runtimeError);
   };
 };
 
@@ -62,7 +70,7 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
  *
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
- * @param {Number} setIndex The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
+ * @param {Number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
  * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  *
  * @private

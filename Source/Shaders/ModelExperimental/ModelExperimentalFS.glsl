@@ -73,6 +73,10 @@ void main()
     modelColorStage(material);
     #endif
 
+    #ifdef HAS_PRIMITIVE_OUTLINE
+    primitiveOutlineStage(material);
+    #endif
+
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
     #ifdef HAS_CLIPPING_PLANES

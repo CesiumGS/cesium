@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -43,7 +42,27 @@ function OctahedralProjectedCubeMap(url) {
 
   this._loading = false;
   this._ready = false;
-  this._readyPromise = defer();
+
+  const cubeMap = this;
+  this._readyPromise = new Promise((resolve, reject) => {
+    cubeMap._completeLoadFromCache = (cachedTexture) => {
+      cleanupResources(this);
+      this._texture = cachedTexture;
+      this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
+      this._ready = true;
+      resolve();
+      return;
+    };
+
+    cubeMap._failLoad = (error) => {
+      reject(error);
+    };
+
+    cubeMap._completeLoad = () => {
+      this._ready = true;
+      resolve();
+    };
+  });
 }
 
 Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
@@ -99,7 +118,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 });
@@ -277,14 +296,9 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   }
 
   if (!defined(this._texture) && !this._loading) {
-    const cachedTexture = context.textureCache.getTexture(this._url);
+    const cachedTexture = frameState.context.textureCache.getTexture(this._url);
     if (defined(cachedTexture)) {
-      cleanupResources(this);
-      this._texture = cachedTexture;
-      this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
-      this._ready = true;
-      this._readyPromise.resolve();
-      return;
+      this._completeLoadFromCache(cachedTexture);
     }
   }
 
@@ -297,10 +311,11 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
         that._loading = false;
       })
       .catch(function (e) {
-        that._readyPromise.reject(e);
+        that._failLoad(e);
       });
     this._loading = true;
   }
+
   if (!defined(this._cubeMapBuffers)) {
     return;
   }
@@ -402,8 +417,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   });
   frameState.commandList.push(atlasCommand);
 
-  this._ready = true;
-  this._readyPromise.resolve();
+  this._completeLoad();
 };
 
 /**

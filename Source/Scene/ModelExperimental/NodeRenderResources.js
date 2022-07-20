@@ -10,7 +10,7 @@ import clone from "../../Core/clone.js";
  * @constructor
  *
  * @param {ModelRenderResources} modelRenderResources The model resources to inherit
- * @param {ModelExperimentalNode} runtimeNode The in-memory representation of the scene graph node.
+ * @param {ModelExperimentalRuntimeNode} runtimeNode The in-memory representation of the scene graph node.
  *
  * @private
  */
@@ -81,7 +81,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   /**
    * A reference to the runtime node
    *
-   * @type {ModelExperimentalNode}
+   * @type {ModelExperimentalRuntimeNode}
    * @readonly
    *
    * @private

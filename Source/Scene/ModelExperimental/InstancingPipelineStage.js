@@ -519,16 +519,16 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
   // Translations get initialized to (0, 0, 0).
   const translationTypedArray = hasTranslation
-    ? translationAttribute.packedTypedArray
+    ? translationAttribute.typedArray
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   const rotationTypedArray = hasRotation
-    ? rotationAttribute.packedTypedArray
+    ? rotationAttribute.typedArray
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   let scaleTypedArray;
   if (hasScale) {
-    scaleTypedArray = scaleAttribute.packedTypedArray;
+    scaleTypedArray = scaleAttribute.typedArray;
   } else {
     scaleTypedArray = new Float32Array(count * 3);
     scaleTypedArray.fill(1);
@@ -586,7 +586,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
 function getInstanceTranslationsAsCartesian3s(translationAttribute, count) {
   const translations = new Array(count);
-  const translationTypedArray = translationAttribute.packedTypedArray;
+  const translationTypedArray = translationAttribute.typedArray;
 
   for (let i = 0; i < count; i++) {
     translations[i] = new Cartesian3(
@@ -692,7 +692,7 @@ function processTransformAttributes(
 
       if (!defined(buffer)) {
         buffer = createVertexBuffer(
-          translationAttribute.packedTypedArray,
+          translationAttribute.typedArray,
           frameState
         );
         renderResources.model._pipelineResources.push(buffer);
@@ -731,10 +731,7 @@ function processTransformAttributes(
       let byteStride = scaleAttribute.byteStride;
 
       if (!defined(buffer)) {
-        buffer = createVertexBuffer(
-          scaleAttribute.packedTypedArray,
-          frameState
-        );
+        buffer = createVertexBuffer(scaleAttribute.typedArray, frameState);
         renderResources.model._pipelineResources.push(buffer);
 
         byteOffset = 0;
@@ -949,7 +946,7 @@ function processFeatureIdAttributes(
 
     const vertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,
-      typedArray: attribute.packedTypedArray,
+      typedArray: attribute.typedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;

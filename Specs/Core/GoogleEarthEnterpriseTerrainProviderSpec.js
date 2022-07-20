@@ -347,12 +347,11 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         .then(function () {
           let promise;
           for (let i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-            promise = terrainProvider.requestTileGeometry(
-              i,
-              i,
-              i,
-              createRequest()
-            );
+            const request = new Request({
+              throttle: true,
+              throttleByServer: true,
+            });
+            promise = terrainProvider.requestTileGeometry(i, i, i, request);
             promises.push(promise);
           }
           RequestScheduler.update();

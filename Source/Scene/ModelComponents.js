@@ -34,6 +34,7 @@ function Quantization() {
    * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
    *
    * @type {Boolean}
+   * @private
    */
   this.octEncodedZXY = false;
 
@@ -248,7 +249,7 @@ function Attribute() {
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
-  this.packedTypedArray = undefined;
+  this.typedArray = undefined;
 
   /**
    * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
@@ -257,16 +258,6 @@ function Attribute() {
    * @private
    */
   this.buffer = undefined;
-
-  /**
-   * A typed array containing a CPU copy of the vertex buffer for further
-   * processing. Since GPU buffers may have padding, attribute values are
-   * accessed using byteOffset and byteStride.
-   *
-   * @type {Uint8Array}
-   * @private
-   */
-  this.typedArray = undefined;
 
   /**
    * The byte offset of elements in the buffer.
@@ -620,12 +611,21 @@ function Primitive() {
    * @private
    */
   this.propertyAttributeIds = [];
+
+  /**
+   * If the CESIUM_primitive_outline glTF extension is used, this property
+   * stores an additional attribute storing outline coordinates.
+   *
+   * @type {Attribute}
+   * @private
+   */
+  this.outlineCoordinates = undefined;
 }
 
 /**
  * Position and metadata information for instances of a node.
  *
- * @alias ModelComponents.Primitive
+ * @alias ModelComponents.Instances
  * @constructor
  *
  * @private

@@ -2,6 +2,7 @@
 "use strict";
 
 const fs = require("fs");
+const { readFile } = require("fs/promises");
 const path = require("path");
 const os = require("os");
 const child_process = require("child_process");
@@ -12,7 +13,6 @@ const request = require("request");
 
 const globby = require("globby");
 const gulpTap = require("gulp-tap");
-const gulpTerser = require("gulp-terser");
 const open = require("open");
 const rimraf = require("rimraf");
 const glslStripComments = require("glsl-strip-comments");
@@ -29,14 +29,15 @@ const Karma = require("karma");
 const yargs = require("yargs");
 const AWS = require("aws-sdk");
 const mime = require("mime");
+const cleanCSS = require("gulp-clean-css");
+const typescript = require("typescript");
+const esbuild = require("esbuild");
+const istanbul = require("istanbul-lib-instrument");
 const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
-const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 const rollupPluginTerser = require("rollup-plugin-terser");
 const rollupCommonjs = require("@rollup/plugin-commonjs");
 const rollupResolve = require("@rollup/plugin-node-resolve").default;
-const cleanCSS = require("gulp-clean-css");
-const typescript = require("typescript");
 
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -53,28 +54,12 @@ const travisDeployUrl =
 const taskName = process.argv[2];
 const noDevelopmentGallery =
   taskName === "release" || taskName === "makeZipFile";
-const minifyShaders =
-  taskName === "minify" ||
-  taskName === "minifyRelease" ||
-  taskName === "release" ||
-  taskName === "makeZipFile" ||
-  taskName === "buildApps";
-
 const verbose = yargs.argv.verbose;
 
 let concurrency = yargs.argv.concurrency;
 if (!concurrency) {
   concurrency = os.cpus().length;
 }
-
-// Work-around until all third party libraries use npm
-const filesToLeaveInThirdParty = [
-  "!Source/ThirdParty/Workers/basis_transcoder.js",
-  "!Source/ThirdParty/basis_transcoder.wasm",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/knockout*.js",
-];
-
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -86,20 +71,6 @@ const sourceFiles = [
   "!Source/ThirdParty/_*",
 ];
 
-const watchedFiles = [
-  "Source/**/*.js",
-  "!Source/Cesium.js",
-  "!Source/Build/**",
-  "!Source/Shaders/**/*.js",
-  "Source/Shaders/**/*.glsl",
-  "!Source/ThirdParty/Shaders/*.js",
-  "Source/ThirdParty/Shaders/*.glsl",
-  "!Source/Workers/**",
-  "Source/Workers/cesiumWorkerBootstrapper.js",
-  "Source/Workers/transferTypedArrayTest.js",
-  "!Specs/SpecList.js",
-];
-
 const filesToClean = [
   "Source/Cesium.js",
   "Source/Shaders/**/*.js",
@@ -107,6 +78,7 @@ const filesToClean = [
   "!Source/Workers/cesiumWorkerBootstrapper.js",
   "!Source/Workers/transferTypedArrayTest.js",
   "Source/ThirdParty/Shaders/*.js",
+  "Source/**/*.d.ts",
   "Specs/SpecList.js",
   "Specs/jasmine/**",
   "Apps/Sandcastle/jsHintOptions.js",
@@ -116,21 +88,180 @@ const filesToClean = [
   "cesium-*.tgz",
 ];
 
-const filesToConvertES6 = [
-  "Source/**/*.js",
-  "Specs/**/*.js",
-  "!Source/ThirdParty/**",
-  "!Source/Cesium.js",
-  "!Source/copyrightHeader.js",
-  "!Source/Shaders/**",
-  "!Source/Workers/cesiumWorkerBootstrapper.js",
-  "!Source/Workers/transferTypedArrayTest.js",
-  "!Specs/karma-main.js",
-  "!Specs/karma.conf.cjs",
-  "!Specs/spec-main.js",
-  "!Specs/SpecList.js",
-  "!Specs/TestWorkers/**",
+const workerSourceFiles = ["Source/WorkersES6/**"];
+const watchedSpecFiles = [
+  "Specs/**/*Spec.js",
+  "Specs/*.js",
+  "Specs/TestWorkers/*.js",
 ];
+const cssFiles = "Source/**/*.css";
+const shaderFiles = [
+  "Source/Shaders/**/*.glsl",
+  "Source/ThirdParty/Shaders/*.glsl",
+];
+
+let copyrightHeader = fs.readFileSync(
+  path.join("Source", "copyrightHeader.js"),
+  "utf8"
+);
+copyrightHeader = copyrightHeader.replace("${version}", version);
+
+function escapeCharacters(token) {
+  return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
+function constructRegex(pragma, exclusive) {
+  const prefix = exclusive ? "exclude" : "include";
+  pragma = escapeCharacters(pragma);
+
+  const s =
+    `[\\t ]*\\/\\/>>\\s?${prefix}Start\\s?\\(\\s?(["'])${pragma}\\1\\s?,\\s?pragmas\\.${pragma}\\s?\\)\\s?;?` +
+    // multiline code block
+    `[\\s\\S]*?` +
+    // end comment
+    `[\\t ]*\\/\\/>>\\s?${prefix}End\\s?\\(\\s?(["'])${pragma}\\2\\s?\\)\\s?;?\\s?[\\t ]*\\n?`;
+
+  return new RegExp(s, "gm");
+}
+
+const pragmas = {
+  debug: false,
+};
+const stripPragmaPlugin = {
+  name: "strip-pragmas",
+  setup: (build) => {
+    build.onLoad({ filter: /\.js$/ }, async (args) => {
+      let source = await readFile(args.path, "utf8");
+
+      try {
+        for (const key in pragmas) {
+          if (pragmas.hasOwnProperty(key)) {
+            source = source.replace(constructRegex(key, pragmas[key]), "");
+          }
+        }
+
+        return { contents: source };
+      } catch (e) {
+        return {
+          errors: {
+            text: e.message,
+          },
+        };
+      }
+    });
+  },
+};
+
+// Print an esbuild warning
+function printBuildWarning({ location, text }) {
+  const { column, file, line, lineText, suggestion } = location;
+
+  let message = `\n
+  > ${file}:${line}:${column}: warning: ${text}
+  ${lineText}
+  `;
+
+  if (suggestion && suggestion !== "") {
+    message += `\n${suggestion}`;
+  }
+
+  console.log(message);
+}
+
+// Ignore `eval` warnings in third-party code we don't have control over
+function handleBuildWarnings(result) {
+  for (const warning of result.warnings) {
+    if (
+      !warning.location.file.includes("protobufjs.js") &&
+      !warning.location.file.includes("Build/Cesium")
+    ) {
+      printBuildWarning(warning);
+    }
+  }
+}
+
+const esbuildBaseConfig = () => {
+  return {
+    target: "es2020",
+    legalComments: "inline",
+    banner: {
+      js: copyrightHeader,
+    },
+  };
+};
+
+async function buildCesiumJs(options) {
+  const css = globby.sync(cssFiles);
+
+  const buildConfig = esbuildBaseConfig();
+  buildConfig.entryPoints = ["Source/Cesium.js"];
+  buildConfig.bundle = true;
+  buildConfig.minify = options.minify;
+  buildConfig.sourcemap = options.sourcemap;
+  buildConfig.external = ["https", "http", "url", "zlib"];
+  buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
+  buildConfig.incremental = options.incremental;
+  buildConfig.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
+
+  // Build ESM
+  const result = await esbuild.build({
+    ...buildConfig,
+    format: "esm",
+    outfile: path.join(options.path, "index.js"),
+  });
+
+  handleBuildWarnings(result);
+
+  const results = [result];
+
+  // Copy and minify CSS and third party
+  const config = esbuildBaseConfig();
+  config.entryPoints = [
+    "Source/ThirdParty/google-earth-dbroot-parser.js",
+    ...css, // Load and optionally minify css
+  ];
+  config.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  config.minify = options.minify;
+  config.sourcemap = options.sourcemap;
+  config.outdir = options.path;
+  await esbuild.build(config);
+
+  // Build IIFE
+  if (options.iife) {
+    const result = await esbuild.build({
+      ...buildConfig,
+      format: "iife",
+      globalName: "Cesium",
+      outfile: path.join(options.path, "Cesium.js"),
+    });
+
+    handleBuildWarnings(result);
+
+    results.push(result);
+  }
+
+  if (options.node) {
+    const result = await esbuild.build({
+      ...buildConfig,
+      format: "cjs",
+      platform: "node",
+      sourcemap: false,
+      define: {
+        // TransformStream is a browser-only implementation depended on by zip.js
+        TransformStream: "null",
+      },
+      outfile: path.join(options.path, "index.cjs"),
+    });
+
+    handleBuildWarnings(result);
+    results.push(result);
+  }
+
+  return results;
+}
 
 function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
@@ -141,86 +272,119 @@ function rollupWarning(message) {
   console.log(message);
 }
 
-let copyrightHeader = fs.readFileSync(
-  path.join("Source", "copyrightHeader.js"),
-  "utf8"
-);
-copyrightHeader = copyrightHeader.replace("${version}", version);
+/**
+ * Bundles the workers and outputs the result to the specified directory
+ * @param {Object} options
+ * @param {boolean} [options.minify=false] true if the worker output should be minified
+ * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {String} options.path output directory
+ */
+async function buildWorkers(options) {
+  // Copy existing workers
+  const workers = globby.sync([
+    "Source/Workers/**",
+    "Source/ThirdParty/Workers/**",
+  ]);
 
-function createWorkers() {
-  rimraf.sync("Build/createWorkers");
+  const config = esbuildBaseConfig();
+  config.entryPoints = workers;
+  config.outdir = options.path;
+  config.outbase = "Source"; // Maintain existing file paths
+  config.minify = options.minify;
+  await esbuild.build(config);
 
-  globby
-    .sync([
-      "Source/Workers/**",
-      "!Source/Workers/cesiumWorkerBootstrapper.js",
-      "!Source/Workers/transferTypedArrayTest.js",
-    ])
-    .forEach(function (file) {
-      rimraf.sync(file);
-    });
+  // Use rollup to build the workers:
+  // 1) They can be built as AMD style modules
+  // 2) They can be built using code-splitting, resulting in smaller modules
+  return globby(["Source/WorkersES6/*.js"]).then(function (files) {
+    const plugins = [rollupResolve(), rollupCommonjs()];
 
-  const workers = globby.sync(["Source/WorkersES6/**"]);
-
-  return rollup
-    .rollup({
-      input: workers,
-      onwarn: rollupWarning,
-    })
-    .then(function (bundle) {
-      return bundle.write({
-        dir: "Build/createWorkers",
-        banner:
-          "/* This file is automatically rebuilt by the Cesium build process. */",
-        format: "amd",
-      });
-    })
-    .then(function () {
-      return streamToPromise(
-        gulp.src("Build/createWorkers/**").pipe(gulp.dest("Source/Workers"))
+    if (options.removePragmas) {
+      plugins.push(
+        rollupPluginStripPragma({
+          pragmas: ["debug"],
+        })
       );
-    })
-    .then(function () {
-      rimraf.sync("Build/createWorkers");
-    });
+    }
+
+    if (options.minify) {
+      plugins.push(rollupPluginTerser.terser());
+    }
+
+    return rollup
+      .rollup({
+        input: files,
+        plugins: plugins,
+        onwarn: rollupWarning,
+      })
+      .then(function (bundle) {
+        return bundle.write({
+          dir: path.join(options.path, "Workers"),
+          format: "amd",
+          // Rollup cannot generate a sourcemap when pragmas are removed
+          sourcemap: options.sourcemap && !options.removePragmas,
+          banner: copyrightHeader,
+        });
+      });
+  });
 }
 
-async function buildThirdParty() {
-  rimraf.sync("Build/createWorkers");
-  globby.sync(filesToLeaveInThirdParty).forEach(function (file) {
-    rimraf.sync(file);
+const externalResolvePlugin = {
+  name: "external-cesium",
+  setup: (build) => {
+    build.onResolve({ filter: new RegExp(`Cesium\.js$`) }, () => {
+      return {
+        path: "Cesium",
+        namespace: "external-cesium",
+      };
+    });
+
+    build.onLoad(
+      {
+        filter: new RegExp(`^Cesium$`),
+        namespace: "external-cesium",
+      },
+      () => {
+        const contents = `module.exports = Cesium`;
+        return {
+          contents,
+        };
+      }
+    );
+  },
+};
+
+async function buildSpecs(options) {
+  options = options || {};
+
+  const results = await esbuild.build({
+    entryPoints: [
+      "Specs/spec-main.js",
+      "Specs/SpecList.js",
+      "Specs/karma-main.js",
+    ],
+    bundle: true,
+    format: "esm",
+    sourcemap: true,
+    target: "es2020",
+    outdir: path.join("Build", "Specs"),
+    plugins: [externalResolvePlugin],
+    incremental: options.incremental,
   });
 
-  const workers = globby.sync(["ThirdParty/npm/**"]);
-
-  return rollup
-    .rollup({
-      input: workers,
-      plugins: [rollupResolve(), rollupCommonjs()],
-      onwarn: rollupWarning,
-    })
-    .then(function (bundle) {
-      return bundle.write({
-        dir: "Build/createThirdPartyNpm",
-        banner:
-          "/* This file is automatically rebuilt by the Cesium build process. */",
-        format: "es",
-      });
-    })
-    .then(function () {
-      return streamToPromise(
-        gulp
-          .src("Build/createThirdPartyNpm/**")
-          .pipe(gulp.dest("Source/ThirdParty"))
-      );
-    })
-    .then(function () {
-      rimraf.sync("Build/createThirdPartyNpm");
-    });
+  return results;
 }
 
-gulp.task("build", async function () {
+async function build(options) {
+  options = options || {};
   mkdirp.sync("Build");
+
+  const outputDirectory = path.join(
+    "Build",
+    `Cesium${!options.minify ? "Unminified" : ""}`
+  );
+  rimraf.sync(outputDirectory);
 
   fs.writeFileSync(
     "Build/package.json",
@@ -230,17 +394,153 @@ gulp.task("build", async function () {
     "utf8"
   );
 
-  await buildThirdParty();
-  glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
+  glslToJavaScript(options.minify, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(createWorkers(), createGalleryList());
+  return Promise.join(
+    buildCesiumJs({
+      minify: options.minify,
+      iife: true,
+      sourcemap: options.sourcemap,
+      removePragmas: options.removePragmas,
+      path: outputDirectory,
+      node: options.node,
+    }),
+    buildWorkers({
+      minify: options.minify,
+      sourcemap: options.sourcemap,
+      path: outputDirectory,
+      removePragmas: options.removePragmas,
+    }),
+    createGalleryList(),
+    buildSpecs()
+  ).then(() => {
+    return copyAssets({
+      outputDirectory: outputDirectory,
+    });
+  });
+}
+
+gulp.task("build", function () {
+  const argv = yargs.argv;
+  const minify = argv.minify ? argv.minify : false;
+  const removePragmas = argv.pragmas ? argv.pragmas : false;
+  const sourcemap = argv.sourcemap ? argv.sourcemap : true;
+  const node = argv.node ? argv.node : true;
+
+  return build({
+    minify: minify,
+    removePragmas: removePragmas,
+    sourcemap: sourcemap,
+    node: node,
+  });
 });
 
-gulp.task("build-watch", function () {
-  return gulp.watch(watchedFiles, gulp.series("build"));
-});
+gulp.task(
+  "build-watch",
+  gulp.series("build", async function () {
+    const argv = yargs.argv;
+    const minify = argv.minify ? argv.minify : false;
+    const removePragmas = argv.pragmas ? argv.pragmas : false;
+    const sourcemap = argv.sourcemap ? argv.sourcemap : true;
+
+    const outputDirectory = path.join(
+      "Build",
+      `Cesium${!minify ? "Unminified" : ""}`
+    );
+
+    let [esmResult, iifeResult, cjsResult] = await buildCesiumJs({
+      minify: minify,
+      path: outputDirectory,
+      removePragmas: removePragmas,
+      sourcemap: sourcemap,
+      incremental: true,
+    });
+
+    let specResult = await buildSpecs({
+      incremental: true,
+    });
+
+    await buildWorkers({
+      minify: minify,
+      path: outputDirectory,
+      removePragmas: removePragmas,
+      sourcemap: sourcemap,
+    });
+
+    gulp.watch(shaderFiles, async () => {
+      glslToJavaScript(minify, "Build/minifyShaders.state");
+      esmResult = await esmResult.rebuild();
+
+      if (iifeResult) {
+        iifeResult = await iifeResult.rebuild();
+      }
+
+      if (cjsResult) {
+        cjsResult = await cjsResult.rebuild();
+      }
+    });
+
+    gulp.watch(sourceFiles, async () => {
+      esmResult = await esmResult.rebuild();
+
+      if (iifeResult) {
+        iifeResult = await iifeResult.rebuild();
+      }
+
+      if (cjsResult) {
+        cjsResult = await cjsResult.rebuild();
+      }
+    });
+
+    gulp.watch(
+      watchedSpecFiles,
+      {
+        events: ["add", "unlink"],
+      },
+      async () => {
+        createSpecList();
+        specResult = await specResult.rebuild();
+      }
+    );
+
+    gulp.watch(
+      watchedSpecFiles,
+      {
+        events: ["change"],
+      },
+      async () => {
+        specResult = await specResult.rebuild();
+      }
+    );
+
+    gulp.watch(workerSourceFiles, () => {
+      return buildWorkers({
+        minify: minify,
+        path: outputDirectory,
+        removePragmas: removePragmas,
+        sourcemap: sourcemap,
+      });
+    });
+
+    process.on("SIGINT", () => {
+      // Free up resources
+      esmResult.rebuild.dispose();
+
+      if (iifeResult) {
+        iifeResult.rebuild.dispose();
+      }
+
+      if (cjsResult) {
+        cjsResult.rebuild.dispose();
+      }
+
+      specResult.rebuild.dispose();
+      process.exit(0);
+    });
+  })
+);
 
 gulp.task("build-ts", function () {
   createTypeScriptDefinitions();
@@ -249,51 +549,6 @@ gulp.task("build-ts", function () {
 
 gulp.task("buildApps", function () {
   return Promise.join(buildCesiumViewer(), buildSandcastle());
-});
-
-gulp.task("build-specs", function buildSpecs() {
-  const externalCesium = rollupPluginExternalGlobals({
-    "../Source/Cesium.js": "Cesium",
-    "../../Source/Cesium.js": "Cesium",
-    "../../../Source/Cesium.js": "Cesium",
-    "../../../../Source/Cesium.js": "Cesium",
-  });
-
-  const removePragmas = rollupPluginStripPragma({
-    pragmas: ["debug"],
-  });
-
-  const promise = Promise.join(
-    rollup
-      .rollup({
-        input: "Specs/SpecList.js",
-        plugins: [externalCesium],
-        onwarn: rollupWarning,
-      })
-      .then(function (bundle) {
-        return bundle.write({
-          file: "Build/Specs/Specs.js",
-          format: "iife",
-        });
-      })
-      .then(function () {
-        return rollup
-          .rollup({
-            input: "Specs/karma-main.js",
-            plugins: [removePragmas, externalCesium],
-            onwarn: rollupWarning,
-          })
-          .then(function (bundle) {
-            return bundle.write({
-              file: "Build/Specs/karma-main.js",
-              name: "karmaMain",
-              format: "iife",
-            });
-          });
-      })
-  );
-
-  return promise;
 });
 
 gulp.task("build-third-party", function () {
@@ -351,28 +606,7 @@ function cloc() {
 
 gulp.task("cloc", gulp.series("clean", cloc));
 
-function combine() {
-  const outputDirectory = path.join("Build", "CesiumUnminified");
-  return combineJavaScript({
-    removePragmas: false,
-    minify: false,
-    outputDirectory: outputDirectory,
-  });
-}
-
-gulp.task("combine", gulp.series("build", combine));
-gulp.task("default", gulp.series("combine"));
-
-function combineRelease() {
-  const outputDirectory = path.join("Build", "CesiumUnminified");
-  return combineJavaScript({
-    removePragmas: true,
-    minify: false,
-    outputDirectory: outputDirectory,
-  });
-}
-
-gulp.task("combineRelease", gulp.series("build", combineRelease));
+gulp.task("default", gulp.series("build"));
 
 gulp.task("prepare", function () {
   // Copy Draco3D files from node_modules into Source
@@ -450,10 +684,21 @@ gulp.task("generateDocumentation-watch", function () {
 gulp.task(
   "release",
   gulp.series(
-    "build",
+    function () {
+      return build({
+        minify: false,
+        removePragmas: false,
+        node: true,
+      });
+    },
+    function () {
+      return build({
+        minify: true,
+        removePragmas: true,
+        node: true,
+      });
+    },
     "build-ts",
-    combine,
-    minifyRelease,
     generateDocumentation
   )
 );
@@ -469,21 +714,16 @@ gulp.task(
     delete packageJson.scripts.prepare;
 
     // Remove build and transform tasks since they do not function as intended from within the release zip
-    delete packageJson.scripts.convertToModules;
     delete packageJson.scripts.build;
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
     delete packageJson.scripts["build-third-party"];
-    delete packageJson.scripts.buildApps;
+    delete packageJson.scripts["buildApps"];
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
-    delete packageJson.scripts.combine;
-    delete packageJson.scripts.combineRelease;
-    delete packageJson.scripts.generateDocumentation;
+    delete packageJson.scripts["generateDocumentation"];
     delete packageJson.scripts["generateDocumentation-watch"];
-    delete packageJson.scripts.makeZipFile;
-    delete packageJson.scripts.minify;
-    delete packageJson.scripts.minifyRelease;
+    delete packageJson.scripts["makeZipFile"];
     delete packageJson.scripts.release;
     delete packageJson.scripts.prettier;
 
@@ -507,6 +747,7 @@ gulp.task(
         "Build/CesiumUnminified/**",
         "Build/Documentation/**",
         "Build/package.json",
+        // TODO: Include built specs? Shouldn't be too big
       ],
       {
         base: ".",
@@ -523,7 +764,6 @@ gulp.task(
         "Specs/**",
         "Specs/**/.eslintrc.json",
         "ThirdParty/**",
-        "Tools/eslint-config-cesium/**",
         "favicon.ico",
         ".eslintignore",
         ".eslintrc.json",
@@ -564,27 +804,6 @@ gulp.task(
       });
   })
 );
-
-gulp.task(
-  "minify",
-  gulp.series("build", function () {
-    return combineJavaScript({
-      removePragmas: false,
-      minify: true,
-      outputDirectory: path.join("Build", "Cesium"),
-    });
-  })
-);
-
-function minifyRelease() {
-  return combineJavaScript({
-    removePragmas: true,
-    minify: true,
-    outputDirectory: path.join("Build", "Cesium"),
-  });
-}
-
-gulp.task("minifyRelease", gulp.series("build", minifyRelease));
 
 function isTravisPullRequest() {
   return (
@@ -964,7 +1183,7 @@ function setStatus(state, targetUrl, description, context) {
   });
 }
 
-gulp.task("coverage", function (done) {
+gulp.task("coverage", async function () {
   const argv = yargs.argv;
   const webglStub = argv.webglStub ? argv.webglStub : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -976,69 +1195,134 @@ gulp.task("coverage", function (done) {
     browsers = argv.browsers.split(",");
   }
 
-  const karmaConfig = Karma.config.parseConfig(karmaConfigFile, {
-    port: 9876,
-    browsers: browsers,
-    specReporter: {
-      suppressErrorSummary: false,
-      suppressFailed: false,
-      suppressPassed: suppressPassed,
-      suppressSkipped: true,
+  const instrumenter = new istanbul.createInstrumenter({
+    esModules: true,
+  });
+
+  const instrumentPlugin = {
+    name: "instrument",
+    setup: (build) => {
+      const readFile = Promise.promisify(fs.readFile);
+      build.onLoad(
+        {
+          filter: /Source\/(Core|DataSources|Renderer|Scene|Widgets)(\/\w+)+\.js$/,
+        },
+        async (args) => {
+          const source = await readFile(args.path, "utf8");
+
+          try {
+            const generatedCode = instrumenter.instrumentSync(
+              source,
+              args.path
+            );
+
+            return { contents: generatedCode };
+          } catch (e) {
+            return {
+              errors: {
+                text: e.message,
+              },
+            };
+          }
+        }
+      );
     },
-    preprocessors: {
-      "Source/Core/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/DataSources/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/Renderer/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/Scene/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/Shaders/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/Widgets/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-      "Source/Workers/**/*.js": ["karma-coverage-istanbul-instrumenter"],
-    },
-    coverageIstanbulInstrumenter: {
-      esModules: true,
-    },
-    reporters: ["spec", "coverage"],
-    coverageReporter: {
-      dir: "Build/Coverage",
-      subdir: function (browserName) {
-        folders.push(browserName);
-        return browserName;
+  };
+
+  const outputDirectory = path.join("Build", "Instrumented");
+
+  const result = await esbuild.build({
+    entryPoints: ["Source/Cesium.js"],
+    bundle: true,
+    sourcemap: true,
+    format: "iife",
+    globalName: "Cesium",
+    target: "es2020",
+    external: ["https", "http", "url", "zlib"],
+    outfile: path.join(outputDirectory, "Cesium.js"),
+    plugins: [instrumentPlugin],
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
+
+  handleBuildWarnings(result);
+
+  return new Promise((resolve, reject) => {
+    const karma = new Karma.Server(
+      {
+        configFile: karmaConfigFile,
+        browsers: browsers,
+        specReporter: {
+          suppressErrorSummary: false,
+          suppressFailed: false,
+          suppressPassed: suppressPassed,
+          suppressSkipped: true,
+        },
+        files: [
+          { pattern: "Specs/Data/**", included: false },
+          { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+          { pattern: "Build/Instrumented/Cesium.js", included: true },
+          { pattern: "Build/Instrumented/Cesium.js.map", included: false },
+          { pattern: "Build/CesiumUnminified/**", included: false },
+          {
+            pattern: "Build/Specs/karma-main.js",
+            included: true,
+            type: "module",
+          },
+          {
+            pattern: "Build/Specs/SpecList.js",
+            included: true,
+            type: "module",
+          },
+          { pattern: "Specs/TestWorkers/**", included: false },
+        ],
+        reporters: ["spec", "coverage"],
+        coverageReporter: {
+          dir: "Build/Coverage",
+          subdir: function (browserName) {
+            folders.push(browserName);
+            return browserName;
+          },
+          includeAllSources: true,
+        },
+        client: {
+          captureConsole: false,
+          args: [
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            webglStub,
+            undefined,
+          ],
+        },
       },
-      includeAllSources: true,
-    },
-    client: {
-      captureConsole: verbose,
-      args: [
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        webglStub,
-        undefined,
-      ],
-    },
+      function (e) {
+        let html = "<!doctype html><html><body><ul>";
+        folders.forEach(function (folder) {
+          html += `<li><a href="${encodeURIComponent(
+            folder
+          )}/index.html">${folder}</a></li>`;
+        });
+        html += "</ul></body></html>";
+        fs.writeFileSync("Build/Coverage/index.html", html);
+
+        if (!process.env.TRAVIS) {
+          folders.forEach(function (dir) {
+            open(`Build/Coverage/${dir}/index.html`);
+          });
+        }
+
+        if (failTaskOnError && e) {
+          reject(e);
+          return;
+        }
+
+        resolve();
+      }
+    );
+    karma.start();
   });
-
-  const karma = new Karma.Server(karmaConfig, function doneCallback(exitCode) {
-    let html = "<!doctype html><html><body><ul>";
-    folders.forEach(function (folder) {
-      html += `<li><a href="${encodeURIComponent(
-        folder
-      )}/index.html">${folder}</a></li>`;
-    });
-    html += "</ul></body></html>";
-    fs.writeFileSync("Build/Coverage/index.html", html);
-
-    if (!process.env.TRAVIS) {
-      folders.forEach(function (dir) {
-        open(`Build/Coverage/${dir}/index.html`);
-      });
-    }
-    return done(failTaskOnError ? exitCode : undefined);
-  });
-
-  karma.start();
 });
 
 gulp.task("test", function (done) {
@@ -1061,28 +1345,27 @@ gulp.task("test", function (done) {
   }
 
   let files = [
-    { pattern: "Specs/karma-main.js", included: true, type: "module" },
-    { pattern: "Source/**", included: false, type: "module" },
-    { pattern: "Specs/*.js", included: true, type: "module" },
-    { pattern: "Specs/Core/**", included: true, type: "module" },
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Specs/DataSources/**", included: true, type: "module" },
-    { pattern: "Specs/Renderer/**", included: true, type: "module" },
-    { pattern: "Specs/Scene/**", included: true, type: "module" },
-    { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
-    { pattern: "Specs/Widgets/**", included: true, type: "module" },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
+    { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
+    { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
     { pattern: "Specs/TestWorkers/**", included: false },
   ];
 
   if (release) {
     files = [
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "Specs/ThirdParty/**", included: false, type: "module" },
-      { pattern: "Specs/TestWorkers/**", included: false },
       { pattern: "Build/Cesium/Cesium.js", included: true },
+      { pattern: "Build/Cesium/Cesium.js.map", included: false },
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
-      { pattern: "Build/Specs/Specs.js", included: true },
+      { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
+      { pattern: "Specs/TestWorkers/**", included: false },
     ];
   }
 
@@ -1120,310 +1403,28 @@ gulp.task("test", function (done) {
   karma.start();
 });
 
-gulp.task("convertToModules", function () {
-  const requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
-  const noModulesRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[?)([\S\s]*?)]?([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
-  const splitRegex = /,\s*/;
-
-  const fsReadFile = Promise.promisify(fs.readFile);
-  const fsWriteFile = Promise.promisify(fs.writeFile);
-
-  const files = globby.sync(filesToConvertES6);
-
-  return Promise.map(files, function (file) {
-    return fsReadFile(file).then(function (contents) {
-      contents = contents.toString();
-      if (contents.startsWith("import")) {
-        return;
-      }
-
-      let result = requiresRegex.exec(contents);
-
-      if (result === null) {
-        result = noModulesRegex.exec(contents);
-        if (result === null) {
-          return;
-        }
-      }
-
-      const names = result[3].split(splitRegex);
-      if (names.length === 1 && names[0].trim() === "") {
-        names.length = 0;
-      }
-
-      for (let i = 0; i < names.length; ++i) {
-        if (names[i].indexOf("//") >= 0 || names[i].indexOf("/*") >= 0) {
-          console.log(
-            `${file} contains comments in the require list.  Skipping so nothing gets broken.`
-          );
-          return;
-        }
-      }
-
-      const identifiers = result[5].split(splitRegex);
-      if (identifiers.length === 1 && identifiers[0].trim() === "") {
-        identifiers.length = 0;
-      }
-
-      for (let i = 0; i < identifiers.length; ++i) {
-        if (
-          identifiers[i].indexOf("//") >= 0 ||
-          identifiers[i].indexOf("/*") >= 0
-        ) {
-          console.log(
-            `${file} contains comments in the require list.  Skipping so nothing gets broken.`
-          );
-          return;
-        }
-      }
-
-      const requires = [];
-
-      for (let i = 0; i < names.length && i < identifiers.length; ++i) {
-        requires.push({
-          name: names[i].trim(),
-          identifier: identifiers[i].trim(),
-        });
-      }
-
-      // Convert back to separate lists for the names and identifiers, and add
-      // any additional names or identifiers that don't have a corresponding pair.
-      const sortedNames = requires.map(function (item) {
-        return `${item.name.slice(0, -1)}.js'`;
-      });
-      for (let i = sortedNames.length; i < names.length; ++i) {
-        sortedNames.push(names[i].trim());
-      }
-
-      const sortedIdentifiers = requires.map(function (item) {
-        return item.identifier;
-      });
-      for (let i = sortedIdentifiers.length; i < identifiers.length; ++i) {
-        sortedIdentifiers.push(identifiers[i].trim());
-      }
-
-      contents = "";
-      if (sortedNames.length > 0) {
-        for (let q = 0; q < sortedNames.length; q++) {
-          let modulePath = sortedNames[q];
-          if (file.startsWith("Specs")) {
-            modulePath = modulePath.substring(1, modulePath.length - 1);
-            const sourceDir = path.dirname(file);
-
-            if (modulePath.startsWith("Specs") || modulePath.startsWith(".")) {
-              let importPath = modulePath;
-              if (modulePath.startsWith("Specs")) {
-                importPath = path.relative(sourceDir, modulePath);
-                if (importPath[0] !== ".") {
-                  importPath = `./${importPath}`;
-                }
-              }
-              modulePath = `'${importPath}'`;
-              contents += `import ${sortedIdentifiers[q]} from ${modulePath};${os.EOL}`;
-            } else {
-              modulePath =
-                `'${path.relative(sourceDir, "Source")}/Cesium.js` + `'`;
-              if (sortedIdentifiers[q] === "CesiumMath") {
-                contents += `import { Math as CesiumMath } from ${modulePath};${os.EOL}`;
-              } else {
-                contents += `import { ${sortedIdentifiers[q]} } from ${modulePath};${os.EOL}`;
-              }
-            }
-          } else {
-            contents += `import ${sortedIdentifiers[q]} from ${modulePath};${os.EOL}`;
-          }
-        }
-      }
-
-      let code;
-      const codeAndReturn = result[6];
-      if (file.endsWith("Spec.js")) {
-        const indi = codeAndReturn.lastIndexOf("});");
-        code = codeAndReturn.slice(0, indi);
-        code = code.trim().replace(`'use strict';${os.EOL}`, "");
-        contents += code + os.EOL;
-      } else {
-        const returnIndex = codeAndReturn.lastIndexOf("return");
-
-        code = codeAndReturn.slice(0, returnIndex);
-        code = code.trim().replace(`'use strict';${os.EOL}`, "");
-        contents += code + os.EOL;
-
-        const returnStatement = codeAndReturn.slice(returnIndex);
-        contents += `${returnStatement
-          .split(";")[0]
-          .replace("return ", "export default ")};${os.EOL}`;
-      }
-
-      return fsWriteFile(file, contents);
-    });
-  });
-});
-
-function combineCesium(debug, minify, combineOutput) {
-  const plugins = [];
-
-  if (!debug) {
-    plugins.push(
-      rollupPluginStripPragma({
-        pragmas: ["debug"],
-      })
-    );
-  }
-  if (minify) {
-    plugins.push(rollupPluginTerser.terser());
-  }
-
-  return rollup
-    .rollup({
-      input: "Source/Cesium.js",
-      plugins: plugins,
-      onwarn: rollupWarning,
-    })
-    .then(function (bundle) {
-      return bundle.write({
-        format: "umd",
-        name: "Cesium",
-        file: path.join(combineOutput, "Cesium.js"),
-        sourcemap: debug,
-        banner: copyrightHeader,
-      });
-    });
-}
-
-function combineWorkers(debug, minify, combineOutput) {
-  //This is done waterfall style for concurrency reasons.
-  // Copy files that are already minified
-  return globby(["Source/ThirdParty/Workers/draco*.js"])
-    .then(function (files) {
-      const stream = gulp
-        .src(files, { base: "Source" })
-        .pipe(gulp.dest(combineOutput));
-      return streamToPromise(stream);
-    })
-    .then(function () {
-      return globby([
-        "Source/Workers/cesiumWorkerBootstrapper.js",
-        "Source/Workers/transferTypedArrayTest.js",
-        "Source/ThirdParty/Workers/*.js",
-        // Files are already minified, don't optimize
-        "!Source/ThirdParty/Workers/draco*.js",
-      ]);
-    })
-    .then(function (files) {
-      return Promise.map(
-        files,
-        function (file) {
-          return streamToPromise(
-            gulp
-              .src(file)
-              .pipe(gulpTerser())
-              .pipe(
-                gulp.dest(
-                  path.dirname(
-                    path.join(combineOutput, path.relative("Source", file))
-                  )
-                )
-              )
-          );
-        },
-        { concurrency: concurrency }
-      );
-    })
-    .then(function () {
-      return globby(["Source/WorkersES6/*.js"]);
-    })
-    .then(function (files) {
-      const plugins = [];
-
-      if (!debug) {
-        plugins.push(
-          rollupPluginStripPragma({
-            pragmas: ["debug"],
-          })
-        );
-      }
-      if (minify) {
-        plugins.push(rollupPluginTerser.terser());
-      }
-
-      return rollup
-        .rollup({
-          input: files,
-          plugins: plugins,
-          onwarn: rollupWarning,
-        })
-        .then(function (bundle) {
-          return bundle.write({
-            dir: path.join(combineOutput, "Workers"),
-            format: "amd",
-            sourcemap: debug,
-            banner: copyrightHeader,
-          });
-        });
-    });
-}
-
-function minifyCSS(outputDirectory) {
-  streamToPromise(
-    gulp
-      .src("Source/**/*.css")
-      .pipe(cleanCSS())
-      .pipe(gulp.dest(outputDirectory))
-  );
-}
-
-function minifyModules(outputDirectory) {
-  return streamToPromise(
-    gulp
-      .src("Source/ThirdParty/google-earth-dbroot-parser.js")
-      .pipe(gulpTerser())
-      .pipe(gulp.dest(`${outputDirectory}/ThirdParty/`))
-  );
-}
-
-function combineJavaScript(options) {
-  const minify = options.minify;
+/**
+ * Copies non-js assets to the output directory
+ *
+ * @param {Object} options
+ * @param {String} options.outputDirectory
+ * @returns
+ */
+function copyAssets(options) {
   const outputDirectory = options.outputDirectory;
-  const removePragmas = options.removePragmas;
+  const everythingElse = [
+    "Source/**",
+    "!**/*.js",
+    "!**/*.glsl",
+    "!**/*.css",
+    "!**/*.md",
+  ];
 
-  const combineOutput = path.join(
-    "Build",
-    "combineOutput",
-    minify ? "minified" : "combined"
-  );
+  const stream = gulp
+    .src(everythingElse, { nodir: true })
+    .pipe(gulp.dest(outputDirectory));
 
-  const promise = Promise.join(
-    combineCesium(!removePragmas, minify, combineOutput),
-    combineWorkers(!removePragmas, minify, combineOutput),
-    minifyModules(outputDirectory)
-  );
-
-  return promise.then(function () {
-    const promises = [];
-
-    //copy to build folder with copyright header added at the top
-    let stream = gulp
-      .src([`${combineOutput}/**`])
-      .pipe(gulp.dest(outputDirectory));
-
-    promises.push(streamToPromise(stream));
-
-    const everythingElse = ["Source/**", "!**/*.js", "!**/*.glsl"];
-    if (minify) {
-      promises.push(minifyCSS(outputDirectory));
-      everythingElse.push("!**/*.css");
-    }
-
-    stream = gulp
-      .src(everythingElse, { nodir: true })
-      .pipe(gulp.dest(outputDirectory));
-    promises.push(streamToPromise(stream));
-
-    return Promise.all(promises).then(function () {
-      rimraf.sync(combineOutput);
-    });
-  });
+  return streamToPromise(stream);
 }
 
 function glslToJavaScript(minify, minifyStateFilePath) {
@@ -1446,10 +1447,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
   const builtinConstants = [];
   const builtinStructs = [];
 
-  const glslFiles = globby.sync([
-    "Source/Shaders/**/*.glsl",
-    "Source/ThirdParty/Shaders/*.glsl",
-  ]);
+  const glslFiles = globby.sync(shaderFiles);
   glslFiles.forEach(function (glslFile) {
     glslFile = path.normalize(glslFile);
     const baseName = path.basename(glslFile, ".glsl");
@@ -1718,10 +1716,10 @@ ${source}
 }
 
 function createSpecList() {
-  const specFiles = globby.sync(["Specs/**/*Spec.js"]);
+  const files = globby.sync(["Specs/**/*Spec.js"]);
 
   let contents = "";
-  specFiles.forEach(function (file) {
+  files.forEach(function (file) {
     contents += `import './${filePathToModuleId(file).replace(
       "Specs/",
       ""
@@ -1983,14 +1981,14 @@ function buildSandcastle() {
       "!Apps/Sandcastle/images/**",
       "!Apps/Sandcastle/gallery/**.jpg",
     ])
-    // Remove dev-only ES6 module loading for unbuilt Cesium
+    // Remove swap out ESM modules for the IIFE build
     .pipe(
       gulpReplace(
         '    <script type="module" src="../load-cesium-es6.js"></script>',
-        ""
+        '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
+          '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
       )
     )
-    .pipe(gulpReplace("nomodule", ""))
     // Fix relative paths for new location
     .pipe(gulpReplace("../../../Build", "../../.."))
     .pipe(gulpReplace("../../Source", "../../../Source"))
@@ -2011,94 +2009,84 @@ function buildSandcastle() {
     .pipe(
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
-        ""
+        '    <script src="../../Build/CesiumUnminified/Cesium.js"></script>\n' +
+          '    <script>window.CESIUM_BASE_URL = "../../Build/CesiumUnminified/";</script>";'
       )
     )
-    .pipe(gulpReplace("nomodule", ""))
     .pipe(gulpReplace("../../Build", "../.."))
     .pipe(gulp.dest("Build/Apps/Sandcastle"));
 
   return streamToPromise(mergeStream(appStream, imageStream, standaloneStream));
 }
 
-function buildCesiumViewer() {
+async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
-  let promise = Promise.join(
-    rollup
-      .rollup({
-        input: "Apps/CesiumViewer/CesiumViewer.js",
-        treeshake: {
-          moduleSideEffects: false,
-        },
-        plugins: [
-          rollupPluginStripPragma({
-            pragmas: ["debug"],
-          }),
-          rollupPluginTerser.terser(),
-        ],
-        onwarn: rollupWarning,
-      })
-      .then(function (bundle) {
-        return bundle.write({
-          file: "Build/Apps/CesiumViewer/CesiumViewer.js",
-          format: "iife",
-        });
-      })
-  );
+  const config = esbuildBaseConfig();
+  config.entryPoints = [
+    "Apps/CesiumViewer/CesiumViewer.js",
+    "Apps/CesiumViewer/CesiumViewer.css",
+  ];
+  config.bundle = true; // Tree-shaking is enabled automatically
+  config.minify = true;
+  config.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  config.format = "iife";
+  config.inject = ["Apps/CesiumViewer/index.js"];
+  config.external = ["https", "http", "zlib"];
+  config.outdir = cesiumViewerOutputDirectory;
+  config.outbase = "Apps/CesiumViewer";
+  config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
+  const result = await esbuild.build(config);
+  handleBuildWarnings(result);
 
-  promise = promise.then(function () {
-    const stream = mergeStream(
-      gulp
-        .src("Build/Apps/CesiumViewer/CesiumViewer.js")
-        .pipe(gulpInsert.prepend(copyrightHeader))
-        .pipe(gulpReplace("../../Source", "."))
-        .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-      gulp
-        .src("Apps/CesiumViewer/CesiumViewer.css")
-        .pipe(cleanCSS())
-        .pipe(gulpReplace("../../Source", "."))
-        .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-      gulp
-        .src("Apps/CesiumViewer/index.html")
-        .pipe(gulpReplace('type="module"', ""))
-        .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-      gulp.src([
-        "Apps/CesiumViewer/**",
-        "!Apps/CesiumViewer/index.html",
-        "!Apps/CesiumViewer/**/*.js",
-        "!Apps/CesiumViewer/**/*.css",
-      ]),
-
-      gulp.src(
-        [
-          "Build/Cesium/Assets/**",
-          "Build/Cesium/Workers/**",
-          "Build/Cesium/ThirdParty/**",
-          "Build/Cesium/Widgets/**",
-          "!Build/Cesium/Widgets/**/*.css",
-        ],
-        {
-          base: "Build/Cesium",
-          nodir: true,
-        }
-      ),
-
-      gulp.src(["Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css"], {
-        base: "Build/Cesium",
-      }),
-
-      gulp.src(["web.config"])
-    );
-
-    return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
+  await esbuild.build({
+    entryPoints: ["Source/Widgets/InfoBox/InfoBoxDescription.css"],
+    minify: true,
+    bundle: true,
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    outdir: cesiumViewerOutputDirectory,
+    outbase: "Source",
   });
 
-  return promise;
+  await buildWorkers({
+    minify: true,
+    removePragmas: true,
+    path: cesiumViewerOutputDirectory,
+  });
+
+  const stream = mergeStream(
+    gulp.src([
+      "Apps/CesiumViewer/**",
+      "!Apps/CesiumViewer/Images",
+      "!Apps/CesiumViewer/**/*.js",
+      "!Apps/CesiumViewer/**/*.css",
+    ]),
+
+    gulp.src(
+      [
+        "Build/Cesium/Assets/**",
+        "Build/Cesium/Workers/**",
+        "Build/Cesium/ThirdParty/**",
+        "Build/Cesium/Widgets/**",
+        "!Build/Cesium/Widgets/**/*.css",
+      ],
+      {
+        base: "Build/Cesium",
+        nodir: true,
+      }
+    ),
+
+    gulp.src(["web.config"])
+  );
+
+  return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
 }
 
 function filePathToModuleId(moduleId) {

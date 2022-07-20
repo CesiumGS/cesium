@@ -2,7 +2,6 @@ import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EventHelper } from "../../Source/Cesium.js";
@@ -101,24 +100,21 @@ describe("Scene/QuadtreePrimitive", function () {
     });
 
     function process(quadtreePrimitive, callback) {
-      const deferred = defer();
+      return new Promise((resolve) => {
+        function next() {
+          ++frameState.frameNumber;
+          quadtree.beginFrame(frameState);
+          quadtree.render(frameState);
+          quadtree.endFrame(frameState);
 
-      function next() {
-        ++frameState.frameNumber;
-        quadtree.beginFrame(frameState);
-        quadtree.render(frameState);
-        quadtree.endFrame(frameState);
-
-        if (callback()) {
-          setTimeout(next, 0);
-        } else {
-          deferred.resolve();
+          if (callback()) {
+            setTimeout(next, 0);
+          } else {
+            resolve();
+          }
         }
-      }
-
-      next();
-
-      return deferred.promise;
+        next();
+      });
     }
 
     it("must be constructed with a tileProvider", function () {
