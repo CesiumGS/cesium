@@ -16,7 +16,7 @@ import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
-import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import PointCloudStylingPipelineStage from "./PointCloudStylingPipelineStage.js";
 import PrimitiveOutlinePipelineStage from "./PrimitiveOutlinePipelineStage.js";
 import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage.js";
 import SceneMode from "../SceneMode.js";
@@ -156,11 +156,13 @@ ModelExperimentalRuntimePrimitive.prototype.configurePipeline = function (
   const node = this.node;
   const model = this.model;
   const customShader = model.customShader;
+  const style = model.style;
+
   const useWebgl2 = frameState.context.webgl2;
   const mode = frameState.mode;
-
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
+
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasSkinning = defined(node.skin);
@@ -184,6 +186,10 @@ ModelExperimentalRuntimePrimitive.prototype.configurePipeline = function (
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
+  const hasPointCloudStyle =
+    primitive.primitiveType === PrimitiveType.POINTS &&
+    (defined(style) || hasAttenuation);
+
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
 
@@ -208,8 +214,8 @@ ModelExperimentalRuntimePrimitive.prototype.configurePipeline = function (
     pipelineStages.push(SkinningPipelineStage);
   }
 
-  if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
-    pipelineStages.push(PointCloudAttenuationPipelineStage);
+  if (hasPointCloudStyle) {
+    pipelineStages.push(PointCloudStylingPipelineStage);
   }
 
   if (hasQuantization) {

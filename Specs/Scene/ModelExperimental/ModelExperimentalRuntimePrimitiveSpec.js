@@ -1,6 +1,7 @@
 import {
   AlphaPipelineStage,
   BatchTexturePipelineStage,
+  Cesium3DTileStyle,
   CustomShader,
   CustomShaderMode,
   CustomShaderPipelineStage,
@@ -15,8 +16,8 @@ import {
   ModelExperimentalType,
   MorphTargetsPipelineStage,
   PickingPipelineStage,
-  PointCloudAttenuationPipelineStage,
   PointCloudShading,
+  PointCloudStylingPipelineStage,
   PrimitiveOutlinePipelineStage,
   PrimitiveStatisticsPipelineStage,
   PrimitiveType,
@@ -423,7 +424,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
     const expectedStages = [
       GeometryPipelineStage,
-      PointCloudAttenuationPipelineStage,
+      PointCloudStylingPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
@@ -436,7 +437,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
-  it("configures point cloud attenuation stage for point clouds", function () {
+  it("configures point cloud styling stage for point cloud gltf", function () {
     const pointCloudShading = new PointCloudShading({
       attenuation: true,
     });
@@ -457,7 +458,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
     const expectedStages = [
       GeometryPipelineStage,
-      PointCloudAttenuationPipelineStage,
+      PointCloudStylingPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
@@ -516,6 +517,66 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
         type: ModelExperimentalType.GLTF,
         featureIdLabel: "featureId_0",
         pointCloudShading: undefined,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures point cloud styling stage for 3d tiles point clouds", function () {
+    const primitive = new ModelExperimentalRuntimePrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.TILE_PNTS,
+        featureIdLabel: "featureId_0",
+        style: new Cesium3DTileStyle(),
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      PointCloudStylingPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("skips point cloud styling stage without a style", function () {
+    const primitive = new ModelExperimentalRuntimePrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.TILE_PNTS,
+        featureIdLabel: "featureId_0",
       },
     });
 
