@@ -1,6 +1,11 @@
 [
   {
-    "name": "@zip.js/zip.js"
+    "name": "@zip.js/zip.js",
+    "license": [
+      "BSD-3-Clause"
+    ],
+    "version": "2.5.26",
+    "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {
     "name": "autolinker"
@@ -21,6 +26,8 @@
     "license": [
       "Apache-2.0"
     ],
+    "version": "2.3.10",
+    "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
   {
@@ -32,7 +39,12 @@
     "url": "https://www.npmjs.com/package/draco3d"
   },
   {
-    "name": "earcut"
+    "name": "earcut",
+    "license": [
+      "ISC"
+    ],
+    "version": "2.2.4",
+    "url": "https://www.npmjs.com/package/earcut"
   },
   {
     "name": "grapheme-splitter"

@@ -985,8 +985,7 @@ describe(
       options.url = pointCloudUrl;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
 
-      // In ModelExperimental, points are also counted as features.
-      return checkPointAndFeatureCounts(tileset, 1000, 1000, 0);
+      return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
     it("verify triangle statistics", function () {
@@ -2040,11 +2039,11 @@ describe(
       });
     });
 
-    function checkDebugColorizeTiles(url, enableModelExperimental) {
+    function checkDebugColorizeTiles(url) {
       CesiumMath.setRandomNumberSeed(0);
-      return Cesium3DTilesTester.loadTileset(scene, url, {
-        enableModelExperimental: enableModelExperimental,
-      }).then(function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
         // Get initial color
         let color;
         Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
@@ -2089,11 +2088,7 @@ describe(
 
     it("debugColorizeTiles for pnts without batch table", function () {
       viewPointCloud();
-
-      // This unit test fails for ModelExperimental because points are counted
-      // as features, which interferes with how debug color is applied.
-      const enableModelExperimental = false;
-      return checkDebugColorizeTiles(pointCloudUrl, enableModelExperimental);
+      return checkDebugColorizeTiles(pointCloudUrl);
     });
 
     it("debugColorizeTiles for glTF", function () {
@@ -5669,7 +5664,7 @@ describe(
 
             tileset.root.contentReadyToProcessPromise
               .then(function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfAttemptedRequests).toBe(2);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(1);
                 expect(statistics.numberOfTilesWithContentReady).toBe(0);
@@ -5842,11 +5837,7 @@ describe(
       it("renders implicit tileset with multiple contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl,
-          {
-            // See https://github.com/CesiumGS/cesium/issues/10551
-            enableModelExperimental: false,
-          }
+          implicitMultipleContentsUrl
         ).then(function (tileset) {
           scene.renderForSpecs();
           const statistics = tileset._statistics;
@@ -5980,7 +5971,7 @@ describe(
 
           tileset.root.contentReadyToProcessPromise
             .then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
+              expect(statistics.numberOfAttemptedRequests).toBe(2);
               expect(statistics.numberOfPendingRequests).toBe(0);
               expect(statistics.numberOfTilesProcessing).toBe(1);
               expect(statistics.numberOfTilesWithContentReady).toBe(0);
@@ -6173,11 +6164,7 @@ describe(
       it("renders implicit tileset with multiple contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          {
-            enableModelExperimental: false,
-          }
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
@@ -6190,11 +6177,7 @@ describe(
       it("renders implicit tileset with multiple contents (legacy with 'content')", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsLegacyWithContentUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          {
-            enableModelExperimental: false,
-          }
+          implicitMultipleContentsLegacyWithContentUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
@@ -6679,9 +6662,7 @@ describe(
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          tilesetWithImplicitMultipleContentsMetadataUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 

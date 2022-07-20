@@ -555,9 +555,7 @@ describe(
       it("initializes implicit content metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withImplicitContentMetadataUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          withImplicitContentMetadataUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];
@@ -586,9 +584,7 @@ describe(
       it("initializes implicit content metadata for inner contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withImplicitContentMetadataLegacyUrl,
-          // See https://github.com/CesiumGS/cesium/issues/10551
-          { enableModelExperimental: false }
+          withImplicitContentMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];

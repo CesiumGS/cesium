@@ -15,6 +15,7 @@ import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
+import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -282,19 +283,9 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       );
     }
 
-    // Since property attributes will be used in a GLSL shader,
-    // remove all non-alphanumeric characters
-    let alphanumericPropertyId = propertyId.replaceAll(/[^A-Za-z0-9_]/g, "");
-
-    // The prefix gl_ is reserved in GLSL, so remove it.
-    // e.g. gl_customProperty -> customProperty
-    alphanumericPropertyId = alphanumericPropertyId.replace(/^gl_/, "");
-
-    // identifiers can't start with a digit, so prefix with an underscore
-    // e.g. 1234 -> _1234
-    if (/^\d/.test(alphanumericPropertyId)) {
-      alphanumericPropertyId = `_${alphanumericPropertyId}`;
-    }
+    let sanitizedPropertyId = ModelExperimentalUtility.sanitizeGlslIdentifier(
+      propertyId
+    );
 
     // If the sanitized string is empty or a duplicate, use a placeholder
     // name instead. This will work for styling, but it may lead to undefined
@@ -303,16 +294,16 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     //    collection being unordered
     // - different tiles may have different number of properties.
     if (
-      alphanumericPropertyId === "" ||
-      classProperties.hasOwnProperty(alphanumericPropertyId)
+      sanitizedPropertyId === "" ||
+      classProperties.hasOwnProperty(sanitizedPropertyId)
     ) {
-      alphanumericPropertyId = `property_${nextPlaceholderId}`;
+      sanitizedPropertyId = `property_${nextPlaceholderId}`;
       nextPlaceholderId++;
     }
 
     const classProperty = transcodePropertyType(property);
     classProperty.name = propertyId;
-    classProperties[alphanumericPropertyId] = classProperty;
+    classProperties[sanitizedPropertyId] = classProperty;
 
     // Extract the typed array and create a custom attribute as a typed array.
     // The caller must add the results to the ModelComponents, and upload the
@@ -321,7 +312,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     //
     // For example, if the original property ID was 'Temperature ℃', the result
     // is _TEMPERATURE
-    let customAttributeName = alphanumericPropertyId.toUpperCase();
+    let customAttributeName = sanitizedPropertyId.toUpperCase();
     if (!customAttributeName.startsWith("_")) {
       customAttributeName = `_${customAttributeName}`;
     }
@@ -349,7 +340,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     customAttributeOutput.push(attribute);
 
     // Refer to the custom attribute name from the property attribute
-    propertyAttributeProperties[alphanumericPropertyId] = {
+    propertyAttributeProperties[sanitizedPropertyId] = {
       attribute: customAttributeName,
     };
   }
