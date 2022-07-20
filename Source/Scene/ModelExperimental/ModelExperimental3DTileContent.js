@@ -72,7 +72,10 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._model.statistics.propertyTablesByteLength;
+      const statistics = this._model.statistics;
+      return (
+        statistics.propertyTablesByteLength + statistics.batchTexturesByteLength
+      );
     },
   },
 

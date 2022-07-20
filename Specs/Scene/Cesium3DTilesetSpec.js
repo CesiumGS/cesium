@@ -1014,11 +1014,9 @@ describe(
 
       viewNothing();
 
-      // Disable ModelExperimental until ModelExperimentalStatistics
-      // are refactored to properly count batch textures.
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
-        enableModelExperimental: false,
-      }).then(function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
         const statistics = tileset._statistics;
 
         // No tiles loaded
@@ -1104,17 +1102,16 @@ describe(
     });
 
     it("verify memory usage statistics for shared resources", function () {
+      ResourceCache.statistics.clear();
       // Six tiles total:
       // * Two b3dm tiles - no shared resources
       // * Two i3dm tiles with embedded glTF - no shared resources
       // * Two i3dm tiles with external glTF - shared resources
       // Expect to see some saving with memory usage since two of the tiles share resources
       // All tiles reference the same external texture but texture caching is not supported yet
-      // TODO : tweak test when #5051 is in
 
       const b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
       const i3dmGeometryMemory = 840;
-
       // Texture is 128x128 RGBA bytes, not mipmapped
       const texturesByteLength = 65536;
 
@@ -1122,16 +1119,13 @@ describe(
         b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
       const expectedTextureMemory = texturesByteLength * 5;
 
-      // Disable ModelExperimental until ModelExperimentalStatistics
-      // are refactored to properly count shared resources.
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithExternalResourcesUrl,
-        {
-          enableModelExperimental: false,
-        }
+        tilesetWithExternalResourcesUrl
       ).then(function (tileset) {
-        const statistics = tileset._statistics;
+        // Contents are not aware of whether their resources are shared by
+        // other contents, so check ResourceCache.
+        const statistics = ResourceCache.statistics;
         expect(statistics.geometryByteLength).toBe(expectedGeometryMemory);
         expect(statistics.texturesByteLength).toBe(expectedTextureMemory);
       });
@@ -7120,9 +7114,7 @@ describe(
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataLegacyUrl,
-
-          { enableModelExperimental: false }
+          tilesetWithImplicitMultipleContentsMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
