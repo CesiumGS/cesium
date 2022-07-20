@@ -266,8 +266,7 @@ function getVariableSubstitutionMap(propertyAttributes) {
     const propertyAttribute = propertyAttributes[i];
     const properties = propertyAttribute.properties;
     for (const propertyId in properties) {
-      // This will have already been sanitized for GLSL by
-      // the point cloud loader.
+      // The property ID was already sanitized for GLSL by PntsLoader.
       if (properties.hasOwnProperty(propertyId)) {
         variableSubstitutionMap[propertyId] = `metadata.${propertyId}`;
       }
