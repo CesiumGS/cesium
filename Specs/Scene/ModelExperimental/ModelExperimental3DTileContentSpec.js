@@ -142,6 +142,36 @@ describe(
       });
     });
 
+    it("renders correctly when tileset starts hidden and tileset.preloadWhenHidden is true", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        Cesium3DTilesTester.expectRender(scene, tileset);
+      });
+    });
+
+    it("does not render when tileset starts hidden and tileset.preloadWhenHidden is false", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+      });
+    });
+
     describe("geoJSON", function () {
       function rendersGeoJson(url) {
         setCamera(centerLongitude, centerLatitude, 1.0);
