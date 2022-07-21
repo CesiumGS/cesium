@@ -667,7 +667,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
         {
             material.diffuse = vec3(fsInput.attributes.tangentEC);
-        }`,
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
