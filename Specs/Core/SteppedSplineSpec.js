@@ -1,6 +1,8 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { SteppedSpline } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  SteppedSpline,
+  Quaternion,
+} from "../../../Source/Cesium.js";
 
 describe("Core/SteppedSpline", function () {
   let times;

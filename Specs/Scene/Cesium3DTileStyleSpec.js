@@ -1,10 +1,12 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ConditionsExpression } from "../../Source/Cesium.js";
-import { Expression } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian4,
+  Color,
+  Resource,
+  Cesium3DTileStyle,
+  ConditionsExpression,
+  Expression,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/Cesium3DTileStyle", function () {
   function MockFeature() {

@@ -1,11 +1,14 @@
-import { decodeGoogleEarthEnterpriseData } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseMetadata } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseTileInformation } from "../../Source/Cesium.js";
+import {
+  decodeGoogleEarthEnterpriseData,
+  defaultValue,
+  GoogleEarthEnterpriseMetadata,
+  GoogleEarthEnterpriseTileInformation,
+  Request,
+  Resource,
+  RuntimeError,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {

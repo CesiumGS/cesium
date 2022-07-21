@@ -1,9 +1,13 @@
-import { BoundingSphere } from "../Source/Cesium.js";
-import { JulianDate } from "../Source/Cesium.js";
+import {
+  BoundingSphere,
+  JulianDate,
+  BoundingSphereState,
+  EllipsoidGeometryUpdater,
+  PrimitiveCollection,
+} from "../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../Source/Cesium.js";
-import { BoundingSphereState } from "../Source/Cesium.js";
-import { EllipsoidGeometryUpdater } from "../Source/Cesium.js";
-import { PrimitiveCollection } from "../Source/Cesium.js";
+
 import createDynamicProperty from "./createDynamicProperty.js";
 import pollToPromise from "./pollToPromise.js";
 

@@ -1,15 +1,19 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  Rectangle,
+  BlendOption,
+  PointPrimitive,
+  PointPrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { BlendOption } from "../../Source/Cesium.js";
-import { PointPrimitive } from "../../Source/Cesium.js";
-import { PointPrimitiveCollection } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

@@ -1,21 +1,25 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { clone } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  clone,
+  Color,
+  defined,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  NearFarScalar,
+  Rectangle,
+  Cesium3DTileBatchTable,
+  Cesium3DTileStyle,
+  ColorBlendMode,
+  HorizontalOrigin,
+  LabelStyle,
+  Vector3DTilePoints,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { LabelStyle } from "../../Source/Cesium.js";
-import { Vector3DTilePoints } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

@@ -1,15 +1,19 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  Cartesian3,
+  JulianDate,
+  Rectangle,
+  TimeIntervalCollection,
+  ConstantProperty,
+  Entity,
+  RectangleGeometryUpdater,
+  RectangleGraphics,
+  SampledProperty,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { RectangleGeometryUpdater } from "../../Source/Cesium.js";
-import { RectangleGraphics } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../createGeometryUpdaterGroundGeometrySpecs.js";

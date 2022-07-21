@@ -1,9 +1,13 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cartesian2,
+  CoplanarPolygonGeometry,
+  Ellipsoid,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CoplanarPolygonGeometry", function () {

@@ -1,9 +1,13 @@
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
+import {
+  Cartesian4,
+  ComponentDatatype,
+  PixelDatatype,
+  Texture,
+  BatchTable,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { BatchTable } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

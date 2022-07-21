@@ -1,13 +1,16 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { Geometry } from "../../Source/Cesium.js";
-import { GeometryAttribute } from "../../Source/Cesium.js";
-import { GeometryType } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  ComponentDatatype,
+  Ellipsoid,
+  Geometry,
+  GeometryAttribute,
+  GeometryType,
+  PrimitiveType,
+  Rectangle,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {

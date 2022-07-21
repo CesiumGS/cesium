@@ -1,8 +1,11 @@
-import { Cartesian2 } from "../Source/Cesium.js";
-import { clone } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { Scene } from "../Source/Cesium.js";
+import {
+  Cartesian2,
+  clone,
+  defaultValue,
+  defined,
+  Scene,
+} from "../../Source/Cesium.js";
+
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
 

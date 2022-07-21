@@ -1,43 +1,47 @@
-import { ArcType } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { BoxGeometry } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CircleGeometry } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { CorridorGeometry } from "../../Source/Cesium.js";
-import { CylinderGeometry } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { EllipseGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidGeometry } from "../../Source/Cesium.js";
-import { Geometry } from "../../Source/Cesium.js";
-import { GeometryAttribute } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
+import {
+  ArcType,
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian2,
+  Cartesian3,
+  CircleGeometry,
+  Color,
+  ColorGeometryInstanceAttribute,
+  ComponentDatatype,
+  CoplanarPolygonGeometry,
+  CornerType,
+  CorridorGeometry,
+  CylinderGeometry,
+  defined,
+  EllipseGeometry,
+  Ellipsoid,
+  EllipsoidGeometry,
+  Geometry,
+  GeometryAttribute,
+  GeometryInstance,
+  Matrix4,
+  PerspectiveFrustum,
+  PlaneGeometry,
+  PolygonGeometry,
+  PolylineGeometry,
+  PolylineVolumeGeometry,
+  PrimitiveType,
+  Rectangle,
+  RectangleGeometry,
+  SimplePolylineGeometry,
+  SphereGeometry,
+  Transforms,
+  WallGeometry,
+  EllipsoidSurfaceAppearance,
+  Material,
+  PerInstanceColorAppearance,
+  PolylineColorAppearance,
+  Primitive,
+  SceneMode,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { PlaneGeometry } from "../../Source/Cesium.js";
-import { PolygonGeometry } from "../../Source/Cesium.js";
-import { PolylineGeometry } from "../../Source/Cesium.js";
-import { PolylineVolumeGeometry } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { SimplePolylineGeometry } from "../../Source/Cesium.js";
-import { SphereGeometry } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { WallGeometry } from "../../Source/Cesium.js";
-import { EllipsoidSurfaceAppearance } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { PolylineColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

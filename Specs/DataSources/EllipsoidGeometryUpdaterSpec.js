@@ -1,21 +1,25 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  GeometryOffsetAttribute,
+  JulianDate,
+  Quaternion,
+  TimeIntervalCollection,
+  ColorMaterialProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  EllipsoidGeometryUpdater,
+  EllipsoidGraphics,
+  Entity,
+  SampledPositionProperty,
+  SampledProperty,
+  HeightReference,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { EllipsoidGeometryUpdater } from "../../Source/Cesium.js";
-import { EllipsoidGraphics } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";

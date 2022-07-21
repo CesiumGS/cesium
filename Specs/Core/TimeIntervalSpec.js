@@ -1,5 +1,4 @@
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
+import { JulianDate, TimeInterval } from "../../../Source/Cesium.js";
 
 describe("Core/TimeInterval", function () {
   function returnTrue() {

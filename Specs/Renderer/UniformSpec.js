@@ -1,10 +1,13 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Matrix2 } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

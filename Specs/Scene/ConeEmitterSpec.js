@@ -1,7 +1,6 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian3, ConeEmitter, Particle } from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { ConeEmitter } from "../../Source/Cesium.js";
-import { Particle } from "../../Source/Cesium.js";
 
 describe("Scene/ConeEmitter", function () {
   it("default constructor", function () {

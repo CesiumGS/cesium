@@ -1,17 +1,19 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { ModelGraphics } from "../../Source/Cesium.js";
-import { NodeTransformationProperty } from "../../Source/Cesium.js";
-import { PropertyBag } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  Quaternion,
+  ConstantProperty,
+  ModelGraphics,
+  NodeTransformationProperty,
+  PropertyBag,
+  ClippingPlaneCollection,
+  ColorBlendMode,
+  HeightReference,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/ModelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

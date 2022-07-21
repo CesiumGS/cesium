@@ -1,23 +1,26 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { ReferenceFrame } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { CompositePositionProperty } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { PathGraphics } from "../../Source/Cesium.js";
-import { PathVisualizer } from "../../Source/Cesium.js";
-import { PolylineGlowMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineOutlineMaterialProperty } from "../../Source/Cesium.js";
-import { ReferenceProperty } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { ScaledPositionProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionPositionProperty } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  Matrix4,
+  ReferenceFrame,
+  TimeInterval,
+  CompositePositionProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  EntityCollection,
+  PathGraphics,
+  PathVisualizer,
+  PolylineGlowMaterialProperty,
+  PolylineOutlineMaterialProperty,
+  ReferenceProperty,
+  SampledPositionProperty,
+  ScaledPositionProperty,
+  TimeIntervalCollectionPositionProperty,
+  SceneMode,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

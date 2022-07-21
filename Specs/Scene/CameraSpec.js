@@ -1,26 +1,29 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  defaultValue,
+  Ellipsoid,
+  GeographicProjection,
+  HeadingPitchRange,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  Rectangle,
+  Transforms,
+  WebMercatorProjection,
+  Camera,
+  CameraFlightPath,
+  MapMode2D,
+  SceneMode,
+  TweenCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { OrthographicFrustum } from "../../Source/Cesium.js";
-import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { CameraFlightPath } from "../../Source/Cesium.js";
-import { MapMode2D } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { TweenCollection } from "../../Source/Cesium.js";
 
 describe("Scene/Camera", function () {
   let scene;

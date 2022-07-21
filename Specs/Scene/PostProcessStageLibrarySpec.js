@@ -1,10 +1,13 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
-import { PostProcessStageLibrary } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Matrix4,
+  Transforms,
+  Model,
+  PostProcessStageLibrary,
+} from "../../../Source/Cesium.js";
+
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
