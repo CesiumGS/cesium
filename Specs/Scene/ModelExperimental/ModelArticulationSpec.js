@@ -4,10 +4,10 @@ import {
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  ModelExperimentalArticulation,
+  ModelArticulation,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
+describe("Scene/ModelExperimental/ModelArticulation", function () {
   const mockSceneGraph = {};
 
   const articulation = {
@@ -63,7 +63,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
 
   it("throws for undefined articulation", function () {
     expect(function () {
-      return new ModelExperimentalArticulation({
+      return new ModelArticulation({
         articulation: undefined,
         sceneGraph: mockSceneGraph,
       });
@@ -72,7 +72,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
 
   it("throws for undefined scene graph", function () {
     expect(function () {
-      return new ModelExperimentalArticulation({
+      return new ModelArticulation({
         articulation: {},
         sceneGraph: undefined,
       });
@@ -80,7 +80,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
   });
 
   it("constructs", function () {
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: mockSceneGraph,
     });
@@ -115,7 +115,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
   });
 
   it("setArticulationStage does not throw if stage name doesn't exist", function () {
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: mockSceneGraph,
     });
@@ -143,7 +143,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
   });
 
   it("setArticulationStage works", function () {
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: mockSceneGraph,
     });
@@ -187,7 +187,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
   });
 
   it("apply does nothing if articulation is not dirty", function () {
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: mockSceneGraph,
     });
@@ -209,7 +209,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulation", function () {
   });
 
   it("apply works", function () {
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: mockSceneGraph,
     });

@@ -9,14 +9,14 @@ import {
   Matrix3,
   Matrix4,
   ModelComponents,
-  ModelExperimentalAnimationChannel,
-  ModelExperimentalRuntimeNode,
+  ModelAnimationChannel,
+  ModelRuntimeNode,
   SteppedSpline,
   Quaternion,
   QuaternionSpline,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function () {
+describe("Scene/ModelExperimental/ModelAnimationChannel", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const times = [0.0, 0.25, 0.5, 1.0];
@@ -79,7 +79,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
   }
 
   beforeEach(function () {
-    runtimeNode = new ModelExperimentalRuntimeNode({
+    runtimeNode = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -90,7 +90,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
 
   it("throws for undefined channel", function () {
     expect(function () {
-      return new ModelExperimentalAnimationChannel({
+      return new ModelAnimationChannel({
         channel: undefined,
         runtimeAnimation: runtimeAnimation,
         runtimeNode: runtimeNode,
@@ -100,7 +100,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
 
   it("throws for undefined runtimeAnimation", function () {
     expect(function () {
-      return new ModelExperimentalAnimationChannel({
+      return new ModelAnimationChannel({
         channel: {},
         runtimeAnimation: undefined,
         runtimeNode: runtimeNode,
@@ -110,7 +110,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
 
   it("throws for undefined runtimeNode", function () {
     expect(function () {
-      return new ModelExperimentalAnimationChannel({
+      return new ModelAnimationChannel({
         channel: {},
         runtimeAnimation: runtimeAnimation,
         runtimeNode: undefined,
@@ -131,7 +131,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -157,7 +157,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -183,7 +183,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.ROTATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -209,7 +209,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.SCALE
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -250,7 +250,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -288,7 +288,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.WEIGHTS
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -327,7 +327,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.WEIGHTS
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -364,7 +364,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -410,7 +410,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.ROTATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -466,7 +466,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.SCALE
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -510,7 +510,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.WEIGHTS
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -546,7 +546,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,
@@ -593,7 +593,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       },
     };
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: wrappedRuntimeAnimation,
       runtimeNode: runtimeNode,
@@ -634,7 +634,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationChannel", function (
       AnimatedPropertyType.TRANSLATION
     );
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: mockChannel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,

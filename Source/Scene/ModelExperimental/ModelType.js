@@ -10,11 +10,11 @@ import DeveloperError from "../../Core/DeveloperError.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-const ModelExperimentalType = {
+const ModelType = {
   /**
    * An individual glTF model.
    * <p>
-   * Not to be confused with {@link ModelExperimentalType.TILE_GLTF}
+   * Not to be confused with {@link ModelType.TILE_GLTF}
    * which is for 3D Tiles
    * </p>
    *
@@ -26,7 +26,7 @@ const ModelExperimentalType = {
    * A glTF model used as tile content in a 3D Tileset via
    * <code>3DTILES_content_gltf</code>.
    * <p>
-   * Not to be confused with {@link ModelExperimentalType.GLTF}
+   * Not to be confused with {@link ModelType.GLTF}
    * which is for individual models
    * </p>
    *
@@ -67,22 +67,22 @@ const ModelExperimentalType = {
 
 /**
  * Check if a model is used for 3D Tiles.
- * @param {ModelExperimentalType} modelType The type of model
+ * @param {ModelType} modelType The type of model
  * @returns {Boolean} <code>true</code> if the model is a 3D Tiles format, <code>false</code> otherwise
  */
-ModelExperimentalType.is3DTiles = function (modelType) {
+ModelType.is3DTiles = function (modelType) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("modelType", modelType);
   //>>includeEnd('debug');
 
   switch (modelType) {
-    case ModelExperimentalType.TILE_GLTF:
-    case ModelExperimentalType.TILE_B3DM:
-    case ModelExperimentalType.TILE_I3DM:
-    case ModelExperimentalType.TILE_PNTS:
-    case ModelExperimentalType.TILE_GEOJSON:
+    case ModelType.TILE_GLTF:
+    case ModelType.TILE_B3DM:
+    case ModelType.TILE_I3DM:
+    case ModelType.TILE_PNTS:
+    case ModelType.TILE_GEOJSON:
       return true;
-    case ModelExperimentalType.GLTF:
+    case ModelType.GLTF:
       return false;
     //>>includeStart('debug', pragmas.debug);
     default:
@@ -91,4 +91,4 @@ ModelExperimentalType.is3DTiles = function (modelType) {
   }
 };
 
-export default Object.freeze(ModelExperimentalType);
+export default Object.freeze(ModelType);

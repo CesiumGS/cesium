@@ -7,7 +7,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
 import defaultValue from "../../Core/defaultValue.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelType from "./ModelType.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -119,7 +119,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
 
 function initialize(modelFeatureTable) {
   const model = modelFeatureTable._model;
-  const is3DTiles = ModelExperimentalType.is3DTiles(model.type);
+  const is3DTiles = ModelType.is3DTiles(model.type);
 
   const featuresLength = modelFeatureTable._propertyTable.count;
   if (featuresLength === 0) {

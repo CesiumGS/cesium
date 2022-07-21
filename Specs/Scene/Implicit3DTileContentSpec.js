@@ -14,7 +14,7 @@ import {
   Matrix3,
   Matrix4,
   MetadataClass,
-  ModelExperimental3DTileContent,
+  Model3DTileContent,
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
@@ -949,9 +949,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
@@ -993,9 +991,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
@@ -1011,9 +1007,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });

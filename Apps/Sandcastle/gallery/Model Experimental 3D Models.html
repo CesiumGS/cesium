@@ -142,7 +142,7 @@
 
           model.readyPromise.then(function (model) {
             viewer.camera.lookAt(
-              position,
+              model.boundingSphere.center,
               new Cesium.HeadingPitchRange(
                 Cesium.Math.toRadians(45),
                 Cesium.Math.toRadians(-15),

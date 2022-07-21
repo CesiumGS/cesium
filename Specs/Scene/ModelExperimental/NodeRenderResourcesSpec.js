@@ -2,7 +2,7 @@ import {
   Axis,
   Cartesian3,
   Matrix4,
-  ModelExperimentalRuntimeNode,
+  ModelRuntimeNode,
   ModelRenderResources,
   NodeRenderResources,
 } from "../../../Source/Cesium.js";
@@ -18,7 +18,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     },
   };
 
-  const runtimeNode = new ModelExperimentalRuntimeNode({
+  const runtimeNode = new ModelRuntimeNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),

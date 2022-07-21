@@ -3,20 +3,20 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 
 /**
- * An in-memory representation of a skin that affects nodes in the {@link ModelExperimentalSceneGraph}.
- * Skins should only be initialized after all of the {@link ModelExperimentalRuntimeNode}s have been instantiated
+ * An in-memory representation of a skin that affects nodes in the {@link ModelSceneGraph}.
+ * Skins should only be initialized after all of the {@link ModelRuntimeNode}s have been instantiated
  * by the scene graph.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Skin} options.skin The corresponding skin components from the 3D model
- * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this skin belongs to.
+ * @param {ModelSceneGraph} options.sceneGraph The scene graph this skin belongs to.
  *
- * @alias ModelExperimentalSkin
+ * @alias ModelSkin
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalSkin(options) {
+export default function ModelSkin(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.skin", options.skin);
@@ -35,11 +35,11 @@ export default function ModelExperimentalSkin(options) {
   initialize(this);
 }
 
-Object.defineProperties(ModelExperimentalSkin.prototype, {
+Object.defineProperties(ModelSkin.prototype, {
   /**
    * The internal skin this runtime skin represents.
    *
-   * @memberof ModelExperimentalSkin.prototype
+   * @memberof ModelSkin.prototype
    * @type {ModelComponents.Skin}
    * @readonly
    *
@@ -54,8 +54,8 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
   /**
    * The scene graph this skin belongs to.
    *
-   * @memberof ModelExperimentalSkin.prototype
-   * @type {ModelExperimentalSceneGraph}
+   * @memberof ModelSkin.prototype
+   * @type {ModelSceneGraph}
    * @readonly
    *
    * @private
@@ -69,7 +69,7 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
   /**
    * The inverse bind matrices of the skin.
    *
-   * @memberof ModelExperimentalSkin.prototype
+   * @memberof ModelSkin.prototype
    * @type {Matrix4[]}
    * @readonly
    *
@@ -84,8 +84,8 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
   /**
    * The joints of the skin.
    *
-   * @memberof ModelExperimentalSkin.prototype
-   * @type {ModelExperimentalRuntimeNode[]}
+   * @memberof ModelSkin.prototype
+   * @type {ModelRuntimeNode[]}
    * @readonly
    *
    * @private
@@ -103,7 +103,7 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
    * Each node that references this skin is responsible for pre-multiplying its inverse
    * world transform to the joint matrices for its own use.
    *
-   * @memberof ModelExperimentalSkin.prototype
+   * @memberof ModelSkin.prototype
    * @type {Matrix4[]}
    * @readonly
    *
@@ -163,7 +163,7 @@ function computeJointMatrix(joint, inverseBindMatrix, result) {
  *
  * @private
  */
-ModelExperimentalSkin.prototype.updateJointMatrices = function () {
+ModelSkin.prototype.updateJointMatrices = function () {
   const jointMatrices = this._jointMatrices;
   const length = jointMatrices.length;
   for (let i = 0; i < length; i++) {

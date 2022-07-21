@@ -4,7 +4,7 @@ import Event from "../../Core/Event.js";
 import JulianDate from "../../Core/JulianDate.js";
 import ModelAnimationLoop from ".././ModelAnimationLoop.js";
 import ModelAnimationState from ".././ModelAnimationState.js";
-import ModelExperimentalAnimationChannel from "../ModelExperimental/ModelExperimentalAnimationChannel.js";
+import ModelAnimationChannel from "../ModelExperimental/ModelAnimationChannel.js";
 
 /**
  * An active animation derived from a glTF asset. An active animation is an
@@ -162,7 +162,7 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
    *
    * @memberof ModelExperimentalAnimation.prototype
    *
-   * @type {ModelExperimentalAnimationChannel[]}
+   * @type {ModelAnimationChannel[]}
    * @readonly
    *
    * @private
@@ -365,7 +365,7 @@ function initialize(runtimeAnimation) {
     const nodeIndex = target.node.index;
     const runtimeNode = sceneGraph._runtimeNodes[nodeIndex];
 
-    const runtimeChannel = new ModelExperimentalAnimationChannel({
+    const runtimeChannel = new ModelAnimationChannel({
       channel: channel,
       runtimeAnimation: runtimeAnimation,
       runtimeNode: runtimeNode,

@@ -5,13 +5,13 @@ import {
   InstancingPipelineStage,
   Matrix3,
   Matrix4,
-  ModelExperimentalRuntimeNode,
+  ModelRuntimeNode,
   ModelMatrixUpdateStage,
   NodeStatisticsPipelineStage,
   Quaternion,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
+describe("Scene/ModelExperimental/ModelRuntimeNode", function () {
   const mockNode = {
     matrix: Matrix4.IDENTITY,
   };
@@ -59,7 +59,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
 
   it("throws for undefined node", function () {
     expect(function () {
-      return new ModelExperimentalRuntimeNode({
+      return new ModelRuntimeNode({
         node: undefined,
         transform: transform,
         transformToRoot: transformToRoot,
@@ -71,7 +71,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
 
   it("throws for undefined transform", function () {
     expect(function () {
-      return new ModelExperimentalRuntimeNode({
+      return new ModelRuntimeNode({
         node: mockNode,
         transform: undefined,
         transformToRoot: transformToRoot,
@@ -83,7 +83,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
 
   it("throws for undefined transform to root", function () {
     expect(function () {
-      return new ModelExperimentalRuntimeNode({
+      return new ModelRuntimeNode({
         node: mockNode,
         transform: transform,
         transformToRoot: undefined,
@@ -95,7 +95,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
 
   it("throws for undefined scene graph", function () {
     expect(function () {
-      return new ModelExperimentalRuntimeNode({
+      return new ModelRuntimeNode({
         node: mockNode,
         transform: transform,
         transformToRoot: transformToRoot,
@@ -107,7 +107,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
 
   it("throws for undefined children", function () {
     expect(function () {
-      return new ModelExperimentalRuntimeNode({
+      return new ModelRuntimeNode({
         node: mockNode,
         transform: transform,
         sceneGraph: mockSceneGraph,
@@ -118,7 +118,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("constructs", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -150,7 +150,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   it("constructs with default transform parameters", function () {
     const mockNodeWithNoMatrix = {};
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithNoMatrix,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -176,7 +176,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
       scale: new Cartesian3(1.0, 1.0, 2.0),
     };
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithParameters,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -196,7 +196,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("setting translation throws if node was constructed with matrix", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -210,7 +210,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("setting rotation throws if node was constructed with matrix", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -224,7 +224,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("setting scale throws if node was constructed with matrix", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -238,7 +238,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("setting morphWeights throws if given different length array", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -258,7 +258,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
       translation: Cartesian3.ZERO,
     };
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithTranslation,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -287,7 +287,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
       rotation: Quaternion.IDENTITY,
     };
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithRotation,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -317,7 +317,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
       scale: new Cartesian3(1.0, 1.0, 1.0),
     };
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithScale,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -343,7 +343,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
       morphWeights: [0.0, 0.0, 0.0],
     };
 
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNodeWithWeights,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -367,7 +367,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
         attributes: [],
       },
     };
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: instancedMockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -391,7 +391,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("getChild throws for undefined index", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -405,7 +405,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("getChild throws for invalid index", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -419,7 +419,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("getChild throws for out of range index", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -436,7 +436,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("getChild works", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -450,7 +450,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("sets transform without replacing original", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,
@@ -472,7 +472,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimeNode", function () {
   });
 
   it("updateComputedTransform updates computedTransform matrix", function () {
-    const node = new ModelExperimentalRuntimeNode({
+    const node = new ModelRuntimeNode({
       node: mockNode,
       transform: transform,
       transformToRoot: transformToRoot,

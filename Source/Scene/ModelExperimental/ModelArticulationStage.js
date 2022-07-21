@@ -10,18 +10,18 @@ const articulationEpsilon = CesiumMath.EPSILON16;
 
 /**
  * An in-memory representation of an articulation stage belonging to a
- * {@link ModelExperimentalArticulation}.
+ * {@link ModelArticulation}.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.ArticulationStage} options.stage The articulation stage components from the 3D model.
- * @param {ModelExperimentalArticulation} options.runtimeArticulation The runtime articulation that this stage belongs to.
+ * @param {ModelArticulation} options.runtimeArticulation The runtime articulation that this stage belongs to.
  *
- * @alias ModelExperimentalArticulationStage
+ * @alias ModelArticulationStage
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalArticulationStage(options) {
+export default function ModelArticulationStage(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const stage = options.stage;
@@ -41,11 +41,11 @@ export default function ModelExperimentalArticulationStage(options) {
   this._currentValue = stage.initialValue;
 }
 
-Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
+Object.defineProperties(ModelArticulationStage.prototype, {
   /**
    * The internal articulation stage that this runtime stage represents.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {ModelComponents.ArticulationStage}
    * @readonly
    *
@@ -60,8 +60,8 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
   /**
    * The runtime articulation that this stage belongs to.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
-   * @type {ModelExperimentalArticulation}
+   * @memberof ModelArticulationStage.prototype
+   * @type {ModelArticulation}
    * @readonly
    *
    * @private
@@ -75,7 +75,7 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
   /**
    * The name of this articulation stage.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {String}
    * @readonly
    *
@@ -91,7 +91,7 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
    * The type of this articulation stage. This specifies which of the
    * node's properties is modified by the stage's value.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {ArticulationStageType}
    * @readonly
    *
@@ -106,7 +106,7 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
   /**
    * The minimum value of this articulation stage.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {Number}
    * @readonly
    *
@@ -121,7 +121,7 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
   /**
    * The maximum value of this articulation stage.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {Number}
    * @readonly
    *
@@ -136,7 +136,7 @@ Object.defineProperties(ModelExperimentalArticulationStage.prototype, {
   /**
    * The current value of this articulation stage.
    *
-   * @memberof ModelExperimentalArticulationStage.prototype
+   * @memberof ModelArticulationStage.prototype
    * @type {Number}
    *
    * @private
@@ -181,9 +181,7 @@ const scratchArticulationRotation = new Matrix3();
  *
  * @private
  */
-ModelExperimentalArticulationStage.prototype.applyStageToMatrix = function (
-  result
-) {
+ModelArticulationStage.prototype.applyStageToMatrix = function (result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');

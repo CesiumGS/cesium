@@ -7,7 +7,7 @@ import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelType from "./ModelType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import Pass from "../../Renderer/Pass.js";
@@ -131,7 +131,7 @@ PointCloudStylingPipelineStage.process = function (
   let is3DTiles;
   let usesAddRefinement;
 
-  if (ModelExperimentalType.is3DTiles(model.type)) {
+  if (ModelType.is3DTiles(model.type)) {
     is3DTiles = true;
     content = model.content;
     usesAddRefinement = content.tile.refine === Cesium3DTileRefine.ADD;

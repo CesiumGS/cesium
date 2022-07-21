@@ -8,7 +8,7 @@ import {
   defaultValue,
   Math as CesiumMath,
   Matrix4,
-  ModelExperimentalType,
+  ModelType,
   OrthographicFrustum,
   Pass,
   PointCloudStylingPipelineStage,
@@ -71,7 +71,7 @@ describe(
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         pointCloudShading: pointCloudShading,
         _attenuation: attenuation,
       };
@@ -96,7 +96,7 @@ describe(
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
-        type: ModelExperimentalType.TILE_PNTS,
+        type: ModelType.TILE_PNTS,
         content: options.content,
         style: options.style,
         pointCloudShading: pointCloudShading,

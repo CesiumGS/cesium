@@ -12,8 +12,8 @@ import {
   LightingPipelineStage,
   MaterialPipelineStage,
   MetadataPipelineStage,
-  ModelExperimentalRuntimePrimitive,
-  ModelExperimentalType,
+  ModelRuntimePrimitive,
+  ModelType,
   MorphTargetsPipelineStage,
   PickingPipelineStage,
   PointCloudShading,
@@ -29,14 +29,14 @@ import {
   WireframePipelineStage,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function () {
+describe("Scene/ModelExperimental/ModelRuntimePrimitive", function () {
   const mockPrimitive = {
     featureIds: [],
     attributes: [],
   };
   const mockNode = {};
   const mockModel = {
-    type: ModelExperimentalType.GLTF,
+    type: ModelType.GLTF,
     allowPicking: true,
     featureIdLabel: "featureId_0",
   };
@@ -82,7 +82,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
   it("throws for undefined primitive", function () {
     expect(function () {
-      return new ModelExperimentalRuntimePrimitive({
+      return new ModelRuntimePrimitive({
         primitive: undefined,
         node: mockNode,
         model: mockModel,
@@ -92,7 +92,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
   it("throws for undefined node", function () {
     expect(function () {
-      return new ModelExperimentalRuntimePrimitive({
+      return new ModelRuntimePrimitive({
         primitive: mockPrimitive,
         node: undefined,
         model: mockModel,
@@ -102,7 +102,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
   it("throws for undefined model", function () {
     expect(function () {
-      return new ModelExperimentalRuntimePrimitive({
+      return new ModelRuntimePrimitive({
         primitive: mockPrimitive,
         node: mockNode,
         model: undefined,
@@ -111,7 +111,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("constructs", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: mockModel,
@@ -123,7 +123,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures the pipeline stages for model picking", function () {
-    let primitive = new ModelExperimentalRuntimePrimitive({
+    let primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: mockModel,
@@ -142,11 +142,11 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
 
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
-    primitive = new ModelExperimentalRuntimePrimitive({
+    primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         allowPicking: false,
         content: {},
       },
@@ -167,7 +167,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures the pipeline stages for instance feature picking", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: {
         instances: {
@@ -184,7 +184,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
         },
       },
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         allowPicking: true,
         instanceFeatureIdLabel: "instanceFeatureId_1",
         content: {},
@@ -210,7 +210,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures the pipeline stages for feature picking", function () {
-    let primitive = new ModelExperimentalRuntimePrimitive({
+    let primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [
           {
@@ -230,7 +230,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: {},
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         allowPicking: true,
         featureIdLabel: "pickingIds",
         content: {},
@@ -254,7 +254,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     primitive.configurePipeline(mockFrameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
-    primitive = new ModelExperimentalRuntimePrimitive({
+    primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [
           { positionalLabel: "featureId_0" },
@@ -264,7 +264,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: {},
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         allowPicking: true,
         featureIdLabel: "featureId_1",
         content: {},
@@ -276,7 +276,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures dequantization", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -309,11 +309,11 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures the pipeline stages for custom shaders", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         content: {},
         customShader: new CustomShader({
           vertexShaderText: emptyVertexShader,
@@ -339,11 +339,11 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
@@ -369,11 +369,11 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not disable the material stage if the custom shader has no fragment shader", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: mockPrimitive,
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
@@ -402,7 +402,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     const pointCloudShading = new PointCloudShading({
       attenuation: true,
     });
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -411,7 +411,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.TILE_PNTS,
+        type: ModelType.TILE_PNTS,
         featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
         content: {
@@ -441,7 +441,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     const pointCloudShading = new PointCloudShading({
       attenuation: true,
     });
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -450,7 +450,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
       },
@@ -475,7 +475,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
     const pointCloudShading = new PointCloudShading({
       attenuation: false,
     });
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -484,7 +484,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
       },
@@ -505,7 +505,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("skips point cloud attenuation if point cloud shading is not set", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -514,7 +514,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         pointCloudShading: undefined,
       },
@@ -535,7 +535,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures point cloud styling stage for 3d tiles point clouds", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -544,7 +544,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.TILE_PNTS,
+        type: ModelType.TILE_PNTS,
         featureIdLabel: "featureId_0",
         style: new Cesium3DTileStyle(),
       },
@@ -566,7 +566,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("skips point cloud styling stage without a style", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -575,7 +575,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.TILE_PNTS,
+        type: ModelType.TILE_PNTS,
         featureIdLabel: "featureId_0",
       },
     });
@@ -595,7 +595,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures the pipeline stages for morph targets", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         morphTargets: [{}],
         morphWeights: [0.0],
@@ -606,7 +606,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -637,7 +637,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       skin: mockSkin,
     };
 
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -646,7 +646,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         pointCloudShading: undefined,
       },
@@ -668,7 +668,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures pipeline for debugWireframe (WebGL 1)", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -679,7 +679,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       model: {
         debugWireframe: true,
         _enableDebugWireframe: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -700,7 +700,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not include wireframe stage if model.enableDebugWireframe is false (WebGL 1)", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -711,7 +711,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       model: {
         debugWireframe: true,
         _enableDebugWireframe: false,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -731,7 +731,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures pipeline for debugWireframe (WebGL 2)", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -741,7 +741,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       node: mockNode,
       model: {
         debugWireframe: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -762,7 +762,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not include wireframe stage for non-triangle primitives", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -772,7 +772,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       node: mockNode,
       model: {
         debugWireframe: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -792,7 +792,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("configures pipeline for projectTo2D", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -802,7 +802,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       node: mockNode,
       model: {
         _projectTo2D: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -823,7 +823,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not add scenemode 2D stage if scene is 3D", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -833,7 +833,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       node: mockNode,
       model: {
         _projectTo2D: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -853,7 +853,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not add scenemode 2D stage if scene is 3D only", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -863,7 +863,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       node: mockNode,
       model: {
         _projectTo2D: true,
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
       },
     });
@@ -883,7 +883,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("adds outline stage for CESIUM_primitive_outline", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -893,7 +893,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         _enableShowOutline: true,
       },
@@ -915,7 +915,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
   });
 
   it("does not add outline stage if outlines are disabled", function () {
-    const primitive = new ModelExperimentalRuntimePrimitive({
+    const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
         featureIdTextures: [],
@@ -925,7 +925,7 @@ describe("Scene/ModelExperimental/ModelExperimentalRuntimePrimitive", function (
       },
       node: mockNode,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
         featureIdLabel: "featureId_0",
         _enableShowOutline: false,
       },

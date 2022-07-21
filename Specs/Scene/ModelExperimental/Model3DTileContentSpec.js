@@ -15,7 +15,7 @@ import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 
 describe(
-  "Scene/ModelExperimental/ModelExperimental3DTileContent",
+  "Scene/ModelExperimental/Model3DTileContent",
   function () {
     const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";

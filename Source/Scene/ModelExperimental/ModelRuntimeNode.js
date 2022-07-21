@@ -11,21 +11,21 @@ import Quaternion from "../../Core/Quaternion.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
 /**
- * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
+ * An in-memory representation of a node as part of the {@link ModelSceneGraph}.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model.
  * @param {Matrix4} options.transform The transform of this node, excluding transforms from the node's ancestors or children.
  * @param {Matrix4} options.transformToRoot The product of the transforms of all the node's ancestors, excluding the node's own transform.
- * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
+ * @param {ModelSceneGraph} options.sceneGraph The scene graph this node belongs to.
  * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
- * @alias ModelExperimentalRuntimeNode
+ * @alias ModelRuntimeNode
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalRuntimeNode(options) {
+export default function ModelRuntimeNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const node = options.node;
@@ -102,7 +102,7 @@ export default function ModelExperimentalRuntimeNode(options) {
   /**
    * The mesh primitives that belong to this node.
    *
-   * @type {ModelExperimentalRuntimePrimitive[]}
+   * @type {ModelRuntimePrimitive[]}
    * @readonly
    *
    * @private
@@ -143,11 +143,11 @@ export default function ModelExperimentalRuntimeNode(options) {
   initialize(this);
 }
 
-Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
+Object.defineProperties(ModelRuntimeNode.prototype, {
   /**
    * The internal node this runtime node represents.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {ModelComponents.Node}
    * @readonly
    *
@@ -161,8 +161,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The scene graph this node belongs to.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
-   * @type {ModelExperimentalSceneGraph}
+   * @memberof ModelRuntimeNode.prototype
+   * @type {ModelSceneGraph}
    * @readonly
    *
    * @private
@@ -176,7 +176,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The indices of the children of this node in the scene graph.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Number[]}
    * @readonly
    *
@@ -193,7 +193,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * the corresponding ModelExperimentalNode, such that animation can be
    * driven by another source, not just an animation in the model's asset.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Matrix4}
    *
    * @private
@@ -212,9 +212,9 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * The transforms of all the node's ancestors, not including this node's
    * transform.
    *
-   * @see ModelExperimentalRuntimeNode#computedTransform
+   * @see ModelRuntimeNode#computedTransform
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
    *
@@ -230,7 +230,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * A transform from the node's local space to the model's scene graph space.
    * This is the product of transformToRoot * transform.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
    *
@@ -246,7 +246,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * The node's original transform, as specified in the model.
    * Does not include transformations from the node's ancestors.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Matrix4}
    * @readonly
    *
@@ -265,7 +265,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * If the node's transformation was originally described using a matrix
    * in the model, then this will return undefined.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Cartesian3}
    *
    * @exception {DeveloperError} The translation of a node cannot be set if it was defined using a matrix in the model's asset.
@@ -309,7 +309,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * If the node's transformation was originally described using a matrix
    * in the model, then this will return undefined.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Quaternion}
    *
    * @exception {DeveloperError} The rotation of a node cannot be set if it was defined using a matrix in the model's asset.
@@ -353,7 +353,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * If the node's transformation was originally described using a matrix
    * in the model, then this will return undefined.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Cartesian3}
    *
    * @exception {DeveloperError} The scale of a node cannot be set if it was defined using a matrix in the model's asset.
@@ -392,7 +392,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
    * The node's morph weights. This is used internally to allow animations
    * in the model's asset to affect the node's properties.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Number[]}
    *
    * @private
@@ -419,8 +419,8 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The skin applied to this node, if it exists.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
-   * @type {ModelExperimentalSkin}
+   * @memberof ModelRuntimeNode.prototype
+   * @type {ModelSkin}
    * @readonly
    *
    * @private
@@ -434,7 +434,7 @@ Object.defineProperties(ModelExperimentalRuntimeNode.prototype, {
   /**
    * The computed joint matrices of this node, derived from its skin.
    *
-   * @memberof ModelExperimentalRuntimeNode.prototype
+   * @memberof ModelRuntimeNode.prototype
    * @type {Matrix4[]}
    * @readonly
    *
@@ -498,7 +498,7 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
  *
  * @param {Number} index The index of the child.
  *
- * @returns {ModelExperimentalRuntimeNode}
+ * @returns {ModelRuntimeNode}
  *
  * @example
  * // Iterate through all children of a runtime node.
@@ -509,7 +509,7 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
  *
  * @private
  */
-ModelExperimentalRuntimeNode.prototype.getChild = function (index) {
+ModelRuntimeNode.prototype.getChild = function (index) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("index", index);
   if (index < 0 || index >= this.children.length) {
@@ -529,7 +529,7 @@ ModelExperimentalRuntimeNode.prototype.getChild = function (index) {
  *
  * @private
  */
-ModelExperimentalRuntimeNode.prototype.configurePipeline = function () {
+ModelRuntimeNode.prototype.configurePipeline = function () {
   const node = this.node;
   const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
@@ -550,7 +550,7 @@ ModelExperimentalRuntimeNode.prototype.configurePipeline = function () {
  *
  * @private
  */
-ModelExperimentalRuntimeNode.prototype.updateComputedTransform = function () {
+ModelRuntimeNode.prototype.updateComputedTransform = function () {
   this._computedTransform = Matrix4.multiply(
     this._transformToRoot,
     this._transform,
@@ -564,7 +564,7 @@ ModelExperimentalRuntimeNode.prototype.updateComputedTransform = function () {
  *
  * @private
  */
-ModelExperimentalRuntimeNode.prototype.updateJointMatrices = function () {
+ModelRuntimeNode.prototype.updateJointMatrices = function () {
   const runtimeSkin = this._runtimeSkin;
   if (!defined(runtimeSkin)) {
     return;

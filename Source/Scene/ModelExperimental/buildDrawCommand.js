@@ -4,7 +4,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalDrawCommand from "./ModelExperimentalDrawCommand.js";
+import ModelDrawCommand from "./ModelDrawCommand.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -16,13 +16,13 @@ import StencilConstants from "../StencilConstants.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
- * Builds the {@link ModelExperimentalDrawCommand} for a {@link ModelExperimentalRuntimePrimitive}
+ * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
  * using its render resources.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {ModelExperimentalDrawCommand} The generated ModelExperimentalDrawCommand.
+ * @returns {ModelDrawCommand} The generated ModelDrawCommand.
  *
  * @private
  */
@@ -112,7 +112,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
 
   const useSilhouetteCommands = model.hasSilhouette(frameState);
 
-  return new ModelExperimentalDrawCommand({
+  return new ModelDrawCommand({
     primitiveRenderResources: primitiveRenderResources,
     command: command,
     useSilhouetteCommands: useSilhouetteCommands,

@@ -8,9 +8,9 @@ import {
   LightingModel,
   Math as CesiumMath,
   Matrix4,
-  ModelExperimentalRuntimeNode,
-  ModelExperimentalRuntimePrimitive,
-  ModelExperimentalType,
+  ModelRuntimeNode,
+  ModelRuntimePrimitive,
+  ModelType,
   PrimitiveType,
   ModelRenderResources,
   NodeRenderResources,
@@ -21,7 +21,7 @@ import {
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   const mockModel = {
     modelMatrix: Matrix4.IDENTITY,
-    type: ModelExperimentalType.GLTF,
+    type: ModelType.GLTF,
   };
   const mockNode = {};
   const mockSceneGraph = {
@@ -32,7 +32,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
   };
 
-  const runtimeNode = new ModelExperimentalRuntimeNode({
+  const runtimeNode = new ModelRuntimeNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
@@ -92,13 +92,13 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   let runtimePrimitive;
   let runtimePrimitiveWithoutIndices;
   beforeAll(function () {
-    runtimePrimitive = new ModelExperimentalRuntimePrimitive({
+    runtimePrimitive = new ModelRuntimePrimitive({
       primitive: primitive,
       node: mockNode,
       model: mockModel,
     });
 
-    runtimePrimitiveWithoutIndices = new ModelExperimentalRuntimePrimitive({
+    runtimePrimitiveWithoutIndices = new ModelRuntimePrimitive({
       primitive: primitiveWithoutIndices,
       node: mockNode,
       model: mockModel,

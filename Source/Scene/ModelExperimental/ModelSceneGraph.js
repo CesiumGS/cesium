@@ -6,13 +6,13 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalArticulation from "./ModelExperimentalArticulation.js";
+import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
-import ModelExperimentalRuntimeNode from "./ModelExperimentalRuntimeNode.js";
-import ModelExperimentalRuntimePrimitive from "./ModelExperimentalRuntimePrimitive.js";
-import ModelExperimentalSkin from "./ModelExperimentalSkin.js";
+import ModelRuntimeNode from "./ModelRuntimeNode.js";
+import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
+import ModelSkin from "./ModelSkin.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
@@ -30,12 +30,12 @@ import Transforms from "../../Core/Transforms.js";
  * @param {ModelExperimental} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
  *
- * @alias ModelExperimentalSceneGraph
+ * @alias ModelSceneGraph
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalSceneGraph(options) {
+export default function ModelSceneGraph(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const components = options.modelComponents;
 
@@ -87,7 +87,7 @@ export default function ModelExperimentalSceneGraph(options) {
   /**
    * The runtime nodes that make up the scene graph
    *
-   * @type {ModelExperimentalRuntimeNode[]}
+   * @type {ModelRuntimeNode[]}
    * @readonly
    *
    * @private
@@ -119,7 +119,7 @@ export default function ModelExperimentalSceneGraph(options) {
   /**
    * The runtime skins that affect nodes in the scene graph.
    *
-   * @type {ModelExperimentalSkin[]}
+   * @type {ModelSkin[]}
    * @readonly
    *
    * @private
@@ -164,7 +164,7 @@ export default function ModelExperimentalSceneGraph(options) {
   initialize(this);
 }
 
-Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
+Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The model components this scene graph represents.
    *
@@ -240,7 +240,7 @@ function initialize(sceneGraph) {
   const runtimeArticulations = sceneGraph._runtimeArticulations;
   for (let i = 0; i < articulationsLength; i++) {
     const articulation = articulations[i];
-    const runtimeArticulation = new ModelExperimentalArticulation({
+    const runtimeArticulation = new ModelArticulation({
       articulation: articulation,
       sceneGraph: sceneGraph,
     });
@@ -280,7 +280,7 @@ function initialize(sceneGraph) {
   for (let i = 0; i < skinsLength; i++) {
     const skin = skins[i];
     runtimeSkins.push(
-      new ModelExperimentalSkin({
+      new ModelSkin({
         skin: skin,
         sceneGraph: sceneGraph,
       })
@@ -369,7 +369,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  * Recursively traverse through the nodes in the scene graph to create
  * their runtime versions, using a post-order depth-first traversal.
  *
- * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph
+ * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  * @returns {Number} The index of this node in the runtimeNodes array.
@@ -400,7 +400,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   }
 
   // Process node and mesh primitives.
-  const runtimeNode = new ModelExperimentalRuntimeNode({
+  const runtimeNode = new ModelRuntimeNode({
     node: node,
     transform: transform,
     transformToRoot: transformToRoot,
@@ -411,7 +411,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     runtimeNode.runtimePrimitives.push(
-      new ModelExperimentalRuntimePrimitive({
+      new ModelRuntimePrimitive({
         primitive: node.primitives[i],
         node: node,
         model: sceneGraph._model,
@@ -441,16 +441,14 @@ const scratchModelPositionMax = new Cartesian3();
 const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
- * Generates the {@link ModelExperimentalDrawCommand} for each primitive in the model.
+ * Generates the {@link ModelDrawCommand} for each primitive in the model.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
-  frameState
-) {
+ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
   const model = this._model;
   const modelRenderResources = new ModelRenderResources(model);
 
@@ -585,9 +583,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.configurePipeline = function (
-  frameState
-) {
+ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   const modelPipelineStages = this.modelPipelineStages;
   modelPipelineStages.length = 0;
 
@@ -617,10 +613,7 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function (
   }
 };
 
-ModelExperimentalSceneGraph.prototype.update = function (
-  frameState,
-  updateForAnimations
-) {
+ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
   let i, j, k;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
@@ -647,7 +640,7 @@ ModelExperimentalSceneGraph.prototype.update = function (
   }
 };
 
-ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (
+ModelSceneGraph.prototype.updateModelMatrix = function (
   modelMatrix,
   frameState
 ) {
@@ -670,7 +663,7 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
+ModelSceneGraph.prototype.updateJointMatrices = function () {
   const skinnedNodes = this._skinnedNodes;
   const length = skinnedNodes.length;
 
@@ -686,8 +679,8 @@ ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
  * using a post-order depth-first traversal to perform a callback on
  * their runtime primitives.
  *
- * @param {ModelExperimentalSceneGraph} sceneGraph The scene graph.
- * @param {ModelExperimentalRuntimeNode} runtimeNode The current runtime node.
+ * @param {ModelSceneGraph} sceneGraph The scene graph.
+ * @param {ModelRuntimeNode} runtimeNode The current runtime node.
  * @param {Boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
  * @param {Function} callback The callback to perform on the runtime primitives of the node.
  *
@@ -739,9 +732,7 @@ function forEachRuntimePrimitive(sceneGraph, visibleNodesOnly, callback) {
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
-  backFaceCulling
-) {
+ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
   forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.backFaceCulling = backFaceCulling;
@@ -755,7 +746,7 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
+ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
   forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
     const drawCommand = runtimePrimitive.drawCommand;
     drawCommand.shadows = shadowMode;
@@ -769,7 +760,7 @@ ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
+ModelSceneGraph.prototype.updateShowBoundingVolume = function (
   debugShowBoundingVolume
 ) {
   forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
@@ -788,7 +779,7 @@ ModelExperimentalSceneGraph.prototype.updateShowBoundingVolume = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
+ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires
@@ -826,7 +817,7 @@ ModelExperimentalSceneGraph.prototype.getDrawCommands = function (frameState) {
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.setArticulationStage = function (
+ModelSceneGraph.prototype.setArticulationStage = function (
   articulationStageKey,
   value
 ) {
@@ -850,7 +841,7 @@ ModelExperimentalSceneGraph.prototype.setArticulationStage = function (
  *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.applyArticulations = function () {
+ModelSceneGraph.prototype.applyArticulations = function () {
   const runtimeArticulations = this._runtimeArticulations;
   for (const articulationName in runtimeArticulations) {
     if (runtimeArticulations.hasOwnProperty(articulationName)) {

@@ -1,7 +1,7 @@
 import {
   combine,
   GltfLoader,
-  ModelExperimentalStatistics,
+  ModelStatistics,
   PrimitiveType,
   Resource,
   ResourceCache,
@@ -78,7 +78,7 @@ describe(
         wireframeIndexBuffer: undefined,
         model: {
           _pipelineResources: resources,
-          statistics: new ModelExperimentalStatistics(),
+          statistics: new ModelStatistics(),
         },
       };
     }

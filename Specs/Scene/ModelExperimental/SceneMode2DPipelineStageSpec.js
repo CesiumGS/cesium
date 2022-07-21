@@ -3,8 +3,8 @@ import {
   combine,
   GltfLoader,
   Matrix4,
-  ModelExperimentalStatistics,
-  ModelExperimentalType,
+  ModelStatistics,
+  ModelType,
   ModelExperimentalUtility,
   Resource,
   ResourceCache,
@@ -76,8 +76,8 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       attributeIndex: 1,
       model: {
-        type: ModelExperimentalType.TILE_GLTF,
-        statistics: new ModelExperimentalStatistics(),
+        type: ModelType.TILE_GLTF,
+        statistics: new ModelStatistics(),
         sceneGraph: {
           computedModelMatrix: Matrix4.IDENTITY,
         },

@@ -2,7 +2,7 @@ import {
   combine,
   GltfLoader,
   Matrix4,
-  ModelExperimentalType,
+  ModelType,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -73,7 +73,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
-          type: ModelExperimentalType.TILE_GLTF,
+          type: ModelType.TILE_GLTF,
         },
         runtimeNode: {
           computedJointMatrices: mockJointMatrices,
@@ -129,7 +129,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
-          type: ModelExperimentalType.TILE_GLTF,
+          type: ModelType.TILE_GLTF,
         },
         runtimeNode: {
           computedJointMatrices: mockJointMatrices,

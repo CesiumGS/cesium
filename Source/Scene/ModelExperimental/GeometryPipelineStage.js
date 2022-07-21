@@ -5,7 +5,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelType from "./ModelType.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import SceneMode from "../SceneMode.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
@@ -127,7 +127,7 @@ GeometryPipelineStage.process = function (
   // .pnts point clouds store sRGB color rather than linear color
   const model = renderResources.model;
   const modelType = model.type;
-  if (modelType === ModelExperimentalType.TILE_PNTS) {
+  if (modelType === ModelType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
       undefined,
