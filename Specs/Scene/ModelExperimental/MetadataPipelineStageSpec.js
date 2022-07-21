@@ -311,6 +311,7 @@ describe(
             "    metadata.insulation = texture2D(u_propertyTexture_1, attributes.texCoord_0).b;",
             "    metadata.insideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).r);",
             "    metadata.outsideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).g);",
+            "    metadataClass.insulation.defaultValue = float(1);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunctionUnordered(
