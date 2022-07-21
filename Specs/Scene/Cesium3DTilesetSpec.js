@@ -3193,6 +3193,33 @@ describe(
       );
     });
 
+    it("applies style after show is toggled", function () {
+      let tileset;
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
+          tileset = t;
+          tileset.show = false;
+          tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
+
+          scene.renderForSpecs();
+
+          tileset.show = true;
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2457522.154792),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[1]).toBe(0);
+            expect(rgba[2]).toBe(0);
+            expect(rgba[3]).toEqual(255);
+          });
+        }
+      );
+    });
+
     it("doesn't re-evaluate style during the next update", function () {
       let tileset;
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
