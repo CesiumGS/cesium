@@ -33,7 +33,7 @@ PrimitiveStatisticsPipelineStage.process = function (
   countFeatureIdTextures(statistics, primitive.featureIds);
   countBinaryMetadata(statistics, model);
 
-  // The following stages handle their own memory statistics since all their
+  // The following stages handle their own memory statistics, since all their
   // resources are generated each time draw commands are built:
   //
   // - PickingPipelineStage
@@ -194,12 +194,11 @@ function countBinaryMetadata(statistics, model) {
     // will be re-run when textures are loaded for an accurate count.
     countPropertyTextures(statistics, structuralMetadata);
 
-    // Property tables are accounted for here
+    // Property tables are accounted for here.
     statistics.propertyTablesByteLength +=
       structuralMetadata.propertyTablesByteLength;
 
-    // Intentionally skip property attributes since those are handled in
-    // countGeometry()
+    // Skip property attributes since those are handled in countGeometry().
   }
 
   // Model feature tables also have batch and pick textures that need to be
@@ -213,9 +212,9 @@ function countBinaryMetadata(statistics, model) {
   for (let i = 0; i < length; i++) {
     const featureTable = featureTables[i];
 
-    // This does not include the property table memory, as that is already
-    // counted through the structuralMetadata above.
-    statistics.propertyTablesByteLength += featureTable.batchTextureByteLength;
+    // This does not include the property table memory, since
+    // it is counted through the structuralMetadata above.
+    statistics.addBatchTexture(featureTable.batchTexture);
   }
 }
 

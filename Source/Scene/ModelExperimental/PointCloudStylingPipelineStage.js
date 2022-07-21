@@ -62,10 +62,32 @@ PointCloudStylingPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-
   const style = model.style;
-  if (defined(style)) {
-    const shaderFunctionInfo = getStyleShaderFunctionInfo(style);
+
+  // Point cloud styling will only be applied on the GPU if there is
+  // no batch table. If a batch table exists, then:
+  //  - the property attribute will not be defined
+  //  - the model will be using a feature table
+
+  const structuralMetadata = model.structuralMetadata;
+  const propertyAttributes = defined(structuralMetadata)
+    ? structuralMetadata.propertyAttributes
+    : undefined;
+
+  const hasFeatureTable =
+    defined(model.featureTableId) &&
+    model.featureTables[model.featureTableId].featuresLength > 0;
+
+  const hasBatchTable = !defined(propertyAttributes) && hasFeatureTable;
+
+  if (defined(style) && !hasBatchTable) {
+    const variableSubstitutionMap = getVariableSubstitutionMap(
+      propertyAttributes
+    );
+    const shaderFunctionInfo = getStyleShaderFunctionInfo(
+      style,
+      variableSubstitutionMap
+    );
     addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
 
     const propertyNames = getPropertyNames(shaderFunctionInfo);
@@ -233,11 +255,33 @@ const builtinVariableSubstitutionMap = {
   NORMAL: "attributes.normalMC",
 };
 
-const parameterList = "ProcessedAttributes attributes";
-
-function getStyleShaderFunctionInfo(style) {
-  const info = scratchShaderFunctionInfo;
+function getVariableSubstitutionMap(propertyAttributes) {
   const variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
+
+  if (!defined(propertyAttributes)) {
+    return variableSubstitutionMap;
+  }
+
+  for (let i = 0; i < propertyAttributes.length; i++) {
+    const propertyAttribute = propertyAttributes[i];
+    const properties = propertyAttribute.properties;
+    for (const propertyId in properties) {
+      // The property ID was already sanitized for GLSL by PntsLoader.
+      if (properties.hasOwnProperty(propertyId)) {
+        variableSubstitutionMap[propertyId] = `metadata.${propertyId}`;
+      }
+    }
+  }
+
+  return variableSubstitutionMap;
+}
+const parameterList =
+  "ProcessedAttributes attributes, " +
+  "Metadata metadata, " +
+  "float tiles3d_tileset_time";
+
+function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
+  const info = scratchShaderFunctionInfo;
   const shaderState = {
     translucent: false,
   };

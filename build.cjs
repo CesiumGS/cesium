@@ -190,6 +190,10 @@ async function buildCesiumJs(options) {
       format: "cjs",
       platform: "node",
       sourcemap: false,
+      define: {
+        // TransformStream is a browser-only implementation depended on by zip.js
+        TransformStream: "null",
+      },
       outfile: path.join(options.path, "index.cjs"),
     });
 
@@ -319,7 +323,7 @@ async function buildWorkers(options) {
   return bundle.write({
     dir: path.join(options.path, "Workers"),
     format: "amd",
-    // Rollup cannot generate a sourcemap
+    // Rollup cannot generate a sourcemap when pragmas are removed
     sourcemap: options.sourcemap && !options.removePragmas,
     banner: copyrightHeader,
   });

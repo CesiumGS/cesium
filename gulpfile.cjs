@@ -1330,7 +1330,10 @@ function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
     return Promise.map(thirdPartyExtra, function (module) {
       if (!discoveredDependencies.includes(module.name)) {
         // If this is not a npm module, return existing info
-        if (!packageJson.devDependencies[module.name]) {
+        if (
+          !packageJson.dependencies[module.name] &&
+          !packageJson.devDependencies[module.name]
+        ) {
           discoveredDependencies.push(module.name);
           return Promise.resolve(module);
         }

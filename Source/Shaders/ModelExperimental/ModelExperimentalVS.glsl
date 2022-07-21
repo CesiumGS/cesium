@@ -98,27 +98,27 @@ void main()
 
     // Compute the final position in each coordinate system needed.
     // This returns the value that will be assigned to gl_Position.
-    vec4 computedPosition = geometryStage(attributes, modelView, normal);    
+    vec4 positionClip = geometryStage(attributes, modelView, normal);    
 
     #ifdef HAS_SILHOUETTE
-    silhouetteStage(attributes);
+    silhouetteStage(attributes, positionClip);
     #endif
 
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
-    float show = pointCloudShowStylingStage(attributes);
+    float show = pointCloudShowStylingStage(attributes, metadata);
     #else
     float show = 1.0;
     #endif
 
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
-    v_pointCloudColor = pointCloudColorStylingStage(attributes);
+    v_pointCloudColor = pointCloudColorStylingStage(attributes, metadata);
     #endif
 
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
         gl_PointSize = vsOutput.pointSize;
         #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
-        gl_PointSize = pointCloudPointSizeStylingStage(attributes);
+        gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
         #else
         gl_PointSize = 1.0;
         #endif
@@ -126,5 +126,5 @@ void main()
         gl_PointSize *= show;
     #endif
 
-    gl_Position = show * computedPosition;
+    gl_Position = show * positionClip;
 }

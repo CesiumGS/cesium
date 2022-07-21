@@ -100,9 +100,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   function expectEmptyMetadata(structuralMetadata) {
     expect(structuralMetadata).toBeDefined();
     expect(structuralMetadata.schema).toEqual({});
-    expect(structuralMetadata.propertyTableCount).toBe(1);
-    const propertyTable = structuralMetadata.getPropertyTable(0);
-    expect(propertyTable.getPropertyIds(0)).toEqual([]);
+    expect(structuralMetadata.propertyTableCount).toBe(0);
   }
 
   function expectMetadata(structuralMetadata, expectedProperties, isBatched) {
