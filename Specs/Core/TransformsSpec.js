@@ -1,20 +1,23 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { EarthOrientationParameters } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Iau2006XysData } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  EarthOrientationParameters,
+  Ellipsoid,
+  GeographicProjection,
+  HeadingPitchRoll,
+  Iau2006XysData,
+  JulianDate,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  Resource,
+  RuntimeError,
+  TimeInterval,
+  Transforms,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
 
 describe("Core/Transforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);

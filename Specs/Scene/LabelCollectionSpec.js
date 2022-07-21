@@ -1,21 +1,25 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  defined,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  Rectangle,
+  BlendOption,
+  Globe,
+  HeightReference,
+  HorizontalOrigin,
+  Label,
+  LabelCollection,
+  LabelStyle,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { BlendOption } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { Label } from "../../Source/Cesium.js";
-import { LabelCollection } from "../../Source/Cesium.js";
-import { LabelStyle } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+
 import createGlobe from "../createGlobe.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";

@@ -1,27 +1,31 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { ArcType } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
-import { CoplanarPolygonOutlineGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  ArcType,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  CoplanarPolygonGeometry,
+  CoplanarPolygonOutlineGeometry,
+  Ellipsoid,
+  JulianDate,
+  PolygonGeometry,
+  PolygonHierarchy,
+  PolygonOutlineGeometry,
+  TimeIntervalCollection,
+  ConstantProperty,
+  Entity,
+  PolygonGeometryUpdater,
+  PolygonGraphics,
+  PropertyArray,
+  SampledPositionProperty,
+  SampledProperty,
+  GroundPrimitive,
+  HeightReference,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PolygonGeometry } from "../../Source/Cesium.js";
-import { PolygonHierarchy } from "../../Source/Cesium.js";
-import { PolygonOutlineGeometry } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { PolygonGeometryUpdater } from "../../Source/Cesium.js";
-import { PolygonGraphics } from "../../Source/Cesium.js";
-import { PropertyArray } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../createGeometryUpdaterGroundGeometrySpecs.js";

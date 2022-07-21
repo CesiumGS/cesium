@@ -1,8 +1,11 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { PolylineVolumeOutlineGeometry } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  CornerType,
+  Ellipsoid,
+  PolylineVolumeOutlineGeometry,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/PolylineVolumeOutlineGeometry", function () {

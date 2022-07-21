@@ -1,11 +1,15 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { CorridorGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  CornerType,
+  CorridorGeometry,
+  Ellipsoid,
+  GeometryOffsetAttribute,
+  Rectangle,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CorridorGeometry", function () {

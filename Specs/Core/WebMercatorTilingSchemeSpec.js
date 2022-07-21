@@ -1,11 +1,14 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartographic,
+  Ellipsoid,
+  Rectangle,
+  TilingScheme,
+  WebMercatorProjection,
+  WebMercatorTilingScheme,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { TilingScheme } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
 
 describe("Core/WebMercatorTilingScheme", function () {
   let tilingScheme;

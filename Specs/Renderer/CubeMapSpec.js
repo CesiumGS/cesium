@@ -1,17 +1,20 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
-import { CubeMap } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { Sampler } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { TextureMagnificationFilter } from "../../Source/Cesium.js";
-import { TextureMinificationFilter } from "../../Source/Cesium.js";
-import { TextureWrap } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  defined,
+  PixelFormat,
+  Resource,
+  ClearCommand,
+  ContextLimits,
+  CubeMap,
+  PixelDatatype,
+  Sampler,
+  Texture,
+  TextureMagnificationFilter,
+  TextureMinificationFilter,
+  TextureWrap,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

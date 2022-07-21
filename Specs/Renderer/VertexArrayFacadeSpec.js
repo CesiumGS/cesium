@@ -1,6 +1,9 @@
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { VertexArrayFacade } from "../../Source/Cesium.js";
+import {
+  ComponentDatatype,
+  BufferUsage,
+  VertexArrayFacade,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

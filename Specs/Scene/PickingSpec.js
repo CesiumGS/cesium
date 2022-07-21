@@ -1,24 +1,28 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Color,
+  Ellipsoid,
+  FeatureDetection,
+  GeometryInstance,
+  Matrix4,
+  OrthographicFrustum,
+  PerspectiveFrustum,
+  Ray,
+  Rectangle,
+  RectangleGeometry,
+  ShowGeometryInstanceAttribute,
+  Transforms,
+  Cesium3DTileStyle,
+  EllipsoidSurfaceAppearance,
+  Globe,
+  PointPrimitiveCollection,
+  Primitive,
+  SceneMode,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { OrthographicFrustum } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { EllipsoidSurfaceAppearance } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { PointPrimitiveCollection } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
+
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";

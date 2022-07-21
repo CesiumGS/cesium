@@ -1,12 +1,16 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { ArcType } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { GroundPolylineGeometry } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  ArcType,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  GeographicProjection,
+  GroundPolylineGeometry,
+  WebMercatorProjection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/GroundPolylineGeometry", function () {

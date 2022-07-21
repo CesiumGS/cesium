@@ -1,7 +1,9 @@
-import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
+import {
+  AxisAlignedBoundingBox,
+  Cartesian3,
+  Intersect,
+  Plane,
+} from "../../../Source/Cesium.js";
 
 describe("Core/AxisAlignedBoundingBox", function () {
   const positions = [

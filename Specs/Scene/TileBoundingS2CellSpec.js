@@ -1,11 +1,15 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  Ellipsoid,
+  Intersect,
+  Plane,
+  S2Cell,
+  TileBoundingS2Cell,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { S2Cell } from "../../Source/Cesium.js";
-import { TileBoundingS2Cell } from "../../Source/Cesium.js";
+
 import createFrameState from "../createFrameState.js";
 
 describe("Scene/TileBoundingS2Cell", function () {

@@ -1,22 +1,26 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  ConstantProperty,
+  EllipseGeometryUpdater,
+  EllipseGraphics,
+  Entity,
+  GridMaterialProperty,
+  StaticGroundGeometryPerMaterialBatch,
+  TimeIntervalCollectionProperty,
+  ClassificationType,
+  GroundPrimitive,
+  MaterialAppearance,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { EllipseGeometryUpdater } from "../../Source/Cesium.js";
-import { EllipseGraphics } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { GridMaterialProperty } from "../../Source/Cesium.js";
-import { StaticGroundGeometryPerMaterialBatch } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
-import { MaterialAppearance } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

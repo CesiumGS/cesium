@@ -1,12 +1,15 @@
-import { DefaultProxy } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { HeightmapTerrainData } from "../../Source/Cesium.js";
+import {
+  DefaultProxy,
+  GeographicTilingScheme,
+  HeightmapTerrainData,
+  Request,
+  RequestScheduler,
+  Resource,
+  TerrainProvider,
+  VRTheWorldTerrainProvider,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
-import { VRTheWorldTerrainProvider } from "../../Source/Cesium.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";

@@ -1,14 +1,18 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  HeadingPitchRange,
+  Matrix4,
+  Camera,
+  Material,
+  PolylineCollection,
+  SceneMode,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { PolylineCollection } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

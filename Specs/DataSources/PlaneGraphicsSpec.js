@@ -1,12 +1,15 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { PlaneGraphics } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  Plane,
+  ColorMaterialProperty,
+  ConstantProperty,
+  PlaneGraphics,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import testDefinitionChanged from "../testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 

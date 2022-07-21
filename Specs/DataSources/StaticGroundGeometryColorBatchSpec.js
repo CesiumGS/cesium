@@ -1,18 +1,22 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  CallbackProperty,
+  EllipseGeometryUpdater,
+  Entity,
+  StaticGroundGeometryColorBatch,
+  TimeIntervalCollectionProperty,
+  ClassificationType,
+  GroundPrimitive,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { EllipseGeometryUpdater } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { StaticGroundGeometryColorBatch } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

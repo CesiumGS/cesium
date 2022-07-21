@@ -1,30 +1,34 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  BoxGeometryUpdater,
+  CheckerboardMaterialProperty,
+  ColorMaterialProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  EllipseGeometryUpdater,
+  EllipseGraphics,
+  Entity,
+  GridMaterialProperty,
+  PolylineArrowMaterialProperty,
+  PolylineGeometryUpdater,
+  PolylineGraphics,
+  StaticGeometryPerMaterialBatch,
+  StripeMaterialProperty,
+  TimeIntervalCollectionProperty,
+  MaterialAppearance,
+  PolylineColorAppearance,
+  PolylineMaterialAppearance,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { BoxGeometryUpdater } from "../../Source/Cesium.js";
-import { CheckerboardMaterialProperty } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { EllipseGeometryUpdater } from "../../Source/Cesium.js";
-import { EllipseGraphics } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { GridMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineArrowMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineGeometryUpdater } from "../../Source/Cesium.js";
-import { PolylineGraphics } from "../../Source/Cesium.js";
-import { StaticGeometryPerMaterialBatch } from "../../Source/Cesium.js";
-import { StripeMaterialProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { MaterialAppearance } from "../../Source/Cesium.js";
-import { PolylineColorAppearance } from "../../Source/Cesium.js";
-import { PolylineMaterialAppearance } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

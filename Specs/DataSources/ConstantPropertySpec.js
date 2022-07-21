@@ -1,6 +1,8 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  JulianDate,
+  ConstantProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/ConstantProperty", function () {
   const time = JulianDate.now();

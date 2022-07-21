@@ -1,8 +1,11 @@
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Iso8601,
+  JulianDate,
+  TimeConstants,
+  TimeStandard,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { TimeConstants } from "../../Source/Cesium.js";
-import { TimeStandard } from "../../Source/Cesium.js";
 
 describe("Core/JulianDate", function () {
   // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
