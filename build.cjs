@@ -122,7 +122,7 @@ const esbuildBaseConfig = () => {
  * @param {String} options.path Directory where build artifacts are output
  * @param {Boolean} [options.minify=false] true if the output should be minified
  * @param {Boolean} [options.removePragmas=false] true if the output should have debug pragmas stripped out
- * @param {Boolean} [options.sourcemaps=false] true if an external sourcemap should be generated
+ * @param {Boolean} [options.sourcemap=false] true if an external sourcemap should be generated
  * @param {Boolean} [options.iife=false] true if an IIFE style module should be built
  * @param {Boolean} [options.node=false] true if a CJS style node module should be built
  * @param {Boolean} [options.incremental=false] true if build output should be cached for repeated builds
@@ -276,7 +276,7 @@ function rollupWarning(message) {
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
  * @param {String} options.path output directory
- * @returns Promise.<*>
+ * @returns {Promise.<*>}
  */
 async function buildWorkers(options) {
   // Copy existing workers

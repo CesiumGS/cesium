@@ -345,7 +345,7 @@ const serveResult = (result, fileName, res, next) => {
   });
 
   //eslint-disable-next-line no-unused-vars
-  app.get("/Build/Specs/*", async function (req, res, next) {
+  app.get("/Build/Specs/spec-main.js", async function (req, res, next) {
     if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
@@ -367,7 +367,7 @@ const serveResult = (result, fileName, res, next) => {
       createSpecList();
     }
 
-    esmResult.outputFiles = [];
+    specResult.outputFiles = [];
   });
 
   app.use(express.static(__dirname));
