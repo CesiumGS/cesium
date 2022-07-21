@@ -5,6 +5,7 @@ import {
   PrimitiveType,
   Resource,
   ResourceCache,
+  ShaderBuilder,
   WireframePipelineStage,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -81,6 +82,7 @@ describe(
           _pipelineResources: resources,
           statistics: new ModelExperimentalStatistics(),
         },
+        shaderBuilder: new ShaderBuilder(),
       };
     }
 
