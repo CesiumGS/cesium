@@ -218,22 +218,22 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("generates shader code from built-in attributes", function () {
     const customShader = new CustomShader({
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    vec3 normalMC = vsInput.attributes.normalMC;",
-        "    vec2 texCoord = vsInput.attributes.texCoord_0;",
-        "    vsOutput.positionMC = vsInput.attributes.positionMC;",
-        "}",
-      ].join("\n"),
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    vec3 positionMC = fsInput.attributes.positionMC;",
-        "    vec3 normalEC = fsInput.attributes.normalEC;",
-        "    vec2 texCoord = fsInput.attributes.texCoord_0;",
-        "}",
-      ].join("\n"),
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+            vec3 normalMC = vsInput.attributes.normalMC;
+            vec2 texCoord = vsInput.attributes.texCoord_0;
+            vsOutput.positionMC = vsInput.attributes.positionMC;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            vec3 positionMC = fsInput.attributes.positionMC;
+            vec3 normalEC = fsInput.attributes.normalEC;
+            vec2 texCoord = fsInput.attributes.texCoord_0;
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
@@ -298,20 +298,20 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("generates shader code for custom attributes", function () {
     const customShader = new CustomShader({
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    float temperature = vsInput.attributes.temperature;",
-        "    positionMC = vsInput.attributes.positionMC;",
-        "}",
-      ].join("\n"),
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    float temperature = fsInput.attributes.temperature;",
-        "    vec3 positionMC = fsInput.attributes.positionMC;",
-        "}",
-      ].join("\n"),
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+            float temperature = vsInput.attributes.temperature;
+            vec3 positionMC = vsInput.attributes.positionMC;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            float temperature = fsInput.attributes.temperature;
+            vec3 positionMC = fsInput.attributes.positionMC;
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
@@ -381,18 +381,18 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         v_color: VaryingType.FLOAT,
         v_computedMatrix: VaryingType.MAT3,
       },
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    vec4 color += vsInput.attributes.color_0 + vsInput.attributes.color_1;",
-        "}",
-      ],
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    vec4 color += fsInput.attributes.color_0 + fsInput.attributes.color_1;",
-        "}",
-      ],
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+          vec4 color += vsInput.attributes.color_0 + vsInput.attributes.color_1;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          vec4 color += fsInput.attributes.color_0 + fsInput.attributes.color_1;
+        }
+      `,
     });
 
     const renderResources = mockRenderResources(customShader);
@@ -459,19 +459,19 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("only generates input lines for attributes that are used", function () {
     const customShader = new CustomShader({
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    vsOutput.positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
-        "}",
-      ].join("\n"),
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    float temperature = fsInput.attributes.temperature",
-        "    material.diffuse = vec3(temperature / 90.0, 0.0, 0.0);",
-        "}",
-      ].join("\n"),
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+            vsOutput.positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            float temperature = fsInput.attributes.temperature;
+            material.diffuse = vec3(temperature / 90.0, 0.0, 0.0);
+        }
+      `,
     });
 
     const renderResources = mockRenderResources(customShader);
@@ -579,14 +579,14 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   it("configures positions in other coordinate systems when present in the shader", function () {
     const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    material.diffuse = fsInput.attributes.positionMC;",
-        "    material.specular = fsInput.attributes.positionWC;",
-        "    material.normal = fsInput.attributes.positionEC;",
-        "}",
-      ].join("\n"),
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            material.diffuse = fsInput.attributes.positionMC;
+            material.specular = fsInput.attributes.positionWC;
+            material.normal = fsInput.attributes.positionEC;
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
@@ -657,18 +657,17 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("infers default values for built-in attributes", function () {
     const customShader = new CustomShader({
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    vec2 texCoords = vsInput.attributes.texCoord_1;",
-        "}",
-      ].join("\n"),
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    material.diffuse = vec3(fsInput.attributes.tangentEC);",
-        "}",
-      ].join("\n"),
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+            vec2 texCoords = vsInput.attributes.texCoord_1;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            material.diffuse = vec3(fsInput.attributes.tangentEC);
+        }`,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
@@ -725,18 +724,18 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("handles incompatible primitives gracefully", function () {
     const customShader = new CustomShader({
-      vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-        "{",
-        "    vec3 texCoords = vsInput.attributes.notAnAttribute;",
-        "}",
-      ].join("\n"),
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    material.diffuse *= fsInput.attributes.alsoNotAnAttribute;",
-        "}",
-      ].join("\n"),
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+        {
+            vec3 texCoords = vsInput.attributes.notAnAttribute;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            material.diffuse *= fsInput.attributes.alsoNotAnAttribute;
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
@@ -809,12 +808,12 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
   it("handles fragment-only custom shader that computes positionWC", function () {
     const customShader = new CustomShader({
-      fragmentShaderText: [
-        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-        "{",
-        "    material.diffuse = fsInput.attributes.positionWC;",
-        "}",
-      ].join("\n"),
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            material.diffuse = fsInput.attributes.positionWC;
+        }
+      `,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;
