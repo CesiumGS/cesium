@@ -115,16 +115,6 @@ MaterialPipelineStage.process = function (
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
 
-  // Check if the model's debug wireframe is enabled. If so, add a define
-  // to disable normal mapping.
-  if (model.debugWireframe) {
-    shaderBuilder.addDefine(
-      "USE_WIREFRAME",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   if (material.doubleSided) {
     shaderBuilder.addDefine(
       "HAS_DOUBLE_SIDED_MATERIAL",

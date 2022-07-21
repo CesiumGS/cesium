@@ -8,6 +8,7 @@ import {
   WireframePipelineStage,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
@@ -82,6 +83,26 @@ describe(
         },
       };
     }
+
+    it("adds define to shader", function () {
+      return loadGltf(boxTexturedBinary, sceneWithWebgl2).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = sceneWithWebgl2.frameState;
+
+        const renderResources = mockRenderResources(primitive);
+        const shaderBuilder = renderResources.shaderBuilder;
+
+        WireframePipelineStage.process(renderResources, primitive, frameState);
+
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_WIREFRAME",
+        ]);
+      });
+    });
 
     it("Creates wireframe indices from buffer (WebGL 2)", function () {
       if (!sceneWithWebgl2.context.webgl2) {

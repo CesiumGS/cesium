@@ -10,20 +10,25 @@ import {
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
+  function mockRenderResources(mockModel) {
+    const defaultAlphaOptions = new ModelAlphaOptions();
+    defaultAlphaOptions.pass = Pass.OPAQUE;
+    return {
+      shaderBuilder: new ShaderBuilder(),
+      uniformMap: {},
+      model: mockModel,
+      alphaOptions: defaultAlphaOptions,
+      renderStateOptions: RenderState.getState(RenderState.fromCache()),
+    };
+  }
   it("configures the render resources for opaque color", function () {
     const mockModel = {
       color: Color.RED,
       colorBlendMode: ColorBlendMode.REPLACE,
       colorBlendAmount: 0.25,
     };
-    const defaultAlphaOptions = new ModelAlphaOptions();
-    defaultAlphaOptions.pass = Pass.OPAQUE;
-    const renderResources = {
-      shaderBuilder: new ShaderBuilder(),
-      uniformMap: {},
-      model: mockModel,
-      alphaOptions: defaultAlphaOptions,
-    };
+
+    const renderResources = mockRenderResources(mockModel);
     const shaderBuilder = renderResources.shaderBuilder;
 
     ModelColorPipelineStage.process(renderResources, mockModel);
@@ -54,14 +59,8 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       colorBlendMode: ColorBlendMode.MIX,
       colorBlendAmount: 0.25,
     };
-    const defaultAlphaOptions = new ModelAlphaOptions();
-    defaultAlphaOptions.pass = Pass.OPAQUE;
-    const renderResources = {
-      shaderBuilder: new ShaderBuilder(),
-      uniformMap: {},
-      model: mockModel,
-      alphaOptions: defaultAlphaOptions,
-    };
+
+    const renderResources = mockRenderResources(mockModel);
     const shaderBuilder = renderResources.shaderBuilder;
 
     ModelColorPipelineStage.process(renderResources, mockModel);
@@ -95,15 +94,9 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
         return false;
       },
     };
-    const defaultAlphaOptions = new ModelAlphaOptions();
-    defaultAlphaOptions.pass = Pass.OPAQUE;
-    const renderResources = {
-      shaderBuilder: new ShaderBuilder(),
-      uniformMap: {},
-      model: mockModel,
-      alphaOptions: defaultAlphaOptions,
-      renderStateOptions: RenderState.getState(RenderState.fromCache()),
-    };
+
+    const renderResources = mockRenderResources(mockModel);
+
     ModelColorPipelineStage.process(renderResources, mockModel);
 
     const renderStateOptions = renderResources.renderStateOptions;
