@@ -1,4 +1,5 @@
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 import getTimestamp from "./getTimestamp.js";
 
 let implementation;
@@ -64,6 +65,12 @@ function requestAnimationFramePolyFill(callback) {
   // we need this extra wrapper function because the native requestAnimationFrame
   // functions must be invoked on the global scope (window), which is not the case
   // if invoked as Cesium.requestAnimationFrame(callback)
+
+  deprecationWarning(
+    "Cesium.requestAnimationFrame",
+    "Cesium.requestAnimationFrame was deprecated in CesiumJS 1.96 and will be removed in 1.99. Use the native requestAnimationFrame method instead."
+  );
+
   return implementation(callback);
 }
 
