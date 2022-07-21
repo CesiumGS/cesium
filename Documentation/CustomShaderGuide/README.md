@@ -676,7 +676,11 @@ range of `[32.0, 212.0]`.
 
 ### Property ID Sanitization
 
-GLSL only supports alphanumeric identifiers, i.e. identifiers that do not starting with a number. Additionally, identifiers with consecutive underscores (`__`), as well as identifiers with the `gl_` prefix, are reserved in GLSL. To circumvent these limitations, the property IDs are modified as follows:
+GLSL only supports alphanumeric identifiers, i.e. identifiers that do not
+starting with a number. Additionally, identifiers with consecutive
+underscores (`__`), as well as identifiers with the `gl_` prefix, are
+reserved in GLSL. To circumvent these limitations, the property IDs are
+modified as follows:
 
 1. Replace all characters excluded from `[A-Za-z0-9_]` with an `_`.
 2. Replace consecutive underscores (e.g. `___`) with a single `_`.
@@ -700,8 +704,8 @@ property IDs, the behavior is undefined. For example:
   map to `metadata.temperature`, so the behavior is undefined
 
 When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
-properties are transcoded as property attributes. These property IDs follow the
-same convention.
+properties are transcoded as property attributes. These property IDs follow
+the same convention.
 
 ## `czm_modelVertexOutput` struct
 
