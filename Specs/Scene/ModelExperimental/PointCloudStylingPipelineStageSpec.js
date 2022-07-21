@@ -1,5 +1,4 @@
 import {
-  AlphaMode,
   Camera,
   Cartesian3,
   Cesium3DTileRefine,
@@ -255,7 +254,6 @@ describe(
       );
 
       expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
-      expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
     });
 
     it("applies point size style in shader", function () {

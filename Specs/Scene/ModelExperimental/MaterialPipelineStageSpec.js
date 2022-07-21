@@ -10,12 +10,12 @@ import {
   ModelStatistics,
   ModelLightingOptions,
   Pass,
+  RenderState,
   Resource,
   ResourceCache,
   ShaderBuilder,
   Cartesian4,
   Cartesian3,
-  Color,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -100,20 +100,25 @@ describe(
       }
     }
 
+    function mockRenderResources() {
+      return {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        alphaOptions: new ModelAlphaOptions(),
+        renderStateOptions: RenderState.getState(RenderState.fromCache()),
+        model: { statistics: new ModelStatistics() },
+      };
+    }
+
     it("processes default material", function () {
       return loadGltf(triangle).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -135,16 +140,9 @@ describe(
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -185,18 +183,10 @@ describe(
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: {
-            statistics: new ModelStatistics(),
-          },
-        };
+
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -236,16 +226,9 @@ describe(
         metallicRoughness.metallicFactor = 0.5;
         metallicRoughness.roughnessFactor = 0.5;
 
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -287,16 +270,9 @@ describe(
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -338,16 +314,9 @@ describe(
         specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
         specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5);
 
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -389,15 +358,8 @@ describe(
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const lightingOptions = new ModelLightingOptions();
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: lightingOptions,
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const lightingOptions = renderResources.lightingOptions;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -412,15 +374,8 @@ describe(
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const lightingOptions = new ModelLightingOptions();
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: lightingOptions,
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const lightingOptions = renderResources.lightingOptions;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -435,15 +390,8 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const lightingOptions = new ModelLightingOptions();
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: lightingOptions,
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const lightingOptions = renderResources.lightingOptions;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -458,15 +406,8 @@ describe(
       return loadGltf(boxNoNormals).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const lightingOptions = new ModelLightingOptions();
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: lightingOptions,
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
+        const lightingOptions = renderResources.lightingOptions;
 
         MaterialPipelineStage.process(
           renderResources,
@@ -477,19 +418,11 @@ describe(
       });
     });
 
-    it("handles alphaMode = OPAQUE", function () {
+    it("handles opaque material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
+        const renderResources = mockRenderResources();
 
         MaterialPipelineStage.process(
           renderResources,
@@ -498,29 +431,19 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).not.toBeDefined();
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
         expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
 
-    it("handles alphaMode = MASK", function () {
+    it("handles alpha mask material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
+        const cutoff = 0.6;
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
-
-        const cutoff = 0.6;
         primitive.material.alphaMode = AlphaMode.MASK;
         primitive.material.alphaCutoff = cutoff;
+
+        const renderResources = mockRenderResources();
         MaterialPipelineStage.process(
           renderResources,
           primitive,
@@ -528,27 +451,19 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).not.toBeDefined();
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.MASK);
         expect(renderResources.alphaOptions.alphaCutoff).toBe(cutoff);
       });
     });
 
-    it("handles alphaMode = BLEND", function () {
+    it("handles translucent material", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-          pass: Pass.OPAQUE,
-        };
-
         primitive.material.alphaMode = AlphaMode.BLEND;
+
+        const renderResources = mockRenderResources();
+        renderResources.pass = Pass.OPAQUE;
+
         MaterialPipelineStage.process(
           renderResources,
           primitive,
@@ -556,7 +471,6 @@ describe(
         );
 
         expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
-        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
         expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
@@ -565,30 +479,18 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: renderStateOptions,
-          model: {
-            statistics: new ModelStatistics(),
-            backFaceCulling: false,
-          },
-          cull: true,
-        };
+
+        const renderResources = mockRenderResources();
+        const renderStateOptions = renderResources.renderStateOptions;
+        renderResources.model.backFaceCulling = false;
+        renderResources.cull = true;
 
         MaterialPipelineStage.process(
           renderResources,
           primitive,
           mockFrameState
         );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(false);
       });
     });
 
@@ -596,30 +498,17 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: renderStateOptions,
-          model: {
-            statistics: new ModelStatistics(),
-            backFaceCulling: true,
-          },
-          cull: true,
-        };
+        const renderResources = mockRenderResources();
+        const renderStateOptions = renderResources.renderStateOptions;
+        renderResources.model.backFaceCulling = true;
+        renderResources.cull = true;
 
         MaterialPipelineStage.process(
           renderResources,
           primitive,
           mockFrameState
         );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: true,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(true);
       });
     });
 
@@ -627,18 +516,9 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: renderStateOptions,
-          model: {
-            statistics: new ModelStatistics(),
-            backFaceCulling: true,
-          },
-        };
+        const renderResources = mockRenderResources();
+        renderResources.model.backFaceCulling = true;
+        const renderStateOptions = renderResources.renderStateOptions;
 
         primitive.material.doubleSided = true;
         MaterialPipelineStage.process(
@@ -647,43 +527,7 @@ describe(
           mockFrameState
         );
 
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
-      });
-    });
-
-    it("disables back-face culling if model color is translucent", function () {
-      return loadGltf(boxUnlit).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const primitive = components.nodes[1].primitives[0];
-        const renderStateOptions = {};
-        const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: renderStateOptions,
-          model: {
-            statistics: new ModelStatistics(),
-            color: new Color(0, 0, 1, 0.5),
-            backFaceCulling: true,
-          },
-          cull: true,
-        };
-
-        MaterialPipelineStage.process(
-          renderResources,
-          primitive,
-          mockFrameState
-        );
-        expect(renderStateOptions).toEqual({
-          cull: {
-            enabled: false,
-          },
-        });
+        expect(renderStateOptions.cull.enabled).toBe(false);
       });
     });
 
@@ -691,17 +535,11 @@ describe(
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: {},
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: { statistics: new ModelStatistics() },
-        };
-
         primitive.material.doubleSided = true;
+
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+
         MaterialPipelineStage.process(
           renderResources,
           primitive,
@@ -715,53 +553,12 @@ describe(
       });
     });
 
-    it("adds define to shader if wireframe is enabled", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: {
-            statistics: new ModelStatistics(),
-            debugWireframe: true,
-          },
-        };
-
-        MaterialPipelineStage.process(
-          renderResources,
-          primitive,
-          mockFrameState
-        );
-
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "USE_WIREFRAME",
-        ]);
-      });
-    });
-
     it("adds define to shader if material is double-sided", function () {
       return loadGltf(twoSidedPlane).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const shaderBuilder = new ShaderBuilder();
-        const uniformMap = {};
-        const renderResources = {
-          shaderBuilder: shaderBuilder,
-          uniformMap: uniformMap,
-          lightingOptions: new ModelLightingOptions(),
-          alphaOptions: new ModelAlphaOptions(),
-          renderStateOptions: {},
-          model: {
-            statistics: new ModelStatistics(),
-            debugWireframe: true,
-          },
-        };
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
 
         MaterialPipelineStage.process(
           renderResources,

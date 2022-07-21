@@ -523,6 +523,11 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
 
       // Re-run the pipeline so texture memory statistics are re-computed

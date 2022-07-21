@@ -637,7 +637,6 @@ function deriveTranslucentCommand(command) {
   derivedCommand.pass = Pass.TRANSLUCENT;
   const rs = clone(command.renderState, true);
   rs.cull.enabled = false;
-  rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
   derivedCommand.renderState = RenderState.fromCache(rs);

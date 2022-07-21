@@ -1,10 +1,12 @@
 import {
   Axis,
   Cartesian3,
+  DepthFunction,
   Matrix4,
   ModelRuntimeNode,
   ModelRenderResources,
   NodeRenderResources,
+  RenderState,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/NodeRenderResources", function () {
@@ -49,9 +51,18 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
+    const defaultRenderState = RenderState.getState(
+      RenderState.fromCache({
+        depthTest: {
+          enabled: true,
+          func: DepthFunction.LESS_OR_EQUAL,
+        },
+      })
+    );
+
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
     expect(nodeResources.attributes).toEqual([]);
-    expect(nodeResources.renderStateOptions).toEqual({});
+    expect(nodeResources.renderStateOptions).toEqual(defaultRenderState);
   });
 
   it("inherits from model render resources", function () {

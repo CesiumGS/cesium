@@ -5,6 +5,7 @@ import {
   clone,
   Color,
   CullFace,
+  DepthFunction,
   DrawCommand,
   defaultValue,
   defined,
@@ -108,7 +109,12 @@ describe("Scene/ModelExperimental/ModelDrawCommand", function () {
 
     options.renderState = defaultValue(
       options.renderState,
-      RenderState.fromCache(new RenderState())
+      RenderState.fromCache({
+        depthTest: {
+          enabled: true,
+          func: DepthFunction.LESS_OR_EQUAL,
+        },
+      })
     );
 
     options.pass = defaultValue(options.pass, Pass.OPAQUE);

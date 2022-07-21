@@ -1,4 +1,3 @@
-import AlphaMode from "../AlphaMode.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import combine from "../../Core/combine.js";
 import ModelColorStageFS from "../../Shaders/ModelExperimental/ModelColorStageFS.js";
@@ -52,21 +51,18 @@ ModelColorPipelineStage.process = function (
 
   // Pass the model's color as a uniform. Set the pass type to translucent, if needed.
   const color = model.color;
-  const renderStateOptions = renderResources.renderStateOptions;
+
   if (color.alpha === 0.0 && !model.hasSilhouette(frameState)) {
-    // When the model is invisible, only disable the color and depth writes
-    // if the model does not have a silhouette. Otherwise, the silhouette
-    // will not render.
-    renderStateOptions.colorMask = {
+    renderResources.renderStateOptions.colorMask = {
       red: false,
       green: false,
       blue: false,
       alpha: false,
     };
-    renderStateOptions.depthMask = false;
-  } else if (color.alpha < 1.0) {
+  }
+
+  if (color.alpha < 1.0) {
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
-    renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
   }
 
   shaderBuilder.addUniform(

@@ -1,4 +1,3 @@
-import AlphaMode from "../AlphaMode.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
@@ -114,7 +113,6 @@ PointCloudStylingPipelineStage.process = function (
     const styleTranslucent = shaderFunctionInfo.styleTranslucent;
     if (styleTranslucent) {
       renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
-      renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
     }
   }
 

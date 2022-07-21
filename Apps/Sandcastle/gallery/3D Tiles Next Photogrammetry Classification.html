@@ -87,6 +87,12 @@
           color: "color(${color})",
         });
 
+        const translucentWindowsStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [["${component} === 'Windows'", "color('gray', 0.7)"]],
+          },
+        });
+
         // Shaders ============================================================================
 
         // Dummy shader that sets the UNLIT lighting mode. For use with the classification style
@@ -97,28 +103,8 @@
           fragmentShaderText: emptyFragmentShader,
         });
 
-        const translucentWindowsShader = new Cesium.CustomShader({
-          lightingModel: Cesium.LightingModel.UNLIT,
-          isTranslucent: true,
-          fragmentShaderText: `
-            const int WINDOW = 0;
-            const int SKYLIGHT = 4;
-            const int TOTAL_FEATURES = 12;
-            
-            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-              int featureId = fsInput.featureIds.featureId_0;
-            
-              if (featureId == WINDOW || featureId == SKYLIGHT) {
-                material.alpha = 0.4;
-                material.roughness = 0.1;
-              }
-            }
-            `,
-        });
-
         const materialShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.PBR,
-          isTranslucent: true,
           fragmentShaderText: `
             const int WINDOW = 0;
             const int FRAME = 1;
@@ -250,7 +236,7 @@
 
         function translucentWindows() {
           defaults();
-          tileset.customShader = translucentWindowsShader;
+          tileset.style = translucentWindowsStyle;
         }
 
         function pbrMaterials() {
