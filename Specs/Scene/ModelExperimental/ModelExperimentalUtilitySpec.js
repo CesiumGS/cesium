@@ -428,6 +428,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
     expect(result).toEqual("temperature_");
   });
+
   it("sanitizeGlslIdentifier removes consecutive underscores", function () {
     const identifier = "custom__property";
     const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);

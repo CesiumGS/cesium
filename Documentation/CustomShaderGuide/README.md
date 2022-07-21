@@ -674,9 +674,9 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
-### Property Name Sanitization
+### Property ID Sanitization
 
-Since GLSL only supports alphanumeric identifiers (not starting with a number or the reserved prefix `gl_`), property IDs are modified as follows:
+GLSL only supports alphanumeric identifiers, i.e. identifiers that do not starting with a number. Additionally, identifiers with consecutive underscores (`__`), as well as identifiers with the `gl_` prefix, are reserved in GLSL. To circumvent these limitations, the property IDs are modified as follows:
 
 1. Replace all characters excluded from `[A-Za-z0-9_]` with an `_`.
 2. Replace consecutive underscores (e.g. `___`) with a single `_`.
