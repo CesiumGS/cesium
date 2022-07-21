@@ -1,6 +1,8 @@
 import Check from "../../Core/Check.js";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
+import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
+import DepthFunction from "../DepthFunction.js";
 
 /**
  * Model render resources are for setting details that are consistent across
@@ -48,7 +50,7 @@ export default function ModelRenderResources(model) {
   this.uniformMap = {};
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha mode.
+   * Options for configuring the alpha stage such as pass and alpha cutoff.
    *
    * @type {ModelAlphaOptions}
    * @readonly
@@ -67,5 +69,12 @@ export default function ModelRenderResources(model) {
    *
    * @private
    */
-  this.renderStateOptions = {};
+  this.renderStateOptions = RenderState.getState(
+    RenderState.fromCache({
+      depthTest: {
+        enabled: true,
+        func: DepthFunction.LESS_OR_EQUAL,
+      },
+    })
+  );
 }

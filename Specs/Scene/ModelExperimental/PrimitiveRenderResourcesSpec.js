@@ -15,6 +15,7 @@ import {
   ModelRenderResources,
   NodeRenderResources,
   PrimitiveRenderResources,
+  RenderState,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 
@@ -81,13 +82,14 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const expectedDepthTest = {
-    depthTest: {
-      enabled: true,
-      func: DepthFunction.LESS_OR_EQUAL,
-    },
-    blending: BlendingState.DISABLED,
-  };
+  const defaultRenderState = RenderState.getState(
+    RenderState.fromCache({
+      depthTest: {
+        enabled: true,
+        func: DepthFunction.LESS_OR_EQUAL,
+      },
+    })
+  );
 
   let runtimePrimitive;
   let runtimePrimitiveWithoutIndices;
@@ -151,7 +153,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.lightingOptions.lightingModel).toEqual(
       LightingModel.UNLIT
     );
-    expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
+    expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
+      defaultRenderState
+    );
   });
 
   it("constructs from primitive without indices", function () {
@@ -181,7 +185,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.lightingOptions.lightingModel).toEqual(
       LightingModel.UNLIT
     );
-    expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
+    expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
+      defaultRenderState
+    );
   });
 
   it("inherits from model render resources", function () {
