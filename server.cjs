@@ -344,12 +344,18 @@ const serveResult = (result, fileName, res, next) => {
     res.send(jsHintOptionsCache);
   });
 
+  let specRebuildPromise = Promise.resolve();
   //eslint-disable-next-line no-unused-vars
-  app.get("/Build/Specs/spec-main.js", async function (req, res, next) {
+  app.get("/Build/Specs/*", async function (req, res, next) {
+    // Multiple files may be requested at this path, calling this function in quick succession.
+    // Await the previous build before re-building again.
+    await specRebuildPromise;
+
     if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
-        specResult = await specResult.rebuild();
+        specRebuildPromise = specResult.rebuild();
+        specResult = await specRebuildPromise;
         console.log(
           `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
         );
