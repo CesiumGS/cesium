@@ -73,11 +73,10 @@ describe(
       };
     }
 
-    function checkMetadataClassStructs(shaderBuilder) {
+    function checkMetadataClassStructs(shaderBuilder, metadataTypes) {
       // Check for MetadataClass sub-structs: one for each metadata type.
-      // These are constructed in both vertex and fragment shaders,
-      // regardless of whether they are used or not
-      for (const metadataType of MetadataPipelineStage.METADATA_TYPES) {
+      // These are constructed in both vertex and fragment shaders
+      for (const metadataType of metadataTypes) {
         const structName = `${metadataType}MetadataClass`;
         const structIdVs = `${structName}VS`;
         const structIdFs = `${structName}FS`;
@@ -164,7 +163,8 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
 
-        checkMetadataClassStructs(shaderBuilder);
+        const metadataTypes = ["float"];
+        checkMetadataClassStructs(shaderBuilder, metadataTypes);
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
@@ -277,6 +277,10 @@ describe(
         MetadataPipelineStage.process(renderResources, primitive, frameState);
 
         const shaderBuilder = renderResources.shaderBuilder;
+
+        const metadataTypes = ["int", "float"];
+        checkMetadataClassStructs(shaderBuilder, metadataTypes);
+
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_VS,
@@ -346,7 +350,8 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
 
-        checkMetadataClassStructs(shaderBuilder);
+        const metadataTypes = ["vec2", "int", "ivec3", "vec3"];
+        checkMetadataClassStructs(shaderBuilder, metadataTypes);
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,

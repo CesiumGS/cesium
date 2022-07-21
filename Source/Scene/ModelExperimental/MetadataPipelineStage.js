@@ -1,3 +1,4 @@
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js";
@@ -32,20 +33,6 @@ MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA =
 MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
-// Allowed types for metadata
-MetadataPipelineStage.METADATA_TYPES = [
-  "int",
-  "ivec2",
-  "ivec3",
-  "ivec4",
-  "float",
-  "vec2",
-  "vec3",
-  "vec4",
-  "mat2",
-  "mat3",
-  "mat4",
-];
 // Metadata class info: some fields must be renamed to avoid reserved words
 MetadataPipelineStage.METADATACLASS_FIELDS = [
   { specName: "noData", shaderName: "noData" },
@@ -74,30 +61,47 @@ MetadataPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
+  const { shaderBuilder, model } = renderResources;
 
-  // Always declare structs, even if not used
-  declareMetadataClassStructs(shaderBuilder);
+  const structuralMetadata = defaultValue(model.structuralMetadata, {});
+  const { propertyAttributes, propertyTextures } = structuralMetadata;
+
+  // Find which metadata types are used
+  const metadataTypes = new Set();
+  if (defined(propertyAttributes)) {
+    getPropertyAttributeTypes(metadataTypes, primitive, propertyAttributes);
+  }
+  if (defined(propertyTextures)) {
+    getPropertyTextureTypes(metadataTypes, propertyTextures);
+  }
+
+  // Declare only the needed <type>MetadataClass structs
+  declareMetadataTypeStructs(shaderBuilder, metadataTypes);
+
+  // Always declare the Metadata and MetadataClass structs, and the
+  // initializeMetadata() function, even if not used
   declareStructsAndFunctions(shaderBuilder);
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
 
-  const structuralMetadata = renderResources.model.structuralMetadata;
-  if (!defined(structuralMetadata)) {
-    return;
+  if (defined(propertyAttributes)) {
+    processPropertyAttributes(renderResources, primitive, propertyAttributes);
   }
-
-  processPropertyAttributes(renderResources, primitive, structuralMetadata);
-  processPropertyTextures(renderResources, structuralMetadata);
+  if (defined(propertyTextures)) {
+    processPropertyTextures(renderResources, propertyTextures);
+  }
 };
 
-function declareMetadataClassStructs(shaderBuilder) {
-  const metadataTypes = MetadataPipelineStage.METADATA_TYPES;
+/**
+ * Declare <type>MetadataClass structs in the shader
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @param {Set<String>} metadataTypes The types of metadata used in the shaders
+ * @private
+ */
+function declareMetadataTypeStructs(shaderBuilder, metadataTypes) {
   const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
 
-  for (let i = 0; i < metadataTypes.length; i++) {
-    const metadataType = metadataTypes[i];
-
+  for (const metadataType of metadataTypes) {
     const structName = `${metadataType}MetadataClass`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;
@@ -160,44 +164,76 @@ function declareStructsAndFunctions(shaderBuilder) {
   );
 }
 
-function processPropertyAttributes(
-  renderResources,
-  primitive,
-  structuralMetadata
-) {
-  const propertyAttributes = structuralMetadata.propertyAttributes;
+/**
+ * A callback function to process a property
+ * @callback processProperty
+ * @param {String} propertyId
+ * @param {Object} property
+ * @private
+ */
 
-  if (!defined(propertyAttributes)) {
-    return;
-  }
-
-  for (let i = 0; i < propertyAttributes.length; i++) {
-    const propertyAttribute = propertyAttributes[i];
-    const properties = propertyAttribute.properties;
+/**
+ * Process the properties of an array of objects
+ * @param {Object[]} propertyArray An array of objects with properties to process
+ * @param {Object} propertyArray[].properties The properties to be processed
+ * @param {processProperty} process A function to execute on each property
+ * @private
+ */
+function processProperties(propertyArray, process) {
+  for (let i = 0; i < propertyArray.length; i++) {
+    const properties = propertyArray[i].properties;
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
         const property = properties[propertyId];
-
-        // Get information about the attribute the same way as the
-        // GeometryPipelineStage to ensure we have the correct GLSL type and
-        // variable name.
-        const modelAttribute = ModelExperimentalUtility.getAttributeByName(
-          primitive,
-          property.attribute
-        );
-        const attributeInfo = ModelExperimentalUtility.getAttributeInfo(
-          modelAttribute
-        );
-
-        addPropertyAttributeProperty(
-          renderResources,
-          attributeInfo,
-          propertyId,
-          property
-        );
+        process(propertyId, property);
       }
     }
   }
+}
+
+function getPropertyAttributeTypes(
+  metadataTypes,
+  primitive,
+  propertyAttributes
+) {
+  const { getAttributeByName, getAttributeInfo } = ModelExperimentalUtility;
+
+  function getPropertyAttributePropertyType(propertyId, property) {
+    // Get information about the attribute the same way as the
+    // GeometryPipelineStage to ensure we have the correct GLSL type
+    const modelAttribute = getAttributeByName(primitive, property.attribute);
+    const attributeInfo = getAttributeInfo(modelAttribute);
+
+    // in WebGL 1, attributes must have floating point components, so it's safe
+    // to assume here that the types will match. Even if the property was
+    // normalized, this is handled at upload time, not in the shader.
+    const glslType = attributeInfo.glslType;
+
+    metadataTypes.add(glslType);
+  }
+
+  processProperties(propertyAttributes, getPropertyAttributePropertyType);
+}
+
+function processPropertyAttributes(
+  renderResources,
+  primitive,
+  propertyAttributes
+) {
+  const { getAttributeByName, getAttributeInfo } = ModelExperimentalUtility;
+
+  function processPropertyAttribute(propertyId, property) {
+    const modelAttribute = getAttributeByName(primitive, property.attribute);
+    const attributeInfo = getAttributeInfo(modelAttribute);
+    addPropertyAttributeProperty(
+      renderResources,
+      attributeInfo,
+      propertyId,
+      property
+    );
+  }
+
+  processProperties(propertyAttributes, processPropertyAttribute);
 }
 
 function addPropertyAttributeProperty(
@@ -294,26 +330,23 @@ function addPropertyAttributeProperty(
   }
 }
 
-function processPropertyTextures(renderResources, structuralMetadata) {
-  const propertyTextures = structuralMetadata.propertyTextures;
-
-  if (!defined(propertyTextures)) {
-    return;
+function getPropertyTextureTypes(metadataTypes, propertyTextures) {
+  function getPropertyTexturePropertyType(propertyId, property) {
+    const glslType = property.getGlslType();
+    metadataTypes.add(glslType);
   }
 
-  for (let i = 0; i < propertyTextures.length; i++) {
-    const propertyTexture = propertyTextures[i];
+  processProperties(propertyTextures, getPropertyTexturePropertyType);
+}
 
-    const properties = propertyTexture.properties;
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = properties[propertyId];
-        if (property.isGpuCompatible()) {
-          addPropertyTextureProperty(renderResources, propertyId, property);
-        }
-      }
+function processPropertyTextures(renderResources, propertyTextures) {
+  function processPropertyTexture(propertyId, property) {
+    if (property.isGpuCompatible()) {
+      addPropertyTextureProperty(renderResources, propertyId, property);
     }
   }
+
+  processProperties(propertyTextures, processPropertyTexture);
 }
 
 function addPropertyTextureProperty(renderResources, propertyId, property) {
