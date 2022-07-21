@@ -57,6 +57,8 @@ if (typeof requestAnimationFrame !== "undefined") {
  * tick();
  *
  * @see {@link https://www.w3.org/TR/html51/webappapis.html#animation-frames|The Web API Animation Frames interface}
+ *
+ * @deprecated
  */
 function requestAnimationFramePolyFill(callback) {
   // we need this extra wrapper function because the native requestAnimationFrame
