@@ -20,7 +20,8 @@
                 "name": "Insulation Thickness",
                 "type": "SCALAR",
                 "componentType": "UINT8",
-                "normalized": true
+                "normalized": true,
+                "default": "1"
               }
             }
           }

@@ -203,6 +203,8 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class information. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
 };
 ```
 
@@ -219,6 +221,8 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class information. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
 };
 ```
 
@@ -571,7 +575,7 @@ The following types of metadata are currently supported:
   types with `componentType: UINT8` are currently supported.
 
 Regardless of the source of metadata, the properties are collected into a single
-struct by property ID. For example, if the metadata class looked like this:
+struct by property ID. Consider the following metadata class:
 
 ```jsonc
 "schema": {
@@ -705,6 +709,63 @@ property IDs, the behavior is undefined. For example:
 When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
 properties are transcoded as property attributes. These property IDs follow
 the same convention.
+
+## `MetadataClass` struct
+
+This struct contains constants for each metadata property, as defined
+in the class schema.
+
+Regardless of the source of metadata, the properties are collected into a single
+struct by property ID. For example, if the metadata class looked like this:
+
+```jsonc
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        "temperature": {
+          "name": "Surface Temperature",
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "noData": -9999.0,
+          "default": 72.0,
+          "min": -40.0,
+          "max": 500.0,
+        }
+      }
+    }
+  }
+}
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct floatMetadataClass {
+  float noData;
+  float defaultValue; // 'default' is a reserved word in GLSL
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
+}
+struct MetadataClass {
+  floatMetadataClass temperature;
+}
+```
+
+The sub-struct for each property will be chosen such that the individual properties
+(such as `noData` and `defaultValue`) will have the same type as the actual values of the
+property.
+
+Now the noData and default values can be accessed as follows in the vertex shader:
+
+```glsl
+float noData = vsInput.metadataClass.temperature.noData;            // == -9999.0
+float defaultTemp = vsInput.metadataClass.temperature.defaultValue; // == 72.0
+float minTemp = vsInput.metadataClass.temperature.minValue;         // == -40.0
+float maxTemp = vsInput.metadataClass.temperature.maxValue;         // == 500.0
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
 
 ## `czm_modelVertexOutput` struct
 

@@ -89,11 +89,12 @@ void main()
     #endif
 
     Metadata metadata;
-    metadataStage(metadata, attributes);
+    MetadataClass metadataClass;
+    metadataStage(metadata, metadataClass, attributes);
 
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
-    customShaderStage(vsOutput, attributes, featureIds, metadata);
+    customShaderStage(vsOutput, attributes, featureIds, metadata, metadataClass);
     #endif
 
     // Compute the final position in each coordinate system needed.
