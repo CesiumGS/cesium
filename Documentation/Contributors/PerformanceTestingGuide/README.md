@@ -221,7 +221,7 @@ When running the test, there are a few additional considerations:
    npm run release
 
    # build Sandcastle and other apps
-   npm run buildApps
+   npm run build-apps
    ```
 
 2. (optional) Unless the Network tab is needed (e.g. for throttling), consider

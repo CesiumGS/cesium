@@ -37,6 +37,7 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
 
 ### 1.95 - 2022-07-01
 
