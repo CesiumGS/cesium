@@ -120,7 +120,7 @@ function compareNumber(a, b) {
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
  *
- * @param {...Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
+ * @param {Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
  *
  * @see Event#addEventListener
  * @see Event#removeEventListener
