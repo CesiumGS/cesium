@@ -12,7 +12,7 @@
 
 ##### Breaking Changes :mega:
 
-- `Model.boundingSphere` now returns the bounding sphere in ECEF coordinates instead of the local coordinate system.
+- `Model.boundingSphere` now returns the bounding sphere in ECEF coordinates instead of the local coordinate system. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
 
 ##### Additions :tada:
 
@@ -36,7 +36,7 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97.
+- Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
 
 ### 1.95 - 2022-07-01
 

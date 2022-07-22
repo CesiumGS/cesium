@@ -1,4 +1,4 @@
-void metadataStage(out Metadata metadata, ProcessedAttributes attributes)
+void metadataStage(out Metadata metadata, out MetadataClass metadataClass, ProcessedAttributes attributes)
 {
-  initializeMetadata(metadata, attributes);
+  initializeMetadata(metadata, metadataClass, attributes);
 }
