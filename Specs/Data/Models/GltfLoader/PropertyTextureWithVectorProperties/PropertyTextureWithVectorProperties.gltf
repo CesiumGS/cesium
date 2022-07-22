@@ -17,7 +17,11 @@
               },
               "uint8vec3Property": {
                 "type": "VEC3",
-                "componentType": "UINT8"
+                "componentType": "UINT8",
+                "noData": [19, 13, 50],
+                "default": [255, 0, 0],
+                "min": [10, 10, 10],
+                "max": [30, 17, 50]
               },
               "arrayProperty": {
                 "array": true,

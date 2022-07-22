@@ -163,7 +163,8 @@
       "prettier --write"
     ],
     "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"
+      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
+      "prettier --write"
     ]
   }
 }

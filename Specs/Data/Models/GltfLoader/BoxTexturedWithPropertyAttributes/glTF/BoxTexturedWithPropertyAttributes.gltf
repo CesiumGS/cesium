@@ -36,7 +36,8 @@
                                 "componentType": "UINT16",
                                 "normalized": true,
                                 "offset": [20, 10],
-                                "scale": [5, 20]
+                                "scale": [5, 20],
+                                "noData": [0.1, 0.3]
                             }
                         }
                     }
