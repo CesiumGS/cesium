@@ -23,7 +23,7 @@ export default function ModelExperimentalUtility() {}
  * @param {ModelExperimental} model The model to report about
  * @param {String} type The type of object to report about
  * @param {String} path The URI of the model file
- * @return {Function} An error function that throws an error for the failed model
+ * @returns {Function} An error function that throws an error for the failed model
  *
  * @private
  */
@@ -49,7 +49,7 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
  * Get a transformation matrix from a node in the model.
  *
  * @param {ModelComponents.Node} node The node components
- * @return {Matrix4} The computed transformation matrix. If no transformation matrix or parameters are specified, this will be the identity matrix.
+ * @returns {Matrix4} The computed transformation matrix. If no transformation matrix or parameters are specified, this will be the identity matrix.
  *
  * @private
  */
@@ -119,7 +119,7 @@ ModelExperimentalUtility.getAttributeByName = function (object, name) {
  * given label
  * @param {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>} featureIds
  * @param {String} label the label to search for
- * @return {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
+ * @returns {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
  *
  * @private
  */
@@ -215,7 +215,7 @@ const cartesianMinScratch = new Cartesian3();
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
  *
- * @return {Object} An object containing the minimum and maximum position values.
+ * @returns {Object} An object containing the minimum and maximum position values.
  *
  * @private
  */
@@ -260,7 +260,7 @@ ModelExperimentalUtility.getPositionMinMax = function (
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
  * @param {Matrix4} result The matrix in which to store the result.
- * @return {Matrix4} The axis correction matrix
+ * @returns {Matrix4} The axis correction matrix
  *
  * @private
  */
@@ -300,7 +300,7 @@ const scratchMatrix3 = new Matrix3();
  *
  * @param {Matrix4} modelMatrix The model matrix
  * @param {PrimitiveType} primitiveType The primitive type
- * @return {CullFace} The cull face
+ * @returns {CullFace} The cull face
  *
  * @private
  */
@@ -311,4 +311,39 @@ ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
 
   const matrix3 = Matrix4.getMatrix3(modelMatrix, scratchMatrix3);
   return Matrix3.determinant(matrix3) < 0.0 ? CullFace.FRONT : CullFace.BACK;
+};
+
+/**
+ * Sanitize the identifier to be used in a GLSL shader. The identifier
+ * is sanitized as follows:
+ * - All non-alphanumeric characters are replaced with underscores.
+ * - If there are multiple underscores in a row, replace them with just one.
+ * - If the gl_ prefix is present, remove it. The prefix is reserved in GLSL.
+ * - If the identifier starts with a digit, prefix it with an underscore.
+ *
+ * @example
+ * // Returns "customProperty"
+ * ModelExperimentalUtility.sanitizeGlslIdentifier("gl_customProperty");
+ *
+ * @example
+ * // Returns "_1234"
+ * ModelExperimentalUtility.sanitizeGlslIdentifier("1234");
+ *
+ * @param {String} identifier The original identifier.
+ *
+ * @returns {String} The sanitized version of the identifier.
+ */
+ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
+  // Remove non-alphanumeric characters.
+  let sanitizedIdentifier = identifier.replaceAll(/[^A-Za-z0-9_]/g, "_");
+  // Replace multiple underscores.
+  sanitizedIdentifier = sanitizedIdentifier.replaceAll(/__+/g, "_");
+  // Remove the gl_ prefix if present.
+  sanitizedIdentifier = sanitizedIdentifier.replace(/^gl_/, "");
+  // Add an underscore if first character is a digit.
+  if (/^\d/.test(sanitizedIdentifier)) {
+    sanitizedIdentifier = `_${sanitizedIdentifier}`;
+  }
+
+  return sanitizedIdentifier;
 };

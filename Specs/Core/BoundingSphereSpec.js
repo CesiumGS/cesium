@@ -1,17 +1,21 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EncodedCartesian3 } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
-import { Interval } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  EncodedCartesian3,
+  GeographicProjection,
+  Intersect,
+  Interval,
+  Matrix4,
+  OrientedBoundingBox,
+  Plane,
+  Quaternion,
+  Rectangle,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { OrientedBoundingBox } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/BoundingSphere", function () {

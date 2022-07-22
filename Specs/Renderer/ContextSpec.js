@@ -1,9 +1,12 @@
-import { Color } from "../../Source/Cesium.js";
-import { IndexDatatype } from "../../Source/Cesium.js";
-import { Buffer } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { Context } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
+import {
+  Color,
+  IndexDatatype,
+  Buffer,
+  BufferUsage,
+  Context,
+  ContextLimits,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

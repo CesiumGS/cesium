@@ -1156,7 +1156,7 @@ function loadTexture(
   });
 
   const promise = textureLoader.promise.then(function (textureLoader) {
-    if (loader.isDestroyed()) {
+    if (loader.isUnloaded() || loader.isDestroyed()) {
       return;
     }
     textureReader.texture = textureLoader.texture;

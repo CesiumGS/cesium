@@ -23,7 +23,7 @@ vec3 computeNormal(ProcessedAttributes attributes)
     vec3 ng = attributes.normalEC;
 
     vec3 normal = ng;
-    #if defined(HAS_NORMAL_TEXTURE) && !defined(USE_WIREFRAME)
+    #if defined(HAS_NORMAL_TEXTURE) && !defined(HAS_WIREFRAME)
     vec2 normalTexCoords = TEXCOORD_NORMAL;
         #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
         normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);

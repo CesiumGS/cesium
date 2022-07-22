@@ -1,6 +1,9 @@
-import { CylinderGeometry } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+import {
+  CylinderGeometry,
+  GeometryOffsetAttribute,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CylinderGeometry", function () {

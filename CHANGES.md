@@ -19,6 +19,7 @@
 - Models and tilesets that use the `CESIUM_primitive_outline` extension can now toggle outlines at runtime with the `showOutline` property. Furthermore, the color of the outlines can now be controlled by the `outlineColor` property. [#10506](https://github.com/CesiumGS/cesium/pull/10506)
 - Added optional `blurActiveElementOnCanvasFocus` option to set the behavior of blurring the active element when interacting with the canvas. [#10518](https://github.com/CesiumGS/cesium/pull/10518)
 - Added `ModelExperimental.getNode` to allow users to modify the transforms of model nodes at runtime. [#10540](https://github.com/CesiumGS/cesium/pull/10540)
+- Added support for point cloud styling for tilesets loaded with `ModelExperimental`. [#10569](https://github.com/CesiumGS/cesium/pull/10569)
 
 ##### Fixes :wrench:
 
@@ -31,7 +32,7 @@
 - Fixed a bug where per-feature post-processing was not working with `ModelExperimental`. [#10528](https://github.com/CesiumGS/cesium/pull/10528)
 - Fixed error in `loadAndExecuteScript` and favorite icon lost in sandcaslte when CesiumJS was running in cross-origin isloated evironment.[#10515](https://github.com/CesiumGS/cesium/pull/10515)
 - Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
-
+- Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:

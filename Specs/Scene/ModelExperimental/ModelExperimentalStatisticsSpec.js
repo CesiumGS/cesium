@@ -1,6 +1,11 @@
-import { ModelExperimentalStatistics } from "../../../Source/Cesium.js";
+import {
+  AssociativeArray,
+  BatchTexture,
+  ModelExperimentalStatistics,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
+  const emptyMap = new AssociativeArray();
   it("constructs", function () {
     const statistics = new ModelExperimentalStatistics();
     expect(statistics.pointsLength).toBe(0);
@@ -8,8 +13,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({});
-    expect(statistics.textureIdSet).toEqual({});
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("clears", function () {
@@ -19,9 +26,12 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     statistics.geometryByteLength = 10;
     statistics.texturesByteLength = 10;
     statistics.propertyTablesByteLength = 10;
-    statistics.bufferIdSet = { uuid1: true, uuid2: true };
-    statistics.textureIdSet = { uuid3: true };
+    statistics._bufferIdSet = { uuid1: true, uuid2: true };
+    statistics._textureIdSet = { uuid3: true };
 
+    const map = new AssociativeArray();
+    map.set("uuid", {});
+    statistics._batchTextureIdMap = map;
     statistics.clear();
 
     expect(statistics.pointsLength).toBe(0);
@@ -29,8 +39,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({});
-    expect(statistics.textureIdSet).toEqual({});
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("addBuffer throws without buffer", function () {
@@ -64,8 +76,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(10);
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({ uuid: true });
-    expect(statistics.textureIdSet).toEqual({});
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({ uuid: true });
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("addBuffer counts GPU buffers with CPU copy", function () {
@@ -83,8 +97,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(20);
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({ uuid: true });
-    expect(statistics.textureIdSet).toEqual({});
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({ uuid: true });
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("addBuffer de-duplicates buffers", function () {
@@ -111,8 +127,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(5);
     expect(statistics.texturesByteLength).toBe(0);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({ uuid1: true, uuid2: true });
-    expect(statistics.textureIdSet).toEqual({});
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({ uuid1: true, uuid2: true });
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("addTexture throws without texture", function () {
@@ -138,8 +156,10 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(10);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({});
-    expect(statistics.textureIdSet).toEqual({ uuid: true });
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({ uuid: true });
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
   });
 
   it("addTexture de-duplicates textures", function () {
@@ -166,7 +186,106 @@ describe("Scene/ModelExperimental/ModelExperimentalStatistics", function () {
     expect(statistics.geometryByteLength).toBe(0);
     expect(statistics.texturesByteLength).toBe(5);
     expect(statistics.propertyTablesByteLength).toBe(0);
-    expect(statistics.bufferIdSet).toEqual({});
-    expect(statistics.textureIdSet).toEqual({ uuid1: true, uuid2: true });
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({ uuid1: true, uuid2: true });
+    expect(statistics._batchTextureIdMap).toEqual(emptyMap);
+  });
+
+  it("addBatchTexture throws without batch texture", function () {
+    const statistics = new ModelExperimentalStatistics();
+
+    expect(function () {
+      return statistics.addBatchTexture(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("addBatchTexture counts batch textures as they load", function () {
+    const statistics = new ModelExperimentalStatistics();
+
+    const batchTexture = new BatchTexture({
+      featuresLength: 10,
+      owner: {},
+    });
+
+    statistics.addBatchTexture(batchTexture);
+    const expectedMap = new AssociativeArray();
+    expectedMap.set(batchTexture._id, batchTexture);
+
+    expect(statistics.pointsLength).toBe(0);
+    expect(statistics.trianglesLength).toBe(0);
+    expect(statistics.geometryByteLength).toBe(0);
+    expect(statistics.texturesByteLength).toBe(0);
+    expect(statistics.propertyTablesByteLength).toBe(0);
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(expectedMap);
+
+    // Simulate creating a batch texture
+    batchTexture._batchTexture = {
+      sizeInBytes: 10,
+    };
+
+    expect(statistics.batchTexturesByteLength).toBe(10);
+
+    // Simulate creating a pick texture
+    batchTexture._pickTexture = {
+      sizeInBytes: 15,
+    };
+
+    expect(statistics.batchTexturesByteLength).toBe(25);
+  });
+
+  it("addBatchTexture de-duplicates batch textures", function () {
+    const statistics = new ModelExperimentalStatistics();
+
+    const batchTexture = new BatchTexture({
+      featuresLength: 10,
+      owner: {},
+    });
+
+    const batchTexture2 = new BatchTexture({
+      featuresLength: 15,
+      owner: {},
+    });
+
+    statistics.addBatchTexture(batchTexture);
+    statistics.addBatchTexture(batchTexture2);
+    statistics.addBatchTexture(batchTexture);
+
+    const expectedMap = new AssociativeArray();
+    expectedMap.set(batchTexture._id, batchTexture);
+    expectedMap.set(batchTexture2._id, batchTexture2);
+
+    expect(statistics.pointsLength).toBe(0);
+    expect(statistics.trianglesLength).toBe(0);
+    expect(statistics.geometryByteLength).toBe(0);
+    expect(statistics.texturesByteLength).toBe(0);
+    expect(statistics.propertyTablesByteLength).toBe(0);
+    expect(statistics.batchTexturesByteLength).toBe(0);
+    expect(statistics._bufferIdSet).toEqual({});
+    expect(statistics._textureIdSet).toEqual({});
+    expect(statistics._batchTextureIdMap).toEqual(expectedMap);
+
+    // Simulate creating first batch texture
+    batchTexture._batchTexture = {
+      sizeInBytes: 10,
+    };
+    batchTexture._pickTexture = {
+      sizeInBytes: 20,
+    };
+
+    expect(statistics.batchTexturesByteLength).toBe(30);
+
+    // Simulate creating second pick texture
+    batchTexture2._batchTexture = {
+      sizeInBytes: 25,
+    };
+    batchTexture2._pickTexture = {
+      sizeInBytes: 45,
+    };
+
+    expect(statistics.batchTexturesByteLength).toBe(100);
   });
 });

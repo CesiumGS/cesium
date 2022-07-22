@@ -1,5 +1,8 @@
-import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
+import {
+  EllipsoidTerrainProvider,
+  TerrainProvider,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

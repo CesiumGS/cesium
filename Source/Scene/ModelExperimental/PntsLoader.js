@@ -19,10 +19,8 @@ import parseBatchTable from "../parseBatchTable.js";
 import DracoLoader from "../DracoLoader.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import ResourceLoader from "../ResourceLoader.js";
-import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import PntsParser from "../PntsParser.js";
-import PropertyTable from "../PropertyTable.js";
 import ResourceLoaderState from "../ResourceLoaderState.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
@@ -570,16 +568,9 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
     });
   }
 
-  // If there are no binary properties create a property table without any
-  // properties. For example, if the batch table only has JSON properties,
-  // those are handled separately, so the property table is empty.
-  const emptyPropertyTable = new PropertyTable({
-    name: MetadataClass.BATCH_TABLE_CLASS_NAME,
-    count: pointsLength,
-  });
   return new StructuralMetadata({
     schema: {},
-    propertyTables: [emptyPropertyTable],
+    propertyTables: [],
   });
 }
 

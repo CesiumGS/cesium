@@ -1,5 +1,8 @@
-import { CylinderOutlineGeometry } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  CylinderOutlineGeometry,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CylinderOutlineGeometry", function () {

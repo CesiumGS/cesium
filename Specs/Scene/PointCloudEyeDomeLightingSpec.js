@@ -1,9 +1,13 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTileStyle,
+  HeadingPitchRange,
+  PerspectiveFrustum,
+  PointCloudEyeDomeLighting,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { PointCloudEyeDomeLighting } from "../../Source/Cesium.js";
+
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 

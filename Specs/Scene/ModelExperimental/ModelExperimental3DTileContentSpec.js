@@ -9,6 +9,7 @@ import {
   GroupMetadata,
   HeadingPitchRange,
   MetadataClass,
+  RuntimeError,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -44,8 +45,6 @@ describe(
       "./Data/Cesium3DTiles/GeoJson/MultiLineString/tileset.json";
     const geoJsonMultipleFeaturesUrl =
       "./Data/Cesium3DTiles/GeoJson/MultipleFeatures/tileset.json";
-    const pointCloudUrl =
-      "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
 
     let scene;
     const centerLongitude = -1.31968;
@@ -143,60 +142,113 @@ describe(
       });
     });
 
-    function rendersGeoJson(url) {
-      setCamera(centerLongitude, centerLatitude, 1.0);
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
+    it("renders correctly when tileset starts hidden and tileset.preloadWhenHidden is true", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // expectRender() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is true, the model has loaded by
+        // this point. It will only render when tileset.show = true
         Cesium3DTilesTester.expectRender(scene, tileset);
       });
-    }
-
-    it("renders GeoJSON MultiPolygon", function () {
-      return rendersGeoJson(geoJsonMultiPolygonUrl);
     });
 
-    it("renders GeoJSON Polygon", function () {
-      return rendersGeoJson(geoJsonPolygonUrl);
+    it("does not render when tileset starts hidden and tileset.preloadWhenHidden is false", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // expectRenderBlank() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is false, the model has not loaded
+        // by this point. Regardless of tileset.show, the tile should not be
+        // rendered.
+        Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+      });
     });
 
-    it("renders GeoJSON Polygon with heights", function () {
-      return rendersGeoJson(geoJsonPolygonHeightsUrl);
-    });
-
-    it("renders GeoJSON Polygon with hole", function () {
-      return rendersGeoJson(geoJsonPolygonHoleUrl);
-    });
-
-    it("renders GeoJSON Polygon with no properties", function () {
-      return rendersGeoJson(geoJsonPolygonNoPropertiesUrl);
-    });
-
-    it("renders GeoJSON LineString", function () {
-      return rendersGeoJson(geoJsonLineStringUrl);
-    });
-
-    it("renders GeoJSON MultiLineString", function () {
-      return rendersGeoJson(geoJsonMultiLineStringUrl);
-    });
-
-    it("renders GeoJSON with multiple features", function () {
-      return rendersGeoJson(geoJsonMultipleFeaturesUrl);
-    });
-
-    it("renders pnts content", function () {
-      setCamera(centerLongitude, centerLatitude, 5.0);
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudUrl).then(
-        function (tileset) {
+    describe("geoJSON", function () {
+      function rendersGeoJson(url) {
+        setCamera(centerLongitude, centerLatitude, 1.0);
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+          tileset
+        ) {
           Cesium3DTilesTester.expectRender(scene, tileset);
-        }
-      );
+        });
+      }
+
+      it("renders GeoJSON MultiPolygon", function () {
+        return rendersGeoJson(geoJsonMultiPolygonUrl);
+      });
+
+      it("renders GeoJSON Polygon", function () {
+        return rendersGeoJson(geoJsonPolygonUrl);
+      });
+
+      it("renders GeoJSON Polygon with heights", function () {
+        return rendersGeoJson(geoJsonPolygonHeightsUrl);
+      });
+
+      it("renders GeoJSON Polygon with hole", function () {
+        return rendersGeoJson(geoJsonPolygonHoleUrl);
+      });
+
+      it("renders GeoJSON Polygon with no properties", function () {
+        return rendersGeoJson(geoJsonPolygonNoPropertiesUrl);
+      });
+
+      it("renders GeoJSON LineString", function () {
+        return rendersGeoJson(geoJsonLineStringUrl);
+      });
+
+      it("renders GeoJSON MultiLineString", function () {
+        return rendersGeoJson(geoJsonMultiLineStringUrl);
+      });
+
+      it("renders GeoJSON with multiple features", function () {
+        return rendersGeoJson(geoJsonMultipleFeaturesUrl);
+      });
     });
 
-    it("renders pnts with color style", function () {
-      setCamera(centerLongitude, centerLatitude, 5.0);
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudUrl).then(
-        function (tileset) {
+    describe("pnts", function () {
+      const pointCloudNormalsUrl =
+        "./Data/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json";
+      const pointCloudWithPerPointPropertiesUrl =
+        "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
+      const pointCloudWithUnicodePropertyIdsUrl =
+        "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/tileset.json";
+      it("renders pnts content", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+      });
+
+      it("renders pnts with color style", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
 
@@ -212,6 +264,7 @@ describe(
           });
           expect(scene).toRenderAndCall(function (rgba) {
             // Pixel is a darker red
+            expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[0]).toBeLessThan(255);
             expect(rgba[1]).toBe(0);
             expect(rgba[2]).toBe(0);
@@ -221,14 +274,15 @@ describe(
           // Remove style
           tileset.style = undefined;
           expect(scene).notToRender([0, 0, 0, 255]);
-        }
-      );
-    });
+        });
+      });
 
-    it("renders pnts with show style", function () {
-      setCamera(centerLongitude, centerLatitude, 5.0);
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudUrl).then(
-        function (tileset) {
+      it("renders pnts with show style", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
 
@@ -247,14 +301,15 @@ describe(
           // Remove style
           tileset.style = undefined;
           expect(scene).notToRender([0, 0, 0, 255]);
-        }
-      );
-    });
+        });
+      });
 
-    it("renders pnts with point size style", function () {
-      setCamera(centerLongitude, centerLatitude, 5.0);
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudUrl).then(
-        function (tileset) {
+      it("renders pnts with point size style", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
           // Verify render without style
           Cesium3DTilesTester.expectRender(scene, tileset);
 
@@ -270,8 +325,145 @@ describe(
           // Remove style
           tileset.style = undefined;
           expect(scene).toRender([0, 0, 0, 255]);
-        }
-      );
+        });
+      });
+
+      it("renders pnts with style using point cloud semantics", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
+          // Verify render without style
+          Cesium3DTilesTester.expectRender(scene, tileset);
+
+          // Apply color style with semantic
+          tileset.style = new Cesium3DTileStyle({
+            color: "vec4(${COLOR}[0], 0.0, 0.0, 1.0)",
+          });
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[1]).toBe(0);
+            expect(rgba[2]).toBe(0);
+            expect(rgba[3]).toBe(255);
+          });
+
+          // Apply show style with semantic
+          tileset.style = new Cesium3DTileStyle({
+            show: "${POSITION}[0] > -50.0",
+          });
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "${POSITION}[0] > 50.0",
+          });
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          // Remove style
+          tileset.style = undefined;
+          expect(scene).notToRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders pnts with style using point cloud properties", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
+          // Verify render without style
+          Cesium3DTilesTester.expectRender(scene, tileset);
+
+          // Apply show style with property
+          tileset.style = new Cesium3DTileStyle({
+            show: "${temperature} > 1.0",
+          });
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "${temperature} > 0.1",
+          });
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          // Remove style
+          tileset.style = undefined;
+          expect(scene).notToRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders pnts with style using point cloud properties (unicode)", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithUnicodePropertyIdsUrl
+        ).then(function (tileset) {
+          // Verify render without style
+          Cesium3DTilesTester.expectRender(scene, tileset);
+
+          tileset.style = new Cesium3DTileStyle({
+            color: "color() * ${temperature_}",
+          });
+
+          expect(scene).toRenderAndCall(function (rgba) {
+            // Pixel color is some shade of gray
+            expect(rgba[0]).toBe(rgba[1]);
+            expect(rgba[0]).toBe(rgba[2]);
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+          });
+
+          // Remove style
+          tileset.style = undefined;
+          expect(scene).notToRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("renders pnts with style and normals", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudNormalsUrl
+        ).then(function (tileset) {
+          // Verify render without style
+          Cesium3DTilesTester.expectRender(scene, tileset);
+
+          tileset.style = new Cesium3DTileStyle({
+            color: 'color("red")',
+            pointSize: 5.0,
+          });
+
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+            expect(rgba[1]).toBe(0);
+            expect(rgba[2]).toBe(0);
+            expect(rgba[3]).toBe(255);
+          });
+
+          // Remove style
+          tileset.style = undefined;
+          expect(scene).notToRender([0, 0, 0, 255]);
+        });
+      });
+
+      it("throws if style references the NORMAL semantic for pnts without normals", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          pointCloudWithPerPointPropertiesUrl
+        ).then(function (tileset) {
+          // Verify render without style
+          Cesium3DTilesTester.expectRender(scene, tileset);
+
+          tileset.style = new Cesium3DTileStyle({
+            color: "${NORMAL}[0] > 0.5",
+          });
+
+          expect(function () {
+            scene.renderForSpecs();
+          }).toThrowError(RuntimeError);
+        });
+      });
     });
 
     it("picks from glTF", function () {

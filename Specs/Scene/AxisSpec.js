@@ -1,7 +1,6 @@
-import { Cartesian4 } from "../../Source/Cesium.js";
+import { Cartesian4, Matrix4, Axis } from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Axis } from "../../Source/Cesium.js";
 
 describe("Scene/Axis", function () {
   function convertUpAxis(upAxis, transformation, expected) {

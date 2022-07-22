@@ -1,9 +1,11 @@
-import { Cartographic } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { TileAvailability } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
+import {
+  Cartographic,
+  GeographicTilingScheme,
+  Rectangle,
+  TileAvailability,
+  WebMercatorTilingScheme,
+  defined,
+} from "../../../Source/Cesium.js";
 
 describe("Core/TileAvailability", function () {
   const webMercator = new WebMercatorTilingScheme();

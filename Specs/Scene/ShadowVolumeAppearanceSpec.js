@@ -1,17 +1,20 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EncodedCartesian3 } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cartographic,
+  ComponentDatatype,
+  Ellipsoid,
+  EncodedCartesian3,
+  Matrix4,
+  Rectangle,
+  Transforms,
+  WebMercatorProjection,
+  Material,
+  MaterialAppearance,
+  PerInstanceColorAppearance,
+  ShadowVolumeAppearance,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { MaterialAppearance } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { ShadowVolumeAppearance } from "../../Source/Cesium.js";
 
 describe("Scene/ShadowVolumeAppearance", function () {
   // using ShadowVolumeAppearanceVS directly fails on Travis with the --release test

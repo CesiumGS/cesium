@@ -1,10 +1,14 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { createGuid } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  createGuid,
+  PixelFormat,
+  Resource,
+  TextureAtlas,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { TextureAtlas } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

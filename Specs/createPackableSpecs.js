@@ -1,5 +1,5 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
+import { defaultValue, defined } from "../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../Source/Cesium.js";
 
 function createPackableSpecs(packable, instance, packedInstance, namePrefix) {

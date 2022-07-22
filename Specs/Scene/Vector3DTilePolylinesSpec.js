@@ -1,12 +1,16 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Rectangle,
+  Cesium3DTileBatchTable,
+  ColorBlendMode,
+  Vector3DTilePolylines,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
-import { Vector3DTilePolylines } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

@@ -1,15 +1,18 @@
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { Geometry } from "../../Source/Cesium.js";
-import { GeometryAttribute } from "../../Source/Cesium.js";
-import { GeometryPipeline } from "../../Source/Cesium.js";
-import { IndexDatatype } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { ShaderProgram } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { VertexArray } from "../../Source/Cesium.js";
+import {
+  ComponentDatatype,
+  Geometry,
+  GeometryAttribute,
+  GeometryPipeline,
+  IndexDatatype,
+  PrimitiveType,
+  BufferUsage,
+  ClearCommand,
+  DrawCommand,
+  ShaderProgram,
+  RuntimeError,
+  VertexArray,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

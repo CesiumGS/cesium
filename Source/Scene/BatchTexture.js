@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
+import createGuid from "../Core/createGuid.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -31,6 +32,8 @@ export default function BatchTexture(options) {
   Check.typeOf.number("options.featuresLength", options.featuresLength);
   Check.typeOf.object("options.owner", options.owner);
   //>>includeEnd('debug');
+
+  this._id = createGuid();
 
   const featuresLength = options.featuresLength;
 

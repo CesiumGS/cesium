@@ -1,25 +1,29 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  defaultValue,
+  defined,
+  GeometryInstance,
+  PerspectiveFrustum,
+  Rectangle,
+  RectangleGeometry,
+  Resource,
+  Transforms,
+  BillboardCollection,
+  Globe,
+  HorizontalOrigin,
+  LabelCollection,
+  Material,
+  PerInstanceColorAppearance,
+  PolylineCollection,
+  Primitive,
+  SceneMode,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { BillboardCollection } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { LabelCollection } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { PolylineCollection } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

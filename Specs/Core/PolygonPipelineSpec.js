@@ -1,9 +1,12 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  PolygonPipeline,
+  WindingOrder,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PolygonPipeline } from "../../Source/Cesium.js";
-import { WindingOrder } from "../../Source/Cesium.js";
 
 describe("Core/PolygonPipeline", function () {
   beforeEach(function () {

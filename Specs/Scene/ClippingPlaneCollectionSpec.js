@@ -1,19 +1,23 @@
-import { AttributeCompression } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  Intersect,
+  Matrix4,
+  PixelFormat,
+  Plane,
+  PixelDatatype,
+  TextureMinificationFilter,
+  TextureWrap,
+  ClippingPlane,
+  ClippingPlaneCollection,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { TextureMinificationFilter } from "../../Source/Cesium.js";
-import { TextureWrap } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("Scene/ClippingPlaneCollection", function () {

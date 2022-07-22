@@ -1,17 +1,20 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Axis } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
-import { ModelInstanceCollection } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  defaultValue,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  JulianDate,
+  Matrix4,
+  Axis,
+  PrimitiveType,
+  Resource,
+  Transforms,
+  Model,
+  ModelInstanceCollection,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

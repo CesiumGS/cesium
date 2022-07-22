@@ -1,5 +1,4 @@
-import { OpenCageGeocoderService } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
+import { OpenCageGeocoderService, Resource } from "../../../Source/Cesium.js";
 
 describe("Core/OpenCageGeocoderService", function () {
   const endpoint = "https://api.opencagedata.com/geocode/v1/";

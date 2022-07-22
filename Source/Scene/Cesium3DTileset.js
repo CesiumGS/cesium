@@ -206,6 +206,7 @@ function Cesium3DTileset(options) {
   this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
 
   this._styleEngine = new Cesium3DTileStyleEngine();
+  this._styleApplied = false;
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -2340,7 +2341,14 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  this._styleEngine.resetDirty();
+
+  // If the style wasn't able to be applied this frame (for example,
+  // the tileset was hidden), keep it dirty so the engine can try
+  // to apply the style next frame.
+  if (this._styleApplied) {
+    this._styleEngine.resetDirty();
+  }
+  this._styleApplied = false;
 };
 
 /**
@@ -2645,6 +2653,7 @@ function updateTileDebugLabels(tileset, frameState) {
 
 function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
+  tileset._styleApplied = true;
 
   const isRender = passOptions.isRender;
   const statistics = tileset._statistics;

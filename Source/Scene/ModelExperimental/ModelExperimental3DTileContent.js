@@ -72,7 +72,10 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._model.statistics.propertyTablesByteLength;
+      const statistics = this._model.statistics;
+      return (
+        statistics.propertyTablesByteLength + statistics.batchTexturesByteLength
+      );
     },
   },
 
@@ -394,7 +397,6 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
-    show: tileset.show,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,

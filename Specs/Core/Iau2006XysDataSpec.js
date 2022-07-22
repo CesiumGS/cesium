@@ -1,7 +1,10 @@
-import { buildModuleUrl } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Iau2006XysData } from "../../Source/Cesium.js";
-import { Iau2006XysSample } from "../../Source/Cesium.js";
+import {
+  buildModuleUrl,
+  defined,
+  Iau2006XysData,
+  Iau2006XysSample,
+} from "../../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Core/Iau2006XysData", function () {
