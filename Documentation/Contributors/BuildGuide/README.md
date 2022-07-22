@@ -127,15 +127,12 @@ Here's the full set of scripts and what they do.
     - `--removePragmas` - Optimizes the output by removing debugging code that validates function input and throws `DeveloperError`s. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
-  - `minify` - Bundles the source modules and [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) to produce an all-in-one files in the `Build/Cesium` directory.
-  - `combineRelease` - Bundles plus removes debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
-  - `minifyRelease` - Bundles, minifies, and removes debugging code.
-  - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
+  - `build-apps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
+  - `build-docs` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
   - `build-ts` - Generates a TypeScript definitions file for the Cesium library
   - `build-third-party` - Generates `ThirdParty.json`, a file which lists the latest licensing information of installed third party modules
   - `release` - A full release build that creates a shippable product, including generating documentation.
-  - `makeZipFile` - Builds a zip file containing all release files. This includes the source ESM modules, bundled ESM and IIFE format `Cesium.js`, plus the bundled minified versions of ESM and IIFE, the generated documentation, the test suite, and the example applications (in both built and source form).
+  - `make-zip` - Builds a zip file containing all release files. This includes the source ESM modules, bundled ESM and IIFE format `Cesium.js`, plus the bundled minified versions of ESM and IIFE, the generated documentation, the test suite, and the example applications (in both built and source form).
 - **Utility scripts** -- code coverage, static code analysis, and other utilities
   - `clean` - Removes all generated build artifacts
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
