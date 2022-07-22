@@ -689,7 +689,7 @@ modified as follows:
 Here are a couple examples of property ID and the resulting variable name in
 the custom shader in the `(vsInput|fsInput).metadata` struct:
 
-- `temperature ℃` -> `metadata.temperature`
+- `temperature ℃` -> `metadata.temperature_`
 - `custom__property` -> `metadata.custom_property`
 - `gl_customProperty` -> `metadata.customProperty`
 - `12345` -> `metadata._12345`
