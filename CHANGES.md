@@ -34,6 +34,10 @@
 - Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
 - Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
 
+##### Deprecated :hourglass_flowing_sand:
+
+- Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97.
+
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:

@@ -16,7 +16,6 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
-  combine,
   ContextLimits,
   Credit,
   CullFace,
@@ -1121,7 +1120,10 @@ describe(
 
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithExternalResourcesUrl
+        tilesetWithExternalResourcesUrl,
+        {
+          enableModelExperimental: true,
+        }
       ).then(function (tileset) {
         // Contents are not aware of whether their resources are shared by
         // other contents, so check ResourceCache.
@@ -3885,16 +3887,10 @@ describe(
     });
 
     it("creates duplicate backface commands", function () {
-      // Disable ModelExperimental here because ModelFeatureTable doesn't handle
-      // the creation of backface commands yet.
-      const options = combine(
-        { enableModelExperimental: false },
-        skipLevelOfDetailOptions
-      );
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,
-        options
+        skipLevelOfDetailOptions
       ).then(function (tileset) {
         const statistics = tileset._statistics;
         const root = tileset.root;
