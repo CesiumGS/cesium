@@ -674,21 +674,24 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
-### Note about Unicode property IDs for .pnts per-point properties
+### Property ID Sanitization
 
-When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
-properties are transcoded as property attributes. Since GLSL only supports
-alphanumeric identifiers (not starting with a number or the reserved prefix
-`gl_`), property IDs are modified as follows:
+GLSL only supports alphanumeric identifiers, i.e. identifiers that do not
+start with a number. Additionally, identifiers with consecutive
+underscores (`__`), as well as identifiers with the `gl_` prefix, are
+reserved in GLSL. To circumvent these limitations, the property IDs are
+modified as follows:
 
-1. Remove all characters except `[A-Za-z0-9_]`.
-2. Remove the reserved `gl_` prefix if present
-3. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
+1. Replace all characters excluded from `[A-Za-z0-9_]` with an `_`.
+2. Replace consecutive underscores (e.g. `___`) with a single `_`.
+3. Remove the reserved `gl_` prefix if present.
+4. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
 
 Here are a couple examples of property ID and the resulting variable name in
 the custom shader in the `(vsInput|fsInput).metadata` struct:
 
 - `temperature ℃` -> `metadata.temperature`
+- `custom__property` -> `metadata.custom_property`
 - `gl_customProperty` -> `metadata.customProperty`
 - `12345` -> `metadata._12345`
 - `gl_12345` -> `metadata._12345`
@@ -699,6 +702,10 @@ property IDs, the behavior is undefined. For example:
 - `✖️✖️✖️` maps to the empty string, so the behavior is undefined.
 - Two properties with names `temperature ℃` and `temperature ℉` would both
   map to `metadata.temperature`, so the behavior is undefined
+
+When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
+properties are transcoded as property attributes. These property IDs follow
+the same convention.
 
 ## `czm_modelVertexOutput` struct
 

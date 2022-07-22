@@ -401,7 +401,7 @@ describe(
           Cesium3DTilesTester.expectRender(scene, tileset);
 
           tileset.style = new Cesium3DTileStyle({
-            color: "color() * ${temperature}",
+            color: "color() * ${temperature_}",
           });
 
           expect(scene).toRenderAndCall(function (rgba) {
