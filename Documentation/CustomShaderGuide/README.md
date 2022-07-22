@@ -682,10 +682,9 @@ underscores (`__`), as well as identifiers with the `gl_` prefix, are
 reserved in GLSL. To circumvent these limitations, the property IDs are
 modified as follows:
 
-1. Replace all characters excluded from `[A-Za-z0-9_]` with an `_`.
-2. Replace consecutive underscores (e.g. `___`) with a single `_`.
-3. Remove the reserved `gl_` prefix if present.
-4. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
+1. Replace all sequences of non-alphanumeric characters with a single `_`.
+2. Remove the reserved `gl_` prefix if present.
+3. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
 
 Here are a couple examples of property ID and the resulting variable name in
 the custom shader in the `(vsInput|fsInput).metadata` struct:
