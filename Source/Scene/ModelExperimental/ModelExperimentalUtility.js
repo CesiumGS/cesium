@@ -316,8 +316,7 @@ ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
 /**
  * Sanitize the identifier to be used in a GLSL shader. The identifier
  * is sanitized as follows:
- * - All non-alphanumeric characters are replaced with underscores.
- * - If there are multiple underscores in a row, replace them with just one.
+ * - Replace all sequences of non-alphanumeric characters with a single `_`.
  * - If the gl_ prefix is present, remove it. The prefix is reserved in GLSL.
  * - If the identifier starts with a digit, prefix it with an underscore.
  *
@@ -334,10 +333,10 @@ ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
  * @returns {String} The sanitized version of the identifier.
  */
 ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
-  // Remove non-alphanumeric characters.
-  let sanitizedIdentifier = identifier.replaceAll(/[^A-Za-z0-9_]/g, "_");
-  // Replace multiple underscores.
-  sanitizedIdentifier = sanitizedIdentifier.replaceAll(/__+/g, "_");
+  // Remove non-alphanumeric characters and replace with a single underscore.
+  // This regex is designed so that the result won't have multiple underscores
+  // in a row.
+  let sanitizedIdentifier = identifier.replaceAll(/[^A-Za-z0-9]+/g, "_");
   // Remove the gl_ prefix if present.
   sanitizedIdentifier = sanitizedIdentifier.replace(/^gl_/, "");
   // Add an underscore if first character is a digit.
