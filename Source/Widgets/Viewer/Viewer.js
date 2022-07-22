@@ -1304,7 +1304,7 @@ Object.defineProperties(Viewer.prototype, {
 
   /**
    * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
-   * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+   * is true. If undefined, the browser's requestAnimationFrame implementation
    * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof Viewer.prototype
@@ -1322,7 +1322,7 @@ Object.defineProperties(Viewer.prototype, {
 
   /**
    * Gets or sets whether or not this widget should control the render loop.
-   * If true the widget will use {@link requestAnimationFrame} to
+   * If true the widget will use requestAnimationFrame to
    * perform rendering and resizing of the widget, as well as drive the
    * simulation clock. If set to false, you must manually call the
    * <code>resize</code>, <code>render</code> methods

@@ -34,6 +34,10 @@
 - Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
 - Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
 
+##### Deprecated :hourglass_flowing_sand:
+
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
+
 ### 1.95 - 2022-07-01
 
 ##### Breaking Changes :mega:
