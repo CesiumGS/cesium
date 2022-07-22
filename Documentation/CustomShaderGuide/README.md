@@ -677,7 +677,7 @@ range of `[32.0, 212.0]`.
 ### Property ID Sanitization
 
 GLSL only supports alphanumeric identifiers, i.e. identifiers that do not
-starting with a number. Additionally, identifiers with consecutive
+start with a number. Additionally, identifiers with consecutive
 underscores (`__`), as well as identifiers with the `gl_` prefix, are
 reserved in GLSL. To circumvent these limitations, the property IDs are
 modified as follows:
