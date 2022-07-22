@@ -2342,8 +2342,9 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
 
-  // If the style wasn't able to be applied this frame, keep it dirty so
-  // the engine can try to apply the style next frame.
+  // If the style wasn't able to be applied this frame (for example,
+  // the tileset was hidden), keep it dirty so the engine can try
+  // to apply the style next frame.
   if (this._styleApplied) {
     this._styleEngine.resetDirty();
   }
