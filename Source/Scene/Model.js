@@ -838,11 +838,35 @@ Object.defineProperties(Model.prototype, {
    */
   boundingSphere: {
     get: function () {
-      deprecationWarning(
-        "model.boundingSphere",
-        "Model.boundingSphere currently returns results in model space. In CesiumJS 1.96, model.boundingSphere will be changed to return results in world space. The calling code will no longer need to multiply the bounding sphere by the model matrix"
+      let modelMatrix = this.modelMatrix;
+      if (
+        this.heightReference !== HeightReference.NONE &&
+        this._clampedModelMatrix
+      ) {
+        modelMatrix = this._clampedModelMatrix;
+      }
+
+      const scale = defined(this.maximumScale)
+        ? Math.min(this.maximumScale, this.scale)
+        : this.scale;
+
+      const boundingSphere = BoundingSphere.clone(
+        this._boundingSphere,
+        this._scaledBoundingSphere
       );
-      return this.boundingSphereInternal;
+      boundingSphere.radius *= scale;
+
+      BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+
+      if (defined(this._rtcCenter)) {
+        Cartesian3.add(
+          this._rtcCenter,
+          boundingSphere.center,
+          boundingSphere.center
+        );
+      }
+
+      return boundingSphere;
     },
   },
 
