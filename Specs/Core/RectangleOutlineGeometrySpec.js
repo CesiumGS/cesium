@@ -1,12 +1,16 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  GeographicProjection,
+  GeometryOffsetAttribute,
+  Matrix2,
+  Rectangle,
+  RectangleOutlineGeometry,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix2 } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleOutlineGeometry } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/RectangleOutlineGeometry", function () {

@@ -1,6 +1,4 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { Ellipsoid } from "../Source/Cesium.js";
-import { Event } from "../Source/Cesium.js";
+import { defaultValue, Ellipsoid, Event } from "../../Source/Cesium.js";
 
 function createGlobe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

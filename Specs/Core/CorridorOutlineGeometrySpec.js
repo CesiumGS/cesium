@@ -1,8 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { CorridorOutlineGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  CornerType,
+  CorridorOutlineGeometry,
+  Ellipsoid,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CorridorOutlineGeometry", function () {

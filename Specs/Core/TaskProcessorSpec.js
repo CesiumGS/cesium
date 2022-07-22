@@ -1,6 +1,9 @@
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { TaskProcessor } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
+import {
+  FeatureDetection,
+  TaskProcessor,
+  RuntimeError,
+} from "../../../Source/Cesium.js";
+
 import absolutize from "../absolutize.js";
 
 describe("Core/TaskProcessor", function () {

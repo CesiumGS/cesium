@@ -1,4 +1,5 @@
-import { CubicRealPolynomial } from "../../Source/Cesium.js";
+import { CubicRealPolynomial } from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/CubicRealPolynomial", function () {

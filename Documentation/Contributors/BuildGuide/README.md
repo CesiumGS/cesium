@@ -16,14 +16,13 @@
 
 1. [Clone the repository](#get-the-code)
 
-2. [Build](#build-the-code)
+2. Install the dependencies
 
    ```bash
     npm install
-    npm run build
    ```
 
-3. Start the server
+3. Start the [server](#development-server)
 
    ```bash
    npm start
@@ -63,19 +62,8 @@ Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) fo
 npm install
 ```
 
-Once all modules have been installed, run `npm run build` to actually build the code:
-
-```bash
-npm run build
-```
-
-Alternatively, if you want to edit source files and see the changes reflected for testing, use `npm run build-watch`.
-
-```bash
-npm run build-watch
-```
-
-Cesium ships with a simple HTTP server for testing, run `npm start` after building to use it:
+Cesium ships with a simple HTTP server for testing.
+Once all modules have been installed, run `npm start` to use it:
 
 ```bash
 npm start

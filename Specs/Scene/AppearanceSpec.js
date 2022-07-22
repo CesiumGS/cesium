@@ -1,7 +1,9 @@
-import { WebGLConstants } from "../../Source/Cesium.js";
-import { Appearance } from "../../Source/Cesium.js";
-import { BlendingState } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
+import {
+  WebGLConstants,
+  Appearance,
+  BlendingState,
+  Material,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/Appearance", function () {
   it("constructor", function () {

@@ -1,6 +1,8 @@
-import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { isCrossOriginUrl } from "../../Source/Cesium.js";
-import { Uri } from "../../Source/Cesium.js";
+import {
+  getAbsoluteUri,
+  isCrossOriginUrl,
+  Uri,
+} from "../../../Source/Cesium.js";
 
 describe("Core/isCrossOriginUrl", function () {
   it("returns false for relative urls", function () {

@@ -1,14 +1,17 @@
+import {
+  Rectangle,
+  Request,
+  RequestScheduler,
+  Resource,
+  WebMercatorTilingScheme,
+  Imagery,
+  ImageryLayer,
+  ImageryProvider,
+  ImageryState,
+  MapboxStyleImageryProvider,
+} from "../../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { Imagery } from "../../Source/Cesium.js";
-import { ImageryLayer } from "../../Source/Cesium.js";
-import { ImageryProvider } from "../../Source/Cesium.js";
-import { ImageryState } from "../../Source/Cesium.js";
-import { MapboxStyleImageryProvider } from "../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/MapboxStyleImageryProvider", function () {

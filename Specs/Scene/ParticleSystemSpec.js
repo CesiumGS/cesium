@@ -1,11 +1,14 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { CircleEmitter } from "../../Source/Cesium.js";
-import { ParticleBurst } from "../../Source/Cesium.js";
-import { ParticleSystem } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  Matrix4,
+  Resource,
+  CircleEmitter,
+  ParticleBurst,
+  ParticleSystem,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

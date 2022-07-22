@@ -1,7 +1,10 @@
-import { Ellipsoid } from "../../../Source/Cesium.js";
-import { Globe } from "../../../Source/Cesium.js";
+import {
+  Ellipsoid,
+  Globe,
+  HomeButtonViewModel,
+} from "../../../../Source/Cesium.js";
+
 import createScene from "../../createScene.js";
-import { HomeButtonViewModel } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/HomeButton/HomeButtonViewModel",

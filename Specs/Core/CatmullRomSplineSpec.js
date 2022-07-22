@@ -1,6 +1,9 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CatmullRomSpline } from "../../Source/Cesium.js";
-import { HermiteSpline } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  CatmullRomSpline,
+  HermiteSpline,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/CatmullRomSpline", function () {

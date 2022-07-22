@@ -1,18 +1,22 @@
-import { Cartesian3, Empty3DTileContent } from "../../Source/Cesium.js";
-import { clone } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Cesium3DTile } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { Cesium3DTileRefine } from "../../Source/Cesium.js";
-import { Cesium3DTilesetHeatmap } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { TileBoundingRegion } from "../../Source/Cesium.js";
-import { TileOrientedBoundingBox } from "../../Source/Cesium.js";
+import {
+  clone,
+  Cartesian3,
+  Empty3DTileContent,
+  HeadingPitchRoll,
+  Matrix3,
+  Matrix4,
+  Rectangle,
+  Transforms,
+  Cesium3DTile,
+  Cesium3DTilePass,
+  Cesium3DTileRefine,
+  Cesium3DTilesetHeatmap,
+  Math as CesiumMath,
+  RuntimeError,
+  TileBoundingRegion,
+  TileOrientedBoundingBox,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

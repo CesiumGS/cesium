@@ -1,11 +1,14 @@
-import { ArcType } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { PolylineGeometry } from "../../Source/Cesium.js";
-import { Appearance } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { PolylineMaterialAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
+import {
+  ArcType,
+  Cartesian3,
+  GeometryInstance,
+  PolylineGeometry,
+  Appearance,
+  Material,
+  PolylineMaterialAppearance,
+  Primitive,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

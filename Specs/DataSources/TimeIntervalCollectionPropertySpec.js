@@ -1,8 +1,10 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/TimeIntervalCollectionProperty", function () {
   it("default constructor has expected values", function () {

@@ -1,15 +1,18 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { BoxGeometryUpdater } from "../../Source/Cesium.js";
-import { BoxGraphics } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  GeometryOffsetAttribute,
+  JulianDate,
+  TimeIntervalCollection,
+  BoxGeometryUpdater,
+  BoxGraphics,
+  ConstantPositionProperty,
+  ConstantProperty,
+  Entity,
+  HeightReference,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";

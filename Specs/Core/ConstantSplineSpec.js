@@ -1,6 +1,8 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ConstantSpline } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  ConstantSpline,
+  Quaternion,
+} from "../../../Source/Cesium.js";
 
 describe("Core/ConstantSpline", function () {
   it("constructor throws without value", function () {

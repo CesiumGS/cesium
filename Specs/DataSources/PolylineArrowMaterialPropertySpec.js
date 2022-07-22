@@ -1,9 +1,11 @@
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { PolylineArrowMaterialProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Color,
+  JulianDate,
+  TimeInterval,
+  ConstantProperty,
+  PolylineArrowMaterialProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/PolylineArrowMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

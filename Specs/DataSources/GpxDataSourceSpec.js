@@ -1,15 +1,17 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DeveloperError } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { Event } from "../../Source/Cesium.js";
-import { GpxDataSource } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { RequestErrorEvent } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  DeveloperError,
+  EntityCollection,
+  Event,
+  GpxDataSource,
+  HeightReference,
+  Iso8601,
+  JulianDate,
+  RequestErrorEvent,
+  RuntimeError,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/GpxDataSource", function () {
   const parser = new DOMParser();

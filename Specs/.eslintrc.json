@@ -4,8 +4,7 @@
         "jasmine": true
     },
     "rules": {
-        "no-self-assign": "off",
-        "no-duplicate-imports":"off"
+        "no-self-assign": "off"
     },
     "overrides": [
         {

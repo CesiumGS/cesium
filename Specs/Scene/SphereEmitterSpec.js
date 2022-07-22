@@ -1,6 +1,4 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Particle } from "../../Source/Cesium.js";
-import { SphereEmitter } from "../../Source/Cesium.js";
+import { Cartesian3, Particle, SphereEmitter } from "../../../Source/Cesium.js";
 
 describe("Scene/SphereEmitter", function () {
   let emitter;

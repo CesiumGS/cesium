@@ -1,8 +1,12 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { EllipsoidGeometry } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  EllipsoidGeometry,
+  GeometryOffsetAttribute,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/EllipsoidGeometry", function () {

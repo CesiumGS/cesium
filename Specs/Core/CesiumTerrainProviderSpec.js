@@ -1,15 +1,19 @@
-import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { HeightmapTerrainData } from "../../Source/Cesium.js";
-import { IonResource } from "../../Source/Cesium.js";
+import {
+  CesiumTerrainProvider,
+  Ellipsoid,
+  GeographicTilingScheme,
+  getAbsoluteUri,
+  HeightmapTerrainData,
+  IonResource,
+  QuantizedMeshTerrainData,
+  Request,
+  RequestScheduler,
+  Resource,
+  TerrainProvider,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { QuantizedMeshTerrainData } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Core/CesiumTerrainProvider", function () {

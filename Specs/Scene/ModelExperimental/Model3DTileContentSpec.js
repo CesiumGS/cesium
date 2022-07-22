@@ -142,6 +142,47 @@ describe(
       });
     });
 
+    it("renders correctly when tileset starts hidden and tileset.preloadWhenHidden is true", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // expectRender() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is true, the model has loaded by
+        // this point. It will only render when tileset.show = true
+        Cesium3DTilesTester.expectRender(scene, tileset);
+      });
+    });
+
+    it("does not render when tileset starts hidden and tileset.preloadWhenHidden is false", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      const tilesetOptions = {
+        show: false,
+        preloadWhenHidden: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        noBatchIdsUrl,
+        tilesetOptions
+      ).then(function (tileset) {
+        // expectRenderBlank() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is false, the model has not loaded
+        // by this point. Regardless of tileset.show, the tile should not be
+        // rendered.
+        Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+      });
+    });
+
     describe("geoJSON", function () {
       function rendersGeoJson(url) {
         setCamera(centerLongitude, centerLatitude, 1.0);
@@ -360,7 +401,7 @@ describe(
           Cesium3DTilesTester.expectRender(scene, tileset);
 
           tileset.style = new Cesium3DTileStyle({
-            color: "color() * ${temperature}",
+            color: "color() * ${temperature_}",
           });
 
           expect(scene).toRenderAndCall(function (rgba) {

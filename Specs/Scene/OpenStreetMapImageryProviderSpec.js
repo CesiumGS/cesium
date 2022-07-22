@@ -1,14 +1,17 @@
+import {
+  Rectangle,
+  Request,
+  RequestScheduler,
+  Resource,
+  WebMercatorTilingScheme,
+  OpenStreetMapImageryProvider,
+  Imagery,
+  ImageryLayer,
+  ImageryState,
+  UrlTemplateImageryProvider,
+} from "../../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { OpenStreetMapImageryProvider } from "../../Source/Cesium.js";
-import { Imagery } from "../../Source/Cesium.js";
-import { ImageryLayer } from "../../Source/Cesium.js";
-import { ImageryState } from "../../Source/Cesium.js";
-import { UrlTemplateImageryProvider } from "../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/OpenStreetMapImageryProvider", function () {

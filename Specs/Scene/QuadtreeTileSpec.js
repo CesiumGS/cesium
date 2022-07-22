@@ -1,8 +1,11 @@
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
+import {
+  GeographicTilingScheme,
+  Rectangle,
+  WebMercatorTilingScheme,
+  QuadtreeTile,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { QuadtreeTile } from "../../Source/Cesium.js";
 
 describe("Scene/QuadtreeTile", function () {
   it("throws without a options", function () {

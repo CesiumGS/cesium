@@ -1,8 +1,12 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  SceneMode,
+  SkyAtmosphere,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { SkyAtmosphere } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

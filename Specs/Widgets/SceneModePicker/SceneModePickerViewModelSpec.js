@@ -1,8 +1,11 @@
-import { Ellipsoid } from "../../../Source/Cesium.js";
-import { Globe } from "../../../Source/Cesium.js";
-import { SceneMode } from "../../../Source/Cesium.js";
+import {
+  Ellipsoid,
+  Globe,
+  SceneMode,
+  SceneModePickerViewModel,
+} from "../../../../Source/Cesium.js";
+
 import createScene from "../../createScene.js";
-import { SceneModePickerViewModel } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/SceneModePicker/SceneModePickerViewModel",
