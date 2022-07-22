@@ -1118,6 +1118,8 @@ describe(
         b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
       const expectedTextureMemory = texturesByteLength * 5;
 
+      // This test was revised for ModelExperimental, which tracks shared memory
+      // differently from Model.
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetWithExternalResourcesUrl,
