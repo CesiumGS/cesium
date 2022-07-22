@@ -153,6 +153,11 @@ describe(
         noBatchIdsUrl,
         tilesetOptions
       ).then(function (tileset) {
+        // expectRender() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is true, the model has loaded by
+        // this point. It will only render when tileset.show = true
         Cesium3DTilesTester.expectRender(scene, tileset);
       });
     });
@@ -168,6 +173,12 @@ describe(
         noBatchIdsUrl,
         tilesetOptions
       ).then(function (tileset) {
+        // expectRenderBlank() renders twice, first with tileset.show = false,
+        // then with tileset.show = true.
+        //
+        // When tileset.preloadWhenHidden is false, the model has not loaded
+        // by this point. Regardless of tileset.show, the tile should not be
+        // rendered.
         Cesium3DTilesTester.expectRenderBlank(scene, tileset);
       });
     });
