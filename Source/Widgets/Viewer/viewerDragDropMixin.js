@@ -86,6 +86,7 @@ function viewerDragDropMixin(viewer, options) {
      */
     dropTarget: {
       //TODO See https://github.com/CesiumGS/cesium/issues/832
+      // Yeah. OK. Seen that. So what is "TODO" here, actually?
       get: function () {
         return dropTarget;
       },
@@ -194,20 +195,184 @@ function viewerDragDropMixin(viewer, options) {
   function handleDrop(event) {
     stop(event);
 
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      handleDroppedFiles(files, event.clientX, event.clientY);
+    }
+  }
+
+  /**
+   * Will be called when at least one file is dropped into the viewer.
+   *
+   * By default, the implementation will clear the entities and data
+   * sources of the viewer (depending on the `cleanOnDrop` setting),
+   * and call `handleDroppedFile` with each file
+   *
+   * @param {File[]} files The non-empty files
+   * @param {Number} clientX The client x-coordinate of the drop position
+   * @param {Number} clientY The client y-coordinate of the drop position
+   */
+  function handleDroppedFiles(files, clientX, clientY) {
     if (clearOnDrop) {
       viewer.entities.removeAll();
       viewer.dataSources.removeAll();
     }
-
-    const files = event.dataTransfer.files;
     const length = files.length;
     for (let i = 0; i < length; i++) {
       const file = files[i];
-      const reader = new FileReader();
-      reader.onload = createOnLoadCallback(viewer, file, proxy, clampToGround);
-      reader.onerror = createDropErrorCallback(viewer, file);
-      reader.readAsText(file);
+      handleDroppedFile(file, clientX, clientY);
     }
+  }
+
+  /**
+   * Will be called for each file that is dropped into the viewer.
+   *
+   * By default, this will check the file extension, case insensitively,
+   * and pass the file to one of the `handleDropped*` methods, depending
+   * on the extension.
+   *
+   * If the file does not have a known extension, then a `dropError`
+   * event will be raised.
+   *
+   * @param {File} file The file
+   * @param {Number} clientX The client x-coordinate of the drop position
+   * @param {Number} clientY The client y-coordinate of the drop position
+   */
+  function handleDroppedFile(file, clientX, clientY) {
+    const fileName = file.name;
+    if (/\.czml$/i.test(fileName)) {
+      handleDroppedCzml(file);
+      return;
+    }
+    if (
+      /\.geojson$/i.test(fileName) ||
+      /\.json$/i.test(fileName) ||
+      /\.topojson$/i.test(fileName)
+    ) {
+      handleDroppedGeoJson(file);
+      return;
+    }
+    if (/\.(kml|kmz)$/i.test(fileName)) {
+      handleDroppedKml(file);
+      return;
+    }
+    if (/\.gpx$/i.test(fileName)) {
+      handleDroppedGpx(file);
+      return;
+    }
+    viewer.dropError.raiseEvent(
+      viewer,
+      fileName,
+      `Unrecognized file: ${fileName}`
+    );
+    return;
+  }
+
+  /**
+   * Handle a dropped GeoJson file
+   *
+   * @param {File} file The file
+   */
+  function handleDroppedCzml(file) {
+    const fileName = file.name;
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      const loadPromise = CzmlDataSource.load(JSON.parse(evt.target.result), {
+        sourceUri: fileName,
+      });
+      handleDroppedDataSource(file, loadPromise);
+    };
+    reader.onerror = createDropErrorCallback(file);
+    reader.readAsText(file);
+  }
+
+  /**
+   * Handle a dropped GeoJson file
+   *
+   * @param {File} file The file
+   */
+  function handleDroppedGeoJson(file) {
+    const fileName = file.name;
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      const loadPromise = GeoJsonDataSource.load(
+        JSON.parse(evt.target.result),
+        {
+          sourceUri: fileName,
+          clampToGround: clampToGround,
+        }
+      );
+      handleDroppedDataSource(file, loadPromise);
+    };
+    reader.onerror = createDropErrorCallback(file);
+    reader.readAsText(file);
+  }
+
+  /**
+   * Handle a dropped KML file
+   *
+   * @param {File} file The file
+   */
+  function handleDroppedKml(file) {
+    const fileName = file.name;
+    const scene = viewer.scene;
+    const loadPromise = KmlDataSource.load(file, {
+      sourceUri: fileName,
+      proxy: proxy,
+      camera: scene.camera,
+      canvas: scene.canvas,
+      clampToGround: clampToGround,
+      screenOverlayContainer: viewer.container,
+    });
+    handleDroppedDataSource(file, loadPromise);
+  }
+
+  /**
+   * Handle a dropped GPX file
+   *
+   * @param {File} file The file
+   */
+  function handleDroppedGpx(file) {
+    const fileName = file.name;
+    const loadPromise = GpxDataSource.load(file, {
+      sourceUri: fileName,
+      proxy: proxy,
+    });
+    handleDroppedDataSource(file, loadPromise);
+  }
+
+  /**
+   * Will be called for a dropped file from which a DataSource has been
+   * created.
+   *
+   * @param {File} file The file
+   * @param {Promise<DataSource>} dataSourceLoadPromise The data source promise
+   */
+  function handleDroppedDataSource(file, dataSourceLoadPromise) {
+    const fileName = file.name;
+    viewer.dataSources
+      .add(dataSourceLoadPromise)
+      .then(function (dataSource) {
+        if (viewer.flyToOnDrop) {
+          viewer.flyTo(dataSource);
+        }
+      })
+      .catch(function (error) {
+        viewer.dropError.raiseEvent(viewer, fileName, error);
+      });
+  }
+
+  /**
+   * Creates a FileReader.onError callback that handles the case that
+   * the given file could not be loaded.
+   *
+   * @param {File} file
+   * @returns The error callback
+   */
+  function createDropErrorCallback(file) {
+    return function (evt) {
+      viewer.dropError.raiseEvent(file.name, evt.target.error);
+    };
   }
 
   //Enable drop by default;
@@ -244,70 +409,4 @@ function subscribe(dropTarget, handleDrop) {
   dropTarget.addEventListener("dragexit", stop, false);
 }
 
-function createOnLoadCallback(viewer, file, proxy, clampToGround) {
-  const scene = viewer.scene;
-  return function (evt) {
-    const fileName = file.name;
-    try {
-      let loadPromise;
-
-      if (/\.czml$/i.test(fileName)) {
-        loadPromise = CzmlDataSource.load(JSON.parse(evt.target.result), {
-          sourceUri: fileName,
-        });
-      } else if (
-        /\.geojson$/i.test(fileName) ||
-        /\.json$/i.test(fileName) ||
-        /\.topojson$/i.test(fileName)
-      ) {
-        loadPromise = GeoJsonDataSource.load(JSON.parse(evt.target.result), {
-          sourceUri: fileName,
-          clampToGround: clampToGround,
-        });
-      } else if (/\.(kml|kmz)$/i.test(fileName)) {
-        loadPromise = KmlDataSource.load(file, {
-          sourceUri: fileName,
-          proxy: proxy,
-          camera: scene.camera,
-          canvas: scene.canvas,
-          clampToGround: clampToGround,
-          screenOverlayContainer: viewer.container,
-        });
-      } else if (/\.gpx$/i.test(fileName)) {
-        loadPromise = GpxDataSource.load(file, {
-          sourceUri: fileName,
-          proxy: proxy,
-        });
-      } else {
-        viewer.dropError.raiseEvent(
-          viewer,
-          fileName,
-          `Unrecognized file: ${fileName}`
-        );
-        return;
-      }
-
-      if (defined(loadPromise)) {
-        viewer.dataSources
-          .add(loadPromise)
-          .then(function (dataSource) {
-            if (viewer.flyToOnDrop) {
-              viewer.flyTo(dataSource);
-            }
-          })
-          .catch(function (error) {
-            viewer.dropError.raiseEvent(viewer, fileName, error);
-          });
-      }
-    } catch (error) {
-      viewer.dropError.raiseEvent(viewer, fileName, error);
-    }
-  };
-}
-
-function createDropErrorCallback(viewer, file) {
-  return function (evt) {
-    viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
-  };
-}
 export default viewerDragDropMixin;
