@@ -8,6 +8,11 @@ import GeoJsonDataSource from "../../DataSources/GeoJsonDataSource.js";
 import KmlDataSource from "../../DataSources/KmlDataSource.js";
 import GpxDataSource from "../../DataSources/GpxDataSource.js";
 import getElement from "../getElement.js";
+import Model from "../../Scene/Model.js";
+import Cartesian2 from "../../Core/Cartesian2";
+import Matrix4 from "../../Core/Matrix4";
+import Transforms from "../../Core/Transforms";
+import { Cartesian3 } from "../../Cesium.js";
 
 /**
  * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -260,6 +265,11 @@ function viewerDragDropMixin(viewer, options) {
       handleDroppedGpx(file);
       return;
     }
+    console.log("Here we go", fileName);
+    if (/\.glb$/i.test(fileName)) {
+      handleDroppedGlb(file, clientX, clientY);
+      return;
+    }
     viewer.dropError.raiseEvent(
       viewer,
       fileName,
@@ -360,6 +370,56 @@ function viewerDragDropMixin(viewer, options) {
       .catch(function (error) {
         viewer.dropError.raiseEvent(viewer, fileName, error);
       });
+  }
+
+  /**
+   * Handle a dropped GLB file
+   *
+   * @param {File} file The file
+   * @param {Number} clientX The client x-coordinate of the drop position
+   * @param {Number} clientY The client y-coordinate of the drop position
+   */
+  function handleDroppedGlb(file, clientX, clientY) {
+    //console.log(`Dropped GLB at ${clientX} ${clientY}`);
+    const cartesian = viewer.scene.pickPosition(
+      new Cartesian2(clientX, clientY)
+    );
+    //console.log(`Pick position is `, cartesian);
+
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      const arrayBuffer = evt.target.result;
+      const model = viewer.scene.primitives.add(
+        Model.fromGltf({
+          url: "DUMMY_PATH",
+          gltf: arrayBuffer,
+        })
+      );
+      //viewer.scene.requestRender();
+      //console.log(`Added model`, model);
+
+      model.readyPromise.then(function (m) {
+        //console.log(`Model ready`, model);
+
+        let matrix = model.modelMatrix;
+        const enu = Transforms.eastNorthUpToFixedFrame(cartesian);
+        const translation = Matrix4.fromTranslation(
+          new Cartesian3(0, 0, 1),
+          new Matrix4()
+        );
+        matrix = Matrix4.multiply(matrix, enu, new Matrix4());
+        matrix = Matrix4.multiply(matrix, translation, new Matrix4());
+        model.modelMatrix = matrix;
+
+        //console.log('Model matrix', model.modelMatrix);
+
+        if (viewer.flyToOnDrop) {
+          viewer.scene.camera.flyToBoundingSphere(model.boundingSphere);
+        }
+      });
+    };
+    reader.onerror = createDropErrorCallback(file);
+    reader.readAsArrayBuffer(file);
   }
 
   /**
