@@ -7,6 +7,7 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
+  ColorBlendMode,
   Credit,
   defaultValue,
   defined,
@@ -30,6 +31,8 @@ import {
   Resource,
   ResourceCache,
   ShaderProgram,
+  ShadowMode,
+  SplitDirection,
   StyleCommandsNeeded,
   Transforms,
   WireframeIndexGenerator,
@@ -102,7 +105,6 @@ describe(
     let scene;
     let scene2D;
     let sceneCV;
-    let sceneWithMockGlobe;
     let sceneWithWebgl2;
 
     beforeAll(function () {
@@ -114,8 +116,6 @@ describe(
       sceneCV = createScene();
       sceneCV.morphToColumbusView(0.0);
 
-      sceneWithMockGlobe = createScene();
-
       sceneWithWebgl2 = createScene({
         contextOptions: {
           requestWebgl2: true,
@@ -123,15 +123,10 @@ describe(
       });
     });
 
-    beforeEach(function () {
-      sceneWithMockGlobe.globe = createMockGlobe();
-    });
-
     afterAll(function () {
       scene.destroyForSpecs();
       scene2D.destroyForSpecs();
       sceneCV.destroyForSpecs();
-      sceneWithMockGlobe.destroyForSpecs();
       sceneWithWebgl2.destroyForSpecs();
     });
 
@@ -139,7 +134,6 @@ describe(
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
-      sceneWithMockGlobe.primitives.removeAll();
       sceneWithWebgl2.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
@@ -241,55 +235,6 @@ describe(
         }
         expect(command.count).toEqual(commandCounts[i]);
       }
-    }
-
-    function createMockGlobe() {
-      const globe = {
-        callback: undefined,
-        removedCallback: false,
-        ellipsoid: Ellipsoid.WGS84,
-        update: function () {},
-        render: function () {},
-        getHeight: function () {
-          return 0.0;
-        },
-        _surface: {
-          tileProvider: {
-            ready: true,
-          },
-          _tileLoadQueueHigh: [],
-          _tileLoadQueueMedium: [],
-          _tileLoadQueueLow: [],
-          _debug: {
-            tilesWaitingForChildren: 0,
-          },
-        },
-        imageryLayersUpdatedEvent: new Event(),
-        destroy: function () {},
-      };
-
-      globe.beginFrame = function () {};
-
-      globe.endFrame = function () {};
-
-      globe.terrainProviderChanged = new Event();
-      Object.defineProperties(globe, {
-        terrainProvider: {
-          set: function (value) {
-            this.terrainProviderChanged.raiseEvent(value);
-          },
-        },
-      });
-
-      globe._surface.updateHeight = function (position, callback) {
-        globe.callback = callback;
-        return function () {
-          globe.removedCallback = true;
-          globe.callback = undefined;
-        };
-      };
-
-      return globe;
     }
 
     it("fromGltf throws with undefined options", function () {
@@ -494,6 +439,60 @@ describe(
         expect(loader._asynchronous).toBe(false);
 
         expect(jobSchedulerExecute).not.toHaveBeenCalled();
+      });
+    });
+
+    it("sets default properties", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.show).toEqual(true);
+        expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(model.scale).toEqual(1.0);
+        expect(model.minimumPixelSize).toEqual(0.0);
+        expect(model.maximumScale).toBeUndefined();
+
+        expect(model.id).toBeUndefined();
+        expect(model.allowPicking).toEqual(true);
+
+        expect(model.activeAnimations).toBeDefined();
+        expect(model.clampAnimations).toEqual(true);
+
+        expect(model.shadows).toEqual(ShadowMode.ENABLED);
+        expect(model.debugShowBoundingVolume).toEqual(false);
+        expect(model._enableDebugWireframe).toEqual(false);
+        expect(model.debugWireframe).toEqual(false);
+
+        expect(model.cull).toEqual(true);
+        expect(model.backFaceCulling).toEqual(true);
+        expect(model.opaquePass).toEqual(Pass.OPAQUE);
+        expect(model.customShader).toBeUndefined();
+
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+        expect(model.scene).toBeUndefined();
+        expect(model.distanceDisplayCondition).toBeUndefined();
+
+        expect(model.color).toEqual(Color.WHITE);
+        expect(model.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
+        expect(model.colorBlendAmount).toEqual(0.5);
+        expect(model.silhouetteColor).toEqual(Color.RED);
+        expect(model.silhouetteSize).toEqual(0.0);
+
+        expect(model._enableShowOutline).toEqual(true);
+        expect(model.showOutline).toEqual(true);
+        expect(model.outlineColor).toEqual(Color.BLACK);
+
+        expect(model.clippingPlanes).toBeUndefined();
+        expect(model.lightColor).toBeUndefined();
+        expect(model.imageBasedLighting).toBeDefined();
+
+        expect(model.credit).toBeUndefined();
+        expect(model.showCreditsOnScreen).toEqual(false);
+        expect(model.splitDirection).toEqual(SplitDirection.NONE);
+        expect(model._projectTo2D).toEqual(false);
       });
     });
 
@@ -1135,6 +1134,15 @@ describe(
       });
     });
 
+    it("boundingSphere throws if model is not ready", function () {
+      const model = ModelExperimental.fromGltf({
+        url: boxTexturedGlbUrl,
+      });
+      expect(function () {
+        return model.boundingSphere;
+      }).toThrowDeveloperError();
+    });
+
     it("boundingSphere works", function () {
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
@@ -1588,6 +1596,73 @@ describe(
     });
 
     describe("height reference", function () {
+      let sceneWithMockGlobe;
+
+      function createMockGlobe() {
+        const globe = {
+          callback: undefined,
+          removedCallback: false,
+          ellipsoid: Ellipsoid.WGS84,
+          update: function () {},
+          render: function () {},
+          getHeight: function () {
+            return 0.0;
+          },
+          _surface: {
+            tileProvider: {
+              ready: true,
+            },
+            _tileLoadQueueHigh: [],
+            _tileLoadQueueMedium: [],
+            _tileLoadQueueLow: [],
+            _debug: {
+              tilesWaitingForChildren: 0,
+            },
+          },
+          imageryLayersUpdatedEvent: new Event(),
+          destroy: function () {},
+        };
+
+        globe.beginFrame = function () {};
+
+        globe.endFrame = function () {};
+
+        globe.terrainProviderChanged = new Event();
+        Object.defineProperties(globe, {
+          terrainProvider: {
+            set: function (value) {
+              this.terrainProviderChanged.raiseEvent(value);
+            },
+          },
+        });
+
+        globe._surface.updateHeight = function (position, callback) {
+          globe.callback = callback;
+          return function () {
+            globe.removedCallback = true;
+            globe.callback = undefined;
+          };
+        };
+
+        return globe;
+      }
+
+      beforeAll(function () {
+        sceneWithMockGlobe = createScene();
+      });
+
+      beforeEach(function () {
+        sceneWithMockGlobe.globe = createMockGlobe();
+      });
+
+      afterEach(function () {
+        sceneWithMockGlobe.primitives.removeAll();
+      });
+
+      afterAll(function () {
+        sceneWithMockGlobe.destroyForSpecs();
+      });
+
       it("initializes with height reference", function () {
         return loadAndZoomToModelExperimental(
           {
@@ -1997,7 +2072,34 @@ describe(
         });
       });
 
-      it("invisible model doesn't render", function () {
+      it("renders with translucent color", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          let result;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            result = rgba;
+          });
+
+          model.color = Color.fromAlpha(Color.WHITE, 0.5);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeLessThan(result[0]);
+            expect(rgba[1]).toBeLessThan(result[1]);
+            expect(rgba[2]).toBeLessThan(result[2]);
+            expect(rgba[3]).toBe(255);
+          });
+        });
+      });
+
+      it("doesn't render invisible model", function () {
         return loadAndZoomToModelExperimental(
           {
             gltf: boxTexturedGltfUrl,
@@ -2316,6 +2418,40 @@ describe(
           model.imageBasedLighting = imageBasedLighting;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual(result);
+          });
+        });
+      });
+
+      it("changing imageBasedLighting parameters works", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: new ImageBasedLighting({
+              imageBasedLightingFactor: Cartesian2.ZERO,
+            }),
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          let result;
+          verifyRender(model, true);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            result = rgba;
+          });
+
+          const ibl = model.imageBasedLighting;
+          ibl.imageBasedLightingFactor = new Cartesian2(1, 1);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual(result);
+          });
+
+          ibl.luminanceAtZenith = 0.0;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).toEqual(result);
           });
         });
       });
