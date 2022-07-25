@@ -520,12 +520,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!this._ready) {
         throw new DeveloperError(
-          "orientedBoudingBox must not be called before the primitive is ready."
+          "orientedBoundingBox must not be called before the primitive is ready."
         );
       }
       //>>includeEnd('debug');
 
-      return this._shape.orientedBoudingBox;
+      return this._shape.orientedBoundingBox;
     },
   },
 
