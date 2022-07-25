@@ -414,8 +414,6 @@ function recomputeBoundingVolumesRecursive(that, node) {
 }
 
 /**
- * Call requestData for each metadata
- *
  * @function
  *
  * @param {VoxelTraversal} that
@@ -423,25 +421,7 @@ function recomputeBoundingVolumesRecursive(that, node) {
  *
  * @private
  */
-function requestTiles(that, keyframeNode) {
-  const keys = Object.keys(that.megatextures);
-  const length = keys.length;
-  const keyframe = keyframeNode.keyframe;
-  for (let i = 0; i < length; i++) {
-    const metadataName = keys[i];
-    requestData(that, keyframeNode, metadataName, keyframe);
-  }
-}
-/**
- * @function
- *
- * @param {VoxelTraversal} that
- * @param {KeyframeNode} keyframeNode
- * @param {String} metadataName
- *
- * @private
- */
-function requestData(that, keyframeNode, metadataName) {
+function requestData(that, keyframeNode) {
   if (
     that._simultaneousRequestCount >=
     VoxelTraversal.simultaneousRequestCountMaximum
@@ -503,7 +483,6 @@ function requestData(that, keyframeNode, metadataName) {
     tileY: tileY,
     tileZ: tileZ,
     keyframe: keyframe,
-    metadataName: metadataName,
   });
 
   if (defined(promise)) {
@@ -802,7 +781,7 @@ function loadAndUnload(that, frameState) {
       continue;
     }
     if (highPriorityKeyframeNode.state === VoxelTraversal.LoadState.UNLOADED) {
-      requestTiles(that, highPriorityKeyframeNode);
+      requestData(that, highPriorityKeyframeNode);
     }
     if (highPriorityKeyframeNode.state === VoxelTraversal.LoadState.RECEIVED) {
       let addNodeIndex = 0;
