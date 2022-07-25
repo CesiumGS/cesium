@@ -50,8 +50,12 @@ describe(
     const floorHeight = -1.0;
 
     const boxUrl = "./Data/Models/Shadows/Box.gltf";
-    const boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
-    const boxNoNormalsUrl = "./Data/Models/Shadows/BoxNoNormals.gltf";
+    const boxExperimentalUrl =
+      "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
+    const boxTranslucentUrl =
+      "./Data/Models/GltfLoader/BoxInterleavedTranslucent/glTF/BoxInterleavedTranslucent.gltf";
+    const boxNoNormalsUrl =
+      "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
     const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
     const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
 
@@ -153,7 +157,7 @@ describe(
       );
       modelPromises.push(
         loadModelExperimental({
-          gltf: boxUrl,
+          gltf: boxExperimentalUrl,
           modelMatrix: boxTransformExperimental,
           show: false,
         }).then(function (model) {

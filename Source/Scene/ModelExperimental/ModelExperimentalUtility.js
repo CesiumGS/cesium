@@ -346,3 +346,38 @@ ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
 
   return sanitizedIdentifier;
 };
+
+ModelExperimentalUtility.supportedExtensions = {
+  AGI_articulations: true,
+  CESIUM_primitive_outline: true,
+  EXT_feature_metadata: true,
+  EXT_instance_features: true,
+  EXT_mesh_gpu_instancing: true,
+  EXT_structural_metadata: true,
+  EXT_texture_webp: true,
+  KHR_draco_mesh_compression: true,
+  KHR_materials_pbrSpecularGlossiness: true,
+  KHR_materials_unlit: true,
+  KHR_mesh_quantization: true,
+  KHR_texture_basisu: true,
+  KHR_texture_transform: true,
+};
+
+/**
+ * Checks whether or not the extensions required by the glTF are
+ * supported. If an unsupported extension is found, this throws
+ * a {@link RuntimeError} with the extension name.
+ *
+ * @param {Array<String>} extensionsRequired The extensionsRequired array in the glTF.
+ */
+ModelExperimentalUtility.checkSupportedExtensions = function (
+  extensionsRequired
+) {
+  const length = extensionsRequired.length;
+  for (let i = 0; i < length; i++) {
+    const extension = extensionsRequired[i];
+    if (!ModelExperimentalUtility.supportedExtensions[extension]) {
+      throw new RuntimeError(`Unsupported glTF Extension: ${extension}`);
+    }
+  }
+};
