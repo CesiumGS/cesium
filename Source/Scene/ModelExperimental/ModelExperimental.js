@@ -66,7 +66,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
  * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
  * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
- * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
@@ -195,8 +195,8 @@ export default function ModelExperimental(options) {
   this._id = options.id;
   this._idDirty = false;
 
-  const color = options.color;
-  this._color = defined(color) ? Color.clone(color) : undefined;
+  const color = defaultValue(options.color, Color.WHITE);
+  this._color = Color.clone(color);
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -2359,7 +2359,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
  * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
  * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
- * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
