@@ -2,12 +2,12 @@ import {
   AttributeCompression,
   AttributeType,
   ComponentDatatype,
-} from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  defined,
+  Math as CesiumMath,
+} from "../../../Source/Cesium.js";
 
 describe("Core/AttributeCompression", function () {
   const negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);

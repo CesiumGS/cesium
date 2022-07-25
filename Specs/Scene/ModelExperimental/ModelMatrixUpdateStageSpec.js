@@ -40,7 +40,7 @@ describe(
         const sceneGraph = model._sceneGraph;
         const node = sceneGraph._runtimeNodes[0];
         const primitive = node.runtimePrimitives[0];
-        const drawCommand = primitive.drawCommands[0];
+        const drawCommand = primitive.drawCommand;
 
         const expectedOriginalTransform = Matrix4.clone(node.transform);
         expect(node._transformDirty).toEqual(false);
@@ -92,7 +92,7 @@ describe(
       });
     });
 
-    function applyTransform(sceneGraph, node, transform) {
+    function applyTransform(node, transform) {
       const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
       expect(node._transformDirty).toEqual(false);
 
@@ -115,6 +115,8 @@ describe(
         },
         scene
       ).then(function (model) {
+        scene.renderForSpecs();
+
         const sceneGraph = model._sceneGraph;
 
         // The root node is transformed.
@@ -127,22 +129,22 @@ describe(
         const childTransformation = Matrix4.fromTranslation(
           new Cartesian3(0, 5, 0)
         );
-        applyTransform(sceneGraph, transformedChildNode, childTransformation);
+        applyTransform(transformedChildNode, childTransformation);
 
         const rootTransformation = Matrix4.fromTranslation(
           new Cartesian3(12, 5, 0)
         );
-        applyTransform(sceneGraph, rootNode, rootTransformation);
+        applyTransform(rootNode, rootTransformation);
 
         const rootPrimitive = rootNode.runtimePrimitives[0];
         const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
         const transformedChildPrimitive =
           transformedChildNode.runtimePrimitives[0];
 
-        const rootDrawCommand = rootPrimitive.drawCommands[0];
-        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const rootDrawCommand = rootPrimitive.drawCommand;
+        const staticChildDrawCommand = staticChildPrimitive.drawCommand;
         const transformedChildDrawCommand =
-          transformedChildPrimitive.drawCommands[0];
+          transformedChildPrimitive.drawCommand;
 
         const expectedRootModelMatrix = Matrix4.multiplyTransformation(
           rootDrawCommand.modelMatrix,
@@ -208,10 +210,10 @@ describe(
         const transformedChildPrimitive =
           transformedChildNode.runtimePrimitives[0];
 
-        const rootDrawCommand = rootPrimitive.drawCommands[0];
-        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const rootDrawCommand = rootPrimitive.drawCommand;
+        const staticChildDrawCommand = staticChildPrimitive.drawCommand;
         const transformedChildDrawCommand =
-          transformedChildPrimitive.drawCommands[0];
+          transformedChildPrimitive.drawCommand;
 
         const expectedRootModelMatrix = Matrix4.multiplyTransformation(
           modelMatrix,
@@ -285,10 +287,10 @@ describe(
         const transformedChildPrimitive =
           transformedChildNode.runtimePrimitives[0];
 
-        const rootDrawCommand = rootPrimitive.drawCommands[0];
-        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const rootDrawCommand = rootPrimitive.drawCommand;
+        const staticChildDrawCommand = staticChildPrimitive.drawCommand;
         const transformedChildDrawCommand =
-          transformedChildPrimitive.drawCommands[0];
+          transformedChildPrimitive.drawCommand;
 
         const expectedRootModelMatrix = Matrix4.multiplyTransformation(
           scaledModelMatrix,
@@ -343,17 +345,17 @@ describe(
         const rootPrimitive = rootNode.runtimePrimitives[0];
         const childPrimitive = childNode.runtimePrimitives[0];
 
-        const rootDrawCommand = rootPrimitive.drawCommands[0];
-        const childDrawCommand = childPrimitive.drawCommands[0];
+        const rootDrawCommand = rootPrimitive.drawCommand;
+        const childDrawCommand = childPrimitive.drawCommand;
 
-        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
-        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.BACK);
+        expect(rootDrawCommand.cullFace).toBe(CullFace.BACK);
+        expect(childDrawCommand.cullFace).toBe(CullFace.BACK);
 
         model.modelMatrix = Matrix4.fromUniformScale(-1);
         scene.renderForSpecs();
 
-        expect(rootDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
-        expect(childDrawCommand.renderState.cull.face).toBe(CullFace.FRONT);
+        expect(rootDrawCommand.cullFace).toBe(CullFace.FRONT);
+        expect(childDrawCommand.cullFace).toBe(CullFace.FRONT);
       });
     });
   },

@@ -5,7 +5,6 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import CustomShaderStageVS from "../../Shaders/ModelExperimental/CustomShaderStageVS.js";
 import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderStageFS.js";
-import AlphaMode from "../AlphaMode.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
@@ -83,13 +82,11 @@ CustomShaderPipelineStage.process = function (
   const alphaOptions = renderResources.alphaOptions;
   if (customShader.isTranslucent) {
     alphaOptions.pass = Pass.TRANSLUCENT;
-    alphaOptions.alphaMode = AlphaMode.BLEND;
   } else {
     // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
     // the material pipeline stage used translucent. The default is configured
     // in AlphaPipelineStage
     alphaOptions.pass = undefined;
-    alphaOptions.alphaMode = AlphaMode.OPAQUE;
   }
 
   // Generate lines of code for the shader, but don't add them to the shader
@@ -106,7 +103,7 @@ CustomShaderPipelineStage.process = function (
   // the input to the fragment shader may include a low-precision ECEF position
   if (generatedCode.shouldComputePositionWC) {
     shaderBuilder.addDefine(
-      "COMPUTE_POSITION_WC",
+      "COMPUTE_POSITION_WC_CUSTOM_SHADER",
       undefined,
       ShaderDestination.BOTH
     );
@@ -519,6 +516,12 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
     MetadataPipelineStage.STRUCT_NAME_METADATA,
     "metadata"
   );
+  // Add MetadataClass struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    "metadataClass"
+  );
 
   const functionId =
     CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS;
@@ -574,6 +577,12 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA,
     "metadata"
+  );
+  // Add MetadataClass struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    "metadataClass"
   );
 
   const functionId =

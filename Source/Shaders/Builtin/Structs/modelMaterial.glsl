@@ -2,7 +2,10 @@
  * Struct for representing a material for a {@link ModelExperimental}. The model
  * rendering pipeline will pass this struct between material, custom shaders,
  * and lighting stages. This is not to be confused with {@link czm_material}
- * which is used by the older Fabric materials system, although they are similar
+ * which is used by the older Fabric materials system, although they are similar.
+ * <p>
+ * All color values (diffuse, specular, emissive) are in linear color space.
+ * </p>
  *
  * @name czm_modelMaterial
  * @glslStruct

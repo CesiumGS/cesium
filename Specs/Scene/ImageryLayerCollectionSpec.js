@@ -1,18 +1,20 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { Event } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { ImageryLayer } from "../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { ImageryLayerFeatureInfo } from "../../Source/Cesium.js";
-import { ImageryProvider } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  Event,
+  GeographicTilingScheme,
+  Matrix4,
+  Ray,
+  Rectangle,
+  WebMercatorProjection,
+  WebMercatorTilingScheme,
+  Globe,
+  ImageryLayer,
+  ImageryLayerCollection,
+  ImageryLayerFeatureInfo,
+  ImageryProvider,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -574,14 +576,14 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = defer();
-            setTimeout(function () {
-              const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Foo";
-              featureInfo.description = "<strong>Foo!</strong>";
-              deferred.resolve([featureInfo]);
-            }, 1);
-            return deferred.promise;
+            return new Promise((resolve) => {
+              setTimeout(function () {
+                const featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.name = "Foo";
+                featureInfo.description = "<strong>Foo!</strong>";
+                resolve([featureInfo]);
+              }, 1);
+            });
           },
 
           requestImage: function (x, y, level) {
@@ -629,14 +631,14 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = defer();
-            setTimeout(function () {
-              const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Foo";
-              featureInfo.description = "<strong>Foo!</strong>";
-              deferred.resolve([featureInfo]);
-            }, 1);
-            return deferred.promise;
+            return new Promise((resolve) => {
+              setTimeout(function () {
+                const featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.name = "Foo";
+                featureInfo.description = "<strong>Foo!</strong>";
+                resolve([featureInfo]);
+              }, 1);
+            });
           },
 
           requestImage: function (x, y, level) {
@@ -658,14 +660,14 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = defer();
-            setTimeout(function () {
-              const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Bar";
-              featureInfo.description = "<strong>Bar!</strong>";
-              deferred.resolve([featureInfo]);
-            }, 1);
-            return deferred.promise;
+            return new Promise((resolve) => {
+              setTimeout(function () {
+                const featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.name = "Bar";
+                featureInfo.description = "<strong>Bar!</strong>";
+                resolve([featureInfo]);
+              }, 1);
+            });
           },
 
           requestImage: function (x, y, level) {
@@ -721,13 +723,13 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = defer();
-            setTimeout(function () {
-              const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = `L${level}X${x}Y${y}`;
-              deferred.resolve([featureInfo]);
-            }, 1);
-            return deferred.promise;
+            return new Promise((resolve) => {
+              setTimeout(function () {
+                const featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.name = `L${level}X${x}Y${y}`;
+                resolve([featureInfo]);
+              }, 1);
+            });
           },
 
           requestImage: function (x, y, level) {

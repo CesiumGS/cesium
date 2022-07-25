@@ -443,6 +443,17 @@ ShaderSource.createPickFragmentShaderSource = function (
   return `${renamedFS}\n${pickMain}`;
 };
 
+function containsDefine(shaderSource, define) {
+  const defines = shaderSource.defines;
+  const definesLength = defines.length;
+  for (let i = 0; i < definesLength; ++i) {
+    if (defines[i] === define) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function containsString(shaderSource, string) {
   const sources = shaderSource.sources;
   const sourcesLength = sources.length;
@@ -471,7 +482,7 @@ ShaderSource.findNormalVarying = function (shaderSource) {
   // Fix for ModelExperimental: the shader text always has the word v_normalEC
   // wrapped in an #ifdef so instead of looking for v_normalEC look for the define
   if (containsString(shaderSource, "#ifdef HAS_NORMALS")) {
-    if (containsString(shaderSource, "#define HAS_NORMALS")) {
+    if (containsDefine(shaderSource, "HAS_NORMALS")) {
       return "v_normalEC";
     }
     return undefined;

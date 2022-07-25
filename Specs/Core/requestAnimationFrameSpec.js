@@ -1,6 +1,5 @@
 import {
   cancelAnimationFrame,
-  defer,
   requestAnimationFrame,
 } from "../../Source/Cesium.js";
 
@@ -13,46 +12,42 @@ describe("Core/requestAnimationFrame", function () {
   });
 
   it("provides a timestamp that increases each frame", function () {
-    const deferred = defer();
+    return new Promise((resolve) => {
+      const callbackTimestamps = [];
 
-    const callbackTimestamps = [];
+      function callback(timestamp) {
+        callbackTimestamps.push(timestamp);
 
-    function callback(timestamp) {
-      callbackTimestamps.push(timestamp);
-
-      if (callbackTimestamps.length < 3) {
-        requestAnimationFrame(callback);
-      } else {
-        expect(callbackTimestamps[0]).toBeLessThanOrEqual(
-          callbackTimestamps[1]
-        );
-        expect(callbackTimestamps[1]).toBeLessThanOrEqual(
-          callbackTimestamps[2]
-        );
-        deferred.resolve();
+        if (callbackTimestamps.length < 3) {
+          requestAnimationFrame(callback);
+        } else {
+          expect(callbackTimestamps[0]).toBeLessThanOrEqual(
+            callbackTimestamps[1]
+          );
+          expect(callbackTimestamps[1]).toBeLessThanOrEqual(
+            callbackTimestamps[2]
+          );
+          resolve();
+        }
       }
-    }
 
-    requestAnimationFrame(callback);
-
-    return deferred.promise;
+      requestAnimationFrame(callback);
+    });
   });
 
   it("can cancel a callback", function () {
-    const deferred = defer();
+    return new Promise((resolve) => {
+      const shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
 
-    const shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
+      const requestID = requestAnimationFrame(shouldNotBeCalled);
+      cancelAnimationFrame(requestID);
 
-    const requestID = requestAnimationFrame(shouldNotBeCalled);
-    cancelAnimationFrame(requestID);
-
-    // schedule and wait for another callback
-    requestAnimationFrame(function () {
-      // make sure cancelled callback didn't run
-      expect(shouldNotBeCalled).not.toHaveBeenCalled();
-      deferred.resolve();
+      // schedule and wait for another callback
+      requestAnimationFrame(function () {
+        // make sure cancelled callback didn't run
+        expect(shouldNotBeCalled).not.toHaveBeenCalled();
+        resolve();
+      });
     });
-
-    return deferred.promise;
   });
 });

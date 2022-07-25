@@ -1,7 +1,10 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { DebugCameraPrimitive } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  Camera,
+  DebugCameraPrimitive,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

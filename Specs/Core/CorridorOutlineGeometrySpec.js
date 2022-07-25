@@ -1,9 +1,11 @@
-import { arrayFill } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { CorridorOutlineGeometry } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  CornerType,
+  CorridorOutlineGeometry,
+  Ellipsoid,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CorridorOutlineGeometry", function () {
@@ -92,8 +94,7 @@ describe("Core/CorridorOutlineGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 
@@ -113,9 +114,7 @@ describe("Core/CorridorOutlineGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 0);
-    expected = arrayFill(expected, 1, 0, 12);
+    const expected = new Array(offset.length).fill(0).fill(1, 0, 12);
     expect(offset).toEqual(expected);
   });
 
@@ -135,8 +134,7 @@ describe("Core/CorridorOutlineGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 

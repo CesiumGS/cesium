@@ -1,18 +1,21 @@
-import { Clock } from "../../../Source/Cesium.js";
-import { defaultValue } from "../../../Source/Cesium.js";
-import { EllipsoidTerrainProvider } from "../../../Source/Cesium.js";
-import { ScreenSpaceEventHandler } from "../../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../../Source/Cesium.js";
-import { Camera } from "../../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../../Source/Cesium.js";
-import { Scene } from "../../../Source/Cesium.js";
-import { SceneMode } from "../../../Source/Cesium.js";
-import { SkyBox } from "../../../Source/Cesium.js";
-import { TileCoordinatesImageryProvider } from "../../../Source/Cesium.js";
+import {
+  Clock,
+  defaultValue,
+  EllipsoidTerrainProvider,
+  ScreenSpaceEventHandler,
+  WebMercatorProjection,
+  Camera,
+  ImageryLayerCollection,
+  Scene,
+  SceneMode,
+  SkyBox,
+  TileCoordinatesImageryProvider,
+  CesiumWidget,
+} from "../../../../Source/Cesium.js";
+
 import DomEventSimulator from "../../DomEventSimulator.js";
 import getWebGLStub from "../../getWebGLStub.js";
 import pollToPromise from "../../pollToPromise.js";
-import { CesiumWidget } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/CesiumWidget/CesiumWidget",

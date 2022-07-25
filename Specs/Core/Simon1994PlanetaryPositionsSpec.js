@@ -1,10 +1,12 @@
-import { defined } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Simon1994PlanetaryPositions as PlanetaryPositions } from "../../Source/Cesium.js";
-import { TimeStandard } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
+import {
+  defined,
+  JulianDate,
+  Matrix3,
+  Math as CesiumMath,
+  TimeStandard,
+  Transforms,
+  Simon1994PlanetaryPositions as PlanetaryPositions,
+} from "../../../Source/Cesium.js";
 
 describe("Core/Simon1994PlanetaryPositions", function () {
   // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the

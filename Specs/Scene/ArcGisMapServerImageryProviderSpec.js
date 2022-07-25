@@ -1,27 +1,30 @@
-import { appendForwardSlash } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { objectToQuery } from "../../Source/Cesium.js";
-import { queryToObject } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
-import { ArcGisMapServerImageryProvider } from "../../Source/Cesium.js";
-import { DiscardMissingTileImagePolicy } from "../../Source/Cesium.js";
-import { Imagery } from "../../Source/Cesium.js";
-import { ImageryLayer } from "../../Source/Cesium.js";
-import { ImageryLayerFeatureInfo } from "../../Source/Cesium.js";
-import { ImageryProvider } from "../../Source/Cesium.js";
-import { ImageryState } from "../../Source/Cesium.js";
+import {
+  appendForwardSlash,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  defined,
+  GeographicTilingScheme,
+  getAbsoluteUri,
+  objectToQuery,
+  queryToObject,
+  Rectangle,
+  Request,
+  RequestScheduler,
+  Resource,
+  WebMercatorProjection,
+  WebMercatorTilingScheme,
+  ArcGisMapServerImageryProvider,
+  DiscardMissingTileImagePolicy,
+  Imagery,
+  ImageryLayer,
+  ImageryLayerFeatureInfo,
+  ImageryProvider,
+  ImageryState,
+  Uri,
+} from "../../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
-import { Uri } from "../../Source/Cesium.js";
 
 describe("Scene/ArcGisMapServerImageryProvider", function () {
   let supportsImageBitmapOptions;
@@ -658,10 +661,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
-      expect(error.message.indexOf("WKID") >= 0).toEqual(true);
-      ++tries;
-      if (tries < 3) {
-        error.retry = true;
+      const isWKIDError = error.message.indexOf("WKID") >= 0;
+      if (isWKIDError) {
+        ++tries;
+        if (tries < 3) {
+          error.retry = true;
+        }
       }
     });
 
@@ -1013,10 +1018,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
-      expect(error.message.indexOf("WKID") >= 0).toEqual(true);
-      ++tries;
-      if (tries < 3) {
-        error.retry = true;
+      const isWKIDError = error.message.indexOf("WKID") >= 0;
+      if (isWKIDError) {
+        ++tries;
+        if (tries < 3) {
+          error.retry = true;
+        }
       }
     });
 

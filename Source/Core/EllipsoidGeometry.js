@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -320,8 +319,8 @@ EllipsoidGeometry.createGeometry = function (ellipsoidGeometry) {
 
   const vertexCount = numThetas * numPhis * vertexMultiplier;
   const positions = new Float64Array(vertexCount * 3);
-  const isInner = arrayFill(new Array(vertexCount), false);
-  const negateNormal = arrayFill(new Array(vertexCount), false);
+  const isInner = new Array(vertexCount).fill(false);
+  const negateNormal = new Array(vertexCount).fill(false);
 
   // Multiply by 6 because there are two triangles per sector
   const indexCount = slicePartitions * stackPartitions * vertexMultiplier;
@@ -607,12 +606,11 @@ EllipsoidGeometry.createGeometry = function (ellipsoidGeometry) {
 
   if (defined(ellipsoidGeometry._offsetAttribute)) {
     const length = positions.length;
-    const applyOffset = new Uint8Array(length / 3);
     const offsetValue =
       ellipsoidGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
         ? 0
         : 1;
-    arrayFill(applyOffset, offsetValue);
+    const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 1,

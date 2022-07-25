@@ -1,25 +1,29 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { BoxGeometry } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { GeometryPipeline } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  defaultValue,
+  defined,
+  destroyObject,
+  GeometryPipeline,
+  Matrix4,
+  Resource,
+  BufferUsage,
+  DrawCommand,
+  Pass,
+  RenderState,
+  Sampler,
+  ShaderProgram,
+  VertexArray,
+  BillboardCollection,
+  BlendingState,
+  TextureAtlas,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { Sampler } from "../../Source/Cesium.js";
-import { ShaderProgram } from "../../Source/Cesium.js";
-import { VertexArray } from "../../Source/Cesium.js";
-import { BillboardCollection } from "../../Source/Cesium.js";
-import { BlendingState } from "../../Source/Cesium.js";
-import { TextureAtlas } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

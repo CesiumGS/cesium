@@ -1,15 +1,18 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
 import Model from "../Scene/Model.js";
+import ModelExperimental from "../Scene/ModelExperimental/ModelExperimental.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -31,6 +34,7 @@ const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
 
+const scratchColor = new Color();
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
@@ -41,12 +45,8 @@ const nodeMatrixScratch = new Matrix4();
  */
 function ModelVisualizer(scene, entityCollection) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(scene)) {
-    throw new DeveloperError("scene is required.");
-  }
-  if (!defined(entityCollection)) {
-    throw new DeveloperError("entityCollection is required.");
-  }
+  Check.typeOf.object("scene", scene);
+  Check.typeOf.object("entityCollection", entityCollection);
   //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
@@ -113,7 +113,12 @@ ModelVisualizer.prototype.update = function (time) {
         primitives.removeAndDestroy(model);
         delete modelHash[entity.id];
       }
-      model = Model.fromGltf({
+
+      const ModelType = ExperimentalFeatures.enableModelExperimental
+        ? ModelExperimental
+        : Model;
+
+      model = ModelType.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,
@@ -172,7 +177,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._silhouetteColor,
       time,
       defaultSilhouetteColor,
-      model._silhouetteColor
+      scratchColor
     );
     model.silhouetteSize = Property.getValueOrDefault(
       modelGraphics._silhouetteSize,
@@ -183,7 +188,7 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._color,
       time,
       defaultColor,
-      model._color
+      scratchColor
     );
     model.colorBlendMode = Property.getValueOrDefault(
       modelGraphics._colorBlendMode,
@@ -364,22 +369,12 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     return BoundingSphereState.PENDING;
   }
 
-  if (model.heightReference === HeightReference.NONE) {
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model.modelMatrix,
-      result
-    );
-  } else {
-    if (!defined(model._clampedModelMatrix)) {
-      return BoundingSphereState.PENDING;
-    }
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model._clampedModelMatrix,
-      result
-    );
+  const hasHeightReference = model.heightReference !== HeightReference.NONE;
+  if (hasHeightReference && !defined(model._clampedModelMatrix)) {
+    return BoundingSphereState.PENDING;
   }
+
+  BoundingSphere.clone(model.boundingSphere, result);
   return BoundingSphereState.DONE;
 };
 

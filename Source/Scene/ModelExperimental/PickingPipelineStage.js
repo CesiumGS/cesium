@@ -44,13 +44,15 @@ PickingPipelineStage.process = function (
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
-    processInstancedPickIds(renderResources, instances, context);
+    processInstancedPickIds(renderResources, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
     const pickObject = buildPickObject(renderResources);
 
     const pickId = context.createPickId(pickObject);
-    model._resources.push(pickId);
+    model._pipelineResources.push(pickId);
+    model._pickIds.push(pickId);
+
     shaderBuilder.addUniform(
       "vec4",
       "czm_pickColor",
@@ -96,6 +98,8 @@ function buildPickObject(renderResources, instanceId) {
       detail: detailPickObject,
     };
   }
+
+  pickObject.id = model.id;
 
   if (defined(instanceId)) {
     // For instanced models, an instanceId property is added to the pick object.
@@ -150,19 +154,19 @@ function processPickTexture(renderResources, primitive, instances) {
     "((selectedFeature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, selectedFeature.st) : vec4(0.0))";
 }
 
-function processInstancedPickIds(renderResources, instances, context) {
+function processInstancedPickIds(renderResources, context) {
   const instanceCount = renderResources.instanceCount;
   const pickIds = new Array(instanceCount);
   const pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
   const model = renderResources.model;
 
-  const modelResources = model._resources;
+  const pipelineResources = model._pipelineResources;
   for (let i = 0; i < instanceCount; i++) {
     const pickObject = buildPickObject(renderResources, i);
 
     const pickId = context.createPickId(pickObject);
-    modelResources.push(pickId);
+    pipelineResources.push(pickId);
     pickIds[i] = pickId;
 
     const pickColor = pickId.color;
@@ -172,14 +176,19 @@ function processInstancedPickIds(renderResources, instances, context) {
     pickIdsTypedArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
   }
 
+  model._pickIds = pickIds;
+
   const pickIdsBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: pickIdsTypedArray,
     usage: BufferUsage.STATIC_DRAW,
   });
-  // Destruction of resources allocated by the ModelExperimental is handled by ModelExperimental.destroy().
+  // Destruction of resources allocated by the ModelExperimental
+  // is handled by ModelExperimental.destroyPipelineResources().
   pickIdsBuffer.vertexArrayDestroyable = false;
-  modelResources.push(pickIdsBuffer);
+  const hasCpuCopy = false;
+  model.statistics.addBuffer(pickIdsBuffer, hasCpuCopy);
+  pipelineResources.push(pickIdsBuffer);
 
   const pickIdsVertexAttribute = {
     index: renderResources.attributeIndex++,

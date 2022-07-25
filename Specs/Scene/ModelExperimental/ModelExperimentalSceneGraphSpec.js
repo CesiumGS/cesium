@@ -4,6 +4,7 @@ import {
   Color,
   CustomShader,
   CustomShaderPipelineStage,
+  Math as CesiumMath,
   Matrix4,
   ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
@@ -24,6 +25,9 @@ describe(
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const simpleSkinGltfUrl =
       "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+    const boxArticulationsUrl =
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+    const duckUrl = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
 
     let scene;
 
@@ -79,7 +83,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -107,7 +111,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
@@ -139,7 +143,7 @@ describe(
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands(frameState);
         expect(drawCommands.length).toEqual(2);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
         expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
@@ -273,6 +277,73 @@ describe(
       });
     });
 
+    it("creates articulation from model", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxArticulationsUrl },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const components = sceneGraph._components;
+        const runtimeNodes = sceneGraph._runtimeNodes;
+
+        expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
+
+        const rootNodes = sceneGraph._rootNodes;
+        expect(rootNodes[0]).toEqual(0);
+
+        const runtimeArticulations = sceneGraph._runtimeArticulations;
+        const runtimeArticulation = runtimeArticulations["SampleArticulation"];
+        expect(runtimeArticulation).toBeDefined();
+        expect(runtimeArticulation.name).toBe("SampleArticulation");
+        expect(runtimeArticulation.runtimeNodes.length).toBe(1);
+        expect(runtimeArticulation.runtimeStages.length).toBe(10);
+      });
+    });
+
+    it("applies articulations", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxArticulationsUrl,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const runtimeNodes = sceneGraph._runtimeNodes;
+        const rootNode = runtimeNodes[0];
+
+        expect(rootNode.transform).toEqual(rootNode.originalTransform);
+
+        sceneGraph.setArticulationStage("SampleArticulation MoveX", 1.0);
+        sceneGraph.setArticulationStage("SampleArticulation MoveY", 2.0);
+        sceneGraph.setArticulationStage("SampleArticulation MoveZ", 3.0);
+        sceneGraph.setArticulationStage("SampleArticulation Yaw", 4.0);
+        sceneGraph.setArticulationStage("SampleArticulation Pitch", 5.0);
+        sceneGraph.setArticulationStage("SampleArticulation Roll", 6.0);
+        sceneGraph.setArticulationStage("SampleArticulation Size", 0.9);
+        sceneGraph.setArticulationStage("SampleArticulation SizeX", 0.8);
+        sceneGraph.setArticulationStage("SampleArticulation SizeY", 0.7);
+        sceneGraph.setArticulationStage("SampleArticulation SizeZ", 0.6);
+
+        // Articulations shouldn't affect the node until applyArticulations is called.
+        expect(rootNode.transform).toEqual(rootNode.originalTransform);
+
+        sceneGraph.applyArticulations();
+
+        // prettier-ignore
+        const expected = [
+           0.714769048324, -0.0434061192623, -0.074974104652,  0,
+          -0.061883302957,  0.0590679731276, -0.624164586760,  0,
+           0.037525155822,  0.5366347296529,  0.047064101083,  0,
+                        1,                3,              -2,  1,
+        ];
+
+        expect(rootNode.transform).toEqualEpsilon(
+          expected,
+          CesiumMath.EPSILON10
+        );
+      });
+    });
+
     it("adds ModelColorPipelineStage when color is set on the model", function () {
       spyOn(ModelColorPipelineStage, "process");
       return loadAndZoomToModelExperimental(
@@ -297,6 +368,39 @@ describe(
         model.customShader = new CustomShader();
         model.update(scene.frameState);
         expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("getDrawCommands ignores hidden nodes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: duckUrl,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const rootNode = sceneGraph._runtimeNodes[0];
+        const meshNode = sceneGraph._runtimeNodes[2];
+
+        expect(rootNode.show).toBe(true);
+        expect(meshNode.show).toBe(true);
+
+        let drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        const originalLength = drawCommands.length;
+        expect(originalLength).not.toEqual(0);
+
+        meshNode.show = false;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(0);
+
+        meshNode.show = true;
+        rootNode.show = false;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(0);
+
+        rootNode.show = true;
+        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
+        expect(drawCommands.length).toEqual(originalLength);
       });
     });
 

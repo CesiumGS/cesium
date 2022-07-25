@@ -1,8 +1,10 @@
-import { arrayFill } from "../../Source/Cesium.js";
-import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
-import { BoxOutlineGeometry } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  AxisAlignedBoundingBox,
+  BoxOutlineGeometry,
+  Cartesian3,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/BoxOutlineGeometry", function () {
@@ -48,8 +50,7 @@ describe("Core/BoxOutlineGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 

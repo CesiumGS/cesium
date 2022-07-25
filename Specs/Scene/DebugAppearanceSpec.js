@@ -1,13 +1,16 @@
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { GeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
-import { Appearance } from "../../Source/Cesium.js";
-import { DebugAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
+import {
+  ComponentDatatype,
+  defaultValue,
+  GeometryInstance,
+  GeometryInstanceAttribute,
+  Rectangle,
+  RectangleGeometry,
+  VertexFormat,
+  Appearance,
+  DebugAppearance,
+  Primitive,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

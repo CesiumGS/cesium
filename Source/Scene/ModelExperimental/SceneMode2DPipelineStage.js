@@ -13,6 +13,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import SceneTransforms from "../SceneTransforms.js";
 
 const scratchModelMatrix = new Matrix4();
+const scratchModelView2D = new Matrix4();
 
 /**
  * The scene mode 2D stage generates resources for rendering a primitive in 2D / CV mode.
@@ -52,9 +53,12 @@ SceneMode2DPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
-  const runtimePrimitive = renderResources.runtimePrimitive;
+  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION
+  );
 
+  const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
   const modelMatrix = model.sceneGraph.computedModelMatrix;
   const nodeComputedTransform = renderResources.runtimeNode.computedTransform;
@@ -70,12 +74,15 @@ SceneMode2DPipelineStage.process = function (
     frameState
   );
 
+  const runtimePrimitive = renderResources.runtimePrimitive;
   runtimePrimitive.boundingSphere2D = boundingSphere2D;
 
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION
-  );
+  // If the model is instanced, 2D projection will be handled in the
+  // InstancingPipelineStage.
+  const instances = renderResources.runtimeNode.node.instances;
+  if (defined(instances)) {
+    return;
+  }
 
   // If the typed array of the position attribute exists, then
   // the positions haven't been projected to 2D yet.
@@ -87,6 +94,8 @@ SceneMode2DPipelineStage.process = function (
       frameState
     );
 
+    // Since this buffer will persist even if the pipeline is re-run,
+    // its memory will be counted in PrimitiveStatisticsPipelineStage
     runtimePrimitive.positionBuffer2D = buffer2D;
     model._modelResources.push(buffer2D);
 
@@ -109,7 +118,6 @@ SceneMode2DPipelineStage.process = function (
     boundingSphere2D.center,
     new Matrix4()
   );
-  const modelView = new Matrix4();
 
   const context = frameState.context;
   const uniformMap = {
@@ -117,7 +125,7 @@ SceneMode2DPipelineStage.process = function (
       return Matrix4.multiplyTransformation(
         context.uniformState.view,
         modelMatrix2D,
-        modelView
+        scratchModelView2D
       );
     },
   };
@@ -202,7 +210,6 @@ function createPositionsTypedArrayFor2D(
   referencePoint,
   frameState
 ) {
-  const typedArray = attribute.typedArray.slice();
   let result;
   if (defined(attribute.quantization)) {
     // Dequantize the positions if necessary.
@@ -211,11 +218,7 @@ function createPositionsTypedArrayFor2D(
       attribute.quantization
     );
   } else {
-    result = new Float32Array(
-      typedArray.buffer,
-      typedArray.byteOffset,
-      typedArray.byteLength / Float32Array.BYTES_PER_ELEMENT
-    );
+    result = attribute.typedArray.slice();
   }
 
   const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;

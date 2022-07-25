@@ -34,6 +34,7 @@ function Quantization() {
    * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
    *
    * @type {Boolean}
+   * @private
    */
   this.octEncodedZXY = false;
 
@@ -242,12 +243,13 @@ function Attribute() {
   this.quantization = undefined;
 
   /**
-   * A typed array containing tightly-packed attribute values.
+   * A typed array containing tightly-packed attribute values, as they appear
+   * in the model file.
    *
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
-  this.packedTypedArray = undefined;
+  this.typedArray = undefined;
 
   /**
    * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
@@ -256,14 +258,6 @@ function Attribute() {
    * @private
    */
   this.buffer = undefined;
-
-  /**
-   * A typed array containing vertex buffer data. Attribute values are accessed using byteOffset and byteStride.
-   *
-   * @type {Uint8Array}
-   * @private
-   */
-  this.typedArray = undefined;
 
   /**
    * The byte offset of elements in the buffer.
@@ -617,12 +611,21 @@ function Primitive() {
    * @private
    */
   this.propertyAttributeIds = [];
+
+  /**
+   * If the CESIUM_primitive_outline glTF extension is used, this property
+   * stores an additional attribute storing outline coordinates.
+   *
+   * @type {Attribute}
+   * @private
+   */
+  this.outlineCoordinates = undefined;
 }
 
 /**
  * Position and metadata information for instances of a node.
  *
- * @alias ModelComponents.Primitive
+ * @alias ModelComponents.Instances
  * @constructor
  *
  * @private
@@ -791,6 +794,15 @@ function Node() {
    * @private
    */
   this.morphWeights = [];
+
+  /**
+   * The name of the articulation affecting this node, as defined by the
+   * AGI_articulations extension.
+   *
+   * @type {String}
+   * @private
+   */
+  this.articulationName = undefined;
 }
 
 /**
@@ -949,6 +961,84 @@ function Animation() {
 }
 
 /**
+ * An articulation stage belonging to an articulation from the
+ * AGI_articulations extension.
+ *
+ * @alias {ModelComponents.ArticulationStage}
+ * @constructor
+ *
+ * @private
+ */
+function ArticulationStage() {
+  /**
+   * The name of the articulation stage.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The type of the articulation stage, defined by the type of motion it modifies.
+   *
+   * @type {ArticulationStageType}
+   * @private
+   */
+  this.type = undefined;
+
+  /**
+   * The minimum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.minimumValue = undefined;
+
+  /**
+   * The maximum value for the range of motion of this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.maximumValue = undefined;
+
+  /**
+   * The initial value for this articulation stage.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.initialValue = undefined;
+}
+
+/**
+ * An articulation for the model, as defined by the AGI_articulations extension.
+ *
+ * @alias {ModelComponents.Articulation}
+ * @constructor
+ *
+ * @private
+ */
+function Articulation() {
+  /**
+   * The name of the articulation.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The stages belonging to this articulation. The stages are applied to
+   * the model in order of appearance.
+   *
+   * @type {ModelComponents.ArticulationStage[]}
+   * @private
+   */
+  this.stages = [];
+}
+
+/**
  * The asset of the model.
  *
  * @alias {ModelComponents.Asset}
@@ -1011,6 +1101,13 @@ function Components() {
    * @type {ModelComponents.Animation[]}
    */
   this.animations = [];
+
+  /**
+   * All articulations in the model as defined by the AGI_articulations extension.
+   *
+   * @type {ModelComponents.Articulation[]}
+   */
+  this.articulations = [];
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1357,6 +1454,8 @@ ModelComponents.AnimationSampler = AnimationSampler;
 ModelComponents.AnimationTarget = AnimationTarget;
 ModelComponents.AnimationChannel = AnimationChannel;
 ModelComponents.Animation = Animation;
+ModelComponents.ArticulationStage = ArticulationStage;
+ModelComponents.Articulation = Articulation;
 ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;

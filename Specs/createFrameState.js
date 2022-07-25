@@ -1,10 +1,12 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { GeographicProjection } from "../Source/Cesium.js";
-import { JulianDate } from "../Source/Cesium.js";
-import { Camera } from "../Source/Cesium.js";
-import { CreditDisplay } from "../Source/Cesium.js";
-import { FrameState } from "../Source/Cesium.js";
-import { JobScheduler } from "../Source/Cesium.js";
+import {
+  defaultValue,
+  GeographicProjection,
+  JulianDate,
+  Camera,
+  CreditDisplay,
+  FrameState,
+  JobScheduler,
+} from "../../Source/Cesium.js";
 
 function createFrameState(context, camera, frameNumber, time) {
   // Mock frame-state for testing.

@@ -6,7 +6,6 @@ const queryString = queryToObject(window.location.search.substring(1));
 
 let webglValidation = false;
 let webglStub = false;
-const built = window.location.search.indexOf("built") !== -1;
 const release = window.location.search.indexOf("release") !== -1;
 const categoryString = queryString.category;
 const excludeCategoryString = queryString.not;
@@ -19,14 +18,10 @@ if (defined(queryString.webglStub)) {
   webglStub = true;
 }
 
-if (built) {
-  if (release) {
-    window.CESIUM_BASE_URL = "../Build/Cesium";
-  } else {
-    window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
-  }
+if (release) {
+  window.CESIUM_BASE_URL = "../Build/Cesium";
 } else {
-  window.CESIUM_BASE_URL = "../Source/";
+  window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;

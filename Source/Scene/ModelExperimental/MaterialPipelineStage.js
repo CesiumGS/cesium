@@ -51,6 +51,8 @@ MaterialPipelineStage.process = function (
   primitive,
   frameState
 ) {
+  // gltf-pipeline automatically creates a default material so this will always
+  // be defined.
   const material = primitive.material;
 
   const uniformMap = renderResources.uniformMap;
@@ -102,28 +104,20 @@ MaterialPipelineStage.process = function (
   // Configure back-face culling
   const model = renderResources.model;
   const cull = model.backFaceCulling && !material.doubleSided;
-  const translucent = defined(model.color) && model.color.alpha < 1.0;
-  renderResources.renderStateOptions.cull = {
-    enabled: cull && !translucent,
-  };
+  renderResources.renderStateOptions.cull.enabled = cull;
 
   const alphaOptions = renderResources.alphaOptions;
-  if (!defined(alphaOptions.alphaMode)) {
-    alphaOptions.alphaMode = material.alphaMode;
-    if (material.alphaMode === AlphaMode.BLEND) {
-      alphaOptions.pass = Pass.TRANSLUCENT;
-    } else if (material.alphaMode === AlphaMode.MASK) {
-      alphaOptions.alphaCutoff = material.alphaCutoff;
-    }
+  if (material.alphaMode === AlphaMode.BLEND) {
+    alphaOptions.pass = Pass.TRANSLUCENT;
+  } else if (material.alphaMode === AlphaMode.MASK) {
+    alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
 
-  // Check if the model's debug wireframe is enabled. If so, add a define
-  // to disable normal mapping.
-  if (model.debugWireframe) {
+  if (material.doubleSided) {
     shaderBuilder.addDefine(
-      "USE_WIREFRAME",
+      "HAS_DOUBLE_SIDED_MATERIAL",
       undefined,
       ShaderDestination.FRAGMENT
     );

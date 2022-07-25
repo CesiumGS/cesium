@@ -1,14 +1,17 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { ExtrapolationType } from "../../Source/Cesium.js";
-import { HermitePolynomialApproximation } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { LagrangePolynomialApproximation } from "../../Source/Cesium.js";
-import { LinearApproximation } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  defined,
+  ExtrapolationType,
+  HermitePolynomialApproximation,
+  JulianDate,
+  LagrangePolynomialApproximation,
+  LinearApproximation,
+  Quaternion,
+  TimeInterval,
+  SampledProperty,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {

@@ -80,6 +80,27 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   },
 
   /**
+   * Size of the batch texture. This does not count the property table size
+   * as that is counted separately through StructuralMetadata.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  batchTextureByteLength: {
+    get: function () {
+      if (defined(this._batchTexture)) {
+        return this._batchTexture.byteLength;
+      }
+
+      return 0;
+    },
+  },
+
+  /**
    * A flag to indicate whether or not the types of style commands needed by this feature table have changed.
    *
    * @memberof ModelFeatureTable.prototype
@@ -128,9 +149,7 @@ function initialize(modelFeatureTable) {
   modelFeatureTable._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     owner: modelFeatureTable,
-    statistics: is3DTiles
-      ? model.content.tileset.statistics
-      : modelFeatureTable._statistics,
+    statistics: is3DTiles ? model.content.tileset.statistics : undefined,
   });
 }
 
@@ -211,12 +230,24 @@ ModelFeatureTable.prototype.getPropertyBySemantic = function (
   return this._propertyTable.getPropertyBySemantic(featureId, semantic);
 };
 
-ModelFeatureTable.prototype.getPropertyNames = function (results) {
+ModelFeatureTable.prototype.getPropertyIds = function (results) {
   return this._propertyTable.getPropertyIds(results);
 };
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
   return this._propertyTable.setProperty(featureId, name, value);
+};
+
+ModelFeatureTable.prototype.isClass = function (featureId, className) {
+  return this._propertyTable.isClass(featureId, className);
+};
+
+ModelFeatureTable.prototype.isExactClass = function (featureId, className) {
+  return this._propertyTable.isExactClass(featureId, className);
+};
+
+ModelFeatureTable.prototype.getExactClassName = function (featureId) {
+  return this._propertyTable.getExactClassName(featureId);
 };
 
 const scratchColor = new Color();
@@ -284,6 +315,6 @@ ModelFeatureTable.prototype.isDestroyed = function () {
  * @private
  */
 ModelFeatureTable.prototype.destroy = function (frameState) {
-  this._batchTexture.destroy();
+  this._batchTexture = this._batchTexture && this._batchTexture.destroy();
   destroyObject(this);
 };

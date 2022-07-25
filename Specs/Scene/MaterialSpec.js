@@ -1,19 +1,22 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { MaterialAppearance } from "../../Source/Cesium.js";
-import { PolylineCollection } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { TextureMagnificationFilter } from "../../Source/Cesium.js";
-import { TextureMinificationFilter } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  defaultValue,
+  defined,
+  Ellipsoid,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  Resource,
+  Material,
+  MaterialAppearance,
+  PolylineCollection,
+  FeatureDetection,
+  Primitive,
+  TextureMagnificationFilter,
+  TextureMinificationFilter,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

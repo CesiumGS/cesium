@@ -1,3 +1,5 @@
+# Code Review Guide
+
 All code in CesiumJS is publicly peer reviewed. We review code to share knowledge, foster shared ownership, and improve code quality and consistency.
 
 This guide describes best practices for code reviewers.
@@ -69,7 +71,7 @@ The tips below will use the following keywords:
 If you are new to git, it may be useful to create a backup of your branch in case something goes wrong.
 To do that, use:
 
-```
+```bash
 git branch # This should show that you are currently on "mybranch", otherwise use "git checkout mybranch"
 git checkout -b mybranch-backup # This should change your current branch to "mybranch-backup", which should be identical to "mybranch"
 # if you wish to be even more conservative, you can push this to remote
@@ -81,7 +83,7 @@ git checkout mybranch
 
 ### You want to squash all the commits in your pull request into a single commit
 
-```
+```bash
 git fetch --all # Ensures remote data is up to date
 git merge origin/target # Merge the remote origin target with the local branch
 git reset origin/target # This will reset your branch the same as origin/target, with your changes unstaged.
@@ -106,7 +108,7 @@ Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-
 
 With merge, your commits will become interleaved with other target branch commits based on timestamp.
 
-```
+```bash
 git fetch --all # Fetch updates from all remotes
 git merge upstream/target
 git push origin mybranch # Does not require force push as it does not change history
@@ -116,7 +118,7 @@ git push origin mybranch # Does not require force push as it does not change his
 
 With rebase, your commits will be added on top of the target branch and will look sequential.
 
-```
+```bash
 git fetch --all # Fetch updates from all remotes
 git rebase -i upstream/target
 git push -f origin mybranch # Requires force push as it is changing existing history on remote

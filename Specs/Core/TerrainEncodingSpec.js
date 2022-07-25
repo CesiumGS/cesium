@@ -1,14 +1,17 @@
-import { AttributeCompression } from "../../Source/Cesium.js";
-import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  AttributeCompression,
+  AxisAlignedBoundingBox,
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  Matrix4,
+  TerrainEncoding,
+  TerrainExaggeration,
+  TerrainQuantization,
+  Transforms,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { TerrainEncoding } from "../../Source/Cesium.js";
-import { TerrainExaggeration } from "../../Source/Cesium.js";
-import { TerrainQuantization } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
 
 describe("Core/TerrainEncoding", function () {
   let center;

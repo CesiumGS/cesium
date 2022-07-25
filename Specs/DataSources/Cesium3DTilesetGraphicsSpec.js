@@ -1,5 +1,7 @@
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Cesium3DTilesetGraphics } from "../../Source/Cesium.js";
+import {
+  ConstantProperty,
+  Cesium3DTilesetGraphics,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/Cesium3DTilesetGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

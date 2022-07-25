@@ -1,20 +1,22 @@
+import {
+  Cartesian3,
+  Cartesian4,
+  createWorldTerrain,
+  Ellipsoid,
+  EllipsoidTerrainProvider,
+  GeographicTilingScheme,
+  Ray,
+  GlobeSurfaceTile,
+  ImageryLayerCollection,
+  QuadtreeTile,
+  QuadtreeTileLoadState,
+  TerrainState,
+  TileProviderError,
+} from "../../../Source/Cesium.js";
 import MockImageryProvider from "../MockImageryProvider.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
-import { GlobeSurfaceTile } from "../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { QuadtreeTile } from "../../Source/Cesium.js";
-import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
-import { TerrainState } from "../../Source/Cesium.js";
-import { TileProviderError } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
@@ -126,13 +128,13 @@ describe("Scene/GlobeSurfaceTile", function () {
     });
 
     it("prints error message when a root tile fails to load", function () {
-      spyOn(TileProviderError, "handleError").and.callThrough();
+      spyOn(TileProviderError, "reportError").and.callThrough();
       mockTerrain.requestTileGeometryWillFail(rootTile);
 
       return processor.process([rootTile]).then(function () {
-        expect(TileProviderError.handleError.calls.count()).toBe(1);
+        expect(TileProviderError.reportError.calls.count()).toBe(1);
         // Test that message argument is defined.
-        expect(TileProviderError.handleError.calls.argsFor(0)[3]).toContain(
+        expect(TileProviderError.reportError.calls.argsFor(0)[3]).toContain(
           "RuntimeError: requestTileGeometry failed as requested."
         );
       });
@@ -459,45 +461,51 @@ describe("Scene/GlobeSurfaceTile", function () {
     });
 
     it("returns false when RECEIVING", function () {
-      const deferred = defer();
+      const promise = new Promise((resolve) => {
+        processor.process([rootTile], 5).then(function () {
+          expect(rootTile.data.eligibleForUnloading).toBe(false);
+          resolve();
+        });
+      });
 
       mockTerrain
         .requestTileGeometryWillSucceed(rootTile)
-        .requestTileGeometryWillWaitOn(deferred.promise, rootTile);
+        .requestTileGeometryWillWaitOn(promise, rootTile);
 
-      return processor.process([rootTile], 5).then(function () {
-        expect(rootTile.data.eligibleForUnloading).toBe(false);
-        deferred.resolve();
-      });
+      return promise;
     });
 
     it("returns false when TRANSFORMING", function () {
-      const deferred = defer();
+      const promise = new Promise((resolve) => {
+        processor.process([rootTile], 5).then(function () {
+          expect(rootTile.data.eligibleForUnloading).toBe(false);
+          resolve();
+        });
+      });
 
       mockTerrain
         .requestTileGeometryWillSucceed(rootTile)
         .createMeshWillSucceed(rootTile)
-        .createMeshWillWaitOn(deferred.promise, rootTile);
+        .createMeshWillWaitOn(promise, rootTile);
 
-      return processor.process([rootTile], 5).then(function () {
-        expect(rootTile.data.eligibleForUnloading).toBe(false);
-        deferred.resolve();
-      });
+      return promise;
     });
 
     it("returns false when imagery is TRANSITIONING", function () {
-      const deferred = defer();
-
+      let resolveFunc;
+      const promise = new Promise((resolve) => {
+        resolveFunc = resolve;
+      });
       const mockImagery = new MockImageryProvider();
       imageryLayerCollection.addImageryProvider(mockImagery);
 
-      mockImagery.requestImageWillWaitOn(deferred.promise, rootTile);
+      mockImagery.requestImageWillWaitOn(promise, rootTile);
 
       mockTerrain.requestTileGeometryWillSucceed(rootTile);
 
       return processor.process([rootTile], 5).then(function () {
         expect(rootTile.data.eligibleForUnloading).toBe(false);
-        deferred.resolve();
+        resolveFunc();
       });
     });
   });

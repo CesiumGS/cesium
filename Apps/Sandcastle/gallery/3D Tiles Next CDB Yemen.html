@@ -331,22 +331,22 @@
               "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
             const metadataClass =
               feature.content.batchTable._propertyTable.class;
-            const propertyNames = feature.getPropertyNames();
-            const length = propertyNames.length;
+            const propertyIds = feature.getPropertyIds();
+            const length = propertyIds.length;
             for (let i = 0; i < length; ++i) {
-              const propertyName = propertyNames[i];
+              const propertyId = propertyIds[i];
 
               // Skip these properties, since they are always empty.
               if (
-                propertyName === "APID" ||
-                propertyName === "FACC" ||
-                propertyName === "RWID"
+                propertyId === "APID" ||
+                propertyId === "FACC" ||
+                propertyId === "RWID"
               ) {
                 continue;
               }
 
-              const propertyValue = feature.getProperty(propertyName);
-              const property = metadataClass.properties[propertyName];
+              const propertyValue = feature.getProperty(propertyId);
+              const property = metadataClass.properties[propertyId];
 
               const propertyType = Cesium.defaultValue(
                 property.componentType,

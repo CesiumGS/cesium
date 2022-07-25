@@ -229,13 +229,23 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       );
       contentHeaderUri = contentHeader.url;
     }
-    contentState = Cesium3DTileContentState.UNLOADED;
-    contentResource = baseResource.getDerivedResource({
-      url: contentHeaderUri,
-    });
-    serverKey = RequestScheduler.getServerKey(
-      contentResource.getUrlComponent()
-    );
+    if (contentHeaderUri === "") {
+      Cesium3DTile._deprecationWarning(
+        "contentUriEmpty",
+        "content.uri property is an empty string, which creates a circular dependency, making this tileset invalid. Omit the content property instead"
+      );
+      content = new Empty3DTileContent(tileset, this);
+      hasEmptyContent = true;
+      contentState = Cesium3DTileContentState.READY;
+    } else {
+      contentState = Cesium3DTileContentState.UNLOADED;
+      contentResource = baseResource.getDerivedResource({
+        url: contentHeaderUri,
+      });
+      serverKey = RequestScheduler.getServerKey(
+        contentResource.getUrlComponent()
+      );
+    }
   } else {
     content = new Empty3DTileContent(tileset, this);
     hasEmptyContent = true;
@@ -1095,8 +1105,12 @@ function requestMultipleContents(tile) {
   tile._contentState = Cesium3DTileContentState.LOADING;
   const contentReadyToProcessPromise = multipleContents.contentsFetchedPromise.then(
     function () {
-      if (tile._contentState !== Cesium3DTileContentState.LOADING) {
-        // tile was canceled, short circuit.
+      if (
+        tile._contentState !== Cesium3DTileContentState.LOADING ||
+        !defined(multipleContents.readyPromise)
+      ) {
+        // The tile or one of the inner content requests was canceled,
+        // short circuit.
         return;
       }
 

@@ -2,15 +2,19 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
+import Credit from "../../Core/Credit.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
 import GltfLoader from "../GltfLoader.js";
+import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
@@ -25,7 +29,9 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
+import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
@@ -41,34 +47,44 @@ import SplitDirection from "../SplitDirection.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+ * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -95,8 +111,9 @@ export default function ModelExperimental(options) {
    * ModelExperimentalType is part of the private API.
    *
    * @type {ModelExperimentalType}
-   * @private
    * @readonly
+   *
+   * @private
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
@@ -171,13 +188,30 @@ export default function ModelExperimental(options) {
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
+  // This flag is true when the Cesium API, not a glTF animation, changes
+  // the transform of a node in the model.
+  this._userAnimationDirty = false;
+
+  this._id = options.id;
+  this._idDirty = false;
+
   const color = options.color;
-  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._color = defined(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+  const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+  this._silhouetteColor = Color.clone(silhouetteColor);
+  this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+  this._silhouetteDirty = false;
+
+  // If silhouettes are used for the model, this will be set to the number
+  // of the stencil buffer used for rendering the silhouette. This is set
+  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
+  this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -206,18 +240,46 @@ export default function ModelExperimental(options) {
   this._featureTableIdDirty = true;
 
   // Keeps track of resources that need to be destroyed when the draw commands are reset.
-  this._resources = [];
+  this._pipelineResources = [];
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._modelResources = [];
 
-  // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
+  // Keeps track of the pick IDs for this model. These are stored and destroyed in the
+  // pipeline resources array; the purpose of this array is to separate them from other
+  // resources and update their ID objects when necessary.
+  this._pickIds = [];
+
+  // The model's bounding sphere and its initial radius are computed
+  // in ModelExperimentalSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
+  this._heightReference = defaultValue(
+    options.heightReference,
+    HeightReference.NONE
+  );
+  this._heightDirty = this._heightReference !== HeightReference.NONE;
+  this._removeUpdateHeightCallback = undefined;
+
+  this._clampedModelMatrix = undefined; // For use with height reference
+
+  const scene = options.scene;
+  if (defined(scene) && defined(scene.terrainProviderChanged)) {
+    this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
+      function () {
+        this._heightDirty = true;
+      },
+      this
+    );
+  }
+  this._scene = scene;
+
+  this._distanceDisplayCondition = options.distanceDisplayCondition;
+
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -253,14 +315,54 @@ export default function ModelExperimental(options) {
     options.enableDebugWireframe,
     false
   );
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
+  // Credit specified by the user.
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+
+  this._credit = credit;
+
+  // Credits to be added from the Resource (if it is an IonResource)
+  this._resourceCredits = [];
+
+  // Credits parsed from the glTF by GltfLoader.
+  this._gltfCredits = [];
+
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+  this._showCreditsOnScreenDirty = true;
 
   this._splitDirection = defaultValue(
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+
+  /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The color to use when rendering outlines.
+   *
+   * @type {Color}
+   *
+   * @default Color.BLACK
+   */
+  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
+
+  this._statistics = new ModelExperimentalStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
@@ -268,13 +370,17 @@ export default function ModelExperimental(options) {
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
+
+  this._sceneGraph = undefined;
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
   const featureTables = model._featureTables;
 
   const propertyTables = structuralMetadata.propertyTables;
-  for (let i = 0; i < propertyTables.length; i++) {
+  const length = propertyTables.length;
+  for (let i = 0; i < length; i++) {
     const propertyTable = propertyTables[i];
     const modelFeatureTable = new ModelFeatureTable({
       model: model,
@@ -329,6 +435,35 @@ function selectFeatureTableId(components, model) {
       }
     }
   }
+
+  // If there's only one feature table, then select it by default. This is
+  // to ensure backwards compatibility with the older handling of b3dm models.
+  if (model._featureTables.length === 1) {
+    return 0;
+  }
+}
+
+/**
+ *  Returns whether the alpha state has changed between invisible,
+ *  translucent, or opaque.
+ *
+ *  @private
+ */
+function isColorAlphaDirty(currentColor, previousColor) {
+  if (!defined(currentColor) && !defined(previousColor)) {
+    return false;
+  }
+
+  if (defined(currentColor) !== defined(previousColor)) {
+    return true;
+  }
+
+  const currentAlpha = currentColor.alpha;
+  const previousAlpha = previousColor.alpha;
+  return (
+    Math.floor(currentAlpha) !== Math.floor(previousAlpha) ||
+    Math.ceil(currentAlpha) !== Math.ceil(previousAlpha)
+  );
 }
 
 function initialize(model) {
@@ -338,7 +473,21 @@ function initialize(model) {
   loader.load();
 
   const loaderPromise = loader.promise.then(function (loader) {
+    // If the model is destroyed before the promise resolves, then
+    // the loader will have been destroyed as well. Return early.
+    if (!defined(loader)) {
+      return;
+    }
+
     const components = loader.components;
+    if (!defined(components)) {
+      if (loader.isUnloaded()) {
+        return;
+      }
+
+      throw new RuntimeError("Failed to load model.");
+    }
+
     const structuralMetadata = components.structuralMetadata;
 
     if (
@@ -348,10 +497,22 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    model._sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelExperimentalSceneGraph({
       model: model,
       modelComponents: components,
     });
+
+    model._sceneGraph = sceneGraph;
+    model._gltfCredits = sceneGraph.components.asset.credits;
+
+    const resourceCredits = model._resource.credits;
+    if (defined(resourceCredits)) {
+      const length = resourceCredits.length;
+      for (let i = 0; i < length; i++) {
+        model._resourceCredits.push(resourceCredits[i]);
+      }
+    }
+
     model._resourcesLoaded = true;
   });
 
@@ -362,7 +523,17 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
+
+      // Re-run the pipeline so texture memory statistics are re-computed
+      if (loader._incrementallyLoadTextures) {
+        model.resetDrawCommands();
+      }
     })
     .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
@@ -453,9 +624,26 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Get the estimated memory usage statistics for this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalStatistics}
+   * @readonly
+   *
+   * @private
+   */
+  statistics: {
+    get: function () {
+      return this._statistics;
+    },
+  },
+
+  /**
    * The currently playing glTF animations.
    *
    * @memberof ModelExperimental.prototype
+   *
    * @type {ModelExperimentalAnimationCollection}
    * @readonly
    */
@@ -499,6 +687,8 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Pass}
    * @readonly
@@ -586,12 +776,63 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The height reference of the model, which determines how the model is drawn
+   * relative to terrain.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {HeightReference}
+   * @default {HeightReference.NONE}
+   *
+   */
+  heightReference: {
+    get: function () {
+      return this._heightReference;
+    },
+    set: function (value) {
+      if (value !== this._heightReference) {
+        this._heightDirty = true;
+      }
+      this._heightReference = value;
+    },
+  },
+
+  /**
+   * Gets or sets the distance display condition, which specifies at what distance
+   * from the camera this model will be displayed.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {DistanceDisplayCondition}
+   *
+   * @default undefined
+   *
+   */
+  distanceDisplayCondition: {
+    get: function () {
+      return this._distanceDisplayCondition;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError("far must be greater than near");
+      }
+      //>>includeEnd('debug');
+      this._distanceDisplayCondition = DistanceDisplayCondition.clone(
+        value,
+        this._distanceDisplayCondition
+      );
+    },
+  },
+
+  /**
    * The structural metadata from the EXT_structural_metadata extension
    *
    * @memberof ModelExperimental.prototype
    *
    * @type {StructuralMetadata}
    * @readonly
+   *
    * @private
    */
   structuralMetadata: {
@@ -638,7 +879,33 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * A user-defined object that is returned when the model is picked.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Object}
+   *
+   * @default undefined
+   *
+   * @see Scene#pick
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+    set: function (value) {
+      if (value !== this._id) {
+        this._idDirty = true;
+      }
+
+      this._id = value;
+    },
+  },
+
+  /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Boolean}
    * @readonly
@@ -654,6 +921,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Cesium3DTileStyle}
    */
   style: {
@@ -661,9 +930,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      if (value !== this._style) {
-        this.applyStyle(value);
-      }
+      this.applyStyle(value);
       this._style = value;
     },
   },
@@ -680,7 +947,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
-      if (!Color.equals(this._color, value)) {
+      if (isColorAlphaDirty(value, this._color)) {
         this.resetDrawCommands();
       }
       this._color = Color.clone(value, this._color);
@@ -693,6 +960,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
+   *
    * @default ColorBlendMode.HIGHLIGHT
    */
   colorBlendMode: {
@@ -710,6 +978,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   *
    * @default 0.5
    */
   colorBlendAmount: {
@@ -718,6 +987,59 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._colorBlendAmount = value;
+    },
+  },
+
+  /**
+   * The silhouette color.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   *
+   * @default Color.RED
+   */
+  silhouetteColor: {
+    get: function () {
+      return this._silhouetteColor;
+    },
+    set: function (value) {
+      if (!Color.equals(value, this._silhouetteColor)) {
+        const alphaDirty = isColorAlphaDirty(value, this._silhouetteColor);
+        this._silhouetteDirty = this._silhouetteDirty || alphaDirty;
+      }
+
+      this._silhouetteColor = Color.clone(value, this._silhouetteColor);
+    },
+  },
+
+  /**
+   * The size of the silhouette in pixels.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0.0
+   */
+  silhouetteSize: {
+    get: function () {
+      return this._silhouetteSize;
+    },
+    set: function (value) {
+      if (value !== this._silhouetteSize) {
+        const currentSize = this._silhouetteSize;
+        const sizeDirty =
+          (value > 0.0 && currentSize === 0.0) ||
+          (value === 0.0 && currentSize > 0.0);
+        this._silhouetteDirty = this._silhouetteDirty || sizeDirty;
+
+        // Back-face culling needs to be updated in case the silhouette size
+        // is greater than zero.
+        this._backFaceCullingDirty = this._backFaceCullingDirty || sizeDirty;
+      }
+
+      this._silhouetteSize = value;
     },
   },
 
@@ -921,6 +1243,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Cartesian3}
+   *
    * @default undefined
    */
   lightColor: {
@@ -969,8 +1292,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
-   * culling is disabled. Back faces are not culled if the model's color is
-   * translucent.
+   * culling is disabled. Back faces are not culled if {@link ModelExperimental#color}
+   * is translucent or {@link ModelExperimental#silhouetteSize} is greater than 0.0.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1021,6 +1344,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
+   *
    * @private
    */
   computedScale: {
@@ -1096,6 +1421,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Gets the credit that will be displayed for the model
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
+
+  /**
    * Gets or sets whether the credits of the model will be displayed on the screen
    *
    * @memberof ModelExperimental.prototype
@@ -1109,6 +1448,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._showCreditsOnScreen;
     },
     set: function (value) {
+      if (this._showCreditsOnScreen !== value) {
+        this._showCreditsOnScreenDirty = true;
+      }
+
       this._showCreditsOnScreen = value;
     },
   },
@@ -1119,6 +1462,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {SplitDirection}
+   *
    * @default {@link SplitDirection.NONE}
    */
   splitDirection: {
@@ -1132,7 +1476,100 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._splitDirection = value;
     },
   },
+
+  /**
+   * Reference to the pick IDs. This is used only in internal code such as
+   * per-feature post-processing in {@link PostProcessStage}
+   *
+   * @type {PickId[]}
+   * @readonly
+   *
+   * @private
+   */
+  pickIds: {
+    get: function () {
+      return this._pickIds;
+    },
+  },
 });
+
+/**
+ * Returns the node with the given <code>name</code> in the glTF. This is used to
+ * modify a node's transform for user-defined animation.
+ *
+ * @param {String} name The name of the node in the glTF.
+ * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
+ *
+ * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ *
+ * @example
+ * // Apply non-uniform scale to node "Hand"
+ * const node = model.getNode("Hand");
+ * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ */
+ModelExperimental.prototype.getNode = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
+
+  return this._nodesByName[name];
+};
+
+/**
+ * Sets the current value of an articulation stage.  After setting one or
+ * multiple stage values, call ModelExperimental.applyArticulations() to
+ * cause the node matrices to be recalculated.
+ *
+ * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+ * @param {Number} value The numeric value of this stage of the articulation.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ *
+ * @see ModelExperimental#applyArticulations
+ *
+ * @example
+ * // Sets the value of the stage named "MoveX" belonging to the articulation named "SampleArticulation"
+ * model.setArticulationStage("SampleArticulation MoveX", 50.0);
+ */
+ModelExperimental.prototype.setArticulationStage = function (
+  articulationStageKey,
+  value
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+
+  this._sceneGraph.setArticulationStage(articulationStageKey, value);
+};
+
+/**
+ * Applies any modified articulation stages to the matrix of each node that
+ * participates in any articulation. Note that this will overwrite any node
+ * transformations on participating nodes.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ */
+ModelExperimental.prototype.applyArticulations = function () {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+
+  this._sceneGraph.applyArticulations();
+};
 
 /**
  * Resets the draw commands for this model.
@@ -1140,10 +1577,6 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
-  if (!this._drawCommandsBuilt) {
-    return;
-  }
-  this.destroyResources();
   this._drawCommandsBuilt = false;
 };
 
@@ -1165,32 +1598,301 @@ ModelExperimental.prototype.update = function (frameState) {
   // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
-  if (!this._resourcesLoaded || !this._texturesLoaded) {
-    this._loader.process(frameState);
-  }
+  processLoader(this, frameState);
 
   // A custom shader may have to load texture uniforms.
-  if (defined(this._customShader)) {
-    this._customShader.update(frameState);
+  updateCustomShader(this, frameState);
+
+  // The image-based lighting may have to load texture uniforms
+  // for specular maps.
+  updateImageBasedLighting(this, frameState);
+
+  // Short-circuit if the model resources aren't ready or the scene
+  // is currently morphing.
+  if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
+    return;
   }
 
+  updatePointCloudAttenuation(this);
+  updateSilhouette(this, frameState);
+  updateClippingPlanes(this, frameState);
+  updateSceneMode(this, frameState);
+  updateFeatureTableId(this);
+  updateFeatureTables(this, frameState);
+
+  this._defaultTexture = frameState.context.defaultTexture;
+
+  buildDrawCommands(this, frameState);
+  updateModelMatrix(this, frameState);
+
+  // Many features (e.g. image-based lighting, clipping planes) depend on the model
+  // matrix being updated for the current height reference, so update it first.
+  updateClamping(this);
+
+  updateBoundingSphereAndScale(this, frameState);
+  updateReferenceMatrices(this, frameState);
+
+  // This check occurs after the bounding sphere has been updated so that
+  // zooming to the bounding sphere can account for any modifications
+  // from the clamp-to-ground setting.
+  const model = this;
+  if (!model._ready) {
+    model._completeLoad(model, frameState);
+
+    // Don't render until the next frame after the ready promise is resolved
+    return;
+  }
+
+  updatePickIds(this);
+
+  // Update the scene graph and draw commands for any changes in model's properties
+  // (e.g. model matrix, back-face culling)
+  updateSceneGraph(this, frameState);
+  updateShowCreditsOnScreen(this);
+  submitDrawCommands(this, frameState);
+};
+
+function processLoader(model, frameState) {
+  if (!model._resourcesLoaded || !model._texturesLoaded) {
+    model._loader.process(frameState);
+  }
+}
+
+function updateCustomShader(model, frameState) {
+  if (defined(model._customShader)) {
+    model._customShader.update(frameState);
+  }
+}
+
+function updateImageBasedLighting(model, frameState) {
+  model._imageBasedLighting.update(frameState);
+  if (model._imageBasedLighting.shouldRegenerateShaders) {
+    model.resetDrawCommands();
+  }
+}
+
+function updatePointCloudAttenuation(model) {
   // Check if the shader needs to be updated for point cloud attenuation
   // settings.
-  if (this.pointCloudShading.attenuation !== this._attenuation) {
-    this.resetDrawCommands();
-    this._attenuation = this.pointCloudShading.attenuation;
+  if (model.pointCloudShading.attenuation !== model._attenuation) {
+    model.resetDrawCommands();
+    model._attenuation = model.pointCloudShading.attenuation;
   }
+}
 
-  const context = frameState.context;
-  const referenceMatrix = defaultValue(this.referenceMatrix, this.modelMatrix);
+function updateSilhouette(model, frameState) {
+  if (model._silhouetteDirty) {
+    // Only rebuild draw commands if silhouettes are supported in the first place.
+    if (supportsSilhouettes(frameState)) {
+      model.resetDrawCommands();
+    }
 
-  // Update the image-based lighting for this model to detect any changes in parameters.
-  this._imageBasedLighting.update(frameState);
+    model._silhouetteDirty = false;
+  }
+}
+
+function updateClippingPlanes(model, frameState) {
+  // Update the clipping planes collection for this model to detect any changes.
+  if (model.isClippingEnabled()) {
+    if (model._clippingPlanes.owner === model) {
+      model._clippingPlanes.update(frameState);
+    }
+
+    const currentClippingPlanesState =
+      model._clippingPlanes.clippingPlanesState;
+    if (currentClippingPlanesState !== model._clippingPlanesState) {
+      model.resetDrawCommands();
+      model._clippingPlanesState = currentClippingPlanesState;
+    }
+  }
+}
+
+function updateSceneMode(model, frameState) {
+  if (frameState.mode !== model._sceneMode) {
+    if (model._projectTo2D) {
+      model.resetDrawCommands();
+    } else {
+      model._updateModelMatrix = true;
+    }
+    model._sceneMode = frameState.mode;
+  }
+}
+
+function updateFeatureTables(model, frameState) {
+  const featureTables = model._featureTables;
+  const length = featureTables.length;
+  for (let i = 0; i < length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
+function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
+  const components = model._sceneGraph.components;
+  const structuralMetadata = components.structuralMetadata;
 
   if (
-    this._imageBasedLighting.useSphericalHarmonicCoefficients ||
-    this._imageBasedLighting.useSpecularEnvironmentMaps
+    defined(structuralMetadata) &&
+    structuralMetadata.propertyTableCount > 0
   ) {
+    model.featureTableId = selectFeatureTableId(components, model);
+
+    // Re-apply the style to reflect the new feature ID table.
+    // This in turn triggers a rebuild of the draw commands.
+    model.applyStyle(model._style);
+  }
+}
+
+function buildDrawCommands(model, frameState) {
+  if (!model._drawCommandsBuilt) {
+    model.destroyPipelineResources();
+    model._sceneGraph.buildDrawCommands(frameState);
+    model._drawCommandsBuilt = true;
+  }
+}
+
+function updateModelMatrix(model, frameState) {
+  // This is done without a dirty flag so that the model matrix can be updated in-place
+  // without needing to use a setter.
+  if (!Matrix4.equals(model.modelMatrix, model._modelMatrix)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+      throw new DeveloperError(
+        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+      );
+    }
+    //>>includeEnd('debug');
+    model._updateModelMatrix = true;
+    model._modelMatrix = Matrix4.clone(model.modelMatrix, model._modelMatrix);
+  }
+}
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
+
+function updateClamping(model) {
+  if (
+    !model._updateModelMatrix &&
+    !model._heightDirty &&
+    model._minimumPixelSize === 0.0
+  ) {
+    return;
+  }
+
+  if (defined(model._removeUpdateHeightCallback)) {
+    model._removeUpdateHeightCallback();
+    model._removeUpdateHeightCallback = undefined;
+  }
+
+  const scene = model._scene;
+  if (
+    !defined(scene) ||
+    !defined(scene.globe) ||
+    model.heightReference === HeightReference.NONE
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (model.heightReference !== HeightReference.NONE) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene and globe."
+      );
+    }
+    //>>includeEnd('debug');
+    model._clampedModelMatrix = undefined;
+    return;
+  }
+
+  const globe = scene.globe;
+  const ellipsoid = globe.ellipsoid;
+
+  // Compute cartographic position so we don't recompute every update
+  const modelMatrix = model.modelMatrix;
+  scratchPosition.x = modelMatrix[12];
+  scratchPosition.y = modelMatrix[13];
+  scratchPosition.z = modelMatrix[14];
+  const cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+  if (!defined(model._clampedModelMatrix)) {
+    model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+  }
+
+  // Install callback to handle updating of terrain tiles
+  const surface = globe._surface;
+  model._removeUpdateHeightCallback = surface.updateHeight(
+    cartoPosition,
+    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
+  );
+
+  // Set the correct height now
+  const height = globe.getHeight(cartoPosition);
+  if (defined(height)) {
+    // Get callback with cartoPosition being the non-clamped position
+    const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+    // Compute the clamped cartesian and call updateHeight callback
+    Cartographic.clone(cartoPosition, scratchCartographic);
+    scratchCartographic.height = height;
+    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+    callback(scratchPosition);
+  }
+
+  model._heightDirty = false;
+  model._updateModelMatrix = true;
+}
+
+function updateBoundingSphereAndScale(model, frameState) {
+  if (!model._updateModelMatrix && model._minimumPixelSize === 0.0) {
+    return;
+  }
+
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+
+  model._clampedScale = defined(model._maximumScale)
+    ? Math.min(model._scale, model._maximumScale)
+    : model._scale;
+
+  model._boundingSphere = BoundingSphere.transform(
+    model._sceneGraph.boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
+  model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updatePickIds(model) {
+  if (!model._idDirty) {
+    return;
+  }
+  model._idDirty = false;
+
+  const id = model._id;
+  const pickIds = model._pickIds;
+  const length = pickIds.length;
+  for (let i = 0; i < length; ++i) {
+    pickIds[i].object.id = id;
+  }
+}
+
+function updateReferenceMatrices(model, frameState) {
+  const modelMatrix = defined(model._clampedModelMatrix)
+    ? model._clampedModelMatrix
+    : model.modelMatrix;
+  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
+  const context = frameState.context;
+
+  const ibl = model._imageBasedLighting;
+  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
     let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
     let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
@@ -1207,23 +1909,13 @@ ModelExperimental.prototype.update = function (frameState) {
       iblReferenceFrameMatrix3,
       iblReferenceFrameMatrix3
     );
-    this._iblReferenceFrameMatrix = Matrix3.transpose(
+    model._iblReferenceFrameMatrix = Matrix3.transpose(
       iblReferenceFrameMatrix3,
-      this._iblReferenceFrameMatrix
+      model._iblReferenceFrameMatrix
     );
   }
 
-  if (this._imageBasedLighting.shouldRegenerateShaders) {
-    this.resetDrawCommands();
-  }
-
-  // Update the clipping planes collection for this model to detect any changes.
-  let currentClippingPlanesState = 0;
-  if (this.isClippingEnabled()) {
-    if (this._clippingPlanes.owner === this) {
-      this._clippingPlanes.update(frameState);
-    }
-
+  if (model.isClippingEnabled()) {
     let clippingPlanesMatrix = scratchClippingPlanesMatrix;
     clippingPlanesMatrix = Matrix4.multiply(
       context.uniformState.view3D,
@@ -1232,140 +1924,98 @@ ModelExperimental.prototype.update = function (frameState) {
     );
     clippingPlanesMatrix = Matrix4.multiply(
       clippingPlanesMatrix,
-      this._clippingPlanes.modelMatrix,
+      model._clippingPlanes.modelMatrix,
       clippingPlanesMatrix
     );
-    this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
       clippingPlanesMatrix,
-      this._clippingPlanesMatrix
+      model._clippingPlanesMatrix
     );
+  }
+}
 
-    currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
+function updateSceneGraph(model, frameState) {
+  const sceneGraph = model._sceneGraph;
+  if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
+    const modelMatrix = defined(model._clampedModelMatrix)
+      ? model._clampedModelMatrix
+      : model.modelMatrix;
+    sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    model._updateModelMatrix = false;
   }
 
-  if (currentClippingPlanesState !== this._clippingPlanesState) {
-    this.resetDrawCommands();
-    this._clippingPlanesState = currentClippingPlanesState;
+  if (model._backFaceCullingDirty) {
+    sceneGraph.updateBackFaceCulling(model._backFaceCulling);
+    model._backFaceCullingDirty = false;
   }
 
-  this._defaultTexture = context.defaultTexture;
+  if (model._shadowsDirty) {
+    sceneGraph.updateShadows(model._shadows);
+    model._shadowsDirty = false;
+  }
 
-  // short-circuit if the model resources aren't ready.
-  if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
+  if (model._debugShowBoundingVolumeDirty) {
+    sceneGraph.updateShowBoundingVolume(model._debugShowBoundingVolume);
+    model._debugShowBoundingVolumeDirty = false;
+  }
+
+  const updateForAnimations =
+    model._userAnimationDirty || model._activeAnimations.update(frameState);
+
+  sceneGraph.update(frameState, updateForAnimations);
+  model._userAnimationDirty = false;
+}
+
+function updateShowCreditsOnScreen(model) {
+  if (!model._showCreditsOnScreenDirty) {
     return;
   }
+  model._showCreditsOnScreenDirty = false;
 
-  if (frameState.mode !== this._sceneMode) {
-    this.resetDrawCommands();
-    this._sceneMode = frameState.mode;
+  const showOnScreen = model._showCreditsOnScreen;
+  if (defined(model._credit)) {
+    model._credit.showOnScreen = showOnScreen;
   }
 
-  if (this._featureTableIdDirty) {
-    updateFeatureTableId(this);
-    this._featureTableIdDirty = false;
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let i = 0; i < resourceCreditsLength; i++) {
+    resourceCredits[i].showOnScreen = showOnScreen;
   }
 
-  const featureTables = this._featureTables;
-  for (let i = 0; i < featureTables.length; i++) {
-    featureTables[i].update(frameState);
-    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-    // to ensure that translucent and opaque features are handled in the correct passes.
-    if (featureTables[i].styleCommandsNeededDirty) {
-      this.resetDrawCommands();
-    }
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let i = 0; i < gltfCreditsLength; i++) {
+    gltfCredits[i].showOnScreen = showOnScreen;
   }
+}
 
-  if (!this._drawCommandsBuilt) {
-    this._sceneGraph.buildDrawCommands(frameState);
-    this._drawCommandsBuilt = true;
-
-    const model = this;
-
-    if (!model._ready) {
-      model._completeLoad(model, frameState);
-
-      // Don't render until the next frame after the ready promise is resolved
-      return;
-    }
-  }
-
-  if (this._debugShowBoundingVolumeDirty) {
-    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
-    this._debugShowBoundingVolumeDirty = false;
-  }
-
-  // This is done without a dirty flag so that the model matrix can be updated in-place
-  // without needing to use a setter.
-  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    //>>includeStart('debug', pragmas.debug);
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      throw new DeveloperError(
-        "ModelExperimental.modelMatrix is only supported in 3D mode."
-      );
-    }
-    //>>includeEnd('debug');
-    this._updateModelMatrix = true;
-    this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
-    this._boundingSphere = BoundingSphere.transform(
-      this._sceneGraph.boundingSphere,
-      this.modelMatrix,
-      this._boundingSphere
-    );
-  }
-
-  if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
-    this._clampedScale = defined(this._maximumScale)
-      ? Math.min(this._scale, this._maximumScale)
-      : this._scale;
-    this._boundingSphere.radius = this._initialRadius * this._clampedScale;
-    this._computedScale = getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix();
-    this._updateModelMatrix = false;
-  }
-
-  if (this._backFaceCullingDirty) {
-    this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
-    this._backFaceCullingDirty = false;
-  }
-
-  if (this._shadowsDirty) {
-    this.sceneGraph.updateShadows(this._shadows);
-    this._shadowsDirty = false;
-  }
-
-  const updateForAnimations = this._activeAnimations.update(frameState);
-  this._sceneGraph.update(frameState, updateForAnimations);
-
-  // Check for show here because we still want the draw commands to be built so user can instantly see the model
+function submitDrawCommands(model, frameState) {
+  // Check that show is true after draw commands are built;
+  // we want the user to be able to instantly see the model
   // when show is set to true.
-  if (this._show && this._computedScale !== 0) {
-    const asset = this._sceneGraph.components.asset;
-    const credits = asset.credits;
 
-    const length = credits.length;
-    for (let i = 0; i < length; i++) {
-      const credit = credits[i];
-      credit.showOnScreen = this._showCreditsOnScreen;
-      frameState.creditDisplay.addCredit(credit);
-    }
+  const displayConditionPassed = passesDistanceDisplayCondition(
+    model,
+    frameState
+  );
 
-    const drawCommands = this._sceneGraph.getDrawCommands();
+  const invisible = model.isInvisible();
+  const silhouette = model.hasSilhouette(frameState);
+
+  // If the model is invisible but has a silhouette, it still
+  // needs to draw in order to write to the stencil buffer and
+  // render the silhouette.
+  const showModel =
+    model._show &&
+    model._computedScale !== 0 &&
+    displayConditionPassed &&
+    (!invisible || silhouette);
+
+  if (showModel) {
+    addCreditsToCreditDisplay(model, frameState);
+    const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
-  }
-};
-
-function updateFeatureTableId(model) {
-  const components = model._sceneGraph.components;
-  const structuralMetadata = components.structuralMetadata;
-
-  if (
-    defined(structuralMetadata) &&
-    structuralMetadata.propertyTableCount > 0
-  ) {
-    model.featureTableId = selectFeatureTableId(components, model);
-    // Re-apply the style to reflect the new feature ID table.
-    // This in turn triggers a rebuild of the draw commands.
-    model.applyStyle(model._style);
   }
 }
 
@@ -1381,10 +2031,7 @@ function scaleInPixels(positionWC, radius, frameState) {
   );
 }
 
-const scratchPosition = new Cartesian3();
-const scratchCartographic = new Cartographic();
-
-function getScale(model, frameState) {
+function getScale(model, modelMatrix, frameState) {
   let scale = model.scale;
 
   if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
@@ -1394,30 +2041,19 @@ function getScale(model, frameState) {
       context.drawingBufferWidth,
       context.drawingBufferHeight
     );
-    const m = model.modelMatrix;
-    scratchPosition.x = m[12];
-    scratchPosition.y = m[13];
-    scratchPosition.z = m[14];
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      const projection = frameState.mapProjection;
-      const cartographic = projection.ellipsoid.cartesianToCartographic(
+      SceneTransforms.computeActualWgs84Position(
+        frameState,
         scratchPosition,
-        scratchCartographic
-      );
-      projection.project(cartographic, scratchPosition);
-
-      // In 2D / CV mode the map is a yz-plane in world space, so the coordinates
-      // need to be reordered accordingly.
-      Cartesian3.fromElements(
-        scratchPosition.z,
-        scratchPosition.x,
-        scratchPosition.y,
         scratchPosition
       );
     }
 
-    const radius = model.boundingSphere.radius;
+    const radius = model._boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
@@ -1439,6 +2075,131 @@ function getScale(model, frameState) {
     ? Math.min(model.maximumScale, scale)
     : scale;
 }
+
+function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+  return function (clampedPosition) {
+    if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+      const clampedCart = ellipsoid.cartesianToCartographic(
+        clampedPosition,
+        scratchCartographic
+      );
+      clampedCart.height += cartoPosition.height;
+      ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+    }
+
+    const clampedModelMatrix = model._clampedModelMatrix;
+
+    // Modify clamped model matrix to use new height
+    Matrix4.clone(model.modelMatrix, clampedModelMatrix);
+    clampedModelMatrix[12] = clampedPosition.x;
+    clampedModelMatrix[13] = clampedPosition.y;
+    clampedModelMatrix[14] = clampedPosition.z;
+
+    model._heightDirty = true;
+  };
+}
+
+const scratchDisplayConditionCartesian = new Cartesian3();
+
+function passesDistanceDisplayCondition(model, frameState) {
+  const condition = model.distanceDisplayCondition;
+  if (!defined(condition)) {
+    return true;
+  }
+
+  const nearSquared = condition.near * condition.near;
+  const farSquared = condition.far * condition.far;
+  let distanceSquared;
+
+  if (frameState.mode === SceneMode.SCENE2D) {
+    const frustum2DWidth =
+      frameState.camera.frustum.right - frameState.camera.frustum.left;
+    const distance = frustum2DWidth * 0.5;
+    distanceSquared = distance * distance;
+  } else {
+    // Distance to center of primitive's reference frame
+    const position = Matrix4.getTranslation(
+      model.modelMatrix,
+      scratchDisplayConditionCartesian
+    );
+
+    // This will project the position if the scene is in Columbus View,
+    // but leave the position as-is in 3D mode.
+    SceneTransforms.computeActualWgs84Position(frameState, position, position);
+
+    distanceSquared = Cartesian3.distanceSquared(
+      position,
+      frameState.camera.positionWC
+    );
+  }
+
+  return distanceSquared >= nearSquared && distanceSquared <= farSquared;
+}
+
+function addCreditsToCreditDisplay(model, frameState) {
+  const creditDisplay = frameState.creditDisplay;
+  // Add all credits to the credit display.
+  const credit = model._credit;
+  if (defined(credit)) {
+    creditDisplay.addCredit(credit);
+  }
+
+  const resourceCredits = model._resourceCredits;
+  const resourceCreditsLength = resourceCredits.length;
+  for (let c = 0; c < resourceCreditsLength; c++) {
+    creditDisplay.addCredit(resourceCredits[c]);
+  }
+
+  const gltfCredits = model._gltfCredits;
+  const gltfCreditsLength = gltfCredits.length;
+  for (let c = 0; c < gltfCreditsLength; c++) {
+    creditDisplay.addCredit(gltfCredits[c]);
+  }
+}
+
+/**
+ * Gets whether or not the model is translucent based on its assigned model color.
+ * If the model color's alpha is equal to zero, then it is considered invisible,
+ * not translucent.
+ *
+ * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.isTranslucent = function () {
+  const color = this.color;
+  return defined(color) && color.alpha > 0.0 && color.alpha < 1.0;
+};
+
+/**
+ * Gets whether or not the model is invisible, i.e. if the model color's alpha
+ * is equal to zero.
+ *
+ * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.isInvisible = function () {
+  const color = this.color;
+  return defined(color) && color.alpha === 0.0;
+};
+
+function supportsSilhouettes(frameState) {
+  return frameState.context.stencilBuffer;
+}
+
+/**
+ * Gets whether or not the model has a silhouette. This accounts for whether
+ * silhouettes are supported (i.e. the context supports stencil buffers).
+ *
+ * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.hasSilhouette = function (frameState) {
+  return (
+    supportsSilhouettes(frameState) &&
+    this._silhouetteSize > 0.0 &&
+    this._silhouetteColor.alpha > 0.0
+  );
+};
 
 /**
  * Gets whether or not clipping planes are enabled for this model.
@@ -1493,13 +2254,25 @@ ModelExperimental.prototype.destroy = function () {
 
   const featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (let i = 0; i < featureTables.length; i++) {
+    const length = featureTables.length;
+    for (let i = 0; i < length; i++) {
       featureTables[i].destroy();
     }
   }
 
-  this.destroyResources();
+  this.destroyPipelineResources();
   this.destroyModelResources();
+
+  // Remove callbacks for height reference behavior.
+  if (defined(this._removeUpdateHeightCallback)) {
+    this._removeUpdateHeightCallback();
+    this._removeUpdateHeightCallback = undefined;
+  }
+
+  if (defined(this._terrainProviderChangedCallback)) {
+    this._terrainProviderChangedCallback();
+    this._terrainProviderChangedCallback = undefined;
+  }
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -1525,19 +2298,22 @@ ModelExperimental.prototype.destroy = function () {
 };
 
 /**
- * Destroys resources generated in the pipeline stages.
+ * Destroys resources generated in the pipeline stages
+ * that must be destroyed when draw commands are rebuilt.
  * @private
  */
-ModelExperimental.prototype.destroyResources = function () {
-  const resources = this._resources;
+ModelExperimental.prototype.destroyPipelineResources = function () {
+  const resources = this._pipelineResources;
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._resources = [];
+  this._pipelineResources.length = 0;
+  this._pickIds.length = 0;
 };
 
 /**
- * Destroys resources generated for the model.
+ * Destroys resources generated in the pipeline stages
+ * that exist for the lifetime of the model.
  * @private
  */
 ModelExperimental.prototype.destroyModelResources = function () {
@@ -1545,7 +2321,7 @@ ModelExperimental.prototype.destroyModelResources = function () {
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-  this._modelResources = [];
+  this._modelResources.length = 0;
 };
 
 /**
@@ -1559,11 +2335,17 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Object} options Object with the following properties:
  * @param {String|Resource} options.url The url to the .gltf or .glb file.
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+ * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
@@ -1572,24 +2354,30 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+ * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
-@param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is false, the model will not show up in 2D / CV mode. This disables minimumPixelSize and prevents future modification to its model matrix. This also cannot be set after the model has loaded.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1608,11 +2396,13 @@ ModelExperimental.fromGltf = function (options) {
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
-    loadPositionsFor2D: options.projectTo2D,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const basePath = defaultValue(options.basePath, "");
@@ -1654,11 +2444,13 @@ ModelExperimental.fromB3dm = function (options) {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
-    loadPositionsFor2D: options.projectTo2D,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -1679,6 +2471,7 @@ ModelExperimental.fromPnts = function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
+    loadAttributesFor2D: options.projectTo2D,
   };
   const loader = new PntsLoader(loaderOptions);
 
@@ -1700,10 +2493,13 @@ ModelExperimental.fromI3dm = function (options) {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
     releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
+    loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
   const loader = new I3dmLoader(loaderOptions);
 
@@ -1733,13 +2529,6 @@ ModelExperimental.fromGeoJson = function (options) {
   return model;
 };
 
-function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
-  const drawCommands = sceneGraph._drawCommands;
-  for (let i = 0; i < drawCommands.length; i++) {
-    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
-  }
-}
-
 /**
  * @private
  */
@@ -1757,19 +2546,36 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  const isPnts = this.type === ModelExperimentalType.TILE_PNTS;
+
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
+  const propertyAttributes = defined(this.structuralMetadata)
+    ? this.structuralMetadata.propertyAttributes
+    : undefined;
+  const hasPropertyAttributes =
+    defined(propertyAttributes) && defined(propertyAttributes[0]);
+
+  // Point clouds will be styled on the GPU unless they contain
+  // a batch table. That is, CPU styling will not be applied if
+  // - points have no metadata at all, or
+  // - points have metadata stored as a property attribute
+  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {
@@ -1777,32 +2583,43 @@ function makeModelOptions(loader, modelType, options) {
     loader: loader,
     type: modelType,
     resource: options.resource,
+    show: options.show,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
+    id: options.id,
+    allowPicking: options.allowPicking,
+    clampAnimations: options.clampAnimations,
+    shadows: options.shadows,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
-    show: options.show,
+    heightReference: options.heightReference,
+    scene: options.scene,
+    distanceDisplayCondition: options.distanceDisplayCondition,
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
+    silhouetteColor: options.silhouetteColor,
+    silhouetteSize: options.silhouetteSize,
+    enableShowOutline: options.enableShowOutline,
+    showOutline: options.showOutline,
+    outlineColor: options.outlineColor,
     clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
+    credit: options.credit,
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
   };
 }
