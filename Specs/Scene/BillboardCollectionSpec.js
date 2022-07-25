@@ -1,25 +1,28 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { createGuid } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  CesiumTerrainProvider,
+  Color,
+  createGuid,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  Rectangle,
+  Resource,
+  Billboard,
+  BillboardCollection,
+  BlendOption,
+  HeightReference,
+  HorizontalOrigin,
+  TextureAtlas,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Billboard } from "../../Source/Cesium.js";
-import { BillboardCollection } from "../../Source/Cesium.js";
-import { BlendOption } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { TextureAtlas } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+
 import createGlobe from "../createGlobe.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -1372,10 +1375,6 @@ describe(
     });
 
     it("renders more than 16K billboards", function () {
-      if (!context.instancedArrays) {
-        return;
-      }
-
       for (let i = 0; i < 16 * 1024; ++i) {
         billboards.add({
           position: Cartesian3.ZERO,
@@ -2287,26 +2286,24 @@ describe(
       return pollToPromise(function () {
         return one.ready;
       }).then(function () {
-        const deferred = defer();
+        return new Promise((resolve) => {
+          // render and yield control several times to make sure the
+          // green image doesn't clobber the blue
+          let iterations = 10;
 
-        // render and yield control several times to make sure the
-        // green image doesn't clobber the blue
-        let iterations = 10;
+          function renderAndCheck() {
+            expect(scene).toRender([0, 0, 255, 255]);
 
-        function renderAndCheck() {
-          expect(scene).toRender([0, 0, 255, 255]);
-
-          if (iterations > 0) {
-            --iterations;
-            setTimeout(renderAndCheck, 1);
-          } else {
-            deferred.resolve();
+            if (iterations > 0) {
+              --iterations;
+              setTimeout(renderAndCheck, 1);
+            } else {
+              resolve();
+            }
           }
-        }
 
-        renderAndCheck();
-
-        return deferred.promise;
+          renderAndCheck();
+        });
       });
     });
 
@@ -2327,26 +2324,24 @@ describe(
       expect(one.ready).toEqual(false);
       expect(one.image).toBeUndefined();
 
-      const deferred = defer();
+      return new Promise((resolve) => {
+        // render and yield control several times to make sure the
+        // green image never loads
+        let iterations = 10;
 
-      // render and yield control several times to make sure the
-      // green image never loads
-      let iterations = 10;
+        function renderAndCheck() {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-      function renderAndCheck() {
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        if (iterations > 0) {
-          --iterations;
-          setTimeout(renderAndCheck, 1);
-        } else {
-          deferred.resolve();
+          if (iterations > 0) {
+            --iterations;
+            setTimeout(renderAndCheck, 1);
+          } else {
+            resolve();
+          }
         }
-      }
 
-      renderAndCheck();
-
-      return deferred.promise;
+        renderAndCheck();
+      });
     });
 
     it("does not crash when removing a billboard that is loading", function () {
@@ -2358,26 +2353,24 @@ describe(
 
       billboards.remove(one);
 
-      const deferred = defer();
+      return new Promise((resolve) => {
+        // render and yield control several times to make sure the
+        // green image doesn't crash when it loads
+        let iterations = 10;
 
-      // render and yield control several times to make sure the
-      // green image doesn't crash when it loads
-      let iterations = 10;
+        function renderAndCheck() {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-      function renderAndCheck() {
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        if (iterations > 0) {
-          --iterations;
-          setTimeout(renderAndCheck, 1);
-        } else {
-          deferred.resolve();
+          if (iterations > 0) {
+            --iterations;
+            setTimeout(renderAndCheck, 1);
+          } else {
+            resolve();
+          }
         }
-      }
 
-      renderAndCheck();
-
-      return deferred.promise;
+        renderAndCheck();
+      });
     });
 
     it("can add a billboard without a globe", function () {

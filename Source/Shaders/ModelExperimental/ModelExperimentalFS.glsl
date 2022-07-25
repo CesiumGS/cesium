@@ -7,9 +7,9 @@
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
-    material.diffuse = vec3(1.0);
-    material.specular = vec3(0.04); // dielectric (non-metal)
-    material.roughness = 0.0;
+    material.diffuse = vec3(0.0);
+    material.specular = vec3(1.0);
+    material.roughness = 1.0;
     material.occlusion = 1.0;
     material.normalEC = vec3(0.0, 0.0, 1.0);
     material.emissive = vec3(0.0);
@@ -23,12 +23,9 @@ vec4 handleAlpha(vec3 color, float alpha)
     if (alpha < u_alphaCutoff) {
         discard;
     }
-    return vec4(color, 1.0);
-    #elif defined(ALPHA_MODE_BLEND)
-    return vec4(color, alpha);
-    #else // OPAQUE
-    return vec4(color, 1.0);
     #endif
+
+    return vec4(color, alpha);
 }
 
 SelectedFeature selectedFeature;
@@ -48,7 +45,8 @@ void main()
     featureIdStage(featureIds, attributes);
 
     Metadata metadata;
-    metadataStage(metadata, attributes);
+    MetadataClass metadataClass;
+    metadataStage(metadata, metadataClass, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
@@ -59,7 +57,7 @@ void main()
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes, featureIds, metadata);
+    customShaderStage(material, attributes, featureIds, metadata, metadataClass);
     #endif
 
     lightingStage(material, attributes);
@@ -72,10 +70,18 @@ void main()
     modelColorStage(material);
     #endif
 
+    #ifdef HAS_PRIMITIVE_OUTLINE
+    primitiveOutlineStage(material);
+    #endif
+
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);
+    #endif
+
+    #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
+    silhouetteStage(color);
     #endif
 
     gl_FragColor = color;

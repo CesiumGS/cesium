@@ -1,14 +1,18 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CloudCollection } from "../../Source/Cesium.js";
-import { CloudType } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ComputeCommand } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  CloudCollection,
+  CloudType,
+  Color,
+  ComputeCommand,
+  DrawCommand,
+  defined,
+  PerspectiveFrustum,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
 
 import pollToPromise from "../pollToPromise.js";
 

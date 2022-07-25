@@ -10,7 +10,7 @@ import clone from "../../Core/clone.js";
  * @constructor
  *
  * @param {ModelRenderResources} modelRenderResources The model resources to inherit
- * @param {ModelExperimentalNode} runtimeNode The in-memory representation of the scene graph node.
+ * @param {ModelExperimentalRuntimeNode} runtimeNode The in-memory representation of the scene graph node.
  *
  * @private
  */
@@ -54,7 +54,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.uniformMap = clone(modelRenderResources.uniformMap);
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the model
+   * Options for configuring the alpha stage such as pass and alpha cutoff. Inherited from the model
    * render resources.
    *
    * @type {ModelAlphaOptions}
@@ -75,13 +75,16 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    *
    * @private
    */
-  this.renderStateOptions = clone(modelRenderResources.renderStateOptions);
+  this.renderStateOptions = clone(
+    modelRenderResources.renderStateOptions,
+    true
+  );
 
   // Other properties.
   /**
    * A reference to the runtime node
    *
-   * @type {ModelExperimentalNode}
+   * @type {ModelExperimentalRuntimeNode}
    * @readonly
    *
    * @private
@@ -135,7 +138,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise maximum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
@@ -145,9 +147,19 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The component-wise minimum value of the translations of the instances.
    *
    * @type {Cartesian3}
-   * @readonly
    *
    * @private
    */
   this.instancingTranslationMin = undefined;
+
+  /**
+   * If the model is instanced and projected to 2D, the reference point is the
+   * average of the instancing translation max and min. The 2D translations are
+   * defined relative to this point to avoid precision issues on the GPU.
+   *
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  this.instancingReferencePoint2D = undefined;
 }

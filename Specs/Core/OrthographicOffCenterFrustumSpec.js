@@ -1,9 +1,12 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Matrix4,
+  OrthographicOffCenterFrustum,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
 
 describe("Core/OrthographicOffCenterFrustum", function () {
   let frustum, planes;

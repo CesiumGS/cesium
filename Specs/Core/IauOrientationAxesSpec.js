@@ -1,9 +1,12 @@
-import { Iau2000Orientation } from "../../Source/Cesium.js";
-import { IauOrientationAxes } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Iau2000Orientation,
+  IauOrientationAxes,
+  JulianDate,
+  Matrix3,
+  TimeStandard,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { TimeStandard } from "../../Source/Cesium.js";
 
 describe("Core/IauOrientationAxes", function () {
   it("compute ICRF to Moon Fixed", function () {

@@ -2,6 +2,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
 
@@ -32,11 +33,11 @@ import createBillboardPointCallback from "./createBillboardPointCallback.js";
  * handler.setInputAction(function(movement) {
  *     const feature = scene.pick(movement.endPosition);
  *     if (feature instanceof Cesium.Cesium3DTilePointFeature) {
- *         const propertyNames = feature.getPropertyNames();
- *         const length = propertyNames.length;
+ *         const propertyIds = feature.getPropertyIds();
+ *         const length = propertyIds.length;
  *         for (let i = 0; i < length; ++i) {
- *             const propertyName = propertyNames[i];
- *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *             const propertyId = propertyIds[i];
+ *             console.log(`{propertyId}: ${feature.getProperty(propertyId)}`);
  *         }
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -732,11 +733,30 @@ Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
+ * @deprecated
+ *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
  */
 Cesium3DTilePointFeature.prototype.getPropertyNames = function (results) {
-  return this._content.batchTable.getPropertyNames(this._batchId, results);
+  deprecationWarning(
+    "Cesium3DTilePointFeature.getPropertyNames",
+    "Cesium3DTilePointFeature.getPropertyNames is deprecated in CesiumJS 1.95, and will be removed in 1.98. Use Cesium3DTilePointFeature.getPropertyIds instead"
+  );
+  return this._content.batchTable.getPropertyIds(this._batchId, results);
+};
+
+/**
+ * Returns an array of property IDs for the feature. This includes properties from this feature's
+ * class and inherited classes when using a batch table hierarchy.
+ *
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The IDs of the feature's properties.
+ */
+Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
+  return this._content.batchTable.getPropertyIds(this._batchId, results);
 };
 
 /**
@@ -750,11 +770,11 @@ Cesium3DTilePointFeature.prototype.getPropertyNames = function (results) {
  *
  * @example
  * // Display all the properties for a feature in the console log.
- * const propertyNames = feature.getPropertyNames();
- * const length = propertyNames.length;
+ * const propertyIds = feature.getPropertyIds();
+ * const length = propertyIds.length;
  * for (let i = 0; i < length; ++i) {
- *     const propertyName = propertyNames[i];
- *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *     const propertyId = propertyIds[i];
+ *     console.log(`{propertyId} : ${feature.getProperty(propertyId)}`);
  * }
  */
 Cesium3DTilePointFeature.prototype.getProperty = function (name) {

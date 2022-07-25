@@ -1,5 +1,8 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CoplanarPolygonOutlineGeometry } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  CoplanarPolygonOutlineGeometry,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/CoplanarPolygonOutlineGeometry", function () {

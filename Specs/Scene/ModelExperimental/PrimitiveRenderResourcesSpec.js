@@ -8,13 +8,14 @@ import {
   LightingModel,
   Math as CesiumMath,
   Matrix4,
-  ModelExperimentalNode,
-  ModelExperimentalPrimitive,
+  ModelExperimentalRuntimeNode,
+  ModelExperimentalRuntimePrimitive,
   ModelExperimentalType,
   PrimitiveType,
   ModelRenderResources,
   NodeRenderResources,
   PrimitiveRenderResources,
+  RenderState,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 
@@ -32,7 +33,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
   };
 
-  const runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalRuntimeNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
@@ -81,24 +82,25 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const expectedDepthTest = {
-    depthTest: {
-      enabled: true,
-      func: DepthFunction.LESS_OR_EQUAL,
-    },
-    blending: BlendingState.DISABLED,
-  };
+  const defaultRenderState = RenderState.getState(
+    RenderState.fromCache({
+      depthTest: {
+        enabled: true,
+        func: DepthFunction.LESS_OR_EQUAL,
+      },
+    })
+  );
 
   let runtimePrimitive;
   let runtimePrimitiveWithoutIndices;
   beforeAll(function () {
-    runtimePrimitive = new ModelExperimentalPrimitive({
+    runtimePrimitive = new ModelExperimentalRuntimePrimitive({
       primitive: primitive,
       node: mockNode,
       model: mockModel,
     });
 
-    runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+    runtimePrimitiveWithoutIndices = new ModelExperimentalRuntimePrimitive({
       primitive: primitiveWithoutIndices,
       node: mockNode,
       model: mockModel,
@@ -151,7 +153,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.lightingOptions.lightingModel).toEqual(
       LightingModel.UNLIT
     );
-    expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
+    expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
+      defaultRenderState
+    );
   });
 
   it("constructs from primitive without indices", function () {
@@ -181,7 +185,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     expect(primitiveResources.lightingOptions.lightingModel).toEqual(
       LightingModel.UNLIT
     );
-    expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
+    expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
+      defaultRenderState
+    );
   });
 
   it("inherits from model render resources", function () {

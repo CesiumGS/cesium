@@ -164,12 +164,12 @@
               tableHtmlScratch =
                 "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
 
-              const propertyNames = feature.getPropertyNames();
-              const length = propertyNames.length;
+              const propertyIds = feature.getPropertyIds();
+              const length = propertyIds.length;
               for (let i = 0; i < length; ++i) {
-                const propertyName = propertyNames[i];
-                const propertyValue = feature.getProperty(propertyName);
-                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
+                const propertyId = propertyIds[i];
+                const propertyValue = feature.getProperty(propertyId);
+                tableHtmlScratch += `<tr><td><tt>${propertyId}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;

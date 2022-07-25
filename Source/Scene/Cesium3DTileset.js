@@ -4,6 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
+import Color from "../Core/Color.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -63,6 +64,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
  * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
+ * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
+ * @param {Axis} [options.modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
@@ -95,13 +98,16 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -163,7 +169,8 @@ function Cesium3DTileset(options) {
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
   this._extensionsUsed = undefined;
   this._extensions = undefined;
-  this._gltfUpAxis = undefined;
+  this._modelUpAxis = undefined;
+  this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
   this._selectedTiles = [];
@@ -199,6 +206,7 @@ function Cesium3DTileset(options) {
   this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
 
   this._styleEngine = new Cesium3DTileStyleEngine();
+  this._styleApplied = false;
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -481,7 +489,7 @@ function Cesium3DTileset(options) {
    *         return;
    *     }
    *
-   *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
+   *     console.log(`Loading: requests: ${numberOfPendingRequests}, processing: ${numberOfTilesProcessing}`);
    * });
    */
   this.loadProgress = new Event();
@@ -589,8 +597,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileFailed.addEventListener(function(error) {
-   *     console.log('An error occurred loading tile: ' + error.url);
-   *     console.log('Error: ' + error.message);
+   *     console.log(`An error occurred loading tile: ${error.url}`);
+   *     console.log(`Error: ${error.message}`);
    * });
    */
   this.tileFailed = new Event();
@@ -747,17 +755,31 @@ function Cesium3DTileset(options) {
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+
   /**
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
+   * <p>
+   * When enableModelExperimental is set to true, this property can be toggled
+   * at runtime. However, when enableModelExperimental is false, this property
+   * is readonly (it can only be set in the constructor).
+   * </p>
    *
    * @type {Boolean}
-   * @readonly
-   *
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The color to use when rendering outlines. This option is only used
+   * when enableModelExperimental is set to true.
+   *
+   * @type {Color}
+   * @default Color.BLACK
+   */
+  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
   /**
    * The {@link SplitDirection} to apply to this tileset.
@@ -769,6 +791,8 @@ function Cesium3DTileset(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+
+  this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -998,16 +1022,22 @@ function Cesium3DTileset(options) {
       }
 
       that._root = that.loadTileset(resource, tilesetJson);
+
+      // Handle legacy gltfUpAxis option
       const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
         ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
         : Axis.Y;
+      const modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
+      const modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
+
       const asset = tilesetJson.asset;
       that._asset = asset;
       that._properties = tilesetJson.properties;
       that._geometricError = tilesetJson.geometricError;
       that._extensionsUsed = tilesetJson.extensionsUsed;
       that._extensions = tilesetJson.extensions;
-      that._gltfUpAxis = gltfUpAxis;
+      that._modelUpAxis = modelUpAxis;
+      that._modelForwardAxis = modelForwardAxis;
       that._extras = tilesetJson.extras;
 
       const extras = asset.extras;
@@ -1155,8 +1185,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    *
    * @example
-   * console.log('Maximum building height: ' + tileset.properties.height.maximum);
-   * console.log('Minimum building height: ' + tileset.properties.height.minimum);
+   * console.log(`Maximum building height: ${tileset.properties.height.maximum}`);
+   * console.log(`Minimum building height: ${tileset.properties.height.minimum}`);
    *
    * @see Cesium3DTileFeature#getProperty
    * @see Cesium3DTileFeature#setProperty
@@ -1610,8 +1640,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The total amount of GPU memory in bytes used by the tileset. This value is estimated from
-   * geometry, texture, and batch table textures of loaded tiles. For point clouds, this value also
-   * includes per-point metadata.
+   * geometry, texture, batch table textures, and binary metadata of loaded tiles.
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -2312,7 +2341,14 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  this._styleEngine.resetDirty();
+
+  // If the style wasn't able to be applied this frame (for example,
+  // the tileset was hidden), keep it dirty so the engine can try
+  // to apply the style next frame.
+  if (this._styleApplied) {
+    this._styleEngine.resetDirty();
+  }
+  this._styleApplied = false;
 };
 
 /**
@@ -2617,6 +2653,7 @@ function updateTileDebugLabels(tileset, frameState) {
 
 function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
+  tileset._styleApplied = true;
 
   const isRender = passOptions.isRender;
   const statistics = tileset._statistics;

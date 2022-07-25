@@ -1,25 +1,27 @@
-import { arraySlice } from "../../Source/Cesium.js";
-import { AttributeCompression } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { BoxGeometry } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidGeometry } from "../../Source/Cesium.js";
-import { EncodedCartesian3 } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { Geometry } from "../../Source/Cesium.js";
-import { GeometryAttribute } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { GeometryPipeline } from "../../Source/Cesium.js";
-import { GeometryType } from "../../Source/Cesium.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian2,
+  Cartesian3,
+  ComponentDatatype,
+  Ellipsoid,
+  EllipsoidGeometry,
+  EncodedCartesian3,
+  GeographicProjection,
+  Geometry,
+  GeometryAttribute,
+  GeometryInstance,
+  GeometryPipeline,
+  GeometryType,
+  Matrix4,
+  PolygonGeometry,
+  PrimitiveType,
+  Tipsify,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { PolygonGeometry } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { Tipsify } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
 
 describe("Core/GeometryPipeline", function () {
   it("converts triangles to wireframe in place", function () {
@@ -1999,7 +2001,7 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.normal).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2030,7 +2032,7 @@ describe("Core/GeometryPipeline", function () {
       })
     );
     expect(geometry.attributes.st).toBeDefined();
-    const originalST = arraySlice(geometry.attributes.st.values);
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2066,8 +2068,8 @@ describe("Core/GeometryPipeline", function () {
     );
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.st).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
-    const originalST = arraySlice(geometry.attributes.st.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalST = geometry.attributes.st.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -2113,9 +2115,9 @@ describe("Core/GeometryPipeline", function () {
     expect(geometry.attributes.normal).toBeDefined();
     expect(geometry.attributes.tangent).toBeDefined();
     expect(geometry.attributes.bitangent).toBeDefined();
-    const originalNormals = arraySlice(geometry.attributes.normal.values);
-    const originalTangents = arraySlice(geometry.attributes.tangent.values);
-    const originalBitangents = arraySlice(geometry.attributes.bitangent.values);
+    const originalNormals = geometry.attributes.normal.values.slice();
+    const originalTangents = geometry.attributes.tangent.values.slice();
+    const originalBitangents = geometry.attributes.bitangent.values.slice();
 
     geometry = GeometryPipeline.compressVertices(geometry);
 

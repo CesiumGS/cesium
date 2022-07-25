@@ -1,19 +1,22 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { IndexDatatype } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { WebGLConstants } from "../../Source/Cesium.js";
-import { WindingOrder } from "../../Source/Cesium.js";
-import { Buffer } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { ShaderProgram } from "../../Source/Cesium.js";
-import { VertexArray } from "../../Source/Cesium.js";
-import { BlendingState } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Color,
+  ComponentDatatype,
+  IndexDatatype,
+  PrimitiveType,
+  WebGLConstants,
+  WindingOrder,
+  Buffer,
+  BufferUsage,
+  ClearCommand,
+  ContextLimits,
+  DrawCommand,
+  RenderState,
+  ShaderProgram,
+  VertexArray,
+  BlendingState,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(
@@ -1286,70 +1289,68 @@ describe(
     });
 
     it("draws two instances of a point with different per-instance colors", function () {
-      if (context.instancedArrays) {
-        const vs =
-          "attribute vec4 position;" +
-          "attribute vec4 color;" +
-          "varying vec4 v_color;" +
-          "void main() {" +
-          "  gl_PointSize = 1.0; " +
-          "  gl_Position = position;" +
-          "  v_color = color;" +
-          "}";
-        const fs =
-          "varying vec4 v_color; void main() { gl_FragColor = v_color; }";
-        sp = ShaderProgram.fromCache({
-          context: context,
-          vertexShaderSource: vs,
-          fragmentShaderSource: fs,
-          attributeLocations: {
-            position: 0,
-            color: 1,
+      const vs =
+        "attribute vec4 position;" +
+        "attribute vec4 color;" +
+        "varying vec4 v_color;" +
+        "void main() {" +
+        "  gl_PointSize = 1.0; " +
+        "  gl_Position = position;" +
+        "  v_color = color;" +
+        "}";
+      const fs =
+        "varying vec4 v_color; void main() { gl_FragColor = v_color; }";
+      sp = ShaderProgram.fromCache({
+        context: context,
+        vertexShaderSource: vs,
+        fragmentShaderSource: fs,
+        attributeLocations: {
+          position: 0,
+          color: 1,
+        },
+      });
+
+      va = new VertexArray({
+        context: context,
+        attributes: [
+          {
+            index: 0,
+            vertexBuffer: Buffer.createVertexBuffer({
+              context: context,
+              typedArray: new Float32Array([0, 0, 0, 1]),
+              usage: BufferUsage.STATIC_DRAW,
+            }),
+            componentsPerAttribute: 4,
           },
-        });
+          {
+            index: 1,
+            vertexBuffer: Buffer.createVertexBuffer({
+              context: context,
+              typedArray: new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
+              usage: BufferUsage.STATIC_DRAW,
+            }),
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: true,
+            instanceDivisor: 1,
+          },
+        ],
+      });
 
-        va = new VertexArray({
-          context: context,
-          attributes: [
-            {
-              index: 0,
-              vertexBuffer: Buffer.createVertexBuffer({
-                context: context,
-                typedArray: new Float32Array([0, 0, 0, 1]),
-                usage: BufferUsage.STATIC_DRAW,
-              }),
-              componentsPerAttribute: 4,
-            },
-            {
-              index: 1,
-              vertexBuffer: Buffer.createVertexBuffer({
-                context: context,
-                typedArray: new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
-                usage: BufferUsage.STATIC_DRAW,
-              }),
-              componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-              componentsPerAttribute: 4,
-              normalize: true,
-              instanceDivisor: 1,
-            },
-          ],
-        });
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
 
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        const command = new DrawCommand({
-          primitiveType: PrimitiveType.POINTS,
-          shaderProgram: sp,
-          vertexArray: va,
-          instanceCount: 2,
-          renderState: RenderState.fromCache({
-            blending: BlendingState.ADDITIVE_BLEND,
-          }),
-        });
-        command.execute(context);
-        expect(context).toReadPixels([255, 255, 0, 255]);
-      }
+      const command = new DrawCommand({
+        primitiveType: PrimitiveType.POINTS,
+        shaderProgram: sp,
+        vertexArray: va,
+        instanceCount: 2,
+        renderState: RenderState.fromCache({
+          blending: BlendingState.ADDITIVE_BLEND,
+        }),
+      });
+      command.execute(context);
+      expect(context).toReadPixels([255, 255, 0, 255]);
     });
 
     it("fails to draw (missing command)", function () {
@@ -1482,46 +1483,49 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when instanceCount is greater than one and the instanced arrays extension is not supported", function () {
-      if (!context.instancedArrays) {
-        const vs =
-          "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        const fs = "void main() { gl_FragColor = vec4(1.0); }";
-        sp = ShaderProgram.fromCache({
-          context: context,
-          vertexShaderSource: vs,
-          fragmentShaderSource: fs,
-          attributeLocations: {
-            position: 0,
+    it("throws when instanceCount is greater than one and instancing is disabled", function () {
+      // disable extension
+      const instancedArrays = context._instancedArrays;
+      context._instancedArrays = undefined;
+
+      const vs =
+        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      sp = ShaderProgram.fromCache({
+        context: context,
+        vertexShaderSource: vs,
+        fragmentShaderSource: fs,
+        attributeLocations: {
+          position: 0,
+        },
+      });
+
+      va = new VertexArray({
+        context: context,
+        attributes: [
+          {
+            index: 0,
+            vertexBuffer: Buffer.createVertexBuffer({
+              context: context,
+              typedArray: new Float32Array([0, 0, 0, 1]),
+              usage: BufferUsage.STATIC_DRAW,
+            }),
+            componentsPerAttribute: 4,
           },
-        });
+        ],
+      });
 
-        va = new VertexArray({
-          context: context,
-          attributes: [
-            {
-              index: 0,
-              vertexBuffer: Buffer.createVertexBuffer({
-                context: context,
-                typedArray: new Float32Array([0, 0, 0, 1]),
-                usage: BufferUsage.STATIC_DRAW,
-              }),
-              componentsPerAttribute: 4,
-            },
-          ],
-        });
+      const command = new DrawCommand({
+        primitiveType: PrimitiveType.POINTS,
+        shaderProgram: sp,
+        vertexArray: va,
+        instanceCount: 2,
+      });
 
-        const command = new DrawCommand({
-          primitiveType: PrimitiveType.POINTS,
-          shaderProgram: sp,
-          vertexArray: va,
-          instanceCount: 2,
-        });
-
-        expect(function () {
-          command.execute(context);
-        }).toThrowDeveloperError();
-      }
+      expect(function () {
+        command.execute(context);
+      }).toThrowDeveloperError();
+      context._instancedArrays = instancedArrays;
     });
   },
   "WebGL"

@@ -3,7 +3,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Clock from "../../Core/Clock.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -58,13 +57,13 @@ function onTimelineScrubfunction(e) {
 }
 
 function getCesium3DTileFeatureDescription(feature) {
-  const propertyNames = feature.getPropertyNames();
+  const propertyIds = feature.getPropertyIds();
 
   let html = "";
-  propertyNames.forEach(function (propertyName) {
-    const value = feature.getProperty(propertyName);
+  propertyIds.forEach(function (propertyId) {
+    const value = feature.getProperty(propertyId);
     if (defined(value)) {
-      html += `<tr><th>${propertyName}</th><td>${value}</td></tr>`;
+      html += `<tr><th>${propertyId}</th><td>${value}</td></tr>`;
     }
   });
 
@@ -76,35 +75,35 @@ function getCesium3DTileFeatureDescription(feature) {
 }
 
 function getCesium3DTileFeatureName(feature) {
-  // We need to iterate all property names to find potential
-  // candidates, but since we prefer some property names
+  // We need to iterate all property IDs to find potential
+  // candidates, but since we prefer some property IDs
   // over others, we store them in an indexed array
   // and then use the first defined element in the array
   // as the preferred choice.
 
   let i;
-  const possibleNames = [];
-  const propertyNames = feature.getPropertyNames();
-  for (i = 0; i < propertyNames.length; i++) {
-    const propertyName = propertyNames[i];
-    if (/^name$/i.test(propertyName)) {
-      possibleNames[0] = feature.getProperty(propertyName);
-    } else if (/name/i.test(propertyName)) {
-      possibleNames[1] = feature.getProperty(propertyName);
-    } else if (/^title$/i.test(propertyName)) {
-      possibleNames[2] = feature.getProperty(propertyName);
-    } else if (/^(id|identifier)$/i.test(propertyName)) {
-      possibleNames[3] = feature.getProperty(propertyName);
-    } else if (/element/i.test(propertyName)) {
-      possibleNames[4] = feature.getProperty(propertyName);
-    } else if (/(id|identifier)$/i.test(propertyName)) {
-      possibleNames[5] = feature.getProperty(propertyName);
+  const possibleIds = [];
+  const propertyIds = feature.getPropertyIds();
+  for (i = 0; i < propertyIds.length; i++) {
+    const propertyId = propertyIds[i];
+    if (/^name$/i.test(propertyId)) {
+      possibleIds[0] = feature.getProperty(propertyId);
+    } else if (/name/i.test(propertyId)) {
+      possibleIds[1] = feature.getProperty(propertyId);
+    } else if (/^title$/i.test(propertyId)) {
+      possibleIds[2] = feature.getProperty(propertyId);
+    } else if (/^(id|identifier)$/i.test(propertyId)) {
+      possibleIds[3] = feature.getProperty(propertyId);
+    } else if (/element/i.test(propertyId)) {
+      possibleIds[4] = feature.getProperty(propertyId);
+    } else if (/(id|identifier)$/i.test(propertyId)) {
+      possibleIds[5] = feature.getProperty(propertyId);
     }
   }
 
-  const length = possibleNames.length;
+  const length = possibleIds.length;
   for (i = 0; i < length; i++) {
-    const item = possibleNames[i];
+    const item = possibleIds[i];
     if (defined(item) && item !== "") {
       return item;
     }
@@ -335,6 +334,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ShadowMode} [terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @property {MapMode2D} [mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @property {Boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+ * @property {Boolean} [blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
  * @property {Boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @property {Number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @property {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
@@ -501,6 +501,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     shadows: options.shadows,
     terrainShadows: options.terrainShadows,
     mapMode2D: options.mapMode2D,
+    blurActiveElementOnCanvasFocus: options.blurActiveElementOnCanvasFocus,
     requestRenderMode: options.requestRenderMode,
     maximumRenderTimeChange: options.maximumRenderTimeChange,
     depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
@@ -1304,7 +1305,7 @@ Object.defineProperties(Viewer.prototype, {
 
   /**
    * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
-   * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+   * is true. If undefined, the browser's requestAnimationFrame implementation
    * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof Viewer.prototype
@@ -1322,7 +1323,7 @@ Object.defineProperties(Viewer.prototype, {
 
   /**
    * Gets or sets whether or not this widget should control the render loop.
-   * If set to true the widget will use {@link requestAnimationFrame} to
+   * If true the widget will use requestAnimationFrame to
    * perform rendering and resizing of the widget, as well as drive the
    * simulation clock. If set to false, you must manually call the
    * <code>resize</code>, <code>render</code> methods
@@ -2075,8 +2076,12 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   //We can't actually perform the zoom until all visualization is ready and
   //bounding spheres have been computed.  Therefore we create and return
   //a deferred which will be resolved as part of the post-render step in the
-  //frame that actually performs the zoom
-  const zoomPromise = defer();
+  //frame that actually performs the zoom.
+  const zoomPromise = new Promise((resolve) => {
+    that._completeZoom = function (value) {
+      resolve(value);
+    };
+  });
   that._zoomPromise = zoomPromise;
   that._zoomIsFlight = isFlight;
   that._zoomOptions = options;
@@ -2149,7 +2154,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   });
 
   that.scene.requestRender();
-  return zoomPromise.promise;
+  return zoomPromise;
 }
 
 function clearZoom(viewer) {
@@ -2162,7 +2167,7 @@ function cancelZoom(viewer) {
   const zoomPromise = viewer._zoomPromise;
   if (defined(zoomPromise)) {
     clearZoom(viewer);
-    zoomPromise.resolve(false);
+    viewer._completeZoom(false);
   }
 }
 
@@ -2182,7 +2187,6 @@ function updateZoomTarget(viewer) {
 
   const scene = viewer.scene;
   const camera = scene.camera;
-  const zoomPromise = viewer._zoomPromise;
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
 
@@ -2191,41 +2195,45 @@ function updateZoomTarget(viewer) {
     target instanceof TimeDynamicPointCloud ||
     target instanceof VoxelPrimitive
   ) {
-    return target.readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
+    return target.readyPromise
+      .then(function () {
+        const boundingSphere = target.boundingSphere;
+        // If offset was originally undefined then give it base value instead of empty object
+        if (!defined(zoomOptions.offset)) {
+          zoomOptions.offset = new HeadingPitchRange(
+            0.0,
+            -0.5,
+            boundingSphere.radius
+          );
+        }
 
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          zoomPromise.resolve(true);
-        },
-        cancel: function () {
-          zoomPromise.resolve(false);
-        },
-      };
+        options = {
+          offset: zoomOptions.offset,
+          duration: zoomOptions.duration,
+          maximumHeight: zoomOptions.maximumHeight,
+          complete: function () {
+            viewer._completeZoom(true);
+          },
+          cancel: function () {
+            viewer._completeZoom(false);
+          },
+        };
 
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
+        if (viewer._zoomIsFlight) {
+          camera.flyToBoundingSphere(target.boundingSphere, options);
+        } else {
+          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+          camera.lookAtTransform(Matrix4.IDENTITY);
 
-        // Finish the promise
-        zoomPromise.resolve(true);
-      }
+          // Finish the promise
+          viewer._completeZoom(true);
+        }
 
-      clearZoom(viewer);
-    });
+        clearZoom(viewer);
+      })
+      .catch(() => {
+        cancelZoom(viewer);
+      });
   }
 
   // If zoomTarget was an ImageryLayer
@@ -2237,10 +2245,10 @@ function updateZoomTarget(viewer) {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        zoomPromise.resolve(true);
+        viewer._completeZoom(true);
       },
       cancel: function () {
-        zoomPromise.resolve(false);
+        viewer._completeZoom(false);
       },
     };
 
@@ -2248,7 +2256,7 @@ function updateZoomTarget(viewer) {
       camera.flyTo(options);
     } else {
       camera.setView(options);
-      zoomPromise.resolve(true);
+      viewer._completeZoom(true);
     }
     clearZoom(viewer);
     return;
@@ -2285,17 +2293,17 @@ function updateZoomTarget(viewer) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
     camera.lookAtTransform(Matrix4.IDENTITY);
     clearZoom(viewer);
-    zoomPromise.resolve(true);
+    viewer._completeZoom(true);
   } else {
     clearZoom(viewer);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        zoomPromise.resolve(true);
+        viewer._completeZoom(true);
       },
       cancel: function () {
-        zoomPromise.resolve(false);
+        viewer._completeZoom(false);
       },
       offset: zoomOptions.offset,
     });

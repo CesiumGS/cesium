@@ -217,7 +217,7 @@ GltfIndexBufferLoader.prototype.load = function () {
         );
       }
 
-      // Unload everything except the index buffer
+      // Unload everything except the index buffer and/or typed array.
       loader.unload();
 
       loader._buffer = buffer;

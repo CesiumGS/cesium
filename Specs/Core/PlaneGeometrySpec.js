@@ -1,6 +1,9 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { PlaneGeometry } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  PlaneGeometry,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/PlaneGeometry", function () {

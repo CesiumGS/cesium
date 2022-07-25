@@ -111,7 +111,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/node.js).
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js).
 
 **General rules:**
 
@@ -327,6 +327,7 @@ byteOffset += sizeOfUint32; // Skip length field
 
 - `TODO` comments need to be removed or addressed before the code is merged into main. Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
 - Remove commented out code before merging into main.
+- Modern language features may provide handy shortcuts and cleaner syntax, but they should be used with consideration for their performance implications, especially in code that is invoked per-frame.
 
 ## Functions
 
@@ -888,7 +889,7 @@ even though it relies on implicitly hoisting the `loadTileset` function to the t
 
 It is usually obvious what directory a file belongs in. When it isn't, the decision is usually between `Core` and another directory. Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/CesiumGS/cesium/blob/main/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
-![](1.jpg)
+![CesiumJS Design](1.jpg)
 
 Modules (files) should only reference modules in the same level or a lower level of the stack. For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
@@ -979,7 +980,7 @@ Cesium includes a [`subscribeAndEvaluate`](https://github.com/CesiumGS/cesium/bl
 
 When using a subscription, always be sure to [dispose the subscription](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it. Otherwise the listener will continue to be notified for the lifetime of the observable.
 
-```
+```javascript
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
 // ...then later...
 fullscreenSubscription.dispose();

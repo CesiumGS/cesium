@@ -1,9 +1,12 @@
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { WallGraphics } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  Color,
+  DistanceDisplayCondition,
+  ColorMaterialProperty,
+  ConstantProperty,
+  WallGraphics,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import testDefinitionChanged from "../testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 

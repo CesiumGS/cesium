@@ -64,7 +64,7 @@ When creating the `Viewer`, turn off the globe and sky box, to avoid extra
 network requests that may impact the load time of your tileset.
 
 ```js
-const viewer = Cesium.Viewer("cesiumContainer", {
+const viewer = new Cesium.Viewer("cesiumContainer", {
   globe: false,
   skybox: false,
 });
@@ -215,14 +215,14 @@ When running the test, there are a few additional considerations:
    files, and minify the results. This way, results reflect how users will
    be running Cesium.
 
-```
-# Make a release build of CesiumJS. This step is necessary after switching
-# branches or otherwise modifying the code.
-npm run release
+   ```bash
+   # Make a release build of CesiumJS. This step is necessary after switching
+   # branches or otherwise modifying the code.
+   npm run release
 
-# build Sandcastle and other apps
-npm run buildApps
-```
+   # build Sandcastle and other apps
+   npm run build-apps
+   ```
 
 2. (optional) Unless the Network tab is needed (e.g. for throttling), consider
    closing DevTools so the browser isn't spending time checking breakpoints or

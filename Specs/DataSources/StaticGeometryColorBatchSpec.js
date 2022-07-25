@@ -1,20 +1,24 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  CallbackProperty,
+  ColorMaterialProperty,
+  EllipseGeometryUpdater,
+  Entity,
+  PolylineGeometryUpdater,
+  StaticGeometryColorBatch,
+  TimeIntervalCollectionProperty,
+  PerInstanceColorAppearance,
+  PolylineColorAppearance,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { EllipseGeometryUpdater } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { PolylineGeometryUpdater } from "../../Source/Cesium.js";
-import { StaticGeometryColorBatch } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { PolylineColorAppearance } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

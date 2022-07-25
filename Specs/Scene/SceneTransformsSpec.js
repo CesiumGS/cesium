@@ -1,12 +1,16 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  OrthographicFrustum,
+  Rectangle,
+  Camera,
+  SceneMode,
+  SceneTransforms,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { OrthographicFrustum } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { SceneTransforms } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

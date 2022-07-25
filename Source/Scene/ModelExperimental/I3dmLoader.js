@@ -58,8 +58,9 @@ const Instances = ModelComponents.Instances;
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
  * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -84,6 +85,7 @@ function I3dmLoader(options) {
     options.loadIndicesForWireframe,
     false
   );
+  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -103,6 +105,7 @@ function I3dmLoader(options) {
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
+  this._loadPrimitiveOutline = loadPrimitiveOutline;
 
   this._state = I3dmLoaderState.UNLOADED;
   this._promise = undefined;
@@ -239,6 +242,7 @@ I3dmLoader.prototype.load = function () {
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
+    loadPrimitiveOutline: this._loadPrimitiveOutline,
   };
 
   if (gltfFormat === 0) {
@@ -487,7 +491,7 @@ function createInstances(loader, components) {
   translationAttribute.componentDatatype = ComponentDatatype.FLOAT;
   translationAttribute.type = AttributeType.VEC3;
   translationAttribute.count = instancesLength;
-  translationAttribute.packedTypedArray = translationTypedArray;
+  translationAttribute.typedArray = translationTypedArray;
   instances.attributes.push(translationAttribute);
 
   // Create rotation vertex attribute.
@@ -498,7 +502,7 @@ function createInstances(loader, components) {
     rotationAttribute.componentDatatype = ComponentDatatype.FLOAT;
     rotationAttribute.type = AttributeType.VEC4;
     rotationAttribute.count = instancesLength;
-    rotationAttribute.packedTypedArray = rotationTypedArray;
+    rotationAttribute.typedArray = rotationTypedArray;
     instances.attributes.push(rotationAttribute);
   }
 
@@ -510,7 +514,7 @@ function createInstances(loader, components) {
     scaleAttribute.componentDatatype = ComponentDatatype.FLOAT;
     scaleAttribute.type = AttributeType.VEC3;
     scaleAttribute.count = instancesLength;
-    scaleAttribute.packedTypedArray = scaleTypedArray;
+    scaleAttribute.typedArray = scaleTypedArray;
     instances.attributes.push(scaleAttribute);
   }
 
@@ -522,7 +526,7 @@ function createInstances(loader, components) {
   featureIdAttribute.componentDatatype = ComponentDatatype.FLOAT;
   featureIdAttribute.type = AttributeType.SCALAR;
   featureIdAttribute.count = instancesLength;
-  featureIdAttribute.packedTypedArray = featureIdArray;
+  featureIdAttribute.typedArray = featureIdArray;
   instances.attributes.push(featureIdAttribute);
 
   // Create feature ID attribute.

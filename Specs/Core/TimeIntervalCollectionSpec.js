@@ -1,9 +1,11 @@
-import { defaultValue } from "../../Source/Cesium.js";
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { TimeStandard } from "../../Source/Cesium.js";
+import {
+  defaultValue,
+  Iso8601,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  TimeStandard,
+} from "../../../Source/Cesium.js";
 
 describe("Core/TimeIntervalCollection", function () {
   function defaultDataCallback(interval, index) {

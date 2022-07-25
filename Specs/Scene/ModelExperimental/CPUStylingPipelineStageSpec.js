@@ -1,5 +1,4 @@
 import {
-  AlphaMode,
   clone,
   Color,
   ColorBlendMode,
@@ -151,7 +150,7 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.ALL_TRANSLUCENT
     );
-    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
+    expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
   });
 
   it("sets the style commands needed when both opaque and translucent commands are needed", function () {
@@ -166,6 +165,6 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
     );
-    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
+    expect(renderResources.alphaOptions.pass).toBeUndefined();
   });
 });

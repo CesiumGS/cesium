@@ -6,7 +6,7 @@ import {
   ModelAnimationLoop,
   ModelComponents,
   ModelExperimentalAnimation,
-  ModelExperimentalNode,
+  ModelExperimentalRuntimeNode,
   Quaternion,
 } from "../../../Source/Cesium.js";
 
@@ -41,7 +41,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
       _runtimeNodes: [],
     };
 
-    runtimeNode = new ModelExperimentalNode({
+    runtimeNode = new ModelExperimentalRuntimeNode({
       node: mockNode,
       transform: Matrix4.IDENTITY,
       transformToRoot: Matrix4.IDENTITY,

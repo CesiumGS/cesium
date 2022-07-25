@@ -1550,7 +1550,7 @@ Object.defineProperties(Scene.prototype, {
    * Whether or not to use high dynamic range rendering.
    * @memberof Scene.prototype
    * @type {Boolean}
-   * @default true
+   * @default false
    */
   highDynamicRange: {
     get: function () {

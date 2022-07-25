@@ -28,6 +28,10 @@ void main()
     skinningStage(attributes);
     #endif
 
+    #ifdef HAS_PRIMITIVE_OUTLINE
+    primitiveOutlineStage();
+    #endif
+
     // Compute the bitangent according to the formula in the glTF spec.
     // Normal and tangents can be affected by morphing and skinning, so
     // the bitangent should not be computed until their values are finalized.
@@ -41,11 +45,23 @@ void main()
     #ifdef HAS_SELECTED_FEATURE_ID
     SelectedFeature feature;
     selectedFeatureIdStage(feature, featureIds);
+    // Handle any show properties that come from the style.
     cpuStylingStage(attributes.positionMC, feature);
     #endif
 
+    #if defined(USE_2D_POSITIONS) || defined(USE_2D_INSTANCING)
+    // The scene mode 2D pipeline stage and instancing stage add a different
+    // model view matrix to accurately project the model to 2D. However, the
+    // output positions and normals should be transformed by the 3D matrices
+    // to keep the data the same for the fragment shader.
     mat4 modelView = czm_modelView3D;
     mat3 normal = czm_normal3D;
+    #else
+    // These are used for individual model projection because they will
+    // automatically change based on the scene mode.
+    mat4 modelView = czm_modelView;
+    mat3 normal = czm_normal;
+    #endif
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
@@ -58,12 +74,12 @@ void main()
         mat4 instanceModelView;
         mat3 instanceModelViewInverseTranspose;
         
-        legacyInstancingStage(attributes.positionMC, instanceModelView, instanceModelViewInverseTranspose);
+        legacyInstancingStage(attributes, instanceModelView, instanceModelViewInverseTranspose);
 
         modelView = instanceModelView;
         normal = instanceModelViewInverseTranspose;
         #else
-        instancingStage(attributes.positionMC);
+        instancingStage(attributes);
         #endif
 
         #ifdef USE_PICKING
@@ -73,24 +89,43 @@ void main()
     #endif
 
     Metadata metadata;
-    metadataStage(metadata, attributes);
+    MetadataClass metadataClass;
+    metadataStage(metadata, metadataClass, attributes);
 
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
-    customShaderStage(vsOutput, attributes, featureIds, metadata);
+    customShaderStage(vsOutput, attributes, featureIds, metadata, metadataClass);
     #endif
 
     // Compute the final position in each coordinate system needed.
-    // This also sets gl_Position.
-    geometryStage(attributes, modelView, normal);    
+    // This returns the value that will be assigned to gl_Position.
+    vec4 positionClip = geometryStage(attributes, modelView, normal);    
+
+    #ifdef HAS_SILHOUETTE
+    silhouetteStage(attributes, positionClip);
+    #endif
+
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+    float show = pointCloudShowStylingStage(attributes, metadata);
+    #else
+    float show = 1.0;
+    #endif
+
+    #ifdef HAS_POINT_CLOUD_COLOR_STYLE
+    v_pointCloudColor = pointCloudColorStylingStage(attributes, metadata);
+    #endif
 
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
         gl_PointSize = vsOutput.pointSize;
-        #elif defined(USE_POINT_CLOUD_ATTENUATION)
-        gl_PointSize = pointCloudAttenuationStage(v_positionEC);
+        #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
+        gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
         #else
         gl_PointSize = 1.0;
         #endif
+
+        gl_PointSize *= show;
     #endif
+
+    gl_Position = show * positionClip;
 }

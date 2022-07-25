@@ -1,13 +1,16 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Buffer } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
-import { ComputeCommand } from "../../Source/Cesium.js";
-import { ShaderProgram } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { VertexArray } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { ViewportQuad } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  PixelFormat,
+  Buffer,
+  BufferUsage,
+  ComputeCommand,
+  ShaderProgram,
+  Texture,
+  VertexArray,
+  Material,
+  ViewportQuad,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

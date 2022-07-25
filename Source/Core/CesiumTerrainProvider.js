@@ -3,7 +3,6 @@ import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -39,6 +38,11 @@ function LayerInformation(layer) {
 
 /**
  * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
+ * Terrain formats can be one of the following:
+ * <ul>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
+ * </ul>
  *
  * @alias CesiumTerrainProvider
  * @constructor
@@ -114,9 +118,7 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
 
-  const deferred = defer();
   this._ready = false;
-  this._readyPromise = deferred;
   this._tileCredits = undefined;
 
   const that = this;
@@ -128,55 +130,49 @@ function CesiumTerrainProvider(options) {
   let attribution = "";
   const overallAvailability = [];
   let overallMaxZoom = 0;
-  Promise.resolve(options.url)
-    .then(function (url) {
-      const resource = Resource.createIfNeeded(url);
-      resource.appendForwardSlash();
-      lastResource = resource;
-      layerJsonResource = lastResource.getDerivedResource({
-        url: "layer.json",
-      });
-
-      // ion resources have a credits property we can use for additional attribution.
-      that._tileCredits = resource.credits;
-
-      requestLayerJson();
-    })
-    .catch(function (e) {
-      deferred.reject(e);
+  this._readyPromise = Promise.resolve(options.url).then(function (url) {
+    const resource = Resource.createIfNeeded(url);
+    resource.appendForwardSlash();
+    lastResource = resource;
+    layerJsonResource = lastResource.getDerivedResource({
+      url: "layer.json",
     });
+
+    // ion resources have a credits property we can use for additional attribution.
+    that._tileCredits = resource.credits;
+
+    return requestLayerJson();
+  });
 
   function parseMetadataSuccess(data) {
     let message;
 
     if (!data.format) {
       message = "The tile format is not specified in the layer.json file.";
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestLayerJson
+        message
       );
-      return;
+      if (metadataError.retry) {
+        return requestLayerJson();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     if (!data.tiles || data.tiles.length === 0) {
       message = "The layer.json file does not specify any tile URL templates.";
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestLayerJson
+        message
       );
-      return;
+      if (metadataError.retry) {
+        return requestLayerJson();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     let hasVertexNormals = false;
@@ -202,17 +198,16 @@ function CesiumTerrainProvider(options) {
       that._requestWaterMask = true;
     } else if (data.format.indexOf("quantized-mesh-1.") !== 0) {
       message = `The tile format "${data.format}" is invalid or not supported.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestLayerJson
+        message
       );
-      return;
+      if (metadataError.retry) {
+        return requestLayerJson();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     const tileUrlTemplates = data.tiles;
@@ -235,17 +230,16 @@ function CesiumTerrainProvider(options) {
       });
     } else {
       message = `The projection "${data.projection}" is invalid or not supported.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestLayerJson
+        message
       );
-      return;
+      if (metadataError.retry) {
+        return requestLayerJson();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
@@ -257,17 +251,16 @@ function CesiumTerrainProvider(options) {
       that._scheme = data.scheme;
     } else {
       message = `The scheme "${data.scheme}" is invalid or not supported.`;
-      metadataError = TileProviderError.handleError(
+      metadataError = TileProviderError.reportError(
         metadataError,
         that,
         that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined,
-        requestLayerJson
+        message
       );
-      return;
+      if (metadataError.retry) {
+        return requestLayerJson();
+      }
+      return Promise.reject(new RuntimeError(message));
     }
 
     let availabilityTilesLoaded;
@@ -383,7 +376,7 @@ function CesiumTerrainProvider(options) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return Promise.resolve();
+        return Promise.resolve(true);
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -398,25 +391,25 @@ function CesiumTerrainProvider(options) {
         .catch(parseMetadataFailure);
     }
 
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 
   function parseMetadataFailure(data) {
     const message = `An error occurred while accessing ${layerJsonResource.url}.`;
-    metadataError = TileProviderError.handleError(
+    metadataError = TileProviderError.reportError(
       metadataError,
       that,
       that._errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined,
-      requestLayerJson
+      message
     );
+    if (metadataError.retry) {
+      return requestLayerJson();
+    }
+    return Promise.reject(new RuntimeError(message));
   }
 
   function metadataSuccess(data) {
-    parseMetadataSuccess(data).then(function () {
+    return parseMetadataSuccess(data).then(function () {
       if (defined(metadataError)) {
         return;
       }
@@ -453,27 +446,26 @@ function CesiumTerrainProvider(options) {
       }
 
       that._ready = true;
-      that._readyPromise.resolve(true);
+      return Promise.resolve(true);
     });
   }
 
   function metadataFailure(data) {
     // If the metadata is not found, assume this is a pre-metadata heightmap tileset.
     if (defined(data) && data.statusCode === 404) {
-      metadataSuccess({
+      return metadataSuccess({
         tilejson: "2.1.0",
         format: "heightmap-1.0",
         version: "1.0.0",
         scheme: "tms",
         tiles: ["{z}/{x}/{y}.terrain?v={version}"],
       });
-      return;
     }
-    parseMetadataFailure(data);
+    return parseMetadataFailure(data);
   }
 
   function requestLayerJson() {
-    Promise.resolve(layerJsonResource.fetchJson())
+    return Promise.resolve(layerJsonResource.fetchJson())
       .then(metadataSuccess)
       .catch(metadataFailure);
   }
@@ -917,6 +909,9 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   }
 
   return promise.then(function (buffer) {
+    if (!defined(buffer)) {
+      return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
+    }
     if (defined(provider._heightmapStructure)) {
       return createHeightmapTerrainData(provider, buffer, level, x, y);
     }
@@ -1008,7 +1003,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 

@@ -96,7 +96,7 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
   batchTableByteLength: {
     get: function () {
       if (defined(this._batchTable)) {
-        return this._batchTable.memorySizeInBytes;
+        return this._batchTable.batchTableByteLength;
       }
       return 0;
     },

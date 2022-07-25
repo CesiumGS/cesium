@@ -2,6 +2,7 @@ import {
   combine,
   ComponentDatatype,
   GltfLoader,
+  ModelExperimentalStatistics,
   ModelExperimentalType,
   MorphTargetsPipelineStage,
   Resource,
@@ -83,6 +84,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
+          statistics: new ModelExperimentalStatistics(),
           type: ModelExperimentalType.TILE_GLTF,
         },
         runtimeNode: {
@@ -154,6 +156,7 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
+          statistics: new ModelExperimentalStatistics(),
           type: ModelExperimentalType.TILE_GLTF,
         },
         runtimeNode: {

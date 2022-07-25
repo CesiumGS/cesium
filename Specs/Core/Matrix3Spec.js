@@ -1,8 +1,12 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  HeadingPitchRoll,
+  Matrix3,
+  Quaternion,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 import createPackableArraySpecs from "../createPackableArraySpecs.js";
 

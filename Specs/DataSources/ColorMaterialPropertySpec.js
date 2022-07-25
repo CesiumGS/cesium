@@ -1,9 +1,11 @@
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Color,
+  JulianDate,
+  TimeInterval,
+  ColorMaterialProperty,
+  ConstantProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/ColorMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

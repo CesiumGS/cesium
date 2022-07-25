@@ -24,6 +24,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Select a Test to Run](#select-a-test-to-run)
       - [Run Only WebGL Category Tests](#run-only-webgl-category-tests)
       - [Run Only Non-WebGL Category Tests](#run-only-non-webgl-category-tests)
+      - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
     - [Run Coverage](#run-coverage)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
@@ -59,11 +60,11 @@ To run all tests with Karma, run `npm run test`.
 
 When all tests pass, output looks like this:
 
-![](test.jpg)
+![Passing Tests Output](test.jpg)
 
 When one or more tests fail, output looks like this:
 
-![](test-fail.jpg)
+![Failing Tests Output](test-fail.jpg)
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
@@ -105,9 +106,9 @@ These tests run quickly (for example, 15 seconds compared to 60) and are very re
 
 #### Run All Tests Against the Minified Release Version of CesiumJS
 
-Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+Most test options load CesiumJS with the unminified build plus a source map, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run minifyRelease`). This option runs the tests using this instead of individual CesiumJS source files. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options. When testing against built Cesium.js, the specs need to be built as well with `npm run build-specs`.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run release`). This option runs the tests using this instead of the unminified build. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 `npm run test-release`
 
@@ -127,7 +128,7 @@ If it is helpful to step through a unit test in a browser debugger, run the test
 
 The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
 
-![](8.jpg)
+![Karma](8.jpg)
 
 ### Running the Tests in the Browser
 
@@ -145,7 +146,7 @@ When one or more tests fail, the page looks like this:
 
 In this case, the number of failing tests is listed at the top, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack. The top several functions of the call stack are inside Jasmine and can be ignored. Above, the file and line of interest for the first failing test starts with an `@`:
 
-```
+```bash
   @at UserContext.<anonymous> (http://localhost:8080/Specs/Core/Cartesian3Spec.js:12:25)
 ```
 
@@ -187,11 +188,11 @@ These tests run quickly (for example, 15 seconds compared to 60) and are very re
 
 #### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
 
-Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+Most test options load CesiumJS with the unminified build plus a source map, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`). This option runs the tests using this instead of individual CesiumJS source files.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run release`). This option runs the tests using this instead of the unminified build.
 
-The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
+The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run release`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
 See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
@@ -203,11 +204,11 @@ To generate a coverage report, run: `npm run coverage`. This will place a report
 
 You'll see a source tree that matches Cesium's own code layout. Each directory shows aggregated results for all files it contains.
 
-![](4.jpg)
+![Coverage Overall](4.jpg)
 
 Click on a directory to see results for each file in that directory. Click on a specific file to see line-by-line coverage for just that file. For example, here is `Core/AssociativeArray`:
 
-![](5.jpg)
+![Coverage Code](5.jpg)
 
 In the left margin, green indicates how many times a line was executed. Many lines, such as comments and semicolons, are not colored since they are not executable.
 
@@ -794,7 +795,7 @@ Advice from [@pjcozzi](https://github.com/pjcozzi):
 
 > Since I wrote the very first CesiumJS test, I have not written a suite - or even individual test - from scratch. I suspect no one does.
 
-![](6.jpg)
+![Jasmine Test Runner](6.jpg)
 
 The first 73 CesiumJS tests from March 2011.
 
@@ -803,9 +804,9 @@ The first 73 CesiumJS tests from March 2011.
 ### Debugger-Aided Incremental Improvements
 
 > Two decades ago, I didn't know what unit tests and code coverage were. I wrote _a little bit of code_, put breakpoints in all the new code paths, and then ran the app in the debugger. When a breakpoint hit, I stepped through the code, looked at the variable values, and verified that the code was doing what I intended. I did this until everything worked and all the breakpoints were hit. Then, I repeated: I added a bit more new code, new breakpoints, and incrementally tested.
-
+>
 > Even today, with modern tools and experience, I never code for hours straight without testing, and I rarely write new code without seeing it execute in the debugger. Debuggers are not a reactive tool for when a bug is found, they are a proactive tool for gaining insight and avoiding surprises.
-
+>
 > Try this approach for yourself!
 
 ## Resources

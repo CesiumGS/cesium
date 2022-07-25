@@ -1,48 +1,51 @@
-import { BoundingSphere } from "../../../Source/Cesium.js";
-import { Cartesian3 } from "../../../Source/Cesium.js";
-import { CartographicGeocoderService } from "../../../Source/Cesium.js";
-import { Clock } from "../../../Source/Cesium.js";
-import { ClockRange } from "../../../Source/Cesium.js";
-import { ClockStep } from "../../../Source/Cesium.js";
-import { Color } from "../../../Source/Cesium.js";
-import { defined } from "../../../Source/Cesium.js";
-import { EllipsoidTerrainProvider } from "../../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../../Source/Cesium.js";
-import { JulianDate } from "../../../Source/Cesium.js";
-import { Matrix4 } from "../../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../../Source/Cesium.js";
-import { ConstantProperty } from "../../../Source/Cesium.js";
-import { DataSourceClock } from "../../../Source/Cesium.js";
-import { DataSourceCollection } from "../../../Source/Cesium.js";
-import { DataSourceDisplay } from "../../../Source/Cesium.js";
-import { Entity } from "../../../Source/Cesium.js";
-import { Camera } from "../../../Source/Cesium.js";
-import { CameraFlightPath } from "../../../Source/Cesium.js";
-import { Cesium3DTileset } from "../../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../../Source/Cesium.js";
-import { SceneMode } from "../../../Source/Cesium.js";
-import { ShadowMode } from "../../../Source/Cesium.js";
-import { TimeDynamicPointCloud } from "../../../Source/Cesium.js";
-import { VoxelPrimitive } from "../../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  CartographicGeocoderService,
+  Clock,
+  ClockRange,
+  ClockStep,
+  Color,
+  defined,
+  EllipsoidTerrainProvider,
+  HeadingPitchRange,
+  JulianDate,
+  Matrix4,
+  TimeIntervalCollection,
+  WebMercatorProjection,
+  ConstantPositionProperty,
+  ConstantProperty,
+  DataSourceClock,
+  DataSourceCollection,
+  DataSourceDisplay,
+  Entity,
+  Camera,
+  CameraFlightPath,
+  Cesium3DTileset,
+  ImageryLayerCollection,
+  SceneMode,
+  ShadowMode,
+  TimeDynamicPointCloud,
+  Animation,
+  BaseLayerPicker,
+  ProviderViewModel,
+  CesiumWidget,
+  ClockViewModel,
+  FullscreenButton,
+  Geocoder,
+  HomeButton,
+  NavigationHelpButton,
+  SceneModePicker,
+  SelectionIndicator,
+  Timeline,
+  GltfVoxelProvider,
+  VoxelPrimitive,
+} from "../../../../Source/Cesium.js";
+
 import createViewer from "../../createViewer.js";
 import DomEventSimulator from "../../DomEventSimulator.js";
 import MockDataSource from "../../MockDataSource.js";
 import pollToPromise from "../../pollToPromise.js";
-import { Animation } from "../../../Source/Cesium.js";
-import { BaseLayerPicker } from "../../../Source/Cesium.js";
-import { ProviderViewModel } from "../../../Source/Cesium.js";
-import { CesiumWidget } from "../../../Source/Cesium.js";
-import { ClockViewModel } from "../../../Source/Cesium.js";
-import { FullscreenButton } from "../../../Source/Cesium.js";
-import { Geocoder } from "../../../Source/Cesium.js";
-import { GltfVoxelProvider } from "../../../Source/Cesium.js";
-import { HomeButton } from "../../../Source/Cesium.js";
-import { NavigationHelpButton } from "../../../Source/Cesium.js";
-import { SceneModePicker } from "../../../Source/Cesium.js";
-import { SelectionIndicator } from "../../../Source/Cesium.js";
-import { Timeline } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/Viewer/Viewer",
@@ -1199,6 +1202,24 @@ describe(
       expect(function () {
         viewer.zoomTo();
       }).toThrowDeveloperError();
+    });
+
+    it("zoomTo returns false if Cesium3DTileset fails to load", function () {
+      viewer = createViewer(container);
+      const tileset = new Cesium3DTileset({
+        url: "foo/bar",
+      });
+
+      return tileset.readyPromise
+        .catch(function (e) {
+          expect(e.toString()).toEqual("Request has failed. Status Code: 404");
+        })
+        .then(function () {
+          return viewer.zoomTo(tileset);
+        })
+        .then((result) => {
+          expect(result).toBe(false);
+        });
     });
 
     it("zoomTo zooms to Cesium3DTileset with default offset when offset not defined", function () {

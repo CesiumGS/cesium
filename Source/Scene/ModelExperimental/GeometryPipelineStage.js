@@ -1,6 +1,7 @@
 import AttributeType from "../AttributeType.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -50,7 +51,8 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
  *
  * If the scene is in either 2D or CV mode, this stage also:
  * <ul>
- *  <li> adds an attribute for the 2D positions
+ *  <li> adds a struct field for the 2D positions
+ *  <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -139,7 +141,16 @@ GeometryPipelineStage.process = function (
     !frameState.scene3DOnly &&
     model._projectTo2D;
 
-  for (let i = 0; i < primitive.attributes.length; i++) {
+  // If the model is instanced, the work for 2D projection will have been done
+  // in InstancingPipelineStage. The attribute struct will be updated with
+  // position2D, but nothing else should be modified.
+  const instanced = defined(renderResources.runtimeNode.node.instances);
+
+  // If the scene is in 3D or the model is instanced, the 2D position attribute
+  // is not needed, so don't increment attributeIndex.
+  const incrementIndexFor2D = use2D && !instanced;
+  const length = primitive.attributes.length;
+  for (let i = 0; i < length; i++) {
     const attribute = primitive.attributes[i];
     const attributeLocationCount = AttributeType.getAttributeLocationCount(
       attribute.type
@@ -147,13 +158,19 @@ GeometryPipelineStage.process = function (
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
 
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(attribute.buffer) && !defined(attribute.constant)) {
+      throw new DeveloperError(
+        "Attributes must be provided as a Buffer or constant value"
+      );
+    }
+    //>>includeEnd('debug');
+
     let index;
     if (attributeLocationCount > 1) {
       index = renderResources.attributeIndex;
       renderResources.attributeIndex += attributeLocationCount;
-    } else if (isPositionAttribute && !use2D) {
-      // If the scene is in 3D, the 2D position attribute is not needed,
-      // so don't increment attributeIndex.
+    } else if (isPositionAttribute && !incrementIndexFor2D) {
       index = 0;
     } else {
       index = renderResources.attributeIndex++;
@@ -164,7 +181,8 @@ GeometryPipelineStage.process = function (
       attribute,
       index,
       attributeLocationCount,
-      use2D
+      use2D,
+      instanced
     );
   }
 
@@ -183,10 +201,15 @@ function processAttribute(
   attribute,
   attributeIndex,
   attributeLocationCount,
-  use2D
+  use2D,
+  instanced
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
+
+  // This indicates to only modify the resources for 2D if the model is
+  // not instanced.
+  const modifyFor2D = use2D && !instanced;
 
   if (attributeLocationCount > 1) {
     // Matrices are stored as multiple attributes, one per column vector.
@@ -201,11 +224,11 @@ function processAttribute(
       renderResources,
       attribute,
       attributeIndex,
-      use2D
+      modifyFor2D
     );
   }
 
-  addAttributeDeclaration(shaderBuilder, attributeInfo, use2D);
+  addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
   // For common attributes like normals and tangents, the code is
@@ -214,9 +237,11 @@ function processAttribute(
     addSemanticDefine(shaderBuilder, attribute);
   }
 
-  // Some GLSL code must be dynamically generated
+  // Dynamically generate GLSL code for the current attribute.
+  // For 2D projection, the position2D field will always be added
+  // to the attributes struct, even if the model is instanced.
   updateAttributesStruct(shaderBuilder, attributeInfo, use2D);
-  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, use2D);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo, modifyFor2D);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -245,7 +270,7 @@ function addAttributeToRenderResources(
   renderResources,
   attribute,
   attributeIndex,
-  use2D
+  modifyFor2D
 ) {
   const quantization = attribute.quantization;
   let type;
@@ -286,7 +311,7 @@ function addAttributeToRenderResources(
 
   renderResources.attributes.push(vertexAttribute);
 
-  if (!isPositionAttribute || !use2D) {
+  if (!isPositionAttribute || !modifyFor2D) {
     return;
   }
 
@@ -381,7 +406,7 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   shaderBuilder.addVarying(glslType, varyingName);
 }
 
-function addAttributeDeclaration(shaderBuilder, attributeInfo, use2D) {
+function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
   const semantic = attributeInfo.attribute.semantic;
   const variableName = attributeInfo.variableName;
 
@@ -402,7 +427,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, use2D) {
     shaderBuilder.addAttribute(glslType, attributeName);
   }
 
-  if (isPosition && use2D) {
+  if (isPosition && modifyFor2D) {
     shaderBuilder.addAttribute("vec3", "a_position2D");
   }
 }

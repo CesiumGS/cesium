@@ -65,6 +65,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+    expect(property.byteLength).toBe(8);
   });
 
   it("constructs properties with stringOffsets and arrayOffsets", function () {
@@ -117,6 +118,7 @@ describe("Scene/MetadataTableProperty", function () {
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
+    expect(property.byteLength).toBe(30);
   });
 
   it("constructs property with EXT_feature_metadata schema", function () {
@@ -168,6 +170,7 @@ describe("Scene/MetadataTableProperty", function () {
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
+    expect(property.byteLength).toBe(33);
   });
 
   it("creates with offset and scale", function () {
@@ -210,6 +213,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.hasValueTransform).toBe(true);
     expect(property.offset).toEqual([-1, -1, -1, -1]);
     expect(property.scale).toEqual([2, 2, 2, 2]);
+    expect(property.byteLength).toBe(8);
   });
 
   it("creates with offset and scale inherited from class property", function () {
@@ -244,6 +248,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.hasValueTransform).toBe(true);
     expect(property.offset).toEqual([-1, -1, -1, -1]);
     expect(property.scale).toEqual([2, 2, 2, 2]);
+    expect(property.byteLength).toBe(8);
   });
 
   it("creates with default offset and scale", function () {
@@ -270,6 +275,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.hasValueTransform).toBe(false);
     expect(property.offset).toEqual([0, 0, 0, 0]);
     expect(property.scale).toEqual([1, 1, 1, 1]);
+    expect(property.byteLength).toBe(8);
   });
 
   it("constructor throws without count", function () {

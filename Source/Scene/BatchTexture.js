@@ -1,8 +1,8 @@
-import arrayFill from "../Core/arrayFill.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
+import createGuid from "../Core/createGuid.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -32,6 +32,8 @@ export default function BatchTexture(options) {
   Check.typeOf.number("options.featuresLength", options.featuresLength);
   Check.typeOf.object("options.owner", options.owner);
   //>>includeEnd('debug');
+
+  this._id = createGuid();
 
   const featuresLength = options.featuresLength;
 
@@ -97,7 +99,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @readonly
    * @private
    */
-  memorySizeInBytes: {
+  byteLength: {
     get: function () {
       let memory = 0;
       if (defined(this._pickTexture)) {
@@ -197,8 +199,7 @@ function getBatchValues(batchTexture) {
   if (!defined(batchTexture._batchValues)) {
     // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
     const byteLength = getByteLength(batchTexture);
-    const bytes = new Uint8Array(byteLength);
-    arrayFill(bytes, 255);
+    const bytes = new Uint8Array(byteLength).fill(255);
     batchTexture._batchValues = bytes;
   }
 
@@ -208,9 +209,8 @@ function getBatchValues(batchTexture) {
 function getShowAlphaProperties(batchTexture) {
   if (!defined(batchTexture._showAlphaProperties)) {
     const byteLength = 2 * batchTexture._featuresLength;
-    const bytes = new Uint8Array(byteLength);
+    const bytes = new Uint8Array(byteLength).fill(255);
     // [Show = true, Alpha = 255]
-    arrayFill(bytes, 255);
     batchTexture._showAlphaProperties = bytes;
   }
   return batchTexture._showAlphaProperties;
@@ -475,6 +475,9 @@ function createPickTexture(batchTexture, context) {
     }
 
     batchTexture._pickTexture = createTexture(batchTexture, context, bytes);
+
+    // Make sure the tileset statistics are updated the frame when the pick
+    // texture is created.
     if (defined(statistics)) {
       statistics.batchTableByteLength += batchTexture._pickTexture.sizeInBytes;
     }
@@ -510,6 +513,9 @@ BatchTexture.prototype.update = function (tileset, frameState) {
     // Create batch texture on-demand
     if (!defined(this._batchTexture)) {
       this._batchTexture = createTexture(this, context, this._batchValues);
+
+      // Make sure the tileset statistics are updated the frame when the
+      // batch texture is created.
       if (defined(this._statistics)) {
         this._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
       }

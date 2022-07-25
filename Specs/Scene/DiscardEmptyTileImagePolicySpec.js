@@ -1,5 +1,8 @@
-import { Resource } from "../../Source/Cesium.js";
-import { DiscardEmptyTileImagePolicy } from "../../Source/Cesium.js";
+import {
+  Resource,
+  DiscardEmptyTileImagePolicy,
+} from "../../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/DiscardEmptyTileImagePolicy", function () {

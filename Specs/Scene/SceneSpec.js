@@ -1,49 +1,54 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  CesiumTerrainProvider,
+  Color,
+  defined,
+  Ellipsoid,
+  GeographicProjection,
+  GeometryInstance,
+  HeadingPitchRoll,
+  JulianDate,
+  PerspectiveFrustum,
+  PixelFormat,
+  Rectangle,
+  RectangleGeometry,
+  RequestScheduler,
+  RuntimeError,
+  TaskProcessor,
+  WebGLConstants,
+  WebMercatorProjection,
+  DrawCommand,
+  Framebuffer,
+  Pass,
+  PixelDatatype,
+  RenderState,
+  ShaderProgram,
+  ShaderSource,
+  Texture,
+  Camera,
+  DirectionalLight,
+  EllipsoidSurfaceAppearance,
+  FrameState,
+  Globe,
+  Material,
+  Primitive,
+  PrimitiveCollection,
+  Scene,
+  SceneTransforms,
+  ScreenSpaceCameraController,
+  SunLight,
+  TweenCollection,
+  Sun,
+  GroundPrimitive,
+  PerInstanceColorAppearance,
+  ColorGeometryInstanceAttribute,
+  Resource,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { TaskProcessor } from "../../Source/Cesium.js";
-import { WebGLConstants } from "../../Source/Cesium.js";
-import { WebMercatorProjection } from "../../Source/Cesium.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { Framebuffer } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { ShaderProgram } from "../../Source/Cesium.js";
-import { ShaderSource } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { DirectionalLight } from "../../Source/Cesium.js";
-import { EllipsoidSurfaceAppearance } from "../../Source/Cesium.js";
-import { FrameState } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
-import { Scene } from "../../Source/Cesium.js";
-import { SceneTransforms } from "../../Source/Cesium.js";
-import { ScreenSpaceCameraController } from "../../Source/Cesium.js";
-import { SunLight } from "../../Source/Cesium.js";
-import { TweenCollection } from "../../Source/Cesium.js";
-import { Sun } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
+
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -89,6 +94,33 @@ describe(
     afterAll(function () {
       scene.destroyForSpecs();
     });
+
+    function returnTileJson(path) {
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          path,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+    }
+
+    function returnQuantizedMeshTileJson() {
+      return returnTileJson(
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json"
+      );
+    }
 
     function createRectangle(rectangle, height) {
       return new Primitive({
@@ -523,19 +555,11 @@ describe(
           new Cartesian3()
         );
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
 
@@ -549,19 +573,11 @@ describe(
           new Cartesian3()
         );
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
 
@@ -575,19 +591,11 @@ describe(
           new Cartesian3()
         );
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
 
@@ -600,20 +608,11 @@ describe(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
           new Cartesian3()
         );
-
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
 
@@ -627,19 +626,11 @@ describe(
           new Cartesian3()
         );
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
 
@@ -653,19 +644,11 @@ describe(
           new Cartesian3()
         );
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
         return expect(s).toRenderAndCall(function () {
-          return pollToPromise(function () {
-            render(s.frameState, s.globe);
-            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
-              0,
-              0,
-              0,
-              0,
-            ]);
-          });
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
         });
       });
     });
@@ -1513,22 +1496,32 @@ describe(
     });
 
     it("Sets terrainProvider", function () {
+      returnQuantizedMeshTileJson();
+
       const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       scene.terrainProvider = new CesiumTerrainProvider({
         url: "//terrain/tiles",
       });
 
-      expect(scene.terrainProvider).toBe(globe.terrainProvider);
-
-      scene.globe = undefined;
-      expect(function () {
-        scene.terrainProvider = new CesiumTerrainProvider({
-          url: "//newTerrain/tiles",
+      return scene.terrainProvider.readyPromise
+        .then(() => {
+          expect(scene.terrainProvider).toBe(globe.terrainProvider);
+          scene.globe = undefined;
+          const newProvider = new CesiumTerrainProvider({
+            url: "//newTerrain/tiles",
+          });
+          return newProvider.readyPromise.then(() => {
+            expect(function () {
+              scene.terrainProvider = newProvider;
+            }).not.toThrow();
+          });
+        })
+        .finally(() => {
+          scene.destroyForSpecs();
+          Resource._Implementations.loadWithXhr =
+            Resource._DefaultImplementations.loadWithXhr;
         });
-      }).not.toThrow();
-
-      scene.destroyForSpecs();
     });
 
     it("Gets terrainProviderChanged", function () {
