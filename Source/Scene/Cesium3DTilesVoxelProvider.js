@@ -10,7 +10,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import GltfLoader from "./GltfLoader.js";
-import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
@@ -422,7 +421,18 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 
   // First load the subtree to check if the tile is available.
   // If the subtree has been requested previously it might still be in the cache.
-  const subtreeCoord = tileCoordinates.getSubtreeCoordinates();
+  let subtreeCoord;
+
+  const isSubtreeRoot =
+    tileCoordinates.isSubtreeRoot() && tileCoordinates.level > 0;
+
+  if (isSubtreeRoot) {
+    // Check availability from the parent subtree so that we don't try fetching a non-existent subtree
+    subtreeCoord = tileCoordinates.getParentSubtreeCoordinates();
+  } else {
+    subtreeCoord = tileCoordinates.getSubtreeCoordinates();
+  }
+
   let subtree = subtreeCache.find(subtreeCoord);
 
   const that = this;
@@ -467,7 +477,17 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   return subtreePromise
     .then(function (subtree) {
       const subtreeLoaderIndex = that._subtreeLoaders.indexOf(subtree);
-      if (!subtree.tileIsAvailableAtCoordinates(tileCoordinates)) {
+
+      let available = false;
+      if (isSubtreeRoot) {
+        available = subtree.childSubtreeIsAvailableAtCoordinates(
+          tileCoordinates
+        );
+      } else {
+        available = subtree.tileIsAvailableAtCoordinates(tileCoordinates);
+      }
+
+      if (!available) {
         if (subtreeLoaderIndex !== -1) {
           that._subtreeLoaders.splice(subtreeLoaderIndex);
         }
