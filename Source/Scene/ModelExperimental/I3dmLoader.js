@@ -589,16 +589,17 @@ function getPositions(featureTable, instancesLength) {
       );
     }
 
+    const decodedPositions = new Float32Array(quantizedPositions.length);
     for (let i = 0; i < quantizedPositions.length / 3; i++) {
-      const quantizedPosition = quantizedPositions[i];
       for (let j = 0; j < 3; j++) {
-        quantizedPositions[3 * i + j] =
-          (quantizedPosition[j] / 65535.0) * quantizedVolumeScale[j] +
+        const index = 3 * i + j;
+        decodedPositions[index] =
+          (quantizedPositions[index] / 65535.0) * quantizedVolumeScale[j] +
           quantizedVolumeOffset[j];
       }
     }
 
-    return quantizedPositions;
+    return decodedPositions;
 
     // eslint-disable-next-line no-else-return
   } else {
