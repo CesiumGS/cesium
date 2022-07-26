@@ -565,42 +565,42 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("model casts shadows onto another model", function () {
+    it("Model casts shadows onto another model", function () {
       box.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(box, floor);
     });
 
-    it("model experimental casts shadows onto another model", function () {
+    it("ModelExperimental casts shadows onto another model", function () {
       boxExperimental.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxExperimental, floor);
     });
 
-    it("translucent model casts shadows onto another model", function () {
+    it("translucent Model casts shadows onto another model", function () {
       boxTranslucent.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucent, floor);
     });
 
-    it("translucent model experimental casts shadows onto another model", function () {
+    it("translucent ModelExperimental casts shadows onto another model", function () {
       boxTranslucentExperimental.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucentExperimental, floor);
     });
 
-    it("model without normals casts shadows onto another model", function () {
+    it("ModelExperimental without normals casts shadows onto another model", function () {
       boxNoNormalsExperimental.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxNoNormalsExperimental, floor);
     });
 
-    it("model with cutout texture casts shadows onto another model", function () {
+    it("Model with cutout texture casts shadows onto another model", function () {
       boxCutout.show = true;
       floor.show = true;
       createCascadedShadowMap();
@@ -652,7 +652,7 @@ describe(
       verifyShadows(primitiveBoxTranslucent, primitiveFloor);
     });
 
-    it("model casts shadow onto globe", function () {
+    it("Model casts shadow onto globe", function () {
       box.show = true;
       scene.globe = new Globe();
       scene.camera.frustum._sseDenominator = 0.005;
@@ -1328,7 +1328,7 @@ describe(
       });
     });
 
-    it("model updates derived commands when the shadow map is dirty", function () {
+    it("Model updates derived commands when the shadow map is dirty", function () {
       const spy1 = spyOn(
         ShadowMap,
         "createReceiveDerivedCommand"

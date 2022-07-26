@@ -1712,7 +1712,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *     <li>POSITION and _BATCHID semantics are required.</li>
    *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
    *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
-   *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>
    *     <li>Only one node is supported.</li>
    *     <li>Only one mesh per node is supported.</li>
    *     <li>Only one primitive per mesh is supported.</li>
