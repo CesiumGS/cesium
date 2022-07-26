@@ -52,6 +52,13 @@ describe(
       "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
     const triangleFanUrl =
       "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
+    const animatedTriangleUrl =
+      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+    const animatedTriangleOffset = new HeadingPitchRange(
+      CesiumMath.PI / 2.0,
+      0,
+      2.0
+    );
 
     const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
@@ -61,26 +68,24 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
     const boxWithCreditsUrl =
       "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
-    const morphPrimitivesTestUrl =
-      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
-    const animatedTriangleUrl =
-      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
-    const animatedTriangleOffset = new HeadingPitchRange(
-      CesiumMath.PI / 2.0,
-      0,
-      2.0
-    );
-    const pointCloudUrl =
-      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const boxArticulationsUrl =
       "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+
+    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const morphPrimitivesTestUrl =
+      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
+    const pointCloudUrl =
+      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+    const twoSidedPlaneUrl =
+      "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+    const riggedFigureUrl =
+      "./Data/Models/rigged-figure-test/rigged-figure-test.gltf";
 
     // prettier-ignore
     const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
@@ -265,34 +270,6 @@ describe(
       });
     });
 
-    it("initializes feature table", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: buildingsMetadata },
-        scene
-      ).then(function (model) {
-        expect(model.ready).toEqual(true);
-        expect(model.featureTables).toBeDefined();
-
-        const featureTable = model.featureTables[0];
-        expect(featureTable).toBeDefined();
-
-        const featuresLength = featureTable.featuresLength;
-        expect(featuresLength).toEqual(10);
-        expect(featureTable.batchTexture).toBeDefined();
-        expect(featureTable.batchTexture._featuresLength).toEqual(10);
-
-        for (let i = 0; i < featuresLength; i++) {
-          const modelFeature = featureTable.getFeature(i);
-          expect(modelFeature instanceof ModelFeature).toEqual(true);
-          expect(modelFeature._featureId).toEqual(i);
-          expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.featureTable).toEqual(featureTable);
-        }
-
-        expect(model._resourcesLoaded).toEqual(true);
-      });
-    });
-
     it("initializes and renders from JSON object", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -442,6 +419,34 @@ describe(
       });
     });
 
+    it("initializes feature table", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model.featureTables).toBeDefined();
+
+        const featureTable = model.featureTables[0];
+        expect(featureTable).toBeDefined();
+
+        const featuresLength = featureTable.featuresLength;
+        expect(featuresLength).toEqual(10);
+        expect(featureTable.batchTexture).toBeDefined();
+        expect(featureTable.batchTexture._featuresLength).toEqual(10);
+
+        for (let i = 0; i < featuresLength; i++) {
+          const modelFeature = featureTable.getFeature(i);
+          expect(modelFeature instanceof ModelFeature).toEqual(true);
+          expect(modelFeature._featureId).toEqual(i);
+          expect(modelFeature.primitive).toEqual(model);
+          expect(modelFeature.featureTable).toEqual(featureTable);
+        }
+
+        expect(model._resourcesLoaded).toEqual(true);
+      });
+    });
+
     it("sets default properties", function () {
       return loadAndZoomToModelExperimental(
         {
@@ -496,7 +501,90 @@ describe(
       });
     });
 
-    it("renders glTF with morph targets", function () {
+    it("renders model without indices", function () {
+      const resource = Resource.createIfNeeded(triangleWithoutIndicesUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: triangleWithoutIndicesUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0.0, 0.0, 100.0)
+            ),
+          },
+          scene
+        ).then(function (model) {
+          // Orient the camera so it doesn't back-face cull the triangle.
+          const center = model.boundingSphere.center;
+          const range = 4.0 * model.boundingSphere.radius;
+          scene.camera.lookAt(
+            center,
+            new HeadingPitchRange(-CesiumMath.PI_OVER_TWO, 0, range)
+          );
+
+          // The triangle's diagonal edge is slightly out of frame.
+          scene.camera.moveDown(0.1);
+
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
+        });
+      });
+    });
+
+    it("renders model with double-sided material", function () {
+      const resource = Resource.createIfNeeded(twoSidedPlaneUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: twoSidedPlaneUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0.0, 0.0, 100.0)
+            ),
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+          };
+
+          const center = model.boundingSphere.center;
+          const range = 4.0 * model.boundingSphere.radius;
+          scene.camera.lookAt(
+            center,
+            new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range)
+          );
+
+          // The top of the double-sided plane should render brightly, since
+          // its normal is pointing towards the light
+          let result;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            result = rgba;
+          });
+
+          scene.camera.lookAt(
+            center,
+            new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range)
+          );
+
+          // The bottom of the plane should render darker than the top, since
+          // its normal is pointing away from the light.
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+            expect(rgba[0]).toBeLessThan(result[0]);
+            expect(rgba[1]).toBeLessThan(result[1]);
+            expect(rgba[2]).toBeLessThan(result[2]);
+            expect(rgba[3]).toEqual(result[3]);
+          });
+        });
+      });
+    });
+
+    it("renders model with morph targets", function () {
       const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
@@ -510,7 +598,11 @@ describe(
           // contains black, which can confuse the test.
           const renderOptions = {
             backgroundColor: Color.BLUE,
+            zoomToModel: false,
           };
+
+          // Move the camera down slightly so the morphed part is in view.
+          scene.camera.moveDown(0.25);
 
           // The model is a plane made three-dimensional by morph targets.
           // If morph targets aren't supported, the model won't appear in the camera.
@@ -519,57 +611,59 @@ describe(
       });
     });
 
-    it("renders model without animations added", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: animatedTriangleUrl,
-          offset: animatedTriangleOffset,
-        },
-        scene
-      ).then(function (model) {
-        const animationCollection = model.activeAnimations;
-        expect(animationCollection).toBeDefined();
-        expect(animationCollection.length).toBe(0);
+    describe("animations", function () {
+      it("renders model without animations added", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: animatedTriangleUrl,
+            offset: animatedTriangleOffset,
+          },
+          scene
+        ).then(function (model) {
+          const animationCollection = model.activeAnimations;
+          expect(animationCollection).toBeDefined();
+          expect(animationCollection.length).toBe(0);
 
-        // Move camera so that the triangle is in view.
-        scene.camera.moveDown(0.5);
-        verifyRender(model, true, {
-          zoomToModel: false,
+          // Move camera so that the triangle is in view.
+          scene.camera.moveDown(0.5);
+          verifyRender(model, true, {
+            zoomToModel: false,
+          });
         });
       });
-    });
 
-    it("renders model with animations added", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: animatedTriangleUrl,
-          offset: animatedTriangleOffset,
-        },
-        scene
-      ).then(function (model) {
-        // Move camera so that the triangle is in view.
-        scene.camera.moveDown(0.5);
+      it("renders model with animations added", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: animatedTriangleUrl,
+            offset: animatedTriangleOffset,
+          },
+          scene
+        ).then(function (model) {
+          // Move camera so that the triangle is in view.
+          scene.camera.moveDown(0.5);
 
-        // The model rotates such that it leaves the view of the camera
-        // halfway into its animation.
-        const startTime = JulianDate.fromDate(
-          new Date("January 1, 2014 12:00:00 UTC")
-        );
-        const animationCollection = model.activeAnimations;
-        animationCollection.add({
-          index: 0,
-          startTime: startTime,
-        });
-        expect(animationCollection.length).toBe(1);
-        verifyRender(model, true, {
-          zoomToModel: false,
-          time: startTime,
-        });
+          // The model rotates such that it leaves the view of the camera
+          // halfway into its animation.
+          const startTime = JulianDate.fromDate(
+            new Date("January 1, 2014 12:00:00 UTC")
+          );
+          const animationCollection = model.activeAnimations;
+          animationCollection.add({
+            index: 0,
+            startTime: startTime,
+          });
+          expect(animationCollection.length).toBe(1);
+          verifyRender(model, true, {
+            zoomToModel: false,
+            time: startTime,
+          });
 
-        const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
-        verifyRender(model, false, {
-          zoomToModel: false,
-          time: time,
+          const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
+          verifyRender(model, false, {
+            zoomToModel: false,
+            time: time,
+          });
         });
       });
     });
@@ -1134,30 +1228,56 @@ describe(
       });
     });
 
-    it("boundingSphere throws if model is not ready", function () {
-      const model = ModelExperimental.fromGltf({
-        url: boxTexturedGlbUrl,
+    describe("boundingSphere", function () {
+      it("boundingSphere throws if model is not ready", function () {
+        const model = ModelExperimental.fromGltf({
+          url: boxTexturedGlbUrl,
+        });
+        expect(function () {
+          return model.boundingSphere;
+        }).toThrowDeveloperError();
       });
-      expect(function () {
-        return model.boundingSphere;
-      }).toThrowDeveloperError();
-    });
 
-    it("boundingSphere works", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      const loadPromise = resource.fetchArrayBuffer();
-      return loadPromise.then(function (buffer) {
-        return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer) },
-          scene
-        ).then(function (model) {
-          const boundingSphere = model.boundingSphere;
-          expect(boundingSphere).toBeDefined();
-          expect(boundingSphere.center).toEqual(new Cartesian3());
-          expect(boundingSphere.radius).toEqualEpsilon(
-            0.8660254037844386,
-            CesiumMath.EPSILON8
-          );
+      it("boundingSphere works", function () {
+        const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+        const loadPromise = resource.fetchArrayBuffer();
+        return loadPromise.then(function (buffer) {
+          return loadAndZoomToModelExperimental(
+            { gltf: new Uint8Array(buffer) },
+            scene
+          ).then(function (model) {
+            const boundingSphere = model.boundingSphere;
+            expect(boundingSphere).toBeDefined();
+            expect(boundingSphere.center).toEqual(new Cartesian3());
+            expect(boundingSphere.radius).toEqualEpsilon(
+              0.8660254037844386,
+              CesiumMath.EPSILON8
+            );
+          });
+        });
+      });
+
+      it("boundingSphere accounts for axis correction", function () {
+        const resource = Resource.createIfNeeded(riggedFigureUrl);
+        const loadPromise = resource.fetchArrayBuffer();
+        return loadPromise.then(function (buffer) {
+          return loadAndZoomToModelExperimental(
+            { gltf: new Uint8Array(buffer) },
+            scene
+          ).then(function (model) {
+            // The bounding sphere should transform from z-forward
+            // to x-forward.
+            const boundingSphere = model.boundingSphere;
+            expect(boundingSphere).toBeDefined();
+            expect(boundingSphere.center).toEqualEpsilon(
+              new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
+              CesiumMath.EPSILON3
+            );
+            expect(boundingSphere.radius).toEqualEpsilon(
+              0.9484635280120018,
+              CesiumMath.EPSILON3
+            );
+          });
         });
       });
     });
@@ -2116,6 +2236,211 @@ describe(
       });
     });
 
+    // These functions assume that model.color = Color.RED
+    function verifyHighlightColor(rgba) {
+      expect(rgba[0]).toBeGreaterThan(0);
+      expect(rgba[0]).toBeLessThan(255);
+      expect(rgba[1]).toEqual(0);
+      expect(rgba[2]).toEqual(0);
+      expect(rgba[3]).toEqual(255);
+    }
+
+    function verifyReplaceColor(rgba) {
+      expect(rgba[0]).toEqual(255);
+      expect(rgba[1]).toEqual(0);
+      expect(rgba[2]).toEqual(0);
+      expect(rgba[3]).toEqual(255);
+    }
+
+    // Assumes colorBlendAmount = 0.5;
+    function verifyMixColor(rgba) {
+      expect(rgba[0]).toBeGreaterThan(0);
+      expect(rgba[0]).toBeLessThan(255);
+      expect(rgba[1]).toBeGreaterThan(0);
+      expect(rgba[1]).toBeLessThan(255);
+      expect(rgba[2]).toBeGreaterThan(0);
+      expect(rgba[2]).toBeLessThan(255);
+      expect(rgba[3]).toEqual(255);
+    }
+
+    describe("colorBlendMode", function () {
+      it("initializes with ColorBlendMode.HIGHLIGHT", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            color: Color.RED,
+            colorBlendMode: ColorBlendMode.HIGHLIGHT,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyHighlightColor(rgba);
+          });
+        });
+      });
+
+      it("initializes with ColorBlendMode.REPLACE", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            color: Color.RED,
+            colorBlendMode: ColorBlendMode.REPLACE,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.REPLACE);
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyReplaceColor(rgba);
+          });
+        });
+      });
+
+      it("initializes with ColorBlendMode.MIX", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            color: Color.RED,
+            colorBlendMode: ColorBlendMode.MIX,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.MIX);
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyMixColor(rgba);
+          });
+        });
+      });
+
+      it("toggles colorBlendMode", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            color: Color.RED,
+            colorBlendMode: ColorBlendMode.REPLACE,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.REPLACE);
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyReplaceColor(rgba);
+          });
+
+          model.colorBlendMode = ColorBlendMode.HIGHLIGHT;
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyHighlightColor(rgba);
+          });
+
+          model.colorBlendMode = ColorBlendMode.MIX;
+          expect(model.colorBlendMode).toEqual(ColorBlendMode.MIX);
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyMixColor(rgba);
+          });
+        });
+      });
+    });
+
+    describe("colorBlendAmount", function () {
+      it("initializes with colorBlendAmount", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            color: Color.RED,
+            colorBlendMode: ColorBlendMode.MIX,
+            colorBlendAmount: 1.0,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.colorBlendAmount).toEqual(1.0);
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          // colorBlendAmount = 1.0 is visually equivalent to
+          // ColorBlendMode.REPLACE
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyReplaceColor(rgba);
+          });
+        });
+      });
+
+      it("changing colorBlendAmount works", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2456659.0004050927),
+          };
+
+          let originalColor;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            originalColor = rgba;
+          });
+
+          model.color = Color.RED;
+          model.colorBlendMode = ColorBlendMode.MIX;
+          model.colorBlendAmount = 1.0;
+          expect(model.colorBlendAmount).toEqual(1.0);
+
+          // colorBlendAmount = 1.0 is visually equivalent to
+          // ColorBlendMode.REPLACE
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyReplaceColor(rgba);
+          });
+
+          model.colorBlendAmount = 0.5;
+          expect(model.colorBlendAmount).toEqual(0.5);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            verifyMixColor(rgba);
+          });
+
+          model.colorBlendAmount = 0.0;
+          expect(model.colorBlendAmount).toEqual(0.0);
+          // colorBlendAmount = 0.0 is visually equivalent to
+          // having no color applied to the model.
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toEqual(originalColor[0]);
+            expect(rgba[1]).toEqual(originalColor[1]);
+            expect(rgba[2]).toEqual(originalColor[2]);
+            expect(rgba[3]).toEqual(originalColor[3]);
+          });
+        });
+      });
+    });
+
     describe("silhouette", function () {
       it("initializes with silhouette size", function () {
         return loadAndZoomToModelExperimental(
@@ -2777,6 +3102,56 @@ describe(
               CesiumMath.EPSILON3
             );
           });
+        });
+      });
+    });
+
+    describe("cull", function () {
+      it("enables culling", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            cull: true,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.cull).toEqual(true);
+
+          // Commands should be submitted while viewing the model.
+          scene.renderForSpecs();
+          expect(scene.frustumCommandsList.length).toBeGreaterThan(0);
+
+          // Commands should not be submitted when model is out of view.
+          model.modelMatrix = Matrix4.fromTranslation(
+            new Cartesian3(100.0, 0.0, 0.0)
+          );
+          scene.renderForSpecs();
+          expect(scene.frustumCommandsList.length).toEqual(0);
+        });
+      });
+
+      // This test passes for Model but fails for ModelExperimental.
+      xit("disables culling", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            cull: false,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.cull).toEqual(false);
+
+          // Commands should be submitted while viewing the model.
+          scene.renderForSpecs();
+          const length = scene.frustumCommandsList.length;
+          expect(length).toBeGreaterThan(0);
+
+          // Commands should still be submitted when model is out of view.
+          model.modelMatrix = Matrix4.fromTranslation(
+            new Cartesian3(100.0, 0.0, 0.0)
+          );
+          scene.renderForSpecs();
+          expect(scene.frustumCommandsList.length).toEqual(length);
         });
       });
     });
