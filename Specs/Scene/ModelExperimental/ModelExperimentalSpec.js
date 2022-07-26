@@ -12,6 +12,7 @@ import {
   defaultValue,
   defined,
   DistanceDisplayCondition,
+  DracoLoader,
   Ellipsoid,
   Event,
   FeatureDetection,
@@ -48,34 +49,26 @@ describe(
 
     const triangleWithoutIndicesUrl =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
-    const triangleStripUrl =
-      "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
-    const triangleFanUrl =
-      "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
-    const animatedTriangleUrl =
-      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
-    const animatedTriangleOffset = new HeadingPitchRange(
-      CesiumMath.PI / 2.0,
-      0,
-      2.0
-    );
 
+    const boxTexturedGltfUrl =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
     const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    const boxTexturedGltfUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
-    const boxWithCreditsUrl =
-      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
+
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
-    const boxBackFaceCullingUrl =
-      "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
-    const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
     const boxArticulationsUrl =
       "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+    // prettier-ignore
+    const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
+      1, 0, 0, 0,
+      0, 0, 1, 0,
+      0, -1, 0, 0,
+      0, 0, 0, 1
+    ]);
 
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const morphPrimitivesTestUrl =
@@ -84,16 +77,13 @@ describe(
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const twoSidedPlaneUrl =
       "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+    const vertexColorTestUrl =
+      "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
+    const emissiveTextureUrl = "./Data/Models/PBR/BoxEmissive/BoxEmissive.gltf";
     const riggedFigureUrl =
       "./Data/Models/rigged-figure-test/rigged-figure-test.gltf";
-
-    // prettier-ignore
-    const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
-      1, 0, 0, 0,
-      0, 0, 1, 0,
-      0, -1, 0, 0,
-      0, 0, 0, 1
-    ]);
+    const dracoCesiumManUrl =
+      "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -110,7 +100,6 @@ describe(
     let scene;
     let scene2D;
     let sceneCV;
-    let sceneWithWebgl2;
 
     beforeAll(function () {
       scene = createScene();
@@ -120,26 +109,18 @@ describe(
 
       sceneCV = createScene();
       sceneCV.morphToColumbusView(0.0);
-
-      sceneWithWebgl2 = createScene({
-        contextOptions: {
-          requestWebgl2: true,
-        },
-      });
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
       scene2D.destroyForSpecs();
       sceneCV.destroyForSpecs();
-      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
-      sceneWithWebgl2.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -154,6 +135,9 @@ describe(
     }
 
     const scratchBytes = [];
+    const defaultDate = JulianDate.fromDate(
+      new Date("January 1, 2014 12:00:00 UTC")
+    );
 
     function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
@@ -174,10 +158,7 @@ describe(
       targetScene.backgroundColor = backgroundColor;
       const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
 
-      const time = defaultValue(
-        options.time,
-        JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"))
-      );
+      const time = defaultValue(options.time, defaultDate);
 
       expect({
         scene: targetScene,
@@ -532,6 +513,42 @@ describe(
       });
     });
 
+    it("renders model with vertex colors", function () {
+      const resource = Resource.createIfNeeded(vertexColorTestUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: vertexColorTestUrl,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
+          // Move the camera to the blue plane.
+          scene.camera.moveLeft(0.5);
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(255);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          // Move the camera to the red plane.
+          scene.camera.moveRight(1.0);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toEqual(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+    });
+
     it("renders model with double-sided material", function () {
       const resource = Resource.createIfNeeded(twoSidedPlaneUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -547,7 +564,7 @@ describe(
         ).then(function (model) {
           const renderOptions = {
             scene: scene,
-            time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+            time: defaultDate,
           };
 
           const center = model.boundingSphere.center;
@@ -584,6 +601,33 @@ describe(
       });
     });
 
+    // This test works for Model but does not work for ModelExperimental.
+    xit("renders model with emissive texture", function () {
+      const resource = Resource.createIfNeeded(emissiveTextureUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: emissiveTextureUrl,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            // Emissive texture is red
+            expect(rgba[0]).toBeGreaterThan(20);
+            expect(rgba[1]).toBeLessThan(20);
+            expect(rgba[2]).toBeLessThan(20);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+    });
+
     it("renders model with morph targets", function () {
       const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -611,7 +655,66 @@ describe(
       });
     });
 
+    it("renders Draco-compressed model", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: dracoCesiumManUrl },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+      });
+    });
+
+    it("fails to load with Draco decoding error", function () {
+      const readyPromise = pollToPromise(function () {
+        return DracoLoader._taskProcessorReady;
+      });
+      DracoLoader._getDecoderTaskProcessor();
+      return readyPromise
+        .then(function () {
+          const decoder = DracoLoader._getDecoderTaskProcessor();
+          spyOn(decoder, "scheduleTask").and.callFake(function () {
+            return Promise.reject({ message: "Custom error" });
+          });
+
+          const model = scene.primitives.add(
+            ModelExperimental.fromGltf({
+              url: dracoCesiumManUrl,
+            })
+          );
+
+          return Promise.all([
+            pollToPromise(
+              function () {
+                scene.renderForSpecs();
+                return model.loader._state === 7; // FAILED
+              },
+              { timeout: 10000 }
+            ),
+            model.readyPromise,
+          ]);
+        })
+        .then(function (e) {
+          fail("Should not resolve");
+        })
+        .catch(function (e) {
+          expect(e).toBeDefined();
+          expect(
+            e.message.includes(`Failed to load model: ${dracoCesiumManUrl}`)
+          ).toBe(true);
+          expect(e.message.includes(`Failed to load Draco`)).toBe(true);
+          expect(e.message.includes(`Custom error`)).toBe(true);
+        });
+    });
+
     describe("animations", function () {
+      const animatedTriangleUrl =
+        "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+      const animatedTriangleOffset = new HeadingPitchRange(
+        CesiumMath.PI / 2.0,
+        0,
+        2.0
+      );
+
       it("renders model without animations added", function () {
         return loadAndZoomToModelExperimental(
           {
@@ -645,9 +748,7 @@ describe(
 
           // The model rotates such that it leaves the view of the camera
           // halfway into its animation.
-          const startTime = JulianDate.fromDate(
-            new Date("January 1, 2014 12:00:00 UTC")
-          );
+          const startTime = defaultDate;
           const animationCollection = model.activeAnimations;
           animationCollection.add({
             index: 0,
@@ -666,6 +767,22 @@ describe(
           });
         });
       });
+
+      it("adds animation to draco-compressed model", function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: dracoCesiumManUrl },
+          scene
+        ).then(function (model) {
+          verifyRender(model, true);
+
+          const animationCollection = model.activeAnimations;
+          const animation = animationCollection.add({
+            index: 0,
+          });
+          expect(animation).toBeDefined();
+          expect(animationCollection.length).toBe(1);
+        });
+      });
     });
 
     it("show works", function () {
@@ -679,6 +796,7 @@ describe(
           expect(model.ready).toEqual(true);
           expect(model.show).toEqual(false);
           verifyRender(model, false);
+
           model.show = true;
           expect(model.show).toEqual(true);
           verifyRender(model, true);
@@ -864,6 +982,9 @@ describe(
     });
 
     describe("credits", function () {
+      const boxWithCreditsUrl =
+        "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
+
       it("initializes with credit", function () {
         const credit = new Credit("User Credit");
         const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
@@ -1089,6 +1210,29 @@ describe(
     });
 
     describe("debugWireframe", function () {
+      const triangleStripUrl =
+        "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+      const triangleFanUrl =
+        "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
+
+      let sceneWithWebgl2;
+
+      beforeAll(function () {
+        sceneWithWebgl2 = createScene({
+          contextOptions: {
+            requestWebgl2: true,
+          },
+        });
+      });
+
+      afterEach(function () {
+        sceneWithWebgl2.primitives.removeAll();
+      });
+
+      afterAll(function () {
+        sceneWithWebgl2.destroyForSpecs();
+      });
+
       it("debugWireframe works for WebGL1 if enableDebugWireframe is true", function () {
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
@@ -2201,7 +2345,7 @@ describe(
         ).then(function (model) {
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
 
           let result;
@@ -2277,9 +2421,8 @@ describe(
 
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
-
           expect(renderOptions).toRenderAndCall(function (rgba) {
             verifyHighlightColor(rgba);
           });
@@ -2299,9 +2442,8 @@ describe(
 
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
-
           expect(renderOptions).toRenderAndCall(function (rgba) {
             verifyReplaceColor(rgba);
           });
@@ -2321,9 +2463,8 @@ describe(
 
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
-
           expect(renderOptions).toRenderAndCall(function (rgba) {
             verifyMixColor(rgba);
           });
@@ -2343,9 +2484,8 @@ describe(
 
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
-
           expect(renderOptions).toRenderAndCall(function (rgba) {
             verifyReplaceColor(rgba);
           });
@@ -2382,9 +2522,8 @@ describe(
 
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
-
           // colorBlendAmount = 1.0 is visually equivalent to
           // ColorBlendMode.REPLACE
           expect(renderOptions).toRenderAndCall(function (rgba) {
@@ -2402,7 +2541,7 @@ describe(
         ).then(function (model) {
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
 
           let originalColor;
@@ -2731,7 +2870,7 @@ describe(
         ).then(function (model) {
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
 
           let result;
@@ -2759,7 +2898,7 @@ describe(
         ).then(function (model) {
           const renderOptions = {
             scene: scene,
-            time: new JulianDate(2456659.0004050927),
+            time: defaultDate,
           };
 
           let result;
@@ -3157,6 +3296,14 @@ describe(
     });
 
     describe("back-face culling", function () {
+      const boxBackFaceCullingUrl =
+        "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
+      const boxBackFaceCullingOffset = new HeadingPitchRange(
+        Math.PI / 2,
+        0,
+        2.0
+      );
+
       it("enables back-face culling", function () {
         return loadAndZoomToModelExperimental(
           {
@@ -3268,7 +3415,7 @@ describe(
       ).then(function (model) {
         const renderOptions = {
           scene: scene,
-          time: new JulianDate(2456659.0004050927),
+          time: defaultDate,
         };
 
         // The model should look the same whether it has -1.0 scale or 1.0 scale.
@@ -3492,6 +3639,57 @@ describe(
 
           model.clippingPlanes = undefined;
           expect(clippingPlanes.isDestroyed()).toBe(true);
+        });
+      });
+    });
+
+    describe("statistics", function () {
+      it("gets triangle count", function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          const statistics = model.statistics;
+          expect(statistics.trianglesLength).toEqual(12);
+        });
+      });
+
+      it("gets point count", function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: pointCloudUrl },
+          scene
+        ).then(function (model) {
+          const statistics = model.statistics;
+          expect(statistics.pointsLength).toEqual(2500);
+        });
+      });
+
+      it("gets memory usage for geometry and textures", function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: boxTexturedGltfUrl, incrementallyLoadTextures: false },
+          scene
+        ).then(function (model) {
+          const expectedGeometryMemory = 840;
+          // Texture is 256*256 and then is mipmapped
+          const expectedTextureMemory = Math.floor(256 * 256 * 4 * (4 / 3));
+
+          const statistics = model.statistics;
+          expect(statistics.geometryByteLength).toEqual(expectedGeometryMemory);
+          expect(statistics.texturesByteLength).toEqual(expectedTextureMemory);
+        });
+      });
+
+      it("gets memory usage for property tables", function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: buildingsMetadata },
+          scene
+        ).then(function (model) {
+          const expectedPropertyTableMemory = 110;
+
+          const statistics = model.statistics;
+          expect(statistics.propertyTablesByteLength).toEqual(
+            expectedPropertyTableMemory
+          );
         });
       });
     });

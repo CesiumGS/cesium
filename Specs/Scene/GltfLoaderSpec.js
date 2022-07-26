@@ -113,6 +113,7 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+    const multiUvTest = "./Data/Models/MultiUVTest/MultiUVTest.glb";
 
     let scene;
     let sceneWithWebgl2;
@@ -1065,6 +1066,51 @@ describe(
         const material1 = primitive1.material;
         expect(material0.unlit).toBe(true);
         expect(material1.unlit).toBe(true);
+      });
+    });
+
+    it("loads MultiUVTest", function () {
+      return loadGltf(multiUvTest).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const emissiveTexture = material.emissiveTexture;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const tangentAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TANGENT
+        );
+        const texcoordAttribute0 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        const texcoordAttribute1 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          1
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(tangentAttribute).toBeDefined();
+        expect(texcoordAttribute0).toBeDefined();
+        expect(texcoordAttribute1).toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(emissiveTexture.texCoord).toBe(1);
       });
     });
 
