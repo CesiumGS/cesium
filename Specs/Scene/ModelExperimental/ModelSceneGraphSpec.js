@@ -7,7 +7,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   ModelColorPipelineStage,
-  ModelExperimentalSceneGraph,
+  ModelSceneGraph,
   ModelExperimentalUtility,
   Pass,
   ResourceCache,
@@ -16,7 +16,7 @@ import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
-  "Scene/ModelExperimental/ModelExperimentalSceneGraph",
+  "Scene/ModelExperimental/ModelSceneGraph",
   function () {
     const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
     const vertexColorGltfUrl =
@@ -152,14 +152,8 @@ describe(
     });
 
     it("builds draw commands for each primitive", function () {
-      spyOn(
-        ModelExperimentalSceneGraph.prototype,
-        "buildDrawCommands"
-      ).and.callThrough();
-      spyOn(
-        ModelExperimentalSceneGraph.prototype,
-        "getDrawCommands"
-      ).and.callThrough();
+      spyOn(ModelSceneGraph.prototype, "buildDrawCommands").and.callThrough();
+      spyOn(ModelSceneGraph.prototype, "getDrawCommands").and.callThrough();
       return loadAndZoomToModelExperimental(
         { gltf: parentGltfUrl },
         scene
@@ -175,12 +169,8 @@ describe(
         const frameState = scene.frameState;
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(
-          ModelExperimentalSceneGraph.prototype.buildDrawCommands
-        ).toHaveBeenCalled();
-        expect(
-          ModelExperimentalSceneGraph.prototype.getDrawCommands
-        ).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.getDrawCommands).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
 
         expect(model._drawCommandsBuilt).toEqual(true);
@@ -189,12 +179,8 @@ describe(
         model._drawCommandsBuilt = false;
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(
-          ModelExperimentalSceneGraph.prototype.buildDrawCommands
-        ).toHaveBeenCalled();
-        expect(
-          ModelExperimentalSceneGraph.prototype.getDrawCommands
-        ).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.getDrawCommands).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
       });
     });
@@ -406,7 +392,7 @@ describe(
 
     it("throws for undefined options.model", function () {
       expect(function () {
-        return new ModelExperimentalSceneGraph({
+        return new ModelSceneGraph({
           model: undefined,
           modelComponents: {},
         });
@@ -415,7 +401,7 @@ describe(
 
     it("throws for undefined options.modelComponents", function () {
       expect(function () {
-        return new ModelExperimentalSceneGraph({
+        return new ModelSceneGraph({
           model: {},
           modelComponents: undefined,
         });

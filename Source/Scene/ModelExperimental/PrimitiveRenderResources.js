@@ -11,7 +11,7 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * at the primitive level. Again, properties are inherited from the parent.
  *
  * @param {NodeRenderResources} nodeRenderResources The node resources to inherit from
- * @param {ModelExperimentalRuntimePrimitive} runtimePrimitive The primitive.
+ * @param {ModelRuntimePrimitive} runtimePrimitive The primitive.
  *
  * @private
  */
@@ -37,7 +37,7 @@ export default function PrimitiveRenderResources(
   /**
    * A reference to the runtime node. Inherited from the node render resources.
    *
-   * @type {ModelExperimentalRuntimeNode}
+   * @type {ModelRuntimeNode}
    * @readonly
    *
    * @private
@@ -133,7 +133,7 @@ export default function PrimitiveRenderResources(
   /**
    * A reference to the runtime primitive.
    *
-   * @type {ModelExperimentalRuntimePrimitive}
+   * @type {ModelRuntimePrimitive}
    * @readonly
    *
    * @private

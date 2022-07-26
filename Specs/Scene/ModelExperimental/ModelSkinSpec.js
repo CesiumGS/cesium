@@ -1,6 +1,6 @@
-import { Matrix4, ModelExperimentalSkin } from "../../../Source/Cesium.js";
+import { Matrix4, ModelSkin } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
+describe("Scene/ModelExperimental/ModelSkin", function () {
   const mockNodes = [{ index: 0 }, { index: 1 }, { index: 2 }];
   const mockRuntimeNodes = [
     {
@@ -34,7 +34,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
 
   it("throws for undefined skin", function () {
     expect(function () {
-      return new ModelExperimentalSkin({
+      return new ModelSkin({
         skin: undefined,
         sceneGraph: mockSceneGraph,
       });
@@ -43,7 +43,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
 
   it("throws for undefined scene graph", function () {
     expect(function () {
-      return new ModelExperimentalSkin({
+      return new ModelSkin({
         skin: mockSkin,
         sceneGraph: undefined,
       });
@@ -51,7 +51,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
   });
 
   it("constructs", function () {
-    const skin = new ModelExperimentalSkin({
+    const skin = new ModelSkin({
       skin: mockSkin,
       sceneGraph: mockSceneGraph,
     });

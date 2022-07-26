@@ -13,9 +13,9 @@ import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
-import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
-import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelSceneGraph from "./ModelSceneGraph.js";
+import ModelStatistics from "./ModelStatistics.js";
+import ModelType from "./ModelType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
@@ -108,14 +108,14 @@ export default function ModelExperimental(options) {
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
-   * ModelExperimentalType is part of the private API.
+   * ModelType is part of the private API.
    *
-   * @type {ModelExperimentalType}
+   * @type {ModelType}
    * @readonly
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
+  this.type = defaultValue(options.type, ModelType.GLTF);
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -155,7 +155,7 @@ export default function ModelExperimental(options) {
   this._computedScale = this._clampedScale;
 
   /**
-   * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
+   * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
    *
    * @type {Number}
@@ -251,7 +251,7 @@ export default function ModelExperimental(options) {
   this._pickIds = [];
 
   // The model's bounding sphere and its initial radius are computed
-  // in ModelExperimentalSceneGraph.
+  // in ModelSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
@@ -362,7 +362,7 @@ export default function ModelExperimental(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
-  this._statistics = new ModelExperimentalStatistics();
+  this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
@@ -497,7 +497,7 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    const sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelSceneGraph({
       model: model,
       modelComponents: components,
     });
@@ -628,7 +628,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalStatistics}
+   * @type {ModelStatistics}
    * @readonly
    *
    * @private
@@ -750,7 +750,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalSceneGraph}
+   * @type {ModelSceneGraph}
    * @private
    */
   sceneGraph: {
@@ -2423,9 +2423,7 @@ ModelExperimental.fromGltf = function (options) {
   const loader = new GltfLoader(loaderOptions);
 
   const is3DTiles = defined(options.content);
-  const type = is3DTiles
-    ? ModelExperimentalType.TILE_GLTF
-    : ModelExperimentalType.GLTF;
+  const type = is3DTiles ? ModelType.TILE_GLTF : ModelType.GLTF;
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = loaderOptions.gltfResource;
@@ -2455,11 +2453,7 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_B3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2475,11 +2469,7 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_PNTS,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2503,11 +2493,7 @@ ModelExperimental.fromI3dm = function (options) {
   };
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_I3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2522,7 +2508,7 @@ ModelExperimental.fromGeoJson = function (options) {
   const loader = new GeoJsonLoader(loaderOptions);
   const modelOptions = makeModelOptions(
     loader,
-    ModelExperimentalType.TILE_GEOJSON,
+    ModelType.TILE_GEOJSON,
     options
   );
   const model = new ModelExperimental(modelOptions);
@@ -2548,7 +2534,7 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
 ModelExperimental.prototype.applyStyle = function (style) {
   this.resetDrawCommands();
 
-  const isPnts = this.type === ModelExperimentalType.TILE_PNTS;
+  const isPnts = this.type === ModelType.TILE_PNTS;
 
   const hasFeatureTable =
     defined(this.featureTableId) &&

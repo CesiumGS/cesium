@@ -21,14 +21,14 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.AnimationChannel} options.channel The corresponding animation channel components from the 3D model.
  * @param {ModelExperimentalAnimation} options.runtimeAnimation The runtime animation containing this channel.
- * @param {ModelExperimentalRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
+ * @param {ModelRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
  *
- * @alias ModelExperimentalAnimationChannel
+ * @alias ModelAnimationChannel
  * @constructor
  *
  * @private
  */
-function ModelExperimentalAnimationChannel(options) {
+function ModelAnimationChannel(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const channel = options.channel;
@@ -52,11 +52,11 @@ function ModelExperimentalAnimationChannel(options) {
   initialize(this);
 }
 
-Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
+Object.defineProperties(ModelAnimationChannel.prototype, {
   /**
    * The glTF animation channel.
    *
-   * @memberof ModelExperimentalAnimationChannel.prototype
+   * @memberof ModelAnimationChannel.prototype
    *
    * @type {ModelComponents.AnimationChannel}
    * @readonly
@@ -72,7 +72,7 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   /**
    * The runtime animation that owns this channel.
    *
-   * @memberof ModelExperimentalAnimationChannel.prototype
+   * @memberof ModelAnimationChannel.prototype
    *
    * @type {ModelExperimentalAnimation}
    * @readonly
@@ -88,9 +88,9 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   /**
    * The runtime node that this channel animates.
    *
-   * @memberof ModelExperimentalAnimationChannel.prototype
+   * @memberof ModelAnimationChannel.prototype
    *
-   * @type {ModelExperimentalRuntimeNode}
+   * @type {ModelRuntimeNode}
    * @readonly
    *
    * @private
@@ -104,7 +104,7 @@ Object.defineProperties(ModelExperimentalAnimationChannel.prototype, {
   /**
    * The splines used to evaluate this animation channel.
    *
-   * @memberof ModelExperimentalAnimationChannel.prototype
+   * @memberof ModelAnimationChannel.prototype
    *
    * @type {Spline[]}
    * @readonly
@@ -258,7 +258,7 @@ function initialize(runtimeChannel) {
  *
  * @private
  */
-ModelExperimentalAnimationChannel.prototype.animate = function (time) {
+ModelAnimationChannel.prototype.animate = function (time) {
   const splines = this._splines;
   const path = this._path;
   const model = this._runtimeAnimation.model;
@@ -290,4 +290,4 @@ ModelExperimentalAnimationChannel.prototype.animate = function (time) {
   }
 };
 
-export default ModelExperimentalAnimationChannel;
+export default ModelAnimationChannel;

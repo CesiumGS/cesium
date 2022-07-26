@@ -16,7 +16,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
- * A wrapper around the draw commands used to render a {@link ModelExperimentalRuntimePrimitive}.
+ * A wrapper around the draw commands used to render a {@link ModelRuntimePrimitive}.
  * This manages the derived commands and returns only the necessary commands depending
  * on the given frame state.
  *
@@ -24,12 +24,12 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
  * @param {Boolean} [options.useSilhouetteCommands=false] Whether the model has a silhouette and needs to derive silhouette commands.
- * @alias ModelExperimentalDrawCommand
+ * @alias ModelDrawCommand
  * @constructor
  *
  * @private
  */
-function ModelExperimentalDrawCommand(options) {
+function ModelDrawCommand(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const command = options.command;
@@ -95,7 +95,7 @@ function initialize(drawCommand) {
   // new commands. As of now, a style can't change an originally translucent
   // feature to opaque since the style's alpha is modulated, not a replacement.
   // When this changes, we need to derive new opaque commands in the constructor
-  // of ModelExperimentalDrawCommand.
+  // of ModelDrawCommand.
   if (defined(styleCommandsNeeded) && command.pass !== Pass.TRANSLUCENT) {
     const translucentCommand = deriveTranslucentCommand(command);
     switch (styleCommandsNeeded) {
@@ -115,11 +115,11 @@ function initialize(drawCommand) {
   buildCommandList(drawCommand);
 }
 
-Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
+Object.defineProperties(ModelDrawCommand.prototype, {
   /**
    * The main draw command that the other commands are derived from.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {DrawCommand}
    *
    * @readonly
@@ -134,8 +134,8 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * The runtime primitive that the draw command belongs to.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
-   * @type {ModelExperimentalRuntimePrimitive}
+   * @memberof ModelDrawCommand.prototype
+   * @type {ModelRuntimePrimitive}
    *
    * @readonly
    * @private
@@ -149,7 +149,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * The model that the draw command belongs to.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {ModelExperimental}
    *
    * @readonly
@@ -164,7 +164,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * The primitive type of the main draw command.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {PrimitiveType}
    *
    * @readonly
@@ -180,7 +180,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    * The current model matrix applied to the draw commands. If there are
    * 2D draw commands, their model matrix will be derived from the 3D one.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {Matrix4}
    *
    * @readonly
@@ -202,7 +202,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    * to the the primitive's bounding sphere transformed by the draw
    * command's model matrix.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {BoundingSphere}
    *
    * @readonly
@@ -217,7 +217,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * Whether the geometry casts or receives shadows from light sources.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {ShadowMode}
    *
    * @private
@@ -239,7 +239,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
    * translucent, if the command is drawing translucent geometry, or if the
    * model is being drawn with a silhouette.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {Boolean}
    *
    * @private
@@ -261,7 +261,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * Determines which faces to cull, if culling is enabled.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {CullFace}
    *
    * @private
@@ -283,7 +283,7 @@ Object.defineProperties(ModelExperimentalDrawCommand.prototype, {
   /**
    * Whether to draw the bounding sphere associated with this draw command.
    *
-   * @memberof ModelExperimentalDrawCommand.prototype
+   * @memberof ModelDrawCommand.prototype
    * @type {Boolean}
    *
    * @private
@@ -528,7 +528,7 @@ function updateShowBoundingVolume(drawCommand) {
  *
  * @private
  */
-ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
+ModelDrawCommand.prototype.getCommands = function (frameState) {
   const commandList = this._commandList;
   const commandList2D = this._commandList2D;
 
@@ -577,7 +577,7 @@ ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
  * render on top of the model.
  *
  * This should only be called after getCommands() has been invoked for
- * the ModelExperimentalDrawCommand this frame. Otherwise, the silhouette
+ * the ModelDrawCommand this frame. Otherwise, the silhouette
  * commands may not have been derived for 2D. The model matrix will also
  * not have been updated for 2D commands.
  *
@@ -587,9 +587,7 @@ ModelExperimentalDrawCommand.prototype.getCommands = function (frameState) {
  *
  * @private
  */
-ModelExperimentalDrawCommand.prototype.getSilhouetteCommands = function (
-  frameState
-) {
+ModelDrawCommand.prototype.getSilhouetteCommands = function (frameState) {
   if (!this._useSilhouetteCommands) {
     return [];
   }
@@ -611,7 +609,7 @@ ModelExperimentalDrawCommand.prototype.getSilhouetteCommands = function (
 
 /**
  * Returns an array of all the draw commands currently managed by the
- * ModelExperimentalDrawCommand. This only includes commands that are
+ * ModelDrawCommand. This only includes commands that are
  * in a command list, so it may exclude the original draw command.
  * This is used internally for updating all derived commands, and for
  * testing.
@@ -620,7 +618,7 @@ ModelExperimentalDrawCommand.prototype.getSilhouetteCommands = function (
  *
  * @private
  */
-ModelExperimentalDrawCommand.prototype.getAllCommands = function () {
+ModelDrawCommand.prototype.getAllCommands = function () {
   const commands = [];
 
   commands.push.apply(commands, this._commandList);
@@ -785,4 +783,4 @@ function shouldUse2DCommands(drawCommand, frameState) {
   return (left < idl2D && right > idl2D) || (left < -idl2D && right > -idl2D);
 }
 
-export default ModelExperimentalDrawCommand;
+export default ModelDrawCommand;

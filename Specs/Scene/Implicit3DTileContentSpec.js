@@ -7,21 +7,21 @@ import {
   Cesium3DTileset,
   Cesium3DTilesetStatistics,
   Ellipsoid,
+  GroupMetadata,
   HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
   ImplicitTileset,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   MetadataClass,
-  GroupMetadata,
   Multiple3DTileContent,
   Resource,
   TileBoundingSphere,
   TileBoundingS2Cell,
 } from "../../Source/Cesium.js";
-import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";

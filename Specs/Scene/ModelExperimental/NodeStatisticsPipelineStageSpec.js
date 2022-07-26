@@ -2,7 +2,7 @@ import {
   combine,
   GltfLoader,
   Matrix4,
-  ModelExperimentalStatistics,
+  ModelStatistics,
   NodeStatisticsPipelineStage,
   Resource,
   ResourceCache,
@@ -67,7 +67,7 @@ describe("Scene/ModelExperimental/NodeStatisticsPipelineStage", function () {
           components: components,
           computedModelMatrix: Matrix4.IDENTITY,
         },
-        statistics: new ModelExperimentalStatistics(),
+        statistics: new ModelStatistics(),
       },
       runtimeNode: {
         computedTransform: Matrix4.IDENTITY,
@@ -120,7 +120,7 @@ describe("Scene/ModelExperimental/NodeStatisticsPipelineStage", function () {
     // attributes will be loaded in as packed typed arrays only.
     // Feature IDs are also only loaded as packed typed arrays.
     return loadGltf(boxInstanced).then(function (gltfLoader) {
-      const statistics = new ModelExperimentalStatistics();
+      const statistics = new ModelStatistics();
       const components = gltfLoader.components;
       const node = components.nodes[0];
 
@@ -135,7 +135,7 @@ describe("Scene/ModelExperimental/NodeStatisticsPipelineStage", function () {
 
   it("_countInstancingAttributes counts attributes with buffers", function () {
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {
-      const statistics = new ModelExperimentalStatistics();
+      const statistics = new ModelStatistics();
       const components = gltfLoader.components;
       const node = components.nodes[0];
 
@@ -154,7 +154,7 @@ describe("Scene/ModelExperimental/NodeStatisticsPipelineStage", function () {
 
   it("_countInstancing2DBuffers counts instancing transform buffer for 2D", function () {
     return loadGltf(boxInstanced).then(function (gltfLoader) {
-      const statistics = new ModelExperimentalStatistics();
+      const statistics = new ModelStatistics();
       const mockRuntimeNode = {
         instancingTransformsBuffer2D: {
           // Matrices are stored as 3 vec4s, so this is
@@ -177,7 +177,7 @@ describe("Scene/ModelExperimental/NodeStatisticsPipelineStage", function () {
 
   it("_countInstancing2DBuffers counts instancing translation buffer for 2D", function () {
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {
-      const statistics = new ModelExperimentalStatistics();
+      const statistics = new ModelStatistics();
       const mockRuntimeNode = {
         instancingTranslationBuffer2D: {
           // Model contains four translated instances:

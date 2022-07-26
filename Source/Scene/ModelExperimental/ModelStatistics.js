@@ -4,14 +4,14 @@ import Check from "../../Core/Check.js";
 /**
  * Rendering statistics for a single model.
  *
- * @alias ModelExperimentalStatistics
+ * @alias ModelStatistics
  * @constructor
  *
  * @see Cesium3DTilesetStatistics
  *
  * @private
  */
-export default function ModelExperimentalStatistics() {
+export default function ModelStatistics() {
   /**
    * Total number of points across all POINTS primitives in this model.
    *
@@ -69,13 +69,13 @@ export default function ModelExperimentalStatistics() {
   this._batchTextureIdMap = new AssociativeArray();
 }
 
-Object.defineProperties(ModelExperimentalStatistics.prototype, {
+Object.defineProperties(ModelStatistics.prototype, {
   /**
    * Total size of the batch textures used for picking and styling.
    * Batch textures are created asynchronously, so this iterates
    * over the textures to ensure their memory values are accurate.
    *
-   * @memberof ModelExperimentalStatistics.prototype
+   * @memberof ModelStatistics.prototype
    *
    * @type {Number}
    * @readonly
@@ -103,7 +103,7 @@ Object.defineProperties(ModelExperimentalStatistics.prototype, {
  *
  * @private
  */
-ModelExperimentalStatistics.prototype.clear = function () {
+ModelStatistics.prototype.clear = function () {
   this.pointsLength = 0;
   this.trianglesLength = 0;
   this.geometryByteLength = 0;
@@ -125,10 +125,7 @@ ModelExperimentalStatistics.prototype.clear = function () {
  *
  * @private
  */
-ModelExperimentalStatistics.prototype.addBuffer = function (
-  buffer,
-  hasCpuCopy
-) {
+ModelStatistics.prototype.addBuffer = function (buffer, hasCpuCopy) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("buffer", buffer);
   Check.typeOf.bool("hasCpuCopy", hasCpuCopy);
@@ -158,7 +155,7 @@ ModelExperimentalStatistics.prototype.addBuffer = function (
  *
  * @private
  */
-ModelExperimentalStatistics.prototype.addTexture = function (texture) {
+ModelStatistics.prototype.addTexture = function (texture) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("texture", texture);
   //>>includeEnd('debug');
@@ -187,9 +184,7 @@ ModelExperimentalStatistics.prototype.addTexture = function (texture) {
  *
  * @private
  */
-ModelExperimentalStatistics.prototype.addBatchTexture = function (
-  batchTexture
-) {
+ModelStatistics.prototype.addBatchTexture = function (batchTexture) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("batchTexture", batchTexture);
   //>>includeEnd('debug');

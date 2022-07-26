@@ -8,7 +8,7 @@ import {
   Matrix4,
   Math as CesiumMath,
   ModelExperimentalUtility,
-  ModelExperimentalStatistics,
+  ModelStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -71,7 +71,7 @@ describe(
         model: {
           _modelResources: [],
           _pipelineResources: [],
-          statistics: new ModelExperimentalStatistics(),
+          statistics: new ModelStatistics(),
         },
         runtimeNode: {},
       };
@@ -87,7 +87,7 @@ describe(
         model: {
           _modelResources: [],
           _pipelineResources: [],
-          statistics: new ModelExperimentalStatistics(),
+          statistics: new ModelStatistics(),
           _projectTo2D: true,
           sceneGraph: {
             computedModelMatrix: Matrix4.IDENTITY,
@@ -549,7 +549,7 @@ describe(
         model: {
           _pipelineResources: [],
           _modelResources: [],
-          statistics: new ModelExperimentalStatistics(),
+          statistics: new ModelStatistics(),
           modelMatrix: Matrix4.fromUniformScale(2.0),
           sceneGraph: {
             axisCorrectionMatrix: ModelExperimentalUtility.getAxisCorrectionMatrix(

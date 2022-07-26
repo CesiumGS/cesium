@@ -12,7 +12,7 @@ import {
   GeographicProjection,
   Math as CesiumMath,
   Matrix4,
-  ModelExperimentalDrawCommand,
+  ModelDrawCommand,
   Pass,
   RenderState,
   SceneMode,
@@ -22,7 +22,7 @@ import {
   WebGLConstants,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
+describe("Scene/ModelExperimental/ModelDrawCommand", function () {
   const noColor = new Color(0, 0, 0, 0);
   const scratchModelMatrix = new Matrix4();
   const scratchExpectedMatrix = new Matrix4();
@@ -137,9 +137,9 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     return result;
   }
 
-  // Creates a ModelExperimentalDrawCommand with the specified
+  // Creates a ModelDrawCommand with the specified
   // derived commands.
-  function createModelExperimentalDrawCommand(options) {
+  function createModelDrawCommand(options) {
     const deriveTranslucent = options.deriveTranslucent;
     const derive2D = options.derive2D;
     const deriveSilhouette = options.deriveSilhouette;
@@ -164,7 +164,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       modelMatrix: derive2D ? modelMatrix2D : Matrix4.IDENTITY,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: deriveSilhouette,
@@ -265,7 +265,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   it("throws for undefined command", function () {
     expect(function () {
-      return new ModelExperimentalDrawCommand({
+      return new ModelDrawCommand({
         command: undefined,
         primitiveRenderResources: {},
       });
@@ -274,7 +274,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
 
   it("throws for undefined primitiveRenderResources", function () {
     expect(function () {
-      return new ModelExperimentalDrawCommand({
+      return new ModelDrawCommand({
         command: new DrawCommand(),
         primitiveRenderResources: undefined,
       });
@@ -284,7 +284,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   it("constructs", function () {
     const renderResources = mockRenderResources();
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -310,7 +310,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   it("constructs with silhouette commands", function () {
     const renderResources = mockRenderResources();
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -360,7 +360,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       pass: Pass.TRANSLUCENT,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -400,7 +400,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       color: new Color(1.0, 1.0, 1.0, 0.0),
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -439,7 +439,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       silhouetteColor: new Color(1.0, 1.0, 1.0, 0.5),
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -477,7 +477,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.ALL_OPAQUE,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -496,7 +496,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.ALL_TRANSLUCENT,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -532,7 +532,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -570,7 +570,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       pass: Pass.TRANSLUCENT,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -587,7 +587,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   it("getCommands works for original command", function () {
     const renderResources = mockRenderResources();
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -606,7 +606,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -627,7 +627,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -662,7 +662,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -693,7 +693,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -731,7 +731,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
     const command = createDrawCommand({
       modelMatrix: modelMatrix2D,
     });
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
       useSilhouetteCommands: true,
@@ -749,7 +749,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getCommands updates model matrix for 2D commands", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -810,7 +810,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getSilhouetteCommands returns silhouette-pass commands", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       deriveSilhouette: true,
     });
@@ -842,7 +842,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getSilhouetteCommands returns 2D silhouette-pass commands", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -876,7 +876,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("getSilhouetteCommands returns empty if model doesn't have silhouette", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
     });
 
@@ -895,7 +895,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
       styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
     });
     const command = createDrawCommand();
-    const drawCommand = new ModelExperimentalDrawCommand({
+    const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
     });
@@ -930,7 +930,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates model matrix for 2D commands", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -1005,7 +1005,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates shadows", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -1042,7 +1042,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates back face culling for command without silhouettes", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
     });
@@ -1070,7 +1070,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("doesn't update back face culling for command with silhouettes", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -1095,7 +1095,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates cull face", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,
@@ -1120,7 +1120,7 @@ describe("Scene/ModelExperimental/ModelExperimentalDrawCommand", function () {
   });
 
   it("updates debugShowBoundingVolume", function () {
-    const drawCommand = createModelExperimentalDrawCommand({
+    const drawCommand = createModelDrawCommand({
       deriveTranslucent: true,
       derive2D: true,
       deriveSilhouette: true,

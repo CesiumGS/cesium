@@ -13,15 +13,11 @@ import Pass from "../../Renderer/Pass.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * @alias ModelExperimental3DTileContent
+ * @alias Model3DTileContent
  * @constructor
  * @private
  */
-export default function ModelExperimental3DTileContent(
-  tileset,
-  tile,
-  resource
-) {
+export default function Model3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -31,7 +27,7 @@ export default function ModelExperimental3DTileContent(
   this._group = undefined;
 }
 
-Object.defineProperties(ModelExperimental3DTileContent.prototype, {
+Object.defineProperties(Model3DTileContent.prototype, {
   featuresLength: {
     get: function () {
       const model = this._model;
@@ -142,7 +138,7 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   },
 });
 
-ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
+Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
@@ -153,10 +149,7 @@ ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
   return featureTable.getFeature(featureId);
 };
 
-ModelExperimental3DTileContent.prototype.hasProperty = function (
-  featureId,
-  name
-) {
+Model3DTileContent.prototype.hasProperty = function (featureId, name) {
   const model = this._model;
   const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
@@ -167,10 +160,7 @@ ModelExperimental3DTileContent.prototype.hasProperty = function (
   return featureTable.hasProperty(featureId, name);
 };
 
-ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
-  enabled,
-  color
-) {
+Model3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
   color = enabled ? color : Color.WHITE;
   if (this.featuresLength === 0) {
     this._model.color = color;
@@ -179,15 +169,12 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
   }
 };
 
-ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
+Model3DTileContent.prototype.applyStyle = function (style) {
   // the setter will call model.applyStyle()
   this._model.style = style;
 };
 
-ModelExperimental3DTileContent.prototype.update = function (
-  tileset,
-  frameState
-) {
+Model3DTileContent.prototype.update = function (tileset, frameState) {
   const model = this._model;
   const tile = this._tile;
 
@@ -232,22 +219,17 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.update(frameState);
 };
 
-ModelExperimental3DTileContent.prototype.isDestroyed = function () {
+Model3DTileContent.prototype.isDestroyed = function () {
   return false;
 };
 
-ModelExperimental3DTileContent.prototype.destroy = function () {
+Model3DTileContent.prototype.destroy = function () {
   this._model = this._model && this._model.destroy();
   return destroyObject(this);
 };
 
-ModelExperimental3DTileContent.fromGltf = function (
-  tileset,
-  tile,
-  resource,
-  gltf
-) {
-  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
+  const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
     gltf: gltf,
@@ -272,14 +254,14 @@ ModelExperimental3DTileContent.fromGltf = function (
   return content;
 };
 
-ModelExperimental3DTileContent.fromB3dm = function (
+Model3DTileContent.fromB3dm = function (
   tileset,
   tile,
   resource,
   arrayBuffer,
   byteOffset
 ) {
-  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
@@ -305,14 +287,14 @@ ModelExperimental3DTileContent.fromB3dm = function (
   return content;
 };
 
-ModelExperimental3DTileContent.fromI3dm = function (
+Model3DTileContent.fromI3dm = function (
   tileset,
   tile,
   resource,
   arrayBuffer,
   byteOffset
 ) {
-  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
@@ -338,14 +320,14 @@ ModelExperimental3DTileContent.fromI3dm = function (
   return content;
 };
 
-ModelExperimental3DTileContent.fromPnts = function (
+Model3DTileContent.fromPnts = function (
   tileset,
   tile,
   resource,
   arrayBuffer,
   byteOffset
 ) {
-  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
@@ -363,13 +345,8 @@ ModelExperimental3DTileContent.fromPnts = function (
   return content;
 };
 
-ModelExperimental3DTileContent.fromGeoJson = function (
-  tileset,
-  tile,
-  resource,
-  geoJson
-) {
-  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
+  const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
     geoJson: geoJson,

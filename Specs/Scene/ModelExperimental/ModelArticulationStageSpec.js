@@ -4,10 +4,10 @@ import {
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  ModelExperimentalArticulationStage,
+  ModelArticulationStage,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function () {
+describe("Scene/ModelExperimental/ModelArticulationStage", function () {
   const scratchCartesian3 = new Cartesian3();
   const scratchMatrix3 = new Matrix3();
   const scratchExpectedMatrix = new Matrix4();
@@ -24,7 +24,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
 
   it("throws for undefined stage", function () {
     expect(function () {
-      return new ModelExperimentalArticulationStage({
+      return new ModelArticulationStage({
         stage: undefined,
         runtimeArticulation: {},
       });
@@ -33,7 +33,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
 
   it("throws for undefined runtime articulation", function () {
     expect(function () {
-      return new ModelExperimentalArticulationStage({
+      return new ModelArticulationStage({
         stage: {},
         runtimeArticulation: undefined,
       });
@@ -50,7 +50,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -75,7 +75,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -97,7 +97,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -124,7 +124,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -146,7 +146,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -180,7 +180,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -214,7 +214,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -248,7 +248,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -277,7 +277,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -307,7 +307,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -337,7 +337,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -371,7 +371,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -405,7 +405,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -439,7 +439,7 @@ describe("Scene/ModelExperimental/ModelExperimentalArticulationStage", function 
     };
 
     const runtimeArticulation = mockRuntimeArticulation();
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });

@@ -4,9 +4,9 @@ import {
   ComponentDatatype,
   defined,
   GeometryPipelineStage,
-  ModelExperimentalStatistics,
+  ModelStatistics,
   GltfLoader,
-  ModelExperimentalType,
+  ModelType,
   Resource,
   ResourceCache,
   SelectedFeatureIdPipelineStage,
@@ -151,8 +151,8 @@ describe(
         attributeIndex: 1,
         count: count,
         model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          statistics: new ModelExperimentalStatistics(),
+          type: ModelType.TILE_GLTF,
+          statistics: new ModelStatistics(),
         },
         runtimeNode: {
           node: {},

@@ -2,23 +2,23 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalArticulationStage from "./ModelExperimentalArticulationStage.js";
+import ModelArticulationStage from "./ModelArticulationStage.js";
 
 /**
  * An in-memory representation of an articulation that affects nodes in the
- * {@link ModelExperimentalSceneGraph}. This is defined in a model by the
+ * {@link ModelSceneGraph}. This is defined in a model by the
  * <code>AGI_articulations</code> extension.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Articulation} options.articulation The articulation components from the 3D model.
- * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this articulation belongs to.
+ * @param {ModelSceneGraph} options.sceneGraph The scene graph this articulation belongs to.
  *
- * @alias ModelExperimentalArticulation
+ * @alias ModelArticulation
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalArticulation(options) {
+export default function ModelArticulation(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const articulation = options.articulation;
@@ -39,17 +39,17 @@ export default function ModelExperimentalArticulation(options) {
   this._runtimeNodes = [];
 
   // Set to true so that the first call to
-  // ModelExperimentalSceneGraph.applyArticulations will work.
+  // ModelSceneGraph.applyArticulations will work.
   this._dirty = true;
 
   initialize(this);
 }
 
-Object.defineProperties(ModelExperimentalArticulation.prototype, {
+Object.defineProperties(ModelArticulation.prototype, {
   /**
    * The internal articulation that this runtime articulation represents.
    *
-   * @memberof ModelExperimentalArticulation.prototype
+   * @memberof ModelArticulation.prototype
    * @type {ModelComponents.Articulation}
    * @readonly
    *
@@ -64,8 +64,8 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
   /**
    * The scene graph that this articulation belongs to.
    *
-   * @memberof ModelExperimentalArticulation.prototype
-   * @type {ModelExperimentalSceneGraph}
+   * @memberof ModelArticulation.prototype
+   * @type {ModelSceneGraph}
    * @readonly
    *
    * @private
@@ -79,7 +79,7 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
   /**
    * The name of this articulation.
    *
-   * @memberof ModelExperimentalArticulation.prototype
+   * @memberof ModelArticulation.prototype
    * @type {String}
    * @readonly
    *
@@ -94,8 +94,8 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
   /**
    * The runtime stages that belong to this articulation.
    *
-   * @memberof ModelExperimentalArticulation.prototype
-   * @type {ModelExperimentalArticulationStage[]}
+   * @memberof ModelArticulation.prototype
+   * @type {ModelArticulationStage[]}
    * @readonly
    *
    * @private
@@ -109,8 +109,8 @@ Object.defineProperties(ModelExperimentalArticulation.prototype, {
   /**
    * The runtime nodes that are affected by this articulation.
    *
-   * @memberof ModelExperimentalArticulation.prototype
-   * @type {ModelExperimentalRuntimeNode[]}
+   * @memberof ModelArticulation.prototype
+   * @type {ModelRuntimeNode[]}
    * @readonly
    *
    * @private
@@ -132,7 +132,7 @@ function initialize(runtimeArticulation) {
   const runtimeStagesByName = runtimeArticulation._runtimeStagesByName;
   for (let i = 0; i < length; i++) {
     const stage = stages[i];
-    const runtimeStage = new ModelExperimentalArticulationStage({
+    const runtimeStage = new ModelArticulationStage({
       stage: stage,
       runtimeArticulation: runtimeArticulation,
     });
@@ -155,10 +155,7 @@ function initialize(runtimeArticulation) {
  *
  * @private
  */
-ModelExperimentalArticulation.prototype.setArticulationStage = function (
-  stageName,
-  value
-) {
+ModelArticulation.prototype.setArticulationStage = function (stageName, value) {
   const stage = this._runtimeStagesByName[stageName];
   if (defined(stage)) {
     stage.currentValue = value;
@@ -179,7 +176,7 @@ const scratchNodeMatrix = new Matrix4();
  *
  * @private
  */
-ModelExperimentalArticulation.prototype.apply = function () {
+ModelArticulation.prototype.apply = function () {
   if (!this._dirty) {
     return;
   }

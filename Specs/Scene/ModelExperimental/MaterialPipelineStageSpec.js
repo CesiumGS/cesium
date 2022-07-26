@@ -7,7 +7,7 @@ import {
   Matrix3,
   MaterialPipelineStage,
   ModelAlphaOptions,
-  ModelExperimentalStatistics,
+  ModelStatistics,
   ModelLightingOptions,
   Pass,
   RenderState,
@@ -107,7 +107,7 @@ describe(
         lightingOptions: new ModelLightingOptions(),
         alphaOptions: new ModelAlphaOptions(),
         renderStateOptions: RenderState.getState(RenderState.fromCache()),
-        model: { statistics: new ModelExperimentalStatistics() },
+        model: { statistics: new ModelStatistics() },
       };
     }
 
