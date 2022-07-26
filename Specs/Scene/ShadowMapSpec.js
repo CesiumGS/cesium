@@ -1245,12 +1245,13 @@ describe(
 
     it("set normalOffset", function () {
       createCascadedShadowMap();
-      scene.shadowMap.normalOffset = false;
+      const shadowMap = scene.shadowMap;
+      shadowMap.normalOffset = false;
 
-      expect(scene.shadowMap._normalOffset, false);
-      expect(scene.shadowMap._terrainBias, false);
-      expect(scene.shadowMap._primitiveBias, false);
-      expect(scene.shadowMap._pointBias, false);
+      expect(shadowMap._normalOffset).toBe(false);
+      expect(shadowMap._terrainBias.normalOffset).toBe(false);
+      expect(shadowMap._primitiveBias.normalOffset).toBe(false);
+      expect(shadowMap._pointBias.normalOffset).toBe(false);
     });
 
     it("set maximumDistance", function () {
