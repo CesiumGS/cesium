@@ -270,7 +270,7 @@ function Cesium3DTilesVoxelProvider(options) {
       return rootGltfLoader.promise;
     })
     .then(function (rootGltfLoader) {
-      that._gltfLoaders.splice(that._gltfLoaders.indexOf(rootGltfLoader));
+      that._gltfLoaders.splice(that._gltfLoaders.indexOf(rootGltfLoader), 1);
       const gltfPrimitive = rootGltfLoader.components.nodes[0].primitives[0];
       const voxel = gltfPrimitive.voxel;
       const primitiveType = gltfPrimitive.primitiveType;
@@ -468,7 +468,8 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
           that._subtreeLoaders.push(subtree);
         }
         that._subtreeResourceLoaders.splice(
-          that._subtreeResourceLoaders.indexOf(subtreeResource)
+          that._subtreeResourceLoaders.indexOf(subtreeResource),
+          1
         );
         return subtree.readyPromise;
       });
@@ -489,7 +490,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 
       if (!available) {
         if (subtreeLoaderIndex !== -1) {
-          that._subtreeLoaders.splice(subtreeLoaderIndex);
+          that._subtreeLoaders.splice(subtreeLoaderIndex, 1);
         }
         return Promise.reject("Tile is not available");
       }
@@ -498,7 +499,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
       that._gltfLoaders.push(gltfLoader);
 
       if (subtreeLoaderIndex !== -1) {
-        that._subtreeLoaders.splice(subtreeLoaderIndex);
+        that._subtreeLoaders.splice(subtreeLoaderIndex, 1);
       }
 
       return gltfLoader.promise;
@@ -527,7 +528,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
         );
       }
 
-      that._gltfLoaders.splice(that._gltfLoaders.indexOf(gltfLoader));
+      that._gltfLoaders.splice(that._gltfLoaders.indexOf(gltfLoader), 1);
       return Promise.resolve(data);
     });
 };
