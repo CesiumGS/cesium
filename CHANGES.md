@@ -1,5 +1,12 @@
 # Change Log
 
+### 1.97 - 2022-09-01
+
+#### Breaking Changes :mega:
+
+- Support for glTF 1.0 assets has been removed. Please convert any glTF 1.0 assets to glTF 2.0. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+- Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:

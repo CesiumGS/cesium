@@ -452,4 +452,25 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
     expect(result).toEqual("_1st_test_variable");
   });
+
+  it("checkSupportedExtensions throws for unsupported extension", function () {
+    const extensionsRequired = [
+      "AGI_articulations",
+      "NOT_supported_extension",
+      "CESIUM_primitive_outline",
+    ];
+    expect(function () {
+      ModelExperimentalUtility.checkSupportedExtensions(extensionsRequired);
+    }).toThrowError();
+  });
+
+  it("checkSupportedExtensions doesn't throw for supported extensions", function () {
+    const extensionsRequired = [
+      "AGI_articulations",
+      "CESIUM_primitive_outline",
+    ];
+    expect(function () {
+      ModelExperimentalUtility.checkSupportedExtensions(extensionsRequired);
+    }).not.toThrowError();
+  });
 });
