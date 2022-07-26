@@ -49,6 +49,13 @@ describe(
 
     const triangleWithoutIndicesUrl =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+    const animatedTriangleUrl =
+      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+    const animatedTriangleOffset = new HeadingPitchRange(
+      CesiumMath.PI / 2.0,
+      0,
+      2.0
+    );
 
     const boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
@@ -706,82 +713,72 @@ describe(
         });
     });
 
-    describe("animations", function () {
-      const animatedTriangleUrl =
-        "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
-      const animatedTriangleOffset = new HeadingPitchRange(
-        CesiumMath.PI / 2.0,
-        0,
-        2.0
-      );
+    it("renders model without animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
+        },
+        scene
+      ).then(function (model) {
+        const animationCollection = model.activeAnimations;
+        expect(animationCollection).toBeDefined();
+        expect(animationCollection.length).toBe(0);
 
-      it("renders model without animations added", function () {
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: animatedTriangleUrl,
-            offset: animatedTriangleOffset,
-          },
-          scene
-        ).then(function (model) {
-          const animationCollection = model.activeAnimations;
-          expect(animationCollection).toBeDefined();
-          expect(animationCollection.length).toBe(0);
-
-          // Move camera so that the triangle is in view.
-          scene.camera.moveDown(0.5);
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
+        verifyRender(model, true, {
+          zoomToModel: false,
         });
       });
+    });
 
-      it("renders model with animations added", function () {
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: animatedTriangleUrl,
-            offset: animatedTriangleOffset,
-          },
-          scene
-        ).then(function (model) {
-          // Move camera so that the triangle is in view.
-          scene.camera.moveDown(0.5);
+    it("renders model with animations added", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: animatedTriangleUrl,
+          offset: animatedTriangleOffset,
+        },
+        scene
+      ).then(function (model) {
+        // Move camera so that the triangle is in view.
+        scene.camera.moveDown(0.5);
 
-          // The model rotates such that it leaves the view of the camera
-          // halfway into its animation.
-          const startTime = defaultDate;
-          const animationCollection = model.activeAnimations;
-          animationCollection.add({
-            index: 0,
-            startTime: startTime,
-          });
-          expect(animationCollection.length).toBe(1);
-          verifyRender(model, true, {
-            zoomToModel: false,
-            time: startTime,
-          });
+        // The model rotates such that it leaves the view of the camera
+        // halfway into its animation.
+        const startTime = defaultDate;
+        const animationCollection = model.activeAnimations;
+        animationCollection.add({
+          index: 0,
+          startTime: startTime,
+        });
+        expect(animationCollection.length).toBe(1);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          time: startTime,
+        });
 
-          const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
-          verifyRender(model, false, {
-            zoomToModel: false,
-            time: time,
-          });
+        const time = JulianDate.addSeconds(startTime, 0.5, new JulianDate());
+        verifyRender(model, false, {
+          zoomToModel: false,
+          time: time,
         });
       });
+    });
 
-      it("adds animation to draco-compressed model", function () {
-        return loadAndZoomToModelExperimental(
-          { gltf: dracoCesiumManUrl },
-          scene
-        ).then(function (model) {
-          verifyRender(model, true);
+    it("adds animation to draco-compressed model", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: dracoCesiumManUrl },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
 
-          const animationCollection = model.activeAnimations;
-          const animation = animationCollection.add({
-            index: 0,
-          });
-          expect(animation).toBeDefined();
-          expect(animationCollection.length).toBe(1);
+        const animationCollection = model.activeAnimations;
+        const animation = animationCollection.add({
+          index: 0,
         });
+        expect(animation).toBeDefined();
+        expect(animationCollection.length).toBe(1);
       });
     });
 
