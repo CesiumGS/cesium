@@ -274,7 +274,7 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
         0.0, 1.0, 0.0, -4736316.75897742,
         0.0, 0.0, 1.0, 4081608.4380407534,
         0.0, 0.0, 0.0, 1.0
-      ));
+      ), CesiumMath.EPSILON8);
     });
   });
 
