@@ -55,8 +55,7 @@ const travisDeployUrl =
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 const taskName = process.argv[2];
-const noDevelopmentGallery =
-  taskName === "release" || taskName === "makeZipFile";
+const noDevelopmentGallery = taskName === "release" || taskName === "make-zip";
 const verbose = yargs.argv.verbose;
 
 let concurrency = yargs.argv.concurrency;
@@ -308,7 +307,7 @@ gulp.task("build-ts", function () {
   return Promise.resolve();
 });
 
-gulp.task("buildApps", function () {
+gulp.task("build-apps", function () {
   return Promise.join(buildCesiumViewer(), buildSandcastle());
 });
 
@@ -433,12 +432,12 @@ function generateDocumentation() {
 
   return streamToPromise(stream);
 }
-gulp.task("generateDocumentation", generateDocumentation);
+gulp.task("build-docs", generateDocumentation);
 
-gulp.task("generateDocumentation-watch", function () {
+gulp.task("build-docs-watch", function () {
   return generateDocumentation().then(function () {
     console.log("Listening for changes in documentation...");
-    return gulp.watch(sourceFiles, gulp.series("generateDocumentation"));
+    return gulp.watch(sourceFiles, gulp.series("build-docs"));
   });
 });
 
@@ -465,7 +464,7 @@ gulp.task(
 );
 
 gulp.task(
-  "makeZipFile",
+  "make-zip",
   gulp.series("release", function () {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
@@ -479,12 +478,12 @@ gulp.task(
     delete packageJson.scripts["build-watch"];
     delete packageJson.scripts["build-ts"];
     delete packageJson.scripts["build-third-party"];
-    delete packageJson.scripts["buildApps"];
+    delete packageJson.scripts["build-apps"];
     delete packageJson.scripts.clean;
     delete packageJson.scripts.cloc;
-    delete packageJson.scripts["generateDocumentation"];
-    delete packageJson.scripts["generateDocumentation-watch"];
-    delete packageJson.scripts["makeZipFile"];
+    delete packageJson.scripts["build-docs"];
+    delete packageJson.scripts["build-docs-watch"];
+    delete packageJson.scripts["make-zip"];
     delete packageJson.scripts.release;
     delete packageJson.scripts.prettier;
 

@@ -374,26 +374,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     return BoundingSphereState.PENDING;
   }
 
-  if (ExperimentalFeatures.enableModelExperimental) {
-    // ModelExperimental's bounding sphere is already in world space,
-    // so it does not need to be transformed.
-    BoundingSphere.clone(model.boundingSphere, result);
-    return BoundingSphereState.DONE;
-  }
-
-  if (hasHeightReference) {
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model._clampedModelMatrix,
-      result
-    );
-  } else {
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model.modelMatrix,
-      result
-    );
-  }
+  BoundingSphere.clone(model.boundingSphere, result);
   return BoundingSphereState.DONE;
 };
 

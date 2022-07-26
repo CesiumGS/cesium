@@ -5,7 +5,6 @@ import {
   ColorGeometryInstanceAttribute,
   destroyObject,
   Ellipsoid,
-  ExperimentalFeatures,
   GeometryInstance,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -130,18 +129,12 @@ describe(
         rectangle,
         Pass.CESIUM_3D_TILE
       );
-
-      // Temporarily disabling ModelExperimental until ClassificationModel is
-      // updated to use GltfLoader
-      ExperimentalFeatures.enableModelExperimental = false;
     });
 
     afterAll(function () {
       reusableGlobePrimitive.destroy();
       reusableTilesetPrimitive.destroy();
       scene.destroyForSpecs();
-
-      ExperimentalFeatures.enableModelExperimental = true;
     });
 
     beforeEach(function () {

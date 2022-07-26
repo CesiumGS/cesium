@@ -929,7 +929,7 @@ require({
           if (docError) {
             appendConsole(
               "consoleError",
-              'Documentation not available.  Please run the "generateDocumentation" build script to generate Cesium documentation.',
+              'Documentation not available.  Please run the "build-docs" build script to generate Cesium documentation.',
               true
             );
             showGallery();

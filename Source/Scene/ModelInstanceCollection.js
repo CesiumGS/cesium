@@ -6,6 +6,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
@@ -647,6 +648,13 @@ function createPickIds(collection, context) {
 
 function createModel(collection, context) {
   const instancingSupported = collection._instancingSupported;
+  if (!instancingSupported) {
+    deprecationWarning(
+      "cpuModelInstancing",
+      "Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97."
+    );
+  }
+
   const usesBatchTable = defined(collection._batchTable);
   const allowPicking = collection._allowPicking;
 
