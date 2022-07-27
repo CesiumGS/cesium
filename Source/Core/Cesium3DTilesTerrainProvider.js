@@ -1018,7 +1018,7 @@ ImplicitSubtreeCache.prototype.computeMaximumLevelAtPosition = function (
     position
   );
   if (tileCoordinates === undefined) {
-    return -1;
+    return 0;
   }
   // @ts-ignore
   return tileCoordinates.level;
