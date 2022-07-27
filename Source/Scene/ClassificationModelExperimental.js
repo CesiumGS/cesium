@@ -1,29 +1,20 @@
-// TODO: alphabetize
+import B3dmLoader from "./ModelExperimental/B3dmLoader.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
+import Check from "../Core/Check.js";
 import destroyObject from "../Core/destroyObject.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Resource from "../Core/Resource.js";
-import Check from "../Core/Check.js";
-import Matrix4 from "../Core/Matrix4.js";
 import GltfLoader from "./GltfLoader.js";
-import B3dmLoader from "./ModelExperimental/B3dmLoader.js";
+import Matrix4 from "../Core/Matrix4.js";
+import ModelExperimentalStatistics from "./ModelExperimental/ModelExperimentalStatistics.js";
 import ModelExperimentalType from "./ModelExperimental/ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
-import SceneMode from "../Scene/SceneMode.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import ModelExperimentalStatistics from "./ModelExperimental/ModelExperimentalStatistics.js";
-
-const LoaderState = {
-  UNLOADED: 0,
-  LOADING: 1,
-  LOADED: 2,
-  READY: 3,
-  FAILED: 4,
-};
+import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
+import SceneMode from "../Scene/SceneMode.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * A 3D model for classifying other 3D assets.
@@ -45,6 +36,7 @@ const LoaderState = {
  * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
@@ -87,6 +79,8 @@ function ClassificationModelExperimental(options) {
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
+  this._vectorPrimitive = undefined;
+
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
@@ -108,7 +102,8 @@ function ClassificationModelExperimental(options) {
 
   this._statistics = new ModelExperimentalStatistics();
 
-  this._state = LoaderState.UNLOADED;
+  this._resourcesLoaded = false;
+  this._ready = false;
 
   this._content = options.content;
   this._cull = defaultValue(options.cull, true);
@@ -149,6 +144,10 @@ function ClassificationModelExperimental(options) {
     false
   );
 
+  this._enableDebugWireframe = defaultValue(
+    options.enableDebugWireframe,
+    false
+  );
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -179,7 +178,7 @@ Object.defineProperties(ClassificationModelExperimental.prototype, {
    */
   ready: {
     get: function () {
-      return this._state === LoaderState.READY;
+      return this._ready;
     },
   },
 
@@ -243,7 +242,7 @@ Object.defineProperties(ClassificationModelExperimental.prototype, {
   boundingSphere: {
     get: function () {
       //>>includeStart('debug', pragmas.debug);
-      if (!this._state !== LoaderState.READY) {
+      if (!this._ready) {
         throw new DeveloperError(
           "The model is not loaded. Use ClassificationModelExperimental.readyPromise or wait for ClassificationModelExperimental.ready to be true."
         );
@@ -261,10 +260,8 @@ function initialize(model) {
 
   loader.load();
 
-  model._state = LoaderState.LOADING;
-
   const loaderPromise = loader.promise.then(function () {
-    model._state = LoaderState.LOADED;
+    model._resourcesLoaded = true;
   });
 
   const promise = new Promise(function (resolve) {
@@ -272,7 +269,7 @@ function initialize(model) {
       // Set the model as ready after the first frame render since the user might set up events subscribed to
       // the post render event, and the model may not be ready for those past the first frame.
       frameState.afterRender.push(function () {
-        model._state = LoaderState.READY;
+        model._ready = true;
         resolve(model);
       });
     };
@@ -289,7 +286,7 @@ function initialize(model) {
       if (model.isDestroyed()) {
         return;
       }
-      model._state = LoaderState.FAILED;
+
       return ModelExperimentalUtility.getFailedLoadFunction(
         model,
         "model",
@@ -309,39 +306,32 @@ function initialize(model) {
  * @exception {RuntimeError} Failed to load external reference.
  */
 ClassificationModelExperimental.prototype.update = function (frameState) {
-  if (frameState.mode !== SceneMode.SCENE3D) {
-    return;
-  }
+  processLoader(this, frameState);
 
-  if (
-    this._state === LoaderState.UNLOADED ||
-    this._state === LoaderState.FAILED
-  ) {
-    return;
-  }
-
-  if (this._state === LoaderState.LOADING) {
-    processLoader(this, frameState);
-    return;
-  }
-
-  if (this._state === LoaderState.LOADED) {
+  if (this._resourcesLoaded) {
     finishLoading(this);
     return;
   }
+
+  if (!this._ready || frameState.mode !== SceneMode.SCENE3D) {
+    return;
+  }
+
+  updateModelMatrixAndBoundingSphere(this);
+  // TODO: other stuff
 
   if (!this._show) {
     return;
   }
 
-  if (this._state === LoaderState.READY) {
-    updateModelMatrixAndBoundingSphere(this);
-    // TODO: other stuff
-  }
+  // draw here
 };
 
 function processLoader(model, frameState) {
-  model._loader.process(frameState);
+  if (!this._resourcesLoaded) {
+    model._loader.process(frameState);
+    return;
+  }
 }
 
 function validate(components) {
@@ -349,7 +339,7 @@ function validate(components) {
 
   if (nodes.length !== 1) {
     throw new RuntimeError(
-      "The model must have a single node when used for classification"
+      "The model must have a single node when used for classification."
     );
   }
 
@@ -357,7 +347,7 @@ function validate(components) {
 
   if (node.primitives.length !== 1) {
     throw new RuntimeError(
-      "The model must have a single primitive when used for classification"
+      "The model must have a single primitive when used for classification."
     );
   }
 
@@ -369,7 +359,7 @@ function validate(components) {
 
   if (!defined(positionAttribute)) {
     throw new RuntimeError(
-      "The primitive must have a position attribute when used for classification"
+      "The primitive must have a position attribute when used for classification."
     );
   }
 
@@ -382,17 +372,19 @@ function validate(components) {
   if (!defined(featureIdAttribute)) {
     // TODO: update comment once glTF is supported
     throw new RuntimeError(
-      "The primitive must have a batch ID attribute when used for classification"
+      "The primitive must have a batch ID attribute when used for classification."
     );
   }
 
   if (primitive.primitiveType !== PrimitiveType.TRIANGLES) {
-    throw new RuntimeError("The primitive must be a triangle mesh");
+    throw new RuntimeError("The primitive must be a triangle mesh.");
   }
 
-  if (positionAttribute.byteStride 
-
-  The primitive must have un-interleaved attributes
+  if (positionAttribute.byteStride !== 0) {
+    throw new RuntimeError(
+      "The primitive must have un-interleaved attributes."
+    );
+  }
 }
 
 function finishLoading(model, frameState) {
@@ -434,10 +426,12 @@ function finishLoading(model, frameState) {
     ? primitive.indices.count
     : positionAttribute.count;
 
-    const trianglesLength = indicesLength / 3;
+  const trianglesLength = indicesLength / 3;
 
   model._statistics.trianglesLength = trianglesLength;
-  model._statistics.geometryByteLength = 
+  //model._statistics.geometryByteLength =
+
+  // this is where you'd create the primitive
 }
 
 function computeModelMatrixAndBoundingSphere(model) {
@@ -592,6 +586,7 @@ function makeModelOptions(loader, type, options) {
     show: options.show,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
+    enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,
     content: options.content,

@@ -1,3 +1,4 @@
+import ClassificationModelExperimental from "../ClassificationModelExperimental.js";
 import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
@@ -291,12 +292,21 @@ ModelExperimental3DTileContent.fromB3dm = function (
     additionalOptions
   );
 
-  const model = ModelExperimental.fromB3dm(modelOptions);
-  model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
+  let model;
+  const classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
+
+  if (defined(classificationType)) {
+    model = ClassificationModelExperimental.fromB3dm(modelOptions);
+  } else {
+    model = ModelExperimental.fromB3dm(modelOptions);
+    model.readyPromise.then(function (model) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
     });
-  });
+  }
   content._model = model;
 
   return content;
