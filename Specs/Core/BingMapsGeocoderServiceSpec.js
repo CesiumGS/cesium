@@ -1,6 +1,8 @@
-import { BingMapsGeocoderService } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
+import {
+  BingMapsGeocoderService,
+  Rectangle,
+  Resource,
+} from "../../../Source/Cesium.js";
 
 describe("Core/BingMapsGeocoderService", function () {
   afterAll(function () {

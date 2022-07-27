@@ -1,6 +1,6 @@
 import {
   Cesium3DTileFeature,
-  ModelExperimentalType,
+  ModelType,
   ModelFeatureTable,
   ModelFeature,
 } from "../../../Source/Cesium.js";
@@ -42,7 +42,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     const table = new ModelFeatureTable({
       propertyTable: mockPropertyTable,
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -60,7 +60,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
         content: {
           tileset: {},
         },
-        type: ModelExperimentalType.TILE_GLTF,
+        type: ModelType.TILE_GLTF,
       },
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -74,7 +74,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("hasProperty works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -89,7 +89,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("hasPropertyBySemantic works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -103,7 +103,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getFeature works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -119,7 +119,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getProperty works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -141,7 +141,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getPropertyInherited works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -172,7 +172,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getPropertyIds works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -192,7 +192,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("setProperty works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });
@@ -205,7 +205,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("destroy works", function () {
     const table = new ModelFeatureTable({
       model: {
-        type: ModelExperimentalType.GLTF,
+        type: ModelType.GLTF,
       },
       propertyTable: mockPropertyTable,
     });

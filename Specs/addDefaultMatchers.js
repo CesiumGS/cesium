@@ -1,17 +1,20 @@
+import {
+  Cartesian2,
+  defaultValue,
+  defined,
+  DeveloperError,
+  FeatureDetection,
+  PrimitiveType,
+  Buffer,
+  BufferUsage,
+  ClearCommand,
+  DrawCommand,
+  ShaderProgram,
+  VertexArray,
+} from "../../Source/Cesium.js";
 import equals from "./equals.js";
-import { Cartesian2 } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { DeveloperError } from "../Source/Cesium.js";
-import { FeatureDetection } from "../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../Source/Cesium.js";
-import { PrimitiveType } from "../Source/Cesium.js";
-import { Buffer } from "../Source/Cesium.js";
-import { BufferUsage } from "../Source/Cesium.js";
-import { ClearCommand } from "../Source/Cesium.js";
-import { DrawCommand } from "../Source/Cesium.js";
-import { ShaderProgram } from "../Source/Cesium.js";
-import { VertexArray } from "../Source/Cesium.js";
 
 function createMissingFunctionMessageFunction(
   item,

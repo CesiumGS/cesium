@@ -13,9 +13,9 @@ import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
-import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
-import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelSceneGraph from "./ModelSceneGraph.js";
+import ModelStatistics from "./ModelStatistics.js";
+import ModelType from "./ModelType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
@@ -29,6 +29,7 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
@@ -107,14 +108,14 @@ export default function ModelExperimental(options) {
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
-   * ModelExperimentalType is part of the private API.
+   * ModelType is part of the private API.
    *
-   * @type {ModelExperimentalType}
+   * @type {ModelType}
    * @readonly
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
+  this.type = defaultValue(options.type, ModelType.GLTF);
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -154,7 +155,7 @@ export default function ModelExperimental(options) {
   this._computedScale = this._clampedScale;
 
   /**
-   * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
+   * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
    *
    * @type {Number}
@@ -186,6 +187,10 @@ export default function ModelExperimental(options) {
 
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
+
+  // This flag is true when the Cesium API, not a glTF animation, changes
+  // the transform of a node in the model.
+  this._userAnimationDirty = false;
 
   this._id = options.id;
   this._idDirty = false;
@@ -246,7 +251,7 @@ export default function ModelExperimental(options) {
   this._pickIds = [];
 
   // The model's bounding sphere and its initial radius are computed
-  // in ModelExperimentalSceneGraph.
+  // in ModelSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
@@ -273,8 +278,8 @@ export default function ModelExperimental(options) {
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -357,7 +362,7 @@ export default function ModelExperimental(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
-  this._statistics = new ModelExperimentalStatistics();
+  this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
@@ -365,6 +370,9 @@ export default function ModelExperimental(options) {
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
+
+  this._sceneGraph = undefined;
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -465,7 +473,21 @@ function initialize(model) {
   loader.load();
 
   const loaderPromise = loader.promise.then(function (loader) {
+    // If the model is destroyed before the promise resolves, then
+    // the loader will have been destroyed as well. Return early.
+    if (!defined(loader)) {
+      return;
+    }
+
     const components = loader.components;
+    if (!defined(components)) {
+      if (loader.isUnloaded()) {
+        return;
+      }
+
+      throw new RuntimeError("Failed to load model.");
+    }
+
     const structuralMetadata = components.structuralMetadata;
 
     if (
@@ -475,7 +497,7 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    const sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelSceneGraph({
       model: model,
       modelComponents: components,
     });
@@ -501,6 +523,11 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
 
       // Re-run the pipeline so texture memory statistics are re-computed
@@ -601,7 +628,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalStatistics}
+   * @type {ModelStatistics}
    * @readonly
    *
    * @private
@@ -723,7 +750,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalSceneGraph}
+   * @type {ModelSceneGraph}
    * @private
    */
   sceneGraph: {
@@ -1467,6 +1494,33 @@ Object.defineProperties(ModelExperimental.prototype, {
 });
 
 /**
+ * Returns the node with the given <code>name</code> in the glTF. This is used to
+ * modify a node's transform for user-defined animation.
+ *
+ * @param {String} name The name of the node in the glTF.
+ * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
+ *
+ * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ *
+ * @example
+ * // Apply non-uniform scale to node "Hand"
+ * const node = model.getNode("Hand");
+ * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ */
+ModelExperimental.prototype.getNode = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
+
+  return this._nodesByName[name];
+};
+
+/**
  * Sets the current value of an articulation stage.  After setting one or
  * multiple stage values, call ModelExperimental.applyArticulations() to
  * cause the node matrices to be recalculated.
@@ -1905,8 +1959,11 @@ function updateSceneGraph(model, frameState) {
     model._debugShowBoundingVolumeDirty = false;
   }
 
-  const updateForAnimations = model._activeAnimations.update(frameState);
+  const updateForAnimations =
+    model._userAnimationDirty || model._activeAnimations.update(frameState);
+
   sceneGraph.update(frameState, updateForAnimations);
+  model._userAnimationDirty = false;
 }
 
 function updateShowCreditsOnScreen(model) {
@@ -2038,7 +2095,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     clampedModelMatrix[13] = clampedPosition.y;
     clampedModelMatrix[14] = clampedPosition.z;
 
-    model._heightChanged = true;
+    model._heightDirty = true;
   };
 }
 
@@ -2366,9 +2423,7 @@ ModelExperimental.fromGltf = function (options) {
   const loader = new GltfLoader(loaderOptions);
 
   const is3DTiles = defined(options.content);
-  const type = is3DTiles
-    ? ModelExperimentalType.TILE_GLTF
-    : ModelExperimentalType.GLTF;
+  const type = is3DTiles ? ModelType.TILE_GLTF : ModelType.GLTF;
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = loaderOptions.gltfResource;
@@ -2398,11 +2453,7 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_B3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2418,11 +2469,7 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_PNTS,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2446,11 +2493,7 @@ ModelExperimental.fromI3dm = function (options) {
   };
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_I3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2465,7 +2508,7 @@ ModelExperimental.fromGeoJson = function (options) {
   const loader = new GeoJsonLoader(loaderOptions);
   const modelOptions = makeModelOptions(
     loader,
-    ModelExperimentalType.TILE_GEOJSON,
+    ModelType.TILE_GEOJSON,
     options
   );
   const model = new ModelExperimental(modelOptions);
@@ -2489,19 +2532,36 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  const isPnts = this.type === ModelType.TILE_PNTS;
+
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
+  const propertyAttributes = defined(this.structuralMetadata)
+    ? this.structuralMetadata.propertyAttributes
+    : undefined;
+  const hasPropertyAttributes =
+    defined(propertyAttributes) && defined(propertyAttributes[0]);
+
+  // Point clouds will be styled on the GPU unless they contain
+  // a batch table. That is, CPU styling will not be applied if
+  // - points have no metadata at all, or
+  // - points have metadata stored as a property attribute
+  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {

@@ -1,10 +1,12 @@
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
+import {
+  Iso8601,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  Entity,
+  EntityCollection,
+  RuntimeError,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/EntityCollection", function () {
   function CollectionListener() {

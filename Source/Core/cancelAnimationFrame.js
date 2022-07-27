@@ -1,4 +1,5 @@
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 
 let implementation;
 if (typeof cancelAnimationFrame !== "undefined") {
@@ -34,11 +35,19 @@ if (typeof cancelAnimationFrame !== "undefined") {
  * @param {Number} requestID The value returned by {@link requestAnimationFrame}.
  *
  * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
+ *
+ * @deprecated
  */
 function cancelAnimationFramePolyfill(requestID) {
   // we need this extra wrapper function because the native cancelAnimationFrame
   // functions must be invoked on the global scope (window), which is not the case
   // if invoked as Cesium.cancelAnimationFrame(requestID)
+
+  deprecationWarning(
+    "Cesium.cancelAnimationFrame",
+    "Cesium.cancelAnimationFrame was deprecated in CesiumJS 1.96 and will be removed in 1.99. Use the native cancelAnimationFrame method instead."
+  );
+
   implementation(requestID);
 }
 export default cancelAnimationFramePolyfill;

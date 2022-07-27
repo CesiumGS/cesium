@@ -1,6 +1,7 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -44,12 +45,8 @@ const scratchColor = new Color();
  */
 function ModelVisualizer(scene, entityCollection) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(scene)) {
-    throw new DeveloperError("scene is required.");
-  }
-  if (!defined(entityCollection)) {
-    throw new DeveloperError("entityCollection is required.");
-  }
+  Check.typeOf.object("scene", scene);
+  Check.typeOf.object("entityCollection", entityCollection);
   //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
@@ -372,29 +369,12 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     return BoundingSphereState.PENDING;
   }
 
-  if (ExperimentalFeatures.enableModelExperimental) {
-    // ModelExperimental's bounding sphere is already in world space, it does
-    // not need to be transformed.
-    BoundingSphere.clone(model.boundingSphere, result);
-    return BoundingSphereState.DONE;
+  const hasHeightReference = model.heightReference !== HeightReference.NONE;
+  if (hasHeightReference && !defined(model._clampedModelMatrix)) {
+    return BoundingSphereState.PENDING;
   }
 
-  if (model.heightReference === HeightReference.NONE) {
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model.modelMatrix,
-      result
-    );
-  } else {
-    if (!defined(model._clampedModelMatrix)) {
-      return BoundingSphereState.PENDING;
-    }
-    BoundingSphere.transform(
-      model.boundingSphereInternal,
-      model._clampedModelMatrix,
-      result
-    );
-  }
+  BoundingSphere.clone(model.boundingSphere, result);
   return BoundingSphereState.DONE;
 };
 

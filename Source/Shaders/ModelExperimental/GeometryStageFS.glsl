@@ -3,7 +3,7 @@ void geometryStage(out ProcessedAttributes attributes)
   attributes.positionMC = v_positionMC;
   attributes.positionEC = v_positionEC;
 
-  #ifdef COMPUTE_POSITION_WC
+  #ifdef COMPUTE_POSITION_WC_CUSTOM_SHADER
   attributes.positionWC = v_positionWC;
   #endif
 

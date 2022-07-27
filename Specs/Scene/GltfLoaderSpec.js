@@ -28,6 +28,7 @@ import {
   Resource,
   ResourceCache,
   ResourceLoaderState,
+  RuntimeError,
   Sampler,
   Texture,
   TextureMagnificationFilter,
@@ -107,7 +108,7 @@ describe(
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
     const boxArticulations =
-      "./Data/Models/Box-Articulations/Box-Articulations.gltf";
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
     const boxWithPrimitiveOutline =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
@@ -147,6 +148,32 @@ describe(
           gltfResource: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("throws if loading an unsupported glTF version", function () {
+      function modifyGltf(gltf) {
+        gltf.asset.version = "1.0";
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
+        function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        }
+      );
+    });
+
+    it("throws if an unsupported extension is required", function () {
+      function modifyGltf(gltf) {
+        gltf.extensionsRequired = ["NOT_supported_extension"];
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
+        function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        }
+      );
     });
 
     function getOptions(gltfPath, options) {
@@ -2141,7 +2168,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2161,7 +2188,7 @@ describe(
         expect(rotationAttribute.max).toBeUndefined();
         expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.packedTypedArray).toEqual(
+        expect(rotationAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2183,7 +2210,7 @@ describe(
         expect(scaleAttribute.max).toBeUndefined();
         expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.packedTypedArray).toEqual(
+        expect(scaleAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.6000000238418579, 0.699999988079071, 1,
@@ -2207,7 +2234,7 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
@@ -2336,7 +2363,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2356,7 +2383,7 @@ describe(
         expect(rotationAttribute.max).toBeUndefined();
         expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.packedTypedArray).toEqual(
+        expect(rotationAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2378,7 +2405,7 @@ describe(
         expect(scaleAttribute.max).toBeUndefined();
         expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.packedTypedArray).toEqual(
+        expect(scaleAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.6000000238418579, 0.699999988079071, 1,
@@ -2402,7 +2429,7 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
@@ -2520,14 +2547,14 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
 
-          expect(rotationAttribute.packedTypedArray).toEqual(
+          expect(rotationAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2540,7 +2567,7 @@ describe(
           expect(rotationAttribute.byteOffset).toBe(0);
           expect(rotationAttribute.byteStride).toBeUndefined();
 
-          expect(scaleAttribute.packedTypedArray).toEqual(
+          expect(scaleAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.6000000238418579, 0.699999988079071, 1,
@@ -2553,7 +2580,7 @@ describe(
           expect(scaleAttribute.byteOffset).toBe(0);
           expect(scaleAttribute.byteStride).toBeUndefined();
 
-          expect(featureIdAttribute.packedTypedArray).toEqual(
+          expect(featureIdAttribute.typedArray).toEqual(
             new Float32Array([0, 0, 1, 1])
           );
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -2636,14 +2663,14 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
 
-          expect(rotationAttribute.packedTypedArray).toEqual(
+          expect(rotationAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2656,7 +2683,7 @@ describe(
           expect(rotationAttribute.byteOffset).toBe(0);
           expect(rotationAttribute.byteStride).toBeUndefined();
 
-          expect(scaleAttribute.packedTypedArray).toEqual(
+          expect(scaleAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.6000000238418579, 0.699999988079071, 1,
@@ -2669,7 +2696,7 @@ describe(
           expect(scaleAttribute.byteOffset).toBe(0);
           expect(scaleAttribute.byteStride).toBeUndefined();
 
-          expect(featureIdAttribute.packedTypedArray).toEqual(
+          expect(featureIdAttribute.typedArray).toEqual(
             new Float32Array([0, 0, 1, 1])
           );
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -2720,7 +2747,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2769,7 +2796,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeUndefined();
+        expect(translationAttribute.typedArray).toBeUndefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBe(12);
@@ -2806,7 +2833,7 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
@@ -2859,7 +2886,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBe(undefined);
@@ -3553,16 +3580,15 @@ describe(
 
         expect(positionAttribute.buffer).toBeUndefined();
         expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(12);
-        expect(positionAttribute.byteStride).toBe(24);
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBeUndefined();
+        expect(positionAttribute.typedArray.byteLength).toBe(288);
 
         expect(normalAttribute.buffer).toBeUndefined();
         expect(normalAttribute.typedArray).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
-        expect(normalAttribute.byteStride).toBe(24);
-
-        expect(positionAttribute.typedArray).toBe(normalAttribute.typedArray);
-        expect(positionAttribute.typedArray.byteLength).toBe(576);
+        expect(normalAttribute.byteStride).toBeUndefined();
+        expect(normalAttribute.typedArray.byteLength).toBe(288);
       });
     });
 
@@ -3589,8 +3615,8 @@ describe(
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(12);
-        expect(positionAttribute.byteStride).toBe(24);
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBeUndefined();
 
         // Typed arrays of other attributes should not be defined
         expect(normalAttribute.buffer).toBeDefined();
@@ -3598,7 +3624,7 @@ describe(
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(24);
 
-        expect(positionAttribute.typedArray.byteLength).toBe(576);
+        expect(positionAttribute.typedArray.byteLength).toBe(288);
       });
     });
 
@@ -3718,7 +3744,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
@@ -3744,21 +3770,21 @@ describe(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
 
         const rotationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.ROTATION
         );
-        expect(rotationAttribute.packedTypedArray).toBeDefined();
+        expect(rotationAttribute.typedArray).toBeDefined();
         expect(rotationAttribute.buffer).toBeUndefined();
 
         const scaleAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.SCALE
         );
-        expect(scaleAttribute.packedTypedArray).toBeDefined();
+        expect(scaleAttribute.typedArray).toBeDefined();
         expect(scaleAttribute.buffer).toBeUndefined();
 
         const featureIdAttribute = getAttribute(
@@ -3766,7 +3792,7 @@ describe(
           InstanceAttributeSemantic.FEATURE_ID,
           0
         );
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
       });
     });
@@ -3816,7 +3842,7 @@ describe(
         expect(translationAttribute.count).toBe(4);
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
@@ -3872,7 +3898,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
@@ -3919,7 +3945,6 @@ describe(
         expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
         expect(outlineCoordinates.buffer).toBeDefined();
         expect(outlineCoordinates.typedArray).not.toBeDefined();
-        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
       });
     });
 
@@ -3967,7 +3992,6 @@ describe(
         expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
         expect(outlineCoordinates.buffer).toBeDefined();
         expect(outlineCoordinates.typedArray).not.toBeDefined();
-        expect(outlineCoordinates.packedTypedArray).not.toBeDefined();
       });
     });
 

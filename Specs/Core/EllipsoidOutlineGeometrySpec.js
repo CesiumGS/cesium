@@ -1,6 +1,9 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { EllipsoidOutlineGeometry } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  EllipsoidOutlineGeometry,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 

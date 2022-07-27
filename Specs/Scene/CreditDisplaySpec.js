@@ -1,6 +1,5 @@
-import { Credit } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { CreditDisplay } from "../../Source/Cesium.js";
+import { Credit, defined, CreditDisplay } from "../../../Source/Cesium.js";
+
 import absolutize from "../absolutize.js";
 
 describe("Scene/CreditDisplay", function () {

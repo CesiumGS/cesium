@@ -42,6 +42,7 @@ export default function Multiple3DTileContent(
   this._tile = tile;
   this._tilesetResource = tilesetResource;
   this._contents = [];
+  this._contentsCreated = false;
 
   // An older version of 3DTILES_multiple_contents used "content" instead of "contents"
   const contentHeaders = defined(contentsJson.contents)
@@ -112,7 +113,12 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   featuresLength: {
@@ -124,7 +130,12 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   pointsLength: {
@@ -136,7 +147,12 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   trianglesLength: {
@@ -148,7 +164,12 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   geometryByteLength: {
@@ -158,9 +179,14 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.   <code>Multiple3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   texturesByteLength: {
@@ -172,7 +198,12 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
+   *
    * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
    * @private
    */
   batchTableByteLength: {
@@ -187,8 +218,27 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. This behaves
+   * differently for <code>Multiple3DTileContent</code>: it returns
+   * undefined if the inner contents have not yet been created. This
+   * is handled specially in {@link Cesium3DTile}.
+   *
+   * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Promise.<Cesium3DTileContent>|undefined}
+   * @readonly
+   *
+   * @private
+   */
   readyPromise: {
     get: function () {
+      // The contents haven't been created yet, short-circuit. The tile
+      // will handle this as a special case
+      if (!this._contentsCreated) {
+        return undefined;
+      }
+
       const readyPromises = this._contents.map(function (content) {
         return content.readyPromise;
       });
@@ -321,8 +371,10 @@ function cancelPendingRequests(multipleContents, originalContentState) {
   // reset the tile's content state to try again later.
   multipleContents._tile._contentState = originalContentState;
 
-  multipleContents.tileset.statistics.numberOfPendingRequests -=
-    multipleContents._requestsInFlight;
+  const statistics = multipleContents.tileset.statistics;
+
+  statistics.numberOfPendingRequests -= multipleContents._requestsInFlight;
+  statistics.numberOfAttemptedRequests += multipleContents._requestsInFlight;
   multipleContents._requestsInFlight = 0;
 
   // Discard the request promises.
@@ -427,8 +479,12 @@ function requestInnerContent(
   contentResource.request = request;
   multipleContents._requests[index] = request;
 
-  return contentResource
-    .fetchArrayBuffer()
+  const promise = contentResource.fetchArrayBuffer();
+  if (!defined(promise)) {
+    return Promise.resolve(undefined);
+  }
+
+  return promise
     .then(function (arrayBuffer) {
       // Short circuit if another inner content was canceled.
       if (originalCancelCount < multipleContents._cancelCount) {
@@ -459,6 +515,7 @@ function createInnerContents(multipleContents) {
   return Promise.all(multipleContents._arrayFetchPromises).then(function (
     arrayBuffers
   ) {
+    // Short circuit if inner contents were canceled
     if (originalCancelCount < multipleContents._cancelCount) {
       return undefined;
     }
@@ -466,13 +523,16 @@ function createInnerContents(multipleContents) {
     const contents = arrayBuffers.map(function (arrayBuffer, i) {
       if (!defined(arrayBuffer)) {
         // Content was not fetched. The error was handled in
-        // the fetch promise
+        // the fetch promise. Return undefined to indicate partial failure.
         return undefined;
       }
 
       return createInnerContent(multipleContents, arrayBuffer, i);
     });
 
+    // Even if we had a partial success, mark that we finished creating
+    // contents
+    multipleContents._contentsCreated = true;
     multipleContents._contents = contents.filter(defined);
   });
 }

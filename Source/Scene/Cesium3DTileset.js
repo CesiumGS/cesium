@@ -206,6 +206,7 @@ function Cesium3DTileset(options) {
   this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
 
   this._styleEngine = new Cesium3DTileStyleEngine();
+  this._styleApplied = false;
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -1711,7 +1712,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *     <li>POSITION and _BATCHID semantics are required.</li>
    *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
    *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
-   *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>
    *     <li>Only one node is supported.</li>
    *     <li>Only one mesh per node is supported.</li>
    *     <li>Only one primitive per mesh is supported.</li>
@@ -2340,7 +2340,14 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  this._styleEngine.resetDirty();
+
+  // If the style wasn't able to be applied this frame (for example,
+  // the tileset was hidden), keep it dirty so the engine can try
+  // to apply the style next frame.
+  if (this._styleApplied) {
+    this._styleEngine.resetDirty();
+  }
+  this._styleApplied = false;
 };
 
 /**
@@ -2645,6 +2652,7 @@ function updateTileDebugLabels(tileset, frameState) {
 
 function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
+  tileset._styleApplied = true;
 
   const isRender = passOptions.isRender;
   const statistics = tileset._statistics;

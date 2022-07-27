@@ -1,6 +1,6 @@
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import AlphaMode from "../AlphaMode.js";
 import BlendingState from "../BlendingState.js";
 import Pass from "../../Renderer/Pass.js";
 
@@ -23,16 +23,15 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
 
   const renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {
+    renderStateOptions.cull.enabled = false;
+    renderStateOptions.depthMask = false;
     renderStateOptions.blending = BlendingState.ALPHA_BLEND;
-  } else {
-    renderStateOptions.blending = BlendingState.DISABLED;
   }
 
   const shaderBuilder = renderResources.shaderBuilder;
   const uniformMap = renderResources.uniformMap;
-  const alphaMode = alphaOptions.alphaMode;
 
-  if (alphaMode === AlphaMode.MASK) {
+  if (defined(alphaOptions.alphaCutoff)) {
     shaderBuilder.addDefine(
       "ALPHA_MODE_MASK",
       undefined,
@@ -46,18 +45,6 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
     uniformMap.u_alphaCutoff = function () {
       return alphaOptions.alphaCutoff;
     };
-  } else if (alphaMode === AlphaMode.BLEND) {
-    shaderBuilder.addDefine(
-      "ALPHA_MODE_BLEND",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  } else {
-    shaderBuilder.addDefine(
-      "ALPHA_MODE_OPAQUE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
   }
 };
 

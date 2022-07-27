@@ -1,9 +1,12 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { ViewportQuad } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Color,
+  Resource,
+  Texture,
+  Material,
+  ViewportQuad,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

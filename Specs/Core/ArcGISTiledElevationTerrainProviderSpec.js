@@ -1,14 +1,18 @@
-import { ArcGISTiledElevationTerrainProvider } from "../../Source/Cesium.js";
-import { DefaultProxy } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { HeightmapTerrainData } from "../../Source/Cesium.js";
+import {
+  ArcGISTiledElevationTerrainProvider,
+  DefaultProxy,
+  GeographicTilingScheme,
+  HeightmapTerrainData,
+  Request,
+  RequestScheduler,
+  Resource,
+  RuntimeError,
+  TerrainProvider,
+  WebMercatorTilingScheme,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Core/ArcGISTiledElevationTerrainProvider", function () {

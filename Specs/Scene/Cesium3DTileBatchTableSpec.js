@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cartesian4,
   Color,
-  ExperimentalFeatures,
   HeadingPitchRange,
   Matrix2,
   Matrix3,
@@ -66,15 +65,10 @@ describe(
       // Keep the error from logging to the console when running tests
       spyOn(Cesium3DTileBatchTable, "_deprecationWarning");
       spyOn(Batched3DModel3DTileContent, "_deprecationWarning");
-
-      // ModelExperimental doesn't use Cesium3DTileBatchTable
-      ExperimentalFeatures.enableModelExperimental = false;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-
-      ExperimentalFeatures.enableModelExperimental = true;
     });
 
     afterEach(function () {

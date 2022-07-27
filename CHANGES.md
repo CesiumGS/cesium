@@ -1,15 +1,33 @@
 # Change Log
 
+### 1.97 - 2022-09-01
+
+#### Breaking Changes :mega:
+
+- Support for glTF 1.0 assets has been removed. Please convert any glTF 1.0 assets to glTF 2.0. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+- Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+
 ### 1.96 - 2022-08-01
+
+##### Major Announcements :loudspeaker:
+
+- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](TODO) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
+  - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
+  - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
+  - Using ESM from `Source` will require a bundler to resolve third party node dependencies.
+  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
 
 ##### Breaking Changes :mega:
 
-- Tilesets and entities now use `ModelExperimental` by default. This can still be changed by setting `ExperimentalFeatures.enableModelExperimental = false`. [#10530](https://github.com/CesiumGS/cesium/pull/10530)
+- `Model.boundingSphere` now returns the bounding sphere in ECEF coordinates instead of the local coordinate system. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
 
 ##### Additions :tada:
 
 - Models and tilesets that use the `CESIUM_primitive_outline` extension can now toggle outlines at runtime with the `showOutline` property. Furthermore, the color of the outlines can now be controlled by the `outlineColor` property. [#10506](https://github.com/CesiumGS/cesium/pull/10506)
 - Added optional `blurActiveElementOnCanvasFocus` option to set the behavior of blurring the active element when interacting with the canvas. [#10518](https://github.com/CesiumGS/cesium/pull/10518)
+- Added `ModelExperimental.getNode` to allow users to modify the transforms of model nodes at runtime. [#10540](https://github.com/CesiumGS/cesium/pull/10540)
+- Added support for point cloud styling for tilesets loaded with `ModelExperimental`. [#10569](https://github.com/CesiumGS/cesium/pull/10569)
+- Upgraded earcut from version 2.2.2 to version 2.2.4 which includes 10-15% better performance in triangulation. [#10593](https://github.com/CesiumGS/cesium/pull/10593)
 
 ##### Fixes :wrench:
 
@@ -21,6 +39,14 @@
 - Fixed a crash in the 3D Tiles Formats sandcastle when loading draco-compressed point clouds with `ModelExperimental`. [#10521](https://github.com/CesiumGS/cesium/pull/10521)
 - Fixed a bug where per-feature post-processing was not working with `ModelExperimental`. [#10528](https://github.com/CesiumGS/cesium/pull/10528)
 - Fixed error in `loadAndExecuteScript` and favorite icon lost in sandcaslte when CesiumJS was running in cross-origin isloated evironment.[#10515](https://github.com/CesiumGS/cesium/pull/10515)
+- Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
+- Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
+- Fixed a bug where `.i3dm` models with quantized positions were not being correctly loaded by `ModelExperimental`. [#10598](https://github.com/CesiumGS/cesium/pull/10598)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
 
 ### 1.95 - 2022-07-01
 
@@ -57,10 +83,6 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - The `.getPropertyNames` methods of `Cesium3DTileFeature`, `Cesium3DTilePointFeature`, and `ModelFeature` have been deprecated and will be removed in 1.98. Use the `.getPropertyIds` methods instead.
-- Support for glTF 1.0 assets has been deprecated and will be removed in CesiumJS 1.96. Please convert any glTF 1.0 assets to glTF 2.0. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
-- Support for the glTF extension `KHR_techniques_webgl` has been deprecated and will be removed in CesiumJS 1.96. If custom GLSL shaders are needed, use `CustomShader` instead. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
-- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) were deprecate in CesiumJS 1.94 and will be removed in CesiumJS 1.96. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
-- `Model.boundingSphere` currently returns results in the model's local coordinate system, but in CesiumJS 1.96 it will be changed to return results in ECEF coordinates. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
 
 ### 1.94.3 - 2022-06-10
 
@@ -118,6 +140,10 @@
 
 - `Cesium3DTileStyle` constructor parameters of `string` or `Resource` type have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
 - `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been deprecated and will be removed in CesiumJS 1.96. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been deprecated and will be removed in CesiumJS 1.97. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
+- Support for glTF 1.0 assets has been deprecated and will be removed in CesiumJS 1.97. Please convert any glTF 1.0 assets to glTF 2.0. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- Support for the glTF extension `KHR_techniques_webgl` has been deprecated and will be removed in CesiumJS 1.97. If custom GLSL shaders are needed, use `CustomShader` instead. [#10414](https://github.com/CesiumGS/cesium/pull/10414)
+- `Model.boundingSphere` currently returns results in the model's local coordinate system, but in CesiumJS 1.96 it will be changed to return results in ECEF coordinates. [#10415](https://github.com/CesiumGS/cesium/pull/10415)
 
 ### 1.93 - 2022-05-02
 

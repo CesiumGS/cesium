@@ -1,6 +1,5 @@
 import {
   Cartesian3,
-  defer,
   GeocoderViewModel,
   Rectangle,
 } from "../../../Source/Cesium.js";
@@ -125,16 +124,20 @@ describe(
     });
 
     it("raises the complete event camera finished", function () {
-      const deferred = defer();
+      let destinationFoundCallback;
+
+      const promise = new Promise((resolve) => {
+        destinationFoundCallback = function (viewModel, destination) {
+          GeocoderViewModel.flyToDestination(viewModel, destination).then(
+            resolve
+          );
+        };
+      });
       const viewModel = new GeocoderViewModel({
         scene: scene,
         flightDuration: 0,
         geocoderServices: [customGeocoderOptions],
-        destinationFound: function (viewModel, destination) {
-          GeocoderViewModel.flyToDestination(viewModel, destination).then(
-            deferred.resolve
-          );
-        },
+        destinationFound: destinationFoundCallback,
       });
 
       const spyListener = jasmine.createSpy("listener");
@@ -143,7 +146,7 @@ describe(
       viewModel.searchText = "-1.0, -2.0";
       viewModel.search();
 
-      return deferred.promise.then(function () {
+      return promise.then(function () {
         expect(spyListener.calls.count()).toBe(1);
 
         viewModel.flightDuration = 1.5;
@@ -209,19 +212,23 @@ describe(
     it("if more than one geocoder service is provided, use first result from first geocode in array order", function () {
       spyOn(GeocoderViewModel, "flyToDestination");
 
-      const deferred = defer();
+      let destinationFoundCallback;
+
+      const promise = new Promise((resolve) => {
+        destinationFoundCallback = function (viewModel, destination) {
+          resolve();
+          GeocoderViewModel.flyToDestination(viewModel, destination);
+        };
+      });
       const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [noResultsGeocoder, customGeocoderOptions2],
-        destinationFound: function (viewModel, destination) {
-          deferred.resolve();
-          GeocoderViewModel.flyToDestination(viewModel, destination);
-        },
+        destinationFound: destinationFoundCallback,
       });
       geocoder._searchText = "sthsnth"; // an empty query will prevent geocoding
 
       geocoder.search();
-      return deferred.promise.then(function () {
+      return promise.then(function () {
         expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
         expect(GeocoderViewModel.flyToDestination).toHaveBeenCalledWith(
           geocoder,
@@ -246,21 +253,26 @@ describe(
     it("uses custom destination found callback", function () {
       spyOn(GeocoderViewModel, "flyToDestination");
 
-      const deferred = defer();
-      const destinationFound = jasmine.createSpy().and.callFake(function () {
-        deferred.resolve();
+      let destinationFoundCallback;
+
+      const promise = new Promise((resolve) => {
+        destinationFoundCallback = jasmine
+          .createSpy()
+          .and.callFake(function () {
+            resolve();
+          });
       });
       const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [noResultsGeocoder, customGeocoderOptions2],
-        destinationFound: destinationFound,
+        destinationFound: destinationFoundCallback,
       });
       geocoder._searchText = "sthsnth"; // an empty query will prevent geocoding
       geocoder.search();
-      return deferred.promise.then(function () {
+      return promise.then(function () {
         expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
         expect(GeocoderViewModel.flyToDestination).not.toHaveBeenCalled();
-        expect(destinationFound).toHaveBeenCalledWith(
+        expect(destinationFoundCallback).toHaveBeenCalledWith(
           geocoder,
           mockDestination
         );

@@ -2,8 +2,8 @@ import {
   combine,
   ComponentDatatype,
   GltfLoader,
-  ModelExperimentalStatistics,
-  ModelExperimentalType,
+  ModelStatistics,
+  ModelType,
   MorphTargetsPipelineStage,
   Resource,
   ResourceCache,
@@ -84,8 +84,8 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
-          statistics: new ModelExperimentalStatistics(),
-          type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelStatistics(),
+          type: ModelType.TILE_GLTF,
         },
         runtimeNode: {
           morphWeights: undefined,
@@ -156,8 +156,8 @@ describe(
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
-          statistics: new ModelExperimentalStatistics(),
-          type: ModelExperimentalType.TILE_GLTF,
+          statistics: new ModelStatistics(),
+          type: ModelType.TILE_GLTF,
         },
         runtimeNode: {
           morphWeights: undefined,

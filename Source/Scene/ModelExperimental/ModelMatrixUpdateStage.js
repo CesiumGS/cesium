@@ -20,8 +20,8 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  *  <li>updates the bounding volume of each draw command in each primitive of the the dirty nodes and their children</li>
  * </ul>
  *
- * @param {ModelExperimentalNode} runtimeNode
- * @param {ModelExperimentalSceneGraph} sceneGraph
+ * @param {ModelRuntimeNode} runtimeNode
+ * @param {ModelSceneGraph} sceneGraph
  * @param {FrameState} frameState
  *
  * @private

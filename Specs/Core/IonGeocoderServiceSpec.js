@@ -1,6 +1,9 @@
-import { GeocodeType } from "../../Source/Cesium.js";
-import { Ion } from "../../Source/Cesium.js";
-import { IonGeocoderService } from "../../Source/Cesium.js";
+import {
+  GeocodeType,
+  Ion,
+  IonGeocoderService,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("Core/IonGeocoderService", function () {

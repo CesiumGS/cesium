@@ -17,11 +17,13 @@ import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelComponents from "./ModelComponents.js";
+import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import Quaternion from "../Core/Quaternion.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
@@ -67,7 +69,7 @@ const GltfLoaderState = {
    *
    * @private
    */
-  UNLOADED: 0,
+  NOT_LOADED: 0,
   /**
    * The state of the loader while waiting for the glTF JSON loader promise
    * to resolve.
@@ -130,6 +132,13 @@ const GltfLoaderState = {
    * @constant
    */
   FAILED: 7,
+  /**
+   * If unload() is called, the loader switches to the unloaded state.
+   *
+   * @type {Number}
+   * @constant
+   */
+  UNLOADED: 8,
 };
 
 /**
@@ -152,7 +161,7 @@ const GltfLoaderState = {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
  * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
  * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
@@ -216,8 +225,8 @@ export default function GltfLoader(options) {
   this._sortedFeatureTextureIds = undefined;
 
   this._gltfJsonLoader = undefined;
-  this._state = GltfLoaderState.UNLOADED;
-  this._textureState = GltfLoaderState.UNLOADED;
+  this._state = GltfLoaderState.NOT_LOADED;
+  this._textureState = GltfLoaderState.NOT_LOADED;
   this._promise = undefined;
   this._texturesLoadedPromise = undefined;
   this._process = function (loader, frameState) {};
@@ -664,17 +673,17 @@ function loadDefaultAccessorValues(accessor, values) {
   return values.fill(MathType.clone(MathType.ZERO));
 }
 
-function loadAccessorValues(accessor, packedTypedArray, values, useQuaternion) {
+function loadAccessorValues(accessor, typedArray, values, useQuaternion) {
   const accessorType = accessor.type;
   const accessorCount = accessor.count;
 
   if (accessorType === AttributeType.SCALAR) {
     for (let i = 0; i < accessorCount; i++) {
-      values[i] = packedTypedArray[i];
+      values[i] = typedArray[i];
     }
   } else if (accessorType === AttributeType.VEC4 && useQuaternion) {
     for (let i = 0; i < accessorCount; i++) {
-      values[i] = Quaternion.unpack(packedTypedArray, i * 4);
+      values[i] = Quaternion.unpack(typedArray, i * 4);
     }
   } else {
     const MathType = AttributeType.getMathType(accessorType);
@@ -683,7 +692,7 @@ function loadAccessorValues(accessor, packedTypedArray, values, useQuaternion) {
     );
 
     for (let i = 0; i < accessorCount; i++) {
-      values[i] = MathType.unpack(packedTypedArray, i * numberOfComponents);
+      values[i] = MathType.unpack(typedArray, i * numberOfComponents);
     }
   }
 
@@ -698,24 +707,20 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
     const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-    const promise = bufferViewLoader.promise
-      .then(function (bufferViewLoader) {
-        if (loader.isDestroyed()) {
-          return;
-        }
-        const bufferViewTypedArray = bufferViewLoader.typedArray;
-        const packedTypedArray = getPackedTypedArray(
-          gltf,
-          accessor,
-          bufferViewTypedArray
-        );
+    const promise = bufferViewLoader.promise.then(function (bufferViewLoader) {
+      if (loader.isDestroyed()) {
+        return;
+      }
+      const bufferViewTypedArray = bufferViewLoader.typedArray;
+      const typedArray = getPackedTypedArray(
+        gltf,
+        accessor,
+        bufferViewTypedArray
+      );
 
-        useQuaternion = defaultValue(useQuaternion, false);
-        loadAccessorValues(accessor, packedTypedArray, values, useQuaternion);
-      })
-      .catch(function () {
-        loadDefaultAccessorValues(accessor, values);
-      });
+      useQuaternion = defaultValue(useQuaternion, false);
+      loadAccessorValues(accessor, typedArray, values, useQuaternion);
+    });
     loader._loaderPromises.push(promise);
 
     return values;
@@ -801,6 +806,56 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
   return semanticInfo;
 }
 
+function finalizeDracoAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray
+) {
+  // The accessor's byteOffset and byteStride should be ignored for draco.
+  // Each attribute is tightly packed in its own buffer after decode.
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+  attribute.quantization = vertexBufferLoader.quantization;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      vertexBufferLoader.quantization.componentDatatype,
+      vertexBufferLoader.typedArray.buffer
+    );
+  }
+}
+
+function finalizeAttribute(
+  gltf,
+  accessor,
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray
+) {
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray) {
+    // The accessor's byteOffset and byteStride should be ignored since values
+    // are tightly packed in a typed array
+    const bufferViewTypedArray = vertexBufferLoader.typedArray;
+    attribute.typedArray = getPackedTypedArray(
+      gltf,
+      accessor,
+      bufferViewTypedArray
+    );
+    attribute.byteOffset = 0;
+    attribute.byteStride = undefined;
+  }
+}
+
 function loadAttribute(
   loader,
   gltf,
@@ -809,8 +864,7 @@ function loadAttribute(
   draco,
   dequantize,
   loadBuffer,
-  loadTypedArray,
-  loadAsTypedArrayPacked
+  loadTypedArray
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -853,36 +907,26 @@ function loadAttribute(
       return;
     }
 
-    if (loadAsTypedArrayPacked) {
-      // The accessor's byteOffset and byteStride should be ignored since values
-      // are tightly packed in a typed array
-      const bufferViewTypedArray = vertexBufferLoader.typedArray;
-      attribute.packedTypedArray = getPackedTypedArray(
-        gltf,
-        accessor,
-        bufferViewTypedArray
-      );
-      attribute.byteOffset = 0;
-      attribute.byteStride = undefined;
-
-      if (loadBuffer) {
-        attribute.buffer = vertexBufferLoader.buffer;
-      }
-    } else {
-      attribute.typedArray = vertexBufferLoader.typedArray;
-      attribute.buffer = vertexBufferLoader.buffer;
-    }
-
     if (
       defined(draco) &&
       defined(draco.attributes) &&
       defined(draco.attributes[gltfSemantic])
     ) {
-      // The accessor's byteOffset and byteStride should be ignored for draco.
-      // Each attribute is tightly packed in its own buffer after decode.
-      attribute.byteOffset = 0;
-      attribute.byteStride = undefined;
-      attribute.quantization = vertexBufferLoader.quantization;
+      finalizeDracoAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray
+      );
+    } else {
+      finalizeAttribute(
+        gltf,
+        accessor,
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray
+      );
     }
   });
 
@@ -921,7 +965,6 @@ function loadVertexAttribute(
   const outputTypedArrayOnly = loader._loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray = outputTypedArrayOnly || loadFor2D;
-  const outputTypedArrayPacked = false;
 
   // Determine what to load right now:
   //
@@ -931,9 +974,6 @@ function loadVertexAttribute(
   //   set the load flags directly
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
   const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
-  const loadAsTypedArrayPacked = needsPostProcessing
-    ? true
-    : outputTypedArrayPacked;
 
   const attribute = loadAttribute(
     loader,
@@ -943,14 +983,12 @@ function loadVertexAttribute(
     draco,
     false,
     loadBuffer,
-    loadTypedArray,
-    loadAsTypedArrayPacked
+    loadTypedArray
   );
 
   const attributePlan = new PrimitiveLoadPlan.AttributeLoadPlan(attribute);
   attributePlan.loadBuffer = outputBuffer;
   attributePlan.loadTypedArray = outputTypedArray;
-  attributePlan.loadPackedTypedArray = outputTypedArrayPacked;
 
   return attributePlan;
 }
@@ -959,10 +997,16 @@ function loadInstancedAttribute(
   loader,
   gltf,
   accessorId,
+  attributes,
   gltfSemantic,
-  loadAsTypedArrayPacked,
   frameState
 ) {
+  const hasRotation = defined(attributes.ROTATION);
+  const hasTranslationMinMax =
+    defined(attributes.TRANSLATION) &&
+    defined(gltf.accessors[attributes.TRANSLATION].min) &&
+    defined(gltf.accessors[attributes.TRANSLATION].max);
+
   const semanticInfo = getSemanticInfo(
     loader,
     InstanceAttributeSemantic,
@@ -970,6 +1014,11 @@ function loadInstancedAttribute(
   );
 
   const modelSemantic = semanticInfo.modelSemantic;
+
+  const isTransformAttribute =
+    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
+    modelSemantic === InstanceAttributeSemantic.ROTATION ||
+    modelSemantic === InstanceAttributeSemantic.SCALE;
 
   const isTranslationAttribute =
     modelSemantic === InstanceAttributeSemantic.TRANSLATION;
@@ -979,8 +1028,23 @@ function loadInstancedAttribute(
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
-  const loadBuffer = !loadAsTypedArrayPacked;
-  loadAsTypedArrayPacked = loadAsTypedArrayPacked || loadFor2D;
+  // In addition to the loader options, load the attributes as typed arrays if:
+  // - the instances have rotations, so that instance matrices are computed on the CPU.
+  //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
+  // - the translation accessor does not have a min and max, so the values can be used
+  //   for computing an accurate bounding volume.
+  // - the attributes contain feature IDs, in order to add the instance's feature ID
+  //   to the pick object.
+  // - translations are required for 2D
+  // - GPU instancing is not supported.
+  let loadTypedArray =
+    loader._loadAttributesAsTypedArray ||
+    ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
+    modelSemantic === InstanceAttributeSemantic.FEATURE_ID ||
+    !frameState.context.instancedArrays;
+
+  const loadBuffer = !loadTypedArray;
+  loadTypedArray = loadTypedArray || loadFor2D;
 
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
@@ -991,8 +1055,7 @@ function loadInstancedAttribute(
     undefined,
     true,
     loadBuffer,
-    loadAsTypedArrayPacked,
-    loadAsTypedArrayPacked
+    loadTypedArray
   );
 }
 
@@ -1095,7 +1158,7 @@ function loadTexture(
   });
 
   const promise = textureLoader.promise.then(function (textureLoader) {
-    if (loader.isDestroyed()) {
+    if (loader.isUnloaded() || loader.isDestroyed()) {
       return;
     }
     textureReader.texture = textureLoader.texture;
@@ -1688,39 +1751,16 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
   const instances = new Instances();
   const attributes = instancingExtension.attributes;
   if (defined(attributes)) {
-    const hasRotation = defined(attributes.ROTATION);
-    const hasTranslationMinMax =
-      defined(attributes.TRANSLATION) &&
-      defined(gltf.accessors[attributes.TRANSLATION].min) &&
-      defined(gltf.accessors[attributes.TRANSLATION].max);
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
-        // In addition to the loader options, load the attributes as typed arrays if:
-        // - the instances have rotations, so that instance matrices are computed on the CPU.
-        //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
-        // - the translation accessor does not have a min and max, so the values can be used
-        //   for computing an accurate bounding volume.
-        // - the attributes contain feature IDs, in order to add the instance's feature ID
-        //   to the pick object.
-        // - GPU instancing is not supported.
-        const isTransformAttribute =
-          semantic === InstanceAttributeSemantic.TRANSLATION ||
-          semantic === InstanceAttributeSemantic.ROTATION ||
-          semantic === InstanceAttributeSemantic.SCALE;
-        const loadAsTypedArrayPacked =
-          loader._loadAttributesAsTypedArray ||
-          ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
-          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0 ||
-          !frameState.context.instancedArrays;
-
         const accessorId = attributes[semantic];
         instances.attributes.push(
           loadInstancedAttribute(
             loader,
             gltf,
             accessorId,
+            attributes,
             semantic,
-            loadAsTypedArrayPacked,
             frameState
           )
         );
@@ -2154,6 +2194,15 @@ function parse(
   rejectPromise,
   rejectTexturesPromise
 ) {
+  const version = gltf.asset.version;
+  if (version !== "2.0") {
+    throw new RuntimeError(`Unsupported glTF version: ${version}`);
+  }
+  const extensionsRequired = gltf.extensionsRequired;
+  if (defined(extensionsRequired)) {
+    ModelExperimentalUtility.checkSupportedExtensions(extensionsRequired);
+  }
+
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
@@ -2303,6 +2352,14 @@ function unloadStructuralMetadata(loader) {
 }
 
 /**
+ * Returns whether the resource has been unloaded.
+ * @private
+ */
+GltfLoader.prototype.isUnloaded = function () {
+  return this._state === GltfLoaderState.UNLOADED;
+};
+
+/**
  * Unloads the resource.
  * @private
  */
@@ -2319,4 +2376,5 @@ GltfLoader.prototype.unload = function () {
   unloadStructuralMetadata(this);
 
   this._components = undefined;
+  this._state = GltfLoaderState.UNLOADED;
 };
