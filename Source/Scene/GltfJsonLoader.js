@@ -10,6 +10,7 @@ import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
 import ForEach from "./GltfPipeline/ForEach.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
+import updateVersion from "./GltfPipeline/updateVersion.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -164,6 +165,42 @@ function handleError(gltfJsonLoader, error) {
   return Promise.reject(gltfJsonLoader.getError(errorMessage, error));
 }
 
+function upgradeVersion(gltfJsonLoader, gltf) {
+  if (gltf.asset.version === "2.0") {
+    return Promise.resolve();
+  }
+
+  // Load all buffers into memory. updateVersion will read and in some cases modify
+  // the buffer data, which it accesses from buffer.extras._pipeline.source
+  const promises = [];
+  ForEach.buffer(gltf, function (buffer) {
+    if (
+      !defined(buffer.extras._pipeline.source) && // Ignore uri if this buffer uses the glTF 1.0 KHR_binary_glTF extension
+      defined(buffer.uri)
+    ) {
+      const resource = gltfJsonLoader._baseResource.getDerivedResource({
+        url: buffer.uri,
+      });
+      const resourceCache = gltfJsonLoader._resourceCache;
+      const bufferLoader = resourceCache.loadExternalBuffer({
+        resource: resource,
+      });
+
+      gltfJsonLoader._bufferLoaders.push(bufferLoader);
+
+      promises.push(
+        bufferLoader.promise.then(function (bufferLoader) {
+          buffer.extras._pipeline.source = bufferLoader.typedArray;
+        })
+      );
+    }
+  });
+
+  return Promise.all(promises).then(function () {
+    updateVersion(gltf);
+  });
+}
+
 function decodeDataUris(gltf) {
   const promises = [];
   ForEach.buffer(gltf, function (buffer) {
@@ -207,6 +244,9 @@ function processGltfJson(gltfJsonLoader, gltf) {
   addPipelineExtras(gltf);
 
   return decodeDataUris(gltf)
+    .then(function () {
+      return upgradeVersion(gltfJsonLoader, gltf);
+    })
     .then(function () {
       addDefaults(gltf);
       return loadEmbeddedBuffers(gltfJsonLoader, gltf);

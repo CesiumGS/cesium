@@ -151,6 +151,8 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    // This is a no-op because GltfJsonLoader automatically upgrades the
+    // glTF version. This should work once that behavior is removed.
     it("throws if loading an unsupported glTF version", function () {
       function modifyGltf(gltf) {
         gltf.asset.version = "1.0";
@@ -175,20 +177,6 @@ describe(
           expect(error).toBeInstanceOf(RuntimeError);
         }
       );
-    });
-
-    it("throws if glb has invalid magic number", function () {
-      const gltfLoader = new GltfLoader({
-        gltfResource: new Resource({
-          url: boxTexturedBinary,
-        }),
-        incrementallyLoadTextures: false,
-        typedArray: new Uint8Array(20),
-      });
-
-      expect(function () {
-        gltfLoader.load();
-      }).toThrowError();
     });
 
     function getOptions(gltfPath, options) {

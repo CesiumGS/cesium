@@ -11,7 +11,6 @@ import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import getMagic from "../Core/getMagic.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
@@ -328,16 +327,6 @@ Object.defineProperties(GltfLoader.prototype, {
  * @private
  */
 GltfLoader.prototype.load = function () {
-  if (defined(this._typedArray)) {
-    const magic = getMagic(this._typedArray, this._typedArray.byteOffset);
-    if (magic !== "glTF") {
-      const url = this._gltfResource.url;
-      throw new RuntimeError(
-        `Failed to load ${url}: glb contains invalid magic header`
-      );
-    }
-  }
-
   const gltfJsonLoader = ResourceCache.loadGltfJson({
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,

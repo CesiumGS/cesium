@@ -87,6 +87,8 @@ describe(
     const vertexColorTestUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
     const emissiveTextureUrl = "./Data/Models/PBR/BoxEmissive/BoxEmissive.gltf";
+    const boomBoxUrl =
+      "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const riggedFigureUrl =
       "./Data/Models/rigged-figure-test/rigged-figure-test.gltf";
     const dracoCesiumManUrl =
@@ -631,6 +633,21 @@ describe(
             expect(rgba[2]).toBeLessThan(20);
             expect(rgba[3]).toEqual(255);
           });
+        });
+      });
+    });
+
+    it("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
+      const resource = Resource.createIfNeeded(boomBoxUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boomBoxUrl,
+          },
+          scene
+        ).then(function (model) {
+          verifyRender(model, true);
         });
       });
     });
@@ -1400,25 +1417,23 @@ describe(
 
       it("boundingSphere accounts for axis correction", function () {
         const resource = Resource.createIfNeeded(riggedFigureUrl);
-        const loadPromise = resource.fetchArrayBuffer();
-        return loadPromise.then(function (buffer) {
-          return loadAndZoomToModelExperimental(
-            { gltf: new Uint8Array(buffer) },
-            scene
-          ).then(function (model) {
-            // The bounding sphere should transform from z-forward
-            // to x-forward.
-            const boundingSphere = model.boundingSphere;
-            expect(boundingSphere).toBeDefined();
-            expect(boundingSphere.center).toEqualEpsilon(
-              new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
-              CesiumMath.EPSILON3
-            );
-            expect(boundingSphere.radius).toEqualEpsilon(
-              0.9484635280120018,
-              CesiumMath.EPSILON3
-            );
-          });
+        return resource.fetchJson().then(function (gltf) {
+          return loadAndZoomToModelExperimental({ gltf: gltf }, scene).then(
+            function (model) {
+              // The bounding sphere should transform from z-forward
+              // to x-forward.
+              const boundingSphere = model.boundingSphere;
+              expect(boundingSphere).toBeDefined();
+              expect(boundingSphere.center).toEqualEpsilon(
+                new Cartesian3(0.0320296511054039, 0, 0.7249599695205688),
+                CesiumMath.EPSILON3
+              );
+              expect(boundingSphere.radius).toEqualEpsilon(
+                0.9484635280120018,
+                CesiumMath.EPSILON3
+              );
+            }
+          );
         });
       });
     });
@@ -2883,7 +2898,7 @@ describe(
         });
       });
 
-      it("changing imageBasedLighting parameters works", function () {
+      it("changing imageBasedLightingFactor works", function () {
         return loadAndZoomToModelExperimental(
           {
             gltf: boxTexturedGltfUrl,
@@ -2909,10 +2924,161 @@ describe(
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual(result);
           });
+        });
+      });
 
-          ibl.luminanceAtZenith = 0.0;
+      it("changing luminanceAtZenith works", function () {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: new ImageBasedLighting({
+              luminanceAtZenith: 0.0,
+            }),
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
+
+          let result;
+          verifyRender(model, true);
           expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba).toEqual(result);
+            result = rgba;
+          });
+
+          const ibl = model.imageBasedLighting;
+          ibl.luminanceAtZenith = 0.2;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual(result);
+          });
+        });
+      });
+
+      it("changing sphericalHarmonicCoefficients works", function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const L00 = new Cartesian3(
+          0.692622075009195,
+          0.4543516001819,
+          0.36910172299235
+        ); // L00, irradiance, pre-scaled base
+        const L1_1 = new Cartesian3(
+          0.289407068366422,
+          0.16789310162658,
+          0.106174907004792
+        ); // L1-1, irradiance, pre-scaled base
+        const L10 = new Cartesian3(
+          -0.591502034778913,
+          -0.28152432317119,
+          0.124647554708491
+        ); // L10, irradiance, pre-scaled base
+        const L11 = new Cartesian3(
+          0.34945458117126,
+          0.163273486841657,
+          -0.03095643545207
+        ); // L11, irradiance, pre-scaled base
+        const L2_2 = new Cartesian3(
+          0.22171176447426,
+          0.11771991868122,
+          0.031381053430064
+        ); // L2-2, irradiance, pre-scaled base
+        const L2_1 = new Cartesian3(
+          -0.348955284677868,
+          -0.187256994042823,
+          -0.026299717727617
+        ); // L2-1, irradiance, pre-scaled base
+        const L20 = new Cartesian3(
+          0.119982671127227,
+          0.076784552175028,
+          0.055517838847755
+        ); // L20, irradiance, pre-scaled base
+        const L21 = new Cartesian3(
+          -0.545546043202299,
+          -0.279787444030397,
+          -0.086854000285261
+        ); // L21, irradiance, pre-scaled base
+        const L22 = new Cartesian3(
+          0.160417569726332,
+          0.120896423762313,
+          0.121102528320197
+        ); // L22, irradiance, pre-scaled base
+        const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: new ImageBasedLighting({
+              sphericalHarmonicCoefficients: coefficients,
+            }),
+          },
+          scene
+        ).then(function (model) {
+          scene.highDynamicRange = true;
+
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
+
+          let result;
+          verifyRender(model, true);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            result = rgba;
+          });
+
+          const ibl = model.imageBasedLighting;
+          ibl.sphericalHarmonicCoefficients = undefined;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual(result);
+          });
+
+          scene.highDynamicRange = false;
+        });
+      });
+
+      it("changing specularEnvironmentMaps works", function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const url = "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: boomBoxUrl,
+            imageBasedLighting: new ImageBasedLighting({
+              specularEnvironmentMaps: url,
+            }),
+          },
+          scene
+        ).then(function (model) {
+          const ibl = model.imageBasedLighting;
+
+          return pollToPromise(function () {
+            scene.render();
+            return (
+              defined(ibl.specularEnvironmentMapAtlas) &&
+              ibl.specularEnvironmentMapAtlas.ready
+            );
+          }).then(function () {
+            scene.highDynamicRange = true;
+
+            const renderOptions = {
+              scene: scene,
+              time: defaultDate,
+            };
+
+            let result;
+            verifyRender(model, true);
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              result = rgba;
+            });
+
+            ibl.specularEnvironmentMaps = undefined;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba).not.toEqual(result);
+            });
+            scene.highDynamicRange = false;
           });
         });
       });
