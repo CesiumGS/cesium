@@ -2838,6 +2838,10 @@ describe(
     });
 
     describe("imageBasedLighting", function () {
+      afterEach(function () {
+        scene.highDynamicRange = false;
+      });
+
       it("initializes with imageBasedLighting", function () {
         const ibl = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
@@ -3033,8 +3037,6 @@ describe(
           expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual(result);
           });
-
-          scene.highDynamicRange = false;
         });
       });
 
@@ -3078,7 +3080,6 @@ describe(
             expect(renderOptions).toRenderAndCall(function (rgba) {
               expect(rgba).not.toEqual(result);
             });
-            scene.highDynamicRange = false;
           });
         });
       });

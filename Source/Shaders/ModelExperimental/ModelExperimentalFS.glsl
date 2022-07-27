@@ -66,7 +66,7 @@ void main()
     cpuStylingStage(material, selectedFeature);
     #endif
 
-    #ifdef HAS_MODEL_COLOR
+    #if defined(HAS_MODEL_COLOR) && !defined(USE_CPU_STYLING)
     modelColorStage(material);
     #endif
 
