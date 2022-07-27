@@ -3242,6 +3242,21 @@ describe(
       });
     });
 
+    it("does not issue draw commands when ignoreCommands is true", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toBe(true);
+        model._ignoreCommands = true;
+
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
+      });
+    });
+
     describe("cull", function () {
       it("enables culling", function () {
         return loadAndZoomToModelExperimental(

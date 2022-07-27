@@ -177,6 +177,20 @@ describe(
       );
     });
 
+    it("throws if glb has invalid magic number", function () {
+      const gltfLoader = new GltfLoader({
+        gltfResource: new Resource({
+          url: boxTexturedBinary,
+        }),
+        incrementallyLoadTextures: false,
+        typedArray: new Uint8Array(20),
+      });
+
+      expect(function () {
+        gltfLoader.load();
+      }).toThrowError();
+    });
+
     function getOptions(gltfPath, options) {
       const resource = new Resource({
         url: gltfPath,
@@ -259,6 +273,15 @@ describe(
       }
       return undefined;
     }
+
+    it("preserves query string in url", function () {
+      const params = "?param1=1&param2=2";
+      const url = boxTextured + params;
+      return loadGltf(url).then(function (gltfLoader) {
+        const loaderResource = gltfLoader._gltfResource;
+        expect(loaderResource.url).toEndWith(params);
+      });
+    });
 
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
