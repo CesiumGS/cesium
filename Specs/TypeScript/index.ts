@@ -33,6 +33,7 @@ import {
   EllipsoidOutlineGeometry,
   EllipsoidTerrainProvider,
   EntityCollection,
+  Event as CesiumEvent,
   FrustumGeometry,
   FrustumOutlineGeometry,
   GeoJsonDataSource,
@@ -394,3 +395,11 @@ const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
 let pb = new PropertyBag();
 let hasProp: boolean = pb.hasProperty("xyz");
 property = pb.xyz;
+
+type MyListener = (x: boolean, y: string) => void;
+
+const listener: MyListener = function(a: boolean, b: string) {}
+
+const evt = new CesiumEvent<MyListener>();
+evt.addEventListener(listener);
+evt.raiseEvent(true, "hi");

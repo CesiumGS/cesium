@@ -120,12 +120,12 @@ function compareNumber(a, b) {
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
  *
- * @param {Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
+ * @param {Parameters<Listener>} args This method takes any number of parameters and passes them through to the listener functions.
  *
  * @see Event#addEventListener
  * @see Event#removeEventListener
  */
-Event.prototype.raiseEvent = function () {
+Event.prototype.raiseEvent = function (...args) {
   this._insideRaiseEvent = true;
 
   let i;
@@ -136,7 +136,7 @@ Event.prototype.raiseEvent = function () {
   for (i = 0; i < length; i++) {
     const listener = listeners[i];
     if (defined(listener)) {
-      listeners[i].apply(scopes[i], arguments);
+      listeners[i].apply(scopes[i], args);
     }
   }
 

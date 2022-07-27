@@ -1252,6 +1252,8 @@ function createTypeScriptDefinitions() {
     .replace(/<String>/gm, "<string>")
     .replace(/<Boolean>/gm, "<boolean>")
     .replace(/<Object>/gm, "<object>")
+    // Workaround for https://github.com/englercj/tsd-jsdoc/issues/149
+    .replace(/\(args: Parameters<Listener>/, "(...args: Parameters<Listener>")
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
