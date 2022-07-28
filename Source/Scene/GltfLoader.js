@@ -2196,7 +2196,10 @@ function parse(
 ) {
   const version = gltf.asset.version;
   if (version !== "2.0") {
-    throw new RuntimeError(`Unsupported glTF version: ${version}`);
+    const url = loader._gltfResource.url;
+    throw new RuntimeError(
+      `Failed to load ${url}: \nUnsupported glTF version: ${version}`
+    );
   }
   const extensionsRequired = gltf.extensionsRequired;
   if (defined(extensionsRequired)) {
