@@ -1,4 +1,3 @@
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js";
@@ -82,7 +81,37 @@ MetadataPipelineStage.process = function (
 ) {
   const { shaderBuilder, model } = renderResources;
 
-  const structuralMetadata = defaultValue(model.structuralMetadata, {});
+  // Declare <type>MetadataClass structs, as needed
+  declareMetadataTypeStructs(shaderBuilder, primitive, model);
+
+  // Always declare the Metadata and MetadataClass structs, and the
+  // initializeMetadata() function, even if not used
+  declareStructsAndFunctions(shaderBuilder);
+  shaderBuilder.addVertexLines([MetadataStageVS]);
+  shaderBuilder.addFragmentLines([MetadataStageFS]);
+
+  // const { structuralMetadata = {}, content } = model;
+  const { structuralMetadata = {} } = model;
+  const { propertyAttributes, propertyTextures } = structuralMetadata;
+  if (defined(propertyAttributes)) {
+    processPropertyAttributes(renderResources, primitive, propertyAttributes);
+  }
+  if (defined(propertyTextures)) {
+    processPropertyTextures(renderResources, propertyTextures);
+  }
+};
+
+/**
+ * Declare <type>MetadataClass structs in the shader
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {ModelExperimental} model
+ * @private
+ */
+function declareMetadataTypeStructs(shaderBuilder, primitive, model) {
+  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
+  // const { structuralMetadata = {}, content } = model;
+  const { structuralMetadata = {} } = model;
   const { propertyAttributes, propertyTextures } = structuralMetadata;
 
   // Find which metadata types are used
@@ -94,42 +123,8 @@ MetadataPipelineStage.process = function (
     getPropertyTextureTypes(metadataTypes, propertyTextures);
   }
 
-  // Declare <type>MetadataClass and <type>MetadataStatistics structs
-  declareMetadataTypeStructs(shaderBuilder, metadataTypes);
-
-  // Always declare the Metadata and MetadataClass structs, and the
-  // initializeMetadata() function, even if not used
-  declareStructsAndFunctions(shaderBuilder);
-  shaderBuilder.addVertexLines([MetadataStageVS]);
-  shaderBuilder.addFragmentLines([MetadataStageFS]);
-
-  if (defined(propertyAttributes)) {
-    processPropertyAttributes(renderResources, primitive, propertyAttributes);
-  }
-  if (defined(propertyTextures)) {
-    processPropertyTextures(renderResources, propertyTextures);
-  }
-};
-
-/**
- * Declare <type>MetadataClass and <type>MetadataStatistics structs in the shader
- * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
- * @param {Set<String>} metadataTypes The types of metadata used in the shaders
- * @private
- */
-function declareMetadataTypeStructs(shaderBuilder, metadataTypes) {
-  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
-  const statisticsFields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
-
   for (const metadataType of metadataTypes) {
-    const className = `${metadataType}MetadataClass`;
-    addTypeStruct(className, metadataType, classFields);
-
-    const statisticsName = `${metadataType}MetadataStatistics`;
-    addTypeStruct(statisticsName, metadataType, statisticsFields);
-  }
-
-  function addTypeStruct(structName, type, fields) {
+    const structName = `${metadataType}MetadataClass`;
     const structIdVs = `${structName}VS`;
     const structIdFs = `${structName}FS`;
 
@@ -138,28 +133,12 @@ function declareMetadataTypeStructs(shaderBuilder, metadataTypes) {
     shaderBuilder.addStruct(structIdFs, structName, ShaderDestination.FRAGMENT);
 
     // Add fields
-    for (let i = 0; i < fields.length; i++) {
-      const shaderName = fields[i].shaderName;
-      // TODO: how to handle occcurrences?
-      const shaderType = getStatisticsType(type, fields[i].type);
-      shaderBuilder.addStructField(structIdVs, shaderType, shaderName);
-      shaderBuilder.addStructField(structIdFs, shaderType, shaderName);
+    for (let i = 0; i < classFields.length; i++) {
+      const shaderName = classFields[i].shaderName;
+      shaderBuilder.addStructField(structIdVs, metadataType, shaderName);
+      shaderBuilder.addStructField(structIdFs, metadataType, shaderName);
     }
   }
-}
-
-function getStatisticsType(dataType, fieldType) {
-  if (!defined(fieldType)) {
-    return dataType;
-  }
-  const floatEquivalents = {
-    int: "float",
-    ivec2: "vec2",
-    ivec3: "vec3",
-    ivec4: "vec4",
-  };
-  const convertedType = floatEquivalents[dataType];
-  return convertedType !== undefined ? convertedType : dataType;
 }
 
 function declareStructsAndFunctions(shaderBuilder) {
@@ -343,7 +322,7 @@ function addPropertyAttributeProperty(
   // struct MetadataStatistics {
   //   floatMetadataStatistics property;
   // }
-  const statisticsType = `${glslType}MetadataStatistics`;
+  /**const statisticsType = `${glslType}MetadataStatistics`;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_VS,
     statisticsType,
@@ -353,7 +332,7 @@ function addPropertyAttributeProperty(
     MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
     statisticsType,
     metadataVariable
-  );
+  );*/
 
   let unpackedValue = `attributes.${attributeVariable}`;
 
@@ -403,7 +382,7 @@ function addPropertyAttributeProperty(
   }
 
   // Add lines to set values in the metadataStatistics struct
-  const statisticsFields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
+  /** const statisticsFields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
   for (let i = 0; i < statisticsFields.length; i++) {
     const { specName, shaderName } = statisticsFields[i];
 
@@ -421,7 +400,7 @@ function addPropertyAttributeProperty(
       MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
       [fieldLine]
     );
-  }
+  }*/
 }
 
 function getPropertyTextureTypes(metadataTypes, propertyTextures) {

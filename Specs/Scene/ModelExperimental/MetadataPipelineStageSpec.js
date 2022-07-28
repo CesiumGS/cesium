@@ -6,7 +6,10 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  HeadingPitchRange,
+  Cartesian3,
 } from "../../../Source/Cesium.js";
+import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -22,10 +25,11 @@ describe(
       "./Data/Models/GltfLoader/PropertyTextureWithVectorProperties/PropertyTextureWithVectorProperties.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    const tilesetWithMetadata =
+      "./Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset_1.1.json";
 
     let scene;
     const gltfLoaders = [];
-    const resources = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -46,8 +50,8 @@ describe(
     }
 
     afterEach(function () {
-      cleanup(resources);
       cleanup(gltfLoaders);
+      scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -441,6 +445,43 @@ describe(
         expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
           new Cartesian2(2, 2)
         );
+      });
+    });
+
+    it("Handles a tileset with metadata statistics", function () {
+      const centerLongitude = -1.31968;
+      const centerLatitude = 0.698874;
+      const headingPitchRange = new HeadingPitchRange(0.0, -1.57, 15.0);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, headingPitchRange);
+
+      const tilesetOptions = { enableModelExperimental: true };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetWithMetadata,
+        tilesetOptions
+      ).then(function (tileset) {
+        expect(tileset).toBeDefined();
+
+        const metadataExtension = tileset.metadataExtension;
+        expect(metadataExtension).toBeDefined();
+        expect(metadataExtension.statistics).toBeDefined();
+
+        const model = tileset.root.content._model;
+        expect(model).toBeDefined();
+
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          model: model,
+          uniformMap: {},
+        };
+
+        const primitive = model.sceneGraph.components.nodes[0].primitives[0];
+        expect(primitive).toBeDefined();
+
+        const frameState = scene.frameState;
+
+        MetadataPipelineStage.process(renderResources, primitive, frameState);
       });
     });
   },

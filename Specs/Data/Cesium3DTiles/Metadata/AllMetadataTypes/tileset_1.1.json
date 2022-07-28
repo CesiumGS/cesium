@@ -154,6 +154,30 @@
       }
     }
   ],
+  "statistics": {
+    "residential": {
+      "population": {
+        "min": 0,
+        "max": 99999999
+      }
+    },
+    "commercial": {
+      "businessCount": {
+        "min": 0,
+        "max": 99999
+      }
+    },
+    "tile": {
+      "averageTemperature": {
+        "min": 0,
+        "max": 119
+      },
+      "population": {
+        "min": 0,
+        "max": 999999999
+      }
+    }
+  },
   "geometricError": 240,
   "root": {
     "boundingVolume": {
