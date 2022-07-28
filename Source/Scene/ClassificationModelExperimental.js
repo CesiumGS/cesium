@@ -1,28 +1,31 @@
-import B3dmLoader from "./ModelExperimental/B3dmLoader.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
 import destroyObject from "../Core/destroyObject.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import GltfLoader from "./GltfLoader.js";
 import Matrix4 from "../Core/Matrix4.js";
-import ModelStatistics from "./ModelExperimental/ModelStatistics.js";
-import ModelType from "./ModelExperimental/Type.js";
-import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import SceneMode from "../Scene/SceneMode.js";
+import GltfLoader from "./GltfLoader.js";
+import B3dmLoader from "./ModelExperimental/B3dmLoader.js";
+import ModelAlphaOptions from "./ModelExperimental/ModelAlphaOptions.js";
+import ModelStatistics from "./ModelExperimental/ModelStatistics.js";
+import ModelType from "./ModelExperimental/ModelType.js";
+import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
+import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import ModelRuntimePrimitive from "./ModelExperimental/ModelRuntimePrimitive.js";
 
 /**
- * A 3D model for classifying other 3D assets. This is a special case when a model
- * of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
- * </p>
+ * A 3D model for classifying other 3D assets. This is a special case when a
+ * model of a 3D tileset becomes a classifier when setting
+ * {@link Cesium3DTileset#classificationType}.
  * <p>
- * Do not call this function directly, instead use the `from` functions to create
- * the ClassificationModelExperimental from your source data type.
+ * Do not call this function directly, instead use the `from` functions to
+ * create the `ClassificationModelExperimental` from your source data type.
  * </p>
  *
  * @alias ClassificationModelExperimental
@@ -34,7 +37,6 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
@@ -78,7 +80,7 @@ function ClassificationModelExperimental(options) {
    */
   this.type = defaultValue(options.type, ModelType.GLTF);
 
-  this._vectorPrimitive = undefined;
+  this._classificationType = options.classificationType;
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -116,10 +118,10 @@ function ClassificationModelExperimental(options) {
    */
   this.show = defaultValue(options.show, true);
 
-  this._classificationType = options.classificationType;
-  this._primitive = undefined;
-
+  // Local bounding sphere
   this._boundingSphere = new BoundingSphere();
+
+  // World-space bounding sphere
   this._computedBoundingSphere = new BoundingSphere();
 
   this._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -128,25 +130,11 @@ function ClassificationModelExperimental(options) {
 
   this._completeLoad = function (model, frameState) {};
 
-  /**
-   * This property is for debugging only; it is not for production use nor is it optimized.
-   * <p>
-   * Draws the bounding sphere for each draw command in the model.
-   * </p>
-   *
-   * @type {Boolean}
-   *
-   * @default false
-   */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false
-  );
-
   this._enableDebugWireframe = defaultValue(
     options.enableDebugWireframe,
     false
   );
+
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -160,6 +148,8 @@ function ClassificationModelExperimental(options) {
   this.debugWireframe = defaultValue(options.debugWireframe, false);
 
   this._readyPromise = initialize(this);
+
+  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 }
 
 Object.defineProperties(ClassificationModelExperimental.prototype, {
@@ -196,6 +186,20 @@ Object.defineProperties(ClassificationModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise;
+    },
+  },
+
+  /**
+   * Gets the model's classification type.
+   *
+   * @memberof ClassificationModelExperimental.prototype
+   *
+   * @type {ClassificationType}
+   * @readonly
+   */
+  classificationType: {
+    get: function () {
+      return this._classificationType;
     },
   },
 
@@ -306,11 +310,7 @@ function initialize(model) {
  */
 ClassificationModelExperimental.prototype.update = function (frameState) {
   processLoader(this, frameState);
-
-  if (this._resourcesLoaded) {
-    finishLoading(this);
-    return;
-  }
+  processResources(this);
 
   if (!this._ready || frameState.mode !== SceneMode.SCENE3D) {
     return;
@@ -319,11 +319,11 @@ ClassificationModelExperimental.prototype.update = function (frameState) {
   updateModelMatrixAndBoundingSphere(this);
   // TODO: other stuff
 
-  if (!this._show) {
-    return;
+  if (this._show && !this._ignoreCommands) {
+    this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+    this._primitive.debugWireframe = this.debugWireframe;
+    this._primitive.update(frameState);
   }
-
-  // draw here
 };
 
 function processLoader(model, frameState) {
@@ -333,9 +333,10 @@ function processLoader(model, frameState) {
   }
 }
 
-function validate(components) {
-  const nodes = components.nodes;
+function validateResources(model) {
+  const components = model._loader.components;
 
+  const nodes = components.nodes;
   if (nodes.length !== 1) {
     throw new RuntimeError(
       "The model must have a single node when used for classification."
@@ -343,7 +344,6 @@ function validate(components) {
   }
 
   const node = nodes[0];
-
   if (node.primitives.length !== 1) {
     throw new RuntimeError(
       "The model must have a single primitive when used for classification."
@@ -386,13 +386,19 @@ function validate(components) {
   }
 }
 
-function finishLoading(model, frameState) {
-  const loader = model._loader;
-  const components = loader.components;
+function processResources(model, frameState) {
+  // If the model's resources aren't loaded, or if they have
+  // already been processed, don't execute this function.
+  if (!model._resourcesLoaded || model._ready) {
+    return;
+  }
 
-  validate(components);
+  validateResources(model);
 
-  const primitive = components.nodes[0].primitives[0];
+  const components = model._loader.components;
+  const node = components.nodes[0];
+  const primitive = node.primitives[0];
+
   const positionMinMax = ModelExperimentalUtility.getPositionMinMax(primitive);
   const positionMin = positionMinMax.min;
   const positionMax = positionMinMax.max;
@@ -416,21 +422,45 @@ function finishLoading(model, frameState) {
 
   computeModelMatrixAndBoundingSphere(model);
 
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION
-  );
+  const runtimePrimitive = new ModelRuntimePrimitive({
+    primitive: primitive,
+    node: node,
+    model: model,
+  });
+  runtimePrimitive.configurePipeline(frameState);
 
-  const indicesLength = defined(primitive.indices)
-    ? primitive.indices.count
-    : positionAttribute.count;
+  const renderResources = {
+    model: model,
+    attributes: [],
+    attributeIndex: 1,
+    hasPropertyTable: false,
+    uniformMap: {},
+    alphaOptions: new ModelAlphaOptions(),
+    shaderBuilder: new ShaderBuilder(),
+    runtimePrimitive: runtimePrimitive,
+    primitiveType: primitive.primitiveType,
+    boundingSphere: new BoundingSphere(),
+    pickId: undefined,
+    renderStateOptions: {},
+    styleCommandsNeeded: undefined,
+  };
 
-  const trianglesLength = indicesLength / 3;
+  const primitivePipelineStages = runtimePrimitive.pipelineStages;
+  const length = primitivePipelineStages.length;
+  for (let i = 0; i < length; i++) {
+    const primitivePipelineStage = primitivePipelineStages[i];
+    primitivePipelineStage.process(
+      renderResources,
+      runtimePrimitive.primitive,
+      frameState
+    );
+  }
 
-  model._statistics.trianglesLength = trianglesLength;
-  //model._statistics.geometryByteLength =
+  // this is where you'd do buildDrawCommand
+  // but for classification model...
 
-  // this is where you'd create the primitive
+  // buildClassificiationDrawCommand?
+  // new ClassificationModelDrawCommand?
 }
 
 function computeModelMatrixAndBoundingSphere(model) {
@@ -578,7 +608,6 @@ function makeModelOptions(loader, type, options) {
     resource: options.resource,
     show: options.show,
     modelMatrix: options.modelMatrix,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
     enableDebugWireframe: options.enableDebugWireframe,
     debugWireframe: options.debugWireframe,
     cull: options.cull,

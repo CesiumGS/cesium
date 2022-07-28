@@ -2012,7 +2012,12 @@ function submitDrawCommands(model, frameState) {
     displayConditionPassed &&
     (!invisible || silhouette);
 
-  if (showModel) {
+  const passes = frameState.passes;
+  const submitCommandsForPass =
+    passes.render || (passes.pick && model.allowPicking);
+  // TODO: don't render silhouette in pick pass
+
+  if (showModel && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);

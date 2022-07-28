@@ -1,8 +1,8 @@
 import {
   combine,
   GltfLoader,
-  ModelStatistics,
-  ModelType,
+  ModelExperimentalStatistics,
+  ModelExperimentalType,
   PickingPipelineStage,
   ShaderBuilder,
   Resource,
@@ -73,8 +73,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       model: {
         _pipelineResources: [],
         _pickIds: [],
-        statistics: new ModelStatistics(),
-        type: ModelType.GLTF,
+        statistics: new ModelExperimentalStatistics(),
+        type: ModelExperimentalType.GLTF,
       },
       runtimePrimitive: {
         primitive: {},
@@ -102,7 +102,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
     expect(pickObject).toBeDefined();
 
-    if (ModelType.is3DTiles(model.type)) {
+    if (ModelExperimentalType.is3DTiles(model.type)) {
       const content = model.content;
       expect(pickObject.primitive).toEqual(content.tileset);
       expect(pickObject.content).toEqual(content);
@@ -125,7 +125,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
   it("sets the picking variables in render resources for 3D Tiles", function () {
     const renderResources = mockRenderResources();
-    renderResources.model.type = ModelType.TILE_GLTF;
+    renderResources.model.type = ModelExperimentalType.TILE_GLTF;
 
     // Setting the content property makes PickingPipelineStage handle this
     // as part of a tileset.
