@@ -215,6 +215,10 @@ function GroundPrimitive(options) {
   const groundPrimitive = this;
   this._readyPromise = new Promise((resolve, reject) => {
     groundPrimitive._completeLoad = () => {
+      if (this._ready) {
+        return;
+      }
+
       this._ready = true;
 
       if (this.releaseGeometryInstances) {
@@ -921,7 +925,6 @@ GroundPrimitive.prototype.update = function (frameState) {
     };
 
     this._primitive = new ClassificationPrimitive(primitiveOptions);
-    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   this._primitive.appearance = this.appearance;
@@ -929,6 +932,12 @@ GroundPrimitive.prototype.update = function (frameState) {
   this._primitive.debugShowShadowVolume = this.debugShowShadowVolume;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+
+  frameState.afterRender.push(() => {
+    if (defined(this._primitive) && this._primitive.ready) {
+      this._completeLoad();
+    }
+  });
 };
 
 /**
