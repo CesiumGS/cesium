@@ -385,10 +385,15 @@ describe(
           MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
           [
             "    vec2MetadataClass vec2Property;",
+            "    vec2MetadataStatistics vec2Property;",
             "    intMetadataClass uint8Property;",
+            "    intMetadataStatistics uint8Property;",
             "    ivec3MetadataClass uint8vec3Property;",
+            "    ivec3MetadataStatistics uint8vec3Property;",
             "    vec3MetadataClass arrayProperty;",
+            "    vec3MetadataStatistics arrayProperty;",
             "    vec2MetadataClass valueTransformProperty;",
+            "    vec2MetadataStatistics valueTransformProperty;",
           ]
         );
 
