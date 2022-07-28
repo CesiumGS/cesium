@@ -7,8 +7,8 @@ import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GltfLoader from "./GltfLoader.js";
 import Matrix4 from "../Core/Matrix4.js";
-import ModelExperimentalStatistics from "./ModelExperimental/ModelExperimentalStatistics.js";
-import ModelExperimentalType from "./ModelExperimental/ModelExperimentalType.js";
+import ModelStatistics from "./ModelExperimental/ModelStatistics.js";
+import ModelType from "./ModelExperimental/Type.js";
 import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Resource from "../Core/Resource.js";
@@ -17,9 +17,8 @@ import SceneMode from "../Scene/SceneMode.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
- * A 3D model for classifying other 3D assets.
- * <p>
- * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
+ * A 3D model for classifying other 3D assets. This is a special case when a model
+ * of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
  * </p>
  * <p>
  * Do not call this function directly, instead use the `from` functions to create
@@ -70,14 +69,14 @@ function ClassificationModelExperimental(options) {
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
-   * ModelExperimentalType is part of the private API.
+   * ModelType is part of the private API.
    *
-   * @type {ModelExperimentalType}
+   * @type {ModelType}
    * @readonly
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
+  this.type = defaultValue(options.type, ModelType.GLTF);
 
   this._vectorPrimitive = undefined;
 
@@ -100,7 +99,7 @@ function ClassificationModelExperimental(options) {
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
-  this._statistics = new ModelExperimentalStatistics();
+  this._statistics = new ModelStatistics();
 
   this._resourcesLoaded = false;
   this._ready = false;
@@ -529,9 +528,7 @@ ClassificationModelExperimental.fromGltf = function (options) {
   const loader = new GltfLoader(loaderOptions);
 
   const is3DTiles = defined(options.content);
-  const type = is3DTiles
-    ? ModelExperimentalType.TILE_GLTF
-    : ModelExperimentalType.GLTF;
+  const type = is3DTiles ? ModelType.TILE_GLTF : ModelType.GLTF;
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = loaderOptions.gltfResource;
@@ -559,11 +556,7 @@ ClassificationModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_B3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
 
   const model = new ClassificationModelExperimental(modelOptions);
   return model;
