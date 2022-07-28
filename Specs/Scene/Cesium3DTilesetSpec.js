@@ -16,7 +16,6 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
-  combine,
   ContextLimits,
   Credit,
   CullFace,
@@ -1119,9 +1118,14 @@ describe(
         b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
       const expectedTextureMemory = texturesByteLength * 5;
 
+      // This test was revised for ModelExperimental, which tracks shared memory
+      // differently from Model.
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithExternalResourcesUrl
+        tilesetWithExternalResourcesUrl,
+        {
+          enableModelExperimental: true,
+        }
       ).then(function (tileset) {
         // Contents are not aware of whether their resources are shared by
         // other contents, so check ResourceCache.
@@ -3193,6 +3197,33 @@ describe(
       );
     });
 
+    it("applies style after show is toggled", function () {
+      let tileset;
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (t) {
+          tileset = t;
+          tileset.show = false;
+          tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
+
+          scene.renderForSpecs();
+
+          tileset.show = true;
+
+          const renderOptions = {
+            scene: scene,
+            time: new JulianDate(2457522.154792),
+          };
+
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[1]).toBe(0);
+            expect(rgba[2]).toBe(0);
+            expect(rgba[3]).toEqual(255);
+          });
+        }
+      );
+    });
+
     it("doesn't re-evaluate style during the next update", function () {
       let tileset;
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
@@ -3858,16 +3889,10 @@ describe(
     });
 
     it("creates duplicate backface commands", function () {
-      // Disable ModelExperimental here because ModelFeatureTable doesn't handle
-      // the creation of backface commands yet.
-      const options = combine(
-        { enableModelExperimental: false },
-        skipLevelOfDetailOptions
-      );
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,
-        options
+        skipLevelOfDetailOptions
       ).then(function (tileset) {
         const statistics = tileset._statistics;
         const root = tileset.root;

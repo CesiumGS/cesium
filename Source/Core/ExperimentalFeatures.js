@@ -22,7 +22,7 @@ const ExperimentalFeatures = {
    *
    * @type {Boolean}
    */
-  enableModelExperimental: true,
+  enableModelExperimental: false,
 };
 
 export default ExperimentalFeatures;

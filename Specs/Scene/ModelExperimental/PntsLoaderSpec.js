@@ -614,7 +614,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         components.structuralMetadata,
         {
           // Originally "temperature ℃", but sanitized for GLSL
-          temperature: {
+          temperature_: {
             type: MetadataType.SCALAR,
             componentType: MetadataComponentType.FLOAT32,
           },

@@ -45,7 +45,7 @@
     "autolinker": "^3.14.3",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^2.2.2",
-    "earcut": "^2.2.2",
+    "earcut": "^2.2.4",
     "grapheme-splitter": "^1.0.4",
     "jsep": "^0.3.1",
     "kdbush": "^3.0.0",
@@ -123,22 +123,19 @@
   "scripts": {
     "prepare": "gulp prepare && husky install",
     "start": "node server.cjs",
-    "startPublic": "node server.cjs --public",
+    "start-public": "node server.cjs --public",
     "build": "gulp build",
-    "minify": "gulp build --minify",
-    "minifyRelease": "gulp build --minify --removePragmas",
-    "combineRelease": "gulp build --removePragmas",
     "build-watch": "gulp build-watch",
     "build-ts": "gulp build-ts",
     "build-third-party": "gulp build-third-party",
-    "buildApps": "gulp buildApps",
+    "build-apps": "gulp build-apps",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
     "coverage": "gulp coverage",
-    "generateDocumentation": "gulp generateDocumentation",
-    "generateDocumentation-watch": "gulp generateDocumentation-watch",
+    "build-docs": "gulp build-docs",
+    "build-docs-watch": "gulp build-docs-watch",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
-    "makeZipFile": "gulp makeZipFile",
+    "make-zip": "gulp make-zip",
     "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
     "release": "gulp release",
     "test": "gulp test",
@@ -163,7 +160,8 @@
       "prettier --write"
     ],
     "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md"
+      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
+      "prettier --write"
     ]
   }
 }
