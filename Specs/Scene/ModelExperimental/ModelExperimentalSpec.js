@@ -470,7 +470,7 @@ describe(
         expect(model.scene).toBeUndefined();
         expect(model.distanceDisplayCondition).toBeUndefined();
 
-        expect(model.color).toEqual(Color.WHITE);
+        expect(model.color).toBeUndefined();
         expect(model.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(model.colorBlendAmount).toEqual(0.5);
         expect(model.silhouetteColor).toEqual(Color.RED);
