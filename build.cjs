@@ -161,6 +161,7 @@ async function buildCesiumJs(options) {
     "Source/ThirdParty/google-earth-dbroot-parser.js",
     ...css, // Load and optionally minify css
   ];
+  cssAndThirdPartyConfig.bundle = true;
   cssAndThirdPartyConfig.minify = options.minify;
   cssAndThirdPartyConfig.loader = {
     ".gif": "text",

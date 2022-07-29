@@ -1,4 +1,5 @@
 import {
+  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTile,
@@ -14,7 +15,6 @@ import {
   Matrix3,
   Matrix4,
   MetadataClass,
-  ModelExperimental3DTileContent,
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
@@ -950,7 +950,7 @@ describe(
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
+            Batched3DModel3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
@@ -994,7 +994,7 @@ describe(
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
+            Batched3DModel3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
@@ -1012,7 +1012,7 @@ describe(
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
-            ModelExperimental3DTileContent
+            Batched3DModel3DTileContent
           );
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
