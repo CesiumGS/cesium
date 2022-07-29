@@ -101,7 +101,7 @@ function VoxelBoxShape() {
   this.shaderMaximumIntersectionsLength = undefined;
 }
 
-const scratchTranslation = new Cartesian3();
+const scratchCenter = new Cartesian3();
 const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
 const scratchTransformLocalToBounds = new Matrix4();
@@ -502,13 +502,12 @@ function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
     result.halfAxes = Matrix4.getMatrix3(matrix, result.halfAxes);
   } else {
     let scale = Matrix4.getScale(matrix, scratchScale);
-    const translation = Matrix4.getTranslation(matrix, scratchTranslation);
-    result.center = Cartesian3.fromElements(
-      translation.x + scale.x * 0.5 * (minimumBounds.x + maximumBounds.x),
-      translation.y + scale.y * 0.5 * (maximumBounds.y + minimumBounds.y),
-      translation.z + scale.z * 0.5 * (maximumBounds.z + minimumBounds.z),
-      result.center
+    const localCenter = Cartesian3.midpoint(
+      minimumBounds,
+      maximumBounds,
+      scratchCenter
     );
+    result.center = Matrix4.multiplyByPoint(matrix, localCenter, result.center);
     scale = Cartesian3.fromElements(
       scale.x * 0.5 * (maximumBounds.x - minimumBounds.x),
       scale.y * 0.5 * (maximumBounds.y - minimumBounds.y),

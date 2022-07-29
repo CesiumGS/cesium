@@ -1072,9 +1072,7 @@ const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
 const scratchLocalScale = new Cartesian3();
-const scratchInverseLocalScale = new Cartesian3();
 const scratchRotation = new Matrix3();
-const scratchInverseRotation = new Matrix3();
 const scratchRotationAndLocalScale = new Matrix3();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
@@ -1323,18 +1321,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
       scratchRotation
     );
     // Note that inverse(rotation) is the same as transpose(rotation)
-    const inverseRotation = Matrix3.transpose(rotation, scratchInverseRotation);
     const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
     const maximumScaleComponent = Cartesian3.maximumComponent(scale);
     const localScale = Cartesian3.divideByScalar(
       scale,
       maximumScaleComponent,
       scratchLocalScale
-    );
-    const inverseLocalScale = Cartesian3.divideComponents(
-      Cartesian3.ONE,
-      localScale,
-      scratchInverseLocalScale
     );
     const rotationAndLocalScale = Matrix3.multiplyByScale(
       rotation,
@@ -1356,9 +1348,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
       transformPositionUvToLocal,
       this._transformPositionUvToWorld
     );
-    this._transformDirectionWorldToLocal = Matrix3.setScale(
-      inverseRotation,
-      inverseLocalScale,
+    this._transformDirectionWorldToLocal = Matrix4.getMatrix3(
+      transformPositionWorldToLocal,
       this._transformDirectionWorldToLocal
     );
     this._transformNormalLocalToWorld = Matrix3.inverseTranspose(
