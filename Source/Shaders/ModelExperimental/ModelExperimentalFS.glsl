@@ -32,7 +32,7 @@ SelectedFeature selectedFeature;
 
 void main()
 {
-    #ifdef HAS_MODEL_SPLITTER
+    /*#ifdef HAS_MODEL_SPLITTER
     modelSplitterStage();
     #endif
 
@@ -84,5 +84,6 @@ void main()
     silhouetteStage(color);
     #endif
 
-    gl_FragColor = color;
+    gl_FragColor = color;*/
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
 }

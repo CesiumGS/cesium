@@ -327,7 +327,7 @@ ClassificationModelExperimental.prototype.update = function (frameState) {
 };
 
 function processLoader(model, frameState) {
-  if (!this._resourcesLoaded) {
+  if (!model._resourcesLoaded) {
     model._loader.process(frameState);
     return;
   }

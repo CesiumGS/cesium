@@ -29,5 +29,10 @@
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
     "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
     "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false,
-    "glTF.defaultV2Engine": "Cesium"
+    "glTF.defaultV2Engine": "Cesium",
+    "editor.rulers": [
+        {   
+            "column": 80
+        }
+    ]
 }

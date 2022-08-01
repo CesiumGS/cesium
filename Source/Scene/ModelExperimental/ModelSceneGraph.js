@@ -593,23 +593,27 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
 
-  if (model.imageBasedLighting.enabled) {
-    modelPipelineStages.push(ImageBasedLightingPipelineStage);
-  }
+  // Skip these stages for classification models.
+  // TODO: see if clipping / split direction work for old implementation?
+  if (!defined(model.classificationType)) {
+    if (model.imageBasedLighting.enabled) {
+      modelPipelineStages.push(ImageBasedLightingPipelineStage);
+    }
 
-  if (model.isClippingEnabled()) {
-    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
-  }
+    if (model.isClippingEnabled()) {
+      modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+    }
 
-  if (
-    defined(model.splitDirection) &&
-    model.splitDirection !== SplitDirection.NONE
-  ) {
-    modelPipelineStages.push(ModelSplitterPipelineStage);
-  }
+    if (model.hasSilhouette(frameState)) {
+      modelPipelineStages.push(ModelSilhouettePipelineStage);
+    }
 
-  if (model.hasSilhouette(frameState)) {
-    modelPipelineStages.push(ModelSilhouettePipelineStage);
+    if (
+      defined(model.splitDirection) &&
+      model.splitDirection !== SplitDirection.NONE
+    ) {
+      modelPipelineStages.push(ModelSplitterPipelineStage);
+    }
   }
 };
 

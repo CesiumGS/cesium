@@ -42,12 +42,12 @@ void main()
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
 
-    #ifdef HAS_SELECTED_FEATURE_ID
+   /* #ifdef HAS_SELECTED_FEATURE_ID
     SelectedFeature feature;
     selectedFeatureIdStage(feature, featureIds);
     // Handle any show properties that come from the style.
     cpuStylingStage(attributes.positionMC, feature);
-    #endif
+    #endif*/
 
     #if defined(USE_2D_POSITIONS) || defined(USE_2D_INSTANCING)
     // The scene mode 2D pipeline stage and instancing stage add a different

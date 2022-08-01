@@ -373,6 +373,7 @@ export default function ModelExperimental(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+  this._classificationType = options.classificationType;
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -1421,7 +1422,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the credit that will be displayed for the model
+   * Gets the credit that will be displayed for the model.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1435,7 +1436,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets or sets whether the credits of the model will be displayed on the screen
+   * Gets or sets whether the credits of the model will be displayed
+   * on the screen.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -1478,8 +1480,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Reference to the pick IDs. This is used only in internal code such as
-   * per-feature post-processing in {@link PostProcessStage}
+   * Reference to the pick IDs. This is only used internally, e.g. for
+   * per-feature post-processing in {@link PostProcessStage}.
    *
    * @type {PickId[]}
    * @readonly
@@ -1489,6 +1491,29 @@ Object.defineProperties(ModelExperimental.prototype, {
   pickIds: {
     get: function () {
       return this._pickIds;
+    },
+  },
+
+  /**
+   * Gets or sets the model's classification type. This indicates whether or not
+   * the model classifies other asset.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ClassificationType}
+   *
+   * @default undefined
+   */
+  classificationType: {
+    get: function () {
+      return this._classificationType;
+    },
+    set: function (value) {
+      if (value !== this._classificationType) {
+        this.resetDrawCommands();
+      }
+
+      value = this._classificationType;
     },
   },
 });
@@ -2612,5 +2637,6 @@ function makeModelOptions(loader, modelType, options) {
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
+    classificationType: options.classificationType,
   };
 }

@@ -48,11 +48,11 @@
         viewer.scene.primitives.add(tileset);
         viewer.zoomTo(tileset);
 
-        const classifcationTilesetUrl =
+        const classificationTilesetUrl =
           "../../SampleData/Cesium3DTiles/Classification/Photogrammetry/tileset.json";
         // A b3dm tileset used to classify the photogrammetry tileset
         const classificationTileset = new Cesium.Cesium3DTileset({
-          url: classifcationTilesetUrl,
+          url: classificationTilesetUrl,
           classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
         });
         classificationTileset.style = new Cesium.Cesium3DTileStyle({
@@ -62,7 +62,7 @@
 
         // The same b3dm tileset used for classification, but rendered normally for comparison.
         const nonClassificationTileset = new Cesium.Cesium3DTileset({
-          url: classifcationTilesetUrl,
+          url: classificationTilesetUrl,
           show: false,
         });
         nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
