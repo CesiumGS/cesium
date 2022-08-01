@@ -238,8 +238,11 @@ function expandSubtree(content, subtree) {
     childIndex
   );
 
+  const statistics = content._tileset.statistics;
+
   // Link the new subtree to the existing placeholder tile.
   placeholderTile.children.push(results.rootTile);
+  statistics.numberOfTilesTotal++;
 
   // for each child subtree, make new placeholder tiles
   const childSubtrees = listChildSubtrees(content, subtree, results.bottomRow);
@@ -252,6 +255,7 @@ function expandSubtree(content, subtree) {
       subtreeLocator.childIndex
     );
     leafTile.children.push(implicitChildTile);
+    statistics.numberOfTilesTotal++;
   }
 }
 
@@ -329,6 +333,8 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
     rootParentIsPlaceholder
   );
 
+  const statistics = content._tileset.statistics;
+
   // Sliding window over the levels of the tree.
   // Each row is branchingFactor * length of previous row
   // Tiles within a row are ordered by Morton index.
@@ -363,6 +369,7 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
         childBitIndex
       );
       parentTile.children.push(childTile);
+      statistics.numberOfTilesTotal++;
       currentRow.push(childTile);
     }
 

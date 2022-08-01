@@ -1,7 +1,10 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HermiteSpline } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  HermiteSpline,
+  Quaternion,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/HermiteSpline", function () {
   let points;

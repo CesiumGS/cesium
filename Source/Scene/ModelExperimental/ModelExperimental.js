@@ -29,6 +29,7 @@ import GeoJsonLoader from "./GeoJsonLoader.js";
 import I3dmLoader from "./I3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
@@ -70,6 +71,9 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
@@ -184,11 +188,15 @@ export default function ModelExperimental(options) {
   this._activeAnimations = new ModelExperimentalAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
+  // This flag is true when the Cesium API, not a glTF animation, changes
+  // the transform of a node in the model.
+  this._userAnimationDirty = false;
+
   this._id = options.id;
   this._idDirty = false;
 
   const color = options.color;
-  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._color = defined(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -199,6 +207,11 @@ export default function ModelExperimental(options) {
   this._silhouetteColor = Color.clone(silhouetteColor);
   this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
   this._silhouetteDirty = false;
+
+  // If silhouettes are used for the model, this will be set to the number
+  // of the stencil buffer used for rendering the silhouette. This is set
+  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
+  this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -265,8 +278,8 @@ export default function ModelExperimental(options) {
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -302,6 +315,7 @@ export default function ModelExperimental(options) {
     options.enableDebugWireframe,
     false
   );
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
   // Credit specified by the user.
@@ -326,6 +340,28 @@ export default function ModelExperimental(options) {
     SplitDirection.NONE
   );
 
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+
+  /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The color to use when rendering outlines.
+   *
+   * @type {Color}
+   *
+   * @default Color.BLACK
+   */
+  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
+
   this._statistics = new ModelExperimentalStatistics();
 
   this._sceneMode = undefined;
@@ -334,6 +370,9 @@ export default function ModelExperimental(options) {
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
   this._readyPromise = initialize(this);
+
+  this._sceneGraph = undefined;
+  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -396,9 +435,20 @@ function selectFeatureTableId(components, model) {
       }
     }
   }
+
+  // If there's only one feature table, then select it by default. This is
+  // to ensure backwards compatibility with the older handling of b3dm models.
+  if (model._featureTables.length === 1) {
+    return 0;
+  }
 }
 
-// Returns whether the color alpha state has changed between invisible, translucent, or opaque
+/**
+ *  Returns whether the alpha state has changed between invisible,
+ *  translucent, or opaque.
+ *
+ *  @private
+ */
 function isColorAlphaDirty(currentColor, previousColor) {
   if (!defined(currentColor) && !defined(previousColor)) {
     return false;
@@ -423,7 +473,21 @@ function initialize(model) {
   loader.load();
 
   const loaderPromise = loader.promise.then(function (loader) {
+    // If the model is destroyed before the promise resolves, then
+    // the loader will have been destroyed as well. Return early.
+    if (!defined(loader)) {
+      return;
+    }
+
     const components = loader.components;
+    if (!defined(components)) {
+      if (loader.isUnloaded()) {
+        return;
+      }
+
+      throw new RuntimeError("Failed to load model.");
+    }
+
     const structuralMetadata = components.structuralMetadata;
 
     if (
@@ -459,6 +523,11 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
 
       // Re-run the pipeline so texture memory statistics are re-computed
@@ -861,9 +930,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      if (value !== this._style) {
-        this.applyStyle(value);
-      }
+      this.applyStyle(value);
       this._style = value;
     },
   },
@@ -880,7 +947,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
-      if (!Color.equals(this._color, value)) {
+      if (isColorAlphaDirty(value, this._color)) {
         this.resetDrawCommands();
       }
       this._color = Color.clone(value, this._color);
@@ -1409,7 +1476,49 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._splitDirection = value;
     },
   },
+
+  /**
+   * Reference to the pick IDs. This is used only in internal code such as
+   * per-feature post-processing in {@link PostProcessStage}
+   *
+   * @type {PickId[]}
+   * @readonly
+   *
+   * @private
+   */
+  pickIds: {
+    get: function () {
+      return this._pickIds;
+    },
+  },
 });
+
+/**
+ * Returns the node with the given <code>name</code> in the glTF. This is used to
+ * modify a node's transform for user-defined animation.
+ *
+ * @param {String} name The name of the node in the glTF.
+ * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
+ *
+ * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ *
+ * @example
+ * // Apply non-uniform scale to node "Hand"
+ * const node = model.getNode("Hand");
+ * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ */
+ModelExperimental.prototype.getNode = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+    );
+  }
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
+
+  return this._nodesByName[name];
+};
 
 /**
  * Sets the current value of an articulation stage.  After setting one or
@@ -1508,6 +1617,7 @@ ModelExperimental.prototype.update = function (frameState) {
   updateSilhouette(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
+  updateFeatureTableId(this);
   updateFeatureTables(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
@@ -1609,11 +1719,6 @@ function updateSceneMode(model, frameState) {
 }
 
 function updateFeatureTables(model, frameState) {
-  if (model._featureTableIdDirty) {
-    updateFeatureTableId(model);
-    model._featureTableIdDirty = false;
-  }
-
   const featureTables = model._featureTables;
   const length = featureTables.length;
   for (let i = 0; i < length; i++) {
@@ -1627,6 +1732,11 @@ function updateFeatureTables(model, frameState) {
 }
 
 function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
   const components = model._sceneGraph.components;
   const structuralMetadata = components.structuralMetadata;
 
@@ -1635,6 +1745,7 @@ function updateFeatureTableId(model) {
     structuralMetadata.propertyTableCount > 0
   ) {
     model.featureTableId = selectFeatureTableId(components, model);
+
     // Re-apply the style to reflect the new feature ID table.
     // This in turn triggers a rebuild of the draw commands.
     model.applyStyle(model._style);
@@ -1848,8 +1959,11 @@ function updateSceneGraph(model, frameState) {
     model._debugShowBoundingVolumeDirty = false;
   }
 
-  const updateForAnimations = model._activeAnimations.update(frameState);
+  const updateForAnimations =
+    model._userAnimationDirty || model._activeAnimations.update(frameState);
+
   sceneGraph.update(frameState, updateForAnimations);
+  model._userAnimationDirty = false;
 }
 
 function updateShowCreditsOnScreen(model) {
@@ -1981,7 +2095,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     clampedModelMatrix[13] = clampedPosition.y;
     clampedModelMatrix[14] = clampedPosition.z;
 
-    model._heightChanged = true;
+    model._heightDirty = true;
   };
 }
 
@@ -2250,6 +2364,9 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
@@ -2285,6 +2402,7 @@ ModelExperimental.fromGltf = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const basePath = defaultValue(options.basePath, "");
@@ -2332,6 +2450,7 @@ ModelExperimental.fromB3dm = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -2352,6 +2471,7 @@ ModelExperimental.fromPnts = function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
+    loadAttributesFor2D: options.projectTo2D,
   };
   const loader = new PntsLoader(loaderOptions);
 
@@ -2379,6 +2499,7 @@ ModelExperimental.fromI3dm = function (options) {
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
   };
   const loader = new I3dmLoader(loaderOptions);
 
@@ -2425,19 +2546,36 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  const isPnts = this.type === ModelExperimentalType.TILE_PNTS;
+
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
+  const propertyAttributes = defined(this.structuralMetadata)
+    ? this.structuralMetadata.propertyAttributes
+    : undefined;
+  const hasPropertyAttributes =
+    defined(propertyAttributes) && defined(propertyAttributes[0]);
+
+  // Point clouds will be styled on the GPU unless they contain
+  // a batch table. That is, CPU styling will not be applied if
+  // - points have no metadata at all, or
+  // - points have metadata stored as a property attribute
+  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {
@@ -2469,6 +2607,9 @@ function makeModelOptions(loader, modelType, options) {
     colorBlendMode: options.colorBlendMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
+    enableShowOutline: options.enableShowOutline,
+    showOutline: options.showOutline,
+    outlineColor: options.outlineColor,
     clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,

@@ -1,10 +1,13 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { IntersectionTests } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Ellipsoid,
+  IntersectionTests,
+  Plane,
+  Ray,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
 
 describe("Core/IntersectionTests", function () {
   it("rayPlane intersects", function () {

@@ -1,11 +1,13 @@
-import { ArcGISTiledElevationTerrainProvider } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { CesiumTerrainProvider } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { sampleTerrain } from "../../Source/Cesium.js";
+import {
+  ArcGISTiledElevationTerrainProvider,
+  Cartographic,
+  CesiumTerrainProvider,
+  createWorldTerrain,
+  defined,
+  RequestScheduler,
+  Resource,
+  sampleTerrain,
+} from "../../../Source/Cesium.js";
 
 describe("Core/sampleTerrain", function () {
   let worldTerrain;

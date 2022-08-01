@@ -1,6 +1,6 @@
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
+import { HeadingPitchRoll, Quaternion } from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/HeadingPitchRoll", function () {
   const deg2rad = CesiumMath.RADIANS_PER_DEGREE;

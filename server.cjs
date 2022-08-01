@@ -1,44 +1,156 @@
 /*eslint-env node*/
-/* eslint-disable no-unused-vars */
-/* eslint-disable global-require */
 "use strict";
-(function () {
-  const express = require("express");
-  const compression = require("compression");
-  const fs = require("fs");
-  const url = require("url");
-  const request = require("request");
 
-  const gzipHeader = Buffer.from("1F8B08", "hex");
+const fs = require("fs");
+const path = require("path");
+const { performance } = require("perf_hooks");
+const request = require("request");
+const { URL } = require("url");
 
-  const yargs = require("yargs").options({
-    port: {
-      default: 8080,
-      description: "Port to listen on.",
-    },
-    public: {
-      type: "boolean",
-      description: "Run a public server that listens on all interfaces.",
-    },
-    "upstream-proxy": {
-      description:
-        'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
-    },
-    "bypass-upstream-proxy-hosts": {
-      description:
-        'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
-    },
-    help: {
-      alias: "h",
-      type: "boolean",
-      description: "Show this help.",
-    },
+const chokidar = require("chokidar");
+const compression = require("compression");
+const express = require("express");
+const mkdirp = require("mkdirp");
+const yargs = require("yargs").options({
+  port: {
+    default: 8080,
+    description: "Port to listen on.",
+  },
+  public: {
+    type: "boolean",
+    description: "Run a public server that listens on all interfaces.",
+  },
+  "upstream-proxy": {
+    description:
+      'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
+  },
+  "bypass-upstream-proxy-hosts": {
+    description:
+      'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
+  },
+  help: {
+    alias: "h",
+    type: "boolean",
+    description: "Show this help.",
+  },
+});
+
+const {
+  buildCesiumJs,
+  buildSpecs,
+  buildWorkers,
+  copyAssets,
+  createCesiumJs,
+  createGalleryList,
+  createJsHintOptions,
+  createSpecList,
+  glslToJavaScript,
+} = require("./build.cjs");
+
+const sourceFiles = [
+  "Source/**/*.js",
+  "!Source/*.js",
+  "!Source/Shaders/**",
+  "!Source/Workers/**",
+  "!Source/WorkersES6/**",
+  "Source/WorkersES6/createTaskProcessorWorker.js",
+  "!Source/ThirdParty/Workers/**",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/_*",
+];
+const specFiles = [
+  "Specs/**/*Spec.js",
+  "Specs/*.js",
+  "!Specs/SpecList.js",
+  "Specs/TestWorkers/*.js",
+];
+const shaderFiles = ["Source/Shaders/**/*.glsl"];
+const workerSourceFiles = ["Source/WorkersES6/*.js"];
+
+const outputDirectory = path.join("Build", "CesiumUnminified");
+
+function formatTimeSinceInSeconds(start) {
+  return Math.ceil((performance.now() - start) / 100) / 10;
+}
+
+async function buildDev() {
+  console.log("Building Cesium...");
+  const start = performance.now();
+
+  mkdirp.sync("Build");
+
+  fs.writeFileSync(
+    "Build/package.json",
+    JSON.stringify({
+      type: "commonjs",
+    }),
+    "utf8"
+  );
+
+  glslToJavaScript(false, "Build/minifyShaders.state");
+  createCesiumJs();
+  createSpecList();
+  createJsHintOptions();
+
+  const [esmResult, iifeResult] = await buildCesiumJs({
+    iife: true,
+    sourcemap: true,
+    path: outputDirectory,
+    incremental: true,
+    write: false,
   });
+
+  await buildWorkers({
+    sourcemap: true,
+    path: outputDirectory,
+    incremental: true,
+  });
+
+  await createGalleryList();
+
+  const specResult = await buildSpecs({
+    incremental: true,
+    write: false,
+  });
+
+  console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
+
+  await copyAssets(outputDirectory);
+
+  return {
+    esmResult,
+    iifeResult,
+    specResult,
+  };
+}
+
+const serveResult = (result, fileName, res, next) => {
+  let bundle;
+  for (const out of result.outputFiles) {
+    if (path.basename(out.path) === fileName) {
+      bundle = out.text;
+    }
+  }
+
+  if (!bundle) {
+    next(new Error("Failed to generate bundle"));
+    return;
+  }
+
+  res.append("Cache-Control", "max-age=0");
+  res.append("Content-Type", "application/javascript");
+  res.send(bundle);
+};
+
+(async function () {
+  const gzipHeader = Buffer.from("1F8B08", "hex");
   const argv = yargs.argv;
 
   if (argv.help) {
     return yargs.showHelp();
   }
+
+  let { esmResult, iifeResult, specResult } = await buildDev();
 
   // eventually this mime type configuration will need to change
   // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
@@ -66,6 +178,7 @@
 
   const app = express();
   app.use(compression());
+  //eslint-disable-next-line no-unused-vars
   app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(
@@ -76,10 +189,12 @@
   });
 
   function checkGzipAndNext(req, res, next) {
-    const reqUrl = url.parse(req.url, true);
+    const baseURL = `${req.protocol}://${req.headers.host}/`;
+    const reqUrl = new URL(req.url, baseURL);
     const filePath = reqUrl.pathname.substring(1);
 
     const readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+    //eslint-disable-next-line no-unused-vars
     readStream.on("error", function (err) {
       next();
     });
@@ -104,6 +219,161 @@
   ];
   app.get(knownTilesetFormats, checkGzipAndNext);
 
+  // Set up file watcher for more expensive operations which would block during
+  // "just in time" compilation
+  const workerWatcher = chokidar.watch(workerSourceFiles, {
+    ignoreInitial: true,
+  });
+  workerWatcher.on("all", async () => {
+    const start = performance.now();
+    await buildWorkers({
+      path: outputDirectory,
+      sourcemap: true,
+    });
+    console.log(
+      `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+    );
+  });
+
+  //eslint-disable-next-line no-unused-vars
+  app.get("/Build/CesiumUnminified/Cesium.js", async function (req, res, next) {
+    if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
+      try {
+        const start = performance.now();
+        createCesiumJs();
+        iifeResult = await iifeResult.rebuild();
+        console.log(
+          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        next(e);
+      }
+    }
+
+    return serveResult(iifeResult, "Cesium.js", res, next);
+  });
+
+  app.get("/Build/CesiumUnminified/Cesium.js.map", async function (
+    //eslint-disable-next-line no-unused-vars
+    req,
+    res,
+    next
+  ) {
+    if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
+      try {
+        const start = performance.now();
+        createCesiumJs();
+        iifeResult = await iifeResult.rebuild();
+        console.log(
+          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        next(e);
+      }
+    }
+
+    return serveResult(iifeResult, "Cesium.js.map", res, next);
+  });
+
+  //eslint-disable-next-line no-unused-vars
+  app.get("/Build/CesiumUnminified/index.js", async function (req, res, next) {
+    if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
+      try {
+        const start = performance.now();
+        createCesiumJs();
+        esmResult = await esmResult.rebuild();
+        console.log(
+          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        next(e);
+      }
+    }
+
+    return serveResult(esmResult, "index.js", res, next);
+  });
+  app.get("/Build/CesiumUnminified/index.js.map", async function (
+    //eslint-disable-next-line no-unused-vars
+    req,
+    res,
+    next
+  ) {
+    if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
+      try {
+        const start = performance.now();
+        createCesiumJs();
+        esmResult = await esmResult.rebuild();
+        console.log(
+          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        next(e);
+      }
+    }
+
+    return serveResult(esmResult, "index.js.map", res, next);
+  });
+
+  const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
+  glslWatcher.on("all", async () => {
+    glslToJavaScript(false, "Build/minifyShaders.state");
+    esmResult.outputFiles = [];
+    iifeResult.outputFiles = [];
+  });
+
+  let jsHintOptionsCache;
+  const sourceCodeWatcher = chokidar.watch(sourceFiles, {
+    ignoreInitial: true,
+  });
+  sourceCodeWatcher.on("all", () => {
+    esmResult.outputFiles = [];
+    iifeResult.outputFiles = [];
+    jsHintOptionsCache = undefined;
+  });
+
+  //eslint-disable-next-line no-unused-vars
+  app.get("/Apps/Sandcastle/jsHintOptions.js", async function (req, res, next) {
+    if (!jsHintOptionsCache) {
+      jsHintOptionsCache = createJsHintOptions();
+    }
+
+    res.append("Cache-Control", "max-age=0");
+    res.append("Content-Type", "application/javascript");
+    res.send(jsHintOptionsCache);
+  });
+
+  let specRebuildPromise = Promise.resolve();
+  //eslint-disable-next-line no-unused-vars
+  app.get("/Build/Specs/*", async function (req, res, next) {
+    // Multiple files may be requested at this path, calling this function in quick succession.
+    // Await the previous build before re-building again.
+    await specRebuildPromise;
+
+    if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
+      try {
+        const start = performance.now();
+        specRebuildPromise = specResult.rebuild();
+        specResult = await specRebuildPromise;
+        console.log(
+          `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        next(e);
+      }
+    }
+
+    return serveResult(specResult, path.basename(req.originalUrl), res, next);
+  });
+
+  const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
+  specWatcher.on("all", async (event) => {
+    if (event === "add" || event === "unlink") {
+      createSpecList();
+    }
+
+    specResult.outputFiles = [];
+  });
+
   app.use(express.static(__dirname));
 
   function getRemoteUrlFromParam(req) {
@@ -113,15 +383,17 @@
       if (!/^https?:\/\//.test(remoteUrl)) {
         remoteUrl = `http://${remoteUrl}`;
       }
-      remoteUrl = url.parse(remoteUrl);
+      remoteUrl = new URL(remoteUrl);
       // copy query string
-      remoteUrl.search = url.parse(req.url).search;
+      const baseURL = `${req.protocol}://${req.headers.host}/`;
+      remoteUrl.search = new URL(req.url, baseURL).search;
     }
     return remoteUrl;
   }
 
   const dontProxyHeaderRegex = /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
 
+  //eslint-disable-next-line no-unused-vars
   function filterHeaders(req, headers) {
     const result = {};
     // filter out headers that are listed in the regex above
@@ -141,6 +413,7 @@
     });
   }
 
+  //eslint-disable-next-line no-unused-vars
   app.get("/proxy/*", function (req, res, next) {
     // look for request like http://localhost:8080/proxy/http://example.com/file?query=1
     let remoteUrl = getRemoteUrlFromParam(req);
@@ -148,7 +421,8 @@
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
       remoteUrl = Object.keys(req.query)[0];
       if (remoteUrl) {
-        remoteUrl = url.parse(remoteUrl);
+        const baseURL = `${req.protocol}://${req.headers.host}/`;
+        remoteUrl = new URL(remoteUrl, baseURL);
       }
     }
 
@@ -169,11 +443,12 @@
 
     request.get(
       {
-        url: url.format(remoteUrl),
+        url: remoteUrl.toString(),
         headers: filterHeaders(req, req.headers),
         encoding: null,
         proxy: proxy,
       },
+      //eslint-disable-next-line no-unused-vars
       function (error, response, body) {
         let code = 500;
 
@@ -236,6 +511,9 @@
       server.close(function () {
         process.exit(0);
       });
+      esmResult.rebuild.dispose();
+      iifeResult.rebuild.dispose();
+      specResult.rebuild.dispose();
       isFirstSig = false;
     } else {
       console.log("Cesium development server force kill.");

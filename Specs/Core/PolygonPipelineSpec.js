@@ -1,9 +1,12 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  PolygonPipeline,
+  WindingOrder,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PolygonPipeline } from "../../Source/Cesium.js";
-import { WindingOrder } from "../../Source/Cesium.js";
 
 describe("Core/PolygonPipeline", function () {
   beforeEach(function () {
@@ -129,14 +132,14 @@ describe("Core/PolygonPipeline", function () {
       const indices = PolygonPipeline.triangulate(combinedPositions, [4]);
 
       expect(indices).toEqual([
-        3,
         0,
         4,
+        7,
         5,
         4,
         0,
         3,
-        4,
+        0,
         7,
         5,
         0,
@@ -181,6 +184,9 @@ describe("Core/PolygonPipeline", function () {
 
       expect(indices).toEqual([
         0,
+        8,
+        11,
+        0,
         4,
         7,
         5,
@@ -188,15 +194,15 @@ describe("Core/PolygonPipeline", function () {
         0,
         3,
         0,
-        8,
+        11,
         8,
         0,
         7,
         5,
         0,
         1,
+        2,
         3,
-        8,
         11,
         9,
         8,
@@ -205,8 +211,8 @@ describe("Core/PolygonPipeline", function () {
         5,
         1,
         2,
-        3,
         11,
+        10,
         9,
         7,
         6,
@@ -214,14 +220,11 @@ describe("Core/PolygonPipeline", function () {
         1,
         2,
         2,
-        11,
         10,
+        9,
         9,
         6,
         2,
-        2,
-        10,
-        9,
       ]);
     });
   });

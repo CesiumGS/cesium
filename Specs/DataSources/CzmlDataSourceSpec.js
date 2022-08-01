@@ -1,50 +1,52 @@
-import { ArcType } from "../../Source/Cesium.js";
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ClockRange } from "../../Source/Cesium.js";
-import { ClockStep } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { CornerType } from "../../Source/Cesium.js";
-import { Credit } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { Event } from "../../Source/Cesium.js";
-import { ExtrapolationType } from "../../Source/Cesium.js";
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { PolygonHierarchy } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { ReferenceFrame } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
-import { Spherical } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { TranslationRotationScale } from "../../Source/Cesium.js";
-import { CompositeEntityCollection } from "../../Source/Cesium.js";
-import { CompositeMaterialProperty } from "../../Source/Cesium.js";
-import { CompositePositionProperty } from "../../Source/Cesium.js";
-import { CompositeProperty } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { CzmlDataSource } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { ReferenceProperty } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { StripeOrientation } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionPositionProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { LabelStyle } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+import {
+  ArcType,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  ClockRange,
+  ClockStep,
+  Color,
+  CornerType,
+  Credit,
+  DistanceDisplayCondition,
+  Event,
+  ExtrapolationType,
+  Iso8601,
+  JulianDate,
+  Math as CesiumMath,
+  NearFarScalar,
+  PolygonHierarchy,
+  Quaternion,
+  Rectangle,
+  ReferenceFrame,
+  Resource,
+  RuntimeError,
+  Spherical,
+  TimeInterval,
+  Transforms,
+  TranslationRotationScale,
+  CompositeEntityCollection,
+  CompositeMaterialProperty,
+  CompositePositionProperty,
+  CompositeProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  CzmlDataSource,
+  EntityCollection,
+  ReferenceProperty,
+  SampledPositionProperty,
+  SampledProperty,
+  StripeOrientation,
+  TimeIntervalCollectionPositionProperty,
+  TimeIntervalCollectionProperty,
+  ClassificationType,
+  ColorBlendMode,
+  HeightReference,
+  HorizontalOrigin,
+  LabelStyle,
+  ShadowMode,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/CzmlDataSource", function () {
   function makeDocument(packet) {
@@ -5231,7 +5233,8 @@ describe("DataSources/CzmlDataSource", function () {
         scale: 3.0,
         minimumPixelSize: 5.0,
         maximumScale: 4.0,
-        gltf: "./Data/Models/Box-Articulations/Box-Articulations.gltf",
+        gltf:
+          "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf",
         incrementallyLoadTextures: true,
         shadows: "ENABLED",
         heightReference: "CLAMP_TO_GROUND",
@@ -5362,7 +5365,8 @@ describe("DataSources/CzmlDataSource", function () {
         show: true,
         scale: 3.0,
         minimumPixelSize: 5.0,
-        gltf: "./Data/Models/Box-Articulations/Box-Articulations.gltf",
+        gltf:
+          "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf",
         incrementallyLoadTextures: true,
         shadows: "ENABLED",
         heightReference: "CLAMP_TO_GROUND",

@@ -2,6 +2,7 @@ import {
   AttributeType,
   Color,
   ComponentDatatype,
+  defaultValue,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
@@ -71,19 +72,23 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
-  function loadPntsArrayBuffer(arrayBuffer) {
+  function loadPntsArrayBuffer(arrayBuffer, options) {
+    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
     const loader = new PntsLoader({
       arrayBuffer: arrayBuffer,
+      loadAttributesFor2D: options.loadAttributesFor2D,
     });
     pntsLoaders.push(loader);
     loader.load();
     return waitForLoaderProcess(loader, scene);
   }
 
-  function loadPnts(pntsPath) {
+  function loadPnts(pntsPath, options) {
     return Resource.fetchArrayBuffer({
       url: pntsPath,
-    }).then(loadPntsArrayBuffer);
+    }).then(function (arrayBuffer) {
+      return loadPntsArrayBuffer(arrayBuffer, options);
+    });
   }
 
   function expectLoadError(arrayBuffer) {
@@ -95,12 +100,10 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   function expectEmptyMetadata(structuralMetadata) {
     expect(structuralMetadata).toBeDefined();
     expect(structuralMetadata.schema).toEqual({});
-    expect(structuralMetadata.propertyTableCount).toEqual(1);
-    const propertyTable = structuralMetadata.getPropertyTable(0);
-    expect(propertyTable.getPropertyIds(0)).toEqual([]);
+    expect(structuralMetadata.propertyTableCount).toBe(0);
   }
 
-  function expectMetadata(structuralMetadata, expectedProperties) {
+  function expectMetadata(structuralMetadata, expectedProperties, isBatched) {
     expect(structuralMetadata).toBeDefined();
     const schema = structuralMetadata.schema;
     const batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
@@ -108,9 +111,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
     expect(structuralMetadata.propertyTableCount).toEqual(1);
     const propertyTable = structuralMetadata.getPropertyTable(0);
-    expect(propertyTable.getPropertyIds(0).sort()).toEqual(
-      Object.keys(expectedProperties).sort()
-    );
+
+    const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
+
+    const tablePropertyNames = [];
+    const attributePropertyNames = [];
 
     for (const propertyName in expectedProperties) {
       if (expectedProperties.hasOwnProperty(propertyName)) {
@@ -121,14 +126,32 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           // If the batch table had JSON properties, the property will not
           // be in the schema, so check if we can access it.
           expect(propertyTable.getProperty(0, propertyName)).toBeDefined();
+          tablePropertyNames.push(propertyName);
         } else {
           // Check the property declaration is expected
           expect(property.type).toEqual(expectedProperty.type);
           expect(property.componentType).toEqual(
             expectedProperty.componentType
           );
+
+          // if batched, binary properties will appear in the property table.
+          // Otherwise, they are per-point and parsed as a property attribute
+          const nameList = isBatched
+            ? tablePropertyNames
+            : attributePropertyNames;
+          nameList.push(propertyName);
         }
       }
+    }
+
+    expect(propertyTable.getPropertyIds(0).sort()).toEqual(
+      tablePropertyNames.sort()
+    );
+
+    if (!isBatched) {
+      expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
+        attributePropertyNames.sort()
+      );
     }
   }
 
@@ -389,11 +412,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.structuralMetadata);
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          temperature: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
+        },
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(3);
+      // 3 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(6);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
         attributes[1],
@@ -408,11 +450,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoPartialUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.structuralMetadata);
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          temperature: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
+        },
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(3);
+      // 3 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(6);
       expectPositionQuantized(attributes[0]);
       expectNormal(attributes[1]);
       expectColorRGB(attributes[2]);
@@ -423,23 +484,29 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        dimensions: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = true;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          dimensions: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          name: {
+            type: MetadataType.SCALAR,
+            isJson: true,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT32,
+          },
         },
-        name: {
-          type: MetadataType.SCALAR,
-          isJson: true,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT32,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
+      // 4 geometry attributes. No metadata attributes
       expect(attributes.length).toBe(4);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
@@ -470,23 +537,29 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        dimensions: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = true;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          dimensions: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          name: {
+            type: MetadataType.SCALAR,
+            isJson: true,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT32,
+          },
         },
-        name: {
-          type: MetadataType.SCALAR,
-          isJson: true,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT32,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
+      // 4 geometry attributes, no metadata attributes
       expect(attributes.length).toBe(4);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
@@ -501,24 +574,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        temperature: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          temperature: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
         },
-        secondaryColor: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT16,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
+      // 2 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(5);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
     });
@@ -530,27 +609,98 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.structuralMetadata, {
-        "temperature ℃": {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.FLOAT32,
+      const isBatched = false;
+      expectMetadata(
+        components.structuralMetadata,
+        {
+          // Originally "temperature ℃", but sanitized for GLSL
+          temperature_: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          secondaryColor: {
+            type: MetadataType.VEC3,
+            componentType: MetadataComponentType.FLOAT32,
+          },
+          id: {
+            type: MetadataType.SCALAR,
+            componentType: MetadataComponentType.UINT16,
+          },
         },
-        secondaryColor: {
-          type: MetadataType.VEC3,
-          componentType: MetadataComponentType.FLOAT32,
-        },
-        id: {
-          type: MetadataType.SCALAR,
-          componentType: MetadataComponentType.UINT16,
-        },
-      });
+        isBatched
+      );
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
+      // 2 geometry attributes + 3 metadata attributes
+      expect(attributes.length).toBe(5);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
     });
+  });
+
+  it("loads attributes for 2D", function () {
+    return loadPnts(pointCloudRGBUrl, { loadAttributesFor2D: true }).then(
+      function (loader) {
+        const components = loader.components;
+        expect(components).toBeDefined();
+        expectEmptyMetadata(components.structuralMetadata);
+
+        const primitive = components.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        expect(attributes.length).toBe(2);
+
+        const positionAttribute = attributes[0];
+        expectPosition(positionAttribute);
+        expect(positionAttribute.typedArray).toBeDefined();
+
+        expectColorRGB(attributes[1]);
+      }
+    );
+  });
+
+  it("loads attributes for 2D with Draco", function () {
+    return loadPnts(pointCloudDracoUrl, { loadAttributesFor2D: true }).then(
+      function (loader) {
+        const components = loader.components;
+        expect(components).toBeDefined();
+        const isBatched = false;
+        expectMetadata(
+          components.structuralMetadata,
+          {
+            secondaryColor: {
+              type: MetadataType.VEC3,
+              componentType: MetadataComponentType.FLOAT32,
+            },
+            temperature: {
+              type: MetadataType.SCALAR,
+              componentType: MetadataComponentType.FLOAT32,
+            },
+            id: {
+              type: MetadataType.SCALAR,
+              componentType: MetadataComponentType.UINT16,
+            },
+          },
+          isBatched
+        );
+
+        const primitive = components.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        // 3 geometry attributes + 3 metadata attributes
+        expect(attributes.length).toBe(6);
+
+        const positionAttribute = attributes[0];
+        expectPositionQuantized(positionAttribute);
+        expect(positionAttribute.typedArray).toBeDefined();
+
+        expectNormalOctEncoded(
+          attributes[1],
+          ComponentDatatype.UNSIGNED_BYTE,
+          true
+        );
+        expectColorRGB(attributes[2]);
+      }
+    );
   });
 
   it("throws with invalid version", function () {

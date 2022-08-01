@@ -1,9 +1,12 @@
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { PolylineGlowMaterialProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Color,
+  JulianDate,
+  TimeInterval,
+  ConstantProperty,
+  PolylineGlowMaterialProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
+
 import testDefinitionChanged from "../testDefinitionChanged.js";
 
 describe("DataSources/PolylineGlowMaterialProperty", function () {

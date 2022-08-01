@@ -5,6 +5,7 @@ import {
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  Cesium3DTilesetStatistics,
   Ellipsoid,
   HeadingPitchRange,
   Implicit3DTileContent,
@@ -34,6 +35,7 @@ describe(
 
     const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
+      statistics: new Cesium3DTilesetStatistics(),
     };
     let metadataSchema; // intentionally left undefined
 
@@ -147,6 +149,7 @@ describe(
 
     let mockPlaceholderTile;
     beforeEach(function () {
+      mockTileset.statistics.numberOfTilesTotal = 0;
       mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
         geometricError: 400,
         boundingVolume: {
@@ -182,6 +185,7 @@ describe(
         for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
         }
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -203,6 +207,7 @@ describe(
         for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
         }
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -301,6 +306,10 @@ describe(
 
         expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
         expect(getBoundingBoxArray(childTile)).toEqual(childBox);
+
+        const tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 2, 4, tiles);
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 
@@ -497,7 +506,7 @@ describe(
         ];
         const templateUri = implicitTileset.subtreeUriTemplate;
         const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
+        let tiles = [];
         gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
         expect(expectedCoordinates.length).toEqual(tiles.length);
@@ -520,6 +529,10 @@ describe(
           expect(placeholderTile.implicitTileset).toBeDefined();
           expect(placeholderTile.implicitCoordinates).toBeDefined();
         }
+
+        tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
       });
     });
 

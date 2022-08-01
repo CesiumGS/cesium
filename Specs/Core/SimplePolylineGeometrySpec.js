@@ -1,11 +1,15 @@
-import { ArcType } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
+import {
+  ArcType,
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  Ellipsoid,
+  PrimitiveType,
+  SimplePolylineGeometry,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { SimplePolylineGeometry } from "../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/SimplePolylineGeometry", function () {

@@ -320,11 +320,7 @@
               2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
 
-            const center = Cesium.Matrix4.multiplyByPoint(
-              model.modelMatrix,
-              model.boundingSphere.center,
-              new Cesium.Cartesian3()
-            );
+            const center = model.boundingSphere.center;
             const heading = Cesium.Math.toRadians(230.0);
             const pitch = Cesium.Math.toRadians(-20.0);
             camera.lookAt(
@@ -345,6 +341,13 @@
             );
             options[0].onselect();
             Sandcastle.addToolbarMenu(options);
+
+            // This only affects nodes that draw primitives. Setting this value
+            // for a joint node will have no effect.
+            Sandcastle.addToggleButton("Show Node", true, function (value) {
+              const node = model.getNode(viewModel.nodeName);
+              node.show = value;
+            });
 
             // respond to viewmodel changes by applying the computed matrix
             Cesium.knockout

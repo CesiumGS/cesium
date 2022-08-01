@@ -304,6 +304,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Will Jadkowski](https://github.com/willjad)
 - [Mac Clayton](https://github.com/mclayton7)
 - [Ben Murphy](https://github.com/littlemurph)
+- [Kent Liu](https://github.com/bimangle)
 - [Ethan Wong](https://github.com/GetToSet)
 - [Calogero Mauceri](https://github.com/kalosma)
 - [Ren Jianqiang](https://github.com/renjianqiang)
@@ -328,3 +329,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuri Chen](https://github.com/yurichen17)
 - [David Ferguson](https://github.com/jdfwarrior)
 - [Karthik Vaithin](https://github.com/kvaithin)
+- [Jonathan Meerson](https://github.com/yonzmeer)
+- [Jiang Heng](https://github.com/jiangheng90)

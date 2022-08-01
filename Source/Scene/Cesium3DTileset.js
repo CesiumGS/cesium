@@ -4,6 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
+import Color from "../Core/Color.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -97,7 +98,9 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
@@ -203,6 +206,7 @@ function Cesium3DTileset(options) {
   this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
 
   this._styleEngine = new Cesium3DTileStyleEngine();
+  this._styleApplied = false;
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -751,17 +755,31 @@ function Cesium3DTileset(options) {
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
+  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+
   /**
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
+   * <p>
+   * When enableModelExperimental is set to true, this property can be toggled
+   * at runtime. However, when enableModelExperimental is false, this property
+   * is readonly (it can only be set in the constructor).
+   * </p>
    *
    * @type {Boolean}
-   * @readonly
-   *
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The color to use when rendering outlines. This option is only used
+   * when enableModelExperimental is set to true.
+   *
+   * @type {Color}
+   * @default Color.BLACK
+   */
+  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
   /**
    * The {@link SplitDirection} to apply to this tileset.
@@ -2323,7 +2341,14 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  this._styleEngine.resetDirty();
+
+  // If the style wasn't able to be applied this frame (for example,
+  // the tileset was hidden), keep it dirty so the engine can try
+  // to apply the style next frame.
+  if (this._styleApplied) {
+    this._styleEngine.resetDirty();
+  }
+  this._styleApplied = false;
 };
 
 /**
@@ -2628,6 +2653,7 @@ function updateTileDebugLabels(tileset, frameState) {
 
 function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
+  tileset._styleApplied = true;
 
   const isRender = passOptions.isRender;
   const statistics = tileset._statistics;

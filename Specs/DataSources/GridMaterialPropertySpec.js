@@ -1,11 +1,13 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { GridMaterialProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Color,
+  JulianDate,
+  TimeInterval,
+  ConstantProperty,
+  GridMaterialProperty,
+  SampledProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/GridMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

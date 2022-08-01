@@ -1,28 +1,30 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Color,
+  defaultValue,
+  defined,
+  Iso8601,
+  JulianDate,
+  PolygonHierarchy,
+  Rectangle,
+  TimeInterval,
+  CallbackProperty,
+  ColorMaterialProperty,
+  Entity,
+  EntityCollection,
+  exportKml,
+  ImageMaterialProperty,
+  PolylineOutlineMaterialProperty,
+  SampledPositionProperty,
+  HeightReference,
+  HorizontalOrigin,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PolygonHierarchy } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { exportKml } from "../../Source/Cesium.js";
-import { ImageMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineOutlineMaterialProperty } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
 
 describe("DataSources/exportKml", function () {
   let kmlDoc;
@@ -505,18 +507,17 @@ describe("DataSources/exportKml", function () {
         expect(result.externalFiles).toBeUndefined();
         expect(result.kmz).toBeDefined();
 
-        const deferred = defer();
-        const fileReader = new FileReader();
-        fileReader.onload = function (event) {
-          // Verify its a zip archive
-          expect(new DataView(event.target.result).getUint32(0, false)).toBe(
-            0x504b0304
-          );
-          deferred.resolve();
-        };
-        fileReader.readAsArrayBuffer(result.kmz);
-
-        return deferred.promise;
+        return new Promise((resolve) => {
+          const fileReader = new FileReader();
+          fileReader.onload = function (event) {
+            // Verify its a zip archive
+            expect(new DataView(event.target.result).getUint32(0, false)).toBe(
+              0x504b0304
+            );
+            resolve();
+          };
+          fileReader.readAsArrayBuffer(result.kmz);
+        });
       });
     });
   });

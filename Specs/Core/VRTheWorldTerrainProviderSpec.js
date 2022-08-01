@@ -1,13 +1,15 @@
-import { DefaultProxy } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { HeightmapTerrainData } from "../../Source/Cesium.js";
+import {
+  DefaultProxy,
+  GeographicTilingScheme,
+  HeightmapTerrainData,
+  Request,
+  RequestScheduler,
+  Resource,
+  TerrainProvider,
+  VRTheWorldTerrainProvider,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
-import { VRTheWorldTerrainProvider } from "../../Source/Cesium.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";
@@ -123,6 +125,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     });
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
+    return provider.readyPromise;
   });
 
   it("returns reasonable geometric error for various levels", function () {
@@ -151,6 +154,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(function () {
       provider.getLevelMaximumGeometricError(0);
     }).toThrowDeveloperError();
+    return provider.readyPromise;
   });
 
   it("getTilingScheme must not be called before isReady returns true", function () {
@@ -161,6 +165,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(function () {
       return provider.tilingScheme;
     }).toThrowDeveloperError();
+    return provider.readyPromise;
   });
 
   it("logo is undefined if credit is not provided", function () {
@@ -168,6 +173,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.credit).toBeUndefined();
+    return provider.readyPromise;
   });
 
   it("logo is defined if credit is provided", function () {
@@ -176,6 +182,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       credit: "thanks to our awesome made up contributors!",
     });
     expect(provider.credit).toBeDefined();
+    return provider.readyPromise;
   });
 
   it("does not have a water mask", function () {
@@ -183,6 +190,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.hasWaterMask).toBe(false);
+    return provider.readyPromise;
   });
 
   it("is not ready immediately", function () {
@@ -190,6 +198,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.ready).toBe(false);
+    return provider.readyPromise;
   });
 
   it("raises an error if the SRS is not supported", function () {
@@ -233,13 +242,16 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = defer();
+    let called = false;
+    const errorFunction = function () {
+      called = true;
+    };
 
-    terrainProvider.errorEvent.addEventListener(function () {
-      deferred.resolve();
+    terrainProvider.errorEvent.addEventListener(errorFunction);
+
+    return terrainProvider.readyPromise.then(fail).catch(() => {
+      expect(called).toBe(true);
     });
-
-    return deferred.promise;
   });
 
   describe("requestTileGeometry", function () {
@@ -252,6 +264,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       expect(function () {
         terrainProvider.requestTileGeometry(0, 0, 0);
       }).toThrowDeveloperError();
+      return terrainProvider.readyPromise;
     });
 
     it("provides HeightmapTerrainData", function () {
@@ -313,12 +326,11 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         let promise;
         let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-          promise = terrainProvider.requestTileGeometry(
-            0,
-            0,
-            0,
-            createRequest()
-          );
+          const request = new Request({
+            throttle: true,
+            throttleByServer: true,
+          });
+          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
           promises.push(promise);
         }
         RequestScheduler.update();

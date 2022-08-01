@@ -1,5 +1,4 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { pointInsideTriangle } from "../../Source/Cesium.js";
+import { Cartesian2, pointInsideTriangle } from "../../../Source/Cesium.js";
 
 describe("Core/pointInsideTriangle", function () {
   it("pointInsideTriangle has point inside", function () {

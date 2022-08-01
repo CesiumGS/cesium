@@ -2,6 +2,7 @@ import {
   I3dmLoader,
   I3dmParser,
   InstanceAttributeSemantic,
+  Math as CesiumMath,
   Matrix4,
   Resource,
   ResourceCache,
@@ -267,22 +268,13 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
       );
 
       const transform = loader.components.transform;
-      expect(transform[Matrix4.COLUMN0ROW0]).toEqual(1.0);
-      expect(transform[Matrix4.COLUMN1ROW0]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN2ROW0]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN3ROW0]).toEqual(1215013.8340490046);
-      expect(transform[Matrix4.COLUMN0ROW1]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN1ROW1]).toEqual(1.0);
-      expect(transform[Matrix4.COLUMN2ROW1]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN3ROW1]).toEqual(-4736316.75897742);
-      expect(transform[Matrix4.COLUMN0ROW2]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN1ROW2]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN2ROW2]).toEqual(1.0);
-      expect(transform[Matrix4.COLUMN3ROW2]).toEqual(4081608.4380407534);
-      expect(transform[Matrix4.COLUMN0ROW3]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN1ROW3]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN2ROW3]).toEqual(0.0);
-      expect(transform[Matrix4.COLUMN3ROW3]).toEqual(1.0);
+      // prettier-ignore
+      expect(transform).toEqualEpsilon(new Matrix4(
+        1.0, 0.0, 0.0, 1215013.8340490046,
+        0.0, 1.0, 0.0, -4736316.75897742,
+        0.0, 0.0, 1.0, 4081608.4380407534,
+        0.0, 0.0, 0.0, 1.0
+      ), CesiumMath.EPSILON8);
     });
   });
 
@@ -301,6 +293,14 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
         ],
         25
       );
+      // The transform is computed from the quantized positions
+      // prettier-ignore
+      expect(components.transform).toEqualEpsilon(new Matrix4(
+        1, 0, 0, 1215013.8125,
+        0, 1, 0, -4736316.75,
+        0, 0, 1, 4081608.5,
+        0, 0, 0, 1
+      ), CesiumMath.EPSILON8);
     });
   });
 

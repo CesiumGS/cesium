@@ -587,7 +587,9 @@ function convertFaceUVtoXYZ(face, u, v) {
  * @private
  */
 function convertSTtoUV(s) {
-  if (s >= 0.5) return (1 / 3) * (4 * s * s - 1);
+  if (s >= 0.5) {
+    return (1 / 3) * (4 * s * s - 1);
+  }
   return (1 / 3) * (1 - 4 * (1 - s) * (1 - s));
 }
 

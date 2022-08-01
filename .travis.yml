@@ -12,13 +12,13 @@ script:
   - npm --silent run prettier-check
 
   - npm --silent run build
+
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
   - travis_wait 20 npm --silent run website-release -- --concurrency 1
   - npm pack &> /dev/null
 
-  - npm --silent run buildApps
-  - npm --silent run build-specs
+  - npm --silent run build-apps
 
   - npm --silent run deploy-s3 -- -c 'public, max-age=1800' --confirm
   - npm --silent run deploy-status -- --status success --message Deployed

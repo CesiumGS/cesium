@@ -1,8 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { TerrainOffsetProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  JulianDate,
+  CallbackProperty,
+  ConstantProperty,
+  TerrainOffsetProperty,
+} from "../../../Source/Cesium.js";
+
 import createGlobe from "../createGlobe.js";
 import createScene from "../createScene.js";
 
