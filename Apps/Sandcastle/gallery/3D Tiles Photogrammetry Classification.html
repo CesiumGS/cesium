@@ -36,12 +36,12 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        // An example of using a b3dm tilset to classify another b3dm tileset.
+        // An example of using a b3dm tileset to classify another b3dm tileset.
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        // A normal b3dm tileset of photogrammetry
+        // A normal b3dm tileset containing photogrammetry
         const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(40866),
         });

@@ -373,6 +373,7 @@ export default function ModelExperimental(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
   this._classificationType = options.classificationType;
 }
 
@@ -1495,25 +1496,19 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets or sets the model's classification type. This indicates whether or not
-   * the model classifies other asset.
+   * Gets the model's classification type. This indicates whether or not the
+   * model classifies other asset.
    *
    * @memberof ModelExperimental.prototype
    *
    * @type {ClassificationType}
+   * @readonly
    *
-   * @default undefined
+   * @private
    */
   classificationType: {
     get: function () {
       return this._classificationType;
-    },
-    set: function (value) {
-      if (value !== this._classificationType) {
-        this.resetDrawCommands();
-      }
-
-      value = this._classificationType;
     },
   },
 });
@@ -2040,7 +2035,6 @@ function submitDrawCommands(model, frameState) {
   const passes = frameState.passes;
   const submitCommandsForPass =
     passes.render || (passes.pick && model.allowPicking);
-  // TODO: don't render silhouette in pick pass
 
   if (showModel && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);

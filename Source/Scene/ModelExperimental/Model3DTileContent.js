@@ -2,9 +2,9 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelExperimental from "./ModelExperimental.js";
-import Pass from "../../Renderer/Pass.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -365,6 +365,10 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
 };
 
 function makeModelOptions(tileset, tile, content, additionalOptions) {
+  const classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
+
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -393,9 +397,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
-    classificationType: tileset.vectorClassificationOnly
-      ? undefined
-      : tileset.classificationType,
+    classificationType: classificationType,
   };
 
   return combine(additionalOptions, mainOptions);

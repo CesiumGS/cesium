@@ -24,7 +24,6 @@ void filterByPassType(vec4 featureColor)
 void cpuStylingStage(inout czm_modelMaterial material, SelectedFeature feature)
 {
     vec4 featureColor = feature.color;
-
     if (featureColor.a == 0.0)
     {
         discard;
@@ -32,7 +31,7 @@ void cpuStylingStage(inout czm_modelMaterial material, SelectedFeature feature)
 
     // If a feature ID vertex attribute is used, the pass type filter is applied in the vertex shader.
     // So, we only apply in in the fragment shader if the feature ID texture is used.
-    #ifdef HAS_SELECTED_FEATURE_ID_TEXTURE
+    #if defined(HAS_SELECTED_FEATURE_ID_TEXTURE) && !defined(USE_CLASSIFICATION)
     filterByPassType(featureColor);
     #endif
 

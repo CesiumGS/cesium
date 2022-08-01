@@ -1,16 +1,16 @@
-import AttributeType from "../AttributeType.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import ModelType from "./ModelType.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import SceneMode from "../SceneMode.js";
-import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import AttributeType from "../AttributeType.js";
+import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelType from "./ModelType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -39,8 +39,9 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
   "void setDynamicVaryings(inout ProcessedAttributes attributes)";
 
 /**
- * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
- * the attribute objects to the render resources and setting the flags as needed.
+ * This pipeline stage processes the vertex attributes of a primitive,
+ * adding attribute declarations to the shaders, adding attribute objects to the
+ *  render resources, and setting define flags as needed.
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
@@ -67,6 +68,18 @@ GeometryPipelineStage.process = function (
   frameState
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
+  const model = renderResources.model;
+  const useClassification = defined(model.classificationType);
+
+  // Some shader stages must be handled differently for classification models.
+  if (useClassification) {
+    shaderBuilder.addDefine(
+      "USE_CLASSIFICATION",
+      undefined,
+      ShaderDestination.BOTH
+    );
+  }
+
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
   shaderBuilder.addStruct(
@@ -80,7 +93,8 @@ GeometryPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  // The Feature struct is always added since it's required for compilation. It may be unused if features are not present.
+  // The Feature struct is always added since it's required for compilation.
+  // It may be unused if features are not present.
   shaderBuilder.addStruct(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
@@ -125,7 +139,6 @@ GeometryPipelineStage.process = function (
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  const model = renderResources.model;
   const modelType = model.type;
   if (modelType === ModelType.TILE_PNTS) {
     shaderBuilder.addDefine(
@@ -135,7 +148,7 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  // The attributes, structs, and functions will need to be modified for 2D / CV.
+  // Attributes, structs, and functions will need to be modified for 2D / CV.
   const use2D =
     frameState.mode !== SceneMode.SCENE3D &&
     !frameState.scene3DOnly &&
@@ -155,8 +168,6 @@ GeometryPipelineStage.process = function (
     const attributeLocationCount = AttributeType.getAttributeLocationCount(
       attribute.type
     );
-    const isPositionAttribute =
-      attribute.semantic === VertexAttributeSemantic.POSITION;
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(attribute.buffer) && !defined(attribute.constant)) {
@@ -165,6 +176,16 @@ GeometryPipelineStage.process = function (
       );
     }
     //>>includeEnd('debug');
+
+    const isPositionAttribute =
+      attribute.semantic === VertexAttributeSemantic.POSITION;
+    const isFeatureIdAttribute =
+      attribute.semantic === VertexAttributeSemantic.FEATURE_ID;
+    if (useClassification) {
+      if (!isPositionAttribute && !isFeatureIdAttribute) {
+        continue;
+      }
+    }
 
     let index;
     if (attributeLocationCount > 1) {

@@ -1,21 +1,22 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import Matrix4 from "../Core/Matrix4.js";
-import DrawCommand from "../Renderer/DrawCommand.js";
-import Pass from "../Renderer/Pass.js";
-import RenderState from "../Renderer/RenderState.js";
-import BlendingState from "./BlendingState.js";
-import ClassificationType from "./ClassificationType.js";
-import DepthFunction from "./DepthFunction.js";
-import StencilConstants from "./StencilConstants.js";
-import StencilFunction from "./StencilFunction.js";
-import StencilOperation from "./StencilOperation.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Check from "../../Core/Check.js";
+import defaultValue from "../../Core/defaultValue.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import DrawCommand from "../../Renderer/DrawCommand.js";
+import Pass from "../../Renderer/Pass.js";
+import RenderState from "../../Renderer/RenderState.js";
+import BlendingState from "../BlendingState.js";
+import ClassificationType from "../ClassificationType.js";
+import DepthFunction from "../DepthFunction.js";
+import StencilConstants from "../StencilConstants.js";
+import StencilFunction from "../StencilFunction.js";
+import StencilOperation from "../StencilOperation.js";
 
 /**
- * A wrapper around the draw commands used to render a
- * {@link ClassificationModelExperimental}. This manages the derived commands
- * and returns only the necessary commands depending on the given frame state.
+ * A wrapper around the draw commands used to render a classification model,
+ * i.e. a {@link ModelExperimental} that classifies another asset. This manages
+ * the derived commands and returns only the necessary commands depending on the
+ * given frame state.
  *
  * @param {Object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
@@ -37,26 +38,26 @@ function ClassificationModelDrawCommand(options) {
   Check.typeOf.object("options.primitiveRenderResources", renderResources);
   //>>includeEnd('debug');
 
-  this._command = command;
-
   const model = renderResources.model;
+
+  this._command = command;
   this._model = model;
-  this._modelMatrix = Matrix4.clone(command.modelMatrix, new Matrix4());
-  this._debugWireframe = model._debugWireframe;
+  this._runtimePrimitive = renderResources.runtimePrimitive;
+
+  // Classification models aren't supported in 2D mode, so there's no need to
+  // duplicate the model matrix for each derived command.
+  this._modelMatrix = command.modelMatrix;
+  this._boundingVolume = command.boundingVolume;
+  this._cullFace = command.renderState.cull.face;
 
   const type = model._classificationType;
   this._classificationType = type;
-  this._runtimePrimitive = renderResources.runtimePrimitive;
-  this._cullFace = command.renderState.cull.face;
 
-  this._commandList = [];
-
-  // ClassificationType has three values:
-  // terrain only, 3D tiles only, and both.
-  // To check if it classifies terrain, thhe simplest check is to make
-  // sure it doesn't classify 3D tiles only. same vice versa
+  // ClassificationType has three values: terrain only, 3D Tiles only, or both.
   this._classifiesTerrain = type !== ClassificationType.CESIUM_3D_TILE;
   this._classifies3DTiles = type !== ClassificationType.TERRAIN;
+
+  this._commandList = [];
 
   initialize(this);
 }
@@ -123,20 +124,20 @@ const colorRenderState = {
 
 function initialize(drawCommand) {
   const command = drawCommand._command;
-  command.castShadows = false;
-  command.receiveShadows = false;
-
   const commandList = drawCommand._commandList;
 
-  // If in debug mode, ignore deriving commands.
-  if (drawCommand._debugWireframe) {
+  const model = drawCommand._model;
+  const useDebugWireframe = model.debugWireframe && model._enableDebugWireframe;
+
+  // If debug wireframe is enabled, don't derive any new commands.
+  // Render as normal.
+  if (useDebugWireframe) {
     command.pass = Pass.OPAQUE;
     commandList.push(command);
+
     return;
   }
 
-  // These show up when Pass = translucent....
-  // why don't they show up under the classification passes?
   if (drawCommand._classifiesTerrain) {
     const pass = Pass.TERRAIN_CLASSIFICATION;
 
@@ -148,16 +149,20 @@ function initialize(drawCommand) {
   }
 
   if (drawCommand._classifies3DTiles) {
-    const stencilPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-    const stencilDepthCommand = deriveStencilDepthCommand(command, stencilPass);
+    const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+
+    const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
     commandList.push(stencilDepthCommand);
 
-    const colorPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-    const stencilDepthCommand2 = deriveStencilDepthCommand(command, colorPass);
-    commandList.push(stencilDepthCommand2);
-
-    const colorCommand = deriveColorCommand(command, colorPass);
+    const colorCommand = deriveColorCommand(command, pass);
     commandList.push(colorCommand);
+
+    const ignoreShowPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+    const ignoreShowCommand = deriveStencilDepthCommand(
+      command,
+      ignoreShowPass
+    );
+    commandList.push(ignoreShowCommand);
   }
 }
 
@@ -186,8 +191,6 @@ function deriveColorCommand(command, pass) {
   return colorCommand;
 }
 
-// why are pick commands separate ? should they be?
-
 Object.defineProperties(ClassificationModelDrawCommand.prototype, {
   /**
    * The main draw command that the other commands are derived from.
@@ -208,7 +211,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * The model that the draw command belongs to.
    *
    * @memberof ClassificationModelDrawCommand.prototype
-   * @type {ClassificationModelExperimental}
+   * @type {ModelExperimental}
    *
    * @readonly
    * @private
@@ -233,11 +236,12 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
       return this.classificationType;
     },
   },
+
   /**
    * The current model matrix applied to the draw commands. If there are
    * 2D draw commands, their model matrix will be derived from the 3D one.
    *
-   * @memberof ModelDrawCommand.prototype
+   * @memberof ClassificationModelDrawCommand.prototype
    * @type {Matrix4}
    *
    * @readonly
@@ -249,33 +253,37 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
     },
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
-      updateModelMatrix(this);
+      const boundingSphere = this._runtimePrimitive.boundingSphere;
+      this.boundingVolume = BoundingSphere.transform(
+        boundingSphere,
+        this._modelMatrix,
+        this.boundingVolume
+      );
+    },
+  },
+
+  /**
+   * Culling is disabled for classification models, so this has no effect on
+   * how the model renders. This only exists to match the interface of
+   * {@link ModelDrawCommand}.
+   *
+   * @memberof ClassificationModelDrawCommand.prototype
+   * @type {CullFace}
+   *
+   * @private
+   */
+  cullFace: {
+    get: function () {
+      return this._cullFace;
+    },
+    set: function (value) {
+      this._cullFace = value;
     },
   },
 });
 
-function updateModelMatrix(drawCommand) {
-  const modelMatrix = drawCommand.modelMatrix;
-  const boundingSphere = drawCommand._runtimePrimitive.boundingSphere;
-  const commandList = drawCommand._commandList;
-  const length = commandList.length;
-
-  for (let i = 0; i < length; i++) {
-    const command = commandList[i];
-    command.modelMatrix = Matrix4.clone(modelMatrix, command.modelMatrix);
-    command.boundingVolume = BoundingSphere.transform(
-      boundingSphere,
-      command.modelMatrix,
-      command.boundingVolume
-    );
-  }
-}
-
-//const scratchNoCommands = [];
-
 /**
  * Returns an array of the draw commands necessary to render the primitive.
- * This does not include the draw commands that render its silhouette.
  *
  * @param {FrameState} frameState The frame state.
  *
@@ -284,16 +292,6 @@ function updateModelMatrix(drawCommand) {
  * @private
  */
 ClassificationModelDrawCommand.prototype.getCommands = function (frameState) {
-  /*
-
-  const passes = frameState.passes;
-  if (passes.render) {
-    
-  }*/
-
-  // returning this._command works... so something is wrong
-  // with the commands being generated.
-  //return [this._command];
   return this._commandList;
 };
 

@@ -589,31 +589,31 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   const model = this._model;
 
+  // Skip these pipeline stages for classification models.
+  if (defined(model.classificationType)) {
+    return;
+  }
+
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
+  if (model.imageBasedLighting.enabled) {
+    modelPipelineStages.push(ImageBasedLightingPipelineStage);
+  }
 
-  // Skip these stages for classification models.
-  // TODO: see if clipping / split direction work for old implementation?
-  if (!defined(model.classificationType)) {
-    if (model.imageBasedLighting.enabled) {
-      modelPipelineStages.push(ImageBasedLightingPipelineStage);
-    }
+  if (model.isClippingEnabled()) {
+    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
 
-    if (model.isClippingEnabled()) {
-      modelPipelineStages.push(ModelClippingPlanesPipelineStage);
-    }
+  if (model.hasSilhouette(frameState)) {
+    modelPipelineStages.push(ModelSilhouettePipelineStage);
+  }
 
-    if (model.hasSilhouette(frameState)) {
-      modelPipelineStages.push(ModelSilhouettePipelineStage);
-    }
-
-    if (
-      defined(model.splitDirection) &&
-      model.splitDirection !== SplitDirection.NONE
-    ) {
-      modelPipelineStages.push(ModelSplitterPipelineStage);
-    }
+  if (
+    defined(model.splitDirection) &&
+    model.splitDirection !== SplitDirection.NONE
+  ) {
+    modelPipelineStages.push(ModelSplitterPipelineStage);
   }
 };
 
@@ -791,6 +791,7 @@ ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
   const drawCommands = [];
   const silhouetteCommands = [];
 
+  const passes = frameState.passes;
   const hasSilhouette = this._model.hasSilhouette(frameState);
 
   forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
@@ -799,7 +800,7 @@ ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
     const result = primitiveDrawCommand.getCommands(frameState);
     drawCommands.push.apply(drawCommands, result);
 
-    if (hasSilhouette) {
+    if (hasSilhouette && !passes.pick) {
       const silhouetteResult = primitiveDrawCommand.getSilhouetteCommands(
         frameState
       );

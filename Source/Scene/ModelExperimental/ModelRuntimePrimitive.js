@@ -153,6 +153,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const primitive = this.primitive;
   const node = this.node;
   const model = this.model;
+
   const customShader = model.customShader;
   const style = model.style;
 
@@ -164,15 +165,18 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasSkinning = defined(node.skin);
+
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
   const materialsEnabled =
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
+
   const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
+
   const generateWireframeIndices =
     model.debugWireframe &&
     PrimitiveType.isTriangles(primitive.primitiveType) &&
