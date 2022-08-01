@@ -74,6 +74,10 @@
         });
         const scene = viewer.scene;
 
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-08-01T00:00:00Z"
+        );
+
         const clipObjects = ["BIM", "Point Cloud", "Instanced", "Model"];
         const viewModel = {
           debugBoundingVolumesEnabled: false,
@@ -281,7 +285,7 @@
         }
 
         // Power Plant design model provided by Bentley Systems
-        const bimUrl = Cesium.IonResource.fromAssetId(8564);
+        const bimUrl = Cesium.IonResource.fromAssetId(1240402);
         const pointCloudUrl = Cesium.IonResource.fromAssetId(16421);
         const instancedUrl =
           "../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json";
