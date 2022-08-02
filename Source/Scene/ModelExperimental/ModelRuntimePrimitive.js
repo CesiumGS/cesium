@@ -91,9 +91,9 @@ export default function ModelRuntimePrimitive(options) {
   this.pipelineStages = [];
 
   /**
-   * The generated {@link ModelDrawCommand} associated with this primitive.
+   * The generated {@link ModelDrawCommand} or {@link ClassificationModelDrawCommand} associated with this primitive.
    *
-   * @type {ModelDrawCommand}
+   * @type {ModelDrawCommand|ClassificationModelDrawCommand}
    *
    * @private
    */
