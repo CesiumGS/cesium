@@ -31,8 +31,9 @@ const customShader = new Cesium.CustomShader({
   // either PBR (physically-based rendering) or UNLIT depending on the desired
   // results.
   lightingModel: Cesium.LightingModel.PBR,
-  // required when setting material.alpha in the fragment shader
-  isTranslucent: true,
+  // Force the shader to render as transparent, even if the primitive had
+  // an opaque material
+  translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
   // Custom vertex shader. This is a function from model space -> model space.
   // VertexInput is documented below
   vertexShaderText: `
