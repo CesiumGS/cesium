@@ -4,6 +4,7 @@ import {
   Matrix2,
   CustomShader,
   CustomShaderMode,
+  CustomShaderTranslucencyMode,
   LightingModel,
   TextureUniform,
   UniformType,
@@ -23,6 +24,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
 
     expect(customShader.mode).toBe(CustomShaderMode.MODIFY_MATERIAL);
     expect(customShader.lightingModel).not.toBeDefined();
+    expect(customShader.translucencyMode).toBe(
+      CustomShaderTranslucencyMode.NO_CHANGE
+    );
     expect(customShader.uniforms).toEqual({});
     expect(customShader.varyings).toEqual({});
     expect(customShader.vertexShaderText).not.toBeDefined();
@@ -33,6 +37,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   it("constructs", function () {
     const customShader = new CustomShader({
       mode: CustomShaderMode.REPLACE_MATERIAL,
+      translucencyMode: CustomShaderTranslucencyMode.TRANSLUCENT,
       lightingModel: LightingModel.PBR,
       vertexShaderText: emptyVertexShader,
       fragmentShaderText: emptyFragmentShader,
@@ -40,6 +45,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
 
     expect(customShader.mode).toBe(CustomShaderMode.REPLACE_MATERIAL);
     expect(customShader.lightingModel).toBe(LightingModel.PBR);
+    expect(customShader.translucencyMode).toBe(
+      CustomShaderTranslucencyMode.TRANSLUCENT
+    );
     expect(customShader.uniforms).toEqual({});
     expect(customShader.varyings).toEqual({});
     expect(customShader.vertexShaderText).toBe(emptyVertexShader);
