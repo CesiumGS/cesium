@@ -83,10 +83,11 @@ MetadataPipelineStage.process = function (
 ) {
   const { shaderBuilder, model } = renderResources;
   const { structuralMetadata = {}, content } = model;
+  const statistics = content?.tileset?.metadataExtension?.statistics;
 
   // Declare <type>MetadataClass and <type>MetadataStatistics structs as needed
   const metadataTypes = getMetadataTypes(primitive, structuralMetadata);
-  declareMetadataTypeStructs(shaderBuilder, metadataTypes, content);
+  declareMetadataTypeStructs(shaderBuilder, metadataTypes, statistics);
 
   // Always declare the Metadata, MetadataClass, and MetadataStatistics structs
   // and the initializeMetadata() function, even if not used
@@ -96,10 +97,15 @@ MetadataPipelineStage.process = function (
 
   const { propertyAttributes, propertyTextures } = structuralMetadata;
   if (defined(propertyAttributes)) {
-    processPropertyAttributes(renderResources, primitive, propertyAttributes);
+    processPropertyAttributes(
+      renderResources,
+      primitive,
+      propertyAttributes,
+      statistics
+    );
   }
   if (defined(propertyTextures)) {
-    processPropertyTextures(renderResources, propertyTextures);
+    processPropertyTextures(renderResources, propertyTextures, statistics);
   }
 };
 
@@ -107,7 +113,7 @@ MetadataPipelineStage.process = function (
  * Get the types of metadata used by a primitive
  * @param {ModelComponents.primitive} primitive
  * @param {StructuralMetadata} structuralMetadata
- * @returns {Set}
+ * @returns {Set<string>}
  * @private
  */
 function getMetadataTypes(primitive, structuralMetadata) {
@@ -127,17 +133,18 @@ function getMetadataTypes(primitive, structuralMetadata) {
 /**
  * Declare <type>MetadataClass structs in the shader
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
- * @param {Set} metadataTypes The types of metadata used
+ * @param {Set<String>} metadataTypes The types of metadata used in the shaders
+ * @param {Object} statistics Statistics about the metadata.
  * @private
  */
-function declareMetadataTypeStructs(shaderBuilder, metadataTypes, content) {
+function declareMetadataTypeStructs(shaderBuilder, metadataTypes, statistics) {
   const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
   for (const metadataType of metadataTypes) {
     const classStructName = `${metadataType}MetadataClass`;
     declareTypeStruct(classStructName, metadataType, classFields);
   }
 
-  if (!defined(content?.tileset?.metadataExtension?.statistics)) {
+  if (!defined(statistics)) {
     return;
   }
 
@@ -289,69 +296,78 @@ function getPropertyAttributeTypes(
 function processPropertyAttributes(
   renderResources,
   primitive,
-  propertyAttributes
+  propertyAttributes,
+  statistics
 ) {
   const {
     getAttributeByName,
     getAttributeInfo,
     sanitizeGlslIdentifier,
   } = ModelExperimentalUtility;
+  const { shaderBuilder } = renderResources;
 
   function processPropertyAttribute(propertyId, property) {
+    const metadataVariable = sanitizeGlslIdentifier(propertyId);
+
     // Get information about the attribute the same way as the
     // GeometryPipelineStage to ensure we have the correct GLSL type
     const modelAttribute = getAttributeByName(primitive, property.attribute);
     const attributeInfo = getAttributeInfo(modelAttribute);
-    const metadataVariable = sanitizeGlslIdentifier(propertyId);
 
     // in WebGL 1, attributes must have floating point components, so it's safe
     // to assume here that the types will match. Even if the property was
     // normalized, this is handled at upload time, not in the shader.
     const glslType = attributeInfo.glslType;
 
+    const valueExpression = addValueTransformUniforms({
+      valueExpression: `attributes.${attributeInfo.variableName}`,
+      renderResources: renderResources,
+      glslType: glslType,
+      metadataVariable: metadataVariable,
+      shaderDestination: ShaderDestination.BOTH,
+      property: property,
+    });
     addPropertyAttributePropertyMetadata(
-      renderResources,
-      attributeInfo,
+      shaderBuilder,
       metadataVariable,
       glslType,
-      property
+      valueExpression
     );
     addPropertyAttributePropertyMetadataClass(
-      renderResources.shaderBuilder,
+      shaderBuilder,
       metadataVariable,
       glslType,
       property
     );
-    addPropertyAttributePropertyMetadataStatistics(
-      renderResources.shaderBuilder,
-      metadataVariable,
-      glslType,
-      property
-    );
+    if (defined(statistics)) {
+      addPropertyAttributePropertyMetadataStatistics(
+        shaderBuilder,
+        metadataVariable,
+        glslType,
+        statistics
+      );
+    }
   }
 
   processProperties(propertyAttributes, processPropertyAttribute);
 }
 
 /**
- * Add fields to the Metadata struct, and metadata value expressions to the
+ * Add fields to the Metadata struct, and metadata value assignments to the
  * initializeMetadata function, for a PropertyAttributeProperty
  * @param {PrimitiveRenderResources} renderResources
- * @param {Object} attributeInfo Info from ModelExperimentalUtility.getAttributeInfo
  * @param {String} metadataVariable
  * @param {String} glslType
- * @param {PropertyAttributeProperty} property
+ * @param {String} valueExpression A GLSL expression for the value of the property
  * @private
  */
 function addPropertyAttributePropertyMetadata(
-  renderResources,
-  attributeInfo,
+  shaderBuilder,
   metadataVariable,
   glslType,
-  property
+  valueExpression
 ) {
   // declare the struct field
-  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATA_VS,
     glslType,
@@ -363,19 +379,8 @@ function addPropertyAttributePropertyMetadata(
     metadataVariable
   );
 
-  // get a GLSL expression for the value of the property, including transforms
-  const transformedValue = addValueTransformUniforms({
-    valueExpression: `attributes.${attributeInfo.variableName}`,
-    renderResources: renderResources,
-    glslType: glslType,
-    metadataVariable: metadataVariable,
-    shaderDestination: ShaderDestination.BOTH,
-    property: property,
-  });
-
   // assign the result to the metadata struct property.
-  // e.g. metadata.property = unpackingSteps(attributes.property);
-  const initializationLine = `metadata.${metadataVariable} = ${transformedValue};`;
+  const initializationLine = `metadata.${metadataVariable} = ${valueExpression};`;
   shaderBuilder.addFunctionLines(
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
     [initializationLine]
@@ -415,24 +420,23 @@ function addPropertyAttributePropertyMetadataClass(
   );
 
   // Add lines to set values in the metadataClass struct
-  const fields = MetadataPipelineStage.METADATACLASS_FIELDS;
-  for (let i = 0; i < fields.length; i++) {
-    const { specName, shaderName } = fields[i];
-
-    const fieldValue = property.classProperty[specName];
-    if (!defined(fieldValue)) {
-      continue;
-    }
-    const fieldLine = `metadataClass.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
-      [fieldLine]
-    );
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
-      [fieldLine]
-    );
-  }
+  const values = getFieldValues(
+    MetadataPipelineStage.METADATACLASS_FIELDS,
+    property.classProperty
+  );
+  const assignments = values.map((field) => {
+    const structField = `metadataClass.${metadataVariable}.${field.name}`;
+    const structValue = `${glslType}(${field.value})`;
+    return `${structField} = ${structValue};`;
+  });
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+    assignments
+  );
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    assignments
+  );
 }
 
 /**
@@ -448,7 +452,7 @@ function addPropertyAttributePropertyMetadataStatistics(
   shaderBuilder,
   metadataVariable,
   glslType,
-  property
+  statistics
 ) {
   // Declare struct field. Prefix to get the appropriate <type>MetadataStatistics struct
   const statisticsType = `${glslType}MetadataStatistics`;
@@ -464,25 +468,23 @@ function addPropertyAttributePropertyMetadataStatistics(
   );
 
   // Add lines to set values in the metadataStatistics struct
-  /** const fields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
-  for (let i = 0; i < fields.length; i++) {
-    const { specName, shaderName } = fields[i];
-
-    // TODO: does this expose the statistics properties??
-    const fieldValue = property.classProperty[specName];
-    if (!defined(fieldValue)) {
-      continue;
-    }
-    const fieldLine = `metadataStatistics.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
-      [fieldLine]
-    );
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
-      [fieldLine]
-    );
-  }*/
+  const values = getFieldValues(
+    MetadataPipelineStage.METADATASTATISTICS_FIELDS,
+    statistics
+  );
+  const assignments = values.map((field) => {
+    const structField = `metadataStatistics.${metadataVariable}.${field.name}`;
+    const structValue = `${glslType}(${field.value})`;
+    return `${structField} = ${structValue};`;
+  });
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+    assignments
+  );
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    assignments
+  );
 }
 
 function getPropertyTextureTypes(metadataTypes, propertyTextures) {
@@ -494,7 +496,11 @@ function getPropertyTextureTypes(metadataTypes, propertyTextures) {
   processProperties(propertyTextures, getPropertyTexturePropertyType);
 }
 
-function processPropertyTextures(renderResources, propertyTextures) {
+function processPropertyTextures(
+  renderResources,
+  propertyTextures,
+  statistics
+) {
   const { sanitizeGlslIdentifier } = ModelExperimentalUtility;
 
   function processPropertyTexture(propertyId, property) {
@@ -512,11 +518,14 @@ function processPropertyTextures(renderResources, propertyTextures) {
       metadataVariable,
       property
     );
-    addPropertyTexturePropertyMetadataStatistics(
-      renderResources.shaderBuilder,
-      metadataVariable,
-      property
-    );
+    if (defined(statistics)) {
+      addPropertyTexturePropertyMetadataStatistics(
+        renderResources.shaderBuilder,
+        metadataVariable,
+        property,
+        statistics
+      );
+    }
   }
 
   processProperties(propertyTextures, processPropertyTexture);
@@ -535,22 +544,24 @@ function addPropertyTexturePropertyMetadata(
   metadataVariable,
   property
 ) {
+  const { shaderBuilder, uniformMap } = renderResources;
+
+  const { texCoord, channels, index, texture } = property.textureReader;
+  const textureUniformName = `u_propertyTexture_${index}`;
+
   // Property texture properties may share the same physical texture, so only
   // add the texture uniform the first time we encounter it.
-  const textureReader = property.textureReader;
-  const textureIndex = textureReader.index;
-  const textureUniformName = `u_propertyTexture_${textureIndex}`;
-  if (!renderResources.uniformMap.hasOwnProperty(textureUniformName)) {
-    addPropertyTextureUniform(
-      renderResources,
+  if (!uniformMap.hasOwnProperty(textureUniformName)) {
+    shaderBuilder.addUniform(
+      "sampler2D",
       textureUniformName,
-      textureReader
+      ShaderDestination.FRAGMENT
     );
+    uniformMap[textureUniformName] = () => texture;
   }
 
   const glslType = property.getGlslType();
 
-  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATA_FS,
     glslType,
@@ -558,7 +569,6 @@ function addPropertyTexturePropertyMetadata(
   );
 
   // Get a GLSL expression for the value of the property
-  const { texCoord, channels } = textureReader;
   const texCoordVariable = `attributes.texCoord_${texCoord}`;
   const valueExpression = `texture2D(${textureUniformName}, ${texCoordVariable}).${channels}`;
 
@@ -598,10 +608,7 @@ function addPropertyTexturePropertyMetadataClass(
 ) {
   const glslType = property.getGlslType();
 
-  // Declare struct field. Prefix to get the appropriate <type>MetadataClass struct, e.g.
-  // struct MetadataClass {
-  //   floatMetadataClass property;
-  // }
+  // Declare struct field. Prefix to get the appropriate <type>MetadataClass struct
   const metadataType = `${glslType}MetadataClass`;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
@@ -610,20 +617,19 @@ function addPropertyTexturePropertyMetadataClass(
   );
 
   // Add lines to set values in the metadataClass struct
-  const fields = MetadataPipelineStage.METADATACLASS_FIELDS;
-  for (let i = 0; i < fields.length; i++) {
-    const { specName, shaderName } = fields[i];
-
-    const fieldValue = property.classProperty[specName];
-    if (!defined(fieldValue)) {
-      continue;
-    }
-    const fieldLine = `metadataClass.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
-      [fieldLine]
-    );
-  }
+  const values = getFieldValues(
+    MetadataPipelineStage.METADATACLASS_FIELDS,
+    property.classProperty
+  );
+  const assignments = values.map((field) => {
+    const structField = `metadataClass.${metadataVariable}.${field.name}`;
+    const structValue = `${glslType}(${field.value})`;
+    return `${structField} = ${structValue};`;
+  });
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    assignments
+  );
 }
 
 /**
@@ -637,52 +643,57 @@ function addPropertyTexturePropertyMetadataClass(
 function addPropertyTexturePropertyMetadataStatistics(
   shaderBuilder,
   metadataVariable,
-  property
+  property,
+  statistics
 ) {
   const glslType = property.getGlslType();
 
-  // Declare struct field. Prefix to get the appropriate <type>MetadataStatistics struct, e.g.
-  // struct MetadataClass {
-  //   floatMetadataClass property;
-  // }
+  // Declare struct field. Prefix to get the appropriate <type>MetadataStatistics struct
   const statisticsType = `${glslType}MetadataStatistics`;
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+    MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
     statisticsType,
     metadataVariable
   );
 
   // Add lines to set values in the metadataStatistics struct
-  /** const fields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
-  for (let i = 0; i < fields.length; i++) {
-    const { specName, shaderName } = fields[i];
-
-    // TODO: this is WRONG
-    const fieldValue = property.classProperty[specName];
-    if (!defined(fieldValue)) {
-      continue;
-    }
-    const fieldLine = `metadataClass.${metadataVariable}.${shaderName} = ${glslType}(${fieldValue});`;
-    shaderBuilder.addFunctionLines(
-      MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
-      [fieldLine]
-    );
-  }*/
+  const values = getFieldValues(
+    MetadataPipelineStage.METADATASTATISTICS_FIELDS,
+    statistics
+  );
+  const assignments = values.map((field) => {
+    const structField = `metadataStatistics.${metadataVariable}.${field.name}`;
+    const structValue = `${glslType}(${field.value})`;
+    return `${structField} = ${structValue};`;
+  });
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    assignments
+  );
 }
 
-function addPropertyTextureUniform(
-  renderResources,
-  uniformName,
-  textureReader
-) {
-  const { shaderBuilder, uniformMap } = renderResources;
-  shaderBuilder.addUniform(
-    "sampler2D",
-    uniformName,
-    ShaderDestination.FRAGMENT
-  );
+/**
+ * Given a list of property names, retrieve property values from a metadata schema object
+ * The property names are supplied in two forms: one from the spec, one used in the shader
+ * @param {Object[]} fieldNames
+ * @param {String} fieldNames[].specName The name of the property in the spec
+ * @param {String} fieldNames[].shaderName The name of the property in the shader
+ * @param {Object} values A source of property values, keyed on fieldNames[].specName
+ * @returns {{name: String, value}[]}
+ */
+function getFieldValues(fieldNames, values) {
+  if (!defined(values)) {
+    return [];
+  }
 
-  uniformMap[uniformName] = () => textureReader.texture;
+  return fieldNames.map(getFieldValue).filter((field) => defined(field.value));
+
+  function getFieldValue(field) {
+    return {
+      name: field.shaderName,
+      value: values[field.specName],
+    };
+  }
 }
 
 /**
@@ -692,10 +703,10 @@ function addPropertyTextureUniform(
  * @param {Object} options Object with the following properties:
  * @param {String} options.valueExpression The GLSL value expression without the transform
  * @param {String} options.metadataVariable The name of the GLSL variable that will contain the property value
- * @param {ShaderDestination} options.shaderDestination Which shader(s) use this variable
  * @param {String} options.glslType The GLSL type of the variable
+ * @param {ShaderDestination} options.shaderDestination Which shader(s) use this variable
  * @param {PrimitiveRenderResources} options.renderResources The render resources for this primitive
- * @param {Object} options.property The property from which the value is derived
+ * @param {(PropertyAttributeProperty|PropertyTextureProperty)} options.property The property from which the value is derived
  * @returns {String}
  * @private
  */

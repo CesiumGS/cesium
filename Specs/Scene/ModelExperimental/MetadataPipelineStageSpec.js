@@ -27,6 +27,8 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const tilesetWithMetadata =
       "./Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset_1.1.json";
+    //const tilesetWithStructuralMetadata =
+    //  "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
 
     let scene;
     const gltfLoaders = [];
@@ -385,15 +387,10 @@ describe(
           MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
           [
             "    vec2MetadataClass vec2Property;",
-            "    vec2MetadataStatistics vec2Property;",
             "    intMetadataClass uint8Property;",
-            "    intMetadataStatistics uint8Property;",
             "    ivec3MetadataClass uint8vec3Property;",
-            "    ivec3MetadataStatistics uint8vec3Property;",
             "    vec3MetadataClass arrayProperty;",
-            "    vec3MetadataStatistics arrayProperty;",
             "    vec2MetadataClass valueTransformProperty;",
-            "    vec2MetadataStatistics valueTransformProperty;",
           ]
         );
 
@@ -453,7 +450,7 @@ describe(
       });
     });
 
-    it("Handles a tileset with metadata statistics", function () {
+    xit("Handles a tileset with metadata statistics", function () {
       const centerLongitude = -1.31968;
       const centerLatitude = 0.698874;
       const headingPitchRange = new HeadingPitchRange(0.0, -1.57, 15.0);
@@ -487,6 +484,13 @@ describe(
         const frameState = scene.frameState;
 
         MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+        //const metadataTypes = ["float"];
+        //checkMetadataClassStructs(renderResources.shaderBuilder, metadataTypes);
+        //expect(renderResources.shaderBuilder._vertexShaderParts.structIds).toBe(true);
+        expect(
+          renderResources.shaderBuilder._fragmentShaderParts.structIds
+        ).toBe(true);
       });
     });
   },
