@@ -247,7 +247,13 @@ B3dmLoader.prototype.load = function () {
       }
 
       const components = gltfLoader.components;
-      components.transform = that._transform;
+
+      // The glTF loader may have set its own transform if using the CESIUM_RTC extension
+      components.transform = Matrix4.multiplyTransformation(
+        that._transform,
+        components.transform,
+        components.transform
+      );
       createStructuralMetadata(that, components);
       that._components = components;
 

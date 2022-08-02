@@ -112,6 +112,8 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+    const boxCesiumRtc =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -4027,6 +4029,16 @@ describe(
         for (let i = 0; i < length; i++) {
           expect(credits[i].html).toEqual(expectedCredits[i]);
         }
+      });
+    });
+
+    it("loads model with CESIUM_RTC", function () {
+      return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const expectedTransform = Matrix4.fromTranslation(
+          new Cartesian3(6378137, 0, 0)
+        );
+        expect(components.transform).toEqual(expectedTransform);
       });
     });
   },
