@@ -1507,7 +1507,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {ClassificationType}
    *
-   * @private
+   * @default undefined
    */
   classificationType: {
     get: function () {
@@ -1989,10 +1989,12 @@ function updateSceneGraph(model, frameState) {
     model._debugShowBoundingVolumeDirty = false;
   }
 
-  const updateForAnimations =
-    (!defined(model.classificationType) && model._userAnimationDirty) ||
-    model._activeAnimations.update(frameState);
-
+  let updateForAnimations = false;
+  // Animations are disabled for classification models.
+  if (!defined(model.classificationType)) {
+    updateForAnimations =
+      model._userAnimationDirty || model._activeAnimations.update(frameState);
+  }
   sceneGraph.update(frameState, updateForAnimations);
   model._userAnimationDirty = false;
 }
