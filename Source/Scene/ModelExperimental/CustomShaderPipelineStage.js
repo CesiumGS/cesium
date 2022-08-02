@@ -9,6 +9,7 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 
 /**
  * The custom shader pipeline stage takes GLSL callbacks from the
@@ -80,14 +81,19 @@ CustomShaderPipelineStage.process = function (
   }
 
   const alphaOptions = renderResources.alphaOptions;
-  if (customShader.isTranslucent) {
+  if (
+    customShader.translucencyMode === CustomShaderTranslucencyMode.TRANSLUCENT
+  ) {
     alphaOptions.pass = Pass.TRANSLUCENT;
-  } else {
-    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
+  } else if (
+    customShader.translucencyMode === CustomShaderTranslucencyMode.OPAQUE
+  ) {
+    // Use the default opqaue pass (either OPAQUE or 3D_TILES), regardless of whether
     // the material pipeline stage used translucent. The default is configured
     // in AlphaPipelineStage
     alphaOptions.pass = undefined;
   }
+  // For CustomShaderTranslucencyMode.NO_CHANGE, do not modify alphaOptions.pass
 
   // Generate lines of code for the shader, but don't add them to the shader
   // yet.
