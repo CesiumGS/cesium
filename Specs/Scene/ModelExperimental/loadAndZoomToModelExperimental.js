@@ -46,6 +46,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         projectTo2D: options.projectTo2D,
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+        classificationType: options.classificationType,
       });
     } catch (error) {
       reject(error);
