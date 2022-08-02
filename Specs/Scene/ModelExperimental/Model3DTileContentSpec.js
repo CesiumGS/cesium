@@ -5,11 +5,27 @@ import {
   ContentMetadata,
   defaultValue,
   defined,
+  destroyObject,
   ExperimentalFeatures,
   GroupMetadata,
   HeadingPitchRange,
   MetadataClass,
   RuntimeError,
+  Cartographic,
+  Color,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  Matrix4,
+  Rectangle,
+  RectangleGeometry,
+  Pass,
+  RenderState,
+  ClassificationType,
+  Math as CesiumMath,
+  PerInstanceColorAppearance,
+  Primitive,
+  StencilConstants,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -233,6 +249,7 @@ describe(
         "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
       const pointCloudWithUnicodePropertyIdsUrl =
         "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/tileset.json";
+
       it("renders pnts content", function () {
         setCamera(centerLongitude, centerLatitude, 5.0);
         return Cesium3DTilesTester.loadTileset(
@@ -466,29 +483,32 @@ describe(
       });
     });
 
-    it("picks from glTF", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
-        function (tileset) {
-          const content = tileset.root.content;
-          tileset.show = false;
-          expect(scene).toPickPrimitive(undefined);
-          tileset.show = true;
-          expect(scene).toPickAndCall(function (result) {
-            expect(result).toBeDefined();
-            expect(result.primitive).toBe(tileset);
-            expect(result.content).toBe(content);
-            expect(result.featureId).toBeUndefined();
-            expect(content.hasProperty(0, "id")).toBe(false);
-            expect(content.getFeature(0)).toBeUndefined();
-          });
-        }
-      );
-    });
+    describe("picking", function () {
+      it("picks from glTF", function () {
+        return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            tileset.show = false;
+            expect(scene).toPickPrimitive(undefined);
+            tileset.show = true;
+            expect(scene).toPickAndCall(function (result) {
+              expect(result).toBeDefined();
+              expect(result.primitive).toBe(tileset);
+              expect(result.content).toBe(content);
+              expect(result.featureId).toBeUndefined();
+              expect(content.hasProperty(0, "id")).toBe(false);
+              expect(content.getFeature(0)).toBeUndefined();
+            });
+          }
+        );
+      });
 
-    it("picks from b3dm", function () {
-      setCamera(centerLongitude, centerLatitude, 15.0);
-      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
-        function (tileset) {
+      it("picks from b3dm", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
           const content = tileset.root.content;
           tileset.show = false;
           expect(scene).toPickPrimitive(undefined);
@@ -502,139 +522,317 @@ describe(
             expect(content.hasProperty(featureId, "id")).toBe(false);
             expect(content.getFeature(featureId)).toBeDefined();
           });
-        }
-      );
-    });
-
-    it("picks from glTF feature table", function () {
-      return Cesium3DTilesTester.loadTileset(scene, buildingsMetadataUrl).then(
-        function (tileset) {
-          const content = tileset.root.content;
-          tileset.show = false;
-          expect(scene).toPickPrimitive(undefined);
-          tileset.show = true;
-          expect(scene).toPickAndCall(function (result) {
-            expect(result).toBeDefined();
-            expect(result.primitive).toBe(tileset);
-            expect(result.content).toBe(content);
-            const featureId = result.featureId;
-            expect(featureId).toBe(0);
-            expect(content.batchTable).toBeDefined();
-            expect(content.hasProperty(featureId, "id")).toBe(true);
-            expect(content.getFeature(featureId)).toBeDefined();
-          });
-        }
-      );
-    });
-
-    it("picks from b3dm batch table", function () {
-      setCamera(centerLongitude, centerLatitude, 15.0);
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-        function (tileset) {
-          const content = tileset.root.content;
-          tileset.show = false;
-          expect(scene).toPickPrimitive(undefined);
-          tileset.show = true;
-          expect(scene).toPickAndCall(function (result) {
-            expect(result).toBeDefined();
-            expect(result.primitive).toBe(tileset);
-            expect(result.content).toBe(content);
-            const featureId = result.featureId;
-            expect(featureId).toBe(0);
-            expect(content.batchTable).toBeDefined();
-            expect(content.hasProperty(featureId, "id")).toBe(true);
-            expect(content.getFeature(featureId)).toBeDefined();
-          });
-        }
-      );
-    });
-
-    it("picks from i3dm batch table", function () {
-      setCamera(centerLongitude, centerLatitude, 25.0);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        instancedWithBatchTableUrl
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        tileset.show = false;
-        expect(scene).toPickPrimitive(undefined);
-        tileset.show = true;
-        expect(scene).toPickAndCall(function (result) {
-          expect(result).toBeDefined();
-          expect(result.primitive).toBe(tileset);
-          expect(result.content).toBe(content);
-          const featureId = result.featureId;
-          expect(featureId).toBe(12);
-          expect(content.hasProperty(featureId, "Height")).toBe(true);
-          expect(content.getFeature(featureId)).toBeDefined();
         });
       });
-    });
 
-    function picksGeoJson(url, hasProperties, expectedFeatureId) {
-      expectedFeatureId = defaultValue(expectedFeatureId, 0);
-      setCamera(centerLongitude, centerLatitude, 1.0);
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
-        const content = tileset.root.content;
-        tileset.show = false;
-        expect(scene).toPickPrimitive(undefined);
-        tileset.show = true;
-        expect(scene).toPickAndCall(function (result) {
-          expect(result).toBeDefined();
-          expect(result.primitive).toBe(tileset);
-          expect(result.content).toBe(content);
-          const featureId = result.featureId;
-          expect(featureId).toBe(expectedFeatureId);
-          const feature = content.getFeature(featureId);
-          expect(feature).toBeDefined();
+      it("picks from glTF feature table", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          tileset.show = false;
+          expect(scene).toPickPrimitive(undefined);
+          tileset.show = true;
+          expect(scene).toPickAndCall(function (result) {
+            expect(result).toBeDefined();
+            expect(result.primitive).toBe(tileset);
+            expect(result.content).toBe(content);
+            const featureId = result.featureId;
+            expect(featureId).toBe(0);
+            expect(content.batchTable).toBeDefined();
+            expect(content.hasProperty(featureId, "id")).toBe(true);
+            expect(content.getFeature(featureId)).toBeDefined();
+          });
+        });
+      });
 
-          if (hasProperties) {
-            expect(feature.getProperty("name")).toBe("UL");
-            expect(feature.getProperty("code")).toBe(12);
-          } else {
-            expect(feature.getProperty("name")).toBeUndefined();
-            expect(feature.getProperty("code")).toBeUndefined();
+      it("picks from b3dm batch table", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            tileset.show = false;
+            expect(scene).toPickPrimitive(undefined);
+            tileset.show = true;
+            expect(scene).toPickAndCall(function (result) {
+              expect(result).toBeDefined();
+              expect(result.primitive).toBe(tileset);
+              expect(result.content).toBe(content);
+              const featureId = result.featureId;
+              expect(featureId).toBe(0);
+              expect(content.batchTable).toBeDefined();
+              expect(content.hasProperty(featureId, "id")).toBe(true);
+              expect(content.getFeature(featureId)).toBeDefined();
+            });
           }
+        );
+      });
+
+      it("picks from i3dm batch table", function () {
+        setCamera(centerLongitude, centerLatitude, 25.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedWithBatchTableUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          tileset.show = false;
+          expect(scene).toPickPrimitive(undefined);
+          tileset.show = true;
+          expect(scene).toPickAndCall(function (result) {
+            expect(result).toBeDefined();
+            expect(result.primitive).toBe(tileset);
+            expect(result.content).toBe(content);
+            const featureId = result.featureId;
+            expect(featureId).toBe(12);
+            expect(content.hasProperty(featureId, "Height")).toBe(true);
+            expect(content.getFeature(featureId)).toBeDefined();
+          });
         });
       });
-    }
 
-    it("picks GeoJSON MultiPolygon", function () {
-      return picksGeoJson(geoJsonMultiPolygonUrl, true);
-    });
+      function picksGeoJson(url, hasProperties, expectedFeatureId) {
+        expectedFeatureId = defaultValue(expectedFeatureId, 0);
+        setCamera(centerLongitude, centerLatitude, 1.0);
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+          tileset
+        ) {
+          const content = tileset.root.content;
+          tileset.show = false;
+          expect(scene).toPickPrimitive(undefined);
+          tileset.show = true;
+          expect(scene).toPickAndCall(function (result) {
+            expect(result).toBeDefined();
+            expect(result.primitive).toBe(tileset);
+            expect(result.content).toBe(content);
+            const featureId = result.featureId;
+            expect(featureId).toBe(expectedFeatureId);
+            const feature = content.getFeature(featureId);
+            expect(feature).toBeDefined();
 
-    it("picks GeoJSON Polygon", function () {
-      return picksGeoJson(geoJsonPolygonUrl, true);
-    });
+            if (hasProperties) {
+              expect(feature.getProperty("name")).toBe("UL");
+              expect(feature.getProperty("code")).toBe(12);
+            } else {
+              expect(feature.getProperty("name")).toBeUndefined();
+              expect(feature.getProperty("code")).toBeUndefined();
+            }
+          });
+        });
+      }
 
-    it("picks GeoJSON Polygon with heights", function () {
-      return picksGeoJson(geoJsonPolygonHeightsUrl, true);
-    });
+      it("picks GeoJSON MultiPolygon", function () {
+        return picksGeoJson(geoJsonMultiPolygonUrl, true);
+      });
 
-    it("picks GeoJSON Polygon with hole", function () {
-      return picksGeoJson(geoJsonPolygonHoleUrl, true);
-    });
+      it("picks GeoJSON Polygon", function () {
+        return picksGeoJson(geoJsonPolygonUrl, true);
+      });
 
-    it("picks GeoJSON Polygon with no properties", function () {
-      return picksGeoJson(geoJsonPolygonNoPropertiesUrl, false);
-    });
+      it("picks GeoJSON Polygon with heights", function () {
+        return picksGeoJson(geoJsonPolygonHeightsUrl, true);
+      });
 
-    it("picks GeoJSON LineString", function () {
-      return picksGeoJson(geoJsonLineStringUrl, true);
-    });
+      it("picks GeoJSON Polygon with hole", function () {
+        return picksGeoJson(geoJsonPolygonHoleUrl, true);
+      });
 
-    it("picks GeoJSON MultiLineString", function () {
-      return picksGeoJson(geoJsonMultiLineStringUrl, true);
-    });
+      it("picks GeoJSON Polygon with no properties", function () {
+        return picksGeoJson(geoJsonPolygonNoPropertiesUrl, false);
+      });
 
-    it("picks GeoJSON with multiple features", function () {
-      return picksGeoJson(geoJsonMultipleFeaturesUrl, true, 1);
+      it("picks GeoJSON LineString", function () {
+        return picksGeoJson(geoJsonLineStringUrl, true);
+      });
+
+      it("picks GeoJSON MultiLineString", function () {
+        return picksGeoJson(geoJsonMultiLineStringUrl, true);
+      });
+
+      it("picks GeoJSON with multiple features", function () {
+        return picksGeoJson(geoJsonMultipleFeaturesUrl, true, 1);
+      });
     });
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
+    });
+
+    describe("classification", function () {
+      let globePrimitive;
+      let tilesetPrimitive;
+      let reusableGlobePrimitive;
+      let reusableTilesetPrimitive;
+
+      function createPrimitive(rectangle, pass) {
+        let renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+          renderState = RenderState.fromCache({
+            stencilTest: StencilConstants.setCesium3DTileBit(),
+            stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,
+            depthTest: {
+              enabled: true,
+            },
+          });
+        }
+
+        const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+          new Color(0.0, 0.0, 0.0, 1.0)
+        );
+
+        return new Primitive({
+          geometryInstances: new GeometryInstance({
+            geometry: new RectangleGeometry({
+              ellipsoid: Ellipsoid.WGS84,
+              rectangle: rectangle,
+            }),
+            id: "depth rectangle",
+            attributes: {
+              color: depthColorAttribute,
+            },
+          }),
+          appearance: new PerInstanceColorAppearance({
+            translucent: false,
+            flat: true,
+            renderState: renderState,
+          }),
+          asynchronous: false,
+        });
+      }
+
+      function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+      }
+
+      MockPrimitive.prototype.update = function (frameState) {
+        if (!this.show) {
+          return;
+        }
+
+        const commandList = frameState.commandList;
+        const startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (let i = startLength; i < commandList.length; ++i) {
+          const command = commandList[i];
+          command.pass = this._pass;
+        }
+      };
+
+      MockPrimitive.prototype.isDestroyed = function () {
+        return false;
+      };
+
+      MockPrimitive.prototype.destroy = function () {
+        return destroyObject(this);
+      };
+
+      let modelMatrix;
+      beforeAll(function () {
+        scene = createScene();
+
+        const translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
+          new Cartographic(centerLongitude, centerLatitude)
+        );
+        Cartesian3.multiplyByScalar(translation, -5.0, translation);
+        modelMatrix = Matrix4.fromTranslation(translation);
+
+        const offset = CesiumMath.toRadians(0.01);
+        const rectangle = new Rectangle(
+          centerLongitude - offset,
+          centerLatitude - offset,
+          centerLongitude + offset,
+          centerLatitude + offset
+        );
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(
+          rectangle,
+          Pass.CESIUM_3D_TILE
+        );
+      });
+
+      beforeEach(function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+
+        // wrap rectangle primitive so it gets executed during the globe pass
+        // and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(
+          reusableTilesetPrimitive,
+          Pass.CESIUM_3D_TILE
+        );
+
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+      });
+
+      afterEach(function () {
+        scene.primitives.removeAll();
+        globePrimitive =
+          globePrimitive &&
+          !globePrimitive.isDestroyed() &&
+          globePrimitive.destroy();
+        tilesetPrimitive =
+          tilesetPrimitive &&
+          !tilesetPrimitive.isDestroyed() &&
+          tilesetPrimitive.destroy();
+      });
+
+      afterAll(function () {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+      });
+
+      it("classifies 3D Tiles", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.CESIUM_3D_TILE,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
+      });
+
+      it("classifies globe", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.TERRAIN,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
+      });
+
+      it("classifies both 3D Tiles and globe", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.BOTH,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
+      });
     });
 
     describe("metadata", function () {

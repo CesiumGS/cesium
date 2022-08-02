@@ -19,7 +19,6 @@ import {
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
@@ -378,7 +377,9 @@ describe(
           "uniform vec3 u_emissiveFactor;",
         ]);
 
-        ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, []);
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_EMISSIVE_FACTOR",
+        ]);
 
         const material = primitive.material;
         const expectedUniforms = {
