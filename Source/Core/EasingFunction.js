@@ -1,4 +1,4 @@
-import Tween from "../ThirdParty/Tween.js";
+import { Easing } from "@tweenjs/tween.js";
 
 /**
  * Easing functions for use with TweenCollection.  These function are from
@@ -14,7 +14,7 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  LINEAR_NONE: Tween.Easing.Linear.None,
+  LINEAR_NONE: Easing.Linear.None,
 
   /**
    * Quadratic in.
@@ -22,21 +22,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_IN: Tween.Easing.Quadratic.In,
+  QUADRATIC_IN: Easing.Quadratic.In,
   /**
    * Quadratic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_OUT: Tween.Easing.Quadratic.Out,
+  QUADRATIC_OUT: Easing.Quadratic.Out,
   /**
    * Quadratic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_IN_OUT: Tween.Easing.Quadratic.InOut,
+  QUADRATIC_IN_OUT: Easing.Quadratic.InOut,
 
   /**
    * Cubic in.
@@ -44,21 +44,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CUBIC_IN: Tween.Easing.Cubic.In,
+  CUBIC_IN: Easing.Cubic.In,
   /**
    * Cubic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CUBIC_OUT: Tween.Easing.Cubic.Out,
+  CUBIC_OUT: Easing.Cubic.Out,
   /**
    * Cubic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CUBIC_IN_OUT: Tween.Easing.Cubic.InOut,
+  CUBIC_IN_OUT: Easing.Cubic.InOut,
 
   /**
    * Quartic in.
@@ -66,21 +66,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUARTIC_IN: Tween.Easing.Quartic.In,
+  QUARTIC_IN: Easing.Quartic.In,
   /**
    * Quartic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUARTIC_OUT: Tween.Easing.Quartic.Out,
+  QUARTIC_OUT: Easing.Quartic.Out,
   /**
    * Quartic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUARTIC_IN_OUT: Tween.Easing.Quartic.InOut,
+  QUARTIC_IN_OUT: Easing.Quartic.InOut,
 
   /**
    * Quintic in.
@@ -88,21 +88,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUINTIC_IN: Tween.Easing.Quintic.In,
+  QUINTIC_IN: Easing.Quintic.In,
   /**
    * Quintic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUINTIC_OUT: Tween.Easing.Quintic.Out,
+  QUINTIC_OUT: Easing.Quintic.Out,
   /**
    * Quintic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUINTIC_IN_OUT: Tween.Easing.Quintic.InOut,
+  QUINTIC_IN_OUT: Easing.Quintic.InOut,
 
   /**
    * Sinusoidal in.
@@ -110,21 +110,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  SINUSOIDAL_IN: Tween.Easing.Sinusoidal.In,
+  SINUSOIDAL_IN: Easing.Sinusoidal.In,
   /**
    * Sinusoidal out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  SINUSOIDAL_OUT: Tween.Easing.Sinusoidal.Out,
+  SINUSOIDAL_OUT: Easing.Sinusoidal.Out,
   /**
    * Sinusoidal in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  SINUSOIDAL_IN_OUT: Tween.Easing.Sinusoidal.InOut,
+  SINUSOIDAL_IN_OUT: Easing.Sinusoidal.InOut,
 
   /**
    * Exponential in.
@@ -132,21 +132,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  EXPONENTIAL_IN: Tween.Easing.Exponential.In,
+  EXPONENTIAL_IN: Easing.Exponential.In,
   /**
    * Exponential out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  EXPONENTIAL_OUT: Tween.Easing.Exponential.Out,
+  EXPONENTIAL_OUT: Easing.Exponential.Out,
   /**
    * Exponential in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  EXPONENTIAL_IN_OUT: Tween.Easing.Exponential.InOut,
+  EXPONENTIAL_IN_OUT: Easing.Exponential.InOut,
 
   /**
    * Circular in.
@@ -154,21 +154,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CIRCULAR_IN: Tween.Easing.Circular.In,
+  CIRCULAR_IN: Easing.Circular.In,
   /**
    * Circular out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CIRCULAR_OUT: Tween.Easing.Circular.Out,
+  CIRCULAR_OUT: Easing.Circular.Out,
   /**
    * Circular in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  CIRCULAR_IN_OUT: Tween.Easing.Circular.InOut,
+  CIRCULAR_IN_OUT: Easing.Circular.InOut,
 
   /**
    * Elastic in.
@@ -176,21 +176,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  ELASTIC_IN: Tween.Easing.Elastic.In,
+  ELASTIC_IN: Easing.Elastic.In,
   /**
    * Elastic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  ELASTIC_OUT: Tween.Easing.Elastic.Out,
+  ELASTIC_OUT: Easing.Elastic.Out,
   /**
    * Elastic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  ELASTIC_IN_OUT: Tween.Easing.Elastic.InOut,
+  ELASTIC_IN_OUT: Easing.Elastic.InOut,
 
   /**
    * Back in.
@@ -198,21 +198,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BACK_IN: Tween.Easing.Back.In,
+  BACK_IN: Easing.Back.In,
   /**
    * Back out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BACK_OUT: Tween.Easing.Back.Out,
+  BACK_OUT: Easing.Back.Out,
   /**
    * Back in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BACK_IN_OUT: Tween.Easing.Back.InOut,
+  BACK_IN_OUT: Easing.Back.InOut,
 
   /**
    * Bounce in.
@@ -220,21 +220,21 @@ const EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BOUNCE_IN: Tween.Easing.Bounce.In,
+  BOUNCE_IN: Easing.Bounce.In,
   /**
    * Bounce out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BOUNCE_OUT: Tween.Easing.Bounce.Out,
+  BOUNCE_OUT: Easing.Bounce.Out,
   /**
    * Bounce in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  BOUNCE_IN_OUT: Tween.Easing.Bounce.InOut,
+  BOUNCE_IN_OUT: Easing.Bounce.InOut,
 };
 
 /**
