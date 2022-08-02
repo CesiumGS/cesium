@@ -7,6 +7,10 @@
 - Support for glTF 1.0 assets has been removed. Please convert any glTF 1.0 assets to glTF 2.0. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
 - Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
 
+##### Additions :tada:
+
+- Tilesets and models loaded with `ModelExperimental` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:
