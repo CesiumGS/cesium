@@ -589,7 +589,7 @@ describe("Scene/ModelExperimental/ModelAnimationChannel", function () {
 
     const wrappedRuntimeAnimation = {
       model: {
-        clampedAnimations: false,
+        clampAnimations: false,
       },
     };
 

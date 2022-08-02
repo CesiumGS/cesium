@@ -69,16 +69,15 @@ MaterialPipelineStage.process = function (
   const defaultNormalTexture = frameState.context.defaultNormalTexture;
   const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
-  if (!disableTextures) {
-    processMaterialUniforms(
-      material,
-      uniformMap,
-      shaderBuilder,
-      defaultTexture,
-      defaultNormalTexture,
-      defaultEmissiveTexture
-    );
-  }
+  processMaterialUniforms(
+    material,
+    uniformMap,
+    shaderBuilder,
+    defaultTexture,
+    defaultNormalTexture,
+    defaultEmissiveTexture,
+    disableTextures
+  );
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
@@ -238,10 +237,11 @@ function processMaterialUniforms(
   shaderBuilder,
   defaultTexture,
   defaultNormalTexture,
-  defaultEmissiveTexture
+  defaultEmissiveTexture,
+  disableTextures
 ) {
   const emissiveTexture = material.emissiveTexture;
-  if (defined(emissiveTexture)) {
+  if (defined(emissiveTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,
@@ -273,7 +273,7 @@ function processMaterialUniforms(
   }
 
   const normalTexture = material.normalTexture;
-  if (defined(normalTexture)) {
+  if (defined(normalTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,
@@ -285,7 +285,7 @@ function processMaterialUniforms(
   }
 
   const occlusionTexture = material.occlusionTexture;
-  if (defined(occlusionTexture)) {
+  if (defined(occlusionTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,

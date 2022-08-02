@@ -196,8 +196,7 @@ export default function ModelExperimental(options) {
   this._id = options.id;
   this._idDirty = false;
 
-  const color = options.color;
-  this._color = defined(color) ? Color.clone(color) : undefined;
+  this._color = Color.clone(options.color);
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -376,6 +375,8 @@ export default function ModelExperimental(options) {
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 
   this._classificationType = options.classificationType;
+
+  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -944,6 +945,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Color}
+   *
+   * @default undefined
    */
   color: {
     get: function () {
@@ -2044,7 +2047,7 @@ function submitDrawCommands(model, frameState) {
   const submitCommandsForPass =
     passes.render || (passes.pick && model.allowPicking);
 
-  if (showModel && submitCommandsForPass) {
+  if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
