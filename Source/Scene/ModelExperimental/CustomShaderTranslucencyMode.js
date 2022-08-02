@@ -8,14 +8,14 @@
  */
 const CustomShaderTranslucencyMode = {
   /**
-   * Do not modify the primitive's translucency settings. If the primitive used a
+   * Inherit translucency settings from the primitive's material. If the primitive used a
    * translucent material, the custom shader will also be considered translucent. If the primitive
    * used an opaque material, the custom shader will be considered opaque.
    *
    * @type {Number}
    * @constant
    */
-  NO_CHANGE: 0,
+  INHERIT: 0,
   /**
    * Force the primitive to render the primitive as opaque, ignoring any material settings.
    *

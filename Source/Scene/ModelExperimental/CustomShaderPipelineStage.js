@@ -93,7 +93,7 @@ CustomShaderPipelineStage.process = function (
     // in AlphaPipelineStage
     alphaOptions.pass = undefined;
   }
-  // For CustomShaderTranslucencyMode.NO_CHANGE, do not modify alphaOptions.pass
+  // For CustomShaderTranslucencyMode.INHERIT, do not modify alphaOptions.pass
 
   // Generate lines of code for the shader, but don't add them to the shader
   // yet.

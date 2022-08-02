@@ -25,7 +25,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     expect(customShader.mode).toBe(CustomShaderMode.MODIFY_MATERIAL);
     expect(customShader.lightingModel).not.toBeDefined();
     expect(customShader.translucencyMode).toBe(
-      CustomShaderTranslucencyMode.NO_CHANGE
+      CustomShaderTranslucencyMode.INHERIT
     );
     expect(customShader.uniforms).toEqual({});
     expect(customShader.varyings).toEqual({});

@@ -184,11 +184,11 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
   });
 
-  it("does not modify pass if translucencyMode = NO_CHANGE", function () {
+  it("does not modify pass if translucencyMode = INHERIT", function () {
     const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
       fragmentShaderText: emptyFragmentShader,
-      translucencyMode: CustomShaderTranslucencyMode.NO_CHANGE,
+      translucencyMode: CustomShaderTranslucencyMode.INHERIT,
     });
     const renderResources = mockRenderResources(customShader);
     renderResources.alphaOptions.pass = Pass.CESIUM_3D_TILE;
