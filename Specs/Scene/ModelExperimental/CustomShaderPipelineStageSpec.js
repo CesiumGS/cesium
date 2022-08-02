@@ -2,6 +2,7 @@ import {
   AttributeType,
   CustomShader,
   CustomShaderPipelineStage,
+  CustomShaderTranslucencyMode,
   LightingModel,
   ModelAlphaOptions,
   ModelLightingOptions,
@@ -183,11 +184,25 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
   });
 
-  it("sets alpha options for translucent custom shader", function () {
+  it("does not modify pass if translucencyMode = INHERIT", function () {
     const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
       fragmentShaderText: emptyFragmentShader,
-      isTranslucent: true,
+      translucencyMode: CustomShaderTranslucencyMode.INHERIT,
+    });
+    const renderResources = mockRenderResources(customShader);
+    renderResources.alphaOptions.pass = Pass.CESIUM_3D_TILE;
+
+    CustomShaderPipelineStage.process(renderResources, primitive);
+
+    expect(renderResources.alphaOptions.pass).toBe(Pass.CESIUM_3D_TILE);
+  });
+
+  it("sets pass for translucent custom shader", function () {
+    const customShader = new CustomShader({
+      vertexShaderText: emptyVertexShader,
+      fragmentShaderText: emptyFragmentShader,
+      translucencyMode: CustomShaderTranslucencyMode.TRANSLUCENT,
     });
     const renderResources = mockRenderResources(customShader);
 
@@ -196,10 +211,24 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
   });
 
+  it("sets pass to undefined for opaque custom shader", function () {
+    const customShader = new CustomShader({
+      vertexShaderText: emptyVertexShader,
+      fragmentShaderText: emptyFragmentShader,
+      translucencyMode: CustomShaderTranslucencyMode.opaque,
+    });
+    const renderResources = mockRenderResources(customShader);
+
+    CustomShaderPipelineStage.process(renderResources, primitive);
+
+    // This is set undefined here, and AlphaPipelineStage handles choosing the correct opaque pass
+    expect(renderResources.alphaOptions.pass).not.toBeDefined();
+  });
+
   it("unlit and translucency work even if no shader code is present", function () {
     const customShader = new CustomShader({
       lightingModel: LightingModel.PBR,
-      isTranslucent: true,
+      translucencyMode: CustomShaderTranslucencyMode.TRANSLUCENT,
     });
     const renderResources = mockRenderResources(customShader);
     const shaderBuilder = renderResources.shaderBuilder;

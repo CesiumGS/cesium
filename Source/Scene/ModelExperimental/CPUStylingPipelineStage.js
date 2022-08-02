@@ -67,8 +67,8 @@ CPUStylingPipelineStage.process = function (
     ShaderDestination.BOTH
   );
   renderResources.uniformMap.model_commandTranslucent = function () {
-    // always check the current value, because custom shaders may
-    // change the value with the isTranslucent flag
+    // Always check the current value, because custom shaders may
+    // change the value with the translucencyMode parameter
     return renderResources.alphaOptions.pass === Pass.TRANSLUCENT;
   };
 
