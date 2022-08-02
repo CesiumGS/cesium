@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  ClassificationType,
   combine,
   DequantizationPipelineStage,
   GltfLoader,
@@ -72,6 +73,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
+      model: {},
     };
     return loadGltf(boxWithLines).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -101,6 +103,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
+      model: {},
     };
 
     return loadGltf(milkTruck).then(function (gltfLoader) {
@@ -157,6 +160,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
+      model: {},
     };
 
     return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
@@ -216,12 +220,53 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     });
   });
 
+  it("only dequantizes position for classification models", function () {
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
+      uniformMap: uniformMap,
+      shaderBuilder: shaderBuilder,
+      model: {
+        classificationType: ClassificationType.BOTH,
+      },
+    };
+
+    return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const primitive = components.nodes[2].primitives[0];
+      DequantizationPipelineStage.process(renderResources, primitive);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec3 model_quantizedVolumeOffset_positionMC;",
+        "uniform vec3 model_quantizedVolumeStepSize_positionMC;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+
+      const uniformValues = {
+        positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
+        positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+      };
+
+      const expected = {
+        positionOffset: new Cartesian3(-0.5, -0.5, -0.5),
+        positionStepSize: new Cartesian3(
+          0.00006103888176768602,
+          0.00006103888176768602,
+          0.00006103888176768602
+        ),
+      };
+
+      expect(uniformValues).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+  });
+
   it("skips non-quantized attributes", function () {
     const uniformMap = {};
     const shaderBuilder = new ShaderBuilder();
     const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
+      model: {},
     };
 
     return loadGltf(boxUncompressed).then(function (gltfLoader) {

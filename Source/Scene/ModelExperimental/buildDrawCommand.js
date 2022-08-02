@@ -34,7 +34,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
   const model = primitiveRenderResources.model;
-  const useClassification = defined(model.classificationType);
+  const hasClassification = defined(model.classificationType);
 
   const context = frameState.context;
 
@@ -95,10 +95,10 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   renderState = RenderState.fromCache(renderState);
 
   // Disable shadows if this renders a classification model.
-  const castShadows = useClassification
+  const castShadows = hasClassification
     ? false
     : ShadowMode.castShadows(model.shadows);
-  const receiveShadows = useClassification
+  const receiveShadows = hasClassification
     ? false
     : ShadowMode.receiveShadows(model.shadows);
 
@@ -121,7 +121,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     receiveShadows: receiveShadows,
   });
 
-  if (useClassification) {
+  if (hasClassification) {
     return new ClassificationModelDrawCommand({
       primitiveRenderResources: primitiveRenderResources,
       command: command,

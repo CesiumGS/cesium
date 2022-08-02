@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  ClassificationType,
   combine,
   ComponentDatatype,
   defined,
@@ -1740,6 +1741,89 @@ describe(
           "attribute vec3 a_positionMC;",
           ["attribute vec3 a_normalMC;"]
         );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("processes attributes for classification model", function () {
+      // This model has positions, normals, and feature IDs.
+      // Only the position and feature ID attributes should be processed.
+      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+        renderResources.model.classificationType = ClassificationType.BOTH;
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(2);
+
+        const positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
+
+        const featureId0Attribute = attributes[1];
+        expect(featureId0Attribute.index).toEqual(1);
+        expect(featureId0Attribute.vertexBuffer).toBeDefined();
+        expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
+        expect(featureId0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(featureId0Attribute.offsetInBytes).toBe(0);
+        expect(featureId0Attribute.strideInBytes).toBe(4);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    float featureId_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    float featureId_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.featureId_0 = a_featureId_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute float a_featureId_0;"]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "HAS_CLASSIFICATION",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "HAS_CLASSIFICATION",
+        ]);
         verifyFeatureStruct(shaderBuilder);
       });
     });

@@ -1,6 +1,7 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
@@ -50,7 +51,7 @@ function ClassificationModelDrawCommand(options) {
   this._boundingVolume = command.boundingVolume;
   this._cullFace = command.renderState.cull.face;
 
-  const type = model._classificationType;
+  const type = model.classificationType;
   this._classificationType = type;
 
   // ClassificationType has three values: terrain only, 3D Tiles only, or both.
@@ -58,6 +59,9 @@ function ClassificationModelDrawCommand(options) {
   this._classifies3DTiles = type !== ClassificationType.TERRAIN;
 
   this._commandList = [];
+
+  // Used for inverted classification.
+  this._ignoreShowCommand = undefined;
 
   initialize(this);
 }
@@ -127,7 +131,7 @@ function initialize(drawCommand) {
   const commandList = drawCommand._commandList;
 
   const model = drawCommand._model;
-  const useDebugWireframe = model.debugWireframe && model._enableDebugWireframe;
+  const useDebugWireframe = model._enableDebugWireframe && model.debugWireframe;
 
   // If debug wireframe is enabled, don't derive any new commands.
   // Render as normal.
@@ -156,13 +160,6 @@ function initialize(drawCommand) {
 
     const colorCommand = deriveColorCommand(command, pass);
     commandList.push(colorCommand);
-
-    const ignoreShowPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-    const ignoreShowCommand = deriveStencilDepthCommand(
-      command,
-      ignoreShowPass
-    );
-    commandList.push(ignoreShowCommand);
   }
 }
 
@@ -208,6 +205,21 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
   },
 
   /**
+   * The runtime primitive that the draw command belongs to.
+   *
+   * @memberof ClassificationModelDrawCommand.prototype
+   * @type {ModelRuntimePrimitive}
+   *
+   * @readonly
+   * @private
+   */
+  runtimePrimitive: {
+    get: function () {
+      return this._runtimePrimitive;
+    },
+  },
+
+  /**
    * The model that the draw command belongs to.
    *
    * @memberof ClassificationModelDrawCommand.prototype
@@ -233,13 +245,12 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    */
   classificationType: {
     get: function () {
-      return this.classificationType;
+      return this._classificationType;
     },
   },
 
   /**
-   * The current model matrix applied to the draw commands. If there are
-   * 2D draw commands, their model matrix will be derived from the 3D one.
+   * The current model matrix applied to the draw commands.
    *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {Matrix4}
@@ -254,11 +265,28 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       const boundingSphere = this._runtimePrimitive.boundingSphere;
-      this.boundingVolume = BoundingSphere.transform(
+      this._boundingVolume = BoundingSphere.transform(
         boundingSphere,
         this._modelMatrix,
-        this.boundingVolume
+        this._boundingVolume
       );
+    },
+  },
+
+  /**
+   * The bounding volume of the main draw command. This is equivalent
+   * to the primitive's bounding sphere transformed by the draw
+   * command's model matrix.
+   *
+   * @memberof ClassificationModelDrawCommand.prototype
+   * @type {BoundingSphere}
+   *
+   * @readonly
+   * @private
+   */
+  boundingVolume: {
+    get: function () {
+      return this._boundingVolume;
     },
   },
 
@@ -292,6 +320,19 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
  * @private
  */
 ClassificationModelDrawCommand.prototype.getCommands = function (frameState) {
+  // Derive the command for inverted classification if necessary.
+  const deriveIgnoreShowCommand =
+    frameState.invertClassification &&
+    this._classifies3DTiles &&
+    !defined(this._ignoreShowCommand);
+
+  if (deriveIgnoreShowCommand) {
+    const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+    const command = deriveStencilDepthCommand(this._command, pass);
+    this._ignoreShowCommand = command;
+    this._commandList.push(command);
+  }
+
   return this._commandList;
 };
 

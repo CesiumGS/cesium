@@ -41,7 +41,7 @@ GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
 /**
  * This pipeline stage processes the vertex attributes of a primitive,
  * adding attribute declarations to the shaders, adding attribute objects to the
- *  render resources, and setting define flags as needed.
+ * render resources, and setting define flags as needed.
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
@@ -69,12 +69,12 @@ GeometryPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const useClassification = defined(model.classificationType);
+  const hasClassification = defined(model.classificationType);
 
   // Some shader stages must be handled differently for classification models.
-  if (useClassification) {
+  if (hasClassification) {
     shaderBuilder.addDefine(
-      "USE_CLASSIFICATION",
+      "HAS_CLASSIFICATION",
       undefined,
       ShaderDestination.BOTH
     );
@@ -177,14 +177,13 @@ GeometryPipelineStage.process = function (
     }
     //>>includeEnd('debug');
 
+    // Classification models only use the position and feature ID attributes.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
     const isFeatureIdAttribute =
       attribute.semantic === VertexAttributeSemantic.FEATURE_ID;
-    if (useClassification) {
-      if (!isPositionAttribute && !isFeatureIdAttribute) {
-        continue;
-      }
+    if (hasClassification && !isPositionAttribute && !isFeatureIdAttribute) {
+      continue;
     }
 
     let index;
@@ -207,7 +206,9 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  handleBitangents(shaderBuilder, primitive.attributes);
+  if (!hasClassification) {
+    handleBitangents(shaderBuilder, primitive.attributes);
+  }
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");

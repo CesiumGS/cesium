@@ -1502,13 +1502,19 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {ClassificationType}
-   * @readonly
    *
    * @private
    */
   classificationType: {
     get: function () {
       return this._classificationType;
+    },
+    set: function (value) {
+      if (value !== this._classificationType) {
+        this.resetDrawCommands();
+      }
+
+      this._classificationType = value;
     },
   },
 });
@@ -1980,7 +1986,8 @@ function updateSceneGraph(model, frameState) {
   }
 
   const updateForAnimations =
-    model._userAnimationDirty || model._activeAnimations.update(frameState);
+    (!defined(model.classificationType) && model._userAnimationDirty) ||
+    model._activeAnimations.update(frameState);
 
   sceneGraph.update(frameState, updateForAnimations);
   model._userAnimationDirty = false;
@@ -2213,6 +2220,9 @@ function supportsSilhouettes(frameState) {
 /**
  * Gets whether or not the model has a silhouette. This accounts for whether
  * silhouettes are supported (i.e. the context supports stencil buffers).
+ * <p>
+ * If the model classifies another model, its silhouette will be disabled.
+ * </p>
  *
  * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
  * @private
@@ -2221,7 +2231,8 @@ ModelExperimental.prototype.hasSilhouette = function (frameState) {
   return (
     supportsSilhouettes(frameState) &&
     this._silhouetteSize > 0.0 &&
-    this._silhouetteColor.alpha > 0.0
+    this._silhouetteColor.alpha > 0.0 &&
+    !defined(this._classificationType)
   );
 };
 

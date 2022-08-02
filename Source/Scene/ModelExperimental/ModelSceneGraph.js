@@ -589,14 +589,15 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   const model = this._model;
 
+  if (defined(model.color)) {
+    modelPipelineStages.push(ModelColorPipelineStage);
+  }
+
   // Skip these pipeline stages for classification models.
   if (defined(model.classificationType)) {
     return;
   }
 
-  if (defined(model.color)) {
-    modelPipelineStages.push(ModelColorPipelineStage);
-  }
   if (model.imageBasedLighting.enabled) {
     modelPipelineStages.push(ImageBasedLightingPipelineStage);
   }

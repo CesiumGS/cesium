@@ -24,7 +24,7 @@ void cpuStylingStage(inout vec3 positionMC, inout SelectedFeature feature)
     float show = ceil(feature.color.a);
     positionMC *= show;
 
-    #if defined(HAS_SELECTED_FEATURE_ID_ATTRIBUTE) && !defined(USE_CLASSIFICATION)
+    #if defined(HAS_SELECTED_FEATURE_ID_ATTRIBUTE) && !defined(HAS_CLASSIFICATION)
     filterByPassType(positionMC, feature.color);
     #endif
 }

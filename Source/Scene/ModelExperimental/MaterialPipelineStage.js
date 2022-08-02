@@ -54,6 +54,12 @@ MaterialPipelineStage.process = function (
   // gltf-pipeline automatically creates a default material so this will always
   // be defined.
   const material = primitive.material;
+  const model = renderResources.model;
+
+  // Classification models only use position and feature ID attributes,
+  // so textures should be disabled to avoid compile errors.
+  const hasClassification = defined(model.classificationType);
+  const disableTextures = hasClassification;
 
   const uniformMap = renderResources.uniformMap;
   const shaderBuilder = renderResources.shaderBuilder;
@@ -63,28 +69,32 @@ MaterialPipelineStage.process = function (
   const defaultNormalTexture = frameState.context.defaultNormalTexture;
   const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
-  processMaterialUniforms(
-    material,
-    uniformMap,
-    shaderBuilder,
-    defaultTexture,
-    defaultNormalTexture,
-    defaultEmissiveTexture
-  );
+  if (!disableTextures) {
+    processMaterialUniforms(
+      material,
+      uniformMap,
+      shaderBuilder,
+      defaultTexture,
+      defaultNormalTexture,
+      defaultEmissiveTexture
+    );
+  }
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture
+      defaultTexture,
+      disableTextures
     );
   } else {
     processMetallicRoughnessUniforms(
       material,
       uniformMap,
       shaderBuilder,
-      defaultTexture
+      defaultTexture,
+      disableTextures
     );
   }
 
@@ -94,15 +104,15 @@ MaterialPipelineStage.process = function (
     VertexAttributeSemantic.NORMAL
   );
 
+  // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
-  if (material.unlit || !hasNormals) {
+  if (material.unlit || !hasNormals || hasClassification) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
     lightingOptions.lightingModel = LightingModel.PBR;
   }
 
   // Configure back-face culling
-  const model = renderResources.model;
   const cull = model.backFaceCulling && !material.doubleSided;
   renderResources.renderStateOptions.cull.enabled = cull;
 
@@ -291,7 +301,8 @@ function processSpecularGlossinessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  disableTextures
 ) {
   const specularGlossiness = material.specularGlossiness;
   shaderBuilder.addDefine(
@@ -301,7 +312,7 @@ function processSpecularGlossinessUniforms(
   );
 
   const diffuseTexture = specularGlossiness.diffuseTexture;
-  if (defined(diffuseTexture)) {
+  if (defined(diffuseTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,
@@ -334,7 +345,7 @@ function processSpecularGlossinessUniforms(
 
   const specularGlossinessTexture =
     specularGlossiness.specularGlossinessTexture;
-  if (defined(specularGlossinessTexture)) {
+  if (defined(specularGlossinessTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,
@@ -393,7 +404,8 @@ function processMetallicRoughnessUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  disableTextures
 ) {
   const metallicRoughness = material.metallicRoughness;
   shaderBuilder.addDefine(
@@ -403,7 +415,7 @@ function processMetallicRoughnessUniforms(
   );
 
   const baseColorTexture = metallicRoughness.baseColorTexture;
-  if (defined(baseColorTexture)) {
+  if (defined(baseColorTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,
@@ -438,7 +450,7 @@ function processMetallicRoughnessUniforms(
   }
 
   const metallicRoughnessTexture = metallicRoughness.metallicRoughnessTexture;
-  if (defined(metallicRoughnessTexture)) {
+  if (defined(metallicRoughnessTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
       uniformMap,

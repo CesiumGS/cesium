@@ -162,7 +162,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
   },
 
   /**
-   * The primitive type of the main draw command.
+   * The primitive type of the draw command.
    *
    * @memberof ModelDrawCommand.prototype
    * @type {PrimitiveType}
@@ -199,7 +199,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * The bounding volume of the main draw command. This is equivalent
-   * to the the primitive's bounding sphere transformed by the draw
+   * to the primitive's bounding sphere transformed by the draw
    * command's model matrix.
    *
    * @memberof ModelDrawCommand.prototype

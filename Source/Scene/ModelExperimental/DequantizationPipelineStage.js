@@ -41,7 +41,7 @@ DequantizationPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const useClassification = defined(model.classificationType);
+  const hasClassification = defined(model.classificationType);
 
   shaderBuilder.addDefine(
     "USE_DEQUANTIZATION",
@@ -64,10 +64,10 @@ DequantizationPipelineStage.process = function (
       continue;
     }
 
-    // Only the position attribute should be handled for classification models.
+    // Only the position attribute is used for classification models.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
-    if (useClassification && !isPositionAttribute) {
+    if (hasClassification && !isPositionAttribute) {
       continue;
     }
 

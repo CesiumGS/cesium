@@ -5,7 +5,7 @@ import {
   CullFace,
   Matrix4,
   Math as CesiumMath,
-  ModelExperimentalDrawCommand,
+  ModelDrawCommand,
   ResourceCache,
   Quaternion,
 } from "../../../Source/Cesium.js";
@@ -88,7 +88,7 @@ describe(
       rootDrawCommand.boundingVolume = new BoundingSphere();
       rootNode.runtimePrimitives.push({
         updateStages: [],
-        drawCommand: new ModelExperimentalDrawCommand({
+        drawCommand: new ModelDrawCommand({
           command: rootDrawCommand,
           primitiveRenderResources: renderResources,
         }),
@@ -101,7 +101,7 @@ describe(
       leafDrawCommand.boundingVolume = new BoundingSphere();
       leafNode.runtimePrimitives.push({
         updateStages: [],
-        drawCommand: new ModelExperimentalDrawCommand({
+        drawCommand: new ModelDrawCommand({
           command: leafDrawCommand,
           primitiveRenderResources: renderResources,
         }),
