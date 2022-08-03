@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.97 - 2022-09-01
+
+##### Fixes :wrench:
+
+- Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:
