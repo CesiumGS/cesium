@@ -2221,12 +2221,12 @@ function supportsSkipLevelOfDetail(frameState) {
 }
 
 /**
- * Gets whether or not the model is part of a tileset that uses the skipLevelOfDetail
- * optimization. This accounts for whether skipLevelOfDetail is supported (i.e. the
- * context supports stencil buffers).
+ * Gets whether or not the model is part of a tileset that uses the
+ * skipLevelOfDetail optimization. This accounts for whether skipLevelOfDetail
+ * is supported (i.e. the context supports stencil buffers).
  *
- * @param {FrameState} The frame state.
- * @returns {Boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, otherwise <code>false</code>.
+ * @param {FrameState} frameState The frame state.
+ * @returns {Boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, <code>false</code> otherwise.
  * @private
  */
 ModelExperimental.prototype.hasSkipLevelOfDetail = function (frameState) {
@@ -2236,7 +2236,7 @@ ModelExperimental.prototype.hasSkipLevelOfDetail = function (frameState) {
   }
 
   const tileset = this._content.tileset;
-  return tileset.skipLevelOfDetail && supportsSkipLevelOfDetail(frameState);
+  return supportsSkipLevelOfDetail(frameState) && tileset.skipLevelOfDetail;
 };
 
 /**

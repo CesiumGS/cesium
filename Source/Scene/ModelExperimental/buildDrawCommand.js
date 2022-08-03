@@ -75,7 +75,6 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     RenderState.fromCache(primitiveRenderResources.renderStateOptions),
     true
   );
-
   renderState.cull.face = ModelExperimentalUtility.getCullFace(
     modelMatrix,
     primitiveRenderResources.primitiveType

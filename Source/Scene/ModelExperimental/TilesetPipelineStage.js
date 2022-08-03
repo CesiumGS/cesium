@@ -4,8 +4,8 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import StencilConstants from "../StencilConstants.js";
 
 /**
- * The tileset pipeline stage is responsible for updating the model with 3D Tiles
- * specific behavior.
+ * The tileset pipeline stage is responsible for updating the model with behavior
+ * specific to 3D Tiles.
  *
  * @namespace TilesetPipelineStage
  *
@@ -24,7 +24,7 @@ TilesetPipelineStage.name = "TilesetPipelineStage"; // Helps with debugging
  * </ul>
  *
  * <p>
- * See {@link ModelExperimentalDrawCommand} for the corresponding skipLevelOfDetail derived commands.
+ * See {@link ModelDrawCommand} for the corresponding skipLevelOfDetail derived commands.
  * </p>
  *
  * @param {ModelRenderResources} renderResources The render resources for this model.
@@ -35,7 +35,7 @@ TilesetPipelineStage.name = "TilesetPipelineStage"; // Helps with debugging
  */
 TilesetPipelineStage.process = function (renderResources, model, frameState) {
   if (model.hasSkipLevelOfDetail(frameState)) {
-    // Make the log depth depth fragment write account for the polygon offset, too.
+    // Make the log-depth depth fragment write account for the polygon offset, too.
     // Otherwise, the back face commands will cause the higher resolution
     // tiles to disappear.
     const shaderBuilder = renderResources.shaderBuilder;
@@ -51,9 +51,8 @@ TilesetPipelineStage.process = function (renderResources, model, frameState) {
       ShaderDestination.FRAGMENT
     );
 
-    // The depth-only back face derived command will override the polygon offset
-    // uniform value, we just prepare it in advance so we don't have to recompile
-    // the shader.
+    // This value will be overriden by the depth-only back face derived command.
+    // We just prepare it in advance so we don't have to recompile the shader.
     const uniformMap = {
       u_polygonOffset: function () {
         return Cartesian2.ZERO;
