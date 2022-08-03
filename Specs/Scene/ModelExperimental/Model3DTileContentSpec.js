@@ -26,16 +26,87 @@ import createCanvas from "../../createCanvas.js";
 describe(
   "Scene/ModelExperimental/Model3DTileContent",
   function () {
+    // glTF
     const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
     const buildingsMetadataUrl =
       "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
+
+    // b3dm
     const withoutBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
     const noBatchIdsUrl =
       "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
+    const withBatchTableUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
+    const withBatchTableBinaryUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json";
+    const translucentUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json";
+    const translucentOpaqueMixUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json";
+    const withTransformBoxUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json";
+    const withTransformSphereUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json";
+    const withTransformRegionUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
+    const texturedUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
+    const withCopyrightUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithCopyright/tileset.json";
+
+    // i3dm
     const instancedWithBatchTableUrl =
       "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
+    const instancedExternalGltfUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json";
+    const instancedWithoutBatchTableUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json";
+    const instancedWithBatchIdsUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/tileset.json";
+    const instancedTexturedUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json";
+
+    // pnts
+    const pointCloudRGBUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json";
+    const pointCloudRGBAUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudRGBA/tileset.json";
+    const pointCloudNoColorUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json";
+    const pointCloudNormalsUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json";
+    const pointCloudQuantizedOctEncodedUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/tileset.json";
+    const pointCloudDracoUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json";
+    const pointCloudWGS84Url =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/tileset.json";
+    const pointCloudBatchedUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
+    const pointCloudWithPerPointPropertiesUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
+    const pointCloudWithUnicodePropertyIdsUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/tileset.json";
+
+    // GeoJSON
+    const geoJsonMultiPolygonUrl =
+      "./Data/Cesium3DTiles/GeoJson/MultiPolygon/tileset.json";
+    const geoJsonPolygonUrl =
+      "./Data/Cesium3DTiles/GeoJson/Polygon/tileset.json";
+    const geoJsonPolygonHeightsUrl =
+      "./Data/Cesium3DTiles/GeoJson/PolygonHeights/tileset.json";
+    const geoJsonPolygonHoleUrl =
+      "./Data/Cesium3DTiles/GeoJson/PolygonHole/tileset.json";
+    const geoJsonPolygonNoPropertiesUrl =
+      "./Data/Cesium3DTiles/GeoJson/PolygonNoProperties/tileset.json";
+    const geoJsonLineStringUrl =
+      "./Data/Cesium3DTiles/GeoJson/LineString/tileset.json";
+    const geoJsonMultiLineStringUrl =
+      "./Data/Cesium3DTiles/GeoJson/MultiLineString/tileset.json";
+    const geoJsonMultipleFeaturesUrl =
+      "./Data/Cesium3DTiles/GeoJson/MultipleFeatures/tileset.json";
 
     let scene;
     const centerLongitude = -1.31968;
@@ -72,23 +143,6 @@ describe(
     });
 
     describe("geoJSON", function () {
-      const geoJsonMultiPolygonUrl =
-        "./Data/Cesium3DTiles/GeoJson/MultiPolygon/tileset.json";
-      const geoJsonPolygonUrl =
-        "./Data/Cesium3DTiles/GeoJson/Polygon/tileset.json";
-      const geoJsonPolygonHeightsUrl =
-        "./Data/Cesium3DTiles/GeoJson/PolygonHeights/tileset.json";
-      const geoJsonPolygonHoleUrl =
-        "./Data/Cesium3DTiles/GeoJson/PolygonHole/tileset.json";
-      const geoJsonPolygonNoPropertiesUrl =
-        "./Data/Cesium3DTiles/GeoJson/PolygonNoProperties/tileset.json";
-      const geoJsonLineStringUrl =
-        "./Data/Cesium3DTiles/GeoJson/LineString/tileset.json";
-      const geoJsonMultiLineStringUrl =
-        "./Data/Cesium3DTiles/GeoJson/MultiLineString/tileset.json";
-      const geoJsonMultipleFeaturesUrl =
-        "./Data/Cesium3DTiles/GeoJson/MultipleFeatures/tileset.json";
-
       beforeEach(function () {
         setCamera(centerLongitude, centerLatitude, 1.0);
       });
@@ -196,27 +250,6 @@ describe(
     });
 
     describe("b3dm", function () {
-      const withBatchTableUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-      const withBatchTableBinaryUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json";
-      const withoutBatchTableUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
-      const translucentUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json";
-      const translucentOpaqueMixUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json";
-      const withTransformBoxUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json";
-      const withTransformSphereUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json";
-      const withTransformRegionUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
-      const texturedUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
-      const withCopyrightUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithCopyright/tileset.json";
-
       beforeEach(function () {
         setCamera(centerLongitude, centerLatitude, 15.0);
       });
@@ -471,17 +504,6 @@ describe(
     });
 
     describe("i3dm", function () {
-      const gltfExternalUrl =
-        "./Data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json";
-      const withBatchTableUrl =
-        "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
-      const withoutBatchTableUrl =
-        "./Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json";
-      const withBatchIdsUrl =
-        "./Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/tileset.json";
-      const texturedUrl =
-        "./Data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json";
-
       beforeEach(function () {
         setCamera(centerLongitude, centerLatitude, 27.0);
       });
@@ -496,90 +518,93 @@ describe(
       });
 
       it("renders with external gltf", function () {
-        return Cesium3DTilesTester.loadTileset(scene, gltfExternalUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
-        );
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedExternalGltfUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
       });
 
       it("renders with batch table", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
-        );
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedWithBatchTableUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
       });
 
       it("renders without batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withoutBatchTableUrl
+          instancedWithoutBatchTableUrl
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
       });
 
       it("renders with batch ids", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchIdsUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
-        );
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedWithBatchIdsUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
       });
 
       it("renders with textures", function () {
-        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          }
-        );
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedTexturedUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
       });
 
       it("gets memory usage", function () {
-        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(
-          function (tileset) {
-            const content = tileset.root.content;
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedTexturedUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
 
-            // Box model - 36 ushort indices and 24 vertices per building, 8
-            // float components (position, normal, uv) per vertex.
-            // (24 * 8 * 4) + (36 * 2) = 840
-            //
-            // There are 25 instances. Each has a transform represented as 3
-            // vec4s, and a float feature ID attribute
-            // 25 * (3 * 4 * 4) + 25 * 4 = 1300
-            const geometryByteLength = 840 + 1300;
+          // Box model - 36 ushort indices and 24 vertices per building, 8
+          // float components (position, normal, uv) per vertex.
+          // (24 * 8 * 4) + (36 * 2) = 840
+          //
+          // There are 25 instances. Each has a transform represented as 3
+          // vec4s, and a float feature ID attribute
+          // 25 * (3 * 4 * 4) + 25 * 4 = 1300
+          const geometryByteLength = 840 + 1300;
 
-            // Texture is 128x128 RGBA bytes, not mipmapped
-            const texturesByteLength = 65536;
+          // Texture is 128x128 RGBA bytes, not mipmapped
+          const texturesByteLength = 65536;
 
-            // One RGBA byte pixel per feature
-            const batchTexturesByteLength = content.featuresLength * 4;
-            const pickTexturesByteLength = content.featuresLength * 4;
+          // One RGBA byte pixel per feature
+          const batchTexturesByteLength = content.featuresLength * 4;
+          const pickTexturesByteLength = content.featuresLength * 4;
 
-            // Features have not been picked or colored yet, so the batch table contribution is 0.
-            expect(content.geometryByteLength).toEqual(geometryByteLength);
-            expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(0);
+          // Features have not been picked or colored yet, so the batch table contribution is 0.
+          expect(content.geometryByteLength).toEqual(geometryByteLength);
+          expect(content.texturesByteLength).toEqual(texturesByteLength);
+          expect(content.batchTableByteLength).toEqual(0);
 
-            // Color a feature and expect the texture memory to increase
-            content.getFeature(0).color = Color.RED;
-            scene.renderForSpecs();
-            expect(content.geometryByteLength).toEqual(geometryByteLength);
-            expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(
-              batchTexturesByteLength
-            );
+          // Color a feature and expect the texture memory to increase
+          content.getFeature(0).color = Color.RED;
+          scene.renderForSpecs();
+          expect(content.geometryByteLength).toEqual(geometryByteLength);
+          expect(content.texturesByteLength).toEqual(texturesByteLength);
+          expect(content.batchTableByteLength).toEqual(batchTexturesByteLength);
 
-            // Pick the tile and expect the texture memory to increase
-            scene.pickForSpecs();
-            expect(content.geometryByteLength).toEqual(geometryByteLength);
-            expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(
-              batchTexturesByteLength + pickTexturesByteLength
-            );
-          }
-        );
+          // Pick the tile and expect the texture memory to increase
+          scene.pickForSpecs();
+          expect(content.geometryByteLength).toEqual(geometryByteLength);
+          expect(content.texturesByteLength).toEqual(texturesByteLength);
+          expect(content.batchTableByteLength).toEqual(
+            batchTexturesByteLength + pickTexturesByteLength
+          );
+        });
       });
 
       it("picks from i3dm batch table", function () {
@@ -605,27 +630,6 @@ describe(
     });
 
     describe("pnts", function () {
-      const pointCloudRGBUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json";
-      const pointCloudRGBAUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudRGBA/tileset.json";
-      const pointCloudNoColorUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json";
-      const pointCloudNormalsUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json";
-      const pointCloudQuantizedOctEncodedUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/tileset.json";
-      const pointCloudDracoUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json";
-      const pointCloudWGS84Url =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/tileset.json";
-      const pointCloudBatchedUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
-      const pointCloudWithPerPointPropertiesUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
-      const pointCloudWithUnicodePropertyIdsUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyIds/tileset.json";
-
       beforeEach(function () {
         setCamera(centerLongitude, centerLatitude, 5.0);
       });
@@ -1135,9 +1139,6 @@ describe(
     });
 
     describe("point cloud attenuation", function () {
-      const pointCloudNoColorUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json";
-
       let noAttenuationPixelCount;
       function attenuationTest(postLoadCallback) {
         const scene = createScene({
@@ -1400,11 +1401,6 @@ describe(
     });
 
     describe("clipping planes", function () {
-      const withBatchTableUrl =
-        "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-      const pointCloudRGBUrl =
-        "./Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json";
-
       it("Links model to tileset clipping planes based on bounding volume clipping", function () {
         setCamera(centerLongitude, centerLatitude, 15.0);
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
