@@ -78,6 +78,8 @@ describe(
       "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const boxArticulationsUrl =
       "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+    const boxCesiumRtcUrl =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     // prettier-ignore
     const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
@@ -559,6 +561,21 @@ describe(
         verifyRender(model, false, {
           zoomToModel: false,
           time: time,
+        });
+      });
+    });
+
+    it("renders model with CESIUM_RTC extension", function () {
+      const resource = Resource.createIfNeeded(boxCesiumRtcUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxCesiumRtcUrl,
+          },
+          scene
+        ).then(function (model) {
+          verifyRender(model, true);
         });
       });
     });
@@ -1073,6 +1090,23 @@ describe(
             0.8660254037844386,
             CesiumMath.EPSILON8
           );
+        });
+      });
+    });
+
+    it("boundingSphere accounts for transform from CESIUM_RTC extension", function () {
+      const resource = Resource.createIfNeeded(boxCesiumRtcUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxCesiumRtcUrl,
+          },
+          scene
+        ).then(function (model) {
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3(6378137, 0, 0));
         });
       });
     });
