@@ -1063,6 +1063,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
+      updateBoundingSphereAndScale(this);
       return this._boundingSphere;
     },
   },
@@ -2034,7 +2035,11 @@ function scaleInPixels(positionWC, radius, frameState) {
 function getScale(model, modelMatrix, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
+  if (
+    defined(frameState) &&
+    model.minimumPixelSize !== 0.0 &&
+    !model._projectTo2D
+  ) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(
