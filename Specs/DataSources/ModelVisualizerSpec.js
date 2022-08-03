@@ -405,10 +405,6 @@ describe(
             new BoundingSphere()
           );
           expect(result).not.toEqual(expected);
-          console.log(result);
-          console.log(expected);
-          console.log(result.radius);
-          console.log(expected.radius);
         });
       });
     });
