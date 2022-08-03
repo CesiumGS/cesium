@@ -532,8 +532,6 @@ describe(
         );
       });
 
-      // TODO: Consolidate these specs
-
       it("renders with textures", function () {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(
           function (tileset) {
@@ -1019,9 +1017,8 @@ describe(
         });
       });
 
-      // TODO: investigate, maybe move to ModelExperimentalSpec?
-      // is functionality missing?
-      it("Supports back face culling when there are per-point normals", function () {
+      // This will be added in a separate PR
+      xit("Supports back face culling when there are per-point normals", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl
@@ -1033,21 +1030,19 @@ describe(
           let pickedCount = 0;
           let picked;
 
+          const callback = function (result) {
+            picked = result;
+          };
+
           expect(scene).toPickAndCall(function (result) {
             // Set culling to true
             tileset.pointCloudShading.backFaceCulling = true;
 
-            expect(scene).toPickAndCall(function (result) {
-              picked = result;
-            });
+            expect(scene).toPickAndCall(callback);
 
-            /* jshint loopfunc: true */
             while (defined(picked)) {
               picked.show = false;
-              //eslint-disable-next-line no-loop-func
-              expect(scene).toPickAndCall(function (result) {
-                picked = result;
-              });
+              expect(scene).toPickAndCall(callback);
               ++pickedCountCulling;
             }
 
@@ -1061,17 +1056,11 @@ describe(
             // Set culling to false
             tileset.pointCloudShading.backFaceCulling = false;
 
-            expect(scene).toPickAndCall(function (result) {
-              picked = result;
-            });
+            expect(scene).toPickAndCall(callback);
 
-            /* jshint loopfunc: true */
             while (defined(picked)) {
               picked.show = false;
-              //eslint-disable-next-line no-loop-func
-              expect(scene).toPickAndCall(function (result) {
-                picked = result;
-              });
+              expect(scene).toPickAndCall(callback);
               ++pickedCount;
             }
 
