@@ -5,7 +5,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelType from "./ModelType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -82,7 +82,7 @@ function buildPickObject(renderResources, instanceId) {
 
   let pickObject;
 
-  if (ModelExperimentalType.is3DTiles(model.type)) {
+  if (ModelType.is3DTiles(model.type)) {
     // For 3D Tiles, the pick object's content and primitive are set to the Cesium3DTileContent that owns the model
     // and the tileset it belongs to, respectively. The detail pick object is returned under the detail key.
     const content = model.content;

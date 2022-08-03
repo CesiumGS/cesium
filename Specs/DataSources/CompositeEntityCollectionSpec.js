@@ -1,14 +1,16 @@
-import { Iso8601 } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { BillboardGraphics } from "../../Source/Cesium.js";
-import { CompositeEntityCollection } from "../../Source/Cesium.js";
-import { CompositePositionProperty } from "../../Source/Cesium.js";
-import { CompositeProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
+import {
+  Iso8601,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  BillboardGraphics,
+  CompositeEntityCollection,
+  CompositePositionProperty,
+  CompositeProperty,
+  ConstantProperty,
+  Entity,
+  EntityCollection,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/CompositeEntityCollection", function () {
   function CollectionListener() {

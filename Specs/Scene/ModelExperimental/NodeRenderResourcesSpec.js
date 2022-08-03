@@ -3,7 +3,7 @@ import {
   Cartesian3,
   DepthFunction,
   Matrix4,
-  ModelExperimentalRuntimeNode,
+  ModelRuntimeNode,
   ModelRenderResources,
   NodeRenderResources,
   RenderState,
@@ -20,7 +20,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     },
   };
 
-  const runtimeNode = new ModelExperimentalRuntimeNode({
+  const runtimeNode = new ModelRuntimeNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),

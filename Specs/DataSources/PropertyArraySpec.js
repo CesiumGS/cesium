@@ -1,7 +1,9 @@
-import { JulianDate } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { PropertyArray } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
+import {
+  JulianDate,
+  ConstantProperty,
+  PropertyArray,
+  SampledProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/PropertyArray", function () {
   const time = JulianDate.now();

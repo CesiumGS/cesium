@@ -16,6 +16,9 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   const interpolationTestUrl =
     "./Data/Models/InterpolationTest/InterpolationTest.glb";
 
+  const defaultDate = JulianDate.fromDate(
+    new Date("January 1, 2014 12:00:00 UTC")
+  );
   const scratchJulianDate = new JulianDate();
   let scene;
 
@@ -475,7 +478,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      let time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
+      let time = defaultDate;
       const animations = model.activeAnimations;
       const animation = animations.add({
         index: 0,
@@ -520,6 +523,34 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
     });
   });
 
+  it("finishes animation when it reaches its end", function () {
+    return loadAndZoomToModelExperimental(
+      {
+        gltf: animatedTriangleUrl,
+      },
+      scene
+    ).then(function (model) {
+      const time = defaultDate;
+      const animationCollection = model.activeAnimations;
+      const animation = animationCollection.add({
+        index: 0,
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      animation.update.addEventListener(spyUpdate);
+
+      scene.renderForSpecs(time);
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, scratchJulianDate));
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqual(0.0);
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqual(1.0);
+      // Animation has reached its final time value.
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqual(1.0);
+    });
+  });
+
   it("animates with a delay", function () {
     return loadAndZoomToModelExperimental(
       {
@@ -527,10 +558,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
-
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,
@@ -555,10 +583,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
-
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,
@@ -623,9 +648,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       let animationTime = 0;
       const animation = animationCollection.add({
@@ -672,9 +695,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       animationCollection.animateWhilePaused = true;
       let animationTime = 0;
@@ -719,9 +740,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,
@@ -750,9 +769,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,
@@ -781,9 +798,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,
@@ -814,9 +829,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
       },
       scene
     ).then(function (model) {
-      const time = JulianDate.fromDate(
-        new Date("January 1, 2014 12:00:00 UTC")
-      );
+      const time = defaultDate;
       const animationCollection = model.activeAnimations;
       const animation = animationCollection.add({
         index: 0,

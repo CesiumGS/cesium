@@ -1,12 +1,14 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { BoxGeometry } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { Geometry } from "../../Source/Cesium.js";
-import { GeometryAttribute } from "../../Source/Cesium.js";
-import { GeometryAttributes } from "../../Source/Cesium.js";
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { PrimitivePipeline } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  ComponentDatatype,
+  Geometry,
+  GeometryAttribute,
+  GeometryAttributes,
+  PrimitiveType,
+  PrimitivePipeline,
+} from "../../../Source/Cesium.js";
 
 describe(
   "Scene/PrimitivePipeline",

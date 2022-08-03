@@ -1,11 +1,12 @@
+import ColorBlendMode from "../ColorBlendMode.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
+import defined from "../../Core/defined.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import Pass from "../../Renderer/Pass.js";
-import ColorBlendMode from "../ColorBlendMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
-import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
-import defined from "../../Core/defined.js";
+
 /**
  * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
  *

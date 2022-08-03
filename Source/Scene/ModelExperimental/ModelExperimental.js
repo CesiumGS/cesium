@@ -13,9 +13,9 @@ import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
-import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
-import ModelExperimentalStatistics from "./ModelExperimentalStatistics.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelSceneGraph from "./ModelSceneGraph.js";
+import ModelStatistics from "./ModelStatistics.js";
+import ModelType from "./ModelType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
@@ -108,14 +108,14 @@ export default function ModelExperimental(options) {
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
-   * ModelExperimentalType is part of the private API.
+   * ModelType is part of the private API.
    *
-   * @type {ModelExperimentalType}
+   * @type {ModelType}
    * @readonly
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
+  this.type = defaultValue(options.type, ModelType.GLTF);
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -155,7 +155,7 @@ export default function ModelExperimental(options) {
   this._computedScale = this._clampedScale;
 
   /**
-   * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
+   * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
    *
    * @type {Number}
@@ -195,8 +195,7 @@ export default function ModelExperimental(options) {
   this._id = options.id;
   this._idDirty = false;
 
-  const color = options.color;
-  this._color = defined(color) ? Color.clone(color) : undefined;
+  this._color = Color.clone(options.color);
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
     ColorBlendMode.HIGHLIGHT
@@ -251,7 +250,7 @@ export default function ModelExperimental(options) {
   this._pickIds = [];
 
   // The model's bounding sphere and its initial radius are computed
-  // in ModelExperimentalSceneGraph.
+  // in ModelSceneGraph.
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
@@ -278,8 +277,8 @@ export default function ModelExperimental(options) {
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -362,7 +361,7 @@ export default function ModelExperimental(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
-  this._statistics = new ModelExperimentalStatistics();
+  this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
@@ -375,6 +374,8 @@ export default function ModelExperimental(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -499,7 +500,7 @@ function initialize(model) {
       createModelFeatureTables(model, structuralMetadata);
     }
 
-    const sceneGraph = new ModelExperimentalSceneGraph({
+    const sceneGraph = new ModelSceneGraph({
       model: model,
       modelComponents: components,
     });
@@ -525,6 +526,11 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
 
       // Re-run the pipeline so texture memory statistics are re-computed
@@ -625,7 +631,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalStatistics}
+   * @type {ModelStatistics}
    * @readonly
    *
    * @private
@@ -747,7 +753,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ModelExperimentalSceneGraph}
+   * @type {ModelSceneGraph}
    * @private
    */
   sceneGraph: {
@@ -938,6 +944,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Color}
+   *
+   * @default undefined
    */
   color: {
     get: function () {
@@ -2018,7 +2026,7 @@ function submitDrawCommands(model, frameState) {
     displayConditionPassed &&
     (!invisible || silhouette);
 
-  if (showModel) {
+  if (showModel && !model._ignoreCommands) {
     addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
@@ -2101,7 +2109,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     clampedModelMatrix[13] = clampedPosition.y;
     clampedModelMatrix[14] = clampedPosition.z;
 
-    model._heightChanged = true;
+    model._heightDirty = true;
   };
 }
 
@@ -2222,7 +2230,7 @@ function supportsSkipLevelOfDetail(frameState) {
  * @private
  */
 ModelExperimental.prototype.hasSkipLevelOfDetail = function (frameState) {
-  const is3DTiles = ModelExperimentalType.is3DTiles(this.type);
+  const is3DTiles = ModelType.is3DTiles(this.type);
   if (!is3DTiles) {
     return false;
   }
@@ -2453,9 +2461,7 @@ ModelExperimental.fromGltf = function (options) {
   const loader = new GltfLoader(loaderOptions);
 
   const is3DTiles = defined(options.content);
-  const type = is3DTiles
-    ? ModelExperimentalType.TILE_GLTF
-    : ModelExperimentalType.GLTF;
+  const type = is3DTiles ? ModelType.TILE_GLTF : ModelType.GLTF;
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = loaderOptions.gltfResource;
@@ -2485,11 +2491,7 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_B3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2505,11 +2507,7 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_PNTS,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2533,11 +2531,7 @@ ModelExperimental.fromI3dm = function (options) {
   };
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(
-    loader,
-    ModelExperimentalType.TILE_I3DM,
-    options
-  );
+  const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -2552,7 +2546,7 @@ ModelExperimental.fromGeoJson = function (options) {
   const loader = new GeoJsonLoader(loaderOptions);
   const modelOptions = makeModelOptions(
     loader,
-    ModelExperimentalType.TILE_GEOJSON,
+    ModelType.TILE_GEOJSON,
     options
   );
   const model = new ModelExperimental(modelOptions);
@@ -2576,19 +2570,36 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  const isPnts = this.type === ModelType.TILE_PNTS;
+
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
+  const propertyAttributes = defined(this.structuralMetadata)
+    ? this.structuralMetadata.propertyAttributes
+    : undefined;
+  const hasPropertyAttributes =
+    defined(propertyAttributes) && defined(propertyAttributes[0]);
+
+  // Point clouds will be styled on the GPU unless they contain
+  // a batch table. That is, CPU styling will not be applied if
+  // - points have no metadata at all, or
+  // - points have metadata stored as a property attribute
+  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {

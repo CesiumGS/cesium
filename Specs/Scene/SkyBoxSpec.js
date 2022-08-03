@@ -1,6 +1,5 @@
-import { Resource } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { SkyBox } from "../../Source/Cesium.js";
+import { Resource, SceneMode, SkyBox } from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

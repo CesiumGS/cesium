@@ -1,6 +1,9 @@
-import { Entity } from "../../Source/Cesium.js";
-import { GeometryUpdater } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+import {
+  Entity,
+  GeometryUpdater,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("DataSources/GeometryUpdater", function () {

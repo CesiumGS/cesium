@@ -1,12 +1,14 @@
-import { BoundingRectangle } from "../Source/Cesium.js";
-import { Color } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { ClearCommand } from "../Source/Cesium.js";
-import { Pass } from "../Source/Cesium.js";
-import { CreditDisplay } from "../Source/Cesium.js";
-import { FrameState } from "../Source/Cesium.js";
-import { JobScheduler } from "../Source/Cesium.js";
-import { PickFramebuffer } from "../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Color,
+  defined,
+  ClearCommand,
+  Pass,
+  CreditDisplay,
+  FrameState,
+  JobScheduler,
+  PickFramebuffer,
+} from "../../Source/Cesium.js";
 
 function executeCommands(context, passState, commands) {
   const length = commands.length;

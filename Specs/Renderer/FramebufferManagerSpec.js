@@ -1,13 +1,16 @@
-import { defined } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { Framebuffer } from "../../Source/Cesium.js";
-import { FramebufferManager } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Renderbuffer } from "../../Source/Cesium.js";
-import { RenderbufferFormat } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
+import {
+  defined,
+  Color,
+  ClearCommand,
+  Framebuffer,
+  FramebufferManager,
+  PixelDatatype,
+  PixelFormat,
+  Renderbuffer,
+  RenderbufferFormat,
+  Texture,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

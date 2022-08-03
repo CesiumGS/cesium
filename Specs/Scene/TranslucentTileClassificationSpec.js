@@ -1,27 +1,30 @@
-import { TranslucentTileClassification } from "../../Source/Cesium.js";
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { GroundPolylineGeometry } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { Framebuffer } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { GroundPolylinePrimitive } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { StencilConstants } from "../../Source/Cesium.js";
+import {
+  TranslucentTileClassification,
+  ApproximateTerrainHeights,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  defined,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
+  GroundPolylineGeometry,
+  PixelFormat,
+  Rectangle,
+  RectangleGeometry,
+  ClearCommand,
+  Framebuffer,
+  Pass,
+  PixelDatatype,
+  RenderState,
+  Texture,
+  ClassificationType,
+  GroundPolylinePrimitive,
+  PerInstanceColorAppearance,
+  Primitive,
+  StencilConstants,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

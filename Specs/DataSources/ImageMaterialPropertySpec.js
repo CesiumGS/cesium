@@ -1,10 +1,12 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { ImageMaterialProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Color,
+  JulianDate,
+  TimeInterval,
+  ConstantProperty,
+  ImageMaterialProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/ImageMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

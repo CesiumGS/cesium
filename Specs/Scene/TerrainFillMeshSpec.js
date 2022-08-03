@@ -1,19 +1,22 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  GeographicProjection,
+  HeightmapTerrainData,
+  Intersect,
+  Camera,
+  GlobeSurfaceTileProvider,
+  ImageryLayerCollection,
+  QuadtreePrimitive,
+  SceneMode,
+  TerrainFillMesh,
+  TileBoundingRegion,
+  TileSelectionResult,
+} from "../../../Source/Cesium.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { HeightmapTerrainData } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { QuadtreePrimitive } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { TerrainFillMesh } from "../../Source/Cesium.js";
-import { TileBoundingRegion } from "../../Source/Cesium.js";
-import { TileSelectionResult } from "../../Source/Cesium.js";
 
 describe("Scene/TerrainFillMesh", function () {
   let processor;

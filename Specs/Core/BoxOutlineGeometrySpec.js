@@ -1,7 +1,10 @@
-import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
-import { BoxOutlineGeometry } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
+import {
+  AxisAlignedBoundingBox,
+  BoxOutlineGeometry,
+  Cartesian3,
+  GeometryOffsetAttribute,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/BoxOutlineGeometry", function () {

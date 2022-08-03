@@ -1,17 +1,20 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { loadKTX2 } from "../../Source/Cesium.js";
-import { KTX2Transcoder } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { ClearCommand } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { Sampler } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { TextureMagnificationFilter } from "../../Source/Cesium.js";
-import { TextureMinificationFilter } from "../../Source/Cesium.js";
-import { TextureWrap } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Color,
+  loadKTX2,
+  KTX2Transcoder,
+  PixelFormat,
+  Resource,
+  ClearCommand,
+  ContextLimits,
+  PixelDatatype,
+  Sampler,
+  Texture,
+  TextureMagnificationFilter,
+  TextureMinificationFilter,
+  TextureWrap,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

@@ -1,8 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidGeodesic } from "../../Source/Cesium.js";
-import { EllipsoidRhumbLine } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  EllipsoidGeodesic,
+  EllipsoidRhumbLine,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/EllipsoidRhumbLine", function () {

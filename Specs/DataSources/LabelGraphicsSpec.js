@@ -1,13 +1,15 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { LabelGraphics } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { LabelStyle } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  ConstantProperty,
+  LabelGraphics,
+  HorizontalOrigin,
+  LabelStyle,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/LabelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

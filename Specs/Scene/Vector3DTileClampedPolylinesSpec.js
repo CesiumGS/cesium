@@ -1,16 +1,19 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { Vector3DTileClampedPolylines } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  ClassificationType,
+  Color,
+  ColorGeometryInstanceAttribute,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  Pass,
+  PerInstanceColorAppearance,
+  Primitive,
+  Vector3DTileClampedPolylines,
+} from "../../../Source/Cesium.js";
+
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 

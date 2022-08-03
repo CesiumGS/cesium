@@ -1,6 +1,4 @@
-import { PrimitiveType } from "../../Source/Cesium.js";
-import { DrawCommand } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
+import { PrimitiveType, DrawCommand, Pass } from "../../../Source/Cesium.js";
 
 describe("Renderer/DrawCommand", function () {
   it("constructs", function () {

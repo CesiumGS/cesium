@@ -1,13 +1,16 @@
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { Imagery } from "../../Source/Cesium.js";
-import { ImageryLayer } from "../../Source/Cesium.js";
-import { ImageryProvider } from "../../Source/Cesium.js";
-import { ImageryState } from "../../Source/Cesium.js";
-import { SingleTileImageryProvider } from "../../Source/Cesium.js";
+import {
+  Ellipsoid,
+  GeographicTilingScheme,
+  Rectangle,
+  Request,
+  Resource,
+  Imagery,
+  ImageryLayer,
+  ImageryProvider,
+  ImageryState,
+  SingleTileImageryProvider,
+} from "../../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/SingleTileImageryProvider", function () {

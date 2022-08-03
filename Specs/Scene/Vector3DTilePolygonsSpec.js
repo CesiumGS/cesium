@@ -1,22 +1,26 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { combine } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Color,
+  ColorGeometryInstanceAttribute,
+  combine,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  Pass,
+  RenderState,
+  Cesium3DTileBatchTable,
+  ClassificationType,
+  ColorBlendMode,
+  PerInstanceColorAppearance,
+  Primitive,
+  StencilConstants,
+  Vector3DTilePolygons,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { StencilConstants } from "../../Source/Cesium.js";
-import { Vector3DTilePolygons } from "../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";

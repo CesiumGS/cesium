@@ -1,6 +1,4 @@
-import { BoxEmitter } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Particle } from "../../Source/Cesium.js";
+import { BoxEmitter, Cartesian3, Particle } from "../../../Source/Cesium.js";
 
 describe("Scene/BoxEmitter", function () {
   let emitter;

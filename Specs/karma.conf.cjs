@@ -27,22 +27,20 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      { pattern: "Specs/karma-main.js", included: true, type: "module" },
-      { pattern: "Source/**", included: false, type: "module" },
-      { pattern: "Specs/*.js", included: true, type: "module" },
-      { pattern: "Specs/Core/**", included: true, type: "module" },
       { pattern: "Specs/Data/**", included: false },
-      { pattern: "Specs/DataSources/**", included: true, type: "module" },
-      { pattern: "Specs/Renderer/**", included: true, type: "module" },
-      { pattern: "Specs/Scene/**", included: true, type: "module" },
-      { pattern: "Specs/ThirdParty/**", included: true, type: "module" },
-      { pattern: "Specs/Widgets/**", included: true, type: "module" },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
+      { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
+      { pattern: "Build/CesiumUnminified/**", included: false },
+      { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
+      { pattern: "Build/Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
     ],
 
     proxies: {
       "/Data": "/base/Specs/Data",
       "/Specs/TestWorkers": "/base/Specs/TestWorkers",
+      "/Build/Specs/TestWorkers": "/base/Build/Specs/TestWorkers",
     },
 
     // list of files to exclude
@@ -50,7 +48,9 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {},
+    preprocessors: {
+      "**/*.js": ["sourcemap"],
+    },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'

@@ -1,6 +1,9 @@
-import { Cartographic } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidGeodesic } from "../../Source/Cesium.js";
+import {
+  Cartographic,
+  Ellipsoid,
+  EllipsoidGeodesic,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/EllipsoidGeodesic", function () {

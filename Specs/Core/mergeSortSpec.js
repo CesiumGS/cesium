@@ -1,6 +1,8 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { mergeSort } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  mergeSort,
+} from "../../../Source/Cesium.js";
 
 describe("Core/mergeSort", function () {
   it("sorts", function () {
