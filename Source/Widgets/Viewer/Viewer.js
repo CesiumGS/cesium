@@ -852,6 +852,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._zoomIsFlight = false;
   this._zoomTarget = undefined;
   this._zoomTargetBoundingSpheres = undefined;
+  this._zoomActive = false;
   this._zoomPromise = undefined;
   this._zoomOptions = undefined;
   this._selectedEntityChanged = new Event();
@@ -2304,6 +2305,7 @@ function updateZoomTarget(viewer) {
 
   const entities = target;
 
+  let zoomTargetUpdated = false;
   let boundingSpheres = viewer._zoomTargetBoundingSpheres;
   if (!defined(boundingSpheres)) {
     boundingSpheres = new AssociativeArray();
@@ -2320,11 +2322,15 @@ function updateZoomTarget(viewer) {
       return;
     } else if (state !== BoundingSphereState.FAILED) {
       const previousBoundingSphere = boundingSpheres.get(entity._id);
-      if (
-        !defined(previousBoundingSphere) ||
+      if (!defined(previousBoundingSphere)) {
+        boundingSpheres.set(
+          entity._id,
+          BoundingSphere.clone(boundingSphereScratch)
+        );
+      } else if (
         !BoundingSphere.equals(boundingSphereScratch, previousBoundingSphere)
       ) {
-        console.log("Bounding sphere changed.");
+        zoomTargetUpdated = true;
         boundingSpheres.set(
           entity._id,
           BoundingSphere.clone(boundingSphereScratch)
@@ -2350,14 +2356,28 @@ function updateZoomTarget(viewer) {
   if (!viewer._zoomIsFlight) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
     camera.lookAtTransform(Matrix4.IDENTITY);
-    //clearZoom(viewer);
+    clearZoom(viewer);
     viewer._completeZoom(true);
-  } else {
+  } else if (zoomTargetUpdated) {
+    //clearZoom(viewer);
+    camera.cancelFlight();
+    camera.flyToBoundingSphere(boundingSphere, {
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
+        viewer._completeZoom(true);
+      },
+      offset: zoomOptions.offset,
+    });
+  } else if (!viewer._zoomActive) {
+    viewer._zoomActive = true;
     //clearZoom(viewer);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
+        clearZoom(viewer);
+        viewer._zoomActive = false;
         viewer._completeZoom(true);
       },
       cancel: function () {
