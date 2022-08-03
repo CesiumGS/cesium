@@ -12,7 +12,6 @@ import HeadingPitchRange from "../../Core/HeadingPitchRange.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import BoundingSphereState from "../../DataSources/BoundingSphereState.js";
-import AssociativeArray from "../../Core/AssociativeArray.js";
 import ConstantPositionProperty from "../../DataSources/ConstantPositionProperty.js";
 import DataSourceCollection from "../../DataSources/DataSourceCollection.js";
 import DataSourceDisplay from "../../DataSources/DataSourceDisplay.js";
@@ -851,8 +850,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._selectedEntity = undefined;
   this._zoomIsFlight = false;
   this._zoomTarget = undefined;
-  this._zoomTargetBoundingSpheres = undefined;
-  this._zoomActive = false;
   this._zoomPromise = undefined;
   this._zoomOptions = undefined;
   this._selectedEntityChanged = new Event();
@@ -2305,15 +2302,10 @@ function updateZoomTarget(viewer) {
 
   const entities = target;
 
-  //let zoomTargetUpdated = false;
-  let boundingSpheres = viewer._zoomTargetBoundingSpheres;
-  if (!defined(boundingSpheres)) {
-    boundingSpheres = new AssociativeArray();
-  }
+  const boundingSpheres = [];
   for (let i = 0, len = entities.length; i < len; i++) {
-    const entity = entities[i];
     const state = viewer._dataSourceDisplay.getBoundingSphere(
-      entity,
+      entities[i],
       false,
       boundingSphereScratch
     );
@@ -2321,25 +2313,9 @@ function updateZoomTarget(viewer) {
     if (state === BoundingSphereState.PENDING) {
       return;
     } else if (state !== BoundingSphereState.FAILED) {
-      const previousBoundingSphere = boundingSpheres.get(entity._id);
-      if (!defined(previousBoundingSphere)) {
-        boundingSpheres.set(
-          entity._id,
-          BoundingSphere.clone(boundingSphereScratch)
-        );
-      } else if (
-        !BoundingSphere.equals(boundingSphereScratch, previousBoundingSphere)
-      ) {
-        //zoomTargetUpdated = true;
-        boundingSpheres.set(
-          entity._id,
-          BoundingSphere.clone(boundingSphereScratch)
-        );
-      }
+      boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
     }
   }
-
-  viewer._zoomTargetBoundingSpheres = boundingSpheres;
 
   if (boundingSpheres.length === 0) {
     cancelZoom(viewer);
@@ -2349,9 +2325,7 @@ function updateZoomTarget(viewer) {
   //Stop tracking the current entity.
   viewer.trackedEntity = undefined;
 
-  const boundingSphere = BoundingSphere.fromBoundingSpheres(
-    boundingSpheres.values
-  );
+  const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
   if (!viewer._zoomIsFlight) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
@@ -2359,14 +2333,11 @@ function updateZoomTarget(viewer) {
     clearZoom(viewer);
     viewer._completeZoom(true);
   } else {
-    viewer._zoomActive = true;
     clearZoom(viewer);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        clearZoom(viewer);
-        viewer._zoomActive = false;
         viewer._completeZoom(true);
       },
       cancel: function () {

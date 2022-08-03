@@ -393,19 +393,33 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     scratchPosition
   );
 
-  let mostDetailedBoundingSphere;
-  sampleTerrainMostDetailed(terrainProvider, [cartoPosition]).then((result) => {
-    Cartographic.clone(cartoPosition, scratchCartographic);
-    scratchCartographic.height = result[0].height;
-    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-    BoundingSphere.clone(model.boundingSphere, mostDetailedBoundingSphere);
-    mostDetailedBoundingSphere.center = scratchPosition;
-  });
-
-  if (!defined(mostDetailedBoundingSphere)) {
-    return BoundingSphere.PENDING;
+  if (!defined(this._modelHash[entity.id].mostDetailedBoundingSphere)) {
+    if (!this._modelHash[entity.id].requestedHeight) {
+      this._modelHash[entity.id].requestedHeight = true;
+      sampleTerrainMostDetailed(terrainProvider, [cartoPosition]).then(
+        (result) => {
+          Cartographic.clone(cartoPosition, scratchCartographic);
+          scratchCartographic.height = result[0].height;
+          ellipsoid.cartographicToCartesian(
+            scratchCartographic,
+            scratchPosition
+          );
+          const boundingSphere = new BoundingSphere();
+          BoundingSphere.clone(model.boundingSphere, boundingSphere);
+          boundingSphere.center = scratchPosition;
+          this._modelHash[
+            entity.id
+          ].mostDetailedBoundingSphere = boundingSphere;
+        }
+      );
+    }
+    return BoundingSphereState.PENDING;
   }
-  BoundingSphere.clone(mostDetailedBoundingSphere, result);
+
+  BoundingSphere.clone(
+    this._modelHash[entity.id].mostDetailedBoundingSphere,
+    result
+  );
   return BoundingSphereState.DONE;
 };
 
