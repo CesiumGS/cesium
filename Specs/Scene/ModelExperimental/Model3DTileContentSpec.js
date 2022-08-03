@@ -255,10 +255,6 @@ describe(
         );
       });
 
-      it("destroys b3dm content", function () {
-        return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
-      });
-
       it("picks from b3dm", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -660,7 +656,7 @@ describe(
         );
       });
 
-      it("renders point cloud that are not defined relative to center", function () {
+      it("renders point cloud that is not defined relative to center", function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
@@ -700,15 +696,6 @@ describe(
             expect(scene).toRender(color);
           }
         );
-      });
-
-      it("renders pnts content", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          pointCloudWithPerPointPropertiesUrl
-        ).then(function (tileset) {
-          Cesium3DTilesTester.expectRender(scene, tileset);
-        });
       });
 
       it("renders pnts with color style", function () {
@@ -1145,10 +1132,6 @@ describe(
           );
         });
       });
-
-      it("destroys pnts content", function () {
-        return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
-      });
     });
 
     describe("point cloud attenuation", function () {
@@ -1366,7 +1349,6 @@ describe(
         });
       });
 
-      // only have one destroy test (this one)
       it("destroys glTF content", function () {
         return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
       });

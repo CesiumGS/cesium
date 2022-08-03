@@ -395,18 +395,16 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
   });
 
   it("throws with invalid format", function () {
-    const path = "example.i3dm";
     const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
       gltfFormat: 2,
     });
-    expectLoadError(path, arrayBuffer);
+    expectLoadError(arrayBuffer);
   });
 
   it("throws with invalid version", function () {
-    const path = "example.i3dm";
     const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
       version: 2,
     });
-    expectLoadError(path, arrayBuffer);
+    expectLoadError(arrayBuffer);
   });
 });

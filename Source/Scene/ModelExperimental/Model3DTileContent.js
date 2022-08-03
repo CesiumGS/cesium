@@ -142,28 +142,35 @@ Object.defineProperties(Model3DTileContent.prototype, {
 Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
+
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTableId)) {
     throw new DeveloperError(
       "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined"
     );
   }
+  //>>includeEnd('debug');
 
   const featureTable = model.featureTables[featureTableId];
 
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTable)) {
     throw new DeveloperError(
       "No feature table found for the selected feature ID set"
     );
   }
+  //>>includeEnd('debug');
 
+  //>>includeStart('debug', pragmas.debug);
   const featuresLength = featureTable.featuresLength;
   if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
     throw new DeveloperError(
-      `featureId is required and between 0 and featuresLength - 1 (${
+      `featureId is required and must be between 0 and featuresLength - 1 (${
         featuresLength - 1
       }).`
     );
   }
+  //>>includeEnd('debug');
   return featureTable.getFeature(featureId);
 };
 
