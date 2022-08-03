@@ -1,6 +1,7 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
@@ -17,6 +18,9 @@ import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
+import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
 const defaultMinimumPixelSize = 0.0;
@@ -334,6 +338,8 @@ ModelVisualizer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
@@ -374,7 +380,32 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     return BoundingSphereState.PENDING;
   }
 
-  BoundingSphere.clone(model.boundingSphere, result);
+  const scene = this._scene;
+  const globe = scene.globe;
+  const ellipsoid = globe.ellipsoid;
+  const terrainProvider = globe.terrainProvider;
+
+  const modelMatrix = model.modelMatrix;
+  scratchPosition.x = modelMatrix[12];
+  scratchPosition.y = modelMatrix[13];
+  scratchPosition.z = modelMatrix[14];
+  const cartoPosition = Ellipsoid.WGS84.cartesianToCartographic(
+    scratchPosition
+  );
+
+  let mostDetailedBoundingSphere;
+  sampleTerrainMostDetailed(terrainProvider, [cartoPosition]).then((result) => {
+    Cartographic.clone(cartoPosition, scratchCartographic);
+    scratchCartographic.height = result[0].height;
+    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+    BoundingSphere.clone(model.boundingSphere, mostDetailedBoundingSphere);
+    mostDetailedBoundingSphere.center = scratchPosition;
+  });
+
+  if (!defined(mostDetailedBoundingSphere)) {
+    return BoundingSphere.PENDING;
+  }
+  BoundingSphere.clone(mostDetailedBoundingSphere, result);
   return BoundingSphereState.DONE;
 };
 

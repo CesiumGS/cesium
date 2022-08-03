@@ -2305,7 +2305,7 @@ function updateZoomTarget(viewer) {
 
   const entities = target;
 
-  let zoomTargetUpdated = false;
+  //let zoomTargetUpdated = false;
   let boundingSpheres = viewer._zoomTargetBoundingSpheres;
   if (!defined(boundingSpheres)) {
     boundingSpheres = new AssociativeArray();
@@ -2330,7 +2330,7 @@ function updateZoomTarget(viewer) {
       } else if (
         !BoundingSphere.equals(boundingSphereScratch, previousBoundingSphere)
       ) {
-        zoomTargetUpdated = true;
+        //zoomTargetUpdated = true;
         boundingSpheres.set(
           entity._id,
           BoundingSphere.clone(boundingSphereScratch)
@@ -2358,20 +2358,9 @@ function updateZoomTarget(viewer) {
     camera.lookAtTransform(Matrix4.IDENTITY);
     clearZoom(viewer);
     viewer._completeZoom(true);
-  } else if (zoomTargetUpdated) {
-    //clearZoom(viewer);
-    camera.cancelFlight();
-    camera.flyToBoundingSphere(boundingSphere, {
-      duration: zoomOptions.duration,
-      maximumHeight: zoomOptions.maximumHeight,
-      complete: function () {
-        viewer._completeZoom(true);
-      },
-      offset: zoomOptions.offset,
-    });
-  } else if (!viewer._zoomActive) {
+  } else {
     viewer._zoomActive = true;
-    //clearZoom(viewer);
+    clearZoom(viewer);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
