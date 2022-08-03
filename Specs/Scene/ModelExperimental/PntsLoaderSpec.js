@@ -3,6 +3,7 @@ import {
   Color,
   ComponentDatatype,
   defaultValue,
+  DracoLoader,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
@@ -13,6 +14,7 @@ import {
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 
@@ -568,6 +570,27 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     });
   });
 
+  it("BATCH_ID semantic uses componentType of UNSIGNED_SHORT by default", function () {
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 2,
+        POSITION: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        BATCH_ID: [0, 1],
+        BATCH_LENGTH: 2,
+      },
+    });
+
+    return loadPntsArrayBuffer(arrayBuffer).then(function (loader) {
+      const components = loader.components;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
+      expect(attributes.length).toBe(3);
+      expectPosition(attributes[0]);
+      expectDefaultColor(attributes[1]);
+      expectBatchId(attributes[2], ComponentDatatype.UNSIGNED_SHORT);
+    });
+  });
+
   it("loads PointCloudWithPerPointProperties", function () {
     return loadPnts(pointCloudWithPerPointPropertiesUrl).then(function (
       loader
@@ -772,6 +795,28 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       },
     });
     expectLoadError(arrayBuffer);
+  });
+
+  it("error decoding a draco point cloud causes loading to fail", function () {
+    const readyPromise = pollToPromise(function () {
+      return DracoLoader._taskProcessorReady;
+    });
+    DracoLoader._getDecoderTaskProcessor();
+    return readyPromise
+      .then(function () {
+        const decoder = DracoLoader._getDecoderTaskProcessor();
+        spyOn(decoder, "scheduleTask").and.callFake(function () {
+          return Promise.reject({ message: "my error" });
+        });
+
+        return loadPnts(pointCloudDracoUrl);
+      })
+      .then(function () {
+        fail("should not resolve");
+      })
+      .catch(function (error) {
+        expect(error.message).toBe("Failed to load Draco pnts\nmy error");
+      });
   });
 
   it("destroys pnts loader", function () {

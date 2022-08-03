@@ -7,6 +7,7 @@ import {
   Resource,
   ResourceCache,
 } from "../../../Source/Cesium.js";
+import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
@@ -79,6 +80,22 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
       return waitForLoaderProcess(loader, scene);
     });
+  }
+
+  function expectLoadError(arrayBuffer) {
+    expect(function () {
+      const resource = Resource.createIfNeeded(
+        "http://example.com/content.i3dm"
+      );
+      const loader = new I3dmLoader({
+        i3dmResource: resource,
+        arrayBuffer: arrayBuffer,
+      });
+      i3dmLoaders.push(loader);
+      loader.load();
+
+      return waitForLoaderProcess(loader, scene);
+    }).toThrowDeveloperError();
   }
 
   function verifyInstances(components, expectedSemantics, instancesLength) {
@@ -375,5 +392,21 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
         25
       );
     });
+  });
+
+  it("throws with invalid format", function () {
+    const path = "example.i3dm";
+    const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      gltfFormat: 2,
+    });
+    expectLoadError(path, arrayBuffer);
+  });
+
+  it("throws with invalid version", function () {
+    const path = "example.i3dm";
+    const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      version: 2,
+    });
+    expectLoadError(path, arrayBuffer);
   });
 });
