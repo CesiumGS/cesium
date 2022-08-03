@@ -16,7 +16,6 @@ import {
   HeadingPitchRoll,
   Math as CesiumMath,
   MetadataClass,
-  ModelExperimental,
   RuntimeError,
   Transforms,
 } from "../../../Source/Cesium.js";
@@ -42,13 +41,15 @@ describe(
     const centerLongitude = -1.31968;
     const centerLatitude = 0.698874;
 
-    function setCamera(longitude, latitude, height) {
+    function setCamera(longitude, latitude, range) {
       // One feature is located at the center, point the camera there
       const center = Cartesian3.fromRadians(longitude, latitude);
-      scene.camera.lookAt(
-        center,
-        new HeadingPitchRange(0.0, -1.57, defined(height) ? height : 100.0)
-      );
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, range));
+    }
+
+    function setCameraWithHeight(longitude, latitude, range, centerHeight) {
+      const center = Cartesian3.fromRadians(longitude, latitude, centerHeight);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, range));
     }
 
     beforeAll(function () {
@@ -63,7 +64,7 @@ describe(
 
     beforeEach(function () {
       scene.morphTo3D(0.0);
-      setCamera(centerLongitude, centerLatitude);
+      setCamera(centerLongitude, centerLatitude, 100.0);
     });
 
     afterEach(function () {
@@ -1434,6 +1435,7 @@ describe(
         "./Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json";
 
       it("Links model to tileset clipping planes based on bounding volume clipping", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             const tile = tileset.root;
@@ -1464,6 +1466,7 @@ describe(
       });
 
       it("Links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             const tile = tileset.root;
@@ -1497,150 +1500,8 @@ describe(
         );
       });
 
-      it("Links model to tileset clipping planes based on bounding volume clipping", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            const tile = tileset.root;
-            const content = tile.content;
-            const model = content._modelInstanceCollection._model;
-            const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
-            );
-
-            expect(model.clippingPlanes).toBeUndefined();
-
-            const clippingPlaneCollection = new ClippingPlaneCollection({
-              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
-            });
-            tileset.clippingPlanes = clippingPlaneCollection;
-            clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState, passOptions);
-
-            expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
-
-            tile._isClipped = false;
-            tile.update(tileset, scene.frameState, passOptions);
-
-            expect(model.clippingPlanes).toBeUndefined();
-          }
-        );
-      });
-
-      it("Links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            const tile = tileset.root;
-            const model = tile.content._modelInstanceCollection._model;
-            const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
-            );
-
-            expect(model.clippingPlanes).toBeUndefined();
-
-            const clippingPlaneCollection = new ClippingPlaneCollection({
-              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
-            });
-            tileset.clippingPlanes = clippingPlaneCollection;
-            clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState, passOptions);
-
-            expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
-
-            const newClippingPlaneCollection = new ClippingPlaneCollection({
-              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
-            });
-            tileset.clippingPlanes = newClippingPlaneCollection;
-            newClippingPlaneCollection.update(scene.frameState);
-            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
-
-            tile.update(tileset, scene.frameState, passOptions);
-            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
-          }
-        );
-      });
-
-      it("rebuilds Model shaders when clipping planes change", function () {
-        spyOn(ModelExperimental, "_getClippingFunction").and.callThrough();
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            const tile = tileset.root;
-            const content = tile.content;
-            const clippingPlaneCollection = new ClippingPlaneCollection({
-              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
-            });
-            const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
-            );
-            tileset.clippingPlanes = clippingPlaneCollection;
-            clippingPlaneCollection.update(scene.frameState);
-            content.clippingPlanesDirty = true;
-            tile.update(tileset, scene.frameState, passOptions);
-
-            expect(
-              ModelExperimental._getClippingFunction.calls.count()
-            ).toEqual(1);
-          }
-        );
-      });
-
-      it("rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count", function () {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
-          function (tileset) {
-            const tile = tileset.root;
-            tile._isClipped = true;
-            const content = tile.content;
-            const passOptions = Cesium3DTilePass.getPassOptions(
-              Cesium3DTilePass.RENDER
-            );
-
-            const noClipFS =
-              content._pointCloud._drawCommand.shaderProgram
-                ._fragmentShaderText;
-            expect(noClipFS.indexOf("clip") !== -1).toBe(false);
-
-            const clippingPlanes = new ClippingPlaneCollection({
-              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
-              unionClippingRegions: false,
-            });
-            tileset.clippingPlanes = clippingPlanes;
-
-            clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState, passOptions);
-            const clipOneIntersectFS =
-              content._pointCloud._drawCommand.shaderProgram
-                ._fragmentShaderText;
-            expect(clipOneIntersectFS.indexOf("= clip(") !== -1).toBe(true);
-            expect(clipOneIntersectFS.indexOf("float clip") !== -1).toBe(true);
-
-            clippingPlanes.unionClippingRegions = true;
-
-            clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState, passOptions);
-            const clipOneUnionFS =
-              content._pointCloud._drawCommand.shaderProgram
-                ._fragmentShaderText;
-            expect(clipOneUnionFS.indexOf("= clip(") !== -1).toBe(true);
-            expect(clipOneUnionFS.indexOf("float clip") !== -1).toBe(true);
-            expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
-
-            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
-
-            clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState, passOptions);
-            const clipTwoUnionFS =
-              content._pointCloud._drawCommand.shaderProgram
-                ._fragmentShaderText;
-            expect(clipTwoUnionFS.indexOf("= clip(") !== -1).toBe(true);
-            expect(clipTwoUnionFS.indexOf("float clip") !== -1).toBe(true);
-            expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
-            expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
-          }
-        );
-      });
-
       it("clipping planes selectively disable rendering", function () {
+        setCameraWithHeight(centerLongitude, centerLatitude, 5.0, 5.0);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
           function (tileset) {
             let color;
@@ -1663,6 +1524,7 @@ describe(
       });
 
       it("clipping planes apply edge styling", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
           function (tileset) {
             let color;
@@ -1686,6 +1548,7 @@ describe(
       });
 
       it("clipping planes union regions (Uint8)", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
         // Force uint8 mode - there's a slight rendering difference between
         // float and packed uint8 clipping planes for this test due to the small context
         spyOn(ClippingPlaneCollection, "useFloatTexture").and.returnValue(
@@ -1719,6 +1582,7 @@ describe(
       });
 
       it("clipping planes union regions (Float)", function () {
+        setCamera(centerLongitude, centerLatitude, 5.0);
         if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
           // This configuration for the test fails in uint8 mode due to the small context
           return;
