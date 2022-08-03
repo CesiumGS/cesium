@@ -2,6 +2,7 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
@@ -142,10 +143,27 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
-    return undefined;
+    throw new DeveloperError(
+      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined"
+    );
   }
 
   const featureTable = model.featureTables[featureTableId];
+
+  if (!defined(featureTable)) {
+    throw new DeveloperError(
+      "No feature table found for the selected feature ID set"
+    );
+  }
+
+  const featuresLength = featureTable.featuresLength;
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      `featureId is required and between 0 and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
+    );
+  }
   return featureTable.getFeature(featureId);
 };
 
