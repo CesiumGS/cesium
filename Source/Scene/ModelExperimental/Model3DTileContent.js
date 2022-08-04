@@ -24,6 +24,7 @@ export default function Model3DTileContent(tileset, tile, resource) {
   this._resource = resource;
 
   this._model = undefined;
+  this._readyPromise = undefined;
   this._metadata = undefined;
   this._group = undefined;
 }
@@ -84,7 +85,7 @@ Object.defineProperties(Model3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._model.readyPromise;
+      return this._readyPromise;
     },
   },
 
@@ -269,12 +270,14 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
   );
 
   const model = ModelExperimental.fromGltf(modelOptions);
-  model.readyPromise.then(function (model) {
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-  content._model = model;
 
   return content;
 };
@@ -302,12 +305,14 @@ Model3DTileContent.fromB3dm = function (
   );
 
   const model = ModelExperimental.fromB3dm(modelOptions);
-  model.readyPromise.then(function (model) {
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-  content._model = model;
 
   return content;
 };
@@ -335,12 +340,14 @@ Model3DTileContent.fromI3dm = function (
   );
 
   const model = ModelExperimental.fromI3dm(modelOptions);
-  model.readyPromise.then(function (model) {
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-  content._model = model;
 
   return content;
 };
@@ -366,7 +373,10 @@ Model3DTileContent.fromPnts = function (
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromPnts(modelOptions);
+  const model = ModelExperimental.fromPnts(modelOptions);
+  content._model = model;
+  content._readyPromise = model.readyPromise;
+
   return content;
 };
 
@@ -384,7 +394,10 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromGeoJson(modelOptions);
+  const model = ModelExperimental.fromGeoJson(modelOptions);
+  content._model = model;
+  content._readyPromise = model.readyPromise;
+
   return content;
 };
 
