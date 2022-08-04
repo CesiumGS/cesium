@@ -3888,7 +3888,7 @@ describe(
       });
     });
 
-    it("creates duplicate backface commands", function () {
+    xit("creates duplicate backface commands", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,
