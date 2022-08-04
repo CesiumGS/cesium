@@ -60,7 +60,7 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or `ModelExperimental` as
+Custom shaders can be applied to either 3D Tiles or Model` as
 follows:
 
 ```js
@@ -76,7 +76,7 @@ const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 }));
 
 // Applying to a model directly
-const model = Cesium.ModelExperimental.fromGltf({,
+const model = CesiumModel.fromGltf({,
   url: "http://example.com/model.gltf",
   customShader: customShader
 });
@@ -707,7 +707,7 @@ property IDs, the behavior is undefined. For example:
 - Two properties with names `temperature ℃` and `temperature ℉` would both
   map to `metadata.temperature`, so the behavior is undefined
 
-When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
+When using the Point Cloud (`.pnts`) format in Model`, per-point
 properties are transcoded as property attributes. These property IDs follow
 the same convention.
 

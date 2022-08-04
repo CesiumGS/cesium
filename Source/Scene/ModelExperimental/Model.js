@@ -42,7 +42,7 @@ import SplitDirection from "../SplitDirection.js";
  * the Model from your source data type.
  * </p>
  *
- * @alias ModelExperimental
+ * @alias Model
  * @constructor
  *
  * @param {Object} options Object with the following properties:
@@ -87,7 +87,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ModelExperimental(options) {
+export default function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
@@ -209,7 +209,7 @@ export default function ModelExperimental(options) {
 
   // If silhouettes are used for the model, this will be set to the number
   // of the stencil buffer used for rendering the silhouette. This is set
-  // by ModelSilhouettePipelineStage, not by ModelExperimental itself.
+  // by ModelSilhouettePipelineStage, not by Model itself.
   this._silhouetteId = undefined;
 
   this._cull = defaultValue(options.cull, true);
@@ -560,13 +560,13 @@ function initialize(model) {
     );
 }
 
-Object.defineProperties(ModelExperimental.prototype, {
+Object.defineProperties(Model.prototype, {
   /**
    * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
    * and shader files were downloaded and the WebGL resources were created.  This is set to
-   * <code>true</code> right before {@link ModelExperimental#readyPromise} is resolved.
+   * <code>true</code> right before {@link Model#readyPromise} is resolved.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    * @readonly
@@ -586,9 +586,9 @@ Object.defineProperties(ModelExperimental.prototype, {
    * This promise is resolved at the end of the frame before the first frame the model is rendered in.
    * </p>
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
-   * @type {Promise.<ModelExperimental>}
+   * @type {Promise.<Model>}
    * @readonly
    */
   readyPromise: {
@@ -602,7 +602,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * When <code>incrementallyLoadTextures</code> is true this may resolve after
    * <code>promise</code> resolves.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Promise<void>}
    * @readonly
@@ -627,7 +627,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Get the estimated memory usage statistics for this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ModelStatistics}
    * @readonly
@@ -643,7 +643,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The currently playing glTF animations.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ModelExperimentalAnimationCollection}
    * @readonly
@@ -657,7 +657,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    * @type {Boolean}
    *
    * @default true
@@ -689,7 +689,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Pass}
    * @readonly
@@ -707,7 +707,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * and lighting. For 3D Tiles, this is inherited from the
    * {@link Cesium3DTileset}.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {PointCloudShading}
    */
@@ -730,7 +730,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
    * may lead to undefined behavior.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {CustomShader}
    */
@@ -749,7 +749,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The scene graph of this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ModelSceneGraph}
    * @private
@@ -763,7 +763,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Cesium3DTileContent}
    * @readonly
@@ -780,7 +780,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The height reference of the model, which determines how the model is drawn
    * relative to terrain.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {HeightReference}
    * @default {HeightReference.NONE}
@@ -802,7 +802,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Gets or sets the distance display condition, which specifies at what distance
    * from the camera this model will be displayed.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {DistanceDisplayCondition}
    *
@@ -829,7 +829,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The structural metadata from the EXT_structural_metadata extension
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {StructuralMetadata}
    * @readonly
@@ -845,7 +845,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The ID for the feature table to use for picking and styling in this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    *
@@ -863,7 +863,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The feature tables for this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Array}
    * @readonly
@@ -882,7 +882,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * A user-defined object that is returned when the model is picked.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Object}
    *
@@ -906,7 +906,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    * @readonly
@@ -922,7 +922,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Cesium3DTileStyle}
    */
@@ -939,7 +939,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The color to blend with the model's rendered color.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Color}
    *
@@ -960,7 +960,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Defines how the color blends with the model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
    *
@@ -978,7 +978,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    *
@@ -996,7 +996,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The silhouette color.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Color}
    *
@@ -1019,7 +1019,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The size of the silhouette in pixels.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    *
@@ -1049,9 +1049,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Gets the model's bounding sphere in world space. This does not take into account
    * glTF animations, skins, or morph targets. It also does not account for
-   * {@link ModelExperimental#minimumPixelSize}.
+   * {@link Model#minimumPixelSize}.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {BoundingSphere}
    * @readonly
@@ -1061,7 +1061,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!this._ready) {
         throw new DeveloperError(
-          "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+          "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
         );
       }
       //>>includeEnd('debug');
@@ -1076,7 +1076,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Draws the bounding sphere for each draw command in the model.
    * </p>
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    *
@@ -1100,7 +1100,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Draws the model in wireframe.
    * </p>
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    *
@@ -1121,7 +1121,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Whether or not to render the model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    *
@@ -1153,7 +1153,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * priority.
    * </p>
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {String}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -1189,7 +1189,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * instance feature IDs take priority.
    * </p>
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {String}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -1219,7 +1219,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ClippingPlaneCollection}
    */
@@ -1243,7 +1243,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
    * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Cartesian3}
    *
@@ -1265,7 +1265,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The properties for managing image-based lighting on this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ImageBasedLighting}
    */
@@ -1295,10 +1295,10 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
-   * culling is disabled. Back faces are not culled if {@link ModelExperimental#color}
-   * is translucent or {@link ModelExperimental#silhouetteSize} is greater than 0.0.
+   * culling is disabled. Back faces are not culled if {@link Model#color}
+   * is translucent or {@link Model#silhouetteSize} is greater than 0.0.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    *
@@ -1322,7 +1322,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Values greater than <code>1.0</code> increase the size of the model; values
    * less than <code>1.0</code> decrease.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    *
@@ -1344,7 +1344,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The true scale of the model after being affected by the model's scale,
    * minimum pixel size, and maximum scale parameters.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    * @readonly
@@ -1362,7 +1362,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * This can be used to ensure that a model is visible even when the viewer
    * zooms out.  When <code>0.0</code>, no minimum size is enforced.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    *
@@ -1385,7 +1385,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
    * is never an unreasonable scale.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Number}
    */
@@ -1404,7 +1404,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Determines whether the model casts or receives shadows from light sources.
 
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {ShadowMode}
    *
@@ -1426,7 +1426,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Gets the credit that will be displayed for the model
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Credit}
    * @readonly
@@ -1440,7 +1440,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * Gets or sets whether the credits of the model will be displayed on the screen
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    *
@@ -1462,7 +1462,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   /**
    * The {@link SplitDirection} to apply to this model.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Model.prototype
    *
    * @type {SplitDirection}
    *
@@ -1503,18 +1503,18 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @param {String} name The name of the node in the glTF.
  * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
- * @exception {DeveloperError} The model is not loaded.  Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
  *
  * @example
  * // Apply non-uniform scale to node "Hand"
  * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
-ModelExperimental.prototype.getNode = function (name) {
+Model.prototype.getNode = function (name) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
     );
   }
   Check.typeOf.string("name", name);
@@ -1525,29 +1525,26 @@ ModelExperimental.prototype.getNode = function (name) {
 
 /**
  * Sets the current value of an articulation stage.  After setting one or
- * multiple stage values, call ModelExperimental.applyArticulations() to
+ * multiple stage values, call Model.applyArticulations() to
  * cause the node matrices to be recalculated.
  *
  * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
  * @param {Number} value The numeric value of this stage of the articulation.
  *
- * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true.
  *
- * @see ModelExperimental#applyArticulations
+ * @see Model#applyArticulations
  *
  * @example
  * // Sets the value of the stage named "MoveX" belonging to the articulation named "SampleArticulation"
  * model.setArticulationStage("SampleArticulation MoveX", 50.0);
  */
-ModelExperimental.prototype.setArticulationStage = function (
-  articulationStageKey,
-  value
-) {
+Model.prototype.setArticulationStage = function (articulationStageKey, value) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("value", value);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -1560,13 +1557,13 @@ ModelExperimental.prototype.setArticulationStage = function (
  * participates in any articulation. Note that this will overwrite any node
  * transformations on participating nodes.
  *
- * @exception {DeveloperError} The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true.
  */
-ModelExperimental.prototype.applyArticulations = function () {
+Model.prototype.applyArticulations = function () {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -1579,7 +1576,7 @@ ModelExperimental.prototype.applyArticulations = function () {
  *
  * @private
  */
-ModelExperimental.prototype.resetDrawCommands = function () {
+Model.prototype.resetDrawCommands = function () {
   this._drawCommandsBuilt = false;
 };
 
@@ -1597,7 +1594,7 @@ const scratchClippingPlanesMatrix = new Matrix4();
  *
  * @exception {RuntimeError} Failed to load external reference.
  */
-ModelExperimental.prototype.update = function (frameState) {
+Model.prototype.update = function (frameState) {
   // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
@@ -1770,7 +1767,7 @@ function updateModelMatrix(model, frameState) {
     //>>includeStart('debug', pragmas.debug);
     if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
       throw new DeveloperError(
-        "ModelExperimental.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
       );
     }
     //>>includeEnd('debug');
@@ -2168,7 +2165,7 @@ function addCreditsToCreditDisplay(model, frameState) {
  * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
  * @private
  */
-ModelExperimental.prototype.isTranslucent = function () {
+Model.prototype.isTranslucent = function () {
   const color = this.color;
   return defined(color) && color.alpha > 0.0 && color.alpha < 1.0;
 };
@@ -2180,7 +2177,7 @@ ModelExperimental.prototype.isTranslucent = function () {
  * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
  * @private
  */
-ModelExperimental.prototype.isInvisible = function () {
+Model.prototype.isInvisible = function () {
   const color = this.color;
   return defined(color) && color.alpha === 0.0;
 };
@@ -2196,7 +2193,7 @@ function supportsSilhouettes(frameState) {
  * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
  * @private
  */
-ModelExperimental.prototype.hasSilhouette = function (frameState) {
+Model.prototype.hasSilhouette = function (frameState) {
   return (
     supportsSilhouettes(frameState) &&
     this._silhouetteSize > 0.0 &&
@@ -2210,7 +2207,7 @@ ModelExperimental.prototype.hasSilhouette = function (frameState) {
  * @returns {Boolean} <code>true</code> if clipping planes are enabled for this model, <code>false</code>.
  * @private
  */
-ModelExperimental.prototype.isClippingEnabled = function () {
+Model.prototype.isClippingEnabled = function () {
   const clippingPlanes = this._clippingPlanes;
   return (
     defined(clippingPlanes) &&
@@ -2227,9 +2224,9 @@ ModelExperimental.prototype.isClippingEnabled = function () {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see ModelExperimental#destroy
+ * @see Model#destroy
  */
-ModelExperimental.prototype.isDestroyed = function () {
+Model.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -2247,9 +2244,9 @@ ModelExperimental.prototype.isDestroyed = function () {
  * @example
  * model = model && model.destroy();
  *
- * @see ModelExperimental#isDestroyed
+ * @see Model#isDestroyed
  */
-ModelExperimental.prototype.destroy = function () {
+Model.prototype.destroy = function () {
   const loader = this._loader;
   if (defined(loader)) {
     loader.destroy();
@@ -2305,7 +2302,7 @@ ModelExperimental.prototype.destroy = function () {
  * that must be destroyed when draw commands are rebuilt.
  * @private
  */
-ModelExperimental.prototype.destroyPipelineResources = function () {
+Model.prototype.destroyPipelineResources = function () {
   const resources = this._pipelineResources;
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
@@ -2319,7 +2316,7 @@ ModelExperimental.prototype.destroyPipelineResources = function () {
  * that exist for the lifetime of the model.
  * @private
  */
-ModelExperimental.prototype.destroyModelResources = function () {
+Model.prototype.destroyModelResources = function () {
   const resources = this._modelResources;
   for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
@@ -2381,9 +2378,9 @@ ModelExperimental.prototype.destroyModelResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
- * @returns {ModelExperimental} The newly created model.
+ * @returns {Model} The newly created model.
  */
-ModelExperimental.fromGltf = function (options) {
+Model.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
@@ -2431,7 +2428,7 @@ ModelExperimental.fromGltf = function (options) {
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = loaderOptions.gltfResource;
 
-  const model = new ModelExperimental(modelOptions);
+  const model = new Model(modelOptions);
 
   return model;
 };
@@ -2439,7 +2436,7 @@ ModelExperimental.fromGltf = function (options) {
 /*
  * @private
  */
-ModelExperimental.fromB3dm = function (options) {
+Model.fromB3dm = function (options) {
   const loaderOptions = {
     b3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -2457,14 +2454,14 @@ ModelExperimental.fromB3dm = function (options) {
   const loader = new B3dmLoader(loaderOptions);
 
   const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
-  const model = new ModelExperimental(modelOptions);
+  const model = new Model(modelOptions);
   return model;
 };
 
 /**
  * @private
  */
-ModelExperimental.fromPnts = function (options) {
+Model.fromPnts = function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
@@ -2473,14 +2470,14 @@ ModelExperimental.fromPnts = function (options) {
   const loader = new PntsLoader(loaderOptions);
 
   const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
-  const model = new ModelExperimental(modelOptions);
+  const model = new Model(modelOptions);
   return model;
 };
 
 /*
  * @private
  */
-ModelExperimental.fromI3dm = function (options) {
+Model.fromI3dm = function (options) {
   const loaderOptions = {
     i3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -2497,14 +2494,14 @@ ModelExperimental.fromI3dm = function (options) {
   const loader = new I3dmLoader(loaderOptions);
 
   const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
-  const model = new ModelExperimental(modelOptions);
+  const model = new Model(modelOptions);
   return model;
 };
 
 /*
  * @private
  */
-ModelExperimental.fromGeoJson = function (options) {
+Model.fromGeoJson = function (options) {
   const loaderOptions = {
     geoJson: options.geoJson,
   };
@@ -2514,14 +2511,14 @@ ModelExperimental.fromGeoJson = function (options) {
     ModelType.TILE_GEOJSON,
     options
   );
-  const model = new ModelExperimental(modelOptions);
+  const model = new Model(modelOptions);
   return model;
 };
 
 /**
  * @private
  */
-ModelExperimental.prototype.applyColorAndShow = function (style) {
+Model.prototype.applyColorAndShow = function (style) {
   const hasColorStyle = defined(style) && defined(style.color);
   const hasShowStyle = defined(style) && defined(style.show);
 
@@ -2534,7 +2531,7 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
 /**
  * @private
  */
-ModelExperimental.prototype.applyStyle = function (style) {
+Model.prototype.applyStyle = function (style) {
   this.resetDrawCommands();
 
   const isPnts = this.type === ModelType.TILE_PNTS;

@@ -10,7 +10,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
-import ModelExperimental from "../Scene/ModelExperimental/ModelExperimental.js";
+import Model from "../Scene/ModelExperimental/Model.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -112,7 +112,7 @@ ModelVisualizer.prototype.update = function (time) {
         delete modelHash[entity.id];
       }
 
-      model = ModelExperimental.fromGltf({
+      model = Model.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,

@@ -51,7 +51,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     ]);
   }
 
-  it("sets up batch textures from ModelExperimental", function () {
+  it("sets up batch textures from Model", function () {
     const renderResources = {
       shaderBuilder: new ShaderBuilder(),
       model: {

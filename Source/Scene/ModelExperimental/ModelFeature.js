@@ -3,7 +3,7 @@ import defined from "../../Core/defined.js";
 import deprecationWarning from "../../Core/deprecationWarning.js";
 
 /**
- * A feature of a {@link ModelExperimental}.
+ * A feature of a {@link Model}.
  * <p>
  * Provides access to a feature's properties stored in the model's feature table.
  * </p>
@@ -18,7 +18,7 @@ import deprecationWarning from "../../Core/deprecationWarning.js";
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {ModelExperimental} options.model The model the feature belongs to.
+ * @param {Model} options.model The model the feature belongs to.
  * @param {Number} options.featureId The unique integral identifier for this feature.
  *
  * @example
@@ -91,7 +91,7 @@ Object.defineProperties(ModelFeature.prototype, {
    *
    * @memberof ModelFeature.prototype
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    *
    * @readonly
    * @private

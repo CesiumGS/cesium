@@ -127,7 +127,7 @@
 
           viewer.scene.primitives.removeAll();
           const model = viewer.scene.primitives.add(
-            Cesium.ModelExperimental.fromGltf({
+            Cesium.Model.fromGltf({
               url: url,
               modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
                 position,

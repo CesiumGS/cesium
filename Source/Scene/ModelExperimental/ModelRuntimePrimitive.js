@@ -32,7 +32,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
  * @param {ModelComponents.Node} options.node The node that this primitive belongs to.
- * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
+ * @param {Model} options.model The {@link Model} this primitive belongs to.
  *
  * @alias ModelRuntimePrimitive
  * @constructor
@@ -72,7 +72,7 @@ export default function ModelRuntimePrimitive(options) {
   /**
    * A reference to the model
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    *
    * @private
    */
@@ -119,7 +119,7 @@ export default function ModelRuntimePrimitive(options) {
 
   /**
    * A buffer containing the primitive's positions projected to 2D world coordinates.
-   * Used for rendering in 2D / CV mode. The memory is managed by ModelExperimental;
+   * Used for rendering in 2D / CV mode. The memory is managed by Model;
    * this is just a reference.
    *
    * @type {Buffer}

@@ -24,7 +24,7 @@ import {
   JulianDate,
   Math as CesiumMath,
   Matrix4,
-  ModelExperimental,
+  Model,
   ModelSceneGraph,
   ModelFeature,
   Pass,
@@ -43,7 +43,7 @@ import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
-  "Scene/ModelExperimental/ModelExperimental",
+  "Scene/ModelExperimental/Model",
   function () {
     const webglStub = !!window.webglStub;
 
@@ -234,13 +234,13 @@ describe(
 
     it("fromGltf throws with undefined options", function () {
       expect(function () {
-        ModelExperimental.fromGltf();
+        Model.fromGltf();
       }).toThrowDeveloperError();
     });
 
     it("fromGltf throws with undefined url", function () {
       expect(function () {
-        ModelExperimental.fromGltf({});
+        Model.fromGltf({});
       }).toThrowDeveloperError();
     });
 
@@ -314,7 +314,7 @@ describe(
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
-        const model = ModelExperimental.fromGltf({
+        const model = Model.fromGltf({
           gltf: gltf,
           basePath: boxTexturedGltfUrl,
           incrementallyLoadTextures: false,
@@ -610,7 +610,8 @@ describe(
       });
     });
 
-    // This test works for Model but does not work for ModelExperimental.
+    // This test does not yet work since models without normals are
+    // rendered as unlit
     xit("renders model with emissive texture", function () {
       const resource = Resource.createIfNeeded(emissiveTextureUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -701,7 +702,7 @@ describe(
           });
 
           const model = scene.primitives.add(
-            ModelExperimental.fromGltf({
+            Model.fromGltf({
               url: dracoCesiumManUrl,
             })
           );
@@ -1388,7 +1389,7 @@ describe(
 
     describe("boundingSphere", function () {
       it("boundingSphere throws if model is not ready", function () {
-        const model = ModelExperimental.fromGltf({
+        const model = Model.fromGltf({
           url: boxTexturedGlbUrl,
         });
         expect(function () {
@@ -1506,7 +1507,7 @@ describe(
           scene
         ).then(function (model) {
           expect(scene).toPickAndCall(function (result) {
-            expect(result.primitive).toBeInstanceOf(ModelExperimental);
+            expect(result.primitive).toBeInstanceOf(Model);
             expect(result.primitive).toEqual(model);
           });
         });
@@ -1531,7 +1532,7 @@ describe(
           scene
         ).then(function (model) {
           expect(scene).toPickAndCall(function (result) {
-            expect(result.primitive).toBeInstanceOf(ModelExperimental);
+            expect(result.primitive).toBeInstanceOf(Model);
             expect(result.primitive).toEqual(model);
             expect(result.id).toEqual(boxTexturedGlbUrl);
           });
@@ -1557,14 +1558,14 @@ describe(
           scene
         ).then(function (model) {
           expect(scene).toPickAndCall(function (result) {
-            expect(result.primitive).toBeInstanceOf(ModelExperimental);
+            expect(result.primitive).toBeInstanceOf(Model);
             expect(result.primitive).toEqual(model);
             expect(result.id).toEqual(boxTexturedGlbUrl);
           });
 
           model.id = "new id";
           expect(scene).toPickAndCall(function (result) {
-            expect(result.primitive).toBeInstanceOf(ModelExperimental);
+            expect(result.primitive).toBeInstanceOf(Model);
             expect(result.primitive).toEqual(model);
             expect(result.id).toEqual("new id");
           });
@@ -3448,7 +3449,7 @@ describe(
         });
       });
 
-      // This test passes for Model but fails for ModelExperimental.
+      // This test does not yet work for Model
       xit("disables culling", function () {
         return loadAndZoomToModelExperimental(
           {
@@ -3875,7 +3876,7 @@ describe(
 
     describe("AGI_articulations", function () {
       it("setArticulationStage throws when model is not ready", function () {
-        const model = ModelExperimental.fromGltf({
+        const model = Model.fromGltf({
           url: boxArticulationsUrl,
         });
 
@@ -3898,7 +3899,7 @@ describe(
       });
 
       it("applyArticulations throws when model is not ready", function () {
-        const model = ModelExperimental.fromGltf({
+        const model = Model.fromGltf({
           url: boxArticulationsUrl,
         });
 
@@ -3937,7 +3938,7 @@ describe(
 
     describe("getNode", function () {
       it("getNode throws when model is not ready", function () {
-        const model = ModelExperimental.fromGltf({
+        const model = Model.fromGltf({
           url: boxArticulationsUrl,
         });
 

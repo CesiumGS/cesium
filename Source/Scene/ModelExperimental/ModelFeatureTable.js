@@ -10,11 +10,11 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import ModelType from "./ModelType.js";
 
 /**
- * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
+ * Manages the {@link ModelFeature}s in a {@link Model}.
  * Extracts the properties from a {@link PropertyTable}.
  *
  * @param {Object} options An object containing the following options:
- * @param {ModelExperimental} options.model The model that owns this feature table.
+ * @param {Model} options.model The model that owns this feature table.
  * @param {PropertyTable} options.propertyTable The property table from the model used to initialize the model.
  *
  * @alias ModelFeatureTable

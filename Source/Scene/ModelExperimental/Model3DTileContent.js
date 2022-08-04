@@ -4,7 +4,7 @@ import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
-import ModelExperimental from "./ModelExperimental.js";
+import Model from "./Model.js";
 import Pass from "../../Renderer/Pass.js";
 
 /**
@@ -269,7 +269,7 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
     additionalOptions
   );
 
-  const model = ModelExperimental.fromGltf(modelOptions);
+  const model = Model.fromGltf(modelOptions);
   content._model = model;
   // Include the animation setup in the ready promise to avoid an uncaught exception
   content._readyPromise = model.readyPromise.then(function (model) {
@@ -304,7 +304,7 @@ Model3DTileContent.fromB3dm = function (
     additionalOptions
   );
 
-  const model = ModelExperimental.fromB3dm(modelOptions);
+  const model = Model.fromB3dm(modelOptions);
   content._model = model;
   // Include the animation setup in the ready promise to avoid an uncaught exception
   content._readyPromise = model.readyPromise.then(function (model) {
@@ -339,7 +339,7 @@ Model3DTileContent.fromI3dm = function (
     additionalOptions
   );
 
-  const model = ModelExperimental.fromI3dm(modelOptions);
+  const model = Model.fromI3dm(modelOptions);
   content._model = model;
   // Include the animation setup in the ready promise to avoid an uncaught exception
   content._readyPromise = model.readyPromise.then(function (model) {
@@ -373,7 +373,7 @@ Model3DTileContent.fromPnts = function (
     content,
     additionalOptions
   );
-  const model = ModelExperimental.fromPnts(modelOptions);
+  const model = Model.fromPnts(modelOptions);
   content._model = model;
   content._readyPromise = model.readyPromise;
 
@@ -394,7 +394,7 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
     content,
     additionalOptions
   );
-  const model = ModelExperimental.fromGeoJson(modelOptions);
+  const model = Model.fromGeoJson(modelOptions);
   content._model = model;
   content._readyPromise = model.readyPromise;
 

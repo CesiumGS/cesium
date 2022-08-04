@@ -110,7 +110,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work for ModelExperimental in WebGL1. This cannot be set after the tileset has loaded.
+ * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work for Model in WebGL1. This cannot be set after the tileset has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
@@ -1341,7 +1341,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * A custom shader to apply to all tiles in the tileset. Only used for
-   * contents that use {@link ModelExperimental}. Using custom shaders with a
+   * contents that use {@link Model}. Using custom shaders with a
    * {@link Cesium3DTileStyle} may lead to undefined behavior.
    *
    * @memberof Cesium3DTileset.prototype

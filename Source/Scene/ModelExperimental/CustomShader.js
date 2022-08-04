@@ -53,7 +53,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  */
 
 /**
- * A user defined GLSL shader used with {@link ModelExperimental} as well
+ * A user defined GLSL shader used with {@link Model} as well
  * as {@link Cesium3DTileset}.
  * <p>
  * If texture uniforms are used, additional resource management must be done:
@@ -61,7 +61,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * <ul>
  *   <li>
  *      The <code>update</code> function must be called each frame. When a
- *      custom shader is passed to a {@link ModelExperimental} or a
+ *      custom shader is passed to a {@link Model} or a
  *      {@link Cesium3DTileset}, this step is handled automaticaly
  *   </li>
  *   <li>

@@ -1,7 +1,7 @@
 import {
   JulianDate,
   ModelAnimationLoop,
-  ModelExperimental,
+  Model,
   ResourceCache,
   Math as CesiumMath,
 } from "../../../Source/Cesium.js";
@@ -50,7 +50,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is called on non-ready model", function () {
-    const model = ModelExperimental.fromGltf({
+    const model = Model.fromGltf({
       gltf: animatedTriangleUrl,
     });
 
@@ -206,7 +206,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when addAll is called on non-ready model", function () {
-    const model = ModelExperimental.fromGltf({
+    const model = Model.fromGltf({
       gltf: animatedTriangleUrl,
     });
 
