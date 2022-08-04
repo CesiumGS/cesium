@@ -1827,6 +1827,130 @@ describe(
         verifyFeatureStruct(shaderBuilder);
       });
     });
+
+    it("processes texcoord attributes for classification model", function () {
+      // Texcoords are processed to be compatible with the shader code
+      // added by FeatureIdPipelineStage.
+      return loadGltf(microcosm).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+        renderResources.model.classificationType = ClassificationType.BOTH;
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(3);
+
+        const positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+
+        const texCoord0Attribute = attributes[1];
+        expect(texCoord0Attribute.index).toEqual(1);
+        expect(texCoord0Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
+
+        const texCoord1Attribute = attributes[2];
+        expect(texCoord1Attribute.index).toEqual(2);
+        expect(texCoord1Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord1Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord1Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(texCoord1Attribute.offsetInBytes).toBe(0);
+        expect(texCoord1Attribute.strideInBytes).toBe(8);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+            "    attributes.texCoord_1 = a_texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    v_texCoord_0 = attributes.texCoord_0;",
+            "    v_texCoord_1 = attributes.texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    attributes.texCoord_0 = v_texCoord_0;",
+            "    attributes.texCoord_1 = v_texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec2 v_texCoord_0;",
+          "varying vec2 v_texCoord_1;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_TEXCOORD_0",
+          "HAS_TEXCOORD_1",
+          "HAS_CLASSIFICATION",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_TEXCOORD_0",
+          "HAS_TEXCOORD_1",
+          "HAS_CLASSIFICATION",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec2 a_texCoord_0;", "attribute vec2 a_texCoord_1;"]
+        );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
   },
   "WebGL"
 );

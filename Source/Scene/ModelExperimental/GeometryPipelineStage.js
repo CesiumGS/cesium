@@ -177,12 +177,17 @@ GeometryPipelineStage.process = function (
     }
     //>>includeEnd('debug');
 
-    // Classification models only use the position and feature ID attributes.
+    // Classification models only use the position, texcoord, and feature ID attributes.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
     const isFeatureIdAttribute =
       attribute.semantic === VertexAttributeSemantic.FEATURE_ID;
-    if (hasClassification && !isPositionAttribute && !isFeatureIdAttribute) {
+    const isTexcoordAttribute =
+      attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+
+    const isClassificationAttribute =
+      isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
+    if (hasClassification && !isClassificationAttribute) {
       continue;
     }
 
