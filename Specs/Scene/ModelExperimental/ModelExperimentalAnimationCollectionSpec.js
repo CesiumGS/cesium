@@ -7,7 +7,7 @@ import {
 } from "../../../Source/Cesium.js";
 
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
+import loadAndZoomToModel from "./loadAndZoomToModel.js";
 import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", function () {
@@ -36,7 +36,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("initializes", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -62,7 +62,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is not given a name or index", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -75,7 +75,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is given invalid name", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -90,7 +90,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is given invalid index", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -105,7 +105,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when add is given invalid multiplier", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -121,7 +121,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("add works with name", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -146,7 +146,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("add works with index", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -171,7 +171,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("add works with options", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -216,7 +216,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when addAll is given invalid multiplier", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -231,7 +231,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("addAll works", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -260,7 +260,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("addAll works with options", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -300,7 +300,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("contains returns false for undefined", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -313,13 +313,13 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("contains returns false for animation not in collection", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
       scene
     ).then(function (firstModel) {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: animatedTriangleUrl,
         },
@@ -334,7 +334,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("contains returns true for animation in collection", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -347,7 +347,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when get is not given index", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -362,7 +362,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("throws when get is given out-of-range index", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -377,7 +377,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("get works", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -390,7 +390,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("remove returns false for undefined", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -403,13 +403,13 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("remove returns false for animation not in collection", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
       scene
     ).then(function (firstModel) {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: animatedTriangleUrl,
         },
@@ -424,7 +424,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("remove returns true for animation in collection", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -444,7 +444,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("removeAll works", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -459,7 +459,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("update returns false when there are no animations", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: interpolationTestUrl,
       },
@@ -472,7 +472,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("raises animation start, update, and stop events when removeOnStop is true", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -524,7 +524,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("finishes animation when it reaches its end", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -552,7 +552,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with a delay", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -577,7 +577,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with startTime", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -607,7 +607,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with an explicit stopTime", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -642,7 +642,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with an explicit animation time", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -689,7 +689,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates while paused with an explicit animation time", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -734,7 +734,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with a multiplier", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -763,7 +763,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with reverse", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -792,7 +792,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with REPEAT", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },
@@ -823,7 +823,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", functio
   });
 
   it("animates with MIRRORED_REPEAT", function () {
-    return loadAndZoomToModelExperimental(
+    return loadAndZoomToModel(
       {
         gltf: animatedTriangleUrl,
       },

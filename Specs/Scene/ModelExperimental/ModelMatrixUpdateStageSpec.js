@@ -10,7 +10,7 @@ import {
   Quaternion,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
+import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(
   "Scene/ModelExperimental/ModelMatrixUpdateStage",
@@ -110,7 +110,7 @@ describe(
     }
 
     it("updates leaf nodes using node transform setter", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: simpleSkin,
         },
@@ -188,7 +188,7 @@ describe(
     }
 
     it("updates nodes with children using node transform setter", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: simpleSkin,
         },
@@ -250,7 +250,7 @@ describe(
     });
 
     it("updates with new model matrix", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: simpleSkin,
         },
@@ -297,7 +297,7 @@ describe(
     });
 
     it("updates with new model matrix and model scale", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: simpleSkin,
         },
@@ -352,7 +352,7 @@ describe(
     });
 
     it("updates render state cull face when scale is negative", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: simpleSkin,
         },
