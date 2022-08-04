@@ -48,7 +48,7 @@ void main()
     // Handle any show properties that come from the style.
     cpuStylingStage(attributes.positionMC, feature);
     #endif
-    
+
     #if defined(USE_2D_POSITIONS) || defined(USE_2D_INSTANCING)
     // The scene mode 2D pipeline stage and instancing stage add a different
     // model view matrix to accurately project the model to 2D. However, the

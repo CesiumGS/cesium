@@ -24,7 +24,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or CLassificationModelDrawCommand.
+ * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or ClassificationModelDrawCommand.
  *
  * @private
  */

@@ -67,14 +67,18 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     return waitForLoaderProcess(gltfLoader, scene);
   }
 
-  it("adds a dequantization function", function () {
-    const uniformMap = {};
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      uniformMap: uniformMap,
-      shaderBuilder: shaderBuilder,
+  function mockRenderResources() {
+    return {
+      uniformMap: {},
+      shaderBuilder: new ShaderBuilder(),
       model: {},
     };
+  }
+
+  it("adds a dequantization function", function () {
+    const renderResources = mockRenderResources();
+    const shaderBuilder = renderResources.shaderBuilder;
+
     return loadGltf(boxWithLines).then(function (gltfLoader) {
       const components = gltfLoader.components;
       const primitive = components.nodes[1].primitives[0];
@@ -98,13 +102,9 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   it("adds dequantization uniforms", function () {
-    const uniformMap = {};
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      uniformMap: uniformMap,
-      shaderBuilder: shaderBuilder,
-      model: {},
-    };
+    const renderResources = mockRenderResources();
+    const shaderBuilder = renderResources.shaderBuilder;
+    const uniformMap = renderResources.uniformMap;
 
     return loadGltf(milkTruck).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -155,13 +155,9 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   it("promotes vertex color dequantization uniforms to vec4", function () {
-    const uniformMap = {};
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      uniformMap: uniformMap,
-      shaderBuilder: shaderBuilder,
-      model: {},
-    };
+    const renderResources = mockRenderResources();
+    const shaderBuilder = renderResources.shaderBuilder;
+    const uniformMap = renderResources.uniformMap;
 
     return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -221,15 +217,11 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   it("only dequantizes position for classification models", function () {
-    const uniformMap = {};
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      uniformMap: uniformMap,
-      shaderBuilder: shaderBuilder,
-      model: {
-        classificationType: ClassificationType.BOTH,
-      },
-    };
+    const renderResources = mockRenderResources();
+    const shaderBuilder = renderResources.shaderBuilder;
+    const uniformMap = renderResources.uniformMap;
+
+    renderResources.model.classificationType = ClassificationType.BOTH;
 
     return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
       const components = gltfLoader.components;
@@ -261,13 +253,9 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   it("skips non-quantized attributes", function () {
-    const uniformMap = {};
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      uniformMap: uniformMap,
-      shaderBuilder: shaderBuilder,
-      model: {},
-    };
+    const renderResources = mockRenderResources();
+    const shaderBuilder = renderResources.shaderBuilder;
+    const uniformMap = renderResources.uniformMap;
 
     return loadGltf(boxUncompressed).then(function (gltfLoader) {
       const components = gltfLoader.components;

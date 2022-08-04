@@ -15,8 +15,8 @@ import StencilOperation from "../StencilOperation.js";
 
 /**
  * A wrapper around the draw commands used to render a classification model,
- * i.e. a {@link ModelExperimental} that classifies another asset. This manages
- * the derived commands and returns only the necessary commands depending on the
+ * i.e. a {@link Model} that classifies another asset. This manages the
+ * derived commands and returns only the necessary commands depending on the
  * given frame state.
  *
  * @param {Object} options An object containing the following options:
@@ -223,7 +223,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * The model that the draw command belongs to.
    *
    * @memberof ClassificationModelDrawCommand.prototype
-   * @type {ModelExperimental}
+   * @type {Model}
    *
    * @readonly
    * @private
