@@ -276,7 +276,8 @@ describe(
         });
     }
 
-    it("per-feature post process stage", function () {
+    // glTF 1.0 model needs to be converted to 2.0
+    xit("per-feature post process stage", function () {
       return loadModel("./Data/Models/Box/CesiumBoxTest.gltf").then(
         function () {
           model.zoomTo();

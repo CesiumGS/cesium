@@ -10,7 +10,6 @@ import {
   ContentMetadata,
   defaultValue,
   defined,
-  ExperimentalFeatures,
   GroupMetadata,
   HeadingPitchRange,
   HeadingPitchRoll,
@@ -119,12 +118,10 @@ describe(
     }
 
     beforeAll(function () {
-      ExperimentalFeatures.enableModelExperimental = true;
       scene = createScene();
     });
 
     afterAll(function () {
-      ExperimentalFeatures.enableModelExperimental = false;
       scene.destroyForSpecs();
     });
 

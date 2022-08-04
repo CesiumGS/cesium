@@ -108,7 +108,7 @@ describe(
 
     it("rejects readyPromise on error", function () {
       // Try loading a composite tile with an instanced tile that has an invalid url.
-      // Expect promise to be rejected in ModelExperimental, Model3DTileContent and Composite3DTileContent.
+      // Expect promise to be rejected in Model, Model3DTileContent and Composite3DTileContent.
       const arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
         tiles: [
           Cesium3DTilesTester.generateInstancedTileBuffer({

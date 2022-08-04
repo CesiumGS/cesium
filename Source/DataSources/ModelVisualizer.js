@@ -6,13 +6,11 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
-import Model from "../Scene/Model.js";
-import ModelExperimental from "../Scene/ModelExperimental/ModelExperimental.js";
+import Model from "../Scene/ModelExperimental/Model.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -114,11 +112,7 @@ ModelVisualizer.prototype.update = function (time) {
         delete modelHash[entity.id];
       }
 
-      const ModelType = ExperimentalFeatures.enableModelExperimental
-        ? ModelExperimental
-        : Model;
-
-      model = ModelType.fromGltf({
+      model = Model.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,

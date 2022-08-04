@@ -9,13 +9,13 @@ import ModelAnimationLoop from ".././ModelAnimationLoop.js";
 import ModelAnimationState from ".././ModelAnimationState.js";
 
 /**
- * A collection of active model animations. Access this using {@link ModelExperimental#activeAnimations}.
+ * A collection of active model animations. Access this using {@link Model#activeAnimations}.
  *
  * @alias ModelExperimentalAnimationCollection
  * @internalConstructor
  * @class
  *
- * @see ModelExperimental#activeAnimations
+ * @see Model#activeAnimations
  */
 function ModelExperimentalAnimationCollection(model) {
   /**
@@ -82,7 +82,7 @@ Object.defineProperties(ModelExperimentalAnimationCollection.prototype, {
    *
    * @memberof ModelExperimentalAnimationCollection.prototype
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    */
   model: {
@@ -123,7 +123,7 @@ function addAnimation(collection, animation, options) {
  * @param {ModelExperimentalAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelExperimentalAnimation} The animation that was added to the collection.
  *
- * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link ModelExperimental#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
  * @exception {DeveloperError} options.name must be a valid animation name.
  * @exception {DeveloperError} options.index must be a valid animation index.
  * @exception {DeveloperError} Either options.name or options.index must be defined.
@@ -174,7 +174,7 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for ModelExperimental.readyPromise to resolve."
+      "Animations are not loaded.  Wait for Model.readyPromise to resolve."
     );
   }
   //>>includeEnd('debug');
@@ -241,7 +241,7 @@ ModelExperimentalAnimationCollection.prototype.add = function (options) {
  * @param {ModelExperimentalAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelExperimentalAnimation[]} An array of {@link ModelExperimentalAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
  *
- * @exception {DeveloperError} Animations are not loaded. Wait for the {@link ModelExperimental#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#readyPromise} to resolve.
  * @exception {DeveloperError} options.multiplier must be greater than zero.
  *
  * @example

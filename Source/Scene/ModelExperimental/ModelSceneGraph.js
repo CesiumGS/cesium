@@ -24,10 +24,10 @@ import SplitDirection from "../SplitDirection.js";
 import Transforms from "../../Core/Transforms.js";
 
 /**
- * An in memory representation of the scene graph for a {@link ModelExperimental}
+ * An in memory representation of the scene graph for a {@link Model}
  *
  * @param {Object} options An object containing the following options
- * @param {ModelExperimental} options.model The model this scene graph belongs to
+ * @param {Model} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
  *
  * @alias ModelSceneGraph
@@ -45,9 +45,9 @@ export default function ModelSceneGraph(options) {
   //>>includeEnd('debug');
 
   /**
-   * A reference to the {@link ModelExperimental} that owns this scene graph.
+   * A reference to the {@link Model} that owns this scene graph.
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    *
    * @private

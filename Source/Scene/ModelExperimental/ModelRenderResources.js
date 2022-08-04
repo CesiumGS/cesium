@@ -9,7 +9,7 @@ import DepthFunction from "../DepthFunction.js";
  * the entire model.
  *
  * @constructor
- * @param {ModelExperimental} model The model that will be rendered
+ * @param {Model} model The model that will be rendered
  *
  * @private
  */
@@ -31,7 +31,7 @@ export default function ModelRenderResources(model) {
   /**
    * A reference to the model.
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    *
    * @private

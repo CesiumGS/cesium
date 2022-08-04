@@ -2,8 +2,8 @@ import defined from "../../Core/defined.js";
 
 /**
  * The node statistics update stage updates memory usage statistics for
- * ModelExperimental on the node level. This counts the binary resources
- * that exist for the lifetime of the ModelExperimental (e.g. attributes
+ * Model on the node level. This counts the binary resources
+ * that exist for the lifetime of the Model (e.g. attributes
  * loaded by GltfLoader). It does not count resources that are created
  * every time the pipeline is run. The individual pipeline stages are
  * responsible for keeping track of additional memory they allocate.

@@ -28,7 +28,7 @@ export default function PrimitiveRenderResources(
   /**
    * A reference to the model. Inherited from the node render resources.
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    *
    * @private

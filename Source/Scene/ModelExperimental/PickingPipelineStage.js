@@ -183,8 +183,8 @@ function processInstancedPickIds(renderResources, context) {
     typedArray: pickIdsTypedArray,
     usage: BufferUsage.STATIC_DRAW,
   });
-  // Destruction of resources allocated by the ModelExperimental
-  // is handled by ModelExperimental.destroyPipelineResources().
+  // Destruction of resources allocated by the Model
+  // is handled by Model.destroyPipelineResources().
   pickIdsBuffer.vertexArrayDestroyable = false;
   const hasCpuCopy = false;
   model.statistics.addBuffer(pickIdsBuffer, hasCpuCopy);

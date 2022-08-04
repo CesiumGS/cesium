@@ -606,8 +606,8 @@ function createVertexBuffer(typedArray, frameState) {
     usage: BufferUsage.STATIC_DRAW,
   });
 
-  // Destruction of resources allocated by the ModelExperimental
-  // is handled by ModelExperimental.destroy().
+  // Destruction of resources allocated by the Model
+  // is handled by Model.destroy().
   buffer.vertexArrayDestroyable = false;
 
   return buffer;

@@ -24,7 +24,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   /**
    * A reference to the model. Inherited from the model render resources.
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    *
    * @private
