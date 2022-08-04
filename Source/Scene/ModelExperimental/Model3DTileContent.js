@@ -376,6 +376,7 @@ Model3DTileContent.fromPnts = function (
   const model = ModelExperimental.fromPnts(modelOptions);
   content._model = model;
   content._readyPromise = model.readyPromise;
+
   return content;
 };
 
@@ -396,6 +397,7 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
   const model = ModelExperimental.fromGeoJson(modelOptions);
   content._model = model;
   content._readyPromise = model.readyPromise;
+
   return content;
 };
 
