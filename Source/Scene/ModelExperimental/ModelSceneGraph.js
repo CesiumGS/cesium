@@ -593,6 +593,11 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
 
+  // Skip these pipeline stages for classification models.
+  if (defined(model.classificationType)) {
+    return;
+  }
+
   if (model.imageBasedLighting.enabled) {
     modelPipelineStages.push(ImageBasedLightingPipelineStage);
   }
@@ -601,15 +606,15 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
   }
 
+  if (model.hasSilhouette(frameState)) {
+    modelPipelineStages.push(ModelSilhouettePipelineStage);
+  }
+
   if (
     defined(model.splitDirection) &&
     model.splitDirection !== SplitDirection.NONE
   ) {
     modelPipelineStages.push(ModelSplitterPipelineStage);
-  }
-
-  if (model.hasSilhouette(frameState)) {
-    modelPipelineStages.push(ModelSilhouettePipelineStage);
   }
 };
 
@@ -787,6 +792,7 @@ ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
   const drawCommands = [];
   const silhouetteCommands = [];
 
+  const passes = frameState.passes;
   const hasSilhouette = this._model.hasSilhouette(frameState);
 
   forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
@@ -795,7 +801,7 @@ ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
     const result = primitiveDrawCommand.getCommands(frameState);
     drawCommands.push.apply(drawCommands, result);
 
-    if (hasSilhouette) {
+    if (hasSilhouette && !passes.pick) {
       const silhouetteResult = primitiveDrawCommand.getSilhouetteCommands(
         frameState
       );
