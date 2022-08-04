@@ -2,7 +2,7 @@ import Check from "../../Core/Check.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 
 /**
- * An enum to distinguish the different uses for {@link ModelExperimental},
+ * An enum to distinguish the different uses for {@link Model},
  * which include individual glTF models, and various 3D Tiles formats
  * (including glTF via <code>3DTILES_content_gltf</code>).
  *

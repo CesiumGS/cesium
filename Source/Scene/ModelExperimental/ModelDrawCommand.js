@@ -150,7 +150,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
    * The model that the draw command belongs to.
    *
    * @memberof ModelDrawCommand.prototype
-   * @type {ModelExperimental}
+   * @type {Model}
    *
    * @readonly
    * @private

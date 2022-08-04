@@ -25,7 +25,7 @@ ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME =
  *</ul>
  *
  * @param {ModelRenderResources} renderResources The render resources for this model.
- * @param {ModelExperimental} model The model.
+ * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
  *
  * @private

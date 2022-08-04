@@ -2,9 +2,10 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
-import ModelExperimental from "./ModelExperimental.js";
+import Model from "./Model.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -23,6 +24,7 @@ export default function Model3DTileContent(tileset, tile, resource) {
   this._resource = resource;
 
   this._model = undefined;
+  this._readyPromise = undefined;
   this._metadata = undefined;
   this._group = undefined;
 }
@@ -83,7 +85,7 @@ Object.defineProperties(Model3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._model.readyPromise;
+      return this._readyPromise;
     },
   },
 
@@ -141,11 +143,35 @@ Object.defineProperties(Model3DTileContent.prototype, {
 Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
+
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTableId)) {
-    return undefined;
+    throw new DeveloperError(
+      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined"
+    );
   }
+  //>>includeEnd('debug');
 
   const featureTable = model.featureTables[featureTableId];
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(featureTable)) {
+    throw new DeveloperError(
+      "No feature table found for the selected feature ID set"
+    );
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  const featuresLength = featureTable.featuresLength;
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      `featureId is required and must be between 0 and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
+    );
+  }
+  //>>includeEnd('debug');
   return featureTable.getFeature(featureId);
 };
 
@@ -243,13 +269,15 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
     additionalOptions
   );
 
-  const model = ModelExperimental.fromGltf(modelOptions);
-  model.readyPromise.then(function (model) {
+  const model = Model.fromGltf(modelOptions);
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-  content._model = model;
 
   return content;
 };
@@ -276,14 +304,15 @@ Model3DTileContent.fromB3dm = function (
     additionalOptions
   );
 
-  const model = ModelExperimental.fromB3dm(modelOptions);
-  model.readyPromise.then(function (model) {
+  const model = Model.fromB3dm(modelOptions);
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-
-  content._model = model;
 
   return content;
 };
@@ -310,13 +339,15 @@ Model3DTileContent.fromI3dm = function (
     additionalOptions
   );
 
-  const model = ModelExperimental.fromI3dm(modelOptions);
-  model.readyPromise.then(function (model) {
+  const model = Model.fromI3dm(modelOptions);
+  content._model = model;
+  // Include the animation setup in the ready promise to avoid an uncaught exception
+  content._readyPromise = model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
+    return model;
   });
-  content._model = model;
 
   return content;
 };
@@ -342,7 +373,10 @@ Model3DTileContent.fromPnts = function (
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromPnts(modelOptions);
+  const model = Model.fromPnts(modelOptions);
+  content._model = model;
+  content._readyPromise = model.readyPromise;
+
   return content;
 };
 
@@ -360,7 +394,10 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
     content,
     additionalOptions
   );
-  content._model = ModelExperimental.fromGeoJson(modelOptions);
+  const model = Model.fromGeoJson(modelOptions);
+  content._model = model;
+  content._readyPromise = model.readyPromise;
+
   return content;
 };
 

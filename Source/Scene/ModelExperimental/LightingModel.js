@@ -1,5 +1,5 @@
 /**
- * The lighting model to use for lighting a {@link ModelExperimental}.
+ * The lighting model to use for lighting a {@link Model}.
  *
  * @enum {Number}
  *

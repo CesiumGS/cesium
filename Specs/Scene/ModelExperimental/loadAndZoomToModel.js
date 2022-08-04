@@ -1,11 +1,11 @@
-import { ModelExperimental } from "../../../Source/Cesium.js";
+import { Model } from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
-function loadAndZoomToModelExperimental(options, scene) {
+function loadAndZoomToModel(options, scene) {
   return new Promise(function (resolve, reject) {
     let model;
     try {
-      model = ModelExperimental.fromGltf({
+      model = Model.fromGltf({
         url: options.url,
         gltf: options.gltf,
         basePath: options.basePath,
@@ -83,4 +83,4 @@ function loadAndZoomToModelExperimental(options, scene) {
   });
 }
 
-export default loadAndZoomToModelExperimental;
+export default loadAndZoomToModel;

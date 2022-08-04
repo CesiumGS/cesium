@@ -1,10 +1,7 @@
-import Batched3DModel3DTileContent from "./Batched3DModel3DTileContent.js";
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
-import Instanced3DModel3DTileContent from "./Instanced3DModel3DTileContent.js";
 import Model3DTileContent from "./ModelExperimental/Model3DTileContent.js";
-import PointCloud3DTileContent from "./PointCloud3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -16,16 +13,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  */
 const Cesium3DTileContentFactory = {
   b3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    if (tileset.enableModelExperimental) {
-      return Model3DTileContent.fromB3dm(
-        tileset,
-        tile,
-        resource,
-        arrayBuffer,
-        byteOffset
-      );
-    }
-    return new Batched3DModel3DTileContent(
+    return Model3DTileContent.fromB3dm(
       tileset,
       tile,
       resource,
@@ -34,16 +22,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   pnts: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    if (tileset.enableModelExperimental) {
-      return Model3DTileContent.fromPnts(
-        tileset,
-        tile,
-        resource,
-        arrayBuffer,
-        byteOffset
-      );
-    }
-    return new PointCloud3DTileContent(
+    return Model3DTileContent.fromPnts(
       tileset,
       tile,
       resource,
@@ -52,16 +31,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   i3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    if (tileset.enableModelExperimental) {
-      return Model3DTileContent.fromI3dm(
-        tileset,
-        tile,
-        resource,
-        arrayBuffer,
-        byteOffset
-      );
-    }
-    return new Instanced3DModel3DTileContent(
+    return Model3DTileContent.fromI3dm(
       tileset,
       tile,
       resource,

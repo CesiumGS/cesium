@@ -6,6 +6,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import UniformType from "./UniformType.js";
 import TextureManager from "./TextureManager.js";
+import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 
 /**
  * An object describing a uniform, its type, and an initial value
@@ -52,7 +53,7 @@ import TextureManager from "./TextureManager.js";
  */
 
 /**
- * A user defined GLSL shader used with {@link ModelExperimental} as well
+ * A user defined GLSL shader used with {@link Model} as well
  * as {@link Cesium3DTileset}.
  * <p>
  * If texture uniforms are used, additional resource management must be done:
@@ -60,7 +61,7 @@ import TextureManager from "./TextureManager.js";
  * <ul>
  *   <li>
  *      The <code>update</code> function must be called each frame. When a
- *      custom shader is passed to a {@link ModelExperimental} or a
+ *      custom shader is passed to a {@link Model} or a
  *      {@link Cesium3DTileset}, this step is handled automaticaly
  *   </li>
  *   <li>
@@ -70,16 +71,13 @@ import TextureManager from "./TextureManager.js";
  *   </li>
  * </ul>
  * <p>
- * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
- * </p>
- * <p>
  * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
  * </p>
  *
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
  * @param {LightingModel} [options.lightingModel] The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
- * @param {Boolean} [options.isTranslucent=false] If set, the model will be rendered as translucent. This overrides the default settings for the model.
+ * @param {CustomShaderTranslucencyMode} [options.translucencyMode=CustomShaderTranslucencyMode.INHERIT] The translucency mode, which determines how the custom shader will be applied. If the value is CustomShaderTransulcencyMode.OPAQUE or CustomShaderTransulcencyMode.TRANSLUCENT, the custom shader will override settings from the model's material. If the value is CustomShaderTransulcencyMode.INHERIT, the custom shader will render as either opaque or translucent depending on the primitive's material settings.
  * @param {Object.<String, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
  * @param {Object.<String, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
  * @param {String} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
@@ -169,13 +167,21 @@ export default function CustomShader(options) {
    * @readonly
    */
   this.fragmentShaderText = options.fragmentShaderText;
+
   /**
-   * Whether the shader should be rendered as translucent
+   * The translucency mode, which determines how the custom shader will be applied. If the value is
+   * CustomShaderTransulcencyMode.OPAQUE or CustomShaderTransulcencyMode.TRANSLUCENT, the custom shader
+   * will override settings from the model's material. If the value isCustomShaderTransulcencyMode.INHERIT,
+   * the custom shader will render as either opaque or translucent depending on the primitive's material settings.
    *
-   * @type {Boolean}
+   * @type {CustomShaderTranslucencyMode}
+   * @default CustomShaderTranslucencyMode.INHERIT
    * @readonly
    */
-  this.isTranslucent = defaultValue(options.isTranslucent, false);
+  this.translucencyMode = defaultValue(
+    options.translucencyMode,
+    CustomShaderTranslucencyMode.INHERIT
+  );
 
   /**
    * texture uniforms require some asynchronous processing. This is delegated

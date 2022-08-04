@@ -13,7 +13,7 @@ import {
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
+import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(
   "Scene/ModelExperimental/ModelSceneGraph",
@@ -45,21 +45,20 @@ describe(
     });
 
     it("creates runtime nodes and runtime primitives from a model", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: vertexColorGltfUrl },
-        scene
-      ).then(function (model) {
-        const sceneGraph = model._sceneGraph;
-        const components = sceneGraph._components;
+      return loadAndZoomToModel({ gltf: vertexColorGltfUrl }, scene).then(
+        function (model) {
+          const sceneGraph = model._sceneGraph;
+          const components = sceneGraph._components;
 
-        expect(sceneGraph).toBeDefined();
+          expect(sceneGraph).toBeDefined();
 
-        const runtimeNodes = sceneGraph._runtimeNodes;
-        expect(runtimeNodes.length).toEqual(components.nodes.length);
+          const runtimeNodes = sceneGraph._runtimeNodes;
+          expect(runtimeNodes.length).toEqual(components.nodes.length);
 
-        expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
-        expect(runtimeNodes[1].runtimePrimitives.length).toEqual(1);
-      });
+          expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
+          expect(runtimeNodes[1].runtimePrimitives.length).toEqual(1);
+        }
+      );
     });
 
     it("builds draw commands for all opaque styled features", function () {
@@ -69,7 +68,7 @@ describe(
         },
       });
 
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: buildingsMetadata,
         },
@@ -97,7 +96,7 @@ describe(
           conditions: [["${height} > 1", "color('red', 0.1)"]],
         },
       });
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: buildingsMetadata,
         },
@@ -129,7 +128,7 @@ describe(
         },
       });
 
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: buildingsMetadata,
         },
@@ -154,10 +153,9 @@ describe(
     it("builds draw commands for each primitive", function () {
       spyOn(ModelSceneGraph.prototype, "buildDrawCommands").and.callThrough();
       spyOn(ModelSceneGraph.prototype, "getDrawCommands").and.callThrough();
-      return loadAndZoomToModelExperimental(
-        { gltf: parentGltfUrl },
-        scene
-      ).then(function (model) {
+      return loadAndZoomToModel({ gltf: parentGltfUrl }, scene).then(function (
+        model
+      ) {
         const sceneGraph = model._sceneGraph;
         const runtimeNodes = sceneGraph._runtimeNodes;
 
@@ -186,10 +184,9 @@ describe(
     });
 
     it("stores runtime nodes correctly", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: parentGltfUrl },
-        scene
-      ).then(function (model) {
+      return loadAndZoomToModel({ gltf: parentGltfUrl }, scene).then(function (
+        model
+      ) {
         const sceneGraph = model._sceneGraph;
         const components = sceneGraph._components;
         const runtimeNodes = sceneGraph._runtimeNodes;
@@ -203,7 +200,7 @@ describe(
     });
 
     it("propagates node transforms correctly", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: parentGltfUrl,
           upAxis: Axis.Z,
@@ -232,62 +229,61 @@ describe(
     });
 
     it("creates runtime skin from model", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: simpleSkinGltfUrl },
-        scene
-      ).then(function (model) {
-        const sceneGraph = model._sceneGraph;
-        const components = sceneGraph._components;
-        const runtimeNodes = sceneGraph._runtimeNodes;
+      return loadAndZoomToModel({ gltf: simpleSkinGltfUrl }, scene).then(
+        function (model) {
+          const sceneGraph = model._sceneGraph;
+          const components = sceneGraph._components;
+          const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
-        expect(runtimeNodes[1].node).toEqual(components.nodes[1]);
-        expect(runtimeNodes[2].node).toEqual(components.nodes[2]);
+          expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
+          expect(runtimeNodes[1].node).toEqual(components.nodes[1]);
+          expect(runtimeNodes[2].node).toEqual(components.nodes[2]);
 
-        const rootNodes = sceneGraph._rootNodes;
-        expect(rootNodes[0]).toEqual(0);
-        expect(rootNodes[1]).toEqual(1);
+          const rootNodes = sceneGraph._rootNodes;
+          expect(rootNodes[0]).toEqual(0);
+          expect(rootNodes[1]).toEqual(1);
 
-        const runtimeSkins = sceneGraph._runtimeSkins;
-        expect(runtimeSkins[0].skin).toEqual(components.skins[0]);
-        expect(runtimeSkins[0].joints).toEqual([
-          runtimeNodes[1],
-          runtimeNodes[2],
-        ]);
-        expect(runtimeSkins[0].jointMatrices.length).toEqual(2);
+          const runtimeSkins = sceneGraph._runtimeSkins;
+          expect(runtimeSkins[0].skin).toEqual(components.skins[0]);
+          expect(runtimeSkins[0].joints).toEqual([
+            runtimeNodes[1],
+            runtimeNodes[2],
+          ]);
+          expect(runtimeSkins[0].jointMatrices.length).toEqual(2);
 
-        const skinnedNodes = sceneGraph._skinnedNodes;
-        expect(skinnedNodes[0]).toEqual(0);
+          const skinnedNodes = sceneGraph._skinnedNodes;
+          expect(skinnedNodes[0]).toEqual(0);
 
-        expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
-      });
+          expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
+        }
+      );
     });
 
     it("creates articulation from model", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: boxArticulationsUrl },
-        scene
-      ).then(function (model) {
-        const sceneGraph = model._sceneGraph;
-        const components = sceneGraph._components;
-        const runtimeNodes = sceneGraph._runtimeNodes;
+      return loadAndZoomToModel({ gltf: boxArticulationsUrl }, scene).then(
+        function (model) {
+          const sceneGraph = model._sceneGraph;
+          const components = sceneGraph._components;
+          const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
+          expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
 
-        const rootNodes = sceneGraph._rootNodes;
-        expect(rootNodes[0]).toEqual(0);
+          const rootNodes = sceneGraph._rootNodes;
+          expect(rootNodes[0]).toEqual(0);
 
-        const runtimeArticulations = sceneGraph._runtimeArticulations;
-        const runtimeArticulation = runtimeArticulations["SampleArticulation"];
-        expect(runtimeArticulation).toBeDefined();
-        expect(runtimeArticulation.name).toBe("SampleArticulation");
-        expect(runtimeArticulation.runtimeNodes.length).toBe(1);
-        expect(runtimeArticulation.runtimeStages.length).toBe(10);
-      });
+          const runtimeArticulations = sceneGraph._runtimeArticulations;
+          const runtimeArticulation =
+            runtimeArticulations["SampleArticulation"];
+          expect(runtimeArticulation).toBeDefined();
+          expect(runtimeArticulation.name).toBe("SampleArticulation");
+          expect(runtimeArticulation.runtimeNodes.length).toBe(1);
+          expect(runtimeArticulation.runtimeStages.length).toBe(10);
+        }
+      );
     });
 
     it("applies articulations", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: boxArticulationsUrl,
         },
@@ -332,7 +328,7 @@ describe(
 
     it("adds ModelColorPipelineStage when color is set on the model", function () {
       spyOn(ModelColorPipelineStage, "process");
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           color: Color.RED,
           gltf: parentGltfUrl,
@@ -345,7 +341,7 @@ describe(
 
     it("adds CustomShaderPipelineStage when customShader is set on the model", function () {
       spyOn(CustomShaderPipelineStage, "process");
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: buildingsMetadata,
         },
@@ -358,7 +354,7 @@ describe(
     });
 
     it("getDrawCommands ignores hidden nodes", function () {
-      return loadAndZoomToModelExperimental(
+      return loadAndZoomToModel(
         {
           gltf: duckUrl,
         },

@@ -11,7 +11,7 @@ import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix3 from "../../Core/Matrix3.js";
 
 /**
- * Utility functions for {@link ModelExperimental}.
+ * Utility functions for {@link Model}.
  *
  * @private
  */
@@ -20,7 +20,7 @@ export default function ModelExperimentalUtility() {}
 /**
  * Create a function for reporting when a model fails to load
  *
- * @param {ModelExperimental} model The model to report about
+ * @param {Model} model The model to report about
  * @param {String} type The type of object to report about
  * @param {String} path The URI of the model file
  * @returns {Function} An error function that throws an error for the failed model
@@ -350,6 +350,7 @@ ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
 ModelExperimentalUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_primitive_outline: true,
+  CESIUM_RTC: true,
   EXT_feature_metadata: true,
   EXT_instance_features: true,
   EXT_mesh_features: true,

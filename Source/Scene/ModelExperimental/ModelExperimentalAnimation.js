@@ -174,11 +174,11 @@ Object.defineProperties(ModelExperimentalAnimation.prototype, {
   },
 
   /**
-   * The {@link ModelExperimental} that owns this animation.
+   * The {@link Model} that owns this animation.
    *
    * @memberof ModelExperimentalAnimation.prototype
    *
-   * @type {ModelExperimental}
+   * @type {Model}
    * @readonly
    *
    * @private

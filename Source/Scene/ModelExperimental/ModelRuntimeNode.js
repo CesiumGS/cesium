@@ -119,7 +119,7 @@ export default function ModelRuntimeNode(options) {
   /**
    * A buffer containing the instanced transforms projected to 2D world
    * coordinates. Used for rendering in 2D / CV mode. The memory is managed
-   * by ModelExperimental; this is just a reference.
+   * by Model; this is just a reference.
    *
    * @type {Buffer}
    * @readonly
@@ -131,7 +131,7 @@ export default function ModelRuntimeNode(options) {
   /**
    * A buffer containing the instanced translation values for the node if
    * it is instanced. Used for rendering in 2D / CV mode. The memory is
-   * managed by ModelExperimental; this is just a reference.
+   * managed by Model; this is just a reference.
    *
    * @type {Buffer}
    * @readonly

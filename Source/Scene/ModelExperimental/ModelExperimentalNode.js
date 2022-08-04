@@ -8,7 +8,7 @@ import defined from "../../Core/defined.js";
  * externally. In this way, animation can be driven by another source, not
  * just by the model's asset.
  * <p>
- * Use {@link ModelExperimental#getNode} to get an instance from a loaded model.
+ * Use {@link Model#getNode} to get an instance from a loaded model.
  * </p>
  *
  * @alias ModelExperimentalNode
@@ -19,7 +19,7 @@ import defined from "../../Core/defined.js";
  * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  *
- * @see ModelExperimental#getNode
+ * @see Model#getNode
  */
 export default function ModelExperimentalNode(model, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
