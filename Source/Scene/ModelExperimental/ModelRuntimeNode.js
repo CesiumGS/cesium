@@ -4,10 +4,10 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import InstancingPipelineStage from "./InstancingPipelineStage.js";
-import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
+import InstancingPipelineStage from "./InstancingPipelineStage.js";
+import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
 /**
@@ -65,7 +65,7 @@ export default function ModelRuntimeNode(options) {
 
   /**
    * Whether or not to show this node and its children. This can be toggled
-   * by the user through {@link ModelExperimentalNode}.
+   * by the user through {@link ModelNode}.
    *
    * @type {Boolean}
    *
@@ -77,7 +77,7 @@ export default function ModelRuntimeNode(options) {
 
   /**
    * Whether or not this node is animated by the user. This is set by the
-   * corresponding {@link ModelExperimentalNode} when the user supplies their
+   * corresponding {@link ModelNode} when the user supplies their
    * own transform. If this is true, the node will ignore animations in the
    * model's asset.
    *
@@ -190,7 +190,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
   /**
    * The node's local space transform. This can be changed externally via
-   * the corresponding ModelExperimentalNode, such that animation can be
+   * the corresponding {@link ModelNode}, such that animation can be
    * driven by another source, not just an animation in the model's asset.
    *
    * @memberof ModelRuntimeNode.prototype

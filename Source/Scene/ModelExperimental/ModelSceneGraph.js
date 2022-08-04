@@ -9,7 +9,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
-import ModelExperimentalNode from "./ModelExperimentalNode.js";
+import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
 import ModelSkin from "./ModelSkin.js";
@@ -429,7 +429,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   const name = node.name;
   if (defined(name)) {
     const model = sceneGraph._model;
-    const publicNode = new ModelExperimentalNode(model, runtimeNode);
+    const publicNode = new ModelNode(model, runtimeNode);
     model._nodesByName[name] = publicNode;
   }
 

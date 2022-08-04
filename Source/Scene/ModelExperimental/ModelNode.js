@@ -11,7 +11,7 @@ import defined from "../../Core/defined.js";
  * Use {@link Model#getNode} to get an instance from a loaded model.
  * </p>
  *
- * @alias ModelExperimentalNode
+ * @alias ModelNode
  * @internalConstructor
  * @class
  *
@@ -21,7 +21,7 @@ import defined from "../../Core/defined.js";
  *
  * @see Model#getNode
  */
-export default function ModelExperimentalNode(model, runtimeNode) {
+export default function ModelNode(model, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("runtimeNode", runtimeNode);
@@ -31,11 +31,11 @@ export default function ModelExperimentalNode(model, runtimeNode) {
   this._runtimeNode = runtimeNode;
 }
 
-Object.defineProperties(ModelExperimentalNode.prototype, {
+Object.defineProperties(ModelNode.prototype, {
   /**
    * The value of the <code>name</code> property of this node.
    *
-   * @memberof ModelExperimentalNode.prototype
+   * @memberof ModelNode.prototype
    *
    * @type {String}
    * @readonly
@@ -49,7 +49,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   /**
    * The index of the node in the glTF.
    *
-   * @memberof ModelExperimentalNode.prototype
+   * @memberof ModelNode.prototype
    *
    * @type {Number}
    * @readonly
@@ -63,7 +63,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   /**
    * Determines if this node and its children will be shown.
    *
-   * @memberof ModelExperimentalNode.prototype
+   * @memberof ModelNode.prototype
    * @type {Boolean}
    *
    * @default true
@@ -87,7 +87,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    * setting individual elements of the matrix will not work.
    * </p>
    *
-   * @memberof ModelExperimentalNode.prototype
+   * @memberof ModelNode.prototype
    * @type {Matrix4}
    */
   matrix: {
@@ -111,7 +111,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    * coordinates to its parent's, without any node transformations
    * or articulations applied.
    *
-   * @memberof ModelExperimentalNode.prototype
+   * @memberof ModelNode.prototype
    * @type {Matrix4}
    */
   originalMatrix: {

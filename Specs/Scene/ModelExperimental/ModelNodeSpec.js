@@ -1,11 +1,11 @@
 import {
   Cartesian3,
   Matrix4,
-  ModelExperimentalNode,
+  ModelNode,
   ModelRuntimeNode,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
+describe("Scene/ModelExperimental/ModelNode", function () {
   const mockNode = {
     name: "Mock Node",
     index: 0,
@@ -30,18 +30,18 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
 
   it("throws for undefined model", function () {
     expect(function () {
-      return new ModelExperimentalNode(undefined, runtimeNode);
+      return new ModelNode(undefined, runtimeNode);
     }).toThrowDeveloperError();
   });
 
   it("throws for undefined runtimeNode", function () {
     expect(function () {
-      return new ModelExperimentalNode(mockModel, undefined);
+      return new ModelNode(mockModel, undefined);
     }).toThrowDeveloperError();
   });
 
   it("constructs", function () {
-    const node = new ModelExperimentalNode(mockModel, runtimeNode);
+    const node = new ModelNode(mockModel, runtimeNode);
 
     expect(node.name).toEqual("Mock Node");
     expect(node.id).toEqual(0);
@@ -51,7 +51,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("sets show for runtime node", function () {
-    const node = new ModelExperimentalNode(mockModel, runtimeNode);
+    const node = new ModelNode(mockModel, runtimeNode);
 
     node.show = false;
     expect(runtimeNode.show).toBe(false);
@@ -61,7 +61,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("sets matrix for runtime node", function () {
-    const node = new ModelExperimentalNode(mockModel, runtimeNode);
+    const node = new ModelNode(mockModel, runtimeNode);
     expect(node.matrix).toEqual(nodeTransform);
     expect(node.originalMatrix).toEqual(nodeTransform);
     expect(runtimeNode.userAnimated).toBe(false);
@@ -80,7 +80,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("setting matrix to undefined resets node transform", function () {
-    const node = new ModelExperimentalNode(mockModel, runtimeNode);
+    const node = new ModelNode(mockModel, runtimeNode);
 
     const matrix = Matrix4.fromTranslation(new Cartesian3(10, 10, 10));
     node.matrix = matrix;

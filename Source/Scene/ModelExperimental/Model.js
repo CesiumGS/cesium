@@ -1499,7 +1499,7 @@ Object.defineProperties(Model.prototype, {
  * modify a node's transform for user-defined animation.
  *
  * @param {String} name The name of the node in the glTF.
- * @returns {ModelExperimentalNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
+ * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
  * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
  *
