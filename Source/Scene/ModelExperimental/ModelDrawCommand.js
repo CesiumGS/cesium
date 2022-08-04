@@ -27,7 +27,6 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @param {Object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
- * @param {FrameState} options.frameState The frame state at the time the command is created.
  *
  * @alias ModelDrawCommand
  * @constructor
@@ -39,12 +38,10 @@ function ModelDrawCommand(options) {
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
-  const frameState = options.frameState;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.command", command);
   Check.typeOf.object("options.primitiveRenderResources", renderResources);
-  Check.typeOf.object("options.frameState", frameState);
   //>>includeEnd('debug');
 
   const model = renderResources.model;
@@ -75,9 +72,9 @@ function ModelDrawCommand(options) {
     hasOpaqueAndTranslucentFeatures && !isTranslucent;
 
   const needsSkipLevelOfDetailCommands =
-    model.hasSkipLevelOfDetail(frameState) && !isTranslucent;
+    renderResources.hasSkipLevelOfDetail && !isTranslucent;
 
-  const needsSilhouetteCommands = model.hasSilhouette(frameState);
+  const needsSilhouetteCommands = renderResources.hasSilhouette;
 
   this._command = command;
 
@@ -121,14 +118,6 @@ function ModelDrawCommand(options) {
   initialize(this);
 }
 
-/**
- * A command derived from the original command in a {@link ModelDrawCommand}.
- *
- * @alias ModelDerivedCommand
- * @internalConstructor
- *
- * @private
- */
 function ModelDerivedCommand(options) {
   // The DrawCommand managed by this derived command.
   this.command = options.command;
@@ -143,7 +132,7 @@ function ModelDerivedCommand(options) {
   // Whether this ModelDerivedCommand is in 2D.
   this.is2D = defaultValue(options.is2D, false);
 
-  // The ModelDerivedCommand that is the 2D version of this one.
+  // A ModelDerivedCommand that is the 2D version of this one.
   this.derivedCommand2D = undefined;
 }
 

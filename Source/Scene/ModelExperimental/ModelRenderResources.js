@@ -28,6 +28,7 @@ export default function ModelRenderResources(model) {
    * @private
    */
   this.shaderBuilder = new ShaderBuilder();
+
   /**
    * A reference to the model.
    *
@@ -77,4 +78,27 @@ export default function ModelRenderResources(model) {
       },
     })
   );
+
+  /**
+   * Whether the model has a silhouette. This value indicates what draw commands
+   * are needed and is set by ModelSilhouettePipelineStage.
+   *
+   * @type {Boolean}
+   * @default false
+   *
+   * @private
+   */
+  this.hasSilhouette = false;
+
+  /**
+   * Whether the model is part of a tileset that uses the skipLevelOfDetail
+   * optimization. This value indicates what draw commands are needed and
+   * is set by TilesetPipelineStage.
+   *
+   * @type {Boolean}
+   * @default false
+   *
+   * @private
+   */
+  this.hasSkipLevelOfDetail = false;
 }

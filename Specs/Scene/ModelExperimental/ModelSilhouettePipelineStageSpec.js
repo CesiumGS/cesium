@@ -61,5 +61,7 @@ describe("Scene/ModelExperimental/ModelSilhouettePipelineStage", function () {
     );
     expect(uniformMap.model_silhouetteSize()).toEqual(mockModel.silhouetteSize);
     expect(uniformMap.model_silhouettePass()).toBe(false);
+
+    expect(renderResources.hasSilhouette).toBe(true);
   });
 });
