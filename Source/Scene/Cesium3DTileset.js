@@ -110,7 +110,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work for Model in WebGL1. This cannot be set after the tileset has loaded.
+ * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
@@ -760,11 +760,6 @@ function Cesium3DTileset(options) {
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
-   * <p>
-   * When enableModelExperimental is set to true, this property can be toggled
-   * at runtime. However, when enableModelExperimental is false, this property
-   * is readonly (it can only be set in the constructor).
-   * </p>
    *
    * @type {Boolean}
    * @default true
@@ -772,8 +767,7 @@ function Cesium3DTileset(options) {
   this.showOutline = defaultValue(options.showOutline, true);
 
   /**
-   * The color to use when rendering outlines. This option is only used
-   * when enableModelExperimental is set to true.
+   * The color to use when rendering outlines.
    *
    * @type {Color}
    * @default Color.BLACK

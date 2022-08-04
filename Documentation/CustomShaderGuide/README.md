@@ -69,10 +69,7 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
-  customShader: customShader,
-  // This is only needed for b3dm and i3dm tilesets. for glTF,
-  // ModelExperimental is always used.
-  enableModelExperimental: true,
+  customShader: customShader
 }));
 
 // Applying to a model directly
