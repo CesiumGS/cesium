@@ -406,14 +406,17 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
         .awaitingSampleTerrain;
       if (!awaitingSampleTerrain) {
         Cartographic.clone(cartoPosition, scratchCartographic);
+        this._modelHash[entity.id].awaitingSampleTerrain = true;
         sampleTerrainMostDetailed(terrainProvider, [scratchCartographic]).then(
-          () => {
-            // Update the height of the cartographic position of the model with the most detailed height.
+          (result) => {
+            this._modelHash[entity.id].awaitingSampleTerrain = false;
+
+            const updatedCartographic = result[0];
             if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
-              scratchCartographic.height += cartoPosition.height;
+              updatedCartographic.height += cartoPosition.height;
             }
             ellipsoid.cartographicToCartesian(
-              scratchCartographic,
+              updatedCartographic,
               scratchPosition
             );
 
@@ -428,7 +431,6 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
             );
           }
         );
-        this._modelHash[entity.id].awaitingSampleTerrain = true;
       }
 
       // We will return the state as pending until the clamped bounding sphere is defined,

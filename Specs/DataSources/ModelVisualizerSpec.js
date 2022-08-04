@@ -375,37 +375,35 @@ describe(
     it("Computes bounding sphere with height reference", function () {
       scene.globe.terrainProvider = createWorldTerrain();
 
-      return scene.globe.terrainProvider.readyPromise.then(() => {
-        const time = JulianDate.now();
-        const testObject = entityCollection.getOrCreateEntity("test");
-        const model = new ModelGraphics({
-          heightReference: HeightReference.RELATIVE_TO_GROUND,
-        });
-        testObject.model = model;
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
 
-        testObject.position = new ConstantProperty(
-          Cartesian3.fromDegrees(149.515332, -34.984799, 1000)
+      testObject.position = new ConstantProperty(
+        Cartesian3.fromDegrees(149.515332, -34.984799, 1000)
+      );
+      model.uri = new ConstantProperty(boxUrl);
+      visualizer.update(time);
+
+      const modelPrimitive = scene.primitives.get(0);
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(function () {
+        expect(state).toBe(BoundingSphereState.DONE);
+        const expected = BoundingSphere.clone(
+          modelPrimitive.boundingSphere,
+          new BoundingSphere()
         );
-        model.uri = new ConstantProperty(boxUrl);
-        visualizer.update(time);
-
-        const modelPrimitive = scene.primitives.get(0);
-        const result = new BoundingSphere();
-        let state = visualizer.getBoundingSphere(testObject, result);
-        expect(state).toBe(BoundingSphereState.PENDING);
-
-        return pollToPromise(function () {
-          scene.render();
-          state = visualizer.getBoundingSphere(testObject, result);
-          return state !== BoundingSphereState.PENDING;
-        }).then(function () {
-          expect(state).toBe(BoundingSphereState.DONE);
-          const expected = BoundingSphere.clone(
-            modelPrimitive.boundingSphere,
-            new BoundingSphere()
-          );
-          expect(result).not.toEqual(expected);
-        });
+        expect(result).not.toEqual(expected);
       });
     });
 
