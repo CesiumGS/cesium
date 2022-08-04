@@ -73,7 +73,7 @@ const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 }));
 
 // Applying to a model directly
-const model = CesiumModel.fromGltf({,
+const model = Cesium.Model.fromGltf({,
   url: "http://example.com/model.gltf",
   customShader: customShader
 });
@@ -704,9 +704,8 @@ property IDs, the behavior is undefined. For example:
 - Two properties with names `temperature ℃` and `temperature ℉` would both
   map to `metadata.temperature`, so the behavior is undefined
 
-When using the Point Cloud (`.pnts`) format in Model`, per-point
-properties are transcoded as property attributes. These property IDs follow
-the same convention.
+When using the Point Cloud (`.pnts`) format, per-point properties are transcoded
+as property attributes. These property IDs follow the same convention.
 
 ## `MetadataClass` struct
 
