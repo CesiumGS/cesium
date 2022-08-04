@@ -247,7 +247,16 @@ B3dmLoader.prototype.load = function () {
       }
 
       const components = gltfLoader.components;
-      components.transform = that._transform;
+
+      // Combine the RTC_CENTER transform from the b3dm and the CESIUM_RTC
+      // transform from the glTF. In practice usually only one or the
+      // other is supplied. If they don't exist the transforms will
+      // be identity matrices.
+      components.transform = Matrix4.multiplyTransformation(
+        that._transform,
+        components.transform,
+        components.transform
+      );
       createStructuralMetadata(that, components);
       that._components = components;
 

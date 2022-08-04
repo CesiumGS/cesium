@@ -517,6 +517,7 @@ gulp.task(
       [
         "Apps/**",
         "Apps/**/.eslintrc.json",
+        "Apps/Sandcastle/.jshintrc",
         "!Apps/Sandcastle/gallery/development/**",
         "Source/**",
         "Source/**/.eslintrc.json",
@@ -528,6 +529,7 @@ gulp.task(
         ".eslintrc.json",
         ".gulp.json",
         ".prettierignore",
+        "build.cjs",
         "gulpfile.cjs",
         "server.cjs",
         "index.cjs",

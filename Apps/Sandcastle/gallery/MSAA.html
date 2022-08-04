@@ -39,6 +39,10 @@
           },
         });
 
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-08-01T00:00:00Z"
+        );
+
         const scene = viewer.scene;
         if (!scene.msaaSupported) {
           window.alert("This browser does not support MSAA.");
@@ -112,7 +116,7 @@
               scene.primitives.removeAll();
               const tileset = scene.primitives.add(
                 new Cesium.Cesium3DTileset({
-                  url: Cesium.IonResource.fromAssetId(8564),
+                  url: Cesium.IonResource.fromAssetId(1240402),
                 })
               );
               viewer.camera.setView({
