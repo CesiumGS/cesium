@@ -9,7 +9,7 @@
 
 ##### Additions :tada:
 
-- Tilesets and models loaded with `ModelExperimental` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
+- `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
 
 ### 1.96 - 2022-08-01
 
