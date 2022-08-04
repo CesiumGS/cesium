@@ -245,12 +245,12 @@ function createAndLinkProgram(gl, shader) {
   if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
     log = gl.getShaderInfoLog(fragmentShader);
     console.error(`${consolePrefix}Fragment shader compile log: ${log}`);
-    logTranslatedSource(fragmentShader, "fragment");
+    console.error(`${consolePrefix} Fragment shader source:\n${fsSource}`);
     errorMessage = `Fragment shader failed to compile.  Compile log: ${log}`;
   } else if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
     log = gl.getShaderInfoLog(vertexShader);
     console.error(`${consolePrefix}Vertex shader compile log: ${log}`);
-    logTranslatedSource(vertexShader, "vertex");
+    console.error(`${consolePrefix} Vertex shader source:\n${vsSource}`);
     errorMessage = `Vertex shader failed to compile.  Compile log: ${log}`;
   } else {
     log = gl.getProgramInfoLog(program);
