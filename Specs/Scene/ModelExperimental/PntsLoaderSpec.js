@@ -4,6 +4,7 @@ import {
   ComponentDatatype,
   defaultValue,
   DracoLoader,
+  Matrix4,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
@@ -27,6 +28,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     "./Data/Cesium3DTiles/PointCloud/PointCloudRGB565/pointCloudRGB565.pnts";
   const pointCloudNoColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/pointCloudNoColor.pnts";
+  const pointCloudWithTransformUrl =
+    "./Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/pointCloudWithTransform.pnts";
   const pointCloudConstantColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/pointCloudConstantColor.pnts";
   const pointCloudNormalsUrl =
@@ -567,6 +570,29 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       expectNormal(attributes[1]);
       expectDefaultColor(attributes[2]);
       expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
+    });
+  });
+
+  it("loads PointCloudWithTransform", function () {
+    return loadPnts(pointCloudWithTransformUrl).then(function (loader) {
+      const components = loader.components;
+      expect(components).toBeDefined();
+      expectEmptyMetadata(components.structuralMetadata);
+
+      // The transform is applied in the tileset.json, but the .pnts
+      // file itself includes no transformations.
+      expect(components.transform).toEqual(Matrix4.IDENTITY);
+      const node = components.nodes[0];
+      expect(node.matrix).not.toBeDefined();
+      expect(node.translation).not.toBeDefined();
+      expect(node.rotation).not.toBeDefined();
+      expect(node.scale).not.toBeDefined();
+
+      const primitive = node.primitives[0];
+      const attributes = primitive.attributes;
+      expect(attributes.length).toBe(2);
+      expectPosition(attributes[0]);
+      expectColorRGB(attributes[1]);
     });
   });
 
