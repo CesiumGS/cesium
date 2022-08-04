@@ -11,11 +11,11 @@
 
 ##### Major Announcements :loudspeaker:
 
-- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](TODO) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
+- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](https://cesium.com/blog/2022/07/19/build-tooling-updates-coming-to-cesiumjs/) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
   - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
   - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
   - Using ESM from `Source` will require a bundler to resolve third party node dependencies.
-  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
+  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminified`.
 
 ##### Breaking Changes :mega:
 
@@ -42,11 +42,12 @@
 - Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
 - Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
 - Fixed a bug where `.i3dm` models with quantized positions were not being correctly loaded by `ModelExperimental`. [#10598](https://github.com/CesiumGS/cesium/pull/10598)
+- Fixed a bug where dynamic geometry was not marked as `ready`. [#10517](https://github.com/CesiumGS/cesium/issues/10517)
 
 ##### Deprecated :hourglass_flowing_sand:
 
 - Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
-- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead. [#10579](https://github.com/CesiumGS/cesium/pull/10579)
 
 ### 1.95 - 2022-07-01
 

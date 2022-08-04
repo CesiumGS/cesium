@@ -350,6 +350,7 @@ ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
 ModelExperimentalUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_primitive_outline: true,
+  CESIUM_RTC: true,
   EXT_feature_metadata: true,
   EXT_instance_features: true,
   EXT_mesh_features: true,
