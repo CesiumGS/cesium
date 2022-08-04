@@ -71,9 +71,6 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  *   </li>
  * </ul>
  * <p>
- * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
- * </p>
- * <p>
  * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
  * </p>
  *
