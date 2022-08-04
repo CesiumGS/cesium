@@ -7,7 +7,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelType from "./ModelType.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import Pass from "../../Renderer/Pass.js";
 import PointCloudStylingStageVS from "../../Shaders/ModelExperimental/PointCloudStylingStageVS.js";
@@ -92,7 +92,7 @@ PointCloudStylingPipelineStage.process = function (
     const propertyNames = getPropertyNames(shaderFunctionInfo);
 
     const usesNormalSemantic = propertyNames.indexOf("normalMC") >= 0;
-    const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
+    const hasNormals = ModelUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.NORMAL
     );
@@ -215,7 +215,7 @@ function getGeometricError(
     return pointCloudShading.baseResolution;
   }
 
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );

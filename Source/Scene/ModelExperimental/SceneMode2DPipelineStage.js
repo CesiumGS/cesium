@@ -6,7 +6,7 @@ import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -53,7 +53,7 @@ SceneMode2DPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );

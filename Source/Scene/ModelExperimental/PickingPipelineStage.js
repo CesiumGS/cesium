@@ -6,7 +6,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The picking pipeline stage is responsible for handling picking of primitives.
@@ -121,14 +121,14 @@ function processPickTexture(renderResources, primitive, instances) {
     featureTableId = model.featureTableId;
   } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
-    featureIdAttribute = ModelExperimentalUtility.getFeatureIdsByLabel(
+    featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       instances.featureIds,
       instanceFeatureIdLabel
     );
     featureTableId = featureIdAttribute.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
-    featureIdAttribute = ModelExperimentalUtility.getFeatureIdsByLabel(
+    featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       primitive.featureIds,
       featureIdLabel
     );

@@ -4,11 +4,11 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import ModelComponents from "../ModelComponents.js";
 import FeatureIdStageFS from "../../Shaders/ModelExperimental/FeatureIdStageFS.js";
 import FeatureIdStageVS from "../../Shaders/ModelExperimental/FeatureIdStageVS.js";
+import ModelComponents from "../ModelComponents.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The feature ID pipeline stage is responsible for processing feature IDs
@@ -152,7 +152,7 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
 
 function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
   const featureIdsArray = primitive.featureIds;
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );

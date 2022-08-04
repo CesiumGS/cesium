@@ -8,7 +8,7 @@ import {
   Matrix4,
   ModelColorPipelineStage,
   ModelSceneGraph,
-  ModelExperimentalUtility,
+  ModelUtility,
   Pass,
   ResourceCache,
 } from "../../../Source/Cesium.js";
@@ -215,10 +215,10 @@ describe(
         expect(components.upAxis).toEqual(Axis.Z);
         expect(components.forwardAxis).toEqual(Axis.X);
 
-        const parentTransform = ModelExperimentalUtility.getNodeTransform(
+        const parentTransform = ModelUtility.getNodeTransform(
           components.nodes[0]
         );
-        const childTransform = ModelExperimentalUtility.getNodeTransform(
+        const childTransform = ModelUtility.getNodeTransform(
           components.nodes[1]
         );
         expect(runtimeNodes[0].transform).toEqual(parentTransform);

@@ -13,7 +13,7 @@ import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudStylingPipelineStage from "./PointCloudStylingPipelineStage.js";
@@ -170,7 +170,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const materialsEnabled =
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
-  const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
+  const hasQuantization = ModelUtility.hasQuantizedAttributes(
     primitive.attributes
   );
   const generateWireframeIndices =
@@ -261,7 +261,7 @@ function inspectFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    featureIds = ModelUtility.getFeatureIdsByLabel(
       node.instances.featureIds,
       model.instanceFeatureIdLabel
     );
@@ -274,7 +274,7 @@ function inspectFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+  featureIds = ModelUtility.getFeatureIdsByLabel(
     primitive.featureIds,
     model.featureIdLabel
   );

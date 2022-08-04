@@ -8,7 +8,7 @@ import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderSta
 import CustomShaderMode from "./CustomShaderMode.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 
 /**
@@ -165,7 +165,7 @@ function getAttributesByName(attributes) {
   const names = {};
   for (let i = 0; i < attributes.length; i++) {
     const attribute = attributes[i];
-    const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
+    const attributeInfo = ModelUtility.getAttributeInfo(attribute);
 
     names[attributeInfo.variableName] = attributeInfo;
   }

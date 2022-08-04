@@ -1,5 +1,5 @@
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
 
 /**
@@ -79,7 +79,7 @@ function updateRuntimeNode(
       transformToRoot,
       drawCommand.modelMatrix
     );
-    drawCommand.cullFace = ModelExperimentalUtility.getCullFace(
+    drawCommand.cullFace = ModelUtility.getCullFace(
       drawCommand.modelMatrix,
       drawCommand.primitiveType
     );

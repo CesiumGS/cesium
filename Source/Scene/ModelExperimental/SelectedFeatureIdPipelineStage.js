@@ -3,7 +3,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/SelectedFeatureIdStageCommon.js";
 import ModelComponents from "../ModelComponents.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The selected feature ID pipeline stage is responsible for handling the
@@ -118,7 +118,7 @@ function getSelectedFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    featureIds = ModelUtility.getFeatureIdsByLabel(
       node.instances.featureIds,
       model.instanceFeatureIdLabel
     );
@@ -136,7 +136,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+  featureIds = ModelUtility.getFeatureIdsByLabel(
     primitive.featureIds,
     model.featureIdLabel
   );

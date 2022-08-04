@@ -1,7 +1,7 @@
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import ModelComponents from "../ModelComponents.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The primitive statistics update stage updates memory usage statistics
@@ -45,8 +45,7 @@ PrimitiveStatisticsPipelineStage.process = function (
 function countGeometry(statistics, primitive) {
   const indicesCount = defined(primitive.indices)
     ? primitive.indices.count
-    : ModelExperimentalUtility.getAttributeBySemantic(primitive, "POSITION")
-        .count;
+    : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
 
   const primitiveType = primitive.primitiveType;
 

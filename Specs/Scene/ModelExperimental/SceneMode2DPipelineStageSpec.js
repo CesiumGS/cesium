@@ -5,7 +5,7 @@ import {
   Matrix4,
   ModelStatistics,
   ModelType,
-  ModelExperimentalUtility,
+  ModelUtility,
   Resource,
   ResourceCache,
   SceneMode2DPipelineStage,
@@ -119,7 +119,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
-      const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.POSITION
       );
@@ -171,7 +171,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       expect(model._modelResources).toEqual([positions2D]);
 
       // Check that the position attribute's typed array has been unloaded.
-      const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.POSITION
       );
@@ -218,7 +218,7 @@ describe("Scene/ModelExperimental/SceneMode2DPipelineStage", function () {
       expect(runtimePrimitive.positionBuffer2D).toBeUndefined();
 
       // Check that the position attribute's typed array has been unloaded.
-      const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.POSITION
       );

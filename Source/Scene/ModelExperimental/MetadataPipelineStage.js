@@ -3,7 +3,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/ModelExperimental/MetadataStageVS.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The metadata pipeline stage processes metadata properties from
@@ -196,7 +196,7 @@ function getPropertyAttributeTypes(
   primitive,
   propertyAttributes
 ) {
-  const { getAttributeByName, getAttributeInfo } = ModelExperimentalUtility;
+  const { getAttributeByName, getAttributeInfo } = ModelUtility;
 
   function getPropertyAttributePropertyType(propertyId, property) {
     // Get information about the attribute the same way as the
@@ -220,7 +220,7 @@ function processPropertyAttributes(
   primitive,
   propertyAttributes
 ) {
-  const { getAttributeByName, getAttributeInfo } = ModelExperimentalUtility;
+  const { getAttributeByName, getAttributeInfo } = ModelUtility;
 
   function processPropertyAttribute(propertyId, property) {
     const modelAttribute = getAttributeByName(primitive, property.attribute);
@@ -242,9 +242,7 @@ function addPropertyAttributeProperty(
   propertyId,
   property
 ) {
-  const metadataVariable = ModelExperimentalUtility.sanitizeGlslIdentifier(
-    propertyId
-  );
+  const metadataVariable = ModelUtility.sanitizeGlslIdentifier(propertyId);
   const attributeVariable = attributeInfo.variableName;
 
   // in WebGL 1, attributes must have floating point components, so it's safe
@@ -365,9 +363,7 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
     );
   }
 
-  const metadataVariable = ModelExperimentalUtility.sanitizeGlslIdentifier(
-    propertyId
-  );
+  const metadataVariable = ModelUtility.sanitizeGlslIdentifier(propertyId);
   const glslType = property.getGlslType();
 
   const shaderBuilder = renderResources.shaderBuilder;

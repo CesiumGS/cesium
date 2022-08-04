@@ -2,7 +2,7 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -73,7 +73,7 @@ WireframePipelineStage.process = function (
 };
 
 function createWireframeIndexBuffer(primitive, indices, frameState) {
-  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );

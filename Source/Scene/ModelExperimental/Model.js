@@ -16,7 +16,7 @@ import ModelAnimationCollection from "./ModelAnimationCollection.js";
 import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import destroyObject from "../../Core/destroyObject.js";
@@ -407,7 +407,7 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     if (defined(node.instances)) {
-      featureIdAttribute = ModelExperimentalUtility.getFeatureIdsByLabel(
+      featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
         node.instances.featureIds,
         instanceFeatureIdLabel
       );
@@ -426,7 +426,7 @@ function selectFeatureTableId(components, model) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
       const primitive = node.primitives[j];
-      const featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+      const featureIds = ModelUtility.getFeatureIdsByLabel(
         primitive.featureIds,
         featureIdLabel
       );
@@ -536,9 +536,7 @@ function initialize(model) {
         model.resetDrawCommands();
       }
     })
-    .catch(
-      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
-    );
+    .catch(ModelUtility.getFailedLoadFunction(model, "model", resource));
 
   const promise = new Promise(function (resolve, reject) {
     model._completeLoad = function (model, frameState) {
@@ -555,9 +553,7 @@ function initialize(model) {
     .then(function () {
       return promise;
     })
-    .catch(
-      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
-    );
+    .catch(ModelUtility.getFailedLoadFunction(model, "model", resource));
 }
 
 Object.defineProperties(Model.prototype, {

@@ -3,7 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
 /**
@@ -162,8 +162,7 @@ export default function PrimitiveRenderResources(
    */
   this.count = defined(primitive.indices)
     ? primitive.indices.count
-    : ModelExperimentalUtility.getAttributeBySemantic(primitive, "POSITION")
-        .count;
+    : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
 
   /**
    * The indices for this primitive.
@@ -195,7 +194,7 @@ export default function PrimitiveRenderResources(
    */
   this.primitiveType = primitive.primitiveType;
 
-  const positionMinMax = ModelExperimentalUtility.getPositionMinMax(
+  const positionMinMax = ModelUtility.getPositionMinMax(
     primitive,
     nodeRenderResources.instancingTranslationMin,
     nodeRenderResources.instancingTranslationMax

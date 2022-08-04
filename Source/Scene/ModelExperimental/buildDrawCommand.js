@@ -5,9 +5,9 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
-import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
-import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelFS from "../../Shaders/ModelExperimental/ModelFS.js";
+import ModelVS from "../../Shaders/ModelExperimental/ModelVS.js";
+import ModelUtility from "./ModelUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
@@ -28,8 +28,8 @@ import VertexArray from "../../Renderer/VertexArray.js";
  */
 export default function buildDrawCommand(primitiveRenderResources, frameState) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
-  shaderBuilder.addVertexLines([ModelExperimentalVS]);
-  shaderBuilder.addFragmentLines([ModelExperimentalFS]);
+  shaderBuilder.addVertexLines([ModelVS]);
+  shaderBuilder.addFragmentLines([ModelFS]);
 
   const model = primitiveRenderResources.model;
   const context = frameState.context;
@@ -84,7 +84,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
   }
 
-  renderState.cull.face = ModelExperimentalUtility.getCullFace(
+  renderState.cull.face = ModelUtility.getCullFace(
     modelMatrix,
     primitiveRenderResources.primitiveType
   );

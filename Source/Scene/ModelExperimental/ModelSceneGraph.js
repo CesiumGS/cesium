@@ -13,7 +13,7 @@ import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
 import ModelSkin from "./ModelSkin.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
@@ -151,7 +151,7 @@ export default function ModelSceneGraph(options) {
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
-  this._axisCorrectionMatrix = ModelExperimentalUtility.getAxisCorrectionMatrix(
+  this._axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
     new Matrix4()
@@ -379,7 +379,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
 function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
-  const transform = ModelExperimentalUtility.getNodeTransform(node);
+  const transform = ModelUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
   const childrenLength = node.children.length;

@@ -1,15 +1,15 @@
-import AttributeType from "../AttributeType.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import ModelType from "./ModelType.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
+import ModelType from "./ModelType.js";
+import ModelUtility from "./ModelUtility.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
@@ -205,7 +205,7 @@ function processAttribute(
   instanced
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
-  const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
+  const attributeInfo = ModelUtility.getAttributeInfo(attribute);
 
   // This indicates to only modify the resources for 2D if the model is
   // not instanced.

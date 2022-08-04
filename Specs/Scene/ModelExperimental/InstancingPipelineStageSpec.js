@@ -7,7 +7,7 @@ import {
   InstancingPipelineStage,
   Matrix4,
   Math as CesiumMath,
-  ModelExperimentalUtility,
+  ModelUtility,
   ModelStatistics,
   Resource,
   ResourceCache,
@@ -552,7 +552,7 @@ describe(
           statistics: new ModelStatistics(),
           modelMatrix: Matrix4.fromUniformScale(2.0),
           sceneGraph: {
-            axisCorrectionMatrix: ModelExperimentalUtility.getAxisCorrectionMatrix(
+            axisCorrectionMatrix: ModelUtility.getAxisCorrectionMatrix(
               Axis.Y,
               Axis.Z,
               new Matrix4()

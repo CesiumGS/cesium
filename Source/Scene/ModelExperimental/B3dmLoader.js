@@ -11,7 +11,7 @@ import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
 import PropertyTable from "../PropertyTable.js";
 import ResourceLoader from "../ResourceLoader.js";
@@ -342,7 +342,7 @@ function processNode(node) {
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     const primitive = node.primitives[i];
-    const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    const featureIdVertexAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.FEATURE_ID
     );

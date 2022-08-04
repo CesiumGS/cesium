@@ -1,16 +1,16 @@
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import AlphaMode from "../AlphaMode.js";
-import LightingModel from "./LightingModel.js";
-import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
-import Pass from "../../Renderer/Pass.js";
-import Matrix3 from "../../Core/Matrix3.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Pass from "../../Renderer/Pass.js";
+import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
+import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import LightingModel from "./LightingModel.js";
+import ModelUtility from "./ModelUtility.js";
 
 const Material = ModelComponents.Material;
 const MetallicRoughness = ModelComponents.MetallicRoughness;
@@ -89,7 +89,7 @@ MaterialPipelineStage.process = function (
   }
 
   // If the primitive does not have normals, fall back to unlit lighting.
-  const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
+  const hasNormals = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.NORMAL
   );

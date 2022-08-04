@@ -1,22 +1,22 @@
-import AttributeType from "../AttributeType.js";
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
-import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Quaternion from "../../Core/Quaternion.js";
+import Transforms from "../../Core/Transforms.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import Quaternion from "../../Core/Quaternion.js";
+import AttributeType from "../AttributeType.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import Transforms from "../../Core/Transforms.js";
+import ModelUtility from "./ModelUtility.js";
 
 const modelViewScratch = new Matrix4();
 const nodeTransformScratch = new Matrix4();
@@ -489,15 +489,15 @@ const scaleScratch = new Cartesian3();
 function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const transforms = new Array(count);
 
-  const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const translationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.TRANSLATION
   );
-  const rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION
   );
-  const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const scaleAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.SCALE
   );
@@ -620,7 +620,7 @@ function processTransformAttributes(
   instancingVertexAttributes,
   use2D
 ) {
-  const translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const translationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.TRANSLATION
   );
@@ -632,7 +632,7 @@ function processTransformAttributes(
     translationMin = translationAttribute.min;
   }
 
-  const rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION
   );
@@ -718,7 +718,7 @@ function processTransformAttributes(
       );
     }
 
-    const scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    const scaleAttribute = ModelUtility.getAttributeBySemantic(
       instances,
       InstanceAttributeSemantic.SCALE
     );

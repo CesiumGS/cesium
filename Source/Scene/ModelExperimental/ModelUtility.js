@@ -15,7 +15,7 @@ import Matrix3 from "../../Core/Matrix3.js";
  *
  * @private
  */
-export default function ModelExperimentalUtility() {}
+export default function ModelUtility() {}
 
 /**
  * Create a function for reporting when a model fails to load
@@ -27,7 +27,7 @@ export default function ModelExperimentalUtility() {}
  *
  * @private
  */
-ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
+ModelUtility.getFailedLoadFunction = function (model, type, path) {
   return function (error) {
     let message = `Failed to load ${type}: ${path}`;
     if (defined(error)) {
@@ -53,7 +53,7 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
  *
  * @private
  */
-ModelExperimentalUtility.getNodeTransform = function (node) {
+ModelUtility.getNodeTransform = function (node) {
   if (defined(node.matrix)) {
     return node.matrix;
   }
@@ -75,11 +75,7 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
  *
  * @private
  */
-ModelExperimentalUtility.getAttributeBySemantic = function (
-  object,
-  semantic,
-  setIndex
-) {
+ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
   const attributes = object.attributes;
   const attributesLength = attributes.length;
   for (let i = 0; i < attributesLength; ++i) {
@@ -103,7 +99,7 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
  *
  * @private
  */
-ModelExperimentalUtility.getAttributeByName = function (object, name) {
+ModelUtility.getAttributeByName = function (object, name) {
   const attributes = object.attributes;
   const attributesLength = attributes.length;
   for (let i = 0; i < attributesLength; ++i) {
@@ -123,7 +119,7 @@ ModelExperimentalUtility.getAttributeByName = function (object, name) {
  *
  * @private
  */
-ModelExperimentalUtility.getFeatureIdsByLabel = function (featureIds, label) {
+ModelUtility.getFeatureIdsByLabel = function (featureIds, label) {
   for (let i = 0; i < featureIds.length; i++) {
     const featureIdSet = featureIds[i];
     if (
@@ -137,7 +133,7 @@ ModelExperimentalUtility.getFeatureIdsByLabel = function (featureIds, label) {
   return undefined;
 };
 
-ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
+ModelUtility.hasQuantizedAttributes = function (attributes) {
   if (!defined(attributes)) {
     return false;
   }
@@ -156,7 +152,7 @@ ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
  *
  * @private
  */
-ModelExperimentalUtility.getAttributeInfo = function (attribute) {
+ModelUtility.getAttributeInfo = function (attribute) {
   const semantic = attribute.semantic;
   const setIndex = attribute.setIndex;
 
@@ -219,12 +215,12 @@ const cartesianMinScratch = new Cartesian3();
  *
  * @private
  */
-ModelExperimentalUtility.getPositionMinMax = function (
+ModelUtility.getPositionMinMax = function (
   primitive,
   instancingTranslationMin,
   instancingTranslationMax
 ) {
-  const positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
@@ -264,11 +260,7 @@ ModelExperimentalUtility.getPositionMinMax = function (
  *
  * @private
  */
-ModelExperimentalUtility.getAxisCorrectionMatrix = function (
-  upAxis,
-  forwardAxis,
-  result
-) {
+ModelUtility.getAxisCorrectionMatrix = function (upAxis, forwardAxis, result) {
   result = Matrix4.clone(Matrix4.IDENTITY, result);
 
   if (upAxis === Axis.Y) {
@@ -304,7 +296,7 @@ const scratchMatrix3 = new Matrix3();
  *
  * @private
  */
-ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
+ModelUtility.getCullFace = function (modelMatrix, primitiveType) {
   if (!PrimitiveType.isTriangles(primitiveType)) {
     return CullFace.BACK;
   }
@@ -322,17 +314,17 @@ ModelExperimentalUtility.getCullFace = function (modelMatrix, primitiveType) {
  *
  * @example
  * // Returns "customProperty"
- * ModelExperimentalUtility.sanitizeGlslIdentifier("gl_customProperty");
+ * ModelUtility.sanitizeGlslIdentifier("gl_customProperty");
  *
  * @example
  * // Returns "_1234"
- * ModelExperimentalUtility.sanitizeGlslIdentifier("1234");
+ * ModelUtility.sanitizeGlslIdentifier("1234");
  *
  * @param {String} identifier The original identifier.
  *
  * @returns {String} The sanitized version of the identifier.
  */
-ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
+ModelUtility.sanitizeGlslIdentifier = function (identifier) {
   // Remove non-alphanumeric characters and replace with a single underscore.
   // This regex is designed so that the result won't have multiple underscores
   // in a row.
@@ -347,7 +339,7 @@ ModelExperimentalUtility.sanitizeGlslIdentifier = function (identifier) {
   return sanitizedIdentifier;
 };
 
-ModelExperimentalUtility.supportedExtensions = {
+ModelUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_primitive_outline: true,
   CESIUM_RTC: true,
@@ -373,13 +365,11 @@ ModelExperimentalUtility.supportedExtensions = {
  *
  * @param {Array<String>} extensionsRequired The extensionsRequired array in the glTF.
  */
-ModelExperimentalUtility.checkSupportedExtensions = function (
-  extensionsRequired
-) {
+ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   const length = extensionsRequired.length;
   for (let i = 0; i < length; i++) {
     const extension = extensionsRequired[i];
-    if (!ModelExperimentalUtility.supportedExtensions[extension]) {
+    if (!ModelUtility.supportedExtensions[extension]) {
       throw new RuntimeError(`Unsupported glTF Extension: ${extension}`);
     }
   }

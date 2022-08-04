@@ -1,7 +1,7 @@
 import defined from "../../Core/defined.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The dequantization stage generates shader code to dequantize attributes
@@ -60,7 +60,7 @@ DequantizationPipelineStage.process = function (
       continue;
     }
 
-    const attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
+    const attributeInfo = ModelUtility.getAttributeInfo(attribute);
     updateDequantizationFunction(shaderBuilder, attributeInfo);
     addDequantizationUniforms(renderResources, attributeInfo);
   }
