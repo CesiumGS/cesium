@@ -64,10 +64,12 @@ DequantizationPipelineStage.process = function (
       continue;
     }
 
-    // Only the position attribute is used for classification models.
+    // Only the position and texcoord attributes are used for classification models.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
-    if (hasClassification && !isPositionAttribute) {
+    const isTexcoordAttribute =
+      attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    if (hasClassification && !isPositionAttribute && !isTexcoordAttribute) {
       continue;
     }
 

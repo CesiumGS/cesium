@@ -216,7 +216,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     });
   });
 
-  it("only dequantizes position for classification models", function () {
+  it("only dequantizes position and texcoords for classification models", function () {
     const renderResources = mockRenderResources();
     const shaderBuilder = renderResources.shaderBuilder;
     const uniformMap = renderResources.uniformMap;
@@ -229,17 +229,26 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       DequantizationPipelineStage.process(renderResources, primitive);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec2 model_quantizedVolumeOffset_texCoord_0;",
+        "uniform vec2 model_quantizedVolumeStepSize_texCoord_0;",
         "uniform vec3 model_quantizedVolumeOffset_positionMC;",
         "uniform vec3 model_quantizedVolumeStepSize_positionMC;",
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
       const uniformValues = {
+        texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
+        texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
         positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
         positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
       };
 
       const expected = {
+        texCoordOffset: new Cartesian2(0, 0),
+        texCoordStepSize: new Cartesian2(
+          0.0002442002442002442,
+          0.0002442002442002442
+        ),
         positionOffset: new Cartesian3(-0.5, -0.5, -0.5),
         positionStepSize: new Cartesian3(
           0.00006103888176768602,
