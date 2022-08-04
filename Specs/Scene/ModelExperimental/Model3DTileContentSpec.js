@@ -118,11 +118,6 @@ describe(
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, range));
     }
 
-    function setCameraWithHeight(longitude, latitude, range, centerHeight) {
-      const center = Cartesian3.fromRadians(longitude, latitude, centerHeight);
-      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, range));
-    }
-
     beforeAll(function () {
       ExperimentalFeatures.enableModelExperimental = true;
       scene = createScene();
@@ -1401,8 +1396,11 @@ describe(
     });
 
     describe("clipping planes", function () {
-      it("Links model to tileset clipping planes based on bounding volume clipping", function () {
+      beforeEach(function () {
         setCamera(centerLongitude, centerLatitude, 15.0);
+      });
+
+      it("Links model to tileset clipping planes based on bounding volume clipping", function () {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             const tile = tileset.root;
@@ -1433,7 +1431,6 @@ describe(
       });
 
       it("Links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
-        setCamera(centerLongitude, centerLatitude, 15.0);
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             const tile = tileset.root;
@@ -1468,8 +1465,7 @@ describe(
       });
 
       it("clipping planes selectively disable rendering", function () {
-        setCameraWithHeight(centerLongitude, centerLatitude, 5.0, 5.0);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             let color;
             expect(scene).toRenderAndCall(function (rgba) {
@@ -1483,7 +1479,7 @@ describe(
 
             expect(scene).notToRender(color);
 
-            clipPlane.distance = 0.0;
+            clipPlane.distance = 5.0;
 
             expect(scene).toRender(color);
           }
@@ -1491,8 +1487,7 @@ describe(
       });
 
       it("clipping planes apply edge styling", function () {
-        setCamera(centerLongitude, centerLatitude, 5.0);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             let color;
             expect(scene).toRenderAndCall(function (rgba) {
@@ -1515,13 +1510,12 @@ describe(
       });
 
       it("clipping planes union regions (Uint8)", function () {
-        setCamera(centerLongitude, centerLatitude, 5.0);
         // Force uint8 mode - there's a slight rendering difference between
         // float and packed uint8 clipping planes for this test due to the small context
         spyOn(ClippingPlaneCollection, "useFloatTexture").and.returnValue(
           false
         );
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             let color;
             expect(scene).toRenderAndCall(function (rgba) {
@@ -1549,12 +1543,11 @@ describe(
       });
 
       it("clipping planes union regions (Float)", function () {
-        setCamera(centerLongitude, centerLatitude, 5.0);
         if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
           // This configuration for the test fails in uint8 mode due to the small context
           return;
         }
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             let color;
             expect(scene).toRenderAndCall(function (rgba) {
