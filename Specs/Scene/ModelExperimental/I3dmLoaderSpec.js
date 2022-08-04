@@ -6,6 +6,7 @@ import {
   Matrix4,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -95,7 +96,7 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
       loader.load();
 
       return waitForLoaderProcess(loader, scene);
-    }).toThrowDeveloperError();
+    }).toThrowError(RuntimeError);
   }
 
   function verifyInstances(components, expectedSemantics, instancesLength) {
