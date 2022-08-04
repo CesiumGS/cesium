@@ -60,7 +60,7 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or Model` as
+Custom shaders can be applied to either 3D Tiles or a Model` as
 follows:
 
 ```js
