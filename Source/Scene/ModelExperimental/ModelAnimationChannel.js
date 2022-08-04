@@ -14,13 +14,13 @@ import QuaternionSpline from "../../Core/QuaternionSpline.js";
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
 /**
- * A runtime animation channel for a {@link ModelExperimentalAnimation}. An animation
+ * A runtime animation channel for a {@link ModelAnimation}. An animation
  * channel is responsible for interpolating between the keyframe values of an animated
  * property, then applying the change to the target node.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.AnimationChannel} options.channel The corresponding animation channel components from the 3D model.
- * @param {ModelExperimentalAnimation} options.runtimeAnimation The runtime animation containing this channel.
+ * @param {ModelAnimation} options.runtimeAnimation The runtime animation containing this channel.
  * @param {ModelRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
  *
  * @alias ModelAnimationChannel
@@ -74,7 +74,7 @@ Object.defineProperties(ModelAnimationChannel.prototype, {
    *
    * @memberof ModelAnimationChannel.prototype
    *
-   * @type {ModelExperimentalAnimation}
+   * @type {ModelAnimation}
    * @readonly
    *
    * @private

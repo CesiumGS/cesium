@@ -5,12 +5,12 @@ import {
   Matrix4,
   ModelAnimationLoop,
   ModelComponents,
-  ModelExperimentalAnimation,
+  ModelAnimation,
   ModelRuntimeNode,
   Quaternion,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
+describe("Scene/ModelExperimental/ModelAnimation", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
   const mockNode = {
@@ -95,7 +95,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
       name: "Sample Animation",
     };
 
-    const runtimeAnimation = new ModelExperimentalAnimation(
+    const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
       emptyOptions
@@ -149,7 +149,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
       removeOnStop: true,
     };
 
-    const runtimeAnimation = new ModelExperimentalAnimation(
+    const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
       options
@@ -192,7 +192,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
       name: "Sample Animation",
     };
 
-    const runtimeAnimation = new ModelExperimentalAnimation(
+    const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
       emptyOptions
@@ -227,7 +227,7 @@ describe("Scene/ModelExperimental/ModelExperimentalAnimation", function () {
       name: "Sample Animation",
     };
 
-    const runtimeAnimation = new ModelExperimentalAnimation(
+    const runtimeAnimation = new ModelAnimation(
       mockModel,
       mockAnimation,
       emptyOptions

@@ -1,15 +1,17 @@
-import defaultValue from "../Core/defaultValue.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
-import ModelAnimationState from "./ModelAnimationState.js";
+import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import Event from "../../Core/Event.js";
+import JulianDate from "../../Core/JulianDate.js";
+import ModelAnimationLoop from "../ModelAnimationLoop.js";
+import ModelAnimationState from "../ModelAnimationState.js";
+import ModelAnimationChannel from "./ModelAnimationChannel.js";
 
 /**
- * An active glTF animation.  A glTF asset can contain animations.  An active animation
- * is an animation that is currently playing or scheduled to be played because it was
- * added to a model's {@link ModelAnimationCollection}.  An active animation is an
- * instance of an animation; for example, there can be multiple active animations
- * for the same glTF animation, each with a different start time.
+ * An active animation derived from a glTF asset. An active animation is an
+ * animation that is either currently playing or scheduled to be played due to
+ * being added to a model's {@link ModelAnimationCollection}. An active animation
+ * is an instance of an animation; for example, there can be multiple active
+ * animations for the same glTF animation, each with a different start time.
  * <p>
  * Create this by calling {@link ModelAnimationCollection#add}.
  * </p>
@@ -20,11 +22,14 @@ import ModelAnimationState from "./ModelAnimationState.js";
  *
  * @see ModelAnimationCollection#add
  */
-function ModelAnimation(options, model, runtimeAnimation) {
-  this._name = runtimeAnimation.name;
+function ModelAnimation(model, animation, options) {
+  this._animation = animation;
+  this._name = animation.name;
+  this._runtimeChannels = undefined;
+
   this._startTime = JulianDate.clone(options.startTime);
   this._delay = defaultValue(options.delay, 0.0); // in seconds
-  this._stopTime = options.stopTime;
+  this._stopTime = JulianDate.clone(options.stopTime);
 
   /**
    * When <code>true</code>, the animation is removed after it stops playing.
@@ -95,7 +100,6 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this.stop = new Event();
 
   this._state = ModelAnimationState.STOPPED;
-  this._runtimeAnimation = runtimeAnimation;
 
   // Set during animation update
   this._computedStartTime = undefined;
@@ -113,11 +117,34 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this._raiseStopEvent = function () {
     that.stop.raiseEvent(model, that);
   };
+
+  this._model = model;
+
+  this._localStartTime = undefined;
+  this._localStopTime = undefined;
+
+  initialize(this);
 }
 
 Object.defineProperties(ModelAnimation.prototype, {
   /**
-   * The glTF animation name that identifies this animation.
+   * The glTF animation.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {ModelComponents.Animation}
+   * @readonly
+   *
+   * @private
+   */
+  animation: {
+    get: function () {
+      return this._animation;
+    },
+  },
+
+  /**
+   * The name that identifies this animation in the model, if it exists.
    *
    * @memberof ModelAnimation.prototype
    *
@@ -131,7 +158,73 @@ Object.defineProperties(ModelAnimation.prototype, {
   },
 
   /**
-   * The scene time to start playing this animation.  When this is <code>undefined</code>,
+   * The runtime animation channels for this animation.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {ModelAnimationChannel[]}
+   * @readonly
+   *
+   * @private
+   */
+  runtimeChannels: {
+    get: function () {
+      return this._runtimeChannels;
+    },
+  },
+
+  /**
+   * The {@link Model} that owns this animation.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {Model}
+   * @readonly
+   *
+   * @private
+   */
+  model: {
+    get: function () {
+      return this._model;
+    },
+  },
+
+  /**
+   * The starting point of the animation in local animation time. This is the minimum
+   * time value across all of the keyframes belonging to this animation.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  localStartTime: {
+    get: function () {
+      return this._localStartTime;
+    },
+  },
+
+  /**
+   * The stopping point of the animation in local animation time. This is the maximum
+   * time value across all of the keyframes belonging to this animation.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  localStopTime: {
+    get: function () {
+      return this._localStopTime;
+    },
+  },
+
+  /**
+   * The scene time to start playing this animation. When this is <code>undefined</code>,
    * the animation starts at the next frame.
    *
    * @memberof ModelAnimation.prototype
@@ -164,7 +257,7 @@ Object.defineProperties(ModelAnimation.prototype, {
   },
 
   /**
-   * The scene time to stop playing this animation.  When this is <code>undefined</code>,
+   * The scene time to stop playing this animation. When this is <code>undefined</code>,
    * the animation is played for its full duration and perhaps repeated depending on
    * {@link ModelAnimation#loop}.
    *
@@ -180,6 +273,7 @@ Object.defineProperties(ModelAnimation.prototype, {
       return this._stopTime;
     },
   },
+
   /**
    * Values greater than <code>1.0</code> increase the speed that the animation is played relative
    * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
@@ -247,6 +341,63 @@ Object.defineProperties(ModelAnimation.prototype, {
     },
   },
 });
+
+function initialize(runtimeAnimation) {
+  let localStartTime = Number.MAX_VALUE;
+  let localStopTime = -Number.MAX_VALUE;
+
+  const sceneGraph = runtimeAnimation._model.sceneGraph;
+  const animation = runtimeAnimation._animation;
+  const channels = animation.channels;
+  const length = channels.length;
+
+  const runtimeChannels = [];
+  for (let i = 0; i < length; i++) {
+    const channel = channels[i];
+    const target = channel.target;
+
+    // Ignore this channel if the target is invalid, i.e. if the node
+    // it references doesn't exist.
+    if (!defined(target)) {
+      continue;
+    }
+
+    const nodeIndex = target.node.index;
+    const runtimeNode = sceneGraph._runtimeNodes[nodeIndex];
+
+    const runtimeChannel = new ModelAnimationChannel({
+      channel: channel,
+      runtimeAnimation: runtimeAnimation,
+      runtimeNode: runtimeNode,
+    });
+
+    const times = channel.sampler.input;
+    localStartTime = Math.min(localStartTime, times[0]);
+    localStopTime = Math.max(localStopTime, times[times.length - 1]);
+
+    runtimeChannels.push(runtimeChannel);
+  }
+
+  runtimeAnimation._runtimeChannels = runtimeChannels;
+  runtimeAnimation._localStartTime = localStartTime;
+  runtimeAnimation._localStopTime = localStopTime;
+}
+
+/**
+ * Evaluate all animation channels to advance this animation.
+ *
+ * @param {Number} time The local animation time.
+ *
+ * @private
+ */
+ModelAnimation.prototype.animate = function (time) {
+  const runtimeChannels = this._runtimeChannels;
+  const length = runtimeChannels.length;
+  for (let i = 0; i < length; i++) {
+    runtimeChannels[i].animate(time);
+  }
+};
+
 /**
  * A function used to compute the local animation time for a ModelAnimation.
  * @callback ModelAnimation.AnimationTimeCallback

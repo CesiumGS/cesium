@@ -12,7 +12,7 @@ import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
-import ModelExperimentalAnimationCollection from "./ModelExperimentalAnimationCollection.js";
+import ModelAnimationCollection from "./ModelAnimationCollection.js";
 import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
@@ -185,7 +185,7 @@ export default function Model(options) {
   this._texturesLoaded = false;
   this._defaultTexture = undefined;
 
-  this._activeAnimations = new ModelExperimentalAnimationCollection(this);
+  this._activeAnimations = new ModelAnimationCollection(this);
   this._clampAnimations = defaultValue(options.clampAnimations, true);
 
   // This flag is true when the Cesium API, not a glTF animation, changes
@@ -645,7 +645,7 @@ Object.defineProperties(Model.prototype, {
    *
    * @memberof Model.prototype
    *
-   * @type {ModelExperimentalAnimationCollection}
+   * @type {ModelAnimationCollection}
    * @readonly
    */
   activeAnimations: {
@@ -1156,7 +1156,6 @@ Object.defineProperties(Model.prototype, {
    * @memberof Model.prototype
    *
    * @type {String}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featureIdLabel: {
     get: function () {
@@ -1192,7 +1191,6 @@ Object.defineProperties(Model.prototype, {
    * @memberof Model.prototype
    *
    * @type {String}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   instanceFeatureIdLabel: {
     get: function () {

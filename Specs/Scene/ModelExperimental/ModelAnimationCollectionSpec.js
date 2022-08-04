@@ -10,7 +10,7 @@ import createScene from "../../createScene.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 import pollToPromise from "../../pollToPromise.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalAnimationCollection", function () {
+describe("Scene/ModelExperimental/ModelAnimationCollection", function () {
   const animatedTriangleUrl =
     "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
   const interpolationTestUrl =
