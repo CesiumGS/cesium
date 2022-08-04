@@ -3,6 +3,8 @@ import {
   Color,
   ComponentDatatype,
   defaultValue,
+  DracoLoader,
+  Matrix4,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
@@ -13,6 +15,7 @@ import {
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 
@@ -25,6 +28,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     "./Data/Cesium3DTiles/PointCloud/PointCloudRGB565/pointCloudRGB565.pnts";
   const pointCloudNoColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/pointCloudNoColor.pnts";
+  const pointCloudWithTransformUrl =
+    "./Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/pointCloudWithTransform.pnts";
   const pointCloudConstantColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/pointCloudConstantColor.pnts";
   const pointCloudNormalsUrl =
@@ -568,6 +573,50 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     });
   });
 
+  it("loads PointCloudWithTransform", function () {
+    return loadPnts(pointCloudWithTransformUrl).then(function (loader) {
+      const components = loader.components;
+      expect(components).toBeDefined();
+      expectEmptyMetadata(components.structuralMetadata);
+
+      // The transform is applied in the tileset.json, but the .pnts
+      // file itself includes no transformations.
+      expect(components.transform).toEqual(Matrix4.IDENTITY);
+      const node = components.nodes[0];
+      expect(node.matrix).not.toBeDefined();
+      expect(node.translation).not.toBeDefined();
+      expect(node.rotation).not.toBeDefined();
+      expect(node.scale).not.toBeDefined();
+
+      const primitive = node.primitives[0];
+      const attributes = primitive.attributes;
+      expect(attributes.length).toBe(2);
+      expectPosition(attributes[0]);
+      expectColorRGB(attributes[1]);
+    });
+  });
+
+  it("BATCH_ID semantic uses componentType of UNSIGNED_SHORT by default", function () {
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 2,
+        POSITION: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        BATCH_ID: [0, 1],
+        BATCH_LENGTH: 2,
+      },
+    });
+
+    return loadPntsArrayBuffer(arrayBuffer).then(function (loader) {
+      const components = loader.components;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
+      expect(attributes.length).toBe(3);
+      expectPosition(attributes[0]);
+      expectDefaultColor(attributes[1]);
+      expectBatchId(attributes[2], ComponentDatatype.UNSIGNED_SHORT);
+    });
+  });
+
   it("loads PointCloudWithPerPointProperties", function () {
     return loadPnts(pointCloudWithPerPointPropertiesUrl).then(function (
       loader
@@ -772,6 +821,28 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       },
     });
     expectLoadError(arrayBuffer);
+  });
+
+  it("error decoding a draco point cloud causes loading to fail", function () {
+    const readyPromise = pollToPromise(function () {
+      return DracoLoader._taskProcessorReady;
+    });
+    DracoLoader._getDecoderTaskProcessor();
+    return readyPromise
+      .then(function () {
+        const decoder = DracoLoader._getDecoderTaskProcessor();
+        spyOn(decoder, "scheduleTask").and.callFake(function () {
+          return Promise.reject({ message: "my error" });
+        });
+
+        return loadPnts(pointCloudDracoUrl);
+      })
+      .then(function () {
+        fail("should not resolve");
+      })
+      .catch(function (error) {
+        expect(error.message).toBe("Failed to load Draco pnts\nmy error");
+      });
   });
 
   it("destroys pnts loader", function () {
