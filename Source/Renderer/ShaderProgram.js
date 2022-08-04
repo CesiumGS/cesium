@@ -197,9 +197,6 @@ function createAndLinkProgram(gl, shader) {
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
 
-  gl.deleteShader(vertexShader);
-  gl.deleteShader(fragmentShader);
-
   const attributeLocations = shader._attributeLocations;
   if (defined(attributeLocations)) {
     for (const attribute in attributeLocations) {
@@ -214,99 +211,73 @@ function createAndLinkProgram(gl, shader) {
   }
 
   gl.linkProgram(program);
-
   let log;
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    const debugShaders = shader._debugShaders;
 
-    // For performance, only check compile errors if there is a linker error.
-    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-      log = gl.getShaderInfoLog(fragmentShader);
-      console.error(`${consolePrefix}Fragment shader compile log: ${log}`);
-      if (defined(debugShaders)) {
-        const fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(
-          fragmentShader
-        );
-        if (fragmentSourceTranslation !== "") {
-          console.error(
-            `${consolePrefix}Translated fragment shader source:\n${fragmentSourceTranslation}`
-          );
-        } else {
-          console.error(`${consolePrefix}Fragment shader translation failed.`);
-        }
-      }
-
-      gl.deleteProgram(program);
-      throw new RuntimeError(
-        `Fragment shader failed to compile.  Compile log: ${log}`
-      );
-    }
-
-    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+  // For performance: if linker succeeds, return without checking compile status
+  if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    if (shader._logShaderCompilation) {
       log = gl.getShaderInfoLog(vertexShader);
-      console.error(`${consolePrefix}Vertex shader compile log: ${log}`);
-      if (defined(debugShaders)) {
-        const vertexSourceTranslation = debugShaders.getTranslatedShaderSource(
-          vertexShader
-        );
-        if (vertexSourceTranslation !== "") {
-          console.error(
-            `${consolePrefix}Translated vertex shader source:\n${vertexSourceTranslation}`
-          );
-        } else {
-          console.error(`${consolePrefix}Vertex shader translation failed.`);
-        }
+      if (defined(log) && log.length > 0) {
+        console.log(`${consolePrefix}Vertex shader compile log: ${log}`);
       }
 
-      gl.deleteProgram(program);
-      throw new RuntimeError(
-        `Vertex shader failed to compile.  Compile log: ${log}`
-      );
+      log = gl.getShaderInfoLog(fragmentShader);
+      if (defined(log) && log.length > 0) {
+        console.log(`${consolePrefix}Fragment shader compile log: ${log}`);
+      }
+
+      log = gl.getProgramInfoLog(program);
+      if (defined(log) && log.length > 0) {
+        console.log(`${consolePrefix}Shader program link log: ${log}`);
+      }
     }
 
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+
+    return program;
+  }
+
+  // Program failed to link. Try to find and report the reason
+  let errorMessage;
+  const debugShaders = shader._debugShaders;
+
+  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+    log = gl.getShaderInfoLog(fragmentShader);
+    console.error(`${consolePrefix}Fragment shader compile log: ${log}`);
+    console.error(`${consolePrefix} Fragment shader source:\n${fsSource}`);
+    errorMessage = `Fragment shader failed to compile.  Compile log: ${log}`;
+  } else if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+    log = gl.getShaderInfoLog(vertexShader);
+    console.error(`${consolePrefix}Vertex shader compile log: ${log}`);
+    console.error(`${consolePrefix} Vertex shader source:\n${vsSource}`);
+    errorMessage = `Vertex shader failed to compile.  Compile log: ${log}`;
+  } else {
     log = gl.getProgramInfoLog(program);
     console.error(`${consolePrefix}Shader program link log: ${log}`);
-    if (defined(debugShaders)) {
-      console.error(
-        `${consolePrefix}Translated vertex shader source:\n${debugShaders.getTranslatedShaderSource(
-          vertexShader
-        )}`
-      );
-      console.error(
-        `${consolePrefix}Translated fragment shader source:\n${debugShaders.getTranslatedShaderSource(
-          fragmentShader
-        )}`
-      );
-    }
-
-    gl.deleteProgram(program);
-    throw new RuntimeError(`Program failed to link.  Link log: ${log}`);
+    logTranslatedSource(vertexShader, "vertex");
+    logTranslatedSource(fragmentShader, "fragment");
+    errorMessage = `Program failed to link.  Link log: ${log}`;
   }
 
-  const logShaderCompilation = shader._logShaderCompilation;
+  gl.deleteShader(vertexShader);
+  gl.deleteShader(fragmentShader);
+  gl.deleteProgram(program);
+  throw new RuntimeError(errorMessage);
 
-  if (logShaderCompilation) {
-    log = gl.getShaderInfoLog(vertexShader);
-    if (defined(log) && log.length > 0) {
-      console.log(`${consolePrefix}Vertex shader compile log: ${log}`);
+  function logTranslatedSource(compiledShader, name) {
+    if (!defined(debugShaders)) {
+      return;
     }
-  }
-
-  if (logShaderCompilation) {
-    log = gl.getShaderInfoLog(fragmentShader);
-    if (defined(log) && log.length > 0) {
-      console.log(`${consolePrefix}Fragment shader compile log: ${log}`);
+    const translation = debugShaders.getTranslatedShaderSource(compiledShader);
+    if (translation === "") {
+      console.error(`${consolePrefix}${name} shader translation failed.`);
+      return;
     }
+    console.error(
+      `${consolePrefix}Translated ${name} shaderSource:\n${translation}`
+    );
   }
-
-  if (logShaderCompilation) {
-    log = gl.getProgramInfoLog(program);
-    if (defined(log) && log.length > 0) {
-      console.log(`${consolePrefix}Shader program link log: ${log}`);
-    }
-  }
-
-  return program;
 }
 
 function findVertexAttributes(gl, program, numberOfAttributes) {

@@ -8,7 +8,7 @@
   - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
   - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
   - Using ESM from `Source` will require a bundler to resolve third party node dependencies.
-  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
+  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminified`.
 
 ##### Breaking Changes :mega:
 
@@ -40,7 +40,7 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
-- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead. [#10579](https://github.com/CesiumGS/cesium/pull/10579)
 
 ### 1.95 - 2022-07-01
 
