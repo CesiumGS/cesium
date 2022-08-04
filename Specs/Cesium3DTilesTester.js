@@ -8,6 +8,7 @@ import {
   Resource,
   Cesium3DTileContentFactory,
   Cesium3DTileset,
+  PointCloudShading,
   TileBoundingSphere,
   RuntimeError,
 } from "../../Source/Cesium.js";
@@ -177,6 +178,9 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
     imageBasedLighting: new ImageBasedLighting({
       imageBasedLighting: new Cartesian2(1, 1),
     }),
+    pointCloudShading: new PointCloudShading(),
+    featureIdLabel: "featureId_0",
+    instanceFeatureIdLabel: "instanceFeatureId_0",
   };
   const url = Resource.createIfNeeded("");
   const content = Cesium3DTileContentFactory[type](
@@ -193,6 +197,7 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
       fail("should not resolve");
     })
     .catch(function (error) {
+      console.log(error);
       expect(error).toBeDefined();
     });
 };
