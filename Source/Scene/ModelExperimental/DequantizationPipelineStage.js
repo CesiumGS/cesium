@@ -1,6 +1,7 @@
 import defined from "../../Core/defined.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -39,15 +40,18 @@ DequantizationPipelineStage.process = function (
   frameState
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addFunction(
-    DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
-    DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
-    ShaderDestination.VERTEX
-  );
+  const model = renderResources.model;
+  const hasClassification = defined(model.classificationType);
 
   shaderBuilder.addDefine(
     "USE_DEQUANTIZATION",
     undefined,
+    ShaderDestination.VERTEX
+  );
+
+  shaderBuilder.addFunction(
+    DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
+    DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
     ShaderDestination.VERTEX
   );
 
@@ -57,6 +61,15 @@ DequantizationPipelineStage.process = function (
     const quantization = attribute.quantization;
     if (!defined(quantization)) {
       // Non-quantized attributes were already handled in GeometryPipelineStage
+      continue;
+    }
+
+    // Only the position and texcoord attributes are used for classification models.
+    const isPositionAttribute =
+      attribute.semantic === VertexAttributeSemantic.POSITION;
+    const isTexcoordAttribute =
+      attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    if (hasClassification && !isPositionAttribute && !isTexcoordAttribute) {
       continue;
     }
 

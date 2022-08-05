@@ -1,6 +1,9 @@
 import {
   _shadersMaterialStageFS,
   AlphaMode,
+  Cartesian4,
+  Cartesian3,
+  ClassificationType,
   combine,
   GltfLoader,
   LightingModel,
@@ -14,8 +17,6 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
-  Cartesian4,
-  Cartesian3,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -100,14 +101,17 @@ describe(
       }
     }
 
-    function mockRenderResources() {
+    function mockRenderResources(classificationType) {
       return {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: {},
         lightingOptions: new ModelLightingOptions(),
         alphaOptions: new ModelAlphaOptions(),
         renderStateOptions: RenderState.getState(RenderState.fromCache()),
-        model: { statistics: new ModelStatistics() },
+        model: {
+          statistics: new ModelStatistics(),
+          classificationType: classificationType,
+        },
       };
     }
 
@@ -354,6 +358,78 @@ describe(
       });
     });
 
+    it("doesn't add texture uniforms for classification models", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(ClassificationType.BOTH);
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform vec3 u_emissiveFactor;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_EMISSIVE_FACTOR",
+        ]);
+
+        const material = primitive.material;
+        const expectedUniforms = {
+          u_emissiveFactor: material.emissiveFactor,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("doesn't add metallic roughness textures for classification models", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+
+        const metallicRoughness = primitive.material.metallicRoughness;
+        metallicRoughness.baseColorFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        metallicRoughness.metallicFactor = 0.5;
+        metallicRoughness.roughnessFactor = 0.5;
+
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform vec4 u_baseColorFactor;",
+          "uniform float u_metallicFactor;",
+          "uniform float u_roughnessFactor;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_BASE_COLOR_FACTOR",
+          "HAS_METALLIC_FACTOR",
+          "HAS_ROUGHNESS_FACTOR",
+        ]);
+
+        const expectedUniforms = {
+          u_baseColorFactor: metallicRoughness.baseColorFactor,
+          u_metallicFactor: metallicRoughness.metallicFactor,
+          u_roughnessFactor: metallicRoughness.roughnessFactor,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
     it("enables PBR lighting for metallic roughness materials", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -391,6 +467,22 @@ describe(
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
         const renderResources = mockRenderResources();
+        const lightingOptions = renderResources.lightingOptions;
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
+      });
+    });
+
+    it("enables unlit lighting for classification models", function () {
+      return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderResources = mockRenderResources(ClassificationType.BOTH);
         const lightingOptions = renderResources.lightingOptions;
 
         MaterialPipelineStage.process(

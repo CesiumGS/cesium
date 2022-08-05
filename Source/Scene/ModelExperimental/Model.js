@@ -36,10 +36,43 @@ import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
 
 /**
- * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
+ * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
  * <p>
  * Do not call this function directly, instead use the `from` functions to create
  * the Model from your source data type.
+ * </p>
+ * <p>
+ * Cesium supports glTF assets with the following extensions:
+ * <ul>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
+ *  </li>
+ * </ul>
+ * </p>
+ * <p>
+ * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
+ * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
+ * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
+ * </p>
+ * <p>
+ * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
+ * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+ * relative to a local origin.
  * </p>
  *
  * @alias Model
@@ -85,7 +118,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model.
  */
 export default function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -372,6 +405,8 @@ export default function Model(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  this._classificationType = options.classificationType;
 
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 }
@@ -733,6 +768,7 @@ Object.defineProperties(Model.prototype, {
    * @memberof Model.prototype
    *
    * @type {CustomShader}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   customShader: {
     get: function () {
@@ -1424,7 +1460,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets the credit that will be displayed for the model
+   * Gets the credit that will be displayed for the model.
    *
    * @memberof Model.prototype
    *
@@ -1438,7 +1474,8 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets or sets whether the credits of the model will be displayed on the screen
+   * Gets or sets whether the credits of the model will be displayed
+   * on the screen.
    *
    * @memberof Model.prototype
    *
@@ -1481,8 +1518,8 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Reference to the pick IDs. This is used only in internal code such as
-   * per-feature post-processing in {@link PostProcessStage}
+   * Reference to the pick IDs. This is only used internally, e.g. for
+   * per-feature post-processing in {@link PostProcessStage}.
    *
    * @type {PickId[]}
    * @readonly
@@ -1492,6 +1529,29 @@ Object.defineProperties(Model.prototype, {
   pickIds: {
     get: function () {
       return this._pickIds;
+    },
+  },
+
+  /**
+   * Gets or sets the model's classification type. This indicates whether
+   * terrain, 3D Tiles or both will be classified by this model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ClassificationType}
+   *
+   * @default undefined
+   */
+  classificationType: {
+    get: function () {
+      return this._classificationType;
+    },
+    set: function (value) {
+      if (value !== this._classificationType) {
+        this.resetDrawCommands();
+      }
+
+      this._classificationType = value;
     },
   },
 });
@@ -1959,9 +2019,12 @@ function updateSceneGraph(model, frameState) {
     model._debugShowBoundingVolumeDirty = false;
   }
 
-  const updateForAnimations =
-    model._userAnimationDirty || model._activeAnimations.update(frameState);
-
+  let updateForAnimations = false;
+  // Animations are disabled for classification models.
+  if (!defined(model.classificationType)) {
+    updateForAnimations =
+      model._userAnimationDirty || model._activeAnimations.update(frameState);
+  }
   sceneGraph.update(frameState, updateForAnimations);
   model._userAnimationDirty = false;
 }
@@ -2012,7 +2075,11 @@ function submitDrawCommands(model, frameState) {
     displayConditionPassed &&
     (!invisible || silhouette);
 
-  if (showModel && !model._ignoreCommands) {
+  const passes = frameState.passes;
+  const submitCommandsForPass =
+    passes.render || (passes.pick && model.allowPicking);
+
+  if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
     const drawCommands = model._sceneGraph.getDrawCommands(frameState);
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
@@ -2189,6 +2256,9 @@ function supportsSilhouettes(frameState) {
 /**
  * Gets whether or not the model has a silhouette. This accounts for whether
  * silhouettes are supported (i.e. the context supports stencil buffers).
+ * <p>
+ * If the model classifies another model, its silhouette will be disabled.
+ * </p>
  *
  * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
  * @private
@@ -2197,7 +2267,8 @@ Model.prototype.hasSilhouette = function (frameState) {
   return (
     supportsSilhouettes(frameState) &&
     this._silhouetteSize > 0.0 &&
-    this._silhouetteColor.alpha > 0.0
+    this._silhouetteColor.alpha > 0.0 &&
+    !defined(this._classificationType)
   );
 };
 
@@ -2378,6 +2449,8 @@ Model.prototype.destroyModelResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model.
+ *
  * @returns {Model} The newly created model.
  */
 Model.fromGltf = function (options) {
@@ -2607,5 +2680,6 @@ function makeModelOptions(loader, modelType, options) {
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
+    classificationType: options.classificationType,
   };
 }
