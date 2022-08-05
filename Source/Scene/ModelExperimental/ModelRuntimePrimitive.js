@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
@@ -19,7 +20,6 @@ import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudStylingPipelineStage from "./PointCloudStylingPipelineStage.js";
 import PrimitiveOutlinePipelineStage from "./PrimitiveOutlinePipelineStage.js";
 import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage.js";
-import SceneMode from "../SceneMode.js";
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
@@ -91,9 +91,9 @@ export default function ModelRuntimePrimitive(options) {
   this.pipelineStages = [];
 
   /**
-   * The generated {@link ModelDrawCommand} associated with this primitive.
+   * The generated {@link ModelDrawCommand} or {@link ClassificationModelDrawCommand} associated with this primitive.
    *
-   * @type {ModelDrawCommand}
+   * @type {ModelDrawCommand|ClassificationModelDrawCommand}
    *
    * @private
    */
@@ -153,6 +153,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const primitive = this.primitive;
   const node = this.node;
   const model = this.model;
+
   const customShader = model.customShader;
   const style = model.style;
 
@@ -193,6 +194,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
+  const hasClassification = defined(model.classificationType);
+
   // Start of pipeline -----------------------------------------------------
   if (use2D) {
     pipelineStages.push(SceneMode2DPipelineStage);
@@ -204,11 +207,12 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(WireframePipelineStage);
   }
 
-  if (hasMorphTargets) {
+  // Morph targets and skinning are disabled for classification models.
+  if (hasMorphTargets && !hasClassification) {
     pipelineStages.push(MorphTargetsPipelineStage);
   }
 
-  if (hasSkinning) {
+  if (hasSkinning && !hasClassification) {
     pipelineStages.push(SkinningPipelineStage);
   }
 

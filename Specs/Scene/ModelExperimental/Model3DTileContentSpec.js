@@ -1,21 +1,35 @@
 import {
   Cartesian3,
+  Cartographic,
   Cesium3DContentGroup,
   Cesium3DTilePass,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
+  ClassificationType,
   ClippingPlane,
   ClippingPlaneCollection,
   Color,
+  ColorGeometryInstanceAttribute,
   ContentMetadata,
   defaultValue,
   defined,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
   GroupMetadata,
   HeadingPitchRange,
   HeadingPitchRoll,
   Math as CesiumMath,
+  Matrix4,
   MetadataClass,
+  Pass,
+  PerInstanceColorAppearance,
+  Primitive,
+  Rectangle,
+  RectangleGeometry,
+  RenderState,
   RuntimeError,
+  StencilConstants,
   Transforms,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
@@ -1083,6 +1097,28 @@ describe(
         });
       });
 
+      it("picks from i3dm batch table", function () {
+        setCamera(centerLongitude, centerLatitude, 25.0);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedWithBatchTableUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          tileset.show = false;
+          expect(scene).toPickPrimitive(undefined);
+          tileset.show = true;
+          expect(scene).toPickAndCall(function (result) {
+            expect(result).toBeDefined();
+            expect(result.primitive).toBe(tileset);
+            expect(result.content).toBe(content);
+            const featureId = result.featureId;
+            expect(featureId).toBe(12);
+            expect(content.hasProperty(featureId, "Height")).toBe(true);
+            expect(content.getFeature(featureId)).toBeDefined();
+          });
+        });
+      });
+
       it("gets memory usage for batch point cloud", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -1569,6 +1605,183 @@ describe(
             expect(scene).toRender(color);
           }
         );
+      });
+    });
+
+    describe("classification", function () {
+      let globePrimitive;
+      let tilesetPrimitive;
+      let reusableGlobePrimitive;
+      let reusableTilesetPrimitive;
+
+      function createPrimitive(rectangle, pass) {
+        let renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+          renderState = RenderState.fromCache({
+            stencilTest: StencilConstants.setCesium3DTileBit(),
+            stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,
+            depthTest: {
+              enabled: true,
+            },
+          });
+        }
+
+        const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+          new Color(0.0, 0.0, 0.0, 1.0)
+        );
+
+        return new Primitive({
+          geometryInstances: new GeometryInstance({
+            geometry: new RectangleGeometry({
+              ellipsoid: Ellipsoid.WGS84,
+              rectangle: rectangle,
+            }),
+            id: "depth rectangle",
+            attributes: {
+              color: depthColorAttribute,
+            },
+          }),
+          appearance: new PerInstanceColorAppearance({
+            translucent: false,
+            flat: true,
+            renderState: renderState,
+          }),
+          asynchronous: false,
+        });
+      }
+
+      function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+      }
+
+      MockPrimitive.prototype.update = function (frameState) {
+        if (!this.show) {
+          return;
+        }
+
+        const commandList = frameState.commandList;
+        const startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (let i = startLength; i < commandList.length; ++i) {
+          const command = commandList[i];
+          command.pass = this._pass;
+        }
+      };
+
+      MockPrimitive.prototype.isDestroyed = function () {
+        return false;
+      };
+
+      MockPrimitive.prototype.destroy = function () {
+        return destroyObject(this);
+      };
+
+      let modelMatrix;
+      beforeAll(function () {
+        scene = createScene();
+
+        const translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
+          new Cartographic(centerLongitude, centerLatitude)
+        );
+        Cartesian3.multiplyByScalar(translation, -5.0, translation);
+        modelMatrix = Matrix4.fromTranslation(translation);
+
+        const offset = CesiumMath.toRadians(0.01);
+        const rectangle = new Rectangle(
+          centerLongitude - offset,
+          centerLatitude - offset,
+          centerLongitude + offset,
+          centerLatitude + offset
+        );
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(
+          rectangle,
+          Pass.CESIUM_3D_TILE
+        );
+      });
+
+      beforeEach(function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+
+        // wrap rectangle primitive so it gets executed during the globe pass
+        // and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(
+          reusableTilesetPrimitive,
+          Pass.CESIUM_3D_TILE
+        );
+
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+      });
+
+      afterEach(function () {
+        scene.primitives.removeAll();
+        globePrimitive =
+          globePrimitive &&
+          !globePrimitive.isDestroyed() &&
+          globePrimitive.destroy();
+        tilesetPrimitive =
+          tilesetPrimitive &&
+          !tilesetPrimitive.isDestroyed() &&
+          tilesetPrimitive.destroy();
+      });
+
+      afterAll(function () {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+      });
+
+      it("classifies 3D Tiles", function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.CESIUM_3D_TILE,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
+      });
+
+      it("classifies globe", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.TERRAIN,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
+      });
+
+      it("classifies both 3D Tiles and globe", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+          classificationType: ClassificationType.BOTH,
+          modelMatrix: modelMatrix,
+        }).then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
       });
     });
 

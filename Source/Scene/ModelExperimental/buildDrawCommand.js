@@ -2,27 +2,29 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import DrawCommand from "../../Renderer/DrawCommand.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelDrawCommand from "./ModelDrawCommand.js";
 import ModelFS from "../../Shaders/ModelExperimental/ModelFS.js";
 import ModelVS from "../../Shaders/ModelExperimental/ModelVS.js";
 import ModelUtility from "./ModelUtility.js";
+import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import StencilConstants from "../StencilConstants.js";
-import VertexArray from "../../Renderer/VertexArray.js";
+import ModelDrawCommand from "./ModelDrawCommand.js";
 
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
- * using its render resources.
+ * using its render resources. If the model classifies another asset, it
+ * builds a {@link ClassificationModelDrawCommand} instead.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {ModelDrawCommand} The generated ModelDrawCommand.
+ * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or ClassificationModelDrawCommand.
  *
  * @private
  */
@@ -32,6 +34,8 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addFragmentLines([ModelFS]);
 
   const model = primitiveRenderResources.model;
+  const hasClassification = defined(model.classificationType);
+
   const context = frameState.context;
 
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
@@ -90,7 +94,13 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   );
   renderState = RenderState.fromCache(renderState);
 
-  const count = primitiveRenderResources.count;
+  // Disable shadows if this renders a classification model.
+  const castShadows = hasClassification
+    ? false
+    : ShadowMode.castShadows(model.shadows);
+  const receiveShadows = hasClassification
+    ? false
+    : ShadowMode.receiveShadows(model.shadows);
 
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
@@ -101,14 +111,22 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     shaderProgram: shaderProgram,
     cull: model.cull,
     pass: pass,
-    count: count,
+    count: primitiveRenderResources.count,
+    owner: model,
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
-    castShadows: ShadowMode.castShadows(model.shadows),
-    receiveShadows: ShadowMode.receiveShadows(model.shadows),
+    castShadows: castShadows,
+    receiveShadows: receiveShadows,
   });
+
+  if (hasClassification) {
+    return new ClassificationModelDrawCommand({
+      primitiveRenderResources: primitiveRenderResources,
+      command: command,
+    });
+  }
 
   const useSilhouetteCommands = model.hasSilhouette(frameState);
 
