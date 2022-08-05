@@ -118,7 +118,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model.
+ * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  */
 export default function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1529,25 +1529,17 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets or sets the model's classification type. This indicates whether
-   * terrain, 3D Tiles or both will be classified by this model.
+   * Gets the model's classification type. This indicates whether terrain,
+   * 3D Tiles or both will be classified by this model.
    *
    * @memberof Model.prototype
    *
    * @type {ClassificationType}
-   *
-   * @default undefined
+   * @readonly
    */
   classificationType: {
     get: function () {
       return this._classificationType;
-    },
-    set: function (value) {
-      if (value !== this._classificationType) {
-        this.resetDrawCommands();
-      }
-
-      this._classificationType = value;
     },
   },
 });
@@ -2445,7 +2437,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
- * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model.
+ * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  *
  * @returns {Model} The newly created model.
  */
