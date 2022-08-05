@@ -120,7 +120,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  */
-export default function Model(options) {
+function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
@@ -132,8 +132,6 @@ export default function Model(options) {
    * The corresponding constructor parameter is undocumented, since
    * ResourceLoader is part of the private API.
    *
-   * @memberof Model.prototype
-   *
    * @type {ResourceLoader}
    * @private
    */
@@ -144,8 +142,6 @@ export default function Model(options) {
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
    * ModelType is part of the private API.
-   *
-   * @memberof Model.prototype
    *
    * @type {ModelType}
    * @readonly
@@ -159,8 +155,6 @@ export default function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @memberof Model.prototype
    * 
    * @type {Matrix4}
 
@@ -184,8 +178,6 @@ export default function Model(options) {
    * The scale value after being clamped by the maximum scale parameter.
    * Used to adjust bounding spheres without repeated calculation.
    *
-   * @memberof Model.prototype
-   *
    * @type {Number}
    * @private
    */
@@ -199,8 +191,6 @@ export default function Model(options) {
    * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
    *
-   * @memberof Model.prototype
-   *
    * @type {Number}
    * @private
    */
@@ -211,8 +201,6 @@ export default function Model(options) {
    * clipping planes and image-based lighting instead of the modelMatrix. This is
    * so that when models are part of a tileset, these properties get transformed
    * relative to a common reference (such as the root).
-   *
-   * @memberof Model.prototype
    *
    * @type {Matrix4}
    * @private
@@ -391,8 +379,6 @@ export default function Model(options) {
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
    *
-   * @memberof Model.prototype
-   *
    * @type {Boolean}
    *
    * @default true
@@ -401,8 +387,6 @@ export default function Model(options) {
 
   /**
    * The color to use when rendering outlines.
-   *
-   * @memberof Model.prototype
    *
    * @type {Color}
    *
@@ -2691,3 +2675,5 @@ function makeModelOptions(loader, modelType, options) {
     classificationType: options.classificationType,
   };
 }
+
+export default Model;
