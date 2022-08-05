@@ -289,7 +289,7 @@ describe(
       expect(blur.uniforms.stepSize).toEqual(2.0);
     });
 
-    // TODO: rewrite this test using loadAndZoomToModel and boxTextured
+    // TODO: rewrite this test using loadAndZoomToModel
     xit("depth of field", function () {
       if (!scene.context.depthTexture) {
         return;
@@ -303,7 +303,7 @@ describe(
 
       const model = scene.primitives.add(
         Model.fromGltf({
-          url: "./Data/Models/Box/CesiumBoxTest.gltf",
+          url: boxTexturedUrl,
           modelMatrix: modelMatrix,
           scale: 40.0,
         })
@@ -422,7 +422,7 @@ describe(
       expect(ao.uniforms.blurStepSize).toEqual(2.0);
     });
 
-    // TODO: rewrite this test using loadAndZoomToModel and boxTextured
+    // TODO: rewrite this test using loadAndZoomToModel
     xit("bloom", function () {
       const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
       const modelMatrix = Transforms.headingPitchRollToFixedFrame(
@@ -432,7 +432,7 @@ describe(
 
       const model = scene.primitives.add(
         Model.fromGltf({
-          url: "./Data/Models/Box/CesiumBoxTest.gltf",
+          url: boxTexturedUrl,
           modelMatrix: modelMatrix,
           scale: 40.0,
         })
