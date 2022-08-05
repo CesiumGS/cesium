@@ -22,6 +22,8 @@ import {
   ClippingPlaneCollection,
   Globe,
   createWorldTerrain,
+  Cartographic,
+  sampleTerrainMostDetailed,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -372,7 +374,55 @@ describe(
       });
     });
 
-    it("Computes bounding sphere with height reference", function () {
+    it("Computes bounding sphere with height reference clamp to ground", function () {
+      scene.globe.terrainProvider = createWorldTerrain();
+
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+      });
+      testObject.model = model;
+
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
+      const positionCartographic = Cartographic.fromCartesian(position);
+
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+      visualizer.update(time);
+
+      const modelPrimitive = scene.primitives.get(0);
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      let updatedPositionCartographic;
+      return sampleTerrainMostDetailed(scene.globe.terrainProvider, [
+        positionCartographic,
+      ])
+        .then((cartographicResults) => {
+          updatedPositionCartographic = cartographicResults[0];
+
+          return pollToPromise(function () {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+          });
+        })
+        .then(() => {
+          expect(state).toBe(BoundingSphereState.DONE);
+          const distance = Cartesian3.distance(
+            modelPrimitive.boundingSphere.center,
+            result.center
+          );
+          expect(distance).toEqualEpsilon(
+            updatedPositionCartographic.height,
+            CesiumMath.EPSILON6
+          );
+        });
+    });
+
+    it("Computes bounding sphere with height reference clamp to ground", function () {
       scene.globe.terrainProvider = createWorldTerrain();
 
       const time = JulianDate.now();
@@ -382,9 +432,10 @@ describe(
       });
       testObject.model = model;
 
-      testObject.position = new ConstantProperty(
-        Cartesian3.fromDegrees(149.515332, -34.984799, 1000)
-      );
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799, 1000);
+      const positionCartographic = Cartographic.fromCartesian(position);
+
+      testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
 
@@ -393,18 +444,30 @@ describe(
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
-      return pollToPromise(function () {
-        scene.render();
-        state = visualizer.getBoundingSphere(testObject, result);
-        return state !== BoundingSphereState.PENDING;
-      }).then(function () {
-        expect(state).toBe(BoundingSphereState.DONE);
-        const expected = BoundingSphere.clone(
-          modelPrimitive.boundingSphere,
-          new BoundingSphere()
-        );
-        expect(result).not.toEqual(expected);
-      });
+      let updatedPositionCartographic;
+      return sampleTerrainMostDetailed(scene.globe.terrainProvider, [
+        positionCartographic,
+      ])
+        .then((cartographicResults) => {
+          updatedPositionCartographic = cartographicResults[0];
+
+          return pollToPromise(function () {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+          });
+        })
+        .then(() => {
+          expect(state).toBe(BoundingSphereState.DONE);
+          const distance = Cartesian3.distance(
+            modelPrimitive.boundingSphere.center,
+            result.center
+          );
+          expect(distance).toEqualEpsilon(
+            updatedPositionCartographic.height,
+            CesiumMath.EPSILON6
+          );
+        });
     });
 
     it("Fails bounding sphere for entity without billboard.", function () {

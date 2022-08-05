@@ -141,6 +141,8 @@ ModelVisualizer.prototype.update = function (time) {
         nodeTransformationsScratch: {},
         articulationsScratch: {},
         loadFail: false,
+        awaitingSampleTerrain: false,
+        clampedBoundingSphere: undefined,
       };
       modelHash[entity.id] = modelData;
 
