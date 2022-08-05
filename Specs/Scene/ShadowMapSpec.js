@@ -35,8 +35,7 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
-// Some tests use glTF 1.0 assets that should be converted to 2.0
-xdescribe(
+describe(
   "Scene/ShadowMap",
   function () {
     let scene;
