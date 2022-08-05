@@ -23,7 +23,7 @@ function readAccessorPacked(gltf, accessor) {
   const values = new Array(numberOfComponents * count);
 
   if (!defined(accessor.bufferView)) {
-    return values.fill(0)
+    return values.fill(0);
   }
 
   const bufferView = gltf.bufferViews[accessor.bufferView];
