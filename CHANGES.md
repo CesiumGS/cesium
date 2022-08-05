@@ -22,6 +22,7 @@
 - Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
 - Support for rendering instanced models on the CPU has been removed.
 - `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
+- `ModelMesh` and `ModelMaterial` have been removed.
 
 ##### Additions :tada:
 
