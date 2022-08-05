@@ -10,7 +10,7 @@ import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import ViewportPrimitive from "../ViewportPrimitive.js";
-import loadAndZoomToModel from "./ModelExperimental/loadAndZoomToModel.js";
+import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
 
 describe(
   "Scene/PostProcessStageLibrary",
