@@ -15,7 +15,7 @@ import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
-import ModelUtility from "./ModelExperimental/ModelUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to

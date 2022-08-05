@@ -17,7 +17,7 @@ import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelComponents from "./ModelComponents.js";
-import ModelUtility from "./ModelExperimental/ModelUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import Quaternion from "../Core/Quaternion.js";
