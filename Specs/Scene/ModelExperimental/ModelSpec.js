@@ -91,7 +91,7 @@ describe(
     const boomBoxUrl =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const riggedFigureUrl =
-      "./Data/Models/rigged-figure-test/rigged-figure-test.gltf";
+      "./Data/Models/GltfLoader/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
       "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
 
@@ -3467,7 +3467,7 @@ describe(
 
     describe("back-face culling", function () {
       const boxBackFaceCullingUrl =
-        "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
+        "./Data/Models/GltfLoader/BoxBackFaceCulling/glTF/BoxBackFaceCulling.gltf";
       const boxBackFaceCullingOffset = new HeadingPitchRange(
         Math.PI / 2,
         0,

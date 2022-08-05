@@ -49,13 +49,15 @@ describe(
     const boxHeight = 4.0;
     const floorHeight = -1.0;
 
-    const boxUrl = "./Data/Models/Shadows/Box.gltf";
+    const boxUrl = "./Data/Models/PBR/Box/Box.gltf";
     const boxTranslucentUrl =
       "./Data/Models/GltfLoader/BoxInterleavedTranslucent/glTF/BoxInterleavedTranslucent.gltf";
     const boxNoNormalsUrl =
       "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
-    const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
-    const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
+    const boxCutoutUrl =
+      "./Data/Models/GltfLoader/BoxCutout/glTF/BoxCutout.gltf";
+    const boxInvertedUrl =
+      "./Data/Models/GltfLoader/BoxInverted/glTF/BoxInverted.gltf";
 
     let box;
     let boxTranslucent;
