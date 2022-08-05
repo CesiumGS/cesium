@@ -375,6 +375,7 @@ describe(
     });
 
     it("Computes bounding sphere with height reference clamp to ground", function () {
+      const ellipsoidTerrainProvider = scene.globe.terrainProvider;
       scene.globe.terrainProvider = createWorldTerrain();
 
       const time = JulianDate.now();
@@ -419,10 +420,12 @@ describe(
             updatedPositionCartographic.height,
             CesiumMath.EPSILON6
           );
+          scene.globe.terrainProvider = ellipsoidTerrainProvider;
         });
     });
 
-    it("Computes bounding sphere with height reference clamp to ground", function () {
+    it("Computes bounding sphere with height reference relative to ground", function () {
+      const ellipsoidTerrainProvider = scene.globe.terrainProvider;
       scene.globe.terrainProvider = createWorldTerrain();
 
       const time = JulianDate.now();
@@ -467,6 +470,7 @@ describe(
             updatedPositionCartographic.height,
             CesiumMath.EPSILON6
           );
+          scene.globe.terrainProvider = ellipsoidTerrainProvider;
         });
     });
 
