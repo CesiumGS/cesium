@@ -1,5 +1,4 @@
 import {
-  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTile,
@@ -7,21 +6,22 @@ import {
   Cesium3DTileset,
   Cesium3DTilesetStatistics,
   Ellipsoid,
+  GroupMetadata,
   HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
   ImplicitTileset,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   MetadataClass,
-  GroupMetadata,
+  Model3DTileContent,
   Multiple3DTileContent,
   Resource,
   TileBoundingSphere,
   TileBoundingS2Cell,
 } from "../../Source/Cesium.js";
-import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -949,9 +949,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
@@ -993,9 +991,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
@@ -1011,9 +1007,7 @@ describe(
           // The root tile of this tileset only has one available content
           const transcodedRoot = tileset.root.children[0];
           const transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
-          );
+          expect(transcodedRoot.content).toBeInstanceOf(Model3DTileContent);
           expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });

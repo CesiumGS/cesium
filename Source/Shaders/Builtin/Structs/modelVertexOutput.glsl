@@ -5,7 +5,7 @@
  * @glslStruct
  *
  * @see {@link CustomShader}
- * @see {@link ModelExperimental}
+ * @see {@link Model}
  *
  * @property {vec3} positionMC The position of the vertex in model coordinates
  * @property {float} pointSize A custom value for gl_PointSize. This is only used for point primitives. 
