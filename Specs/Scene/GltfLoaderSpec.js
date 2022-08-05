@@ -154,21 +154,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    // This is a no-op because GltfJsonLoader automatically upgrades the
-    // glTF version. This should work once that behavior is removed.
-    it("throws if loading an unsupported glTF version", function () {
-      function modifyGltf(gltf) {
-        gltf.asset.version = "1.0";
-        return gltf;
-      }
-
-      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
-        function (error) {
-          expect(error).toBeInstanceOf(RuntimeError);
-        }
-      );
-    });
-
     it("throws if an unsupported extension is required", function () {
       function modifyGltf(gltf) {
         gltf.extensionsRequired = ["NOT_supported_extension"];
