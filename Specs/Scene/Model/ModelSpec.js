@@ -3808,41 +3808,20 @@ describe(
       });
     });
 
-    describe("classification", function () {
-      it("initializes with classificationType", function () {
-        return loadAndZoomToModel(
-          {
-            url: boxTexturedGltfUrl,
-            classificationType: ClassificationType.CESIUM_3D_TILE,
-          },
-          scene
-        ).then(function (model) {
-          expect(model.classificationType).toBe(
-            ClassificationType.CESIUM_3D_TILE
-          );
+    it("renders with classificationType", function () {
+      return loadAndZoomToModel(
+        {
+          url: boxTexturedGltfUrl,
+          classificationType: ClassificationType.CESIUM_3D_TILE,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.classificationType).toBe(
+          ClassificationType.CESIUM_3D_TILE
+        );
 
-          // There's nothing to classify, so the model won't render.
-          verifyRender(model, false);
-        });
-      });
-
-      it("changing classificationType works", function () {
-        return loadAndZoomToModel(
-          {
-            url: boxTexturedGltfUrl,
-          },
-          scene
-        ).then(function (model) {
-          verifyRender(model, true);
-
-          model.classificationType = ClassificationType.CESIUM_3D_TILE;
-          expect(model.classificationType).toBe(
-            ClassificationType.CESIUM_3D_TILE
-          );
-
-          // There's nothing to classify, so the model won't render.
-          verifyRender(model, false);
-        });
+        // There's nothing to classify, so the model won't render.
+        verifyRender(model, false);
       });
     });
 
