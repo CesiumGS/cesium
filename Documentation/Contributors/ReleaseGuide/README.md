@@ -13,7 +13,7 @@ There is no release manager; instead, our community shares the responsibility. A
 3. Make sure you are using the latest drivers for your video card.
 4. Pull down the latest `main` branch.
 5. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
-6. Proofread [CHANGES.md](../blob/main/CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first.
+6. Proofread [CHANGES.md](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first.
 7. Update the version in `package.json` to match, e.g. `1.14.0` -> `1.15.0`.
 8. Commit these changes.
 9. Make sure the repository is clean `git clean -d -x -f`. **This will delete all files not already in the repository.**
@@ -46,4 +46,4 @@ There is no release manager; instead, our community shares the responsibility. A
 26. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
     - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.
 27. Update the version of CesiumJS used in the Cesium Workshop: https://github.com/CesiumGS/cesium-workshop/blob/main/index.html#L13-L14
-28. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/wiki/Release-Guide)
+28. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/blob/main/Documentation/Contributors/AnalyticsReleaseGuide/README.md)
