@@ -20,6 +20,8 @@
 
 - Support for glTF 1.0 assets has been removed. Please convert any glTF 1.0 assets to glTF 2.0. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
 - Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+- Support for rendering instanced models on the CPU has been removed.
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
 
 ##### Additions :tada:
 
