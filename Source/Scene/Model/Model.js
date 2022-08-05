@@ -62,17 +62,15 @@ import SplitDirection from "../SplitDirection.js";
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC}
+ *  </li>
  * </ul>
  * </p>
  * <p>
  * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
  * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
  * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
- * </p>
- * <p>
- * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
- * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
- * relative to a local origin.
  * </p>
  *
  * @alias Model
@@ -119,8 +117,12 @@ import SplitDirection from "../SplitDirection.js";
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ *
+ * @see Model.fromGltf
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
-export default function Model(options) {
+function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
@@ -155,7 +157,7 @@ export default function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
+   * 
    * @type {Matrix4}
 
    * @default {@link Matrix4.IDENTITY}
@@ -705,6 +707,8 @@ Object.defineProperties(Model.prototype, {
   /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
+   *
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    * @readonly
@@ -1516,6 +1520,8 @@ Object.defineProperties(Model.prototype, {
   /**
    * Reference to the pick IDs. This is only used internally, e.g. for
    * per-feature post-processing in {@link PostProcessStage}.
+   *
+   * @memberof Model.prototype
    *
    * @type {PickId[]}
    * @readonly
@@ -2671,3 +2677,5 @@ function makeModelOptions(loader, modelType, options) {
     classificationType: options.classificationType,
   };
 }
+
+export default Model;

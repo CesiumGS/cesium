@@ -30,7 +30,6 @@ import deprecationWarning from "../../Core/deprecationWarning.js";
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  *
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeature(options) {
   this._model = options.model;
