@@ -8,6 +8,7 @@ import {
   ShaderBuilder,
   HeadingPitchRange,
   Cartesian3,
+  Transforms,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -25,10 +26,8 @@ describe(
       "./Data/Models/GltfLoader/PropertyTextureWithVectorProperties/PropertyTextureWithVectorProperties.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    const tilesetWithMetadata =
-      "./Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset_1.1.json";
-    //const tilesetWithStructuralMetadata =
-    //  "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
+    const tilesetWithMetadataStatistics =
+      "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
     let scene;
     const gltfLoaders = [];
@@ -451,16 +450,20 @@ describe(
     });
 
     xit("Handles a tileset with metadata statistics", function () {
-      const centerLongitude = -1.31968;
-      const centerLatitude = 0.698874;
-      const headingPitchRange = new HeadingPitchRange(0.0, -1.57, 15.0);
-      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-      scene.camera.lookAt(center, headingPitchRange);
+      const center = Cartesian3.fromDegrees(-75.152325, 39.94704);
 
-      const tilesetOptions = { enableModelExperimental: true };
+      const headingPitchRange = new HeadingPitchRange(0, 0, 25.0);
+      scene.camera.lookAt(center, headingPitchRange);
+      scene.camera.moveRight(8);
+      scene.camera.moveUp(4);
+
+      const tilesetOptions = {
+        enableModelExperimental: true,
+        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+      };
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithMetadata,
+        tilesetWithMetadataStatistics,
         tilesetOptions
       ).then(function (tileset) {
         expect(tileset).toBeDefined();
