@@ -17,7 +17,7 @@ import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelComponents from "./ModelComponents.js";
-import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import Quaternion from "../Core/Quaternion.js";
@@ -2205,7 +2205,7 @@ function parse(
   }
   const extensionsRequired = gltf.extensionsRequired;
   if (defined(extensionsRequired)) {
-    ModelExperimentalUtility.checkSupportedExtensions(extensionsRequired);
+    ModelUtility.checkSupportedExtensions(extensionsRequired);
   }
 
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
