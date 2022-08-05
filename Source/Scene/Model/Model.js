@@ -132,6 +132,8 @@ export default function Model(options) {
    * The corresponding constructor parameter is undocumented, since
    * ResourceLoader is part of the private API.
    *
+   * @memberof Model.prototype
+   *
    * @type {ResourceLoader}
    * @private
    */
@@ -142,6 +144,8 @@ export default function Model(options) {
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
    * ModelType is part of the private API.
+   *
+   * @memberof Model.prototype
    *
    * @type {ModelType}
    * @readonly
@@ -156,6 +160,8 @@ export default function Model(options) {
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
    *
+   * @memberof Model.prototype
+   * 
    * @type {Matrix4}
 
    * @default {@link Matrix4.IDENTITY}
@@ -178,6 +184,8 @@ export default function Model(options) {
    * The scale value after being clamped by the maximum scale parameter.
    * Used to adjust bounding spheres without repeated calculation.
    *
+   * @memberof Model.prototype
+   *
    * @type {Number}
    * @private
    */
@@ -191,6 +199,8 @@ export default function Model(options) {
    * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
    *
+   * @memberof Model.prototype
+   *
    * @type {Number}
    * @private
    */
@@ -201,6 +211,8 @@ export default function Model(options) {
    * clipping planes and image-based lighting instead of the modelMatrix. This is
    * so that when models are part of a tileset, these properties get transformed
    * relative to a common reference (such as the root).
+   *
+   * @memberof Model.prototype
    *
    * @type {Matrix4}
    * @private
@@ -379,6 +391,8 @@ export default function Model(options) {
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
    *
+   * @memberof Model.prototype
+   *
    * @type {Boolean}
    *
    * @default true
@@ -387,6 +401,8 @@ export default function Model(options) {
 
   /**
    * The color to use when rendering outlines.
+   *
+   * @memberof Model.prototype
    *
    * @type {Color}
    *
@@ -705,6 +721,8 @@ Object.defineProperties(Model.prototype, {
   /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
+   *
+   * @memberof Model.prototype
    *
    * @type {Boolean}
    * @readonly
@@ -1516,6 +1534,8 @@ Object.defineProperties(Model.prototype, {
   /**
    * Reference to the pick IDs. This is only used internally, e.g. for
    * per-feature post-processing in {@link PostProcessStage}.
+   *
+   * @memberof Model.prototype
    *
    * @type {PickId[]}
    * @readonly
