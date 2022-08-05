@@ -1502,7 +1502,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
 }
 
 // Convert an array of sample datas to a final weighted properties.
-Properties getPropertiesFromMegatexture(SampleData sampleDatas[SAMPLE_COUNT]) {
+Properties accumulatePropertiesFromMegatexture(SampleData sampleDatas[SAMPLE_COUNT]) {
     #if (SAMPLE_COUNT == 1)
         return getPropertiesFromMegatexture(sampleDatas[0]);
     #else
@@ -1733,7 +1733,7 @@ void main()
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
-        Properties properties = getPropertiesFromMegatexture(sampleDatas);
+        Properties properties = accumulatePropertiesFromMegatexture(sampleDatas);
         
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
