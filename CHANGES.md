@@ -18,7 +18,7 @@
 
 #### Breaking Changes :mega:
 
-- glTF 1.0 assets are no longer fully supported. glTF 1.0 techniques are converted to PBR materials where possible, but more complex techniques will no longer function correctly. If custom GLSL shaders are needed, use `CustomShader` instead.
+- glTF 1.0 assets are no longer fully supported. glTF 1.0 techniques are converted to PBR materials where possible, but more complex techniques will no longer function correctly. If custom GLSL shaders are needed, use `CustomShader` instead. [#10648](https://github.com/CesiumGS/cesium/pull/10648)
 - The glTF 2.0 extension `KHR_techniques_webgl` and `KHR_materials_common` are also no longer fully supported. Materials are converted to PBR materials where possible.
 - Support for rendering instanced models on the CPU has been removed.
 - `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
