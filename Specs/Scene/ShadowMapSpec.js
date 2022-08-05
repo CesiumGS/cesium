@@ -5,6 +5,7 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
+  defined,
   EllipsoidTerrainProvider,
   GeometryInstance,
   HeadingPitchRange,
@@ -1286,7 +1287,8 @@ describe(
         const count = spy.calls.count();
         for (let i = 0; i < count; ++i) {
           const drawCommand = spy.calls.argsFor(i)[0];
-          if (drawCommand.owner.primitive instanceof Model) {
+          const owner = drawCommand.owner;
+          if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
                 "czm_shadow"
@@ -1303,7 +1305,8 @@ describe(
         const count = spy.calls.count();
         for (let i = 0; i < count; ++i) {
           const drawCommand = spy.calls.argsFor(i)[0];
-          if (drawCommand.owner.primitive instanceof Model) {
+          const owner = drawCommand.owner;
+          if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
                 "czm_shadow"
