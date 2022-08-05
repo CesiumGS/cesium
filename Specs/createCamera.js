@@ -1,9 +1,11 @@
-import { Cartesian3 } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { GeographicProjection } from "../Source/Cesium.js";
-import { Matrix4 } from "../Source/Cesium.js";
-import { Camera } from "../Source/Cesium.js";
+import {
+  Cartesian3,
+  defaultValue,
+  defined,
+  GeographicProjection,
+  Matrix4,
+  Camera,
+} from "../../Source/Cesium.js";
 
 function MockScene(canvas) {
   canvas = defaultValue(canvas, {

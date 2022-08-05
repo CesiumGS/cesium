@@ -1,9 +1,12 @@
-import { BoundingRectangle } from "../../Source/Cesium.js";
-import { Framebuffer } from "../../Source/Cesium.js";
-import { GlobeTranslucencyFramebuffer } from "../../Source/Cesium.js";
-import { PassState } from "../../Source/Cesium.js";
-import { PixelDatatype } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
+import {
+  BoundingRectangle,
+  Framebuffer,
+  GlobeTranslucencyFramebuffer,
+  PassState,
+  PixelDatatype,
+  Texture,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("Scene/GlobeTranslucencyFramebuffer", function () {

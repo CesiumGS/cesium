@@ -166,7 +166,7 @@ function handleError(gltfJsonLoader, error) {
 }
 
 function upgradeVersion(gltfJsonLoader, gltf) {
-  if (gltf.asset.version === "2.0") {
+  if (defined(gltf.asset) && gltf.asset.version === "2.0") {
     return Promise.resolve();
   }
 

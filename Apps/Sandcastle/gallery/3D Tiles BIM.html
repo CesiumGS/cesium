@@ -35,15 +35,17 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = false;
-
         // Power Plant design model provided by Bentley Systems
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-08-01T00:00:00Z"
+        );
+
         const tileset = scene.primitives.add(
           new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(8564),
+            url: Cesium.IonResource.fromAssetId(1240402),
           })
         );
 

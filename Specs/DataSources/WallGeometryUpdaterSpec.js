@@ -1,17 +1,20 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { PropertyArray } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { WallGeometryUpdater } from "../../Source/Cesium.js";
-import { WallGraphics } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  JulianDate,
+  TimeInterval,
+  TimeIntervalCollection,
+  ConstantProperty,
+  Entity,
+  PropertyArray,
+  SampledPositionProperty,
+  SampledProperty,
+  TimeIntervalCollectionProperty,
+  WallGeometryUpdater,
+  WallGraphics,
+  PrimitiveCollection,
+} from "../../../Source/Cesium.js";
+
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";

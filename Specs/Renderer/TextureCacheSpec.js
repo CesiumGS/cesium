@@ -1,5 +1,5 @@
-import { Texture } from "../../Source/Cesium.js";
-import { TextureCache } from "../../Source/Cesium.js";
+import { Texture, TextureCache } from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

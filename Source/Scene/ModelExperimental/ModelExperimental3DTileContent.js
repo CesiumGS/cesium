@@ -2,9 +2,9 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
-import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelExperimental from "./ModelExperimental.js";
+import Pass from "../../Renderer/Pass.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -72,7 +72,10 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._model.statistics.propertyTablesByteLength;
+      const statistics = this._model.statistics;
+      return (
+        statistics.propertyTablesByteLength + statistics.batchTexturesByteLength
+      );
     },
   },
 
@@ -192,7 +195,6 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
-  model.pointCloudShading = tileset.pointCloudShading;
   model.featureIdLabel = tileset.featureIdLabel;
   model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
   model.lightColor = tileset.lightColor;
@@ -204,6 +206,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.debugWireframe = tileset.debugWireframe;
   model.showOutline = tileset.showOutline;
   model.outlineColor = tileset.outlineColor;
+  model.pointCloudShading = tileset.pointCloudShading;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;
@@ -394,7 +397,6 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
-    show: tileset.show,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,

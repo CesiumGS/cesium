@@ -1,24 +1,27 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { BoundingSphereState } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantPositionProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { EntityCollection } from "../../Source/Cesium.js";
-import { PolylineArrowMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineGraphics } from "../../Source/Cesium.js";
-import { PolylineVisualizer } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { PolylineColorAppearance } from "../../Source/Cesium.js";
-import { PolylineMaterialAppearance } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  JulianDate,
+  ShowGeometryInstanceAttribute,
+  BoundingSphereState,
+  CallbackProperty,
+  ColorMaterialProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  Entity,
+  EntityCollection,
+  PolylineArrowMaterialProperty,
+  PolylineGraphics,
+  PolylineVisualizer,
+  ClassificationType,
+  PolylineColorAppearance,
+  PolylineMaterialAppearance,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import createDynamicProperty from "../createDynamicProperty.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";

@@ -1,6 +1,9 @@
-import { ContextLimits } from "../../Source/Cesium.js";
-import { Renderbuffer } from "../../Source/Cesium.js";
-import { RenderbufferFormat } from "../../Source/Cesium.js";
+import {
+  ContextLimits,
+  Renderbuffer,
+  RenderbufferFormat,
+} from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

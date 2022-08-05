@@ -1,33 +1,36 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { ArcType } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { DistanceDisplayConditionGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { GroundPolylineGeometry } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { PolylinePipeline } from "../../Source/Cesium.js";
-import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { TimeIntervalCollection } from "../../Source/Cesium.js";
-import { BoundingSphereState } from "../../Source/Cesium.js";
-import { CallbackProperty } from "../../Source/Cesium.js";
-import { ColorMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { GridMaterialProperty } from "../../Source/Cesium.js";
-import { PolylineGeometryUpdater } from "../../Source/Cesium.js";
-import { PolylineGraphics } from "../../Source/Cesium.js";
-import { PropertyArray } from "../../Source/Cesium.js";
-import { SampledPositionProperty } from "../../Source/Cesium.js";
-import { SampledProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
-import { Globe } from "../../Source/Cesium.js";
-import { GroundPolylinePrimitive } from "../../Source/Cesium.js";
-import { ShadowMode } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  ArcType,
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  defined,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  GroundPolylineGeometry,
+  JulianDate,
+  PolylinePipeline,
+  ShowGeometryInstanceAttribute,
+  TimeInterval,
+  TimeIntervalCollection,
+  BoundingSphereState,
+  CallbackProperty,
+  ColorMaterialProperty,
+  ConstantProperty,
+  Entity,
+  GridMaterialProperty,
+  PolylineGeometryUpdater,
+  PolylineGraphics,
+  PropertyArray,
+  SampledPositionProperty,
+  SampledProperty,
+  TimeIntervalCollectionProperty,
+  Globe,
+  GroundPolylinePrimitive,
+  ShadowMode,
+} from "../../../Source/Cesium.js";
+
 import createDynamicProperty from "../createDynamicProperty.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";

@@ -3,7 +3,6 @@ import {
   Cesium3DContentGroup,
   Color,
   ContentMetadata,
-  ExperimentalFeatures,
   HeadingPitchRange,
   HeadingPitchRoll,
   Transforms,
@@ -62,9 +61,6 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-
-      // This class is only used with Model
-      ExperimentalFeatures.enableModelExperimental = false;
     });
 
     beforeEach(function () {
@@ -74,8 +70,6 @@ describe(
 
     afterAll(function () {
       scene.destroyForSpecs();
-
-      ExperimentalFeatures.enableModelExperimental = true;
     });
 
     afterEach(function () {

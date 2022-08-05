@@ -221,7 +221,7 @@ const uriToGuid = {};
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.96.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.97.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -659,7 +659,7 @@ function Model(options) {
   if (options.dequantizeInShader) {
     deprecationWarning(
       "Model.dequantizeInShader",
-      "The Model dequantizeInShader constructor parameter was deprecated in CesiumJS 1.94 and will be removed in 1.96"
+      "The Model dequantizeInShader constructor parameter was deprecated in CesiumJS 1.94 and will be removed in 1.97"
     );
   }
 
@@ -722,7 +722,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       deprecationWarning(
         "Model.gltf",
-        "Model.gltf getter was deprecated in CesiumJS 1.94 and will be removed in 1.96"
+        "Model.gltf getter was deprecated in CesiumJS 1.94 and will be removed in 1.97"
       );
 
       return this.gltfInternal;
@@ -803,7 +803,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       deprecationWarning(
         "model.basePath",
-        "Model.basePath getter is deprecated in CesiumJS 1.94. It will be removed in CesiumJS 1.96"
+        "Model.basePath getter is deprecated in CesiumJS 1.94. It will be removed in CesiumJS 1.97"
       );
       return this.basePathInternal;
     },
@@ -838,11 +838,35 @@ Object.defineProperties(Model.prototype, {
    */
   boundingSphere: {
     get: function () {
-      deprecationWarning(
-        "model.boundingSphere",
-        "Model.boundingSphere currently returns results in model space. In CesiumJS 1.96, model.boundingSphere will be changed to return results in world space. The calling code will no longer need to multiply the bounding sphere by the model matrix"
+      let modelMatrix = this.modelMatrix;
+      if (
+        this.heightReference !== HeightReference.NONE &&
+        this._clampedModelMatrix
+      ) {
+        modelMatrix = this._clampedModelMatrix;
+      }
+
+      const scale = defined(this.maximumScale)
+        ? Math.min(this.maximumScale, this.scale)
+        : this.scale;
+
+      const boundingSphere = BoundingSphere.clone(
+        this._boundingSphere,
+        this._scaledBoundingSphere
       );
-      return this.boundingSphereInternal;
+      boundingSphere.radius *= scale;
+
+      BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+
+      if (defined(this._rtcCenter)) {
+        Cartesian3.add(
+          this._rtcCenter,
+          boundingSphere.center,
+          boundingSphere.center
+        );
+      }
+
+      return boundingSphere;
     },
   },
 
@@ -1008,7 +1032,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       deprecationWarning(
         "Model.pendingTextureLoads",
-        "The Model.pendingTextureLoads getter was deprecated in CesiumJS 1.94 and will be removed in CesiumJS 1.96"
+        "The Model.pendingTextureLoads getter was deprecated in CesiumJS 1.94 and will be removed in CesiumJS 1.97"
       );
 
       return this.pendingTextureLoadsInternal;
@@ -1427,7 +1451,7 @@ function containsGltfMagic(uint8Array) {
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.96.
+ * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models. Deprecated in CesiumJS 1.94, will be removed in CesiumJS 1.97.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
@@ -5319,14 +5343,14 @@ Model.prototype.update = function (frameState) {
           if (sourceVersion !== "2.0") {
             deprecationWarning(
               "gltf-1.0",
-              "glTF 1.0 assets were deprecated in CesiumJS 1.94. They will be removed in 1.96. Please convert any glTF 1.0 assets to glTF 2.0."
+              "glTF 1.0 assets were deprecated in CesiumJS 1.94. They will be removed in 1.97. Please convert any glTF 1.0 assets to glTF 2.0."
             );
           }
 
           if (sourceKHRTechniquesWebGL) {
             deprecationWarning(
               "KHR_techniques_webgl",
-              "Support for glTF 1.0 techniques and the KHR_techniques_webgl glTF extension were deprecated in CesiumJS 1.94. It will be removed in 1.96. If custom GLSL shaders are needed, use CustomShader instead."
+              "Support for glTF 1.0 techniques and the KHR_techniques_webgl glTF extension were deprecated in CesiumJS 1.94. It will be removed in 1.97. If custom GLSL shaders are needed, use CustomShader instead."
             );
           }
 

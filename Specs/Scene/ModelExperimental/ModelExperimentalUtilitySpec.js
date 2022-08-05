@@ -422,4 +422,34 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expectCullFace(matrix, PrimitiveType.TRIANGLE_STRIP, CullFace.FRONT);
     expectCullFace(matrix, PrimitiveType.TRIANGLE_FAN, CullFace.FRONT);
   });
+
+  it("sanitizeGlslIdentifier removes non-alphanumeric characters", function () {
+    const identifier = "temperature ℃";
+    const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
+    expect(result).toEqual("temperature_");
+  });
+
+  it("sanitizeGlslIdentifier removes consecutive underscores", function () {
+    const identifier = "custom__property";
+    const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
+    expect(result).toEqual("custom_property");
+  });
+
+  it("sanitizeGlslIdentifier removes gl_ prefix", function () {
+    const identifier = "gl_customProperty";
+    const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
+    expect(result).toEqual("customProperty");
+  });
+
+  it("sanitizeGlslIdentifier adds underscore to digit identifier", function () {
+    const identifier = "1234";
+    const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
+    expect(result).toEqual("_1234");
+  });
+
+  it("sanitizeGlslIdentifier handles all cases", function () {
+    const identifier = "gl_1st__test℃_variable";
+    const result = ModelExperimentalUtility.sanitizeGlslIdentifier(identifier);
+    expect(result).toEqual("_1st_test_variable");
+  });
 });

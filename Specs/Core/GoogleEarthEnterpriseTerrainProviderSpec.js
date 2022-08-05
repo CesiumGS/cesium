@@ -1,15 +1,19 @@
-import { defaultValue } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseMetadata } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseTerrainData } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseTerrainProvider } from "../../Source/Cesium.js";
-import { GoogleEarthEnterpriseTileInformation } from "../../Source/Cesium.js";
+import {
+  defaultValue,
+  Ellipsoid,
+  GeographicTilingScheme,
+  GoogleEarthEnterpriseMetadata,
+  GoogleEarthEnterpriseTerrainData,
+  GoogleEarthEnterpriseTerrainProvider,
+  GoogleEarthEnterpriseTileInformation,
+  Request,
+  RequestScheduler,
+  Resource,
+  TerrainProvider,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { TerrainProvider } from "../../Source/Cesium.js";
+
 import pollToPromise from "../pollToPromise.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {

@@ -1,15 +1,18 @@
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { HorizontalOrigin } from "../../Source/Cesium.js";
-import { LabelCollection } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { PrimitiveCollection } from "../../Source/Cesium.js";
-import { VerticalOrigin } from "../../Source/Cesium.js";
+import {
+  ColorGeometryInstanceAttribute,
+  defaultValue,
+  defined,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  HorizontalOrigin,
+  LabelCollection,
+  PerInstanceColorAppearance,
+  Primitive,
+  PrimitiveCollection,
+  VerticalOrigin,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 

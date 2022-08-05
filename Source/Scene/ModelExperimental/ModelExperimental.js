@@ -278,8 +278,8 @@ export default function ModelExperimental(options) {
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
-  this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+  this._attenuation = pointCloudShading.attenuation;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -523,6 +523,11 @@ function initialize(model) {
   );
   model._texturesLoadedPromise = texturesLoadedPromise
     .then(function () {
+      // If the model was destroyed while loading textures, return.
+      if (!defined(model) || model.isDestroyed()) {
+        return;
+      }
+
       model._texturesLoaded = true;
 
       // Re-run the pipeline so texture memory statistics are re-computed
@@ -2090,7 +2095,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
     clampedModelMatrix[13] = clampedPosition.y;
     clampedModelMatrix[14] = clampedPosition.z;
 
-    model._heightChanged = true;
+    model._heightDirty = true;
   };
 }
 
@@ -2541,19 +2546,36 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
  * @private
  */
 ModelExperimental.prototype.applyStyle = function (style) {
+  this.resetDrawCommands();
+
+  const isPnts = this.type === ModelExperimentalType.TILE_PNTS;
+
+  const hasFeatureTable =
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0;
+
+  const propertyAttributes = defined(this.structuralMetadata)
+    ? this.structuralMetadata.propertyAttributes
+    : undefined;
+  const hasPropertyAttributes =
+    defined(propertyAttributes) && defined(propertyAttributes[0]);
+
+  // Point clouds will be styled on the GPU unless they contain
+  // a batch table. That is, CPU styling will not be applied if
+  // - points have no metadata at all, or
+  // - points have metadata stored as a property attribute
+  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    return;
+  }
+
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
-  if (
-    defined(this.featureTableId) &&
-    this.featureTables[this.featureTableId].featuresLength > 0
-  ) {
+  if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);
   }
-
-  this.resetDrawCommands();
 };
 
 function makeModelOptions(loader, modelType, options) {

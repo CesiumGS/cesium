@@ -65,8 +65,6 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = false;
-
         // Add a clipping plane, a plane geometry to show the representation of the
         // plane, and control the magnitude of the plane distance with the mouse.
 
@@ -75,6 +73,10 @@
           selectionIndicator: false,
         });
         const scene = viewer.scene;
+
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-08-01T00:00:00Z"
+        );
 
         const clipObjects = ["BIM", "Point Cloud", "Instanced", "Model"];
         const viewModel = {
@@ -283,7 +285,7 @@
         }
 
         // Power Plant design model provided by Bentley Systems
-        const bimUrl = Cesium.IonResource.fromAssetId(8564);
+        const bimUrl = Cesium.IonResource.fromAssetId(1240402);
         const pointCloudUrl = Cesium.IonResource.fromAssetId(16421);
         const instancedUrl =
           "../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json";

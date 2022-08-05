@@ -1,16 +1,20 @@
-import { defined } from "../../../Source/Cesium.js";
-import { GeometryInstance } from "../../../Source/Cesium.js";
+import {
+  defined,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  WebMercatorTilingScheme,
+  EllipsoidSurfaceAppearance,
+  Globe,
+  GlobeSurfaceTile,
+  Primitive,
+  QuadtreeTile,
+  CesiumInspectorViewModel,
+} from "../../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../../Source/Cesium.js";
-import { Rectangle } from "../../../Source/Cesium.js";
-import { RectangleGeometry } from "../../../Source/Cesium.js";
-import { WebMercatorTilingScheme } from "../../../Source/Cesium.js";
-import { EllipsoidSurfaceAppearance } from "../../../Source/Cesium.js";
-import { Globe } from "../../../Source/Cesium.js";
-import { GlobeSurfaceTile } from "../../../Source/Cesium.js";
-import { Primitive } from "../../../Source/Cesium.js";
-import { QuadtreeTile } from "../../../Source/Cesium.js";
+
 import createScene from "../../createScene.js";
-import { CesiumInspectorViewModel } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/CesiumInspector/CesiumInspectorViewModel",

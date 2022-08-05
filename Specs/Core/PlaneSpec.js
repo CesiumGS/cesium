@@ -1,9 +1,12 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cartesian4,
+  Matrix3,
+  Matrix4,
+  Plane,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
 
 describe("Core/Plane", function () {
   it("constructs", function () {

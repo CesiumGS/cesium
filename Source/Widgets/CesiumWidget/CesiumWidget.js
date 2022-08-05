@@ -8,7 +8,6 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import FeatureDetection from "../../Core/FeatureDetection.js";
 import formatError from "../../Core/formatError.js";
-import requestAnimationFrame from "../../Core/requestAnimationFrame.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import createWorldImagery from "../../Scene/createWorldImagery.js";
 import Globe from "../../Scene/Globe.js";
@@ -534,7 +533,7 @@ Object.defineProperties(CesiumWidget.prototype, {
 
   /**
    * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
-   * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+   * is true. If undefined, the browser's requestAnimationFrame implementation
    * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof CesiumWidget.prototype
@@ -559,7 +558,7 @@ Object.defineProperties(CesiumWidget.prototype, {
 
   /**
    * Gets or sets whether or not this widget should control the render loop.
-   * If true the widget will use {@link requestAnimationFrame} to
+   * If true the widget will use requestAnimationFrame to
    * perform rendering and resizing of the widget, as well as drive the
    * simulation clock. If set to false, you must manually call the
    * <code>resize</code>, <code>render</code> methods as part of a custom

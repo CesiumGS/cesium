@@ -1,24 +1,28 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  destroyObject,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  GroundPolylineGeometry,
+  HeadingPitchRange,
+  Rectangle,
+  RectangleGeometry,
+  ShowGeometryInstanceAttribute,
+  Pass,
+  GroundPolylinePrimitive,
+  PerInstanceColorAppearance,
+  PolylineColorAppearance,
+  PolylineMaterialAppearance,
+  Primitive,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { DistanceDisplayConditionGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { GroundPolylineGeometry } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { GroundPolylinePrimitive } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { PolylineColorAppearance } from "../../Source/Cesium.js";
-import { PolylineMaterialAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
+
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";

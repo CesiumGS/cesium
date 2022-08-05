@@ -1,6 +1,5 @@
-import { IndexDatatype } from "../../Source/Cesium.js";
-import { Buffer } from "../../Source/Cesium.js";
-import { BufferUsage } from "../../Source/Cesium.js";
+import { IndexDatatype, Buffer, BufferUsage } from "../../../Source/Cesium.js";
+
 import createContext from "../createContext.js";
 
 describe(

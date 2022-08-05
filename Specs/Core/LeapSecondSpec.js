@@ -1,5 +1,4 @@
-import { JulianDate } from "../../Source/Cesium.js";
-import { LeapSecond } from "../../Source/Cesium.js";
+import { JulianDate, LeapSecond } from "../../../Source/Cesium.js";
 
 describe("Core/LeapSecond", function () {
   it("default constructor sets expected values", function () {

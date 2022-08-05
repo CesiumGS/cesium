@@ -1,6 +1,9 @@
-import { FeatureDetection } from "../../../Source/Cesium.js";
+import {
+  FeatureDetection,
+  NavigationHelpButton,
+} from "../../../../Source/Cesium.js";
+
 import DomEventSimulator from "../../DomEventSimulator.js";
-import { NavigationHelpButton } from "../../../Source/Cesium.js";
 
 describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   it("can create and destroy", function () {

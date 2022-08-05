@@ -276,7 +276,16 @@ I3dmLoader.prototype.load = function () {
       }
 
       const components = gltfLoader.components;
-      components.transform = that._transform;
+
+      // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
+      // transform from the glTF. In practice CESIUM_RTC is not set for
+      // instanced models but multiply the transforms just in case.
+      components.transform = Matrix4.multiplyTransformation(
+        that._transform,
+        components.transform,
+        components.transform
+      );
+
       createInstances(that, components);
       createStructuralMetadata(that, components);
       that._components = components;
@@ -349,6 +358,8 @@ function createStructuralMetadata(loader, components) {
 
 const positionScratch = new Cartesian3();
 const propertyScratch1 = new Array(4);
+const transformScratch = new Matrix4();
+
 function createInstances(loader, components) {
   let i;
   const featureTable = loader._featureTable;
@@ -419,8 +430,18 @@ function createInstances(loader, components) {
     }
 
     // Set the center of the bounding sphere as the RTC center transform.
-    components.transform = Matrix4.fromTranslation(
-      positionBoundingSphere.center
+    const centerTransform = Matrix4.fromTranslation(
+      positionBoundingSphere.center,
+      transformScratch
+    );
+
+    // Combine the center transform and the CESIUM_RTC transform from the glTF.
+    // In practice CESIUM_RTC is not set for instanced models but multiply the
+    // transforms just in case.
+    components.transform = Matrix4.multiplyTransformation(
+      centerTransform,
+      components.transform,
+      components.transform
     );
   }
 
@@ -589,16 +610,17 @@ function getPositions(featureTable, instancesLength) {
       );
     }
 
+    const decodedPositions = new Float32Array(quantizedPositions.length);
     for (let i = 0; i < quantizedPositions.length / 3; i++) {
-      const quantizedPosition = quantizedPositions[i];
       for (let j = 0; j < 3; j++) {
-        quantizedPositions[3 * i + j] =
-          (quantizedPosition[j] / 65535.0) * quantizedVolumeScale[j] +
+        const index = 3 * i + j;
+        decodedPositions[index] =
+          (quantizedPositions[index] / 65535.0) * quantizedVolumeScale[j] +
           quantizedVolumeOffset[j];
       }
     }
 
-    return quantizedPositions;
+    return decodedPositions;
 
     // eslint-disable-next-line no-else-return
   } else {

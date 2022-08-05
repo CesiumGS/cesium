@@ -1,7 +1,9 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidTangentPlane } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Ellipsoid,
+  EllipsoidTangentPlane,
+} from "../../../Source/Cesium.js";
 
 describe("Core/EllipsoidTangentPlane", function () {
   it("constructor defaults to WGS84", function () {
