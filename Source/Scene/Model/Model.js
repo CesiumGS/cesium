@@ -120,7 +120,7 @@ import SplitDirection from "../SplitDirection.js";
  *
  * @see Model.fromGltf
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html%7CCesium Sandcastle Models Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
