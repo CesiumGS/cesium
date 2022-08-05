@@ -71,7 +71,7 @@ describe(
     const animatedMorphCube =
       "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/InterpolationTest/InterpolationTest.glb";
+      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -113,7 +113,8 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
-    const multiUvTest = "./Data/Models/MultiUVTest/MultiUVTest.glb";
+    const multiUvTest =
+      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
     const boxCesiumRtc =
       "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 

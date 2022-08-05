@@ -1216,7 +1216,7 @@ describe(
       });
       const model = scene.primitives.add(
         Model.fromGltf({
-          url: "./Data/Models/Box/CesiumBoxTest.gltf",
+          url: "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf",
         })
       );
       model.clippingPlanes = clippingPlanes;

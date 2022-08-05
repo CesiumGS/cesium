@@ -276,39 +276,39 @@ describe(
         });
     }
 
-    // glTF 1.0 model needs to be converted to 2.0
+    // TODO: rewrite test using loadAndZoomToModel
     xit("per-feature post process stage", function () {
-      return loadModel("./Data/Models/Box/CesiumBoxTest.gltf").then(
-        function () {
-          model.zoomTo();
-          const fs =
-            "uniform sampler2D colorTexture; \n" +
-            "varying vec2 v_textureCoordinates; \n" +
-            "void main() { \n" +
-            "    if (czm_selected(v_textureCoordinates)) { \n" +
-            "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +
-            "    } else { \n" +
-            "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
-            "    } \n" +
-            "} \n";
-          const stage = scene.postProcessStages.add(
-            new PostProcessStage({
-              fragmentShader: fs,
-            })
-          );
-          stage.selected = [];
-          return pollToPromise(function () {
-            scene.renderForSpecs();
-            return stage.ready;
-          }).then(function () {
-            expect(scene).toRender([255, 0, 0, 255]);
-            stage.selected = [model];
-            expect(scene).toRenderAndCall(function (rgba) {
-              expect(rgba).not.toEqual([255, 0, 0, 255]);
-            });
+      return loadModel(
+        "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf"
+      ).then(function () {
+        model.zoomTo();
+        const fs =
+          "uniform sampler2D colorTexture; \n" +
+          "varying vec2 v_textureCoordinates; \n" +
+          "void main() { \n" +
+          "    if (czm_selected(v_textureCoordinates)) { \n" +
+          "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +
+          "    } else { \n" +
+          "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+          "    } \n" +
+          "} \n";
+        const stage = scene.postProcessStages.add(
+          new PostProcessStage({
+            fragmentShader: fs,
+          })
+        );
+        stage.selected = [];
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return stage.ready;
+        }).then(function () {
+          expect(scene).toRender([255, 0, 0, 255]);
+          stage.selected = [model];
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual([255, 0, 0, 255]);
           });
-        }
-      );
+        });
+      });
     });
 
     it("destroys", function () {
