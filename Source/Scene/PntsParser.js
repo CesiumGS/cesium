@@ -373,7 +373,7 @@ function parseColors(featureTable) {
       semantic: VertexAttributeSemantic.COLOR,
       setIndex: 0,
       typedArray: colors,
-      // These settings are for the ModelExperimental implementation
+      // These settings are for the Model implementation
       // which decodes on the CPU and uploads a VEC3 of float colors.
       // PointCloud does the decoding on the GPU so uploads a
       // UNSIGNED_SHORT instead.

@@ -1007,81 +1007,80 @@ gulp.task("coverage", async function () {
 
   handleBuildWarnings(result);
 
-  return new Promise((resolve, reject) => {
-    const karma = new Karma.Server(
+  const karmaConfig = Karma.config.parseConfig(karmaConfigFile, {
+    configFile: karmaConfigFile,
+    browsers: browsers,
+    specReporter: {
+      suppressErrorSummary: false,
+      suppressFailed: false,
+      suppressPassed: suppressPassed,
+      suppressSkipped: true,
+    },
+    files: [
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Build/Instrumented/Cesium.js", included: true },
+      { pattern: "Build/Instrumented/Cesium.js.map", included: false },
+      { pattern: "Build/CesiumUnminified/**", included: false },
       {
-        configFile: karmaConfigFile,
-        browsers: browsers,
-        specReporter: {
-          suppressErrorSummary: false,
-          suppressFailed: false,
-          suppressPassed: suppressPassed,
-          suppressSkipped: true,
-        },
-        files: [
-          { pattern: "Specs/Data/**", included: false },
-          { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-          { pattern: "Build/Instrumented/Cesium.js", included: true },
-          { pattern: "Build/Instrumented/Cesium.js.map", included: false },
-          { pattern: "Build/CesiumUnminified/**", included: false },
-          {
-            pattern: "Build/Specs/karma-main.js",
-            included: true,
-            type: "module",
-          },
-          {
-            pattern: "Build/Specs/SpecList.js",
-            included: true,
-            type: "module",
-          },
-          { pattern: "Specs/TestWorkers/**", included: false },
-        ],
-        reporters: ["spec", "coverage"],
-        coverageReporter: {
-          dir: "Build/Coverage",
-          subdir: function (browserName) {
-            folders.push(browserName);
-            return browserName;
-          },
-          includeAllSources: true,
-        },
-        client: {
-          captureConsole: false,
-          args: [
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            webglStub,
-            undefined,
-          ],
-        },
+        pattern: "Build/Specs/karma-main.js",
+        included: true,
+        type: "module",
       },
-      function (e) {
-        let html = "<!doctype html><html><body><ul>";
-        folders.forEach(function (folder) {
-          html += `<li><a href="${encodeURIComponent(
-            folder
-          )}/index.html">${folder}</a></li>`;
+      {
+        pattern: "Build/Specs/SpecList.js",
+        included: true,
+        type: "module",
+      },
+      { pattern: "Specs/TestWorkers/**", included: false },
+    ],
+    reporters: ["spec", "coverage"],
+    coverageReporter: {
+      dir: "Build/Coverage",
+      subdir: function (browserName) {
+        folders.push(browserName);
+        return browserName;
+      },
+      includeAllSources: true,
+    },
+    client: {
+      captureConsole: false,
+      args: [
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        webglStub,
+        undefined,
+      ],
+    },
+  });
+
+  return new Promise((resolve, reject) => {
+    const karma = new Karma.Server(karmaConfig, function doneCallback(e) {
+      let html = "<!doctype html><html><body><ul>";
+      folders.forEach(function (folder) {
+        html += `<li><a href="${encodeURIComponent(
+          folder
+        )}/index.html">${folder}</a></li>`;
+      });
+      html += "</ul></body></html>";
+      fs.writeFileSync("Build/Coverage/index.html", html);
+
+      if (!process.env.TRAVIS) {
+        folders.forEach(function (dir) {
+          open(`Build/Coverage/${dir}/index.html`);
         });
-        html += "</ul></body></html>";
-        fs.writeFileSync("Build/Coverage/index.html", html);
-
-        if (!process.env.TRAVIS) {
-          folders.forEach(function (dir) {
-            open(`Build/Coverage/${dir}/index.html`);
-          });
-        }
-
-        if (failTaskOnError && e) {
-          reject(e);
-          return;
-        }
-
-        resolve();
       }
-    );
+
+      if (failTaskOnError && e) {
+        reject(e);
+        return;
+      }
+
+      resolve();
+    });
     karma.start();
   });
 });
