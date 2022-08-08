@@ -1,4 +1,4 @@
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defer from "./defer.js";
