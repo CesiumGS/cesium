@@ -13,7 +13,7 @@ import Request from "../Core/Request.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
-import protobuf from "../ThirdParty/protobufjs.js";
+import * as protobuf from "protobufjs/dist/minimal/protobuf.js";
 
 /**
  * @private
