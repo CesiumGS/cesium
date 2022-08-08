@@ -23,7 +23,7 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import MersenneTwister from "../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
