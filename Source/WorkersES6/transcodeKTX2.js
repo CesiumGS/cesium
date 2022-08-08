@@ -6,7 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import ktx_parse from "../ThirdParty/ktx-parse.js";
+import ktx_parse from "ktx-parse";
 
 const faceOrder = [
   "positiveX",
