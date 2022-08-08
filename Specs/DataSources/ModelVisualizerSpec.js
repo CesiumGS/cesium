@@ -21,9 +21,7 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
   Globe,
-  createWorldTerrain,
   Cartographic,
-  sampleTerrainMostDetailed,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -375,8 +373,14 @@ describe(
     });
 
     it("Computes bounding sphere with height reference clamp to ground", function () {
-      const ellipsoidTerrainProvider = scene.globe.terrainProvider;
-      scene.globe.terrainProvider = createWorldTerrain();
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
+      const positionCartographic = Cartographic.fromCartesian(position);
+      const expectedCartographic = Cartographic.clone(positionCartographic);
+      expectedCartographic.height = 10000.0;
+
+      spyOn(ModelVisualizer, "_sampleTerrainMostDetailed").and.callFake(() => {
+        return Promise.resolve([expectedCartographic]);
+      });
 
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
@@ -385,9 +389,6 @@ describe(
       });
       testObject.model = model;
 
-      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
-      const positionCartographic = Cartographic.fromCartesian(position);
-
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
@@ -398,9 +399,10 @@ describe(
       expect(state).toBe(BoundingSphereState.PENDING);
 
       let updatedPositionCartographic;
-      return sampleTerrainMostDetailed(scene.globe.terrainProvider, [
-        positionCartographic,
-      ])
+      return ModelVisualizer._sampleTerrainMostDetailed(
+        scene.globe.terrainProvider,
+        [positionCartographic]
+      )
         .then((cartographicResults) => {
           updatedPositionCartographic = cartographicResults[0];
 
@@ -420,13 +422,23 @@ describe(
             updatedPositionCartographic.height,
             CesiumMath.EPSILON6
           );
-          scene.globe.terrainProvider = ellipsoidTerrainProvider;
         });
     });
 
     it("Computes bounding sphere with height reference relative to ground", function () {
-      const ellipsoidTerrainProvider = scene.globe.terrainProvider;
-      scene.globe.terrainProvider = createWorldTerrain();
+      const relativeHeight = 1000.0;
+      const position = Cartesian3.fromDegrees(
+        149.515332,
+        -34.984799,
+        relativeHeight
+      );
+      const positionCartographic = Cartographic.fromCartesian(position);
+      const expectedCartographic = Cartographic.clone(positionCartographic);
+      expectedCartographic.height = 10000.0;
+
+      spyOn(ModelVisualizer, "_sampleTerrainMostDetailed").and.callFake(() => {
+        return Promise.resolve([expectedCartographic]);
+      });
 
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
@@ -435,9 +447,6 @@ describe(
       });
       testObject.model = model;
 
-      const position = Cartesian3.fromDegrees(149.515332, -34.984799, 1000);
-      const positionCartographic = Cartographic.fromCartesian(position);
-
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
@@ -448,9 +457,10 @@ describe(
       expect(state).toBe(BoundingSphereState.PENDING);
 
       let updatedPositionCartographic;
-      return sampleTerrainMostDetailed(scene.globe.terrainProvider, [
-        positionCartographic,
-      ])
+      return ModelVisualizer._sampleTerrainMostDetailed(
+        scene.globe.terrainProvider,
+        [positionCartographic]
+      )
         .then((cartographicResults) => {
           updatedPositionCartographic = cartographicResults[0];
 
@@ -467,10 +477,9 @@ describe(
             result.center
           );
           expect(distance).toEqualEpsilon(
-            updatedPositionCartographic.height,
+            updatedPositionCartographic.height - relativeHeight,
             CesiumMath.EPSILON6
           );
-          scene.globe.terrainProvider = ellipsoidTerrainProvider;
         });
     });
 

@@ -334,6 +334,9 @@ ModelVisualizer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+// Used for testing.
+ModelVisualizer._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
+
 const scratchPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 /**
@@ -403,30 +406,28 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
       if (!awaitingSampleTerrain) {
         Cartographic.clone(cartoPosition, scratchCartographic);
         this._modelHash[entity.id].awaitingSampleTerrain = true;
-        sampleTerrainMostDetailed(terrainProvider, [scratchCartographic]).then(
-          (result) => {
-            this._modelHash[entity.id].awaitingSampleTerrain = false;
+        ModelVisualizer._sampleTerrainMostDetailed(terrainProvider, [
+          scratchCartographic,
+        ]).then((result) => {
+          this._modelHash[entity.id].awaitingSampleTerrain = false;
 
-            const updatedCartographic = result[0];
-            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
-              updatedCartographic.height += cartoPosition.height;
-            }
-            ellipsoid.cartographicToCartesian(
-              updatedCartographic,
-              scratchPosition
-            );
-
-            // Update the bounding sphere with the updated position.
-            BoundingSphere.clone(model.boundingSphere, clampedBoundingSphere);
-            clampedBoundingSphere.center = scratchPosition;
-
-            this._modelHash[
-              entity.id
-            ].clampedBoundingSphere = BoundingSphere.clone(
-              clampedBoundingSphere
-            );
+          const updatedCartographic = result[0];
+          if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+            updatedCartographic.height += cartoPosition.height;
           }
-        );
+          ellipsoid.cartographicToCartesian(
+            updatedCartographic,
+            scratchPosition
+          );
+
+          // Update the bounding sphere with the updated position.
+          BoundingSphere.clone(model.boundingSphere, clampedBoundingSphere);
+          clampedBoundingSphere.center = scratchPosition;
+
+          this._modelHash[
+            entity.id
+          ].clampedBoundingSphere = BoundingSphere.clone(clampedBoundingSphere);
+        });
       }
 
       // We will return the state as pending until the clamped bounding sphere is defined,
