@@ -90,7 +90,8 @@ void main()
 
     Metadata metadata;
     MetadataClass metadataClass;
-    metadataStage(metadata, metadataClass, attributes);
+    MetadataStatistics metadataStatistics;
+    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);

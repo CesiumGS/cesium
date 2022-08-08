@@ -32,7 +32,7 @@ const MetadataPipelineStage = {
   FUNCTION_ID_INITIALIZE_METADATA_VS: "initializeMetadataVS",
   FUNCTION_ID_INITIALIZE_METADATA_FS: "initializeMetadataFS",
   FUNCTION_SIGNATURE_INITIALIZE_METADATA:
-    "void initializeMetadata(out Metadata metadata, out MetadataClass metadataClass, ProcessedAttributes attributes)",
+    "void initializeMetadata(out Metadata metadata, out MetadataClass metadataClass, out MetadataStatistics metadataStatistics, ProcessedAttributes attributes)",
   FUNCTION_ID_SET_METADATA_VARYINGS: "setMetadataVaryings",
   FUNCTION_SIGNATURE_SET_METADATA_VARYINGS: "void setMetadataVaryings()",
 
@@ -111,9 +111,9 @@ MetadataPipelineStage.process = function (
 
 /**
  * Get the types of metadata used by a primitive
- * @param {ModelComponents.primitive} primitive
+ * @param {ModelComponents.Primitive} primitive
  * @param {StructuralMetadata} structuralMetadata
- * @returns {Set<string>}
+ * @returns {Set<String>}
  * @private
  */
 function getMetadataTypes(primitive, structuralMetadata) {
@@ -251,24 +251,27 @@ function declareStructsAndFunctions(shaderBuilder) {
  */
 
 /**
- * Process the properties of an array of objects
- * @param {Object[]} propertyArray An array of objects with properties to process
- * @param {Object} propertyArray[].properties The properties to be processed
- * @param {processProperty} process A function to execute on each property
+ * Execute a function on each "own property" of a supplied object
+ * @param {Object} properties
+ * @param {processProperty} process
  * @private
  */
-function processProperties(propertyArray, process) {
-  for (let i = 0; i < propertyArray.length; i++) {
-    const properties = propertyArray[i].properties;
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = properties[propertyId];
-        process(propertyId, property);
-      }
+function processProperties(properties, process) {
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const property = properties[propertyId];
+      process(propertyId, property);
     }
   }
 }
 
+/**
+ * Update a Set of metadata types to include PropertyAttributeProperty types
+ * @param {Set<String>} metadataTypes
+ * @param {ModelComponents.Primitive} primitive
+ * @param {PropertyAttribute[]} propertyAttributes
+ * @private
+ */
 function getPropertyAttributeTypes(
   metadataTypes,
   primitive,
@@ -290,14 +293,52 @@ function getPropertyAttributeTypes(
     metadataTypes.add(glslType);
   }
 
-  processProperties(propertyAttributes, getPropertyAttributePropertyType);
+  for (let i = 0; i < propertyAttributes.length; i++) {
+    const properties = propertyAttributes[i].properties;
+    processProperties(properties, getPropertyAttributePropertyType);
+  }
 }
 
+/**
+ * Update the shader to handle all PropertyAttributes
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {ModelComponents.Primitive} primitive
+ * @param {PropertyAttribute[]} propertyAttributes
+ * @param {Object} statistics
+ * @private
+ */
 function processPropertyAttributes(
   renderResources,
   primitive,
   propertyAttributes,
   statistics
+) {
+  for (let i = 0; i < propertyAttributes.length; i++) {
+    const propertyAttribute = propertyAttributes[i];
+    const classId = propertyAttribute.class.id;
+    const classStatistics = statistics?.classes[classId];
+    processPropertyAttribute(
+      renderResources,
+      primitive,
+      propertyAttribute,
+      classStatistics
+    );
+  }
+}
+
+/**
+ * Update the shader for a single PropertyAttribute
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {ModelComponents.Primitive} primitive
+ * @param {PropertyAttribute} propertyAttribute
+ * @param {Object} classStatistics
+ * @private
+ */
+function processPropertyAttribute(
+  renderResources,
+  primitive,
+  propertyAttribute,
+  classStatistics
 ) {
   const {
     getAttributeByName,
@@ -306,7 +347,7 @@ function processPropertyAttributes(
   } = ModelExperimentalUtility;
   const { shaderBuilder } = renderResources;
 
-  function processPropertyAttribute(propertyId, property) {
+  function processPropertyAttributeProperty(propertyId, property) {
     const metadataVariable = sanitizeGlslIdentifier(propertyId);
 
     // Get information about the attribute the same way as the
@@ -339,17 +380,21 @@ function processPropertyAttributes(
       glslType,
       property
     );
-    if (defined(statistics)) {
+    if (defined(classStatistics)) {
+      const propertyStatistics = classStatistics.properties[propertyId];
       addPropertyAttributePropertyMetadataStatistics(
         shaderBuilder,
         metadataVariable,
         glslType,
-        statistics
+        propertyStatistics
       );
     }
   }
 
-  processProperties(propertyAttributes, processPropertyAttribute);
+  processProperties(
+    propertyAttribute.properties,
+    processPropertyAttributeProperty
+  );
 }
 
 /**
@@ -445,14 +490,14 @@ function addPropertyAttributePropertyMetadataClass(
  * @param {ShaderBuilder} shaderBuilder
  * @param {String} metadataVariable
  * @param {String} glslType
- * @param {PropertyAttributeProperty} property
+ * @param {Object} propertyStatistics
  * @private
  */
 function addPropertyAttributePropertyMetadataStatistics(
   shaderBuilder,
   metadataVariable,
   glslType,
-  statistics
+  propertyStatistics
 ) {
   // Declare struct field. Prefix to get the appropriate <type>MetadataStatistics struct
   const statisticsType = `${glslType}MetadataStatistics`;
@@ -470,7 +515,7 @@ function addPropertyAttributePropertyMetadataStatistics(
   // Add lines to set values in the metadataStatistics struct
   const values = getFieldValues(
     MetadataPipelineStage.METADATASTATISTICS_FIELDS,
-    statistics
+    propertyStatistics
   );
   const assignments = values.map((field) => {
     const structField = `metadataStatistics.${metadataVariable}.${field.name}`;
@@ -487,23 +532,59 @@ function addPropertyAttributePropertyMetadataStatistics(
   );
 }
 
+/**
+ * Update a Set of metadata types to include PropertyTextureProperty types
+ * @param {Set<String>} metadataTypes
+ * @param {PropertyTexture[]} propertyTextures
+ * @private
+ */
 function getPropertyTextureTypes(metadataTypes, propertyTextures) {
   function getPropertyTexturePropertyType(propertyId, property) {
     const glslType = property.getGlslType();
     metadataTypes.add(glslType);
   }
 
-  processProperties(propertyTextures, getPropertyTexturePropertyType);
+  for (let i = 0; i < propertyTextures.length; i++) {
+    const properties = propertyTextures[i].properties;
+    processProperties(properties, getPropertyTexturePropertyType);
+  }
 }
 
+/**
+ * Update the shader to handle all PropertyTextures
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {PropertyTextures[]} propertyTextures
+ * @param {Object} statistics
+ * @private
+ */
 function processPropertyTextures(
   renderResources,
   propertyTextures,
   statistics
 ) {
+  for (let i = 0; i < propertyTextures.length; i++) {
+    const propertyTexture = propertyTextures[i];
+    const classId = propertyTexture.class.id;
+    const classStatistics = statistics?.classes[classId];
+    processPropertyTexture(renderResources, propertyTexture, classStatistics);
+  }
+}
+
+/**
+ * Update the shader for a single PropertyTexture
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {PropertyTexture} propertyTexture
+ * @param {Object} classStatistics
+ * @private
+ */
+function processPropertyTexture(
+  renderResources,
+  propertyTexture,
+  classStatistics
+) {
   const { sanitizeGlslIdentifier } = ModelExperimentalUtility;
 
-  function processPropertyTexture(propertyId, property) {
+  function processPropertyTextureProperty(propertyId, property) {
     if (!property.isGpuCompatible()) {
       return;
     }
@@ -518,17 +599,18 @@ function processPropertyTextures(
       metadataVariable,
       property
     );
-    if (defined(statistics)) {
+    if (defined(classStatistics)) {
+      const propertyStatistics = classStatistics.properties[propertyId];
       addPropertyTexturePropertyMetadataStatistics(
         renderResources.shaderBuilder,
         metadataVariable,
         property,
-        statistics
+        propertyStatistics
       );
     }
   }
 
-  processProperties(propertyTextures, processPropertyTexture);
+  processProperties(propertyTexture.properties, processPropertyTextureProperty);
 }
 
 /**
@@ -638,13 +720,14 @@ function addPropertyTexturePropertyMetadataClass(
  * @param {ShaderBuilder} shaderBuilder
  * @param {String} metadataVariable
  * @param {PropertyTextureProperty} property
+ * @param {Object} propertyStatistics
  * @private
  */
 function addPropertyTexturePropertyMetadataStatistics(
   shaderBuilder,
   metadataVariable,
   property,
-  statistics
+  propertyStatistics
 ) {
   const glslType = property.getGlslType();
 
@@ -659,7 +742,7 @@ function addPropertyTexturePropertyMetadataStatistics(
   // Add lines to set values in the metadataStatistics struct
   const values = getFieldValues(
     MetadataPipelineStage.METADATASTATISTICS_FIELDS,
-    statistics
+    propertyStatistics
   );
   const assignments = values.map((field) => {
     const structField = `metadataStatistics.${metadataVariable}.${field.name}`;
@@ -679,7 +762,8 @@ function addPropertyTexturePropertyMetadataStatistics(
  * @param {String} fieldNames[].specName The name of the property in the spec
  * @param {String} fieldNames[].shaderName The name of the property in the shader
  * @param {Object} values A source of property values, keyed on fieldNames[].specName
- * @returns {{name: String, value}[]}
+ * @returns {Array<{name: String, value}>}
+ * @private
  */
 function getFieldValues(fieldNames, values) {
   if (!defined(values)) {

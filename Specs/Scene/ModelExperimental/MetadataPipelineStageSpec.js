@@ -449,17 +449,17 @@ describe(
       });
     });
 
-    xit("Handles a tileset with metadata statistics", function () {
-      const center = Cartesian3.fromDegrees(-75.152325, 39.94704);
+    it("Handles a tileset with metadata statistics", function () {
+      const modelPos = Cartesian3.fromDegrees(-75.152325, 39.94704);
 
-      const headingPitchRange = new HeadingPitchRange(0, 0, 25.0);
-      scene.camera.lookAt(center, headingPitchRange);
-      scene.camera.moveRight(8);
-      scene.camera.moveUp(4);
+      const offset = new HeadingPitchRange(0, 0, 5.0);
+      scene.camera.lookAt(modelPos, offset);
+      //scene.camera.moveRight(5);
+      //scene.camera.moveUp(3);
 
       const tilesetOptions = {
         enableModelExperimental: true,
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        modelMatrix: Transforms.eastNorthUpToFixedFrame(modelPos),
       };
       return Cesium3DTilesTester.loadTileset(
         scene,
@@ -467,12 +467,40 @@ describe(
         tilesetOptions
       ).then(function (tileset) {
         expect(tileset).toBeDefined();
+        expect(tileset.tilesLoaded).toBe(true);
 
         const metadataExtension = tileset.metadataExtension;
         expect(metadataExtension).toBeDefined();
         expect(metadataExtension.statistics).toBeDefined();
 
-        const model = tileset.root.content._model;
+        const root = tileset.root;
+        expect(root.hasEmptyContent).toBe(true);
+        expect(root.contentReady).toBe(true);
+
+        const child = root.children[0];
+        expect(child).toBeDefined();
+        expect(child.hasEmptyContent).toBe(false);
+        expect(child.contentReady).toBe(false);
+        expect(child.contentUnloaded).toBe(true);
+
+        const child1 = root.children[1];
+        expect(child1).toBeDefined();
+        expect(child1.hasEmptyContent).toBe(false);
+        expect(child1.contentReady).toBe(true);
+        expect(child1.contentUnloaded).toBe(false);
+
+        const content = child1.content;
+        expect(content).toBeDefined();
+        expect(Object.keys(content)).toEqual([
+          "_tileset",
+          "_tile",
+          "_resource",
+          "_model",
+          "_metadata",
+          "_group",
+        ]);
+
+        const model = content._model;
         expect(model).toBeDefined();
 
         const renderResources = {
@@ -488,12 +516,69 @@ describe(
 
         MetadataPipelineStage.process(renderResources, primitive, frameState);
 
-        //const metadataTypes = ["float"];
-        //checkMetadataClassStructs(renderResources.shaderBuilder, metadataTypes);
-        //expect(renderResources.shaderBuilder._vertexShaderParts.structIds).toBe(true);
-        expect(
-          renderResources.shaderBuilder._fragmentShaderParts.structIds
-        ).toBe(true);
+        // Confirm MetadataClass sub-structs were all declared
+        const metadataTypes = ["float"];
+        checkMetadataClassStructs(renderResources.shaderBuilder, metadataTypes);
+
+        // Confirm MetadataStatistics sub-structs were all declared
+        const structName = `floatMetadataStatistics`;
+        const structIdVs = `${structName}VS`;
+        const structIdFs = `${structName}FS`;
+        const structFields = [
+          `    float minValue;`,
+          `    float maxValue;`,
+          `    float mean;`,
+          `    float median;`,
+          `    float standardDeviation;`,
+          `    float variance;`,
+          `    float sum;`,
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          renderResources.shaderBuilder,
+          structIdVs,
+          structName,
+          structFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          renderResources.shaderBuilder,
+          structIdFs,
+          structName,
+          structFields
+        );
+
+        // Check that the correct values are set in the initializeMetadata function
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          renderResources.shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          [
+            "    metadata.classification = attributes.classification;",
+            "    metadata.intensity = attributes.intensity;",
+            "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
+            "    metadataStatistics.intensity.median = float(0.25416669249534607);",
+            "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
+            "    metadataStatistics.intensity.variance = float(0.03320655011);",
+            "    metadataStatistics.intensity.sum = float(8500.30455558002);",
+            "    metadataStatistics.intensity.minValue = float(0);",
+            "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+          renderResources.shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          [
+            "    metadata.classification = attributes.classification;",
+            "    metadata.intensity = attributes.intensity;",
+            "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
+            "    metadataStatistics.intensity.median = float(0.25416669249534607);",
+            "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
+            "    metadataStatistics.intensity.variance = float(0.03320655011);",
+            "    metadataStatistics.intensity.sum = float(8500.30455558002);",
+            "    metadataStatistics.intensity.minValue = float(0);",
+            "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
+          ]
+        );
       });
     });
   },

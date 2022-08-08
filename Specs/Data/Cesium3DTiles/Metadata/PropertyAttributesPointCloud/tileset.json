@@ -9,8 +9,8 @@
         "count": 29338,
         "properties": {
           "intensity": {
-            "minimum": 0.0,
-            "maximum": 0.6333333849906921,
+            "min": 0.0,
+            "max": 0.6333333849906921,
             "mean": 0.28973701532415364,
             "median": 0.25416669249534607,
             "standardDeviation": 0.18222664489583626,
