@@ -373,114 +373,108 @@ describe(
     });
 
     it("Computes bounding sphere with height reference clamp to ground", function () {
+      // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
       const positionCartographic = Cartographic.fromCartesian(position);
-      const expectedCartographic = Cartographic.clone(positionCartographic);
-      expectedCartographic.height = 10000.0;
 
-      spyOn(ModelVisualizer, "_sampleTerrainMostDetailed").and.callFake(() => {
-        return Promise.resolve([expectedCartographic]);
+      // Setup a pre-configured result for sampleTerrainMostDetailed.
+      const sampledResultCartographic = Cartographic.clone(
+        positionCartographic
+      );
+      sampledResultCartographic.height = 10000.0;
+      const sampledResult = Cartographic.toCartesian(sampledResultCartographic);
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callFake(() => {
+        return Promise.resolve([sampledResultCartographic]);
       });
 
+      // Initialize the Entity and the ModelGraphics.
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics({
         heightReference: HeightReference.CLAMP_TO_GROUND,
       });
       testObject.model = model;
-
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
+
       visualizer.update(time);
 
-      const modelPrimitive = scene.primitives.get(0);
+      // Request the bounding sphere once.
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
-      let updatedPositionCartographic;
-      return ModelVisualizer._sampleTerrainMostDetailed(
-        scene.globe.terrainProvider,
-        [positionCartographic]
-      )
-        .then((cartographicResults) => {
-          updatedPositionCartographic = cartographicResults[0];
-
-          return pollToPromise(function () {
-            scene.render();
-            state = visualizer.getBoundingSphere(testObject, result);
-            return state !== BoundingSphereState.PENDING;
-          });
-        })
-        .then(() => {
-          expect(state).toBe(BoundingSphereState.DONE);
-          const distance = Cartesian3.distance(
-            modelPrimitive.boundingSphere.center,
-            result.center
-          );
-          expect(distance).toEqualEpsilon(
-            updatedPositionCartographic.height,
-            CesiumMath.EPSILON6
-          );
-        });
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.DONE);
+        // Ensure that we only sample the terrain once.
+        expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
+        // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+        const distance = Cartesian3.distance(result.center, sampledResult);
+        expect(distance).toEqualEpsilon(0, CesiumMath.EPSILON6);
+      });
     });
 
     it("Computes bounding sphere with height reference relative to ground", function () {
-      const relativeHeight = 1000.0;
+      // Setup a position for the model.
+      const heightOffset = 1000.0;
       const position = Cartesian3.fromDegrees(
         149.515332,
         -34.984799,
-        relativeHeight
+        heightOffset
       );
       const positionCartographic = Cartographic.fromCartesian(position);
-      const expectedCartographic = Cartographic.clone(positionCartographic);
-      expectedCartographic.height = 10000.0;
 
-      spyOn(ModelVisualizer, "_sampleTerrainMostDetailed").and.callFake(() => {
-        return Promise.resolve([expectedCartographic]);
+      // Setup a pre-configured result for sampleTerrainMostDetailed.
+      const sampledResultCartographic = Cartographic.clone(
+        positionCartographic
+      );
+      sampledResultCartographic.height = 10000.0;
+      const sampledResult = Cartographic.toCartesian(sampledResultCartographic);
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callFake(() => {
+        return Promise.resolve([sampledResultCartographic]);
       });
 
+      // Initialize the Entity and the ModelGraphics.
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics({
         heightReference: HeightReference.RELATIVE_TO_GROUND,
       });
       testObject.model = model;
-
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
+
       visualizer.update(time);
 
-      const modelPrimitive = scene.primitives.get(0);
+      // Request the bounding sphere once.
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
-      let updatedPositionCartographic;
-      return ModelVisualizer._sampleTerrainMostDetailed(
-        scene.globe.terrainProvider,
-        [positionCartographic]
-      )
-        .then((cartographicResults) => {
-          updatedPositionCartographic = cartographicResults[0];
-
-          return pollToPromise(function () {
-            scene.render();
-            state = visualizer.getBoundingSphere(testObject, result);
-            return state !== BoundingSphereState.PENDING;
-          });
-        })
-        .then(() => {
-          expect(state).toBe(BoundingSphereState.DONE);
-          const distance = Cartesian3.distance(
-            modelPrimitive.boundingSphere.center,
-            result.center
-          );
-          expect(distance).toEqualEpsilon(
-            updatedPositionCartographic.height - relativeHeight,
-            CesiumMath.EPSILON6
-          );
-        });
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.DONE);
+        // Ensure that we only sample the terrain once.
+        expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
+        // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+        const distance = Cartesian3.distance(result.center, sampledResult);
+        expect(distance).toEqualEpsilon(heightOffset, CesiumMath.EPSILON6);
+      });
     });
 
     it("Fails bounding sphere for entity without billboard.", function () {
