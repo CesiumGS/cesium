@@ -42,7 +42,7 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
-import zip from "../ThirdParty/zip.js";
+import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
 import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
