@@ -2,6 +2,32 @@
 
 ### 1.97 - 2022-09-01
 
+#### Major Announcements :loudspeaker:
+
+- CesiumJS has switched to a new architecture for loading glTF models and tilesets that enables features includes:
+  - User-defined GLSL shaders via [`CustomShader`](Documentation/CustomShaderGuide/README.md)
+  - Support for [3D Tiles Next](https://cesium.com/blog/2021/11/10/introducing-3d-tiles-next/) metadata extensions: [`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata), [`EXT_mesh_features`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_mesh_features/extensions/2.0/Vendor/EXT_mesh_features) and [`EXT_instance_features`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features)
+  - Support for [`EXT_mesh_gpu_instancing`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing)
+  - Support for [`EXT_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression)
+  - Texture caching across different tiles
+  - Numerous bug fixes
+- Usage notes for the new glTF architecture:
+  - Those using `ModelExperimental.fromGltf()` should now use `Model.fromGltf()`
+  - The `enableModelExperimental` flag was removed, as tilesets and entities always use the new architecture
+  - The new implementation of `Model` uses the same public API as before, so no other changes are necessary.
+
+#### Breaking Changes :mega:
+
+- Support for glTF 1.0 assets has been removed. Please convert any glTF 1.0 assets to glTF 2.0. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+- Support for the glTF extension `KHR_techniques_webgl` has been removed. If custom GLSL shaders are needed, use `CustomShader` instead. [#10595](https://github.com/CesiumGS/cesium/pull/10595)
+- Support for rendering instanced models on the CPU has been removed.
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
+- `ModelMesh` and `ModelMaterial` have been removed.
+
+##### Additions :tada:
+
+- `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
+
 ##### Fixes :wrench:
 
 - Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)

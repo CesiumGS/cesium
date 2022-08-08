@@ -17,7 +17,9 @@ import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 
-describe(
+// Since b3dm tilesets now use ModelFeatureTable, disabling these tests until Cesium3DTileBatchTable and
+// ModelFeatureTable can be consolidated
+xdescribe(
   "Scene/Cesium3DTileBatchTable",
   function () {
     let scene;

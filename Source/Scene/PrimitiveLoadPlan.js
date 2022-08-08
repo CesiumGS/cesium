@@ -6,7 +6,7 @@ import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
-import PrimitiveOutlineGenerator from "./ModelExperimental/PrimitiveOutlineGenerator.js";
+import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer

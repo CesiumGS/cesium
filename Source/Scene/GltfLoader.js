@@ -17,11 +17,13 @@ import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelComponents from "./ModelComponents.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import Quaternion from "../Core/Quaternion.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
@@ -2184,6 +2186,8 @@ function loadScene(gltf, nodes) {
   return scene;
 }
 
+const scratchCenter = new Cartesian3();
+
 function parse(
   loader,
   gltf,
@@ -2192,9 +2196,22 @@ function parse(
   rejectPromise,
   rejectTexturesPromise
 ) {
+  const version = gltf.asset.version;
+  if (version !== "2.0") {
+    const url = loader._gltfResource.url;
+    throw new RuntimeError(
+      `Failed to load ${url}: \nUnsupported glTF version: ${version}`
+    );
+  }
+  const extensionsRequired = gltf.extensionsRequired;
+  if (defined(extensionsRequired)) {
+    ModelUtility.checkSupportedExtensions(extensionsRequired);
+  }
+
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
+  const cesiumRtcExtension = extensions.CESIUM_RTC;
 
   if (defined(featureMetadataExtensionLegacy)) {
     // If the old EXT_feature_metadata extension is present, sort the IDs of the
@@ -2237,6 +2254,19 @@ function parse(
   components.articulations = articulations;
   components.upAxis = loader._upAxis;
   components.forwardAxis = loader._forwardAxis;
+
+  if (defined(cesiumRtcExtension)) {
+    // CESIUM_RTC is almost always WGS84 coordinates so no axis conversion needed
+    const center = Cartesian3.fromArray(
+      cesiumRtcExtension.center,
+      0,
+      scratchCenter
+    );
+    components.transform = Matrix4.fromTranslation(
+      center,
+      components.transform
+    );
+  }
 
   loader._components = components;
 
