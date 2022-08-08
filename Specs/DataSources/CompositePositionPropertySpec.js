@@ -268,7 +268,7 @@ describe("DataSources/CompositePositionProperty", function () {
     right.intervals.addInterval(interval2);
     expect(left.equals(right)).toEqual(true);
 
-    right.referenceFrame = ReferenceFrame.INTERTIAL;
+    right.referenceFrame = ReferenceFrame.INERTIAL;
     expect(left.equals(right)).toEqual(false);
   });
 
