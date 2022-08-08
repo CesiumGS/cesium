@@ -7,7 +7,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
 import writeTextToCanvas from "../Core/writeTextToCanvas.js";
-import bitmapSDF from "../ThirdParty/bitmap-sdf.js";
+import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";
 import BlendOption from "./BlendOption.js";
 import HeightReference from "./HeightReference.js";
