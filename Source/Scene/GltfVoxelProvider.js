@@ -9,7 +9,7 @@ import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
-import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 
 /**
@@ -211,7 +211,7 @@ function GltfVoxelProvider(options) {
     .then(function (loader) {
       const gltf = loader.components;
       const node = gltf.nodes[0];
-      const modelMatrix = ModelExperimentalUtility.getNodeTransform(node);
+      const modelMatrix = ModelUtility.getNodeTransform(node);
       const gltfPrimitive = node.primitives[0];
       const voxel = gltfPrimitive.voxel;
       const primitiveType = gltfPrimitive.primitiveType;

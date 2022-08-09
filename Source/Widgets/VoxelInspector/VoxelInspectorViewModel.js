@@ -6,7 +6,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import HeadingPitchRoll from "../../Core/HeadingPitchRoll.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import CustomShader from "../../Scene/ModelExperimental/CustomShader.js";
+import CustomShader from "../../Scene/Model/CustomShader.js";
 import VoxelShapeType from "../../Scene/VoxelShapeType.js";
 import knockout from "../../ThirdParty/knockout.js";
 

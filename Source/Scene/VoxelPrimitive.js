@@ -26,7 +26,7 @@ import MetadataType from "./MetadataType.js";
 import PolylineCollection from "./PolylineCollection.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
-import CustomShader from "./ModelExperimental/CustomShader.js";
+import CustomShader from "./Model/CustomShader.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
