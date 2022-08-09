@@ -1,6 +1,7 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
@@ -15,6 +16,9 @@ import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
+import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
 const defaultMinimumPixelSize = 0.0;
@@ -131,6 +135,8 @@ ModelVisualizer.prototype.update = function (time) {
         nodeTransformationsScratch: {},
         articulationsScratch: {},
         loadFail: false,
+        awaitingSampleTerrain: false,
+        clampedBoundingSphere: undefined,
       };
       modelHash[entity.id] = modelData;
 
@@ -328,6 +334,11 @@ ModelVisualizer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+// Used for testing.
+ModelVisualizer._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
@@ -364,8 +375,68 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
-  if (hasHeightReference && !defined(model._clampedModelMatrix)) {
-    return BoundingSphereState.PENDING;
+  if (hasHeightReference) {
+    const scene = this._scene;
+    const globe = scene.globe;
+    const ellipsoid = globe.ellipsoid;
+    const terrainProvider = globe.terrainProvider;
+
+    const modelMatrix = model.modelMatrix;
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
+    const cartoPosition = Ellipsoid.WGS84.cartesianToCartographic(
+      scratchPosition
+    );
+
+    // Since the model's bounding sphere may be clamped to a lower LOD tile if
+    // the camera is initially far away, we use sampleTerrainMostDetailed to estimate
+    // where the bounding sphere should be and set that as the target bounding sphere
+    // for the camera.
+    let clampedBoundingSphere = this._modelHash[entity.id]
+      .clampedBoundingSphere;
+
+    if (!defined(clampedBoundingSphere)) {
+      clampedBoundingSphere = new BoundingSphere();
+
+      // Since this function is called per-frame, we set a flag when sampleTerrainMostDetailed
+      // is called and check for it to avoid calling it again.
+      const awaitingSampleTerrain = this._modelHash[entity.id]
+        .awaitingSampleTerrain;
+      if (!awaitingSampleTerrain) {
+        Cartographic.clone(cartoPosition, scratchCartographic);
+        this._modelHash[entity.id].awaitingSampleTerrain = true;
+        ModelVisualizer._sampleTerrainMostDetailed(terrainProvider, [
+          scratchCartographic,
+        ]).then((result) => {
+          this._modelHash[entity.id].awaitingSampleTerrain = false;
+
+          const updatedCartographic = result[0];
+          if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+            updatedCartographic.height += cartoPosition.height;
+          }
+          ellipsoid.cartographicToCartesian(
+            updatedCartographic,
+            scratchPosition
+          );
+
+          // Update the bounding sphere with the updated position.
+          BoundingSphere.clone(model.boundingSphere, clampedBoundingSphere);
+          clampedBoundingSphere.center = scratchPosition;
+
+          this._modelHash[
+            entity.id
+          ].clampedBoundingSphere = BoundingSphere.clone(clampedBoundingSphere);
+        });
+      }
+
+      // We will return the state as pending until the clamped bounding sphere is defined,
+      // which happens when the sampleTerrainMostDetailed promise returns.
+      return BoundingSphereState.PENDING;
+    }
+
+    BoundingSphere.clone(clampedBoundingSphere, result);
+    return BoundingSphereState.DONE;
   }
 
   BoundingSphere.clone(model.boundingSphere, result);

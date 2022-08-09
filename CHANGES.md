@@ -28,6 +28,10 @@
 
 - `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
 
+##### Fixes :wrench:
+
+- Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:
