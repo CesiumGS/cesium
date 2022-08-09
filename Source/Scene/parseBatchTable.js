@@ -15,7 +15,7 @@ import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
-import ModelExperimentalUtility from "./ModelExperimental/ModelExperimentalUtility.js";
+import ModelUtility from "./Model/ModelUtility.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -283,9 +283,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       );
     }
 
-    let sanitizedPropertyId = ModelExperimentalUtility.sanitizeGlslIdentifier(
-      propertyId
-    );
+    let sanitizedPropertyId = ModelUtility.sanitizeGlslIdentifier(propertyId);
 
     // If the sanitized string is empty or a duplicate, use a placeholder
     // name instead. This will work for styling, but it may lead to undefined

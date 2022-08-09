@@ -1,5 +1,5 @@
 /**
- * Struct for representing a material for a {@link ModelExperimental}. The model
+ * Struct for representing a material for a {@link Model}. The model
  * rendering pipeline will pass this struct between material, custom shaders,
  * and lighting stages. This is not to be confused with {@link czm_material}
  * which is used by the older Fabric materials system, although they are similar.
