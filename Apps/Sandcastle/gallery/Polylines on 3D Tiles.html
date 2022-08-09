@@ -39,12 +39,56 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2022-08-01T00:00:00Z"
+        );
+
         const powerplant = scene.primitives.add(
           new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(8564),
+            url: Cesium.IonResource.fromAssetId(1240402),
             show: false,
           })
         );
+
+        // Hide duplicate floor geometry to avoid
+        // z-fighting artifacts.
+        const duplicateFloor = 114082;
+        function getElement(feature) {
+          return parseInt(feature.getProperty("element"), 10);
+        }
+
+        function hideDuplicateFloor(feature) {
+          const element = parseInt(feature.getProperty("element"), 10);
+
+          if (element === duplicateFloor) {
+            feature.show = false;
+          }
+        }
+
+        function processContentFeatures(content, callback) {
+          const featuresLength = content.featuresLength;
+          for (let i = 0; i < featuresLength; ++i) {
+            const feature = content.getFeature(i);
+            callback(feature);
+          }
+        }
+
+        function processTileFeatures(tile, callback) {
+          const content = tile.content;
+          const innerContents = content.innerContents;
+          if (Cesium.defined(innerContents)) {
+            const length = innerContents.length;
+            for (let i = 0; i < length; ++i) {
+              processContentFeatures(innerContents[i], callback);
+            }
+          } else {
+            processContentFeatures(content, callback);
+          }
+        }
+
+        powerplant.tileLoad.addEventListener(function (tile) {
+          processTileFeatures(tile, hideDuplicateFloor);
+        });
         const pipes = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([

@@ -28,6 +28,7 @@ import {
   Resource,
   ResourceCache,
   ResourceLoaderState,
+  RuntimeError,
   Sampler,
   Texture,
   TextureMagnificationFilter,
@@ -70,7 +71,7 @@ describe(
     const animatedMorphCube =
       "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/InterpolationTest/InterpolationTest.glb";
+      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -112,6 +113,10 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+    const multiUvTest =
+      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
+    const boxCesiumRtc =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -147,6 +152,34 @@ describe(
           gltfResource: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    // This is a no-op because GltfJsonLoader automatically upgrades the
+    // glTF version. This should work once that behavior is removed.
+    it("throws if loading an unsupported glTF version", function () {
+      function modifyGltf(gltf) {
+        gltf.asset.version = "1.0";
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
+        function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        }
+      );
+    });
+
+    it("throws if an unsupported extension is required", function () {
+      function modifyGltf(gltf) {
+        gltf.extensionsRequired = ["NOT_supported_extension"];
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
+        function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        }
+      );
     });
 
     function getOptions(gltfPath, options) {
@@ -231,6 +264,15 @@ describe(
       }
       return undefined;
     }
+
+    it("preserves query string in url", function () {
+      const params = "?param1=1&param2=2";
+      const url = boxTextured + params;
+      return loadGltf(url).then(function (gltfLoader) {
+        const loaderResource = gltfLoader._gltfResource;
+        expect(loaderResource.url).toEndWith(params);
+      });
+    });
 
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
@@ -1038,6 +1080,51 @@ describe(
         const material1 = primitive1.material;
         expect(material0.unlit).toBe(true);
         expect(material1.unlit).toBe(true);
+      });
+    });
+
+    it("loads MultiUVTest", function () {
+      return loadGltf(multiUvTest).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const emissiveTexture = material.emissiveTexture;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const tangentAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TANGENT
+        );
+        const texcoordAttribute0 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        const texcoordAttribute1 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          1
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(tangentAttribute).toBeDefined();
+        expect(texcoordAttribute0).toBeDefined();
+        expect(texcoordAttribute1).toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(emissiveTexture.texCoord).toBe(1);
       });
     });
 
@@ -4027,6 +4114,16 @@ describe(
         for (let i = 0; i < length; i++) {
           expect(credits[i].html).toEqual(expectedCredits[i]);
         }
+      });
+    });
+
+    it("loads model with CESIUM_RTC", function () {
+      return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const expectedTransform = Matrix4.fromTranslation(
+          new Cartesian3(6378137, 0, 0)
+        );
+        expect(components.transform).toEqual(expectedTransform);
       });
     });
   },

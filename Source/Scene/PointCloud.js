@@ -962,7 +962,7 @@ function createShaders(pointCloud, frameState, style) {
     "uniform vec4 u_highlightColor; \n";
 
   // The time variable is named differently for compatibility with custom
-  // shaders in ModelExperimental.
+  // shaders in Model.
   vs += "float u_pointSize; \n" + "float tiles3d_tileset_time; \n";
 
   if (attenuation) {
