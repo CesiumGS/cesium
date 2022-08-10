@@ -71,7 +71,7 @@ describe(
     const animatedMorphCube =
       "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/InterpolationTest/InterpolationTest.glb";
+      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -113,7 +113,10 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
-    const multiUvTest = "./Data/Models/MultiUVTest/MultiUVTest.glb";
+    const multiUvTest =
+      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
+    const boxCesiumRtc =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -4111,6 +4114,16 @@ describe(
         for (let i = 0; i < length; i++) {
           expect(credits[i].html).toEqual(expectedCredits[i]);
         }
+      });
+    });
+
+    it("loads model with CESIUM_RTC", function () {
+      return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const expectedTransform = Matrix4.fromTranslation(
+          new Cartesian3(6378137, 0, 0)
+        );
+        expect(components.transform).toEqual(expectedTransform);
       });
     });
   },

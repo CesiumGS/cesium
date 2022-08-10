@@ -166,6 +166,10 @@ function ClassificationPrimitive(options) {
   const classificationPrimitive = this;
   this._readyPromise = new Promise((resolve, reject) => {
     classificationPrimitive._completeLoad = () => {
+      if (this._ready) {
+        return;
+      }
+
       this._ready = true;
 
       if (this.releaseGeometryInstances) {
@@ -1297,7 +1301,6 @@ ClassificationPrimitive.prototype.update = function (frameState) {
     }
 
     this._primitive = new Primitive(primitiveOptions);
-    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   if (
@@ -1351,6 +1354,12 @@ ClassificationPrimitive.prototype.update = function (frameState) {
   this._primitive.show = this.show;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+
+  frameState.afterRender.push(() => {
+    if (defined(this._primitive) && this._primitive.ready) {
+      this._completeLoad();
+    }
+  });
 };
 
 /**
