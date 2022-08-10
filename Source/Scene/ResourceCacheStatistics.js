@@ -10,7 +10,7 @@ import defined from "../Core/defined.js";
  *
  * @private
  */
-export default function ResourceCacheStatistics() {
+function ResourceCacheStatistics() {
   /**
    * The size of vertex buffers and index buffers loaded in the cache in bytes.
    *
@@ -179,3 +179,5 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
     this.texturesByteLength -= textureSize;
   }
 };
+
+export default ResourceCacheStatistics;

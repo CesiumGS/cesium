@@ -23,7 +23,7 @@
  *
  * @private
  */
-export default function ShaderStruct(name) {
+function ShaderStruct(name) {
   this.name = name;
   this.fields = [];
 }
@@ -51,3 +51,5 @@ ShaderStruct.prototype.generateGlslLines = function () {
 
   return [].concat(`struct ${this.name}`, "{", fields, "};");
 };
+
+export default ShaderStruct;

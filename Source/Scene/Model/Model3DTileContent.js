@@ -18,7 +18,7 @@ import Model from "./Model.js";
  * @constructor
  * @private
  */
-export default function Model3DTileContent(tileset, tile, resource) {
+function Model3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -439,3 +439,5 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
 
   return combine(additionalOptions, mainOptions);
 }
+
+export default Model3DTileContent;

@@ -168,7 +168,7 @@ const GltfLoaderState = {
  * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
-export default function GltfLoader(options) {
+function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const gltfResource = options.gltfResource;
   let baseResource = options.baseResource;
@@ -2397,3 +2397,5 @@ GltfLoader.prototype.unload = function () {
   this._components = undefined;
   this._state = GltfLoaderState.UNLOADED;
 };
+
+export default GltfLoader;

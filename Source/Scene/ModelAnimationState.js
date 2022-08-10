@@ -1,7 +1,9 @@
 /**
  * @private
  */
-export default Object.freeze({
+const ModelAnimationState = {
   STOPPED: 0,
   ANIMATING: 1,
-});
+};
+
+export default Object.freeze(ModelAnimationState);

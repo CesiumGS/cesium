@@ -48,7 +48,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitTileCoordinates(options) {
+function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.subdivisionScheme", options.subdivisionScheme);
   Check.typeOf.number("options.subtreeLevels", options.subtreeLevels);
@@ -643,3 +643,5 @@ ImplicitTileCoordinates.fromTileIndex = function (
     mortonIndex
   );
 };
+
+export default ImplicitTileCoordinates;

@@ -1,4 +1,4 @@
-export default function ShaderBuilderTester() {}
+function ShaderBuilderTester() {}
 
 function expectHasLine(linesArray, line) {
   expect(linesArray.indexOf(line)).not.toBe(-1);
@@ -198,3 +198,5 @@ ShaderBuilderTester.expectFragmentLinesEqual = function (
     expectedFragmentLines
   );
 };
+
+export default ShaderBuilderTester;

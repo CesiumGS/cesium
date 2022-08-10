@@ -47,7 +47,7 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
  * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
-export default function PntsLoader(options) {
+function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const arrayBuffer = options.arrayBuffer;
@@ -708,3 +708,5 @@ PntsLoader.prototype.unload = function () {
   this._components = undefined;
   this._parsedContent = undefined;
 };
+
+export default PntsLoader;

@@ -13,7 +13,7 @@ import DepthFunction from "../DepthFunction.js";
  *
  * @private
  */
-export default function ModelRenderResources(model) {
+function ModelRenderResources(model) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   //>>includeEnd('debug');
@@ -78,3 +78,5 @@ export default function ModelRenderResources(model) {
     })
   );
 }
+
+export default ModelRenderResources;

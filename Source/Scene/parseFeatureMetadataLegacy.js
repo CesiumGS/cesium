@@ -20,7 +20,7 @@ import MetadataTable from "./MetadataTable.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseFeatureMetadataLegacy(options) {
+function parseFeatureMetadataLegacy(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const extension = options.extension;
 
@@ -135,3 +135,5 @@ function reformatChannels(channelsString) {
   }
   return result;
 }
+
+export default parseFeatureMetadataLegacy;

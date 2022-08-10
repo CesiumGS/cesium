@@ -19,7 +19,7 @@ import defined from "../Core/defined.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseBoundingVolumeSemantics(tileMetadata) {
+function parseBoundingVolumeSemantics(tileMetadata) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("tileMetadata", tileMetadata);
   //>>includeEnd('debug');
@@ -117,3 +117,5 @@ function parseMaximumHeight(prefix, tileMetadata) {
   const maximumHeightSemantic = `${prefix}_MAXIMUM_HEIGHT`;
   return tileMetadata.getPropertyBySemantic(maximumHeightSemantic);
 }
+
+export default parseBoundingVolumeSemantics;

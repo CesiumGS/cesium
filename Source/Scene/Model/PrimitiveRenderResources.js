@@ -15,10 +15,7 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  *
  * @private
  */
-export default function PrimitiveRenderResources(
-  nodeRenderResources,
-  runtimePrimitive
-) {
+function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("nodeRenderResources", nodeRenderResources);
   Check.typeOf.object("runtimePrimitive", runtimePrimitive);
@@ -277,3 +274,5 @@ export default function PrimitiveRenderResources(
    */
   this.styleCommandsNeeded = undefined;
 }
+
+export default PrimitiveRenderResources;

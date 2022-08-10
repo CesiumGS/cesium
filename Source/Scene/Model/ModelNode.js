@@ -21,7 +21,7 @@ import defined from "../../Core/defined.js";
  *
  * @see Model#getNode
  */
-export default function ModelNode(model, runtimeNode) {
+function ModelNode(model, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("runtimeNode", runtimeNode);
@@ -120,3 +120,5 @@ Object.defineProperties(ModelNode.prototype, {
     },
   },
 });
+
+export default ModelNode;

@@ -35,7 +35,7 @@ import Transforms from "../../Core/Transforms.js";
  *
  * @private
  */
-export default function ModelSceneGraph(options) {
+function ModelSceneGraph(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const components = options.modelComponents;
 
@@ -863,3 +863,5 @@ ModelSceneGraph.prototype.applyArticulations = function () {
     }
   }
 };
+
+export default ModelSceneGraph;

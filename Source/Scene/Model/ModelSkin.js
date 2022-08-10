@@ -16,7 +16,7 @@ import defaultValue from "../../Core/defaultValue.js";
  *
  * @private
  */
-export default function ModelSkin(options) {
+function ModelSkin(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.skin", options.skin);
@@ -176,3 +176,5 @@ ModelSkin.prototype.updateJointMatrices = function () {
     );
   }
 };
+
+export default ModelSkin;
