@@ -400,7 +400,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
       return BoundingSphereState.DONE;
     }
 
-    // Otherwise, in the case of terrain provider's with availability,
+    // Otherwise, in the case of terrain providers with availability,
     // since the model's bounding sphere may be clamped to a lower LOD tile if
     // the camera is initially far away, we use sampleTerrainMostDetailed to estimate
     // where the bounding sphere should be and set that as the target bounding sphere
@@ -411,6 +411,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     // Check if the sample terrain function has failed.
     const sampleTerrainFailed = this._modelHash[entity.id].sampleTerrainFailed;
     if (sampleTerrainFailed) {
+      this._modelHash[entity.id].sampleTerrainFailed = false;
       return BoundingSphereState.FAILED;
     }
 
