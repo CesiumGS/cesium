@@ -538,13 +538,13 @@ describe(
           shaderBuilder,
           "enum2MetadataStatistics",
           "enum2MetadataStatistics",
-          [`    float occurrences[2];`]
+          [`    int occurrences[2];`]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           "enum2MetadataStatistics",
           "enum2MetadataStatistics",
-          [`    float occurrences[2];`]
+          [`    int occurrences[2];`]
         );
 
         // Check main metadata, metadataClass, metadataStatistics structs
@@ -584,7 +584,7 @@ describe(
 
         const metadataStatisticsFields = [
           "    floatMetadataStatistics intensity;",
-          //"    enum2MetadataStatistics classification;",
+          "    enum2MetadataStatistics classification;",
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
@@ -602,6 +602,8 @@ describe(
         // Check that the correct values are set in the initializeMetadata function
         const assignments = [
           "    metadata.classification = attributes.classification;",
+          "    metadataStatistics.classification.occurrences[0] = int(6876);",
+          "    metadataStatistics.classification.occurrences[1] = int(22462);",
           "    metadata.intensity = attributes.intensity;",
           "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
           "    metadataStatistics.intensity.median = float(0.25416669249534607);",

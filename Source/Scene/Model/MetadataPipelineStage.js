@@ -58,7 +58,7 @@ const MetadataPipelineStage = {
     },
     { specName: "variance", shaderName: "variance", type: "float" },
     { specName: "sum", shaderName: "sum" },
-    // { specName: "occurrences", shaderName: "occurrences" }, // TODO
+    // { specName: "occurrences", shaderName: "occurrences" }, // Handled in getEnumAssignments
   ],
 };
 
@@ -106,12 +106,14 @@ MetadataPipelineStage.process = function (
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
 
-  propertyAttributesInfo.forEach((info) =>
-    processPropertyAttributePropertyInfo(renderResources, info)
-  );
-  propertyTexturesInfo.forEach((info) =>
-    processPropertyTexturePropertyInfo(renderResources, info)
-  );
+  for (let i = 0; i < propertyAttributesInfo.length; i++) {
+    const info = propertyAttributesInfo[i];
+    processPropertyAttributeProperty(renderResources, info);
+  }
+  for (let i = 0; i < propertyTexturesInfo.length; i++) {
+    const info = propertyTexturesInfo[i];
+    processPropertyTextureProperty(renderResources, info);
+  }
 };
 
 /**
@@ -125,20 +127,19 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
   const classTypes = new Set();
   const statisticsTypes = new Set();
   const enumLengths = new Set();
-  propertyInfos.forEach((info) => {
-    const { type, enumType, glslType, propertyStatistics } = info;
+
+  for (let i = 0; i < propertyInfos.length; i++) {
+    const { type, enumType, glslType, propertyStatistics } = propertyInfos[i];
     classTypes.add(glslType);
     if (!defined(propertyStatistics)) {
-      return;
+      continue;
     }
     if (type === MetadataType.ENUM) {
-      console.log(`ENUM at metadataVariable ${info.metadataVariable}`);
-      console.log(`enumType.values.length = ${enumType.values.length}`);
       enumLengths.add(enumType.values.length);
     } else {
       statisticsTypes.add(glslType);
     }
-  });
+  }
 
   const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
   for (const metadataType of classTypes) {
@@ -159,7 +160,7 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
     const structName = `enum${length}MetadataStatistics`;
     shaderBuilder.addStruct(structName, structName, ShaderDestination.BOTH);
 
-    const shaderType = "float";
+    const shaderType = "int";
     const shaderName = `occurrences[${length}]`;
     shaderBuilder.addStructField(structName, shaderType, shaderName);
   }
@@ -310,7 +311,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
  * @param {Object} propertyInfo
  * @private
  */
-function processPropertyAttributePropertyInfo(renderResources, propertyInfo) {
+function processPropertyAttributeProperty(renderResources, propertyInfo) {
   addPropertyAttributePropertyMetadata(renderResources, propertyInfo);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -373,15 +374,12 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
   const { metadataVariable, glslType, shaderDestination } = propertyInfo;
 
   // Construct assignment statements to set values in the metadataClass struct
-  const values = getFieldValues(
+  const assignments = getStructAssignments(
     MetadataPipelineStage.METADATACLASS_FIELDS,
-    classProperty
+    classProperty,
+    `metadataClass.${metadataVariable}`,
+    glslType
   );
-  const assignments = values.map((field) => {
-    const structField = `metadataClass.${metadataVariable}.${field.name}`;
-    const structValue = `${glslType}(${field.value})`;
-    return `${structField} = ${structValue};`;
-  });
 
   // Struct field: Prefix to get the appropriate <type>MetadataClass struct
   const metadataType = `${glslType}MetadataClass`;
@@ -421,24 +419,19 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   if (!defined(propertyStatistics)) {
     return;
   }
-  const { metadataVariable, type, glslType } = propertyInfo;
-  if (type === MetadataType.ENUM) {
-    return;
-  }
+  const { metadataVariable, type, enumType, glslType } = propertyInfo;
+  const isEnum = type === MetadataType.ENUM;
 
   // Construct assignment statements to set values in the metadataStatistics struct
-  const values = getFieldValues(
-    MetadataPipelineStage.METADATASTATISTICS_FIELDS,
-    propertyStatistics
-  );
-  const assignments = values.map((field) => {
-    const structField = `metadataStatistics.${metadataVariable}.${field.name}`;
-    const structValue = `${glslType}(${field.value})`;
-    return `${structField} = ${structValue};`;
-  });
+  const fields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
+  const struct = `metadataStatistics.${metadataVariable}`;
+  const assignments = isEnum
+    ? getEnumAssignments(propertyStatistics, struct, enumType)
+    : getStructAssignments(fields, propertyStatistics, struct, glslType);
 
   // Struct field: Prefix to get the appropriate <type>MetadataStatistics struct
-  const statisticsType = `${glslType}MetadataStatistics`;
+  const prefix = isEnum ? `enum${enumType.values.length}` : glslType;
+  const statisticsType = `${prefix}MetadataStatistics`;
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
     statisticsType,
@@ -494,7 +487,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
 
   return Object.entries(propertyTexture.properties)
     .map(getPropertyTexturePropertyInfo)
-    .filter((info) => defined(info));
+    .filter(defined);
 
   function getPropertyTexturePropertyInfo([propertyId, property]) {
     if (!property.isGpuCompatible()) {
@@ -519,7 +512,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
  * @param {Array<Object>} propertyInfo
  * @private
  */
-function processPropertyTexturePropertyInfo(renderResources, propertyInfo) {
+function processPropertyTextureProperty(renderResources, propertyInfo) {
   addPropertyTexturePropertyMetadata(renderResources, propertyInfo);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -582,27 +575,49 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
 }
 
 /**
- * Given a list of property names, retrieve property values from a metadata schema object
- * The property names are supplied in two forms: one from the spec, one used in the shader
+ * Construct GLSL assignment statements to set metadata spec values in a struct
  * @param {Object[]} fieldNames
  * @param {String} fieldNames[].specName The name of the property in the spec
  * @param {String} fieldNames[].shaderName The name of the property in the shader
  * @param {Object} values A source of property values, keyed on fieldNames[].specName
+ * @param {String} struct The name of the struct to which values will be assigned
+ * @param {String} type The type of the values to be assigned
  * @returns {Array<{name: String, value}>}
  * @private
  */
-function getFieldValues(fieldNames, values) {
-  if (!defined(values)) {
-    return [];
+function getStructAssignments(fieldNames, values, struct, type) {
+  return defined(values)
+    ? fieldNames.map(constructAssignment).filter(defined)
+    : [];
+
+  function constructAssignment(field) {
+    const value = values[field.specName];
+    if (defined(value)) {
+      return `${struct}.${field.shaderName} = ${type}(${value});`;
+    }
   }
+}
 
-  return fieldNames.map(getFieldValue).filter((field) => defined(field.value));
+/**
+ * Construct GLSL assignment statements to set occurrence values in a
+ * MetadataStatistics struct for an ENUM property
+ * @param {Object} propertyStatistics
+ * @param {String} struct
+ * @param {MetadataEnum} enumType
+ * @returns
+ */
+function getEnumAssignments(propertyStatistics, struct, enumType) {
+  const { occurrences } = propertyStatistics;
 
-  function getFieldValue(field) {
-    return {
-      name: field.shaderName,
-      value: values[field.specName],
-    };
+  return defined(occurrences)
+    ? enumType.values.map(constructAssignment).filter(defined)
+    : [];
+
+  function constructAssignment(enumValue) {
+    const occurrence = occurrences[enumValue.name];
+    if (defined(occurrence)) {
+      return `${struct}.occurrences[${enumValue.value}] = int(${occurrence});`;
+    }
   }
 }
 
