@@ -79,7 +79,6 @@ const filesToClean = [
   "Source/Workers/**",
   "!Source/Workers/cesiumWorkerBootstrapper.js",
   "!Source/Workers/transferTypedArrayTest.js",
-  "!Source/Workers/package.json",
   "Source/ThirdParty/Shaders/*.js",
   "Source/**/*.d.ts",
   "Specs/SpecList.js",
