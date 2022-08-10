@@ -113,6 +113,7 @@ MetadataPipelineStage.process = function (
   propertyTexturesInfo.forEach((info) =>
     processPropertyTexturePropertyInfo(renderResources, info)
   );
+  console.log("code version 11:48 AM");
 };
 
 /**
@@ -140,20 +141,13 @@ function declareMetadataTypeStructs(shaderBuilder, metadataTypes, statistics) {
   }
 
   function declareTypeStruct(structName, type, fields) {
-    const structIdVs = `${structName}VS`;
-    const structIdFs = `${structName}FS`;
+    shaderBuilder.addStruct(structName, structName, ShaderDestination.BOTH);
 
-    // Declare the struct in both vertex and fragment shaders
-    shaderBuilder.addStruct(structIdVs, structName, ShaderDestination.VERTEX);
-    shaderBuilder.addStruct(structIdFs, structName, ShaderDestination.FRAGMENT);
-
-    // Add fields
     for (let i = 0; i < fields.length; i++) {
-      const shaderName = fields[i].shaderName;
+      const { shaderName } = fields[i];
       const shaderType =
         fields[i].type === "float" ? convertToFloatComponents(type) : type;
-      shaderBuilder.addStructField(structIdVs, shaderType, shaderName);
-      shaderBuilder.addStructField(structIdFs, shaderType, shaderName);
+      shaderBuilder.addStructField(structName, shaderType, shaderName);
     }
   }
 }
@@ -276,6 +270,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
     return {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
+      type: property.classProperty.type,
       glslType,
       variableName,
       propertyStatistics: classStatistics?.properties[propertyId],
@@ -481,6 +476,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
     return {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
+      type: property.classProperty.type,
       glslType: property.getGlslType(),
       propertyStatistics: classStatistics?.properties[propertyId],
       shaderDestination: ShaderDestination.FRAGMENT,

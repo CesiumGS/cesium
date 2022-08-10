@@ -83,8 +83,6 @@ describe(
       // These are constructed in both vertex and fragment shaders
       for (const metadataType of metadataTypes) {
         const structName = `${metadataType}MetadataClass`;
-        const structIdVs = `${structName}VS`;
-        const structIdFs = `${structName}FS`;
         const structFields = [
           `    ${metadataType} noData;`,
           `    ${metadataType} defaultValue;`,
@@ -93,13 +91,13 @@ describe(
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          structIdVs,
+          structName,
           structName,
           structFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          structIdFs,
+          structName,
           structName,
           structFields
         );
@@ -513,8 +511,6 @@ describe(
 
         // Confirm MetadataStatistics sub-structs were all declared
         const structName = `floatMetadataStatistics`;
-        const structIdVs = `${structName}VS`;
-        const structIdFs = `${structName}FS`;
         const structFields = [
           `    float minValue;`,
           `    float maxValue;`,
@@ -526,13 +522,13 @@ describe(
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           renderResources.shaderBuilder,
-          structIdVs,
+          structName,
           structName,
           structFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           renderResources.shaderBuilder,
-          structIdFs,
+          structName,
           structName,
           structFields
         );
