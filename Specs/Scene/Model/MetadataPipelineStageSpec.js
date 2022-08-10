@@ -492,8 +492,9 @@ describe(
         const model = content._model;
         expect(model).toBeDefined();
 
+        const shaderBuilder = new ShaderBuilder();
         const renderResources = {
-          shaderBuilder: new ShaderBuilder(),
+          shaderBuilder: shaderBuilder,
           model: model,
           uniformMap: {},
         };
@@ -507,7 +508,7 @@ describe(
 
         // Confirm MetadataClass sub-structs were all declared
         const metadataTypes = ["float"];
-        checkMetadataClassStructs(renderResources.shaderBuilder, metadataTypes);
+        checkMetadataClassStructs(shaderBuilder, metadataTypes);
 
         // Confirm MetadataStatistics sub-structs were all declared
         const structName = `floatMetadataStatistics`;
@@ -521,50 +522,106 @@ describe(
           `    float sum;`,
         ];
         ShaderBuilderTester.expectHasVertexStruct(
-          renderResources.shaderBuilder,
+          shaderBuilder,
           structName,
           structName,
           structFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
-          renderResources.shaderBuilder,
+          shaderBuilder,
           structName,
           structName,
           structFields
         );
+        // Check for ENUM sub-struct
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          "enum2MetadataStatistics",
+          "enum2MetadataStatistics",
+          [`    float occurrences[2];`]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          "enum2MetadataStatistics",
+          "enum2MetadataStatistics",
+          [`    float occurrences[2];`]
+        );
+
+        // Check main metadata, metadataClass, metadataStatistics structs
+        const metadataFields = [
+          "    float classification;",
+          "    float intensity;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          metadataFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          metadataFields
+        );
+
+        const metadataClassFields = [
+          "    floatMetadataClass classification;",
+          "    floatMetadataClass intensity;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          metadataClassFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          metadataClassFields
+        );
+
+        const metadataStatisticsFields = [
+          "    floatMetadataStatistics intensity;",
+          //"    enum2MetadataStatistics classification;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+          metadataStatisticsFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+          metadataStatisticsFields
+        );
 
         // Check that the correct values are set in the initializeMetadata function
+        const assignments = [
+          "    metadata.classification = attributes.classification;",
+          "    metadata.intensity = attributes.intensity;",
+          "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
+          "    metadataStatistics.intensity.median = float(0.25416669249534607);",
+          "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
+          "    metadataStatistics.intensity.variance = float(0.03320655011);",
+          "    metadataStatistics.intensity.sum = float(8500.30455558002);",
+          "    metadataStatistics.intensity.minValue = float(0);",
+          "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
+        ];
         ShaderBuilderTester.expectHasVertexFunctionUnordered(
           renderResources.shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
-          [
-            "    metadata.classification = attributes.classification;",
-            "    metadata.intensity = attributes.intensity;",
-            "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
-            "    metadataStatistics.intensity.median = float(0.25416669249534607);",
-            "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
-            "    metadataStatistics.intensity.variance = float(0.03320655011);",
-            "    metadataStatistics.intensity.sum = float(8500.30455558002);",
-            "    metadataStatistics.intensity.minValue = float(0);",
-            "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
-          ]
+          assignments
         );
         ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           renderResources.shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
-          [
-            "    metadata.classification = attributes.classification;",
-            "    metadata.intensity = attributes.intensity;",
-            "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
-            "    metadataStatistics.intensity.median = float(0.25416669249534607);",
-            "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
-            "    metadataStatistics.intensity.variance = float(0.03320655011);",
-            "    metadataStatistics.intensity.sum = float(8500.30455558002);",
-            "    metadataStatistics.intensity.minValue = float(0);",
-            "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
-          ]
+          assignments
         );
       });
     });

@@ -2,6 +2,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/Model/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/Model/MetadataStageVS.js";
+import MetadataType from "../MetadataType.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -96,10 +97,8 @@ MetadataPipelineStage.process = function (
   );
 
   // Declare <type>MetadataClass and <type>MetadataStatistics structs as needed
-  const metadataTypes = new Set();
-  propertyAttributesInfo.forEach((info) => metadataTypes.add(info.glslType));
-  propertyTexturesInfo.forEach((info) => metadataTypes.add(info.glslType));
-  declareMetadataTypeStructs(shaderBuilder, metadataTypes, statistics);
+  const allPropertyInfos = propertyAttributesInfo.concat(propertyTexturesInfo);
+  declareMetadataTypeStructs(shaderBuilder, allPropertyInfos);
 
   // Always declare the Metadata, MetadataClass, and MetadataStatistics structs
   // and the initializeMetadata() function, even if not used
@@ -113,7 +112,6 @@ MetadataPipelineStage.process = function (
   propertyTexturesInfo.forEach((info) =>
     processPropertyTexturePropertyInfo(renderResources, info)
   );
-  console.log("code version 11:48 AM");
 };
 
 /**
@@ -123,21 +121,47 @@ MetadataPipelineStage.process = function (
  * @param {Object} statistics Statistics about the metadata.
  * @private
  */
-function declareMetadataTypeStructs(shaderBuilder, metadataTypes, statistics) {
+function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
+  const classTypes = new Set();
+  const statisticsTypes = new Set();
+  const enumLengths = new Set();
+  propertyInfos.forEach((info) => {
+    const { type, enumType, glslType, propertyStatistics } = info;
+    classTypes.add(glslType);
+    if (!defined(propertyStatistics)) {
+      return;
+    }
+    if (type === MetadataType.ENUM) {
+      console.log(`ENUM at metadataVariable ${info.metadataVariable}`);
+      console.log(`enumType.values.length = ${enumType.values.length}`);
+      enumLengths.add(enumType.values.length);
+    } else {
+      statisticsTypes.add(glslType);
+    }
+  });
+
   const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
-  for (const metadataType of metadataTypes) {
+  for (const metadataType of classTypes) {
     const classStructName = `${metadataType}MetadataClass`;
     declareTypeStruct(classStructName, metadataType, classFields);
   }
 
-  if (!defined(statistics)) {
-    return;
-  }
-
   const statisticsFields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
-  for (const metadataType of metadataTypes) {
+  for (const metadataType of statisticsTypes) {
     const statisticsStructName = `${metadataType}MetadataStatistics`;
     declareTypeStruct(statisticsStructName, metadataType, statisticsFields);
+  }
+
+  for (const length of enumLengths) {
+    if (length < 1) {
+      continue;
+    }
+    const structName = `enum${length}MetadataStatistics`;
+    shaderBuilder.addStruct(structName, structName, ShaderDestination.BOTH);
+
+    const shaderType = "float";
+    const shaderName = `occurrences[${length}]`;
+    shaderBuilder.addStructField(structName, shaderType, shaderName);
   }
 
   function declareTypeStruct(structName, type, fields) {
@@ -271,6 +295,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
+      enumType: property.classProperty.enumType,
       glslType,
       variableName,
       propertyStatistics: classStatistics?.properties[propertyId],
@@ -396,7 +421,10 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   if (!defined(propertyStatistics)) {
     return;
   }
-  const { metadataVariable, glslType, shaderDestination } = propertyInfo;
+  const { metadataVariable, type, glslType } = propertyInfo;
+  if (type === MetadataType.ENUM) {
+    return;
+  }
 
   // Construct assignment statements to set values in the metadataStatistics struct
   const values = getFieldValues(
@@ -420,7 +448,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
     assignments
   );
-  if (!ShaderDestination.includesVertexShader(shaderDestination)) {
+  if (!ShaderDestination.includesVertexShader(propertyInfo.shaderDestination)) {
     return;
   }
   shaderBuilder.addStructField(
@@ -477,6 +505,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
+      enumType: property.classProperty.enumType,
       glslType: property.getGlslType(),
       propertyStatistics: classStatistics?.properties[propertyId],
       shaderDestination: ShaderDestination.FRAGMENT,
