@@ -443,6 +443,43 @@ describe(
         });
     });
 
+    it("Computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
+      // Setup a position for the model.
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      // Ensure that the terrain provider does not have availability.
+      const globe = scene.globe;
+      const terrainProvider = globe.terrainProvider;
+      expect(terrainProvider.availability).toBe(undefined);
+
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result.center).toEqual(position);
+      });
+    });
+
     it("Computes bounding sphere with height reference relative to ground", function () {
       // Setup a position for the model.
       const heightOffset = 1000.0;
@@ -519,6 +556,43 @@ describe(
         });
     });
 
+    it("Computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
+      // Setup a position for the model.
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799, 1000);
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      // Ensure that the terrain provider does not have availability.
+      const globe = scene.globe;
+      const terrainProvider = globe.terrainProvider;
+      expect(terrainProvider.availability).toBe(undefined);
+
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result.center).toEqual(position);
+      });
+    });
+
     it("Fails bounding sphere for entity without billboard.", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       visualizer.update(JulianDate.now());
@@ -548,6 +622,58 @@ describe(
         return state !== BoundingSphereState.PENDING;
       }).then(function () {
         expect(state).toBe(BoundingSphereState.FAILED);
+      });
+    });
+
+    it("Fails bounding sphere when sampleTerrainMostDetailed fails.", function () {
+      // Setup a position for the model.
+      const heightOffset = 1000.0;
+      const position = Cartesian3.fromDegrees(
+        149.515332,
+        -34.984799,
+        heightOffset
+      );
+
+      // Setup a spy so we can track how often sampleTerrain is called.
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callFake(() => {
+        return Promise.reject();
+      });
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Assign a tiled terrain provider to the globe.
+      const globe = scene.globe;
+      const previousTerrainProvider = globe.terrainProvider;
+      globe.terrainProvider = createWorldTerrain();
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state;
+
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.FAILED);
+        // Ensure that we only sample the terrain once from the visualizer.
+        expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
+        // Reset the terrain provider.
+        globe.terrainProvider = previousTerrainProvider;
       });
     });
 
