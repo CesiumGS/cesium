@@ -287,6 +287,12 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
   }
 }
 
+/**
+ * For a type with integer components, find a corresponding float-component type
+ * @param {String} type The name of a GLSL type with integer components
+ * @returns {String}
+ * @private
+ */
 function convertToFloatComponents(type) {
   const conversions = {
     int: "float",
@@ -604,7 +610,8 @@ function getStructAssignments(fieldNames, values, struct, type) {
  * @param {Object} propertyStatistics
  * @param {String} struct
  * @param {MetadataEnum} enumType
- * @returns
+ * @returns {String}
+ * @private
  */
 function getEnumAssignments(propertyStatistics, struct, enumType) {
   const { occurrences } = propertyStatistics;
