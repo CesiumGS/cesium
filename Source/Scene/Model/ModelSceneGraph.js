@@ -567,11 +567,18 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     this._boundingSphere
   );
 
+  this._boundingSphere = BoundingSphere.transform(
+    this._boundingSphere,
+    this._components.transform,
+    this._boundingSphere
+  );
+
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
   );
+
   model._initialRadius = model._boundingSphere.radius;
   model._boundingSphere.radius *= model._clampedScale;
 };
