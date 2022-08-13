@@ -823,8 +823,12 @@ function finalizeDracoAttribute(
   }
 
   if (loadTypedArray) {
+    const componentDatatype = defined(vertexBufferLoader.quantization)
+      ? vertexBufferLoader.quantization.componentDatatype
+      : attribute.componentDatatype;
+
     attribute.typedArray = ComponentDatatype.createArrayBufferView(
-      vertexBufferLoader.quantization.componentDatatype,
+      componentDatatype,
       vertexBufferLoader.typedArray.buffer
     );
   }
