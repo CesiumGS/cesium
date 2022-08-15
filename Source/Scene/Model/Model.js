@@ -1102,7 +1102,11 @@ Object.defineProperties(Model.prototype, {
       }
       //>>includeEnd('debug');
 
-      updateBoundingSphereAndScale(this);
+      const modelMatrix = defined(this._clampedModelMatrix)
+        ? this._clampedModelMatrix
+        : this.modelMatrix;
+
+      updateBoundingSphere(this, modelMatrix);
       return this._boundingSphere;
     },
   },
@@ -1912,6 +1916,11 @@ function updateBoundingSphereAndScale(model, frameState) {
     ? model._clampedModelMatrix
     : model.modelMatrix;
 
+  updateBoundingSphere(model, modelMatrix);
+  updateComputedScale(model, modelMatrix, frameState);
+}
+
+function updateBoundingSphere(model, modelMatrix) {
   model._clampedScale = defined(model._maximumScale)
     ? Math.min(model._scale, model._maximumScale)
     : model._scale;
@@ -1921,8 +1930,60 @@ function updateBoundingSphereAndScale(model, frameState) {
     modelMatrix,
     model._boundingSphere
   );
+  model._boundingSphere = BoundingSphere.transform(
+    model._sceneGraph.boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
+
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
-  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updateComputedScale(model, modelMatrix, frameState) {
+  let scale = model.scale;
+
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
+    // Compute size of bounding sphere in pixels
+    const context = frameState.context;
+    const maxPixelSize = Math.max(
+      context.drawingBufferWidth,
+      context.drawingBufferHeight
+    );
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
+
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      SceneTransforms.computeActualWgs84Position(
+        frameState,
+        scratchPosition,
+        scratchPosition
+      );
+    }
+
+    const radius = model._boundingSphere.radius;
+    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / metersPerPixel;
+    const diameterInPixels = Math.min(
+      pixelsPerMeter * (2.0 * radius),
+      maxPixelSize
+    );
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale =
+        (model.minimumPixelSize * metersPerPixel) /
+        (2.0 * model._initialRadius);
+    }
+  }
+
+  const clampedScale = defined(model.maximumScale)
+    ? Math.min(model.maximumScale, scale)
+    : scale;
+
+  model._computedScale = clampedScale;
 }
 
 function updatePickIds(model) {
@@ -2091,55 +2152,6 @@ function scaleInPixels(positionWC, radius, frameState) {
     frameState.context.drawingBufferWidth,
     frameState.context.drawingBufferHeight
   );
-}
-
-function getScale(model, modelMatrix, frameState) {
-  let scale = model.scale;
-
-  if (
-    defined(frameState) &&
-    model.minimumPixelSize !== 0.0 &&
-    !model._projectTo2D
-  ) {
-    // Compute size of bounding sphere in pixels
-    const context = frameState.context;
-    const maxPixelSize = Math.max(
-      context.drawingBufferWidth,
-      context.drawingBufferHeight
-    );
-    scratchPosition.x = modelMatrix[12];
-    scratchPosition.y = modelMatrix[13];
-    scratchPosition.z = modelMatrix[14];
-
-    if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
-        frameState,
-        scratchPosition,
-        scratchPosition
-      );
-    }
-
-    const radius = model._boundingSphere.radius;
-    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
-    // metersPerPixel is always > 0.0
-    const pixelsPerMeter = 1.0 / metersPerPixel;
-    const diameterInPixels = Math.min(
-      pixelsPerMeter * (2.0 * radius),
-      maxPixelSize
-    );
-
-    // Maintain model's minimum pixel size
-    if (diameterInPixels < model.minimumPixelSize) {
-      scale =
-        (model.minimumPixelSize * metersPerPixel) /
-        (2.0 * model._initialRadius);
-    }
-  }
-
-  return defined(model.maximumScale)
-    ? Math.min(model.maximumScale, scale)
-    : scale;
 }
 
 function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
