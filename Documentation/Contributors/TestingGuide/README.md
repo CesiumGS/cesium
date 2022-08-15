@@ -36,6 +36,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Testing Exceptions](#testing-exceptions)
     - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
     - [Rendering Tests](#rendering-tests)
+      - [Debugging Rendering Tests](#debugging-rendering-tests)
     - [GLSL](#glsl)
     - [Spies](#spies)
     - [Test Data and Services](#test-data-and-services)
@@ -499,6 +500,46 @@ it("can declare automatic uniforms", function () {
     context: context,
     fragmentShader: fs,
   }).contextToRender();
+});
+```
+
+#### Debugging Rendering Tests
+
+Rendering tests typically render to a 1x1 pixel canvas. This is so each test runs as
+quickly as possible. However, when regressions happen, it is difficult to tell why the test is failing since the image is too small to see. To make debugging tests easier,
+`createScene()` has options to adjust the canvas size to give a better preview of what
+the camera sees.
+
+An example debug workflow might look like this:
+
+1. Use `fit()` to focus on the test that is failing.
+2. Use the `debugWidth` and `debugHeight` options for `createScene()` to make the canvas larger.
+3. Put a breakpoint in the code around where the first rendering code happens, such as a call of `scene.renderForSpecs()`.
+4. Step through the test. After each render, check the browser window to see the frame that was just rendered.
+
+```js
+beforeAll(function () {
+  scene = createScene({
+    // Create a 300x300 px canvas so we can see what the camera sees.
+    // This is intended for temporary debugging, do not commit these debug options.
+    debugWidth: 300,
+    debugHeight: 300,
+  });
+});
+
+// Focus the test that is failing
+fit("test that is failing", function () {
+  // Start a breakpoint here
+  scene.renderForSpecs();
+  // After each render call, check the browser for the frame that was just rendered.
+
+  // ...
+
+  scene.renderForSpecs();
+
+  // ... and so on
+
+  scene.renderForSpecs();
 });
 ```
 
