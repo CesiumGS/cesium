@@ -1105,8 +1105,8 @@ Object.defineProperties(Model.prototype, {
       const modelMatrix = defined(this._clampedModelMatrix)
         ? this._clampedModelMatrix
         : this.modelMatrix;
-
       updateBoundingSphere(this, modelMatrix);
+
       return this._boundingSphere;
     },
   },
@@ -1921,20 +1921,15 @@ function updateBoundingSphereAndScale(model, frameState) {
 }
 
 function updateBoundingSphere(model, modelMatrix) {
+  model._boundingSphere = BoundingSphere.transform(
+    model._sceneGraph.boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
+
   model._clampedScale = defined(model._maximumScale)
     ? Math.min(model._scale, model._maximumScale)
     : model._scale;
-
-  model._boundingSphere = BoundingSphere.transform(
-    model._sceneGraph.boundingSphere,
-    modelMatrix,
-    model._boundingSphere
-  );
-  model._boundingSphere = BoundingSphere.transform(
-    model._sceneGraph.boundingSphere,
-    modelMatrix,
-    model._boundingSphere
-  );
 
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
 }
@@ -1979,11 +1974,9 @@ function updateComputedScale(model, modelMatrix, frameState) {
     }
   }
 
-  const clampedScale = defined(model.maximumScale)
+  model._computedScale = defined(model.maximumScale)
     ? Math.min(model.maximumScale, scale)
     : scale;
-
-  model._computedScale = clampedScale;
 }
 
 function updatePickIds(model) {
