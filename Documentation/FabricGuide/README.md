@@ -23,7 +23,9 @@
 
 ## Introduction
 
-_Fabric_ is a JSON schema for describing _materials_ in Cesium. Materials represent the appearance of an object such as polygons, polylines, ellipsoids, and sensors.
+Fabric is a JSON schema for describing materials in Cesium. Materials represent the appearance of an object such as polygons, polylines, ellipsoids, and sensors.
+
+_Note: For details about applying custom materials to 3D models or 3D Tiles, use the [Custom Shader Guide](../CustomShaderGuide/README.md) instead._
 
 Materials can be as simple as draping an image over an object, or applying a pattern such as stripes or a checkerboard. Using Fabric and GLSL, new materials can be scripted from scratch or created by combining existing materials in a hierarchy; for example, wet crumbling bricks can be created with a combination of procedural brick, bump map, and specular map materials.
 
@@ -40,7 +42,7 @@ polygon.material = Material.fromType("Color");
 Above, `Color` is a built-in material which represents a single color, including alpha. `Material.fromType` is shorthand; the entire Fabric JSON can also be provided.
 
 ```javascript
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: {
     type: "Color",
   },
@@ -50,17 +52,17 @@ polygon.material = new Cesium.Material({
 Each material has zero or more uniforms, which are input parameters that can be specified when creating the material and modified after. For example, `Color` has a `color` uniform with `red`, `green`, `blue`, and `alpha` components.
 
 ```javascript
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: {
     type: "Color",
     uniforms: {
-      color: new Cesium.Color(1.0, 0.0, 0.0, 0.5),
+      color: new Color(1.0, 0.0, 0.0, 0.5),
     },
   },
 });
 
 // Change from translucent red to opaque white
-polygon.material.uniforms.color = Cesium.Color.WHITE;
+polygon.material.uniforms.color = Color.WHITE;
 ```
 
 ## Built-In Materials
@@ -82,7 +84,7 @@ polygon.material.uniforms.image = "image.png";
 or
 
 ```javascript
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: {
     type: "Image",
     uniforms: {
@@ -150,7 +152,7 @@ polygon.material.uniforms.image =
 Some materials, such as `Diffuse` and `NormalMap` require images with three components per pixel; other materials, such as `Specular` and `Alpha`, require one component. We can specify what channels (and in what order) these components are pulled from when creating a material using the `channels` or `channel` string uniform. For example, by default in the `Specular` material, the specular component is taken from the `r` channel. However, we can change that:
 
 ```javascript
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: {
     type: "SpecularMap",
     uniforms: {
@@ -166,7 +168,7 @@ This allows packing data for multiple materials into the same image, e.g., stori
 Materials that use images often have a `repeat` uniform that controls the number of times the image repeats horizontally and vertically. This can be useful for tiling images across a surface.
 
 ```javascript
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: {
     type: "DiffuseMap",
     uniforms: {
@@ -187,23 +189,23 @@ New materials are created using Fabric, a bit of GLSL, and potentially other mat
 If a material is not going to be reused, it can be created without a `type`.
 
 ```javascript
-var fabric = {
+const fabric = {
   // no type
   // ...rest of fabric JSON
 };
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: fabric,
 });
 ```
 
-When a non-existing `type` is used, the material is cached during the first call to `new Cesium.Material`, and later calls to `new Cesium.Material` or `Material.fromType` can reference the material as if it were a built-in material, i.e., they don't need to provide the full Fabric, just the `type` and any `uniforms` they want to set.
+When a non-existing `type` is used, the material is cached during the first call to `new Material`, and later calls to `new Material` or `Material.fromType` can reference the material as if it were a built-in material, i.e., they don't need to provide the full Fabric, just the `type` and any `uniforms` they want to set.
 
 ```javascript
-var fabric = {
+const fabric = {
   type: "MyNewMaterial",
   // ...rest of fabric JSON
 };
-polygon.material = new Cesium.Material({
+polygon.material = new Material({
   fabric: fabric,
 });
 // ... later calls just use the type.
@@ -215,7 +217,7 @@ anotherPolygon.material = Material.fromType("MyNewMaterial");
 Perhaps the simplest interesting material is one that reflects white in all directions:
 
 ```javascript
-var fabric = {
+const fabric = {
   components: {
     diffuse: "vec3(1.0)",
   },
@@ -399,18 +401,14 @@ This material has `diffuse` and `specular` components that pull values from mate
 Given this Fabric, our material can be used like other materials.
 
 ```javascript
-var m = Material.fromType("OurMappedPlastic");
+const m = Material.fromType("OurMappedPlastic");
 polygon.material = m;
 
 m.materials.diffuseMaterial.uniforms.image = "diffuseMap.png";
 m.materials.specularMaterial.uniforms.image = "specularMap.png";
 ```
 
-_TODO: links to reference doc._
-
-_TODO: links to Sandcastle._
-
-_TODO: need simple but inspiring examples of writing custom materials with Fabric._
+For more details about the Material API, refer to the [CesiumJS documentation](https://cesium.com/learn/cesiumjs/ref-doc/Material.html?classFilter=material). For more examples of usage of the Material API, refer to this [Sandcastle](https://sandcastle.cesium.com/?src=Materials.html&label=Geometries).
 
 ## Fabric Schema
 
@@ -427,7 +425,7 @@ From the rendering perspective, a material is a GLSL function, `czm_getMaterial`
 In JavaScript, the object should have a public `material` property. When this property changes, the `update` function should prepend the material's GLSL source to the object's fragment shader's source, and combine the uniforms of the object and the material.
 
 ```javascript
-var fsSource = this.material.shaderSource + ourFragmentShaderSource;
+const fsSource = this.material.shaderSource + ourFragmentShaderSource;
 
 this._drawUniforms = combine([this._uniforms, this.material._uniforms]);
 ```
