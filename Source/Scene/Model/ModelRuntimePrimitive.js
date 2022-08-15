@@ -39,7 +39,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  *
  * @private
  */
-export default function ModelRuntimePrimitive(options) {
+function ModelRuntimePrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const primitive = options.primitive;
@@ -294,3 +294,5 @@ function inspectFeatureIds(model, node, primitive) {
     hasPropertyTable: false,
   };
 }
+
+export default ModelRuntimePrimitive;

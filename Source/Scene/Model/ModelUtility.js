@@ -15,7 +15,7 @@ import Matrix3 from "../../Core/Matrix3.js";
  *
  * @private
  */
-export default function ModelUtility() {}
+function ModelUtility() {}
 
 /**
  * Create a function for reporting when a model fails to load
@@ -374,3 +374,5 @@ ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
     }
   }
 };
+
+export default ModelUtility;

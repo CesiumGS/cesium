@@ -34,7 +34,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfJsonLoader(options) {
+function GltfJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltfResource = options.gltfResource;
@@ -291,3 +291,5 @@ GltfJsonLoader.prototype.unload = function () {
 GltfJsonLoader.prototype._fetchGltf = function () {
   return this._gltfResource.fetchArrayBuffer();
 };
+
+export default GltfJsonLoader;

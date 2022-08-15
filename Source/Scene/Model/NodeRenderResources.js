@@ -14,7 +14,7 @@ import clone from "../../Core/clone.js";
  *
  * @private
  */
-export default function NodeRenderResources(modelRenderResources, runtimeNode) {
+function NodeRenderResources(modelRenderResources, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelRenderResources", modelRenderResources);
   Check.typeOf.object("runtimeNode", runtimeNode);
@@ -163,3 +163,5 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.instancingReferencePoint2D = undefined;
 }
+
+export default NodeRenderResources;

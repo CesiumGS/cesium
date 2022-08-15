@@ -119,7 +119,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  *   `
  * });
  */
-export default function CustomShader(options) {
+function CustomShader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
@@ -469,3 +469,5 @@ CustomShader.prototype.destroy = function () {
   this._textureManager = this._textureManager && this._textureManager.destroy();
   destroyObject(this);
 };
+
+export default CustomShader;

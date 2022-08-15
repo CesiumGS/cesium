@@ -18,7 +18,7 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  *
  * @private
  */
-export default function ModelArticulation(options) {
+function ModelArticulation(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const articulation = options.articulation;
@@ -210,3 +210,5 @@ ModelArticulation.prototype.apply = function () {
     node.transform = transform;
   }
 };
+
+export default ModelArticulation;

@@ -22,7 +22,7 @@ import PropertyAttributeProperty from "./PropertyAttributeProperty.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function PropertyAttribute(options) {
+function PropertyAttribute(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const propertyAttribute = options.propertyAttribute;
   const classDefinition = options.class;
@@ -156,3 +156,5 @@ PropertyAttribute.prototype.getProperty = function (propertyId) {
 
   return this._properties[propertyId];
 };
+
+export default PropertyAttribute;

@@ -53,7 +53,7 @@ import ShaderFunction from "./ShaderFunction.js";
  *
  * @private
  */
-export default function ShaderBuilder() {
+function ShaderBuilder() {
   // Some WebGL implementations require attribute 0 to always
   // be active, so the position attribute is tracked separately
   this._positionAttributeLine = undefined;
@@ -564,3 +564,5 @@ function generateFunctionLines(shaderBuilder) {
     fragmentLines: fragmentLines,
   };
 }
+
+export default ShaderBuilder;

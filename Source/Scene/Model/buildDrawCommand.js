@@ -28,7 +28,7 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  *
  * @private
  */
-export default function buildDrawCommand(primitiveRenderResources, frameState) {
+function buildDrawCommand(primitiveRenderResources, frameState) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelVS]);
   shaderBuilder.addFragmentLines([ModelFS]);
@@ -159,3 +159,5 @@ function getIndexBuffer(primitiveRenderResources) {
 
   return indices.buffer;
 }
+
+export default buildDrawCommand;

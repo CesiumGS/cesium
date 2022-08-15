@@ -32,12 +32,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function Multiple3DTileContent(
-  tileset,
-  tile,
-  tilesetResource,
-  contentsJson
-) {
+function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   this._tileset = tileset;
   this._tile = tile;
   this._tilesetResource = tilesetResource;
@@ -675,3 +670,5 @@ Multiple3DTileContent.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
+
+export default Multiple3DTileContent;

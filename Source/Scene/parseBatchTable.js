@@ -35,7 +35,7 @@ import ModelUtility from "./Model/ModelUtility.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseBatchTable(options) {
+function parseBatchTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
   Check.typeOf.object("options.batchTable", options.batchTable);
@@ -433,3 +433,5 @@ function initializeHierarchy(hierarchyExtension, binaryBody) {
 
 // exposed for testing
 parseBatchTable._deprecationWarning = deprecationWarning;
+
+export default parseBatchTable;

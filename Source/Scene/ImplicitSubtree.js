@@ -38,7 +38,7 @@ import ResourceCache from "./ResourceCache.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitSubtree(
+function ImplicitSubtree(
   resource,
   json,
   subtreeView,
@@ -1142,3 +1142,5 @@ ImplicitSubtree.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+export default ImplicitSubtree;

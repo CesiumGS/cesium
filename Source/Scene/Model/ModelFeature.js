@@ -31,7 +31,7 @@ import deprecationWarning from "../../Core/deprecationWarning.js";
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  *
  */
-export default function ModelFeature(options) {
+function ModelFeature(options) {
   this._model = options.model;
 
   // This ModelFeatureTable is not documented as an option since it is
@@ -242,3 +242,5 @@ ModelFeature.prototype.getPropertyIds = function (results) {
 ModelFeature.prototype.setProperty = function (name, value) {
   return this._featureTable.setProperty(this._featureId, name, value);
 };
+
+export default ModelFeature;

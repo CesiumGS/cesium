@@ -22,11 +22,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitTileset(
-  baseResource,
-  tileJson,
-  metadataSchema
-) {
+function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   const implicitTiling = hasExtension(tileJson, "3DTILES_implicit_tiling")
     ? tileJson.extensions["3DTILES_implicit_tiling"]
     : tileJson.implicitTiling;
@@ -263,3 +259,5 @@ function makeTileHeaderTemplate(tileJson) {
 
   return template;
 }
+
+export default ImplicitTileset;

@@ -42,7 +42,7 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function Implicit3DTileContent(
+function Implicit3DTileContent(
   tileset,
   tile,
   resource,
@@ -1150,3 +1150,5 @@ Implicit3DTileContent.prototype.destroy = function () {
 Implicit3DTileContent._deriveBoundingBox = deriveBoundingBox;
 Implicit3DTileContent._deriveBoundingRegion = deriveBoundingRegion;
 Implicit3DTileContent._deriveBoundingVolumeS2 = deriveBoundingVolumeS2;
+
+export default Implicit3DTileContent;

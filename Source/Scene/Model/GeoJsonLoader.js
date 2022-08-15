@@ -40,7 +40,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.geoJson The GeoJson object.
  */
-export default function GeoJsonLoader(options) {
+function GeoJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
@@ -527,3 +527,5 @@ function parse(geoJson, frameState) {
 GeoJsonLoader.prototype.unload = function () {
   this._components = undefined;
 };
+
+export default GeoJsonLoader;
