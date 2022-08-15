@@ -1,4 +1,4 @@
-import MersenneTwister from "../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";

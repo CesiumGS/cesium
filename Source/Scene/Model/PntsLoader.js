@@ -9,7 +9,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
-import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AlphaMode from "../AlphaMode.js";

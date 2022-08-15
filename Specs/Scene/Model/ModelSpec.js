@@ -94,6 +94,8 @@ describe(
       "./Data/Models/GltfLoader/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
       "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
+    const boxCesiumRtcUrl =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -782,6 +784,17 @@ describe(
       });
     });
 
+    it("renders model with CESIUM_RTC extension", function () {
+      return loadAndZoomToModel(
+        {
+          gltf: boxCesiumRtcUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+      });
+    });
+
     it("adds animation to draco-compressed model", function () {
       return loadAndZoomToModel({ gltf: dracoCesiumManUrl }, scene).then(
         function (model) {
@@ -1431,6 +1444,19 @@ describe(
               CesiumMath.EPSILON3
             );
           });
+        });
+      });
+
+      it("boundingSphere accounts for transform from CESIUM_RTC extension", function () {
+        return loadAndZoomToModel(
+          {
+            gltf: boxCesiumRtcUrl,
+          },
+          scene
+        ).then(function (model) {
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3(6378137, 0, 0));
         });
       });
     });
