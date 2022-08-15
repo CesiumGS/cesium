@@ -380,8 +380,8 @@ describe(
         // required by this test dataset
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
-          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
           [
             "    vec2MetadataClass vec2Property;",
             "    intMetadataClass uint8Property;",
@@ -452,8 +452,6 @@ describe(
 
       const offset = new HeadingPitchRange(0, 0, 5.0);
       scene.camera.lookAt(modelPos, offset);
-      //scene.camera.moveRight(5);
-      //scene.camera.moveUp(3);
 
       const tilesetOptions = {
         modelMatrix: Transforms.eastNorthUpToFixedFrame(modelPos),
@@ -470,26 +468,7 @@ describe(
         expect(metadataExtension).toBeDefined();
         expect(metadataExtension.statistics).toBeDefined();
 
-        const root = tileset.root;
-        expect(root.hasEmptyContent).toBe(true);
-        expect(root.contentReady).toBe(true);
-
-        const child = root.children[0];
-        expect(child).toBeDefined();
-        expect(child.hasEmptyContent).toBe(false);
-        expect(child.contentReady).toBe(false);
-        expect(child.contentUnloaded).toBe(true);
-
-        const child1 = root.children[1];
-        expect(child1).toBeDefined();
-        expect(child1.hasEmptyContent).toBe(false);
-        expect(child1.contentReady).toBe(true);
-        expect(child1.contentUnloaded).toBe(false);
-
-        const content = child1.content;
-        expect(content).toBeDefined();
-
-        const model = content._model;
+        const model = tileset.root.children[1].content._model;
         expect(model).toBeDefined();
 
         const shaderBuilder = new ShaderBuilder();
@@ -571,14 +550,14 @@ describe(
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
-          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
           metadataClassFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
-          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
           metadataClassFields
         );
 
@@ -588,14 +567,14 @@ describe(
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_VS,
-          MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
           metadataStatisticsFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
-          MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
           metadataStatisticsFields
         );
 

@@ -525,8 +525,14 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     "metadataClass"
+  );
+  // Add MetadataStatistics struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+    "metadataStatistics"
   );
 
   const functionId =
@@ -587,8 +593,14 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     "metadataClass"
+  );
+  // Add MetadataStatistics struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+    "metadataStatistics"
   );
 
   const functionId =

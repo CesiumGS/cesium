@@ -859,7 +859,8 @@ For example, consider a schema with the following enum type:
 The number of entities classified as "Buildings" will be accessible in the shader as follows:
 
 ```glsl
-int buildingsCount = vsInput.metadataStatistics.classification.occurrences[1];
+#define BUILDINGS 1
+int buildingsCount = vsInput.metadataStatistics.classification.occurrences[BUILDINGS];
 ```
 
 ## `czm_modelVertexOutput` struct

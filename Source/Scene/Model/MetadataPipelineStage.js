@@ -22,13 +22,13 @@ const MetadataPipelineStage = {
   STRUCT_ID_METADATA_FS: "MetadataFS",
   STRUCT_NAME_METADATA: "Metadata",
 
-  STRUCT_ID_METADATACLASS_VS: "MetadataClassVS",
-  STRUCT_ID_METADATACLASS_FS: "MetadataClassFS",
-  STRUCT_NAME_METADATACLASS: "MetadataClass",
+  STRUCT_ID_METADATA_CLASS_VS: "MetadataClassVS",
+  STRUCT_ID_METADATA_CLASS_FS: "MetadataClassFS",
+  STRUCT_NAME_METADATA_CLASS: "MetadataClass",
 
-  STRUCT_ID_METADATASTATISTICS_VS: "MetadataStatisticsVS",
-  STRUCT_ID_METADATASTATISTICS_FS: "MetadataStatisticsFS",
-  STRUCT_NAME_METADATASTATISTICS: "MetadataStatistics",
+  STRUCT_ID_METADATA_STATISTICS_VS: "MetadataStatisticsVS",
+  STRUCT_ID_METADATA_STATISTICS_FS: "MetadataStatisticsFS",
+  STRUCT_NAME_METADATA_STATISTICS: "MetadataStatistics",
 
   FUNCTION_ID_INITIALIZE_METADATA_VS: "initializeMetadataVS",
   FUNCTION_ID_INITIALIZE_METADATA_FS: "initializeMetadataFS",
@@ -40,13 +40,13 @@ const MetadataPipelineStage = {
   // Metadata class and statistics fields:
   // - some must be renamed to avoid reserved words
   // - some always have float/vec values, even for integer/ivec property types
-  METADATACLASS_FIELDS: [
+  METADATA_CLASS_FIELDS: [
     { specName: "noData", shaderName: "noData" },
     { specName: "default", shaderName: "defaultValue" },
     { specName: "min", shaderName: "minValue" },
     { specName: "max", shaderName: "maxValue" },
   ],
-  METADATASTATISTICS_FIELDS: [
+  METADATA_STATISTICS_FIELDS: [
     { specName: "min", shaderName: "minValue" },
     { specName: "max", shaderName: "maxValue" },
     { specName: "mean", shaderName: "mean", type: "float" },
@@ -122,7 +122,7 @@ MetadataPipelineStage.process = function (
  * @param {PropertyAttribute[]} propertyAttributes
  * @param {ModelComponents.Primitive} primitive
  * @param {Object} statistics
- * @returns {Array<{Object}>}
+ * @returns {Object[]}
  * @private
  */
 function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
@@ -139,7 +139,7 @@ function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
  * @param {PropertyAttribute} propertyAttribute
  * @param {ModelComponents.Primitive} primitive
  * @param {Object} statistics
- * @returns {Array<{Object}>}
+ * @returns {Object[]}
  * @private
  */
 function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
@@ -180,7 +180,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
  * return as a flattened Array
  * @param {PropertyTexture[]} propertyTextures
  * @param {Object} statistics
- * @returns {Array<{Object}>}
+ * @returns {Object[]}
  * @private
  */
 function getPropertyTexturesInfo(propertyTextures, statistics) {
@@ -196,7 +196,7 @@ function getPropertyTexturesInfo(propertyTextures, statistics) {
  * Collect info about the properties of a PropertyTexture
  * @param {PropertyTexture} propertyTexture
  * @param {Object} statistics
- * @returns {Array<{Object}>}
+ * @returns {Object[]}
  * @private
  */
 function getPropertyTextureInfo(propertyTexture, statistics) {
@@ -251,13 +251,13 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
     }
   }
 
-  const classFields = MetadataPipelineStage.METADATACLASS_FIELDS;
+  const classFields = MetadataPipelineStage.METADATA_CLASS_FIELDS;
   for (const metadataType of classTypes) {
     const classStructName = `${metadataType}MetadataClass`;
     declareTypeStruct(classStructName, metadataType, classFields);
   }
 
-  const statisticsFields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
+  const statisticsFields = MetadataPipelineStage.METADATA_STATISTICS_FIELDS;
   for (const metadataType of statisticsTypes) {
     const statisticsStructName = `${metadataType}MetadataStatistics`;
     declareTypeStruct(statisticsStructName, metadataType, statisticsFields);
@@ -319,25 +319,25 @@ function declareStructsAndFunctions(shaderBuilder) {
 
   // Declare the MetadataClass struct
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_VS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     ShaderDestination.VERTEX
   );
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     ShaderDestination.FRAGMENT
   );
 
   // Declare the MetadataStatistics struct
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_VS,
-    MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_VS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
     ShaderDestination.VERTEX
   );
   shaderBuilder.addStruct(
-    MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
-    MetadataPipelineStage.STRUCT_NAME_METADATASTATISTICS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
     ShaderDestination.FRAGMENT
   );
 
@@ -500,7 +500,7 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
 
   // Construct assignment statements to set values in the metadataClass struct
   const assignments = getStructAssignments(
-    MetadataPipelineStage.METADATACLASS_FIELDS,
+    MetadataPipelineStage.METADATA_CLASS_FIELDS,
     classProperty,
     `metadataClass.${metadataVariable}`,
     glslType
@@ -509,7 +509,7 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
   // Struct field: Prefix to get the appropriate <type>MetadataClass struct
   const metadataType = `${glslType}MetadataClass`;
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
     metadataType,
     metadataVariable
   );
@@ -521,7 +521,7 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
     return;
   }
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATACLASS_VS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_VS,
     metadataType,
     metadataVariable
   );
@@ -548,7 +548,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   const isEnum = type === MetadataType.ENUM;
 
   // Construct assignment statements to set values in the metadataStatistics struct
-  const fields = MetadataPipelineStage.METADATASTATISTICS_FIELDS;
+  const fields = MetadataPipelineStage.METADATA_STATISTICS_FIELDS;
   const struct = `metadataStatistics.${metadataVariable}`;
   const assignments = isEnum
     ? getEnumAssignments(propertyStatistics, struct, enumType)
@@ -558,7 +558,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   const prefix = isEnum ? `enum${enumType.values.length}` : glslType;
   const statisticsType = `${prefix}MetadataStatistics`;
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_FS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
     statisticsType,
     metadataVariable
   );
@@ -570,7 +570,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
     return;
   }
   shaderBuilder.addStructField(
-    MetadataPipelineStage.STRUCT_ID_METADATASTATISTICS_VS,
+    MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_VS,
     statisticsType,
     metadataVariable
   );
