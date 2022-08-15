@@ -22,7 +22,7 @@ import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import Transforms from "../../Core/Transforms.js";
-import TilesetPipelineStage from "./TilesetPipelineStage.js";
+import Cesium3DTilesetPipelineStage from "./Cesium3DTilesetPipelineStage.js";
 import ModelType from "./ModelType.js";
 
 /**
@@ -620,7 +620,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   }
 
   if (ModelType.is3DTiles(model.type)) {
-    modelPipelineStages.push(TilesetPipelineStage);
+    modelPipelineStages.push(Cesium3DTilesetPipelineStage);
   }
 };
 
@@ -780,13 +780,12 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
   });
 };
 
+const scratchSilhouetteCommands = [];
 /**
- * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
- * the draw commands associated with each primitive.
- *TODO: fix documentation and name
- * @param {FrameState} frameState The frame state.
+ * Traverses through the scene graph and pushes the draw commands associated with
+ * each primitive to the frame state's command list.
  *
- * @returns {DrawCommand[]} The draw commands of the primitives in the scene graph.
+ * @param {FrameState} frameState The frame state.
  *
  * @private
  */
@@ -797,20 +796,28 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // gathering the original commands and the silhouette commands separately.
 
   const passes = frameState.passes;
+
   const hasSilhouette = this._model.hasSilhouette(frameState);
+  const silhouetteCommands = scratchSilhouetteCommands;
+  silhouetteCommands.length = 0;
 
   forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
     const primitiveDrawCommand = runtimePrimitive.drawCommand;
-    primitiveDrawCommand.pushCommands(frameState);
+    primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
     // If a model has silhouettes, the commands that draw the silhouettes for
     // each primitive can only be invoked after the entire model has drawn.
     // Otherwise, the silhouette may draw on top of the model. This requires
     // gathering the original commands and the silhouette commands separately.
-
     if (hasSilhouette && !passes.pick) {
-      primitiveDrawCommand.pushSilhouetteCommands(frameState);
+      primitiveDrawCommand.pushSilhouetteCommands(
+        frameState,
+        silhouetteCommands
+      );
     }
   });
+
+  frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
 };
 
 /**

@@ -81,11 +81,8 @@ function ModelDrawCommand(options) {
   // None of the derived commands (non-2D) use a different model matrix
   // or bounding volume than the original, so they all point to the
   // ModelDrawCommand's copy to save update time and memory.
-  this._modelMatrix = Matrix4.clone(command.modelMatrix, new Matrix4());
-  this._boundingVolume = BoundingSphere.clone(
-    command.boundingVolume,
-    new BoundingSphere()
-  );
+  this._modelMatrix = Matrix4.clone(command.modelMatrix);
+  this._boundingVolume = BoundingSphere.clone(command.boundingVolume);
 
   // The 2D model matrix depends on the frame state's map projection,
   // so it must be updated when the commands are handled in pushCommands.
@@ -150,9 +147,11 @@ ModelDerivedCommand.clone = function (derivedCommand) {
 
 function initialize(drawCommand) {
   const command = drawCommand._command;
+  command.modelMatrix = drawCommand._modelMatrix;
+  command.boundingVolume = drawCommand._boundingVolume;
+
   const model = drawCommand._model;
   const usesBackFaceCulling = drawCommand._usesBackFaceCulling;
-
   const derivedCommands = drawCommand._derivedCommands;
 
   drawCommand._originalCommand = new ModelDerivedCommand({
@@ -300,22 +299,17 @@ Object.defineProperties(ModelDrawCommand.prototype, {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
 
-      this._boundingSphere = BoundingSphere.transform(
+      this._boundingVolume = BoundingSphere.transform(
         this.runtimePrimitive.boundingSphere,
         this._modelMatrix,
-        this._boundingSphere
+        this._boundingVolume
       );
     },
   },
 
   /**
-<<<<<<< HEAD:Source/Scene/ModelExperimental/ModelDrawCommand.js
-   * The bounding volume of the original draw command. This is equivalent
-   * to the the primitive's bounding sphere transformed by the draw
-=======
    * The bounding volume of the main draw command. This is equivalent
    * to the primitive's bounding sphere transformed by the draw
->>>>>>> main:Source/Scene/Model/ModelDrawCommand.js
    * command's model matrix.
    *
    * @memberof ModelDrawCommand.prototype
@@ -512,10 +506,11 @@ function updateDebugShowBoundingVolume(drawCommand) {
  * This does not include the draw commands that render its silhouette.
  *
  * @param {FrameState} frameState The frame state.
+ * @param {Array<DrawCommand>} result The array to push the draw commands to.
  *
  * @private
  */
-ModelDrawCommand.prototype.pushCommands = function (frameState) {
+ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
   const use2D = shouldUse2DCommands(this, frameState);
 
   if (use2D && !this._has2DCommands) {
@@ -529,10 +524,8 @@ ModelDrawCommand.prototype.pushCommands = function (frameState) {
     this._modelMatrix2DDirty = false;
   }
 
-  const commandList = frameState.commandList;
-
   if (this._needsTranslucentCommand) {
-    pushCommand(commandList, this._translucentCommand, use2D);
+    pushCommand(result, this._translucentCommand, use2D);
     // Don't return here; the main command still needs to be pushed.
   }
 
@@ -554,25 +547,18 @@ ModelDrawCommand.prototype.pushCommands = function (frameState) {
       }
 
       updateSkipLodStencilCommand(this, tile, use2D);
-      pushCommand(commandList, this._skipLodStencilCommand, use2D);
+      pushCommand(result, this._skipLodStencilCommand, use2D);
       return;
     }
   }
 
   if (this._needsSilhouetteCommands) {
-    pushCommand(commandList, this._silhouetteModelCommand, use2D);
+    pushCommand(result, this._silhouetteModelCommand, use2D);
     return;
   }
 
-  pushCommand(commandList, this._originalCommand, use2D);
+  pushCommand(result, this._originalCommand, use2D);
 };
-
-function pushCommand(commandList, derivedCommand, use2D) {
-  commandList.push(derivedCommand.command);
-  if (use2D) {
-    commandList.push(derivedCommand.derivedCommand2D.command);
-  }
-}
 
 /**
  * Pushes the draw commands necessary to render the silhouette. These should
@@ -586,13 +572,24 @@ function pushCommand(commandList, derivedCommand, use2D) {
  * updated for 2D commands.
  *
  * @param {FrameState} frameState The frame state.
+ * @param {Array<DrawCommand>} result The array to push the silhouette commands to.
  *
  * @private
  */
-ModelDrawCommand.prototype.pushSilhouetteCommands = function (frameState) {
+ModelDrawCommand.prototype.pushSilhouetteCommands = function (
+  frameState,
+  result
+) {
   const use2D = shouldUse2DCommands(this, frameState);
-  pushCommand(frameState.commandList, this._silhouetteColorCommand, use2D);
+  pushCommand(result, this._silhouetteColorCommand, use2D);
 };
+
+function pushCommand(commandList, derivedCommand, use2D) {
+  commandList.push(derivedCommand.command);
+  if (use2D) {
+    commandList.push(derivedCommand.derivedCommand2D.command);
+  }
+}
 
 function shouldUse2DCommands(drawCommand, frameState) {
   if (frameState.mode !== SceneMode.SCENE2D || drawCommand.model._projectTo2D) {
@@ -625,8 +622,6 @@ function derive2DCommand(drawCommand, derivedCommand) {
   const derivedCommand2D = ModelDerivedCommand.clone(derivedCommand);
 
   const command2D = DrawCommand.shallowClone(derivedCommand.command);
-
-  // These will be computed in updateModelMatrix2D()
   command2D.modelMatrix = drawCommand._modelMatrix2D;
   command2D.boundingVolume = drawCommand._boundingVolume2D;
 
@@ -686,6 +681,15 @@ function deriveSilhouetteModelCommand(command, model) {
       zPass: WebGLConstants.REPLACE,
     },
   };
+
+  if (model.isInvisible()) {
+    renderState.colorMask = {
+      red: false,
+      green: false,
+      blue: false,
+      alpha: false,
+    };
+  }
 
   silhouetteModelCommand.renderState = RenderState.fromCache(renderState);
 

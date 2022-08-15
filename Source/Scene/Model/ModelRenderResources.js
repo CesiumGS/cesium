@@ -93,7 +93,7 @@ export default function ModelRenderResources(model) {
   /**
    * Whether the model is part of a tileset that uses the skipLevelOfDetail
    * optimization. This value indicates what draw commands are needed and
-   * is set by TilesetPipelineStage.
+   * is set by Cesium3DTilesetPipelineStage.
    *
    * @type {Boolean}
    * @default false
