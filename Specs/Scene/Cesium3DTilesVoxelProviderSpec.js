@@ -36,7 +36,8 @@ describe(
     });
 
     it("constructor works", function () {
-      const url = "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/tileset.json";
+      const url =
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
       const provider = new Cesium3DTilesVoxelProvider({
         url: url,
       });
@@ -77,7 +78,8 @@ describe(
     });
 
     it("requestData works for root tile", function () {
-      const url = "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/tileset.json";
+      const url =
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
       const provider = new Cesium3DTilesVoxelProvider({
         url: url,
       });
@@ -110,7 +112,8 @@ describe(
     });
 
     it("requestData throws if the provider is not ready", function () {
-      const url = "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/tileset.json";
+      const url =
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
       const provider = new Cesium3DTilesVoxelProvider({
         url: url,
       });

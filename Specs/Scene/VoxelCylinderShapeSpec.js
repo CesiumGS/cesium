@@ -14,7 +14,7 @@ describe(
   function () {
     it("constructs", function () {
       const shape = new VoxelCylinderShape();
-      expect(shape.isVisible).toEqual(false);
+      expect(shape.shapeTransform).toEqual(new Matrix4());
     });
 
     it("update works with model matrix", function () {
@@ -37,7 +37,7 @@ describe(
       const minBounds = VoxelCylinderShape.DefaultMinBounds;
       const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
 
-      shape.update(modelMatrix, minBounds, maxBounds);
+      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
       const expectedOrientedBoundingBox = new OrientedBoundingBox(
         translation,
@@ -92,7 +92,7 @@ describe(
       const maxAngle = 0.0;
       const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
       const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
-      shape.update(modelMatrix, minBounds, maxBounds);
+      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
       const expectedMinX = translation.x - maxRadius * scale.x;
       const expectedMaxX = translation.x + maxRadius * scale.x;
@@ -172,7 +172,7 @@ describe(
         defaultMaxBounds.y,
         maxAngle
       );
-      shape.update(modelMatrix, minBounds, maxBounds);
+      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
       const expectedScale = new Cartesian3(0.5, 1.0, 1.0);
       const expectedTranslation = new Cartesian3(-0.5, 0.0, 0.0);

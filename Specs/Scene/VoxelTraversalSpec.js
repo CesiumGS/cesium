@@ -109,9 +109,7 @@ describe(
     const keyframeCount = 1;
     const voxelDimensions = provider.voxelDimensions;
     const neighborEdgeCount = provider.neighborEdgeCount;
-    const channelCount = provider.channelCount;
-    const minimumValues = provider.minimumValues;
-    const maximumValues = provider.maximumValues;
+    // TODO: not available from the dummy provider (nor from the real providers)
     const datatypes = provider.datatypes;
     const textureMemory = 500;
 
@@ -131,13 +129,10 @@ describe(
         return new VoxelTraversal(
           primitive,
           context,
-          keyframeCount,
           voxelDimensions,
-          neighborEdgeCount,
-          channelCount,
-          minimumValues,
-          maximumValues,
           datatypes,
+          datatypes,
+          keyframeCount,
           textureMemory
         );
       });

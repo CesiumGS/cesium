@@ -12,7 +12,7 @@ import {
 describe("Scene/VoxelEllipsoidShape", function () {
   it("constructs", function () {
     const shape = new VoxelEllipsoidShape();
-    expect(shape.isVisible).toEqual(false);
+    expect(shape.shapeTransform).toEqual(new Matrix4());
   });
 
   it("update works with model matrix", function () {
@@ -28,8 +28,16 @@ describe("Scene/VoxelEllipsoidShape", function () {
       scale
     );
 
-    const minBounds = VoxelEllipsoidShape.DefaultMinBounds;
-    const maxBounds = VoxelEllipsoidShape.DefaultMaxBounds;
+    const minBounds = new Cartesian3(
+      -CesiumMath.PI,
+      -CesiumMath.PI_OVER_TWO,
+      0.0
+    );
+    const maxBounds = new Cartesian3(
+      +CesiumMath.PI,
+      +CesiumMath.PI_OVER_TWO,
+      100000
+    );
     const maxHeight = maxBounds.z;
 
     const expectedOrientedBoundingBox = new OrientedBoundingBox(
@@ -52,14 +60,14 @@ describe("Scene/VoxelEllipsoidShape", function () {
       new BoundingSphere()
     );
 
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     expect(shape.orientedBoundingBox.center).toEqual(
       expectedOrientedBoundingBox.center
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON9
     );
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
 
@@ -69,10 +77,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
 
     expect(
       Matrix4.getMatrix3(shape.boundTransform, new Matrix3())
-    ).toEqualEpsilon(
-      expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
-    );
+    ).toEqualEpsilon(expectedOrientedBoundingBox.halfAxes, CesiumMath.EPSILON9);
 
     expect(
       Matrix4.getTranslation(shape.shapeTransform, new Cartesian3())
@@ -80,10 +85,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
 
     expect(
       Matrix4.getMatrix3(shape.shapeTransform, new Matrix3())
-    ).toEqualEpsilon(
-      expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
-    );
+    ).toEqualEpsilon(expectedOrientedBoundingBox.halfAxes, CesiumMath.EPSILON9);
 
     // expect(shape.boundTransform).toEqual(modelMatrix);
     // expect(shape.shapeTransform).toEqual(modelMatrix);

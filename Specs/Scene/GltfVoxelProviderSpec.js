@@ -35,7 +35,7 @@ describe(
 
     it("constructor works", function () {
       const url =
-        "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/0/0/0/0/tile.gltf";
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/0/0/0/0/tile.gltf";
       const provider = new GltfVoxelProvider({
         gltf: url,
       });
@@ -74,7 +74,7 @@ describe(
 
     it("requestData works", function () {
       const url =
-        "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/0/0/0/0/tile.gltf";
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/0/0/0/0/tile.gltf";
       const provider = new GltfVoxelProvider({
         gltf: url,
       });
@@ -109,7 +109,7 @@ describe(
 
     it("requestData throws for non-root tiles", function () {
       const url =
-        "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/0/0/0/0/tile.gltf";
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/0/0/0/0/tile.gltf";
       const provider = new GltfVoxelProvider({
         gltf: url,
       });
@@ -124,7 +124,8 @@ describe(
     });
 
     it("requestData throws if the provider is not ready", function () {
-      const url = "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/tileset.json";
+      const url =
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
       const provider = new GltfVoxelProvider({
         gltf: url,
       });

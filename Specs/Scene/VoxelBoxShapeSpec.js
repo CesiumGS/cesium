@@ -12,7 +12,7 @@ import {
 describe("Scene/VoxelBoxShape", function () {
   it("constructs", function () {
     const shape = new VoxelBoxShape();
-    expect(shape.isVisible).toEqual(false);
+    expect(shape.shapeTransform).toEqual(new Matrix4());
   });
 
   it("update works with model matrix", function () {
@@ -51,7 +51,13 @@ describe("Scene/VoxelBoxShape", function () {
       Cartesian3.magnitude(scale)
     );
 
-    shape.update(modelMatrix, minBounds, maxBounds);
+    const visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
 
     expect(shape.orientedBoundingBox.center).toEqual(
       expectedOrientedBoundingBox.center
@@ -63,7 +69,7 @@ describe("Scene/VoxelBoxShape", function () {
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
     expect(shape.boundTransform).toEqual(modelMatrix);
     expect(shape.shapeTransform).toEqual(modelMatrix);
-    expect(shape.isVisible).toBeTrue();
+    expect(visible).toBeTrue();
   });
 
   it("update works with non-default minimum and maximum bounds", function () {
@@ -79,7 +85,13 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = new Cartesian3(-0.75, -0.75, -0.75);
     const maxBounds = new Cartesian3(-0.25, -0.25, -0.25);
-    shape.update(modelMatrix, minBounds, maxBounds);
+    const visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
 
     const expectedTranslation = new Cartesian3(0.75, 1.75, 2.75);
     const expectedScale = new Cartesian3(0.5, 0.75, 1.0);
@@ -103,7 +115,7 @@ describe("Scene/VoxelBoxShape", function () {
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
     expect(shape.boundTransform).toEqual(expectedModelMatrix);
     expect(shape.shapeTransform).toEqual(expectedModelMatrix);
-    expect(shape.isVisible).toBeTrue();
+    expect(visible).toBeTrue();
   });
 
   it("update is visible with zero scale for one component", function () {
@@ -115,6 +127,7 @@ describe("Scene/VoxelBoxShape", function () {
 
     let scale;
     let modelMatrix;
+    let visible;
 
     // 0 scale for X
     scale = new Cartesian3(0.0, 2.0, 2.0);
@@ -123,8 +136,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeTrue();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeTrue();
 
     // 0 scale for Y
     scale = Cartesian3.fromElements(2.0, 0.0, 2.0, scale);
@@ -133,8 +152,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeTrue();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeTrue();
 
     // 0 scale for Z
     scale = Cartesian3.fromElements(2.0, 2.0, 0.0, scale);
@@ -143,8 +168,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeTrue();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeTrue();
   });
 
   it("update is invisible with zero scale for two or more components", function () {
@@ -156,6 +187,7 @@ describe("Scene/VoxelBoxShape", function () {
 
     let scale;
     let modelMatrix;
+    let visible;
 
     // 0 scale for X and Y
     scale = new Cartesian3(0.0, 0.0, 2.0);
@@ -164,8 +196,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 scale for X and Z
     scale = Cartesian3.fromElements(0.0, 2.0, 0.0, scale);
@@ -174,8 +212,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 scale for Y and Z
     scale = Cartesian3.fromElements(2.0, 0.0, 0.0, scale);
@@ -184,8 +228,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 scale for X, Y, and Z
     scale = Cartesian3.fromElements(0.0, 0.0, 0.0, scale);
@@ -194,8 +244,14 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
   });
 
   it("update is visible with zero bounds for one component", function () {
@@ -214,19 +270,29 @@ describe("Scene/VoxelBoxShape", function () {
     let expectedScale;
     let actualScale;
     let actualTranslation;
+    let visible;
+
+    const clipMinBounds = new Cartesian3(-1.0, -1.0, -1.0);
+    const clipMaxBounds = new Cartesian3(1.0, 1.0, 1.0);
 
     // 0 in X bound
     minBounds = new Cartesian3(0.0, -1.0, -1.0);
     maxBounds = new Cartesian3(0.0, +1.0, +1.0);
     expectedScale = new Cartesian3(0.0, 1.0, 1.0);
 
-    shape.update(modelMatrix, minBounds, maxBounds);
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
     actualScale = Matrix4.getScale(shape.shapeTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
       new Cartesian3()
     );
-    expect(shape.isVisible).toBeTrue();
+    expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
     expect(actualTranslation).toEqual(translation);
 
@@ -235,13 +301,19 @@ describe("Scene/VoxelBoxShape", function () {
     maxBounds = new Cartesian3(+1.0, 0.0, +1.0);
     expectedScale = new Cartesian3(1.0, 0.0, 1.0);
 
-    shape.update(modelMatrix, minBounds, maxBounds);
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
     actualScale = Matrix4.getScale(shape.shapeTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
       new Cartesian3()
     );
-    expect(shape.isVisible).toBeTrue();
+    expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
     expect(actualTranslation).toEqual(translation);
 
@@ -250,13 +322,19 @@ describe("Scene/VoxelBoxShape", function () {
     maxBounds = new Cartesian3(+1.0, +1.0, 0.0);
     expectedScale = new Cartesian3(1.0, 1.0, 0.0);
 
-    shape.update(modelMatrix, minBounds, maxBounds);
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
     actualScale = Matrix4.getScale(shape.shapeTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
       new Cartesian3()
     );
-    expect(shape.isVisible).toBeTrue();
+    expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
     expect(actualTranslation).toEqual(translation);
   });
@@ -274,30 +352,55 @@ describe("Scene/VoxelBoxShape", function () {
 
     let minBounds;
     let maxBounds;
+    let visible;
 
     // 0 in X and Y bounds
     minBounds = new Cartesian3(0.0, 0.0, -1.0);
     maxBounds = new Cartesian3(0.0, 0.0, +1.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 in X and Z bounds
     minBounds = new Cartesian3(0.0, -1.0, 0.0);
     maxBounds = new Cartesian3(0.0, +1.0, 0.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 in Y and Z bounds
     minBounds = new Cartesian3(-1.0, 0.0, 0.0);
     maxBounds = new Cartesian3(+1.0, 0.0, 0.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
 
     // 0 in X, Y, and Z bounds
     minBounds = new Cartesian3(0.0, 0.0, 0.0);
     maxBounds = new Cartesian3(0.0, 0.0, 0.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      minBounds,
+      maxBounds
+    );
+    expect(visible).toBeFalse();
   });
 
   it("update is invisible when minimum bounds exceed maximum bounds", function () {
@@ -311,26 +414,48 @@ describe("Scene/VoxelBoxShape", function () {
       scale
     );
 
+    let visible;
+
     let minBounds;
     let maxBounds;
+    const clipMinBounds = new Cartesian3(-1.0, -1.0, -1.0);
+    const clipMaxBounds = new Cartesian3(2.0, 2.0, 2.0);
 
     // Exceeds X
     minBounds = new Cartesian3(+2.0, -1.0, -1.0);
     maxBounds = new Cartesian3(+1.0, +1.0, +1.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
+    expect(visible).toBeFalse();
 
     // Exceeds Y
     minBounds = new Cartesian3(-1.0, +2.0, -1.0);
     maxBounds = new Cartesian3(+1.0, +1.0, +1.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
+    expect(visible).toBeFalse();
 
     // Exceeds Z
     minBounds = new Cartesian3(-1.0, -1.0, +2.0);
     maxBounds = new Cartesian3(+1.0, +1.0, +1.0);
-    shape.update(modelMatrix, minBounds, maxBounds);
-    expect(shape.isVisible).toBeFalse();
+    visible = shape.update(
+      modelMatrix,
+      minBounds,
+      maxBounds,
+      clipMinBounds,
+      clipMaxBounds
+    );
+    expect(visible).toBeFalse();
   });
 
   it("update throws with no model matrix parameter", function () {
@@ -353,10 +478,17 @@ describe("Scene/VoxelBoxShape", function () {
       rotation,
       scale
     );
+    const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
 
     expect(function () {
-      return shape.update(modelMatrix, undefined, maxBounds);
+      return shape.update(
+        modelMatrix,
+        undefined,
+        maxBounds,
+        minBounds,
+        maxBounds
+      );
     }).toThrowDeveloperError();
   });
 
@@ -371,9 +503,16 @@ describe("Scene/VoxelBoxShape", function () {
       scale
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
+    const maxBounds = VoxelBoxShape.DefaultMaxBounds;
 
     expect(function () {
-      return shape.update(modelMatrix, minBounds, undefined);
+      return shape.update(
+        modelMatrix,
+        minBounds,
+        undefined,
+        minBounds,
+        maxBounds
+      );
     }).toThrowDeveloperError();
   });
 
@@ -389,7 +528,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     const tileLevel = 0;
     const tileX = 0;
@@ -419,7 +558,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     const expectedScale = new Cartesian3(0.5, 0.5, 0.5);
     let expectedTranslation;
@@ -577,7 +716,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     const tileLevel = 0;
     const tileX = 0;
@@ -637,7 +776,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     const tileLevel = 0;
     const tileX = 0;
@@ -667,7 +806,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     const dimensions = new Cartesian3(32, 32, 16);
     const stepSize = shape.computeApproximateStepSize(dimensions);
@@ -687,7 +826,7 @@ describe("Scene/VoxelBoxShape", function () {
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
+    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
 
     expect(function () {
       return shape.computeApproximateStepSize(undefined);
