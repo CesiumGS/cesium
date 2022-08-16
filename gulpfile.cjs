@@ -1087,7 +1087,7 @@ gulp.task("coverage", async function () {
 });
 
 gulp.task("test", function (done) {
-  const argv = yargs.array("debugCanvasSize").argv;
+  const argv = yargs.argv;
 
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
