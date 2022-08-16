@@ -23,7 +23,7 @@
 
 ## Introduction
 
-Fabric is a JSON schema for describing materials in Cesium. Materials represent the appearance of an object such as polygons, polylines, ellipsoids, and sensors.
+Fabric is a JSON schema for describing materials in CesiumJS. Materials represent the appearance of an object such as polygons, polylines, ellipsoids, and sensors.
 
 _Note: For details about applying custom materials to 3D models or 3D Tiles, use the [Custom Shader Guide](../CustomShaderGuide/README.md) instead._
 
@@ -36,13 +36,13 @@ Materials can be as simple as draping an image over an object, or applying a pat
 Objects that support materials have a `material` property. Currently, these objects are polygons, polylines, ellipsoids, and sensors. Materials are applied by assigning to the object's `material` property.
 
 ```javascript
-polygon.material = Material.fromType("Color");
+polygon.material = Cesium.Material.fromType("Color");
 ```
 
 Above, `Color` is a built-in material which represents a single color, including alpha. `Material.fromType` is shorthand; the entire Fabric JSON can also be provided.
 
 ```javascript
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: {
     type: "Color",
   },
@@ -52,22 +52,22 @@ polygon.material = new Material({
 Each material has zero or more uniforms, which are input parameters that can be specified when creating the material and modified after. For example, `Color` has a `color` uniform with `red`, `green`, `blue`, and `alpha` components.
 
 ```javascript
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: {
     type: "Color",
     uniforms: {
-      color: new Color(1.0, 0.0, 0.0, 0.5),
+      color: new Cesium.Color(1.0, 0.0, 0.0, 0.5),
     },
   },
 });
 
 // Change from translucent red to opaque white
-polygon.material.uniforms.color = Color.WHITE;
+polygon.material.uniforms.color = Cesium.Color.WHITE;
 ```
 
 ## Built-In Materials
 
-Cesium has several built-in materials. Two widely used ones are:
+CesiumJS has several built-in materials. Two widely used ones are:
 
 | Name    | Screenshot                                      | Description                                                                                                                  |
 | :------ | :---------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
@@ -77,14 +77,14 @@ Cesium has several built-in materials. Two widely used ones are:
 All built-in materials can be created similar to how we used `Color` above. For example:
 
 ```javascript
-polygon.material = Material.fromType("Image");
+polygon.material = Cesium.Material.fromType("Image");
 polygon.material.uniforms.image = "image.png";
 ```
 
 or
 
 ```javascript
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: {
     type: "Image",
     uniforms: {
@@ -137,7 +137,7 @@ There are a few materials that do not fit into any other category.
 | `Water`       | <img src="Water.png" width="200" height="92" />       | Animating water with waves and ripples. |
 | `RimLighting` | <img src="RimLighting.png" width="200" height="92" /> | Highlights the rim or silhouette.       |
 
-For more materials, see the [Cesium Materials Plugin](https://github.com/CesiumGS/cesium-materials-pack).
+For more materials, see the [CesiumJS Materials Plugin](https://github.com/CesiumGS/cesium-materials-pack).
 
 ### Common Uniforms
 
@@ -152,7 +152,7 @@ polygon.material.uniforms.image =
 Some materials, such as `Diffuse` and `NormalMap` require images with three components per pixel; other materials, such as `Specular` and `Alpha`, require one component. We can specify what channels (and in what order) these components are pulled from when creating a material using the `channels` or `channel` string uniform. For example, by default in the `Specular` material, the specular component is taken from the `r` channel. However, we can change that:
 
 ```javascript
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: {
     type: "SpecularMap",
     uniforms: {
@@ -168,7 +168,7 @@ This allows packing data for multiple materials into the same image, e.g., stori
 Materials that use images often have a `repeat` uniform that controls the number of times the image repeats horizontally and vertically. This can be useful for tiling images across a surface.
 
 ```javascript
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: {
     type: "DiffuseMap",
     uniforms: {
@@ -193,7 +193,7 @@ const fabric = {
   // no type
   // ...rest of fabric JSON
 };
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: fabric,
 });
 ```
@@ -205,11 +205,11 @@ const fabric = {
   type: "MyNewMaterial",
   // ...rest of fabric JSON
 };
-polygon.material = new Material({
+polygon.material = new Cesium.Material({
   fabric: fabric,
 });
 // ... later calls just use the type.
-anotherPolygon.material = Material.fromType("MyNewMaterial");
+anotherPolygon.material = Cesium.Material.fromType("MyNewMaterial");
 ```
 
 ### Components
@@ -305,7 +305,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 }
 ```
 
-Using `source` instead of `components` is more verbose, but provides more flexibility, including the ability to share common computations for different components and to make utility functions. A rule of thumb is to use the `components` property unless the flexibility of explicitly implementing `czm_getMaterial` is needed. Under the hood, the `components` sub-properties are used to implement `czm_getMaterial`. In both cases, we have access to GLSL built-in functions and Cesium provided built-in GLSL [functions, uniforms, and constants](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/AutomaticUniforms.js).
+Using `source` instead of `components` is more verbose, but provides more flexibility, including the ability to share common computations for different components and to make utility functions. A rule of thumb is to use the `components` property unless the flexibility of explicitly implementing `czm_getMaterial` is needed. Under the hood, the `components` sub-properties are used to implement `czm_getMaterial`. In both cases, we have access to GLSL built-in functions and CesiumJS provided built-in GLSL [functions, uniforms, and constants](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/AutomaticUniforms.js).
 
 ### Input
 
@@ -332,13 +332,13 @@ A simple material that visualizes the `st` texture coordinates is:
 
 Similarly, we can visualize the normal in eye coordinates by setting `diffuse` to `materialInput.normalEC`.
 
-In addition to `materialInput`, materials have access to uniforms, both Cesium provided built-in [uniforms](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/AutomaticUniforms.js) and uniforms specific to the material. For example, we can implement our own `Color` material by setting the `diffuse` and `alpha` components based on a color uniform.
+In addition to `materialInput`, materials have access to uniforms, both CesiumJS provided built-in [uniforms](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/AutomaticUniforms.js) and uniforms specific to the material. For example, we can implement our own `Color` material by setting the `diffuse` and `alpha` components based on a color uniform.
 
 ```javascript
 {
   type : 'OurColor',
   uniforms : {
-    color : new Color(1.0, 0.0, 0.0, 1.0)
+    color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
   },
   components : {
     diffuse : 'color.rgb',
@@ -366,7 +366,7 @@ We can implement our own `DiffuseMap` material by using an image uniform:
 Above, `'czm_defaultImage'` is a placeholder 1x1 image. As discussed earlier, this can also be an image URL or data URI. For example, a user would create an `OurDiffuseMap` like:
 
 ```javascript
-polygon.material = Material.fromType("OurDiffuseMap");
+polygon.material = Cesium.Material.fromType("OurDiffuseMap");
 polygon.material.uniforms.image = "diffuse.png";
 ```
 
@@ -401,7 +401,7 @@ This material has `diffuse` and `specular` components that pull values from mate
 Given this Fabric, our material can be used like other materials.
 
 ```javascript
-const m = Material.fromType("OurMappedPlastic");
+const m = Cesium.Material.fromType("OurMappedPlastic");
 polygon.material = m;
 
 m.materials.diffuseMaterial.uniforms.image = "diffuseMap.png";
@@ -412,7 +412,7 @@ For more details about the Material API, refer to the [CesiumJS documentation](h
 
 ## Fabric Schema
 
-A [JSON Schema](https://json-schema.org/) for Fabric [is in the Cesium repo](https://github.com/CesiumGS/cesium/tree/master/Documentation/Schemas/Fabric). This details all Fabric properties and sub-properties, including `type`, `materials`, `uniforms`, `components`, and `source`. There are several JSON examples showing the schema, but not necessarily interesting visuals.
+A [JSON Schema](https://json-schema.org/) for Fabric [is in the CesiumJS repo](https://github.com/CesiumGS/cesium/tree/master/Documentation/Schemas/Fabric). This details all Fabric properties and sub-properties, including `type`, `materials`, `uniforms`, `components`, and `source`. There are several JSON examples showing the schema, but not necessarily interesting visuals.
 
 In addition to more rigorous Fabric documentation, the schema can be used to validate Fabric using a tool like [JSV](https://github.com/garycourt/JSV).
 
@@ -427,5 +427,5 @@ In JavaScript, the object should have a public `material` property. When this pr
 ```javascript
 const fsSource = this.material.shaderSource + ourFragmentShaderSource;
 
-this._drawUniforms = combine([this._uniforms, this.material._uniforms]);
+this._drawUniforms = Cesium.combine([this._uniforms, this.material._uniforms]);
 ```
