@@ -1809,12 +1809,6 @@ function buildDrawCommands(that, context) {
     ShaderDestination.FRAGMENT
   );
 
-  shaderBuilder.addDefine(
-    "MEGATEXTURE_2D",
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
-
   if (
     !Cartesian3.equals(paddingBefore, Cartesian3.ZERO) ||
     !Cartesian3.equals(paddingAfter, Cartesian3.ZERO)
