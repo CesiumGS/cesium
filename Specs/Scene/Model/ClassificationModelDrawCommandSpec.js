@@ -19,8 +19,11 @@ import {
 
 describe("Scene/Model/ClassificationModelDrawCommand", function () {
   const noColor = new Color(0, 0, 0, 0);
-  const mockFrameState = {};
+  const mockFrameState = {
+    commandList: [],
+  };
   const mockFrameStateWithInvertedClassification = {
+    commandList: [],
     invertClassification: true,
   };
 
@@ -142,6 +145,11 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
 
     expect(renderState.blending).toEqual(expectedColorCommandBlending);
   }
+
+  beforeEach(function () {
+    mockFrameState.commandList.length = 0;
+    mockFrameStateWithInvertedClassification.commandList.length = 0;
+  });
 
   it("throws for undefined command", function () {
     expect(function () {
@@ -320,7 +328,7 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
     expect(drawCommand._ignoreShowCommand).toBeUndefined();
   });
 
-  it("getCommands works", function () {
+  it("pushCommands works", function () {
     const renderResources = mockRenderResources(ClassificationType.BOTH);
     const command = createDrawCommand();
     const drawCommand = new ClassificationModelDrawCommand({
@@ -328,35 +336,36 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
       command: command,
     });
 
-    const commands = drawCommand.getCommands(mockFrameState);
-    expect(commands.length).toEqual(4);
+    const commandList = mockFrameState.commandList;
+    drawCommand.pushCommands(mockFrameState, commandList);
+    expect(commandList.length).toEqual(4);
 
     let expectedPass = Pass.TERRAIN_CLASSIFICATION;
     let expectedStencilFunction = StencilFunction.ALWAYS;
 
-    let stencilDepthCommand = commands[0];
+    let stencilDepthCommand = commandList[0];
     verifyStencilDepthCommand(
       stencilDepthCommand,
       expectedPass,
       expectedStencilFunction
     );
-    let colorCommand = commands[1];
+    let colorCommand = commandList[1];
     verifyColorCommand(colorCommand, expectedPass);
 
     expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     expectedStencilFunction = StencilFunction.EQUAL;
 
-    stencilDepthCommand = commands[2];
+    stencilDepthCommand = commandList[2];
     verifyStencilDepthCommand(
       stencilDepthCommand,
       expectedPass,
       expectedStencilFunction
     );
-    colorCommand = commands[3];
+    colorCommand = commandList[3];
     verifyColorCommand(colorCommand, expectedPass);
   });
 
-  it("getCommands derives ignore show command for 3D Tiles", function () {
+  it("pushCommands derives ignore show command for 3D Tiles", function () {
     const renderResources = mockRenderResources(
       ClassificationType.CESIUM_3D_TILE
     );
@@ -366,26 +375,28 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
       command: command,
     });
 
-    const commands = drawCommand.getCommands(
-      mockFrameStateWithInvertedClassification
+    const commandList = mockFrameStateWithInvertedClassification.commandList;
+    drawCommand.pushCommands(
+      mockFrameStateWithInvertedClassification,
+      commandList
     );
     expect(drawCommand._ignoreShowCommand).toBeDefined();
-    expect(commands.length).toEqual(3);
+    expect(commandList.length).toEqual(3);
 
     let expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     const expectedStencilFunction = StencilFunction.EQUAL;
 
-    const stencilDepthCommand = commands[0];
+    const stencilDepthCommand = commandList[0];
     verifyStencilDepthCommand(
       stencilDepthCommand,
       expectedPass,
       expectedStencilFunction
     );
-    const colorCommand = commands[1];
+    const colorCommand = commandList[1];
     verifyColorCommand(colorCommand, expectedPass);
 
     expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-    const ignoreShowCommand = commands[2];
+    const ignoreShowCommand = commandList[2];
     verifyStencilDepthCommand(
       ignoreShowCommand,
       expectedPass,
@@ -393,7 +404,7 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
     );
   });
 
-  it("getCommands doesn't derive ignore show command for terrain", function () {
+  it("pushCommands doesn't derive ignore show command for terrain", function () {
     const renderResources = mockRenderResources(ClassificationType.TERRAIN);
     const command = createDrawCommand();
     const drawCommand = new ClassificationModelDrawCommand({
@@ -401,11 +412,13 @@ describe("Scene/Model/ClassificationModelDrawCommand", function () {
       command: command,
     });
 
-    const commands = drawCommand.getCommands(
-      mockFrameStateWithInvertedClassification
+    const commandList = mockFrameStateWithInvertedClassification.commandList;
+    drawCommand.pushCommands(
+      mockFrameStateWithInvertedClassification,
+      commandList
     );
     expect(drawCommand._ignoreShowCommand).toBeUndefined();
-    expect(commands.length).toEqual(2);
+    expect(commandList.length).toEqual(2);
   });
 
   it("updates model matrix", function () {

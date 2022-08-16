@@ -322,7 +322,6 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   frameState,
   result
 ) {
-  // TODO: refactor for classification models
   // Derive the command for inverted classification if necessary.
   const deriveIgnoreShowCommand =
     frameState.invertClassification &&
@@ -336,7 +335,7 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
     this._commandList.push(command);
   }
 
-  return this._commandList;
+  result.push.apply(result, this._commandList);
 };
 
 export default ClassificationModelDrawCommand;
