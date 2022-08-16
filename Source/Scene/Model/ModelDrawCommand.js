@@ -809,7 +809,7 @@ function deriveSkipLodBackfaceCommand(command) {
     units: 5.0,
   };
 
-  // The stencil test is set in Cesium3DTilesetPipelineStage.
+  // The stencil test is set in TilesetPipelineStage.
 
   const uniformMap = clone(backfaceCommand.uniformMap);
   const polygonOffset = new Cartesian2(5.0, 5.0);

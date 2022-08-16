@@ -8,7 +8,7 @@ import Transforms from "../../Core/Transforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import buildDrawCommand from "./buildDrawCommand.js";
-import Cesium3DTilesetPipelineStage from "./Cesium3DTilesetPipelineStage.js";
+import TilesetPipelineStage from "./TilesetPipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
@@ -620,7 +620,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   }
 
   if (ModelType.is3DTiles(model.type)) {
-    modelPipelineStages.push(Cesium3DTilesetPipelineStage);
+    modelPipelineStages.push(TilesetPipelineStage);
   }
 };
 

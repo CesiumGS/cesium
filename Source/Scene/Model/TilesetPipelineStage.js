@@ -7,12 +7,12 @@ import StencilConstants from "../StencilConstants.js";
  * The tileset pipeline stage is responsible for updating the model with behavior
  * specific to 3D Tiles.
  *
- * @namespace Cesium3DTilesetPipelineStage
+ * @namespace TilesetPipelineStage
  *
  * @private
  */
-const Cesium3DTilesetPipelineStage = {};
-Cesium3DTilesetPipelineStage.name = "Cesium3DTilesetPipelineStage"; // Helps with debugging
+const TilesetPipelineStage = {};
+TilesetPipelineStage.name = "TilesetPipelineStage"; // Helps with debugging
 
 /**
  * Process a model. This modifies the following parts of the render resources:
@@ -33,11 +33,7 @@ Cesium3DTilesetPipelineStage.name = "Cesium3DTilesetPipelineStage"; // Helps wit
  *
  * @private
  */
-Cesium3DTilesetPipelineStage.process = function (
-  renderResources,
-  model,
-  frameState
-) {
+TilesetPipelineStage.process = function (renderResources, model, frameState) {
   if (model.hasSkipLevelOfDetail(frameState)) {
     // Make the log-depth depth fragment write account for the polygon offset, too.
     // Otherwise, the back face commands will cause the higher resolution
@@ -51,6 +47,8 @@ Cesium3DTilesetPipelineStage.process = function (
 
     // This value will be overriden by the depth-only back face derived command.
     // We just prepare it in advance so we don't have to recompile the shader.
+    // We don't add a unifrom declaration through shader builder because
+    // this is included in writeLogDepth.glsl
     const uniformMap = {
       u_polygonOffset: function () {
         return Cartesian2.ZERO;
@@ -71,4 +69,4 @@ Cesium3DTilesetPipelineStage.process = function (
   renderStateOptions.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 };
 
-export default Cesium3DTilesetPipelineStage;
+export default TilesetPipelineStage;
