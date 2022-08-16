@@ -15,8 +15,11 @@ function createScene(options) {
   // Render tests can be difficult to debug. Let the caller choose a larger
   // canvas size temporarily. By stepping through a render test, you can see
   // what the camera sees after each render call.
-  const debugWidth = options.debugWidth;
-  const debugHeight = options.debugHeight;
+  const debugWidth = window.debugCanvasWidth;
+  const debugHeight = defaultValue(
+    window.debugCanvasHeight,
+    window.debugCanvasWidth
+  );
 
   // save the canvas so we don't try to clone an HTMLCanvasElement
   const canvas = defined(options.canvas)

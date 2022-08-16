@@ -1087,7 +1087,7 @@ gulp.task("coverage", async function () {
 });
 
 gulp.task("test", function (done) {
-  const argv = yargs.argv;
+  const argv = yargs.array("debugCanvasSize").argv;
 
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
@@ -1098,6 +1098,8 @@ gulp.task("test", function (done) {
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
   const debug = argv.debug ? false : true;
+  const debugCanvasWidth = argv.debugCanvasWidth;
+  const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
 
   let browsers = ["Chrome"];
@@ -1155,6 +1157,8 @@ gulp.task("test", function (done) {
         webglValidation,
         webglStub,
         release,
+        debugCanvasWidth,
+        debugCanvasHeight,
       ],
     },
   });
