@@ -1159,105 +1159,224 @@ describe("Scene/Model/ModelDrawCommand", function () {
     // TODO: add for skip level of detail
   });
 
-  it("updates back face culling for command without silhouettes", function () {
-    const drawCommand = createModelDrawCommand({
-      deriveTranslucent: true,
-      derive2D: true,
-    });
+  describe("back face culling", function () {
+    it("updates back face culling", function () {
+      const drawCommand = createModelDrawCommand({
+        derive2D: true,
+      });
 
-    const derivedCommands = drawCommand._derivedCommands;
-    const length = derivedCommands.length;
-    expect(length).toEqual(4);
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(2);
 
-    for (let i = 0; i < length; i++) {
-      const command = derivedCommands[i].command;
-      expect(command.renderState.cull.enabled).toBe(false);
-    }
-
-    drawCommand.backFaceCulling = true;
-    for (let i = 0; i < length; i++) {
-      const derivedCommand = derivedCommands[i];
-      const command = derivedCommand.command;
-
-      //const shadowValue = derivedCommand.updateShadows;
-      if (command.pass === Pass.TRANSLUCENT) {
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
         expect(command.renderState.cull.enabled).toBe(false);
-      } else {
+      }
+
+      drawCommand.backFaceCulling = true;
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
         expect(command.renderState.cull.enabled).toBe(true);
       }
-    }
-  });
-
-  it("doesn't update back face culling for command with silhouettes", function () {
-    const drawCommand = createModelDrawCommand({
-      deriveTranslucent: true,
-      derive2D: true,
-      deriveSilhouette: true,
     });
 
-    let result = drawCommand.getAllCommands();
-    const length = result.length;
-    expect(length).toEqual(8);
+    it("doesn't update back face culling for translucent command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveTranslucent: true,
+      });
 
-    for (let i = 0; i < length; i++) {
-      const command = result[i];
-      expect(command.renderState.cull.enabled).toBe(false);
-    }
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(2);
 
-    drawCommand.backFaceCulling = true;
-    result = drawCommand.getAllCommands();
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.enabled).toBe(false);
+      }
 
-    for (let i = 0; i < length; i++) {
-      const command = result[i];
-      expect(command.renderState.cull.enabled).toBe(false);
-    }
-  });
+      drawCommand.backFaceCulling = true;
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
 
-  it("updates cull face", function () {
-    const drawCommand = createModelDrawCommand({
-      deriveTranslucent: true,
-      derive2D: true,
-      deriveSilhouette: true,
+        const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
+        if (!updateBackFaceCulling) {
+          expect(derivedCommand).toBe(drawCommand._translucentCommand);
+        }
+
+        expect(command.renderState.cull.enabled).toBe(updateBackFaceCulling);
+      }
     });
 
-    let result = drawCommand.getAllCommands();
-    const length = result.length;
-    expect(length).toEqual(8);
+    it("doesn't update back face culling for silhouette-pass command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSilhouette: true,
+      });
 
-    for (let i = 0; i < length; i++) {
-      const command = result[i];
-      expect(command.renderState.cull.face).toBe(CullFace.BACK);
-    }
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
 
-    drawCommand.cullFace = CullFace.FRONT;
-    result = drawCommand.getAllCommands();
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.enabled).toBe(false);
+      }
 
-    for (let i = 0; i < length; i++) {
-      const command = result[i];
-      expect(command.renderState.cull.face).toBe(CullFace.FRONT);
-    }
-  });
+      drawCommand.backFaceCulling = true;
 
-  // TODO: individual caveat cases for each update
-  it("updates debugShowBoundingVolume", function () {
-    const drawCommand = createModelDrawCommand({
-      deriveTranslucent: true,
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
+        if (!updateBackFaceCulling) {
+          expect(derivedCommand).toBe(drawCommand._silhouetteColorCommand);
+        }
+
+        expect(command.renderState.cull.enabled).toBe(updateBackFaceCulling);
+      }
     });
 
-    const derivedCommands = drawCommand._derivedCommands;
-    const length = derivedCommands.length;
-    expect(length).toEqual(4);
+    // TODO: skip level of detail commands
+  });
 
-    for (let i = 0; i < length; i++) {
-      const command = derivedCommands[i].command;
-      expect(command.debugShowBoundingVolume).toBe(false);
-    }
+  describe("cull face", function () {
+    it("updates cull face", function () {
+      const drawCommand = createModelDrawCommand({
+        derive2D: true,
+      });
 
-    drawCommand.debugShowBoundingVolume = true;
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(2);
 
-    for (let i = 0; i < length; i++) {
-      const command = derivedCommands[i].command;
-      expect(command.debugShowBoundingVolume).toBe(true);
-    }
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.face).toBe(CullFace.BACK);
+      }
+
+      drawCommand.cullFace = CullFace.FRONT;
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.face).toBe(CullFace.FRONT);
+      }
+    });
+
+    it("doesn't update cull face for translucent command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveTranslucent: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(2);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.face).toBe(CullFace.BACK);
+      }
+
+      drawCommand.cullFace = CullFace.FRONT;
+
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        const updateCullFace = derivedCommand.updateCullFace;
+        if (!updateCullFace) {
+          expect(derivedCommand).toBe(drawCommand._translucentCommand);
+          expect(command.renderState.cull.face).toBe(CullFace.BACK);
+        } else {
+          expect(command.renderState.cull.face).toBe(CullFace.FRONT);
+        }
+      }
+    });
+
+    it("doesn't update cull face for silhouette command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSilhouette: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.renderState.cull.face).toBe(CullFace.BACK);
+      }
+
+      drawCommand.cullFace = CullFace.FRONT;
+
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        const updateCullFace = derivedCommand.updateCullFace;
+        if (!updateCullFace) {
+          expect(derivedCommand).toBe(drawCommand._silhouetteColorCommand);
+          expect(command.renderState.cull.face).toBe(CullFace.BACK);
+        } else {
+          expect(command.renderState.cull.face).toBe(CullFace.FRONT);
+        }
+      }
+    });
+  });
+
+  describe("debugShowBoundingVolume", function () {
+    it("updates debugShowBoundingVolume", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveTranslucent: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(2);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.debugShowBoundingVolume).toBe(false);
+      }
+
+      drawCommand.debugShowBoundingVolume = true;
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.debugShowBoundingVolume).toBe(true);
+      }
+    });
+
+    it("doesn't update debugShowBoundingVolume for silhouette command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSilhouette: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.debugShowBoundingVolume).toBe(false);
+      }
+
+      drawCommand.debugShowBoundingVolume = true;
+
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+        const updateDebugShowBoundingVolume =
+          derivedCommand.updateDebugShowBoundingVolume;
+        if (!updateDebugShowBoundingVolume) {
+          expect(derivedCommand).toBe(drawCommand._silhouetteColorCommand);
+        }
+
+        expect(command.debugShowBoundingVolume).toBe(
+          updateDebugShowBoundingVolume
+        );
+      }
+    });
   });
 });
