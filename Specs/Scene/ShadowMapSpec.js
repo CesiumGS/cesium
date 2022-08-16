@@ -74,6 +74,8 @@ describe(
     let primitiveFloor;
     let primitiveFloorRTC;
 
+    let originalLight;
+
     beforeAll(function () {
       scene = createScene();
       scene.frameState.scene3DOnly = true;
@@ -306,6 +308,10 @@ describe(
       scene.destroyForSpecs();
     });
 
+    beforeEach(function () {
+      originalLight = scene.light;
+    });
+
     afterEach(function () {
       const length = scene.primitives.length;
       for (let i = 0; i < length; ++i) {
@@ -314,6 +320,7 @@ describe(
 
       scene.globe = undefined;
       scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
+      scene.light = originalLight;
     });
 
     function createCascadedShadowMap() {
@@ -414,6 +421,18 @@ describe(
         lightCamera: lightCamera,
         isPointLight: true,
       });
+    }
+
+    function colorAbsoluteDifference(rgba1, rgba2) {
+      const [r1, g1, b1, a1] = rgba1;
+      const [r2, g2, b2, a2] = rgba2;
+
+      const diffR = Math.abs(r1 - r2);
+      const diffG = Math.abs(g1 - g2);
+      const diffB = Math.abs(b1 - b2);
+      const diffA = Math.abs(a1 - a2);
+
+      return [diffR, diffG, diffB, diffA];
     }
 
     function renderAndExpect(rgba, time) {
@@ -708,8 +727,7 @@ describe(
       renderAndExpect(shadowedColor);
     });
 
-    // TODO: need to debug why the color is slightly off
-    xit("sun shadow map works", function () {
+    it("sun shadow map works", function () {
       box.show = true;
       floor.show = true;
 
@@ -742,13 +760,20 @@ describe(
       }, startTime);
 
       // Change the time so that the shadows are no longer pointing straight down
-      renderAndExpect(unshadowedColor, endTime);
+      renderAndCall(function (rgba) {
+        // Due to shading differences, the result might not exactly the same, but
+        // it should be close
+        const [r, g, b, a] = colorAbsoluteDifference(rgba, unshadowedColor);
+        expect(r).toBeLessThan(48);
+        expect(g).toBeLessThan(8);
+        expect(b).toBeLessThan(8);
+        expect(a).toBeLessThan(8);
+      }, endTime);
 
       scene.shadowMap = undefined;
     });
 
-    // TODO: need to debug why the color is slightly off
-    xit("uses scene's light source", function () {
+    it("uses scene's light source", function () {
       const originalLight = scene.light;
 
       box.show = true;
@@ -797,7 +822,17 @@ describe(
       scene.light = new DirectionalLight({
         direction: lightDirectionAngle,
       });
-      renderAndExpect(unshadowedColor);
+
+      // Change the time so that the shadows are no longer pointing straight down
+      renderAndCall(function (rgba) {
+        // Due to shading differences, the result might not exactly the same, but
+        // it should be close
+        const [r, g, b, a] = colorAbsoluteDifference(rgba, unshadowedColor);
+        expect(r).toBeLessThan(48);
+        expect(g).toBeLessThan(4);
+        expect(b).toBeLessThan(4);
+        expect(a).toBeLessThan(4);
+      });
 
       scene.shadowMap = undefined;
       scene.light = originalLight;
