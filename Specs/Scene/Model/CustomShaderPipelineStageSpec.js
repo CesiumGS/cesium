@@ -291,6 +291,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -302,6 +303,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -374,6 +376,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -385,6 +388,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -458,6 +462,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -469,6 +474,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -539,6 +545,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -550,6 +557,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -610,6 +618,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
   });
@@ -663,6 +672,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -674,6 +684,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -737,6 +748,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -748,6 +760,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -889,6 +902,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
