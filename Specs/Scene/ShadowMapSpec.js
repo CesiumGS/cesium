@@ -61,6 +61,8 @@ describe(
 
     let box;
     let boxTranslucent;
+    // copy of box that can be repositioned in the scene
+    let boxPointLights;
     let boxCutout;
     let boxNoNormals;
 
@@ -73,8 +75,6 @@ describe(
     let primitiveBoxTranslucent;
     let primitiveFloor;
     let primitiveFloorRTC;
-
-    let originalLight;
 
     beforeAll(function () {
       scene = createScene();
@@ -137,6 +137,16 @@ describe(
           show: false,
         }).then(function (model) {
           boxTranslucent = model;
+        })
+      );
+      modelPromises.push(
+        loadModel({
+          url: boxUrl,
+          modelMatrix: boxTransform,
+          scale: 0.2,
+          show: false,
+        }).then(function (model) {
+          boxPointLights = model;
         })
       );
       modelPromises.push(
@@ -308,10 +318,6 @@ describe(
       scene.destroyForSpecs();
     });
 
-    beforeEach(function () {
-      originalLight = scene.light;
-    });
-
     afterEach(function () {
       const length = scene.primitives.length;
       for (let i = 0; i < length; ++i) {
@@ -320,7 +326,6 @@ describe(
 
       scene.globe = undefined;
       scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
-      scene.light = originalLight;
     });
 
     function createCascadedShadowMap() {
@@ -764,7 +769,7 @@ describe(
         // Due to shading differences, the result might not exactly the same, but
         // it should be close
         const [r, g, b, a] = colorAbsoluteDifference(rgba, unshadowedColor);
-        expect(r).toBeLessThan(48);
+        expect(r).toBeLessThan(64);
         expect(g).toBeLessThan(8);
         expect(b).toBeLessThan(8);
         expect(a).toBeLessThan(8);
@@ -860,7 +865,9 @@ describe(
     });
 
     // TODO: Need to debug this test
-    xit("point light shadows", function () {
+    it("point light shadows", function () {
+      boxPointLights.show = true;
+
       // Check that shadows are cast from all directions.
       // Place the point light in the middle of an enclosed area and place a box on each side.
       room.show = true;
@@ -889,17 +896,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        const box = scene.primitives.add(
-          Model.fromGltf({
-            url: boxUrl,
-            modelMatrix: Transforms.headingPitchRollToFixedFrame(
-              origins[i],
-              new HeadingPitchRoll()
-            ),
-            scale: 0.2,
-          })
+        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
+          origins[i],
+          new HeadingPitchRoll()
         );
-        scene.render(); // Model is pre-loaded, render one frame to make it ready
+        scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);
         scene.camera.moveForward(0.5);
@@ -930,8 +931,6 @@ describe(
         // Move the camera away from the shadow
         scene.camera.moveRight(0.5);
         renderAndExpect(unshadowedColor);
-
-        scene.primitives.remove(box);
       }
     });
 
