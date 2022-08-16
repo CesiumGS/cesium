@@ -606,7 +606,6 @@ describe(
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
       }).then(() => {
-        // Ensure that the clamped position has height set to 0.
         const cartographic = globe.ellipsoid.cartesianToCartographic(
           result.center
         );
