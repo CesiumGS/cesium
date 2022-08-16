@@ -100,9 +100,9 @@ Procedural texture materials procedurally compute patterns on the GPU so they do
 
 | Name           | Screenshot                                             | Description                                               |
 | :------------- | :----------------------------------------------------- | :-------------------------------------------------------- |
-| `Checkerboard` | <img src="Checkerboard.PNG" width="200" height="92" /> | Checkerboard with alternating light and dark colors.      |
-| `Stripe`       | <img src="Stripe.PNG" width="200" height="92" />       | Alternating light and dark horizontal or vertical stripes |
-| `Dot`          | <img src="Dot.PNG" width="200" height="92" />          | A pattern of dots organized by row and column.            |
+| `Checkerboard` | <img src="Checkerboard.png" width="200" height="92" /> | Checkerboard with alternating light and dark colors.      |
+| `Stripe`       | <img src="Stripe.png" width="200" height="92" />       | Alternating light and dark horizontal or vertical stripes |
+| `Dot`          | <img src="Dot.png" width="200" height="92" />          | A pattern of dots organized by row and column.            |
 | `Grid`         | <img src="Grid.png" width="200" height="92" />         | A grid of lines, useful for displaying 3D volumes.        |
 
 ### Base Materials
@@ -111,12 +111,12 @@ Base materials represent fine-grain fundamental material characteristics, such a
 
 | Name          | Screenshot                                            | Description                                                                                                                                                                                                        |
 | :------------ | :---------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DiffuseMap`  | <img src="DiffuseMap.PNG" width="200" height="92" />  | An image with `vec3` components defining incoming light that scatters evenly in all directions.                                                                                                                    |
-| `SpecularMap` | <img src="SpecularMap.PNG" width="200" height="92" /> | An image with a scalar component defining the intensity of incoming light reflecting in a single direction. This is used to make parts of the surface shiny, e.g., water vs. land.                                 |
-| `AlphaMap`    | <img src="AlphaMap.PNG" width="200" height="92" />    | An image with a scalar component defining the opacity of the material. This is used to make parts of the surface translucent or transparent, e.g., a fence.                                                        |
-| `NormalMap`   | <img src="NormalMap.PNG" width="200" height="92" />   | An image with `vec3` components defining the surface's normal in tangent coordinates. Normal mapping is used to add surface detail without adding geometry.                                                        |
-| `BumpMap`     | <img src="BumpMap.PNG" width="200" height="92" />     | An image with a scalar component defining heights. Like normal mapping, bump mapping is used to add surface detail without adding geometry by perturbing the normal based on differences in adjacent image pixels. |
-| `EmissionMap` | <img src="EmissionMap.PNG" width="200" height="92" /> | An image with `vec3` components defining light emitted by the material equally in all directions, e.g., lights in a long hallway.                                                                                  |
+| `DiffuseMap`  | <img src="DiffuseMap.png" width="200" height="92" />  | An image with `vec3` components defining incoming light that scatters evenly in all directions.                                                                                                                    |
+| `SpecularMap` | <img src="SpecularMap.png" width="200" height="92" /> | An image with a scalar component defining the intensity of incoming light reflecting in a single direction. This is used to make parts of the surface shiny, e.g., water vs. land.                                 |
+| `AlphaMap`    | <img src="AlphaMap.png" width="200" height="92" />    | An image with a scalar component defining the opacity of the material. This is used to make parts of the surface translucent or transparent, e.g., a fence.                                                        |
+| `NormalMap`   | <img src="NormalMap.png" width="200" height="92" />   | An image with `vec3` components defining the surface's normal in tangent coordinates. Normal mapping is used to add surface detail without adding geometry.                                                        |
+| `BumpMap`     | <img src="BumpMap.png" width="200" height="92" />     | An image with a scalar component defining heights. Like normal mapping, bump mapping is used to add surface detail without adding geometry by perturbing the normal based on differences in adjacent image pixels. |
+| `EmissionMap` | <img src="EmissionMap.png" width="200" height="92" /> | An image with `vec3` components defining light emitted by the material equally in all directions, e.g., lights in a long hallway.                                                                                  |
 
 ## Polyline Materials
 
