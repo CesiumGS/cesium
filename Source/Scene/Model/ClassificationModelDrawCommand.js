@@ -311,15 +311,18 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 });
 
 /**
- * Returns an array of the draw commands necessary to render the primitive.
+ * Pushes the draw commands necessary to render the primitive.
  *
  * @param {FrameState} frameState The frame state.
- *
- * @returns {DrawCommand[]} The draw commands.
+ * @param {DrawCommand[]} result The array to push the draw commands to.
  *
  * @private
  */
-ClassificationModelDrawCommand.prototype.getCommands = function (frameState) {
+ClassificationModelDrawCommand.prototype.pushCommands = function (
+  frameState,
+  result
+) {
+  // TODO: refactor for classification models
   // Derive the command for inverted classification if necessary.
   const deriveIgnoreShowCommand =
     frameState.invertClassification &&

@@ -502,11 +502,11 @@ function updateDebugShowBoundingVolume(drawCommand) {
 }
 
 /**
- * Pushes draw commands necessary to render the primitive.
+ * Pushes the draw commands necessary to render the primitive.
  * This does not include the draw commands that render its silhouette.
  *
  * @param {FrameState} frameState The frame state.
- * @param {Array<DrawCommand>} result The array to push the draw commands to.
+ * @param {DrawCommand[]} result The array to push the draw commands to.
  *
  * @private
  */
@@ -526,7 +526,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
 
   if (this._needsTranslucentCommand) {
     pushCommand(result, this._translucentCommand, use2D);
-    // Don't return here; the main command still needs to be pushed.
+    // Don't return here; the opaque command still needs to be pushed.
   }
 
   if (this._needsSkipLevelOfDetailCommands) {
@@ -540,7 +540,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     if (hasMixedContent) {
       if (!finalResolution) {
         pushCommand(
-          tileset._backFaceCommands,
+          tileset._backfaceCommands,
           this._skipLodBackfaceCommand,
           use2D
         );
@@ -572,7 +572,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
  * updated for 2D commands.
  *
  * @param {FrameState} frameState The frame state.
- * @param {Array<DrawCommand>} result The array to push the silhouette commands to.
+ * @param {DrawCommand[]} result The array to push the silhouette commands to.
  *
  * @private
  */
@@ -751,19 +751,20 @@ function deriveSilhouetteColorCommand(command, model) {
 }
 
 function updateSkipLodStencilCommand(drawCommand, tile, use2D) {
-  const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
+  const stencilDerivedComand = drawCommand._skipLodStencilCommand;
+  const stencilCommand = stencilDerivedComand.command;
 
   const selectionDepth = tile._selectionDepth;
-  const lastSelectionDepth = getLastSelectionDepth(skipLodStencilCommand);
+  const lastSelectionDepth = getLastSelectionDepth(stencilCommand);
 
   if (selectionDepth !== lastSelectionDepth) {
     const skipLodStencilReference = getStencilReference(selectionDepth);
-    const renderState = clone(skipLodStencilCommand.renderState, true);
+    const renderState = clone(stencilCommand.renderState, true);
     renderState.stencilTest.reference = skipLodStencilReference;
-    skipLodStencilCommand.renderState = RenderState.fromCache(renderState);
+    stencilCommand.renderState = RenderState.fromCache(renderState);
 
     if (use2D) {
-      skipLodStencilCommand.derivedCommand2D.renderState = renderState;
+      stencilDerivedComand.derivedCommand2D.renderState = renderState;
     }
   }
 }
@@ -778,6 +779,8 @@ function getLastSelectionDepth(stencilCommand) {
 }
 
 function getStencilReference(selectionDepth) {
+  // Stencil test is masked to the most significant 3 bits so the reference is shifted.
+  // Writes 0 for the terrain bit.
   return (
     StencilConstants.CESIUM_3D_TILE_MASK |
     (selectionDepth << StencilConstants.SKIP_LOD_BIT_SHIFT)
@@ -806,6 +809,8 @@ function deriveSkipLodBackfaceCommand(command) {
     units: 5.0,
   };
 
+  // The stencil test is set in Cesium3DTilesetPipelineStage.
+
   const uniformMap = clone(backfaceCommand.uniformMap);
   const polygonOffset = new Cartesian2(5.0, 5.0);
 
@@ -826,8 +831,7 @@ function deriveSkipLodStencilCommand(command) {
   // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
   const stencilCommand = DrawCommand.shallowClone(command);
   const renderState = clone(command.renderState, true);
-  // Stencil test is masked to the most significant 3 bits so the reference is shifted. Writes 0 for the terrain bit
-  // The reference is updated dynamically. See updateSkipLodStencilCommand.
+  // The stencil reference is updated dynamically; see updateSkipLodStencilCommand().
   renderState.stencilTest.enabled = true;
   renderState.stencilTest.mask = StencilConstants.SKIP_LOD_MASK;
   renderState.stencilTest.reference = StencilConstants.CESIUM_3D_TILE_MASK;

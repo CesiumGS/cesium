@@ -19,7 +19,7 @@ Cesium3DTilesetPipelineStage.name = "Cesium3DTilesetPipelineStage"; // Helps wit
  *
  * <ul>
  *  <li>adds a define to the fragment shader to indicate that the model uses polygon offset for the skipLevelOfDetail optimization</li>
- *  <li>adds a uniform to the fragment shader to supply polygon offset values for the skipLevelOfDetail optimization</li>
+ *  <li>adds a function to the uniform map to supply polygon offset values for the skipLevelOfDetail optimization</li>
  *  <li>sets stencil values that enable classification on 3D Tiles</li>
  * </ul>
  *
@@ -49,12 +49,6 @@ Cesium3DTilesetPipelineStage.process = function (
       ShaderDestination.FRAGMENT
     );
 
-    shaderBuilder.addUniform(
-      "vec2",
-      "u_polygonOffset",
-      ShaderDestination.FRAGMENT
-    );
-
     // This value will be overriden by the depth-only back face derived command.
     // We just prepare it in advance so we don't have to recompile the shader.
     const uniformMap = {
@@ -67,9 +61,11 @@ Cesium3DTilesetPipelineStage.process = function (
       uniformMap,
       renderResources.uniformMap
     );
+    renderResources.hasSkipLevelOfDetail = true;
   }
 
-  // Set stencil values for classification on 3D Tiles
+  // Set stencil values for classification on 3D Tiles. This is applied to all
+  // of the derived commands, not just the back-face derived command.
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.stencilTest = StencilConstants.setCesium3DTileBit();
   renderStateOptions.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;

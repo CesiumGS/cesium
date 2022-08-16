@@ -1,11 +1,15 @@
-import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Transforms from "../../Core/Transforms.js";
+import SceneMode from "../SceneMode.js";
+import SplitDirection from "../SplitDirection.js";
+import buildDrawCommand from "./buildDrawCommand.js";
+import Cesium3DTilesetPipelineStage from "./Cesium3DTilesetPipelineStage.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
@@ -17,13 +21,9 @@ import ModelUtility from "./ModelUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
+import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import SceneMode from "../SceneMode.js";
-import SplitDirection from "../SplitDirection.js";
-import Transforms from "../../Core/Transforms.js";
-import Cesium3DTilesetPipelineStage from "./Cesium3DTilesetPipelineStage.js";
-import ModelType from "./ModelType.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -782,8 +782,8 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 
 const scratchSilhouetteCommands = [];
 /**
- * Traverses through the scene graph and pushes the draw commands associated with
- * each primitive to the frame state's command list.
+ * Traverses through the scene graph and pushes the draw commands associated
+ * with each primitive to the frame state's command list.
  *
  * @param {FrameState} frameState The frame state.
  *
