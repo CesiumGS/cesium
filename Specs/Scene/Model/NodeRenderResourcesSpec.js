@@ -63,6 +63,8 @@ describe("Scene/Model/NodeRenderResources", function () {
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
     expect(nodeResources.attributes).toEqual([]);
     expect(nodeResources.renderStateOptions).toEqual(defaultRenderState);
+    expect(nodeResources.hasSilhouette).toBe(false);
+    expect(nodeResources.hasSkipLevelOfDetail).toBe(false);
   });
 
   it("inherits from model render resources", function () {
@@ -71,6 +73,8 @@ describe("Scene/Model/NodeRenderResources", function () {
     modelResources.renderStateOptions.cull = {
       enabled: true,
     };
+    modelResources.hasSilhouette = true;
+    modelResources.hasSkipLevelOfDetail = true;
 
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
@@ -84,6 +88,9 @@ describe("Scene/Model/NodeRenderResources", function () {
     expect(nodeResources.renderStateOptions.cull).toEqual({
       enabled: true,
     });
+
+    expect(nodeResources.hasSilhouette).toBe(true);
+    expect(nodeResources.hasSkipLevelOfDetail).toBe(true);
 
     // The node's shader builder should be a clone of the model's
     expect(nodeResources.shaderBuilder).not.toBe(modelResources.shaderBuilder);

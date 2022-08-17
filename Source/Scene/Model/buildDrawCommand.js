@@ -5,15 +5,15 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelVS from "../../Shaders/Model/ModelVS.js";
-import ModelUtility from "./ModelUtility.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import VertexArray from "../../Renderer/VertexArray.js";
-import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
 import StencilConstants from "../StencilConstants.js";
+import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
+import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
 
 /**
@@ -128,12 +128,9 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     });
   }
 
-  const useSilhouetteCommands = model.hasSilhouette(frameState);
-
   return new ModelDrawCommand({
     primitiveRenderResources: primitiveRenderResources,
     command: command,
-    useSilhouetteCommands: useSilhouetteCommands,
   });
 }
 
