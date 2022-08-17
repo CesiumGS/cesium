@@ -316,6 +316,8 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the draw commands to.
  *
+ * @returns {DrawCommand[]} The modified result parameter.
+ *
  * @private
  */
 ClassificationModelDrawCommand.prototype.pushCommands = function (
@@ -336,6 +338,8 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   }
 
   result.push.apply(result, this._commandList);
+
+  return result;
 };
 
 export default ClassificationModelDrawCommand;

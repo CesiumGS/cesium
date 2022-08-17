@@ -508,6 +508,8 @@ function updateDebugShowBoundingVolume(drawCommand) {
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the draw commands to.
  *
+ * @returns {DrawCommand[]} The modified result parameter.
+ *
  * @private
  */
 ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
@@ -558,6 +560,8 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
   }
 
   pushCommand(result, this._originalCommand, use2D);
+
+  return result;
 };
 
 /**
@@ -565,14 +569,17 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
  * be added to the command list after the draw commands of all primitives
  * in the model have been added. This way, the silhouette won't render on
  * top of the model.
- *
+ * <p>
  * This should only be called after pushCommands() has been invoked for
  * the ModelDrawCommand this frame. Otherwise, the silhouette commands may
  * not have been derived for 2D. The model matrix will also not have been
  * updated for 2D commands.
+ * </p>
  *
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the silhouette commands to.
+ *
+ * @returns {DrawCommand[]} The modified result parameter.
  *
  * @private
  */
@@ -582,6 +589,8 @@ ModelDrawCommand.prototype.pushSilhouetteCommands = function (
 ) {
   const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._silhouetteColorCommand, use2D);
+
+  return result;
 };
 
 function pushCommand(commandList, derivedCommand, use2D) {

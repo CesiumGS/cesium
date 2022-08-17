@@ -781,6 +781,7 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 };
 
 const scratchSilhouetteCommands = [];
+
 /**
  * Traverses through the scene graph and pushes the draw commands associated
  * with each primitive to the frame state's command list.

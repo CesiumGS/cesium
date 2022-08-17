@@ -103,7 +103,7 @@ export default function PrimitiveRenderResources(
   /**
    * An object storing options for creating a {@link RenderState}.
    * The pipeline stages simply set the options; the actual render state
-   * is created when the {@link DrawCommand} is constructed. Inherted from
+   * is created when the {@link DrawCommand} is constructed. Inherited from
    * the node render resources.
    *
    * @type {Object}

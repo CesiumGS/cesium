@@ -47,7 +47,7 @@ TilesetPipelineStage.process = function (renderResources, model, frameState) {
 
     // This value will be overriden by the depth-only back face derived command.
     // We just prepare it in advance so we don't have to recompile the shader.
-    // We don't add a unifrom declaration through shader builder because
+    // We don't add a uniform declaration through ShaderBuilder because
     // this is included in writeLogDepth.glsl
     const uniformMap = {
       u_polygonOffset: function () {
