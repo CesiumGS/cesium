@@ -14,7 +14,7 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import HeightReference from "../Scene/HeightReference.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import topojson from "../ThirdParty/topojson.js";
+import * as topojson from "topojson-client";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
