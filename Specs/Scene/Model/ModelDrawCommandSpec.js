@@ -1,6 +1,7 @@
 import {
   BlendingState,
   BoundingSphere,
+  Cartesian2,
   Cartesian3,
   clone,
   Color,
@@ -17,6 +18,9 @@ import {
   RenderState,
   SceneMode,
   ShadowMode,
+  StencilConstants,
+  StencilFunction,
+  StencilOperation,
   StyleCommandsNeeded,
   Transforms,
   WebGLConstants,
@@ -80,6 +84,16 @@ describe("Scene/Model/ModelDrawCommand", function () {
       },
       shadows: ShadowMode.ENABLED,
       _projectTo2D: false,
+      content: {
+        tileset: {
+          _hasMixedContent: true,
+          _backfaceCommands: [],
+        },
+        tile: {
+          _finalResolution: false,
+          _selectionDepth: 0,
+        },
+      },
     };
   }
 
@@ -164,9 +178,11 @@ describe("Scene/Model/ModelDrawCommand", function () {
     const deriveTranslucent = options.deriveTranslucent;
     const deriveSilhouette = options.deriveSilhouette;
     const derive2D = options.derive2D;
+    const deriveSkipLevelOfDetail = options.deriveSkipLevelOfDetail;
 
     const modelOptions = {
       silhouetteSize: deriveSilhouette ? 1.0 : 0.0,
+      skipLevelOfDetail: deriveSkipLevelOfDetail,
     };
 
     const styleCommandsNeeded = deriveTranslucent
@@ -188,7 +204,6 @@ describe("Scene/Model/ModelDrawCommand", function () {
     const drawCommand = new ModelDrawCommand({
       primitiveRenderResources: renderResources,
       command: command,
-      frameState: mockFrameState,
     });
 
     // Derive the 2D commands
@@ -337,6 +352,13 @@ describe("Scene/Model/ModelDrawCommand", function () {
       const translucentCommand = drawCommand._translucentCommand;
       expect(derivedCommands[1]).toBe(translucentCommand);
       expect(translucentCommand.is2D).toBe(false);
+
+      verifyDerivedCommandUpdateFlags(translucentCommand, {
+        updateShadows: true,
+        updateBackFaceCulling: false,
+        updateCullFace: false,
+        updateDebugShowBoundingVolume: true,
+      });
 
       const innerCommand = translucentCommand.command;
       expect(innerCommand).not.toEqual(command);
@@ -647,6 +669,145 @@ describe("Scene/Model/ModelDrawCommand", function () {
     });
   });
 
+  describe("skipLeveOfDetail commands", function () {
+    const expectedColorMask = {
+      red: false,
+      green: false,
+      blue: false,
+      alpha: false,
+    };
+
+    const expectedPolygonOffset = {
+      enabled: true,
+      factor: 5.0,
+      units: 5.0,
+    };
+
+    function verifySkipLodBackfaceCommand(command) {
+      const renderState = command.renderState;
+      expect(renderState.cull.enabled).toBe(true);
+      expect(renderState.cull.face).toBe(CullFace.FRONT);
+      expect(renderState.colorMask).toEqual(expectedColorMask);
+      expect(renderState.polygonOffset).toEqual(expectedPolygonOffset);
+
+      const uniformMap = command.uniformMap;
+      expect(uniformMap.u_polygonOffset()).toEqual(new Cartesian2(5.0, 5.0));
+
+      expect(command.castShadows).toBe(false);
+      expect(command.receiveShadows).toBe(false);
+    }
+
+    function verifySkipLodStencilCommand(command) {
+      const renderState = command.renderState;
+      const stencilTest = renderState.stencilTest;
+      expect(stencilTest.enabled).toBe(true);
+      expect(stencilTest.mask).toEqual(StencilConstants.SKIP_LOD_MASK);
+      expect(stencilTest.reference).toEqual(
+        StencilConstants.CESIUM_3D_TILE_MASK
+      );
+      expect(stencilTest.frontFunction).toEqual(
+        StencilFunction.GREATER_OR_EQUAL
+      );
+      expect(stencilTest.frontOperation.zPass).toEqual(
+        StencilOperation.REPLACE
+      );
+      expect(stencilTest.backFunction).toEqual(
+        StencilFunction.GREATER_OR_EQUAL
+      );
+      expect(stencilTest.backOperation.zPass).toEqual(StencilOperation.REPLACE);
+
+      const expectedStencilMask =
+        StencilConstants.CESIUM_3D_TILE_MASK | StencilConstants.SKIP_LOD_MASK;
+      expect(renderState.stencilMask).toEqual(expectedStencilMask);
+    }
+
+    it("constructs skipLevelOfDetail commands", function () {
+      const renderResources = mockRenderResources({
+        modelOptions: {
+          skipLevelOfDetail: true,
+        },
+      });
+      const command = createDrawCommand();
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      expect(derivedCommands.length).toEqual(3);
+
+      const originalCommand = drawCommand._originalCommand;
+      expect(derivedCommands[0]).toBe(originalCommand);
+      expect(originalCommand.is2D).toBe(false);
+
+      verifyDerivedCommandsDefined(drawCommand, {
+        translucent: false,
+        skipLevelOfDetail: true,
+        silhouette: false,
+      });
+
+      const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
+      expect(derivedCommands[1]).toBe(skipLodBackfaceCommand);
+      expect(skipLodBackfaceCommand.is2D).toBe(false);
+
+      verifyDerivedCommandUpdateFlags(skipLodBackfaceCommand, {
+        updateShadows: false,
+        updateBackFaceCulling: false,
+        updateCullFace: true,
+        updateDebugShowBoundingVolume: false,
+      });
+
+      const innerBackfaceCommand = skipLodBackfaceCommand.command;
+      expect(innerBackfaceCommand).not.toEqual(command);
+      verifySkipLodBackfaceCommand(innerBackfaceCommand);
+
+      const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
+      expect(derivedCommands[2]).toBe(skipLodStencilCommand);
+      expect(skipLodStencilCommand.is2D).toBe(false);
+
+      verifyDerivedCommandUpdateFlags(skipLodStencilCommand, {
+        updateShadows: true,
+        updateBackFaceCulling: true,
+        updateCullFace: true,
+        updateDebugShowBoundingVolume: true,
+      });
+
+      const innerStencilCommand = skipLodStencilCommand.command;
+      expect(innerStencilCommand).not.toEqual(command);
+      verifySkipLodStencilCommand(innerStencilCommand);
+    });
+
+    it("doesn't construct skipLevelOfDetail commands if original command is translucent", function () {
+      const renderResources = mockRenderResources({
+        modelOptions: {
+          skipLevelOfDetail: true,
+        },
+      });
+      const command = createDrawCommand({
+        pass: Pass.TRANSLUCENT,
+      });
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
+      });
+
+      const originalCommand = drawCommand._originalCommand;
+      expect(originalCommand).toBeDefined();
+      expect(originalCommand.command.pass).toBe(Pass.TRANSLUCENT);
+
+      const derivedCommands = drawCommand._derivedCommands;
+      expect(derivedCommands.length).toEqual(1);
+      expect(derivedCommands[0]).toBe(originalCommand);
+
+      // No other commands should be derived.
+      verifyDerivedCommandsDefined(drawCommand, {
+        translucent: false,
+        skipLevelOfDetail: false,
+        silhouette: false,
+      });
+    });
+  });
+
   describe("pushCommands", function () {
     it("pushCommands pushes original command", function () {
       const renderResources = mockRenderResources();
@@ -701,6 +862,58 @@ describe("Scene/Model/ModelDrawCommand", function () {
       drawCommand.pushCommands(mockFrameState, commandList);
       expect(commandList.length).toEqual(1);
       expect(commandList[0]).toBe(silhouetteModelDrawCommand);
+    });
+
+    it("pushCommands pushes skipLevelOfDetail commands", function () {
+      const renderResources = mockRenderResources({
+        modelOptions: {
+          skipLevelOfDetail: true,
+        },
+      });
+      const command = createDrawCommand();
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
+      });
+
+      const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
+      const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
+
+      const commandList = mockFrameState.commandList;
+      drawCommand.pushCommands(mockFrameState, commandList);
+      expect(commandList.length).toEqual(1);
+      expect(commandList[0]).toBe(skipLodStencilCommand.command);
+
+      const tileset = drawCommand.model.content.tileset;
+      const backfaceCommands = tileset._backfaceCommands;
+      expect(backfaceCommands.length).toEqual(1);
+      expect(backfaceCommands[0]).toBe(skipLodBackfaceCommand.command);
+    });
+
+    it("pushCommands doesn't push skipLevelOfDetail backface commmand if tile is at final resolution", function () {
+      const renderResources = mockRenderResources({
+        modelOptions: {
+          skipLevelOfDetail: true,
+        },
+      });
+      const command = createDrawCommand();
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
+      });
+
+      const content = drawCommand.model.content;
+      content.tile._finalResolution = true;
+
+      const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
+
+      const commandList = mockFrameState.commandList;
+      drawCommand.pushCommands(mockFrameState, commandList);
+      expect(commandList.length).toEqual(1);
+      expect(commandList[0]).toBe(skipLodStencilCommand.command);
+
+      const backfaceCommands = content.tileset._backfaceCommands;
+      expect(backfaceCommands.length).toEqual(0);
     });
 
     it("pushCommands derives 2D command if model is near IDL", function () {
@@ -832,6 +1045,61 @@ describe("Scene/Model/ModelDrawCommand", function () {
       expect(commandList.length).toEqual(2);
       expect(commandList[0]).toBe(modelDrawCommand);
       expect(commandList[1]).toBe(modelDrawCommand2D);
+    });
+
+    it("pushCommands derives 2D skipLevelOfDetail commands", function () {
+      const renderResources = mockRenderResources({
+        modelOptions: {
+          skipLevelOfDetail: true,
+        },
+        boundingSphereTransform2D: idlMatrix2D,
+      });
+      const command = createDrawCommand({
+        modelMatrix: idlMatrix2D,
+      });
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
+      });
+
+      // 2D commands aren't derived until pushCommands is called
+      const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
+      const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
+      expect(skipLodBackfaceCommand.derivedCommand2D).toBeUndefined();
+      expect(skipLodStencilCommand.derivedCommand2D).toBeUndefined();
+
+      drawCommand.pushCommands(mockFrameState2D, mockFrameState2D.commandList);
+
+      const skipLodBackfaceCommand2D = skipLodBackfaceCommand.derivedCommand2D;
+      expect(skipLodBackfaceCommand2D).toBeDefined();
+      expect(skipLodBackfaceCommand2D.is2D).toBe(true);
+
+      const skipLodStencilCommand2D = skipLodStencilCommand.derivedCommand2D;
+      expect(skipLodStencilCommand2D).toBeDefined();
+      expect(skipLodStencilCommand2D.is2D).toBe(true);
+
+      const backfaceDrawCommand = skipLodBackfaceCommand.command;
+      const backfaceDrawCommand2D = skipLodBackfaceCommand2D.command;
+      expect(backfaceDrawCommand.modelMatrix).toBe(drawCommand._modelMatrix);
+      expect(backfaceDrawCommand2D.modelMatrix).toBe(
+        drawCommand._modelMatrix2D
+      );
+
+      const stencilDrawCommand = skipLodStencilCommand.command;
+      const stencilDrawCommand2D = skipLodStencilCommand2D.command;
+      expect(stencilDrawCommand.modelMatrix).toBe(drawCommand._modelMatrix);
+      expect(stencilDrawCommand2D.modelMatrix).toBe(drawCommand._modelMatrix2D);
+
+      const commandList = mockFrameState2D.commandList;
+      expect(commandList.length).toEqual(2);
+      expect(commandList[0]).toBe(stencilDrawCommand);
+      expect(commandList[1]).toBe(stencilDrawCommand2D);
+
+      const tileset = drawCommand.model.content.tileset;
+      const backfaceCommands = tileset._backfaceCommands;
+      expect(backfaceCommands.length).toEqual(2);
+      expect(backfaceCommands[0]).toBe(backfaceDrawCommand);
+      expect(backfaceCommands[1]).toBe(backfaceDrawCommand2D);
     });
 
     it("pushCommands doesn't derive 2D commands if model is not near IDL", function () {
@@ -1124,6 +1392,38 @@ describe("Scene/Model/ModelDrawCommand", function () {
       }
     });
 
+    it("doesn't update shadows for skipLevelOfDetail backface command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSkipLevelOfDetail: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.castShadows).toBe(false);
+        expect(command.receiveShadows).toBe(false);
+      }
+
+      drawCommand.shadows = ShadowMode.ENABLED;
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        // Expect shadow updates to be disabled for the
+        // silhouette color command.
+        const updateShadows = derivedCommand.updateShadows;
+        if (!updateShadows) {
+          expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
+        }
+
+        expect(command.castShadows).toBe(updateShadows);
+        expect(command.receiveShadows).toBe(updateShadows);
+      }
+    });
+
     it("doesn't update shadows for 2D commands", function () {
       const drawCommand = createModelDrawCommand({
         deriveTranslucent: true,
@@ -1155,8 +1455,6 @@ describe("Scene/Model/ModelDrawCommand", function () {
         expect(command.receiveShadows).toBe(updateShadows);
       }
     });
-
-    // TODO: add for skip level of detail
   });
 
   describe("back face culling", function () {
@@ -1238,7 +1536,53 @@ describe("Scene/Model/ModelDrawCommand", function () {
       }
     });
 
-    // TODO: skip level of detail commands
+    it("doesn't update back face culling for skipLevelOfDetail backface command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSkipLevelOfDetail: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
+
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        // Backface culling is only enabled for the backface command.
+        const backfaceCulling = command.renderState.cull.enabled;
+        if (backfaceCulling) {
+          expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
+        }
+      }
+
+      drawCommand.backFaceCulling = true;
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
+        if (!updateBackFaceCulling) {
+          expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
+        }
+
+        expect(command.renderState.cull.enabled).toBe(true);
+      }
+
+      drawCommand.backFaceCulling = false;
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+
+        const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
+        if (!updateBackFaceCulling) {
+          expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
+          expect(command.renderState.cull.enabled).toBe(true);
+        } else {
+          expect(command.renderState.cull.enabled).toBe(false);
+        }
+      }
+    });
   });
 
   describe("cull face", function () {
@@ -1371,6 +1715,37 @@ describe("Scene/Model/ModelDrawCommand", function () {
           derivedCommand.updateDebugShowBoundingVolume;
         if (!updateDebugShowBoundingVolume) {
           expect(derivedCommand).toBe(drawCommand._silhouetteColorCommand);
+        }
+
+        expect(command.debugShowBoundingVolume).toBe(
+          updateDebugShowBoundingVolume
+        );
+      }
+    });
+
+    it("doesn't update debugShowBoundingVolume for skipLevelOfDetail backface command", function () {
+      const drawCommand = createModelDrawCommand({
+        deriveSkipLevelOfDetail: true,
+      });
+
+      const derivedCommands = drawCommand._derivedCommands;
+      const length = derivedCommands.length;
+      expect(length).toEqual(3);
+
+      for (let i = 0; i < length; i++) {
+        const command = derivedCommands[i].command;
+        expect(command.debugShowBoundingVolume).toBe(false);
+      }
+
+      drawCommand.debugShowBoundingVolume = true;
+
+      for (let i = 0; i < length; i++) {
+        const derivedCommand = derivedCommands[i];
+        const command = derivedCommand.command;
+        const updateDebugShowBoundingVolume =
+          derivedCommand.updateDebugShowBoundingVolume;
+        if (!updateDebugShowBoundingVolume) {
+          expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
         }
 
         expect(command.debugShowBoundingVolume).toBe(
