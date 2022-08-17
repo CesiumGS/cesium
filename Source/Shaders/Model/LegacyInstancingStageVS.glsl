@@ -13,7 +13,6 @@ void legacyInstancingStage(
     instanceModelViewInverseTranspose = mat3(u_instance_modifiedModelView * instanceModel);
 
     attributes.positionMC = (instanceModel * vec4(positionMC, 1.0)).xyz;
-    attributes.normalMC = (instanceModel * vec4(normalMC, 0.0)).xyz;
     
     #ifdef USE_2D_INSTANCING
     mat4 instancingTransform2D = getInstancingTransform2D();
