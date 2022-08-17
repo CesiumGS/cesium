@@ -506,27 +506,38 @@ it("can declare automatic uniforms", function () {
 #### Debugging Rendering Tests
 
 Rendering tests typically render to a 1x1 pixel canvas. This is so each test runs as
-quickly as possible. However, when regressions happen, it is difficult to tell why the test is failing since the image is too small to see. To make debugging tests easier,
-`createScene()` has options to adjust the canvas size to give a better preview of what
-the camera sees.
+quickly as possible. However, when regressions happen, it is difficult to tell why the test is failing since the
+image is too small to see. To make debugging tests easier, the `debugCanvasWidth` and `debugCanvasHeight` arguments can
+be used to increase the canvas size as desired.
+
+Example using the command line:
+
+```bash
+# Render tests will use a 400x300 canvas
+npm run test -- --debugCanvasWidth 400 --debugCanvasHeight 300
+```
+
+Example using SpecRunner:
+
+```text
+http://localhost:8080/Specs/SpecRunner.html?debugCanvasWidth=400&debugCanvasHeight=300
+```
+
+For ease of use, `debugCanvasHeight` can be omitted to produce a square canvas. For example:
+
+```bash
+# Render tests will use a 300x300 canvas
+npm run test -- --debugCanvasWidth 300
+```
 
 An example debug workflow might look like this:
 
 1. Use `fit()` to focus on the test that is failing.
-2. Use the `debugWidth` and `debugHeight` options for `createScene()` to make the canvas larger.
-3. Put a breakpoint in the code around where the first rendering code happens, such as a call of `scene.renderForSpecs()`.
+2. Create a breakpoint where the first rendering code happens, such as a call of `scene.renderForSpecs()`.
+3. Run the tests using the debug options described above
 4. Step through the test. After each render, check the browser window to see the frame that was just rendered.
 
 ```js
-beforeAll(function () {
-  scene = createScene({
-    // Create a 300x300 px canvas so we can see what the camera sees.
-    // This is intended for temporary debugging, do not commit these debug options.
-    debugWidth: 300,
-    debugHeight: 300,
-  });
-});
-
 // Focus the test that is failing
 fit("test that is failing", function () {
   // Start a breakpoint here
@@ -534,11 +545,10 @@ fit("test that is failing", function () {
   // After each render call, check the browser for the frame that was just rendered.
 
   // ...
-
   scene.renderForSpecs();
+  // Check the browser again for the next frame
 
   // ... and so on
-
   scene.renderForSpecs();
 });
 ```
