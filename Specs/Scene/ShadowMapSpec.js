@@ -428,18 +428,6 @@ describe(
       });
     }
 
-    function colorAbsoluteDifference(rgba1, rgba2) {
-      const [r1, g1, b1, a1] = rgba1;
-      const [r2, g2, b2, a2] = rgba2;
-
-      const diffR = Math.abs(r1 - r2);
-      const diffG = Math.abs(g1 - g2);
-      const diffB = Math.abs(b1 - b2);
-      const diffA = Math.abs(a1 - a2);
-
-      return [diffR, diffG, diffB, diffA];
-    }
-
     function renderAndExpect(rgba, time) {
       expect({
         scene: scene,
@@ -742,7 +730,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the sun as a light source
@@ -755,24 +743,36 @@ describe(
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
-      });
+      }, startTime);
 
       // Render with shadows
+      let shadowedColor;
       scene.shadowMap.enabled = true;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       }, startTime);
 
       // Change the time so that the shadows are no longer pointing straight down
       renderAndCall(function (rgba) {
-        // Due to shading differences, the result might not exactly the same, but
-        // it should be close
-        const [r, g, b, a] = colorAbsoluteDifference(rgba, unshadowedColor);
-        expect(r).toBeLessThan(64);
-        expect(g).toBeLessThan(8);
-        expect(b).toBeLessThan(8);
-        expect(a).toBeLessThan(8);
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the sunlight direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(shadowedRed).toBeLessThan(red);
+        expect(red).toBeLessThan(unshadowedRed);
       }, endTime);
 
       scene.shadowMap = undefined;
@@ -798,7 +798,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the scene's light source
@@ -818,9 +818,17 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
+      let shadowedColor;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       });
 
       // Change the light so that the shadows are no longer pointing straight down
@@ -828,15 +836,19 @@ describe(
         direction: lightDirectionAngle,
       });
 
-      // Change the time so that the shadows are no longer pointing straight down
+      // Change the light direction so that the shadows are no longer pointing straight down
       renderAndCall(function (rgba) {
-        // Due to shading differences, the result might not exactly the same, but
-        // it should be close
-        const [r, g, b, a] = colorAbsoluteDifference(rgba, unshadowedColor);
-        expect(r).toBeLessThan(48);
-        expect(g).toBeLessThan(4);
-        expect(b).toBeLessThan(4);
-        expect(a).toBeLessThan(4);
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the light direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(shadowedRed).toBeLessThan(red);
+        expect(red).toBeLessThan(unshadowedRed);
       });
 
       scene.shadowMap = undefined;
@@ -864,7 +876,6 @@ describe(
       verifyShadows(box, floor);
     });
 
-    // TODO: Need to debug this test
     it("point light shadows", function () {
       boxPointLights.show = true;
 
