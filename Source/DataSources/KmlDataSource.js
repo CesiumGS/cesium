@@ -40,7 +40,7 @@ import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
-import Autolinker from "../ThirdParty/Autolinker.js";
+import Autolinker from "autolinker";
 import Uri from "../ThirdParty/Uri.js";
 import zip from "../ThirdParty/zip.js";
 import getElement from "../Widgets/getElement.js";
