@@ -771,7 +771,7 @@ describe(
         const red = rgba[0];
         const unshadowedRed = unshadowedColor[0];
         const shadowedRed = shadowedColor[0];
-        expect(shadowedRed).toBeLessThan(red);
+        expect(red).toBeGreaterThan(shadowedRed);
         expect(red).toBeLessThan(unshadowedRed);
       }, endTime);
 
@@ -835,8 +835,6 @@ describe(
       scene.light = new DirectionalLight({
         direction: lightDirectionAngle,
       });
-
-      // Change the light direction so that the shadows are no longer pointing straight down
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(shadowedColor);
@@ -847,7 +845,7 @@ describe(
         const red = rgba[0];
         const unshadowedRed = unshadowedColor[0];
         const shadowedRed = shadowedColor[0];
-        expect(shadowedRed).toBeLessThan(red);
+        expect(red).toBeGreaterThan(shadowedRed);
         expect(red).toBeLessThan(unshadowedRed);
       });
 
