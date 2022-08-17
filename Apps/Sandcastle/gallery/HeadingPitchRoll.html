@@ -108,7 +108,6 @@
         const camera = viewer.camera;
         const controller = scene.screenSpaceCameraController;
         let r = 0;
-        const center = new Cesium.Cartesian3();
 
         const hpRoll = new Cesium.HeadingPitchRoll();
         const hpRange = new Cesium.HeadingPitchRange();
@@ -149,11 +148,7 @@
           // Zoom to model
           r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
           controller.minimumZoomDistance = r * 0.5;
-          Cesium.Matrix4.multiplyByPoint(
-            model.modelMatrix,
-            model.boundingSphere.center,
-            center
-          );
+          const center = model.boundingSphere.center;
           const heading = Cesium.Math.toRadians(230.0);
           const pitch = Cesium.Math.toRadians(-20.0);
           hpRange.heading = heading;
@@ -250,11 +245,7 @@
 
           if (fromBehind.checked) {
             // Zoom to model
-            Cesium.Matrix4.multiplyByPoint(
-              planePrimitive.modelMatrix,
-              planePrimitive.boundingSphere.center,
-              center
-            );
+            const center = planePrimitive.boundingSphere.center;
             hpRange.heading = hpRoll.heading;
             hpRange.pitch = hpRoll.pitch;
             camera.lookAt(center, hpRange);

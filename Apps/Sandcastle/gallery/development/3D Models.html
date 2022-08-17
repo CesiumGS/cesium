@@ -157,7 +157,7 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendAmount")
           .subscribe(function (newValue) {
-            model.colorBlendAmount = newValue;
+            model.colorBlendAmount = Number(newValue);
           });
 
         function createModel(url, height, heading, pitch, roll) {
@@ -195,7 +195,7 @@
               model.colorBlendMode = getColorBlendMode(
                 viewModel.colorBlendMode
               );
-              model.colorBlendAmount = viewModel.colorBlendAmount;
+              model.colorBlendAmount = Number(viewModel.colorBlendAmount);
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
@@ -211,11 +211,7 @@
                 Math.max(model.boundingSphere.radius, camera.frustum.near);
               controller.minimumZoomDistance = r * 0.5;
 
-              const center = Cesium.Matrix4.multiplyByPoint(
-                model.modelMatrix,
-                model.boundingSphere.center,
-                new Cesium.Cartesian3()
-              );
+              const center = model.boundingSphere.center;
               const heading = Cesium.Math.toRadians(230.0);
               const pitch = Cesium.Math.toRadians(-20.0);
               camera.lookAt(

@@ -11,6 +11,7 @@ import ForEach from "./GltfPipeline/ForEach.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
+import usesExtension from "./GltfPipeline/usesExtension";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -34,7 +35,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfJsonLoader(options) {
+function GltfJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltfResource = options.gltfResource;
@@ -166,7 +167,12 @@ function handleError(gltfJsonLoader, error) {
 }
 
 function upgradeVersion(gltfJsonLoader, gltf) {
-  if (gltf.asset.version === "2.0") {
+  if (
+    defined(gltf.asset) &&
+    gltf.asset.version === "2.0" &&
+    !usesExtension(gltf, "KHR_techniques_webgl") &&
+    !usesExtension(gltf, "KHR_materials_common")
+  ) {
     return Promise.resolve();
   }
 
@@ -291,3 +297,5 @@ GltfJsonLoader.prototype.unload = function () {
 GltfJsonLoader.prototype._fetchGltf = function () {
   return this._gltfResource.fetchArrayBuffer();
 };
+
+export default GltfJsonLoader;

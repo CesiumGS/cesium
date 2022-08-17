@@ -1,4 +1,5 @@
-import { IndexDatatype } from "../../Source/Cesium.js";
+import { IndexDatatype } from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/IndexDatatype", function () {

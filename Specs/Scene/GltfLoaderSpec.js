@@ -1,4 +1,5 @@
 import {
+  ArticulationStageType,
   AttributeType,
   Axis,
   Cartesian2,
@@ -27,6 +28,7 @@ import {
   Resource,
   ResourceCache,
   ResourceLoaderState,
+  RuntimeError,
   Sampler,
   Texture,
   TextureMagnificationFilter,
@@ -69,7 +71,7 @@ describe(
     const animatedMorphCube =
       "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/InterpolationTest/InterpolationTest.glb";
+      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -105,6 +107,16 @@ describe(
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const boxArticulations =
+      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+    const boxWithPrimitiveOutline =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+    const boxWithPrimitiveOutlineSharedVertices =
+      "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+    const multiUvTest =
+      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
+    const boxCesiumRtc =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     let scene;
     let sceneWithWebgl2;
@@ -112,12 +124,6 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-
-      // This is set to true in order to test that buffers / typed arrays
-      // are loaded in correctly for instanced models. If this is false,
-      // instanced attributes will always load in as typed arrays, which
-      // will cause several tests to fail.
-      scene.context._instancedArrays = true;
 
       sceneWithWebgl2 = createScene();
       sceneWithWebgl2.context._webgl2 = true;
@@ -146,6 +152,19 @@ describe(
           gltfResource: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("throws if an unsupported extension is required", function () {
+      function modifyGltf(gltf) {
+        gltf.extensionsRequired = ["NOT_supported_extension"];
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).catch(
+        function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        }
+      );
     });
 
     function getOptions(gltfPath, options) {
@@ -230,6 +249,15 @@ describe(
       }
       return undefined;
     }
+
+    it("preserves query string in url", function () {
+      const params = "?param1=1&param2=2";
+      const url = boxTextured + params;
+      return loadGltf(url).then(function (gltfLoader) {
+        const loaderResource = gltfLoader._gltfResource;
+        expect(loaderResource.url).toEndWith(params);
+      });
+    });
 
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
@@ -1037,6 +1065,51 @@ describe(
         const material1 = primitive1.material;
         expect(material0.unlit).toBe(true);
         expect(material1.unlit).toBe(true);
+      });
+    });
+
+    it("loads MultiUVTest", function () {
+      return loadGltf(multiUvTest).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const emissiveTexture = material.emissiveTexture;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const tangentAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TANGENT
+        );
+        const texcoordAttribute0 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        const texcoordAttribute1 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          1
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(tangentAttribute).toBeDefined();
+        expect(texcoordAttribute0).toBeDefined();
+        expect(texcoordAttribute1).toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(emissiveTexture.texCoord).toBe(1);
       });
     });
 
@@ -2140,7 +2213,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2160,7 +2233,7 @@ describe(
         expect(rotationAttribute.max).toBeUndefined();
         expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.packedTypedArray).toEqual(
+        expect(rotationAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2182,7 +2255,7 @@ describe(
         expect(scaleAttribute.max).toBeUndefined();
         expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.packedTypedArray).toEqual(
+        expect(scaleAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.6000000238418579, 0.699999988079071, 1,
@@ -2206,7 +2279,7 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
@@ -2335,7 +2408,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2355,7 +2428,7 @@ describe(
         expect(rotationAttribute.max).toBeUndefined();
         expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.packedTypedArray).toEqual(
+        expect(rotationAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2377,7 +2450,7 @@ describe(
         expect(scaleAttribute.max).toBeUndefined();
         expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.packedTypedArray).toEqual(
+        expect(scaleAttribute.typedArray).toEqual(
           // prettier-ignore
           new Float32Array([
             0.6000000238418579, 0.699999988079071, 1,
@@ -2401,7 +2474,7 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
@@ -2519,14 +2592,14 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
 
-          expect(rotationAttribute.packedTypedArray).toEqual(
+          expect(rotationAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2539,7 +2612,7 @@ describe(
           expect(rotationAttribute.byteOffset).toBe(0);
           expect(rotationAttribute.byteStride).toBeUndefined();
 
-          expect(scaleAttribute.packedTypedArray).toEqual(
+          expect(scaleAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.6000000238418579, 0.699999988079071, 1,
@@ -2552,7 +2625,7 @@ describe(
           expect(scaleAttribute.byteOffset).toBe(0);
           expect(scaleAttribute.byteStride).toBeUndefined();
 
-          expect(featureIdAttribute.packedTypedArray).toEqual(
+          expect(featureIdAttribute.typedArray).toEqual(
             new Float32Array([0, 0, 1, 1])
           );
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -2635,14 +2708,14 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
 
-          expect(rotationAttribute.packedTypedArray).toEqual(
+          expect(rotationAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.3826833963394165, 0, 0, 0.9238795042037964,
@@ -2655,7 +2728,7 @@ describe(
           expect(rotationAttribute.byteOffset).toBe(0);
           expect(rotationAttribute.byteStride).toBeUndefined();
 
-          expect(scaleAttribute.packedTypedArray).toEqual(
+          expect(scaleAttribute.typedArray).toEqual(
             // prettier-ignore
             new Float32Array([
               0.6000000238418579, 0.699999988079071, 1,
@@ -2668,7 +2741,7 @@ describe(
           expect(scaleAttribute.byteOffset).toBe(0);
           expect(scaleAttribute.byteStride).toBeUndefined();
 
-          expect(featureIdAttribute.packedTypedArray).toEqual(
+          expect(featureIdAttribute.typedArray).toEqual(
             new Float32Array([0, 0, 1, 1])
           );
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -2719,7 +2792,7 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toEqual(
+        expect(translationAttribute.typedArray).toEqual(
           new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
         );
         expect(translationAttribute.buffer).toBeUndefined();
@@ -2768,7 +2841,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeUndefined();
+        expect(translationAttribute.typedArray).toBeUndefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBe(12);
@@ -2805,7 +2878,7 @@ describe(
           expect(positionAttribute).toBeDefined();
           expect(normalAttribute).toBeDefined();
 
-          expect(translationAttribute.packedTypedArray).toEqual(
+          expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
           expect(translationAttribute.buffer).toBeUndefined();
@@ -2858,7 +2931,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBe(undefined);
@@ -3062,6 +3135,96 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
+      });
+    });
+
+    it("loads BoxArticulations", function () {
+      return loadGltf(boxArticulations).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        expect(rootNode.articulationName).toEqual("SampleArticulation");
+
+        const articulations = components.articulations;
+        expect(articulations.length).toEqual(1);
+
+        const articulation = articulations[0];
+        expect(articulation.name).toEqual("SampleArticulation");
+
+        const stages = articulation.stages;
+        expect(stages.length).toEqual(10);
+
+        const xTranslateStage = stages[0];
+        expect(xTranslateStage.name).toEqual("MoveX");
+        expect(xTranslateStage.type).toEqual(ArticulationStageType.XTRANSLATE);
+        expect(xTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(xTranslateStage.maximumValue).toEqual(1000.0);
+        expect(xTranslateStage.initialValue).toEqual(0.0);
+
+        const yTranslateStage = stages[1];
+        expect(yTranslateStage.name).toEqual("MoveY");
+        expect(yTranslateStage.type).toEqual(ArticulationStageType.YTRANSLATE);
+        expect(yTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(yTranslateStage.maximumValue).toEqual(1000.0);
+        expect(yTranslateStage.initialValue).toEqual(0.0);
+
+        const zTranslateStage = stages[2];
+        expect(zTranslateStage.name).toEqual("MoveZ");
+        expect(zTranslateStage.type).toEqual(ArticulationStageType.ZTRANSLATE);
+        expect(zTranslateStage.minimumValue).toEqual(-1000.0);
+        expect(zTranslateStage.maximumValue).toEqual(1000.0);
+        expect(zTranslateStage.initialValue).toEqual(0.0);
+
+        const yRotateStage = stages[3];
+        expect(yRotateStage.name).toEqual("Yaw");
+        expect(yRotateStage.type).toEqual(ArticulationStageType.YROTATE);
+        expect(yRotateStage.minimumValue).toEqual(-360.0);
+        expect(yRotateStage.maximumValue).toEqual(360.0);
+        expect(yRotateStage.initialValue).toEqual(0.0);
+
+        const xRotateStage = stages[4];
+        expect(xRotateStage.name).toEqual("Pitch");
+        expect(xRotateStage.type).toEqual(ArticulationStageType.XROTATE);
+        expect(xRotateStage.minimumValue).toEqual(-360.0);
+        expect(xRotateStage.maximumValue).toEqual(360.0);
+        expect(xRotateStage.initialValue).toEqual(0.0);
+
+        const zRotateStage = stages[5];
+        expect(zRotateStage.name).toEqual("Roll");
+        expect(zRotateStage.type).toEqual(ArticulationStageType.ZROTATE);
+        expect(zRotateStage.minimumValue).toEqual(-360.0);
+        expect(zRotateStage.maximumValue).toEqual(360.0);
+        expect(zRotateStage.initialValue).toEqual(0.0);
+
+        const uniformScaleStage = stages[6];
+        expect(uniformScaleStage.name).toEqual("Size");
+        expect(uniformScaleStage.type).toEqual(
+          ArticulationStageType.UNIFORMSCALE
+        );
+        expect(uniformScaleStage.minimumValue).toEqual(0.0);
+        expect(uniformScaleStage.maximumValue).toEqual(1.0);
+        expect(uniformScaleStage.initialValue).toEqual(1.0);
+
+        const xScaleStage = stages[7];
+        expect(xScaleStage.name).toEqual("SizeX");
+        expect(xScaleStage.type).toEqual(ArticulationStageType.XSCALE);
+        expect(xScaleStage.minimumValue).toEqual(0.0);
+        expect(xScaleStage.maximumValue).toEqual(1.0);
+        expect(xScaleStage.initialValue).toEqual(1.0);
+
+        const yScaleStage = stages[8];
+        expect(yScaleStage.name).toEqual("SizeY");
+        expect(yScaleStage.type).toEqual(ArticulationStageType.YSCALE);
+        expect(yScaleStage.minimumValue).toEqual(0.0);
+        expect(yScaleStage.maximumValue).toEqual(1.0);
+        expect(yScaleStage.initialValue).toEqual(1.0);
+
+        const zScaleStage = stages[9];
+        expect(zScaleStage.name).toEqual("SizeZ");
+        expect(zScaleStage.type).toEqual(ArticulationStageType.ZSCALE);
+        expect(zScaleStage.minimumValue).toEqual(0.0);
+        expect(zScaleStage.maximumValue).toEqual(1.0);
+        expect(zScaleStage.initialValue).toEqual(1.0);
       });
     });
 
@@ -3462,16 +3625,15 @@ describe(
 
         expect(positionAttribute.buffer).toBeUndefined();
         expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(12);
-        expect(positionAttribute.byteStride).toBe(24);
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBeUndefined();
+        expect(positionAttribute.typedArray.byteLength).toBe(288);
 
         expect(normalAttribute.buffer).toBeUndefined();
         expect(normalAttribute.typedArray).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
-        expect(normalAttribute.byteStride).toBe(24);
-
-        expect(positionAttribute.typedArray).toBe(normalAttribute.typedArray);
-        expect(positionAttribute.typedArray.byteLength).toBe(576);
+        expect(normalAttribute.byteStride).toBeUndefined();
+        expect(normalAttribute.typedArray.byteLength).toBe(288);
       });
     });
 
@@ -3498,8 +3660,8 @@ describe(
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(12);
-        expect(positionAttribute.byteStride).toBe(24);
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBeUndefined();
 
         // Typed arrays of other attributes should not be defined
         expect(normalAttribute.buffer).toBeDefined();
@@ -3507,7 +3669,7 @@ describe(
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(24);
 
-        expect(positionAttribute.typedArray.byteLength).toBe(576);
+        expect(positionAttribute.typedArray.byteLength).toBe(288);
       });
     });
 
@@ -3627,7 +3789,7 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
@@ -3653,21 +3815,21 @@ describe(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
 
         const rotationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.ROTATION
         );
-        expect(rotationAttribute.packedTypedArray).toBeDefined();
+        expect(rotationAttribute.typedArray).toBeDefined();
         expect(rotationAttribute.buffer).toBeUndefined();
 
         const scaleAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.SCALE
         );
-        expect(scaleAttribute.packedTypedArray).toBeDefined();
+        expect(scaleAttribute.typedArray).toBeDefined();
         expect(scaleAttribute.buffer).toBeUndefined();
 
         const featureIdAttribute = getAttribute(
@@ -3675,7 +3837,7 @@ describe(
           InstanceAttributeSemantic.FEATURE_ID,
           0
         );
-        expect(featureIdAttribute.packedTypedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
         expect(featureIdAttribute.buffer).toBeUndefined();
       });
     });
@@ -3725,7 +3887,7 @@ describe(
         expect(translationAttribute.count).toBe(4);
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
@@ -3781,10 +3943,142 @@ describe(
         expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.packedTypedArray).toBeDefined();
+        expect(translationAttribute.typedArray).toBeDefined();
         expect(translationAttribute.buffer).toBeDefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline", function () {
+      return loadGltf(boxWithPrimitiveOutline).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        expect(outlineCoordinates.count).toBe(24);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+      });
+    });
+
+    it("loads model with CESIUM_primitive_outline with shared vertices", function () {
+      return loadGltf(boxWithPrimitiveOutlineSharedVertices).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).not.toBeDefined();
+        expect(texCoordAttribute).not.toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).toBeDefined();
+        expect(outlineCoordinates.name).toBe("_OUTLINE_COORDINATES");
+        // the model originally had 8 vertices, but some are duplicated
+        // when generating outlines
+        expect(outlineCoordinates.count).toBe(16);
+        expect(outlineCoordinates.semantic).not.toBeDefined();
+        expect(outlineCoordinates.type).toBe(AttributeType.VEC3);
+        expect(outlineCoordinates.buffer).toBeDefined();
+        expect(outlineCoordinates.typedArray).not.toBeDefined();
+      });
+    });
+
+    it("does not load CESIUM_primitive_outline if loadPrimitiveOutline is false", function () {
+      const options = {
+        loadPrimitiveOutline: false,
+      };
+      return loadGltf(boxWithPrimitiveOutline, options).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const [rootNode] = scene.nodes;
+        const [primitive] = rootNode.primitives;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texCoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(texCoordAttribute).toBeDefined();
+
+        const indices = primitive.indices;
+        expect(indices).toBeDefined();
+        expect(indices.buffer).toBeDefined();
+        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.count).toBe(36);
+
+        const outlineCoordinates = primitive.outlineCoordinates;
+        expect(outlineCoordinates).not.toBeDefined();
       });
     });
 
@@ -3805,6 +4099,16 @@ describe(
         for (let i = 0; i < length; i++) {
           expect(credits[i].html).toEqual(expectedCredits[i]);
         }
+      });
+    });
+
+    it("loads model with CESIUM_RTC", function () {
+      return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const expectedTransform = Matrix4.fromTranslation(
+          new Cartesian3(6378137, 0, 0)
+        );
+        expect(components.transform).toEqual(expectedTransform);
       });
     });
   },

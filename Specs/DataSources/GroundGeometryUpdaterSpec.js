@@ -1,7 +1,9 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
-import { GroundGeometryUpdater } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  GeometryOffsetAttribute,
+  GroundGeometryUpdater,
+  HeightReference,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/GroundGeometryUpdater", function () {
   beforeAll(function () {

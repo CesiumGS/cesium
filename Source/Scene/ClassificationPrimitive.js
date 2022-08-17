@@ -1,7 +1,6 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -163,7 +162,28 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-  this._readyPromise = defer();
+
+  const classificationPrimitive = this;
+  this._readyPromise = new Promise((resolve, reject) => {
+    classificationPrimitive._completeLoad = () => {
+      if (this._ready) {
+        return;
+      }
+
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
+
+      const error = this._error;
+      if (!defined(error)) {
+        resolve(this);
+      } else {
+        reject(error);
+      }
+    };
+  });
 
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
@@ -323,7 +343,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -1281,20 +1301,6 @@ ClassificationPrimitive.prototype.update = function (frameState) {
     }
 
     this._primitive = new Primitive(primitiveOptions);
-    this._primitive.readyPromise.then(function (primitive) {
-      that._ready = true;
-
-      if (that.releaseGeometryInstances) {
-        that.geometryInstances = undefined;
-      }
-
-      const error = primitive._error;
-      if (!defined(error)) {
-        that._readyPromise.resolve(that);
-      } else {
-        that._readyPromise.reject(error);
-      }
-    });
   }
 
   if (
@@ -1348,6 +1354,12 @@ ClassificationPrimitive.prototype.update = function (frameState) {
   this._primitive.show = this.show;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+
+  frameState.afterRender.push(() => {
+    if (defined(this._primitive) && this._primitive.ready) {
+      this._completeLoad();
+    }
+  });
 };
 
 /**

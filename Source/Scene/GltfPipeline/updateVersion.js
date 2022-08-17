@@ -8,6 +8,7 @@ import moveTechniqueRenderStates from "./moveTechniqueRenderStates.js";
 import moveTechniquesToExtension from "./moveTechniquesToExtension.js";
 import removeUnusedElements from "./removeUnusedElements.js";
 import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
+import removeExtension from "./removeExtension.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import clone from "../../Core/clone.js";
@@ -70,6 +71,12 @@ function updateVersion(gltf, options) {
     version = gltf.asset.version;
     updateFunction = updateFunctions[version];
   }
+
+  if (!options.keepLegacyExtensions) {
+    convertTechniquesToPbr(gltf);
+    convertMaterialsCommonToPbr(gltf);
+  }
+
   return gltf;
 }
 
@@ -530,7 +537,7 @@ function objectsToArrays(gltf) {
     const extensions = material.extensions;
     if (defined(extensions)) {
       const materialsCommon = extensions.KHR_materials_common;
-      if (defined(materialsCommon)) {
+      if (defined(materialsCommon) && defined(materialsCommon.values)) {
         ForEach.materialValue(materialsCommon, function (value, name) {
           if (typeof value === "string") {
             materialsCommon.values[name] = {
@@ -695,7 +702,7 @@ function underscoreApplicationSpecificSemantics(gltf) {
               newSemantic = indexedSemantic + suffix;
               mappedSemantics[semantic] = newSemantic;
             } else if (!defined(knownSemantics[strippedSemantic])) {
-              newSemantic = "_" + semantic;
+              newSemantic = `_${semantic}`;
               mappedSemantics[semantic] = newSemantic;
             }
           }
@@ -931,6 +938,20 @@ function requireAnimationAccessorMinMax(gltf) {
   });
 }
 
+function validatePresentAccessorMinMax(gltf) {
+  ForEach.accessor(gltf, function (accessor) {
+    if (defined(accessor.min) || defined(accessor.max)) {
+      const minMax = findAccessorMinMax(gltf, accessor);
+      if (defined(accessor.min)) {
+        accessor.min = minMax.min;
+      }
+      if (defined(accessor.max)) {
+        accessor.max = minMax.max;
+      }
+    }
+  });
+}
+
 function glTF10to20(gltf) {
   gltf.asset = defaultValue(gltf.asset, {});
   gltf.asset.version = "2.0";
@@ -956,6 +977,9 @@ function glTF10to20(gltf) {
   requirePositionAccessorMinMax(gltf);
   // An animation sampler's input accessor must have min and max properties defined
   requireAnimationAccessorMinMax(gltf);
+  // When an acccessor has a min- or max, then it is recomputed, to capture the actual
+  // value, and not use the (possibly imprecise) value from the input
+  validatePresentAccessorMinMax(gltf);
   // buffer.type is unnecessary and should be removed
   removeBufferType(gltf);
   // Remove format, internalFormat, target, and type
@@ -974,6 +998,154 @@ function glTF10to20(gltf) {
   moveTechniquesToExtension(gltf);
   // Remove empty arrays
   removeEmptyArrays(gltf);
+}
+
+// It's not possible to upgrade glTF 1.0 shaders to 2.0 PBR materials in a generic way,
+// but we can look for certain uniform names that are commonly found in glTF 1.0 assets
+// and create PBR materials out of those.
+const baseColorTextureNames = ["u_tex", "u_diffuse"];
+const baseColorFactorNames = ["u_diffuse"];
+
+function initializePbrMaterial(material) {
+  material.pbrMetallicRoughness = defined(material.pbrMetallicRoughness)
+    ? material.pbrMetallicRoughness
+    : {};
+
+  material.pbrMetallicRoughness.roughnessFactor = 1.0;
+  material.pbrMetallicRoughness.metallicFactor = 0.0;
+}
+
+function isTexture(value) {
+  return defined(value.index);
+}
+
+function isVec4(value) {
+  return Array.isArray(value) && value.length === 4;
+}
+
+function srgbToLinear(srgb) {
+  const linear = new Array(4);
+  linear[3] = srgb[3];
+
+  for (let i = 0; i < 3; i++) {
+    const c = srgb[i];
+    if (c <= 0.04045) {
+      // eslint-disable-next-line no-loss-of-precision
+      linear[i] = srgb[i] * 0.07739938080495356037151702786378;
+    } else {
+      linear[i] = Math.pow(
+        // eslint-disable-next-line no-loss-of-precision
+        (c + 0.055) * 0.94786729857819905213270142180095,
+        2.4
+      );
+    }
+  }
+
+  return linear;
+}
+
+function convertTechniquesToPbr(gltf) {
+  // Future work: convert other values like emissive, specular, etc. Only handling diffuse right now.
+  ForEach.material(gltf, function (material) {
+    ForEach.materialValue(material, function (value, name) {
+      if (baseColorTextureNames.indexOf(name) !== -1 && isTexture(value)) {
+        initializePbrMaterial(material);
+        material.pbrMetallicRoughness.baseColorTexture = value;
+      } else if (baseColorFactorNames.indexOf(name) !== -1 && isVec4(value)) {
+        initializePbrMaterial(material);
+        material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(value);
+      }
+    });
+  });
+
+  removeExtension(gltf, "KHR_techniques_webgl");
+  removeExtension(gltf, "KHR_blend");
+}
+
+function convertMaterialsCommonToPbr(gltf) {
+  // Future work: convert KHR_materials_common lights to KHR_lights_punctual
+  ForEach.material(gltf, function (material) {
+    const materialsCommon = defaultValue(
+      material.extensions,
+      defaultValue.EMPTY_OBJECT
+    ).KHR_materials_common;
+
+    if (defined(materialsCommon)) {
+      const technique = materialsCommon.technique;
+      if (technique === "CONSTANT") {
+        // Add the KHR_materials_unlit extension
+        addExtensionsUsed(gltf, "KHR_materials_unlit");
+        material.extensions = defined(material.extensions)
+          ? material.extensions
+          : {};
+        material.extensions["KHR_materials_unlit"] = {};
+      }
+
+      const values = defined(materialsCommon.values)
+        ? materialsCommon.values
+        : {};
+
+      const ambient = values.ambient;
+      const diffuse = values.diffuse;
+      const emission = values.emission;
+      const transparency = values.transparency;
+
+      // These actually exist on the extension object, not the values object despite what's shown in the spec
+      const doubleSided = materialsCommon.doubleSided;
+      const transparent = materialsCommon.transparent;
+
+      // Ignore specular and shininess for now because the conversion to PBR
+      // isn't straightforward and depends on the technique
+      initializePbrMaterial(material);
+
+      if (defined(ambient)) {
+        if (isVec4(ambient)) {
+          material.emissiveFactor = ambient.slice(0, 3);
+        } else if (isTexture(ambient)) {
+          material.emissiveTexture = ambient;
+        }
+      }
+
+      if (defined(diffuse)) {
+        if (isVec4(diffuse)) {
+          material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(diffuse);
+        } else if (isTexture(diffuse)) {
+          material.pbrMetallicRoughness.baseColorTexture = diffuse;
+        }
+      }
+
+      if (defined(doubleSided)) {
+        material.doubleSided = doubleSided;
+      }
+
+      if (defined(emission)) {
+        if (isVec4(emission)) {
+          material.emissiveFactor = emission.slice(0, 3);
+        } else if (isTexture(emission)) {
+          material.emissiveTexture = emission;
+        }
+      }
+
+      if (defined(transparency)) {
+        if (defined(material.pbrMetallicRoughness.baseColorFactor)) {
+          material.pbrMetallicRoughness.baseColorFactor[3] *= transparency;
+        } else {
+          material.pbrMetallicRoughness.baseColorFactor = [
+            1,
+            1,
+            1,
+            transparency,
+          ];
+        }
+      }
+
+      if (defined(transparent)) {
+        material.alphaMode = transparent ? "BLEND" : "OPAQUE";
+      }
+    }
+  });
+
+  removeExtension(gltf, "KHR_materials_common");
 }
 
 export default updateVersion;

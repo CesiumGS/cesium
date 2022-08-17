@@ -33,7 +33,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
  * @private
  */
-export default function GltfIndexBufferLoader(options) {
+function GltfIndexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -411,3 +411,5 @@ GltfIndexBufferLoader.prototype.unload = function () {
   this._buffer = undefined;
   this._gltf = undefined;
 };
+
+export default GltfIndexBufferLoader;

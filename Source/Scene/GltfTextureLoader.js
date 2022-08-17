@@ -10,6 +10,7 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js";
 
 /**
  * Loads a glTF texture.
@@ -33,7 +34,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfTextureLoader(options) {
+function GltfTextureLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -253,25 +254,6 @@ CreateTextureJob.prototype.execute = function () {
   );
 };
 
-function resizeImageToNextPowerOfTwo(image) {
-  const canvas = document.createElement("canvas");
-  canvas.width = CesiumMath.nextPowerOfTwo(image.width);
-  canvas.height = CesiumMath.nextPowerOfTwo(image.height);
-  const canvasContext = canvas.getContext("2d");
-  canvasContext.drawImage(
-    image,
-    0,
-    0,
-    image.width,
-    image.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-  return canvas;
-}
-
 function createTexture(gltf, textureInfo, image, mipLevels, context) {
   // internalFormat is only defined for CompressedTextureBuffer
   const internalFormat = image.internalFormat;
@@ -397,3 +379,5 @@ GltfTextureLoader.prototype.unload = function () {
   this._texture = undefined;
   this._gltf = undefined;
 };
+
+export default GltfTextureLoader;

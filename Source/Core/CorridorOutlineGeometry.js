@@ -1,4 +1,3 @@
-import arrayFill from "./arrayFill.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -308,11 +307,11 @@ function computePositionsExtruded(params) {
   if (defined(params.offsetAttribute)) {
     let applyOffset = new Uint8Array(length * 2);
     if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
-      applyOffset = arrayFill(applyOffset, 1, 0, length);
+      applyOffset = applyOffset.fill(1, 0, length);
     } else {
       const applyOffsetValue =
         params.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-      applyOffset = arrayFill(applyOffset, applyOffsetValue);
+      applyOffset = applyOffset.fill(applyOffsetValue);
     }
 
     attributes.applyOffset = new GeometryAttribute({
@@ -574,13 +573,12 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
 
     if (defined(corridorOutlineGeometry._offsetAttribute)) {
       const length = attr.attributes.position.values.length;
-      const applyOffset = new Uint8Array(length / 3);
       const offsetValue =
         corridorOutlineGeometry._offsetAttribute ===
         GeometryOffsetAttribute.NONE
           ? 0
           : 1;
-      arrayFill(applyOffset, offsetValue);
+      const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
       attr.attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,

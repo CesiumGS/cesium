@@ -477,6 +477,7 @@ Occluder.computeOccludeePoint = function (
     }
   }
   //Verify that the dot is not near 90 degress
+  // eslint-disable-next-line no-loss-of-precision
   if (dot < 0.00174532836589830883577820272085) {
     return undefined;
   }
@@ -600,6 +601,7 @@ Occluder._rotationVector = function (
   );
   if (
     Cartesian3.dot(occluderPlaneNormal, positionDirection) <
+    // eslint-disable-next-line no-loss-of-precision
     0.99999998476912904932780850903444
   ) {
     const crossProduct = Cartesian3.cross(

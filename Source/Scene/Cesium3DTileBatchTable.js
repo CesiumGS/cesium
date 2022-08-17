@@ -302,7 +302,7 @@ function setBinaryProperty(binaryProperty, index, value) {
 function checkBatchId(batchId, featuresLength) {
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      `batchId is required and between zero and featuresLength - 1 (${featuresLength}` -
+      `batchId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
         +")."
     );
   }
@@ -525,7 +525,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
         }${batchIdAttributeName}); \n` +
         `    vec4 featureProperties = texture2D(tile_batchTexture, st); \n` +
         `    tile_color(featureProperties); \n` +
-        `    float show = ceil(featureProperties.a); \n` + // 0 - false, non-zeo - true
+        `    float show = ceil(featureProperties.a); \n` + // 0 - false, non-zero - true
         `    gl_Position *= show; \n`; // Per-feature show/hide
       if (handleTranslucent) {
         newMain +=
@@ -811,7 +811,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "{ \n" +
         "    tile_main(); \n" +
         "    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n" +
-        "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zeo - true
+        "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zero - true
         "        discard; \n" +
         "    } \n" +
         "    gl_FragColor = featureProperties; \n" +

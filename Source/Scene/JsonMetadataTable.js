@@ -20,7 +20,7 @@ import MetadataEntity from "./MetadataEntity.js";
 // that does not have a class definition.
 const emptyClass = {};
 
-export default function JsonMetadataTable(options) {
+function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", options.count, 0);
   Check.typeOf.object("options.properties", options.properties);
@@ -109,3 +109,5 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
 
   return false;
 };
+
+export default JsonMetadataTable;

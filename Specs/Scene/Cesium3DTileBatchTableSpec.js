@@ -1,21 +1,25 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { Matrix2 } from "../../Source/Cesium.js";
-import { Matrix3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { ContextLimits } from "../../Source/Cesium.js";
-import { Batched3DModel3DTileContent } from "../../Source/Cesium.js";
-import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  HeadingPitchRange,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  ContextLimits,
+  Batched3DModel3DTileContent,
+  Cesium3DTileBatchTable,
+  Cesium3DTileStyle,
+  RuntimeError,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 
-describe(
+// Since b3dm tilesets now use ModelFeatureTable, disabling these tests until Cesium3DTileBatchTable and
+// ModelFeatureTable can be consolidated
+xdescribe(
   "Scene/Cesium3DTileBatchTable",
   function () {
     let scene;

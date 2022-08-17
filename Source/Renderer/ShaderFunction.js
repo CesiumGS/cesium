@@ -22,7 +22,7 @@
  *
  * @private
  */
-export default function ShaderFunction(signature) {
+function ShaderFunction(signature) {
   this.signature = signature;
   this.body = [];
 }
@@ -45,3 +45,5 @@ ShaderFunction.prototype.addLines = function (lines) {
 ShaderFunction.prototype.generateGlslLines = function () {
   return [].concat(this.signature, "{", this.body, "}");
 };
+
+export default ShaderFunction;

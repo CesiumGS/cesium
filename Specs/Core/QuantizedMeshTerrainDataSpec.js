@@ -1,11 +1,14 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  defined,
+  GeographicTilingScheme,
+  QuantizedMeshTerrainData,
+  TerrainData,
+  TerrainMesh,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { QuantizedMeshTerrainData } from "../../Source/Cesium.js";
-import { TerrainData } from "../../Source/Cesium.js";
-import { TerrainMesh } from "../../Source/Cesium.js";
 
 describe("Core/QuantizedMeshTerrainData", function () {
   it("conforms to TerrainData interface", function () {

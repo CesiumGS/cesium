@@ -1,4 +1,3 @@
-import arrayFill from "../Core/arrayFill.js";
 import AttributeType from "./AttributeType.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
@@ -22,7 +21,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-export default function BatchTableHierarchy(options) {
+function BatchTableHierarchy(options) {
   this._classes = undefined;
   this._classIds = undefined;
   this._classIndexes = undefined;
@@ -144,7 +143,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
     classes[i].instances = combine(binaryProperties, properties);
   }
 
-  const classCounts = arrayFill(new Array(classesLength), 0);
+  const classCounts = new Array(classesLength).fill(0);
   const classIndexes = new Uint16Array(instancesLength);
   for (i = 0; i < instancesLength; ++i) {
     classId = classIds[i];
@@ -553,3 +552,5 @@ BatchTableHierarchy.prototype.getClassName = function (batchId) {
   const instanceClass = this._classes[classId];
   return instanceClass.name;
 };
+
+export default BatchTableHierarchy;

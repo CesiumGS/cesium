@@ -1,8 +1,12 @@
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
+import {
+  BoundingSphere,
+  Color,
+  SceneMode,
+  Sun,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { Sun } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe(

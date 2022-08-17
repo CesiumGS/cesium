@@ -1,4 +1,3 @@
-import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -44,7 +43,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  *
  * @private
  */
-export default function GltfVertexBufferLoader(options) {
+function GltfVertexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -330,10 +329,9 @@ function getQuantizationInformation(
         dracoQuantization.minValues
       );
       quantization.normalizationRange = MathType.unpack(
-        arrayFill(new Array(componentCount), normalizationRange)
+        new Array(componentCount).fill(normalizationRange)
       );
-      const packedDimensions = arrayFill(
-        new Array(componentCount),
+      const packedDimensions = new Array(componentCount).fill(
         dracoQuantization.range
       );
       quantization.quantizedVolumeDimensions = MathType.unpack(
@@ -386,7 +384,11 @@ function loadFromDraco(vertexBufferLoader) {
     }
 
     // Now wait for process() to run to finish loading
-    vertexBufferLoader._typedArray = typedArray;
+    vertexBufferLoader._typedArray = new Uint8Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength
+    );
     vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     return vertexBufferLoader;
   });
@@ -524,3 +526,5 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._buffer = undefined;
   this._gltf = undefined;
 };
+
+export default GltfVertexBufferLoader;

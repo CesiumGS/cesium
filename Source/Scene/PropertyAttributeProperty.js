@@ -19,7 +19,7 @@ import defined from "../Core/defined.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function PropertyAttributeProperty(options) {
+function PropertyAttributeProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const property = options.property;
   const classProperty = options.classProperty;
@@ -120,6 +120,20 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   },
 
   /**
+   * The properties inherited from this property's class
+   *
+   * @memberof PropertyAttributeProperty.prototype
+   * @type {MetadataClassProperty}
+   * @readonly
+   * @private
+   */
+  classProperty: {
+    get: function () {
+      return this._classProperty;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof PropertyAttributeProperty.prototype
@@ -147,3 +161,5 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
     },
   },
 });
+
+export default PropertyAttributeProperty;

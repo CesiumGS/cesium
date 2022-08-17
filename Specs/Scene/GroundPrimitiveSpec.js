@@ -1,27 +1,30 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { arraySlice } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { DistanceDisplayConditionGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  Color,
+  ColorGeometryInstanceAttribute,
+  destroyObject,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  HeadingPitchRange,
+  PolygonGeometry,
+  Rectangle,
+  RectangleGeometry,
+  ShowGeometryInstanceAttribute,
+  Pass,
+  RenderState,
+  ClassificationType,
+  EllipsoidSurfaceAppearance,
+  GroundPrimitive,
+  InvertClassification,
+  Material,
+  PerInstanceColorAppearance,
+  Primitive,
+  StencilConstants,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PolygonGeometry } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { EllipsoidSurfaceAppearance } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
-import { InvertClassification } from "../../Source/Cesium.js";
-import { Material } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { StencilConstants } from "../../Source/Cesium.js";
+
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -364,13 +367,13 @@ describe(
 
     function expectRender(scene, color) {
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(arraySlice(rgba, 0, 4)).toEqual(color);
+        expect(rgba.slice(0, 4)).toEqual(color);
       });
     }
 
     function expectRenderBlank(scene) {
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(arraySlice(rgba)).not.toEqual([0, 0, 0, 255]);
+        expect(rgba.slice()).not.toEqual([0, 0, 0, 255]);
         expect(rgba[0]).toEqual(0);
       });
     }

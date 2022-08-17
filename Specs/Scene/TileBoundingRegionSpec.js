@@ -1,15 +1,19 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Color,
+  Ellipsoid,
+  GeographicTilingScheme,
+  Intersect,
+  Plane,
+  Rectangle,
+  SceneMode,
+  TileBoundingRegion,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
-import { TileBoundingRegion } from "../../Source/Cesium.js";
+
 import createFrameState from "../createFrameState.js";
 
 describe("Scene/TileBoundingRegion", function () {

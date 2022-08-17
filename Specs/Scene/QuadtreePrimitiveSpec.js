@@ -1,23 +1,25 @@
+import {
+  Cartesian3,
+  Cartographic,
+  defined,
+  Ellipsoid,
+  EventHelper,
+  GeographicProjection,
+  GeographicTilingScheme,
+  Intersect,
+  Rectangle,
+  Visibility,
+  Camera,
+  GlobeSurfaceTileProvider,
+  GlobeTranslucencyState,
+  ImageryLayerCollection,
+  QuadtreePrimitive,
+  QuadtreeTileLoadState,
+  SceneMode,
+} from "../../../Source/Cesium.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartographic } from "../../Source/Cesium.js";
-import { defer } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EventHelper } from "../../Source/Cesium.js";
-import { GeographicProjection } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Intersect } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { Visibility } from "../../Source/Cesium.js";
-import { Camera } from "../../Source/Cesium.js";
-import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
-import { GlobeTranslucencyState } from "../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { QuadtreePrimitive } from "../../Source/Cesium.js";
-import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
-import { SceneMode } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -101,24 +103,21 @@ describe("Scene/QuadtreePrimitive", function () {
     });
 
     function process(quadtreePrimitive, callback) {
-      const deferred = defer();
+      return new Promise((resolve) => {
+        function next() {
+          ++frameState.frameNumber;
+          quadtree.beginFrame(frameState);
+          quadtree.render(frameState);
+          quadtree.endFrame(frameState);
 
-      function next() {
-        ++frameState.frameNumber;
-        quadtree.beginFrame(frameState);
-        quadtree.render(frameState);
-        quadtree.endFrame(frameState);
-
-        if (callback()) {
-          setTimeout(next, 0);
-        } else {
-          deferred.resolve();
+          if (callback()) {
+            setTimeout(next, 0);
+          } else {
+            resolve();
+          }
         }
-      }
-
-      next();
-
-      return deferred.promise;
+        next();
+      });
     }
 
     it("must be constructed with a tileProvider", function () {

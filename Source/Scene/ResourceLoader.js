@@ -17,7 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-export default function ResourceLoader() {}
+function ResourceLoader() {}
 
 Object.defineProperties(ResourceLoader.prototype, {
   /**
@@ -92,7 +92,13 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
   if (defined(error)) {
     errorMessage += `\n${error.message}`;
   }
-  return new RuntimeError(errorMessage);
+
+  const runtimeError = new RuntimeError(errorMessage);
+  if (defined(error)) {
+    runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
+  }
+
+  return runtimeError;
 };
 
 /**
@@ -129,3 +135,5 @@ ResourceLoader.prototype.destroy = function () {
   this.unload();
   return destroyObject(this);
 };
+
+export default ResourceLoader;

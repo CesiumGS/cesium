@@ -23,7 +23,7 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import MersenneTwister from "../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
@@ -960,7 +960,10 @@ function createShaders(pointCloud, frameState, style) {
     "uniform vec4 u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier; \n" +
     "uniform vec4 u_constantColor; \n" +
     "uniform vec4 u_highlightColor; \n";
-  vs += "float u_pointSize; \n" + "float u_time; \n";
+
+  // The time variable is named differently for compatibility with custom
+  // shaders in Model.
+  vs += "float u_pointSize; \n" + "float tiles3d_tileset_time; \n";
 
   if (attenuation) {
     vs += "float u_geometricError; \n" + "float u_depthMultiplier; \n";
@@ -1016,7 +1019,7 @@ function createShaders(pointCloud, frameState, style) {
     "void main() \n" +
     "{ \n" +
     "    u_pointSize = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.x; \n" +
-    "    u_time = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.y; \n";
+    "    tiles3d_tileset_time = u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier.y; \n";
 
   if (attenuation) {
     vs +=

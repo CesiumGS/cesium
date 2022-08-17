@@ -42,7 +42,6 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
         const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
@@ -172,8 +171,9 @@
               value: checkerboardTexture,
             },
           },
-          // necessary when setting material.alpha
-          isTranslucent: true,
+          // This model normally renders opaque so material.alpha would be ignored.
+          // this setting forces the shader to render in the translucent pass.
+          translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
@@ -396,7 +396,7 @@
         function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
           const model = viewer.scene.primitives.add(
-            Cesium.ModelExperimental.fromGltf({
+            Cesium.Model.fromGltf({
               url: url,
               customShader: customShader,
               modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(

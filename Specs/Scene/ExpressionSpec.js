@@ -1,11 +1,14 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  Expression,
+  ExpressionNodeType,
+  RuntimeError,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Expression } from "../../Source/Cesium.js";
-import { ExpressionNodeType } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
 
 describe("Scene/Expression", function () {
   function MockFeature() {
@@ -3905,7 +3908,7 @@ describe("Scene/Expression", function () {
   it("gets shader expression for tiles3d_tileset_time", function () {
     const expression = new Expression("${tiles3d_tileset_time}");
     const shaderExpression = expression.getShaderExpression({}, {});
-    const expected = "u_time";
+    const expected = "tiles3d_tileset_time";
     expect(shaderExpression).toEqual(expected);
   });
 

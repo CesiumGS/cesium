@@ -1,8 +1,8 @@
-import arrayFill from "../Core/arrayFill.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
+import createGuid from "../Core/createGuid.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -27,11 +27,13 @@ import Texture from "../Renderer/Texture.js";
  *
  * @private
  */
-export default function BatchTexture(options) {
+function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.featuresLength", options.featuresLength);
   Check.typeOf.object("options.owner", options.owner);
   //>>includeEnd('debug');
+
+  this._id = createGuid();
 
   const featuresLength = options.featuresLength;
 
@@ -197,8 +199,7 @@ function getBatchValues(batchTexture) {
   if (!defined(batchTexture._batchValues)) {
     // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
     const byteLength = getByteLength(batchTexture);
-    const bytes = new Uint8Array(byteLength);
-    arrayFill(bytes, 255);
+    const bytes = new Uint8Array(byteLength).fill(255);
     batchTexture._batchValues = bytes;
   }
 
@@ -208,9 +209,8 @@ function getBatchValues(batchTexture) {
 function getShowAlphaProperties(batchTexture) {
   if (!defined(batchTexture._showAlphaProperties)) {
     const byteLength = 2 * batchTexture._featuresLength;
-    const bytes = new Uint8Array(byteLength);
+    const bytes = new Uint8Array(byteLength).fill(255);
     // [Show = true, Alpha = 255]
-    arrayFill(bytes, 255);
     batchTexture._showAlphaProperties = bytes;
   }
   return batchTexture._showAlphaProperties;
@@ -570,3 +570,5 @@ BatchTexture.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+export default BatchTexture;

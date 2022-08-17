@@ -23,7 +23,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function BufferLoader(options) {
+function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const typedArray = options.typedArray;
   const resource = options.resource;
@@ -142,3 +142,5 @@ BufferLoader._fetchArrayBuffer = function (resource) {
 BufferLoader.prototype.unload = function () {
   this._typedArray = undefined;
 };
+
+export default BufferLoader;

@@ -1,10 +1,14 @@
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { createElevationBandMaterial } from "../../Source/Cesium.js";
+import {
+  Cartesian4,
+  Color,
+  createElevationBandMaterial,
+  PixelFormat,
+  Texture,
+  TextureMinificationFilter,
+} from "../../../Source/Cesium.js";
+
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Texture } from "../../Source/Cesium.js";
-import { TextureMinificationFilter } from "../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 
 describe("Scene/createElevationBandMaterial", function () {

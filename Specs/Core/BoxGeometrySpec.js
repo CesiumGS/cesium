@@ -1,9 +1,11 @@
-import { arrayFill } from "../../Source/Cesium.js";
-import { AxisAlignedBoundingBox } from "../../Source/Cesium.js";
-import { BoxGeometry } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { GeometryOffsetAttribute } from "../../Source/Cesium.js";
-import { VertexFormat } from "../../Source/Cesium.js";
+import {
+  AxisAlignedBoundingBox,
+  BoxGeometry,
+  Cartesian3,
+  GeometryOffsetAttribute,
+  VertexFormat,
+} from "../../../Source/Cesium.js";
+
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/BoxGeometry", function () {
@@ -78,8 +80,7 @@ describe("Core/BoxGeometry", function () {
 
     const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    let expected = new Array(offset.length);
-    expected = arrayFill(expected, 1);
+    const expected = new Array(offset.length).fill(1);
     expect(offset).toEqual(expected);
   });
 

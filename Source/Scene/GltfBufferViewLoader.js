@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfBufferViewLoader(options) {
+function GltfBufferViewLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -264,3 +264,5 @@ GltfBufferViewLoader.prototype.unload = function () {
   this._bufferLoader = undefined;
   this._typedArray = undefined;
 };
+
+export default GltfBufferViewLoader;

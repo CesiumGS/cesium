@@ -1,13 +1,16 @@
-import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
-import { BoundingSphere } from "../../Source/Cesium.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Iso8601 } from "../../Source/Cesium.js";
-import { BoundingSphereState } from "../../Source/Cesium.js";
-import { DataSourceCollection } from "../../Source/Cesium.js";
-import { DataSourceDisplay } from "../../Source/Cesium.js";
-import { Entity } from "../../Source/Cesium.js";
-import { GroundPolylinePrimitive } from "../../Source/Cesium.js";
-import { GroundPrimitive } from "../../Source/Cesium.js";
+import {
+  ApproximateTerrainHeights,
+  BoundingSphere,
+  Cartesian3,
+  Iso8601,
+  BoundingSphereState,
+  DataSourceCollection,
+  DataSourceDisplay,
+  Entity,
+  GroundPolylinePrimitive,
+  GroundPrimitive,
+} from "../../../Source/Cesium.js";
+
 import createScene from "../createScene.js";
 import MockDataSource from "../MockDataSource.js";
 

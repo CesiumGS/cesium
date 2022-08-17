@@ -1,8 +1,10 @@
-import { loadKTX2 } from "../../Source/Cesium.js";
-import { KTX2Transcoder } from "../../Source/Cesium.js";
-import { PixelFormat } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
-import { RuntimeError } from "../../Source/Cesium.js";
+import {
+  loadKTX2,
+  KTX2Transcoder,
+  PixelFormat,
+  Resource,
+  RuntimeError,
+} from "../../../Source/Cesium.js";
 
 describe("Core/loadKTX2", function () {
   it("throws with no url", function () {

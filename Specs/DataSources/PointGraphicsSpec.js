@@ -1,9 +1,11 @@
-import { Color } from "../../Source/Cesium.js";
-import { DistanceDisplayCondition } from "../../Source/Cesium.js";
-import { NearFarScalar } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { PointGraphics } from "../../Source/Cesium.js";
-import { HeightReference } from "../../Source/Cesium.js";
+import {
+  Color,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  ConstantProperty,
+  PointGraphics,
+  HeightReference,
+} from "../../../Source/Cesium.js";
 
 describe("DataSources/PointGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

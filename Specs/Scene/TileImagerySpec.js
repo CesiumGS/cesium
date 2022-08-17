@@ -1,5 +1,4 @@
-import { ImageryState } from "../../Source/Cesium.js";
-import { TileImagery } from "../../Source/Cesium.js";
+import { ImageryState, TileImagery } from "../../../Source/Cesium.js";
 
 describe("Scene/TileImagery", function () {
   it("does not use ancestor ready imagery that needs to be reprojected", function () {

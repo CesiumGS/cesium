@@ -1,10 +1,13 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { JulianDate } from "../../Source/Cesium.js";
-import { TimeInterval } from "../../Source/Cesium.js";
-import { CheckerboardMaterialProperty } from "../../Source/Cesium.js";
-import { ConstantProperty } from "../../Source/Cesium.js";
-import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Color,
+  JulianDate,
+  TimeInterval,
+  CheckerboardMaterialProperty,
+  ConstantProperty,
+  TimeIntervalCollectionProperty,
+} from "../../../Source/Cesium.js";
+
 import testDefinitionChanged from "../testDefinitionChanged.js";
 
 describe("DataSources/CheckerboardMaterialProperty", function () {

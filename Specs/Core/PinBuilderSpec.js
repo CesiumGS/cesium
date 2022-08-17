@@ -1,6 +1,4 @@
-import { buildModuleUrl } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { PinBuilder } from "../../Source/Cesium.js";
+import { buildModuleUrl, Color, PinBuilder } from "../../../Source/Cesium.js";
 
 describe("Core/PinBuilder", function () {
   function getPinColor(canvas) {
