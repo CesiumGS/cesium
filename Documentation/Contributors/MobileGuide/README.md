@@ -2,7 +2,7 @@
 
 ## Supported mobile platforms
 
-Cesium relies on WebGL, which is supported on [nearly all major mobile hardware platforms and browsers](https://caniuse.com/webgl). However, WebGL may be unavailable on some older devices.
+CesiumJS relies on WebGL, which is supported on [nearly all major mobile hardware platforms and browsers](https://caniuse.com/webgl). However, WebGL may be unavailable on some older devices.
 
 ## Debugging on Mobile
 
