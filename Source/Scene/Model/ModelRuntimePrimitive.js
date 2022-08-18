@@ -185,9 +185,11 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const pointCloudShading = model.pointCloudShading;
   const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
+  const hasPointCloudBackFaceCulling =
+    defined(pointCloudShading) && pointCloudShading.backFaceCulling;
   const hasPointCloudStyle =
     primitive.primitiveType === PrimitiveType.POINTS &&
-    (defined(style) || hasAttenuation);
+    (defined(style) || hasAttenuation || hasPointCloudBackFaceCulling);
 
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);

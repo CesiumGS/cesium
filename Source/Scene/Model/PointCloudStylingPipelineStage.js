@@ -125,6 +125,14 @@ PointCloudStylingPipelineStage.process = function (
     );
   }
 
+  if (pointCloudShading.backFaceCulling) {
+    shaderBuilder.addDefine(
+      "HAS_POINT_CLOUD_BACK_FACE_CULLING",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+  }
+
   let content;
   let is3DTiles;
   let usesAddRefinement;

@@ -1014,8 +1014,7 @@ describe(
         });
       });
 
-      // This will be added in a separate PR
-      xit("Supports back face culling when there are per-point normals", function () {
+      it("Supports back face culling when there are per-point normals", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl
@@ -1031,38 +1030,36 @@ describe(
             picked = result;
           };
 
-          expect(scene).toPickAndCall(function (result) {
-            // Set culling to true
-            tileset.pointCloudShading.backFaceCulling = true;
+          // Set culling to true
+          tileset.pointCloudShading.backFaceCulling = true;
 
+          expect(scene).toPickAndCall(callback);
+
+          while (defined(picked)) {
+            picked.show = false;
             expect(scene).toPickAndCall(callback);
+            ++pickedCountCulling;
+          }
 
-            while (defined(picked)) {
-              picked.show = false;
-              expect(scene).toPickAndCall(callback);
-              ++pickedCountCulling;
-            }
+          // Set the shows back to true
+          const length = content.featuresLength;
+          for (let i = 0; i < length; ++i) {
+            const feature = content.getFeature(i);
+            feature.show = true;
+          }
 
-            // Set the shows back to true
-            const length = content.featuresLength;
-            for (let i = 0; i < length; ++i) {
-              const feature = content.getFeature(i);
-              feature.show = true;
-            }
+          // Set culling to false
+          tileset.pointCloudShading.backFaceCulling = false;
 
-            // Set culling to false
-            tileset.pointCloudShading.backFaceCulling = false;
+          expect(scene).toPickAndCall(callback);
 
+          while (defined(picked)) {
+            picked.show = false;
             expect(scene).toPickAndCall(callback);
+            ++pickedCount;
+          }
 
-            while (defined(picked)) {
-              picked.show = false;
-              expect(scene).toPickAndCall(callback);
-              ++pickedCount;
-            }
-
-            expect(pickedCount).toBeGreaterThan(pickedCountCulling);
-          });
+          expect(pickedCount).toBeGreaterThan(pickedCountCulling);
         });
       });
 

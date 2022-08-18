@@ -314,6 +314,7 @@ function Model(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._pointCloudShading = pointCloudShading;
   this._attenuation = pointCloudShading.attenuation;
+  this._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -1674,7 +1675,7 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  updatePointCloudAttenuation(this);
+  updatePointCloudShading(this);
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
@@ -1733,12 +1734,19 @@ function updateImageBasedLighting(model, frameState) {
   }
 }
 
-function updatePointCloudAttenuation(model) {
+function updatePointCloudShading(model) {
+  const pointCloudShading = model.pointCloudShading;
+
   // Check if the shader needs to be updated for point cloud attenuation
   // settings.
-  if (model.pointCloudShading.attenuation !== model._attenuation) {
+  if (pointCloudShading.attenuation !== model._attenuation) {
     model.resetDrawCommands();
-    model._attenuation = model.pointCloudShading.attenuation;
+    model._attenuation = pointCloudShading.attenuation;
+  }
+
+  if (pointCloudShading.backFaceCulling !== model._pointCloudBackFaceCulling) {
+    model.resetDrawCommands();
+    model._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
   }
 }
 
