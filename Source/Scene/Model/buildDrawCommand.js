@@ -121,6 +121,14 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     receiveShadows: receiveShadows,
   });
 
+  // does this need to create Vector3DTileBatch instances for all of the
+  // features in the thing...
+  // don't need to use the class, but need to store
+  // - batchIds array
+  // - indexOffsets
+  // - indexCounts
+  // change out the index buffer of the vertex array
+  // I think buildClassificationDrawCommand should be separate here
   if (hasClassification) {
     return new ClassificationModelDrawCommand({
       primitiveRenderResources: primitiveRenderResources,

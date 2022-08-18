@@ -162,10 +162,11 @@ const GltfLoaderState = {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
- * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
+ * @param {Boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+ * @param {Boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+ * @param {Boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
 function GltfLoader(options) {
@@ -191,7 +192,10 @@ function GltfLoader(options) {
     false
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-
+  const loadForClassification = defaultValue(
+    options.loadForClassification,
+    false
+  );
   const renameBatchIdSemantic = defaultValue(
     options.renameBatchIdSemantic,
     false
@@ -216,6 +220,7 @@ function GltfLoader(options) {
   this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
+  this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
@@ -952,6 +957,7 @@ function loadVertexAttribute(
   );
 
   const modelSemantic = semanticInfo.modelSemantic;
+
   const isPositionAttribute =
     modelSemantic === VertexAttributeSemantic.POSITION;
   const loadFor2D =
@@ -960,11 +966,17 @@ function loadVertexAttribute(
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
+  const loadForClassification =
+    loader._loadForClassification &&
+    modelSemantic === VertexAttributeSemantic.FEATURE_ID;
+
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
-  const outputTypedArrayOnly = loader._loadAttributesAsTypedArray;
+  const outputTypedArrayOnly =
+    loader._loadAttributesAsTypedArray || loadForClassification;
   const outputBuffer = !outputTypedArrayOnly;
-  const outputTypedArray = outputTypedArrayOnly || loadFor2D;
+  const outputTypedArray =
+    outputTypedArrayOnly || loadFor2D || loadForClassification;
 
   // Determine what to load right now:
   //
@@ -1064,6 +1076,7 @@ function loadIndices(
   gltf,
   accessorId,
   draco,
+  hasFeatureIds,
   needsPostProcessing,
   frameState
 ) {
@@ -1082,10 +1095,16 @@ function loadIndices(
   const loadForWireframe =
     loader._loadIndicesForWireframe && !frameState.context.webgl2;
 
+  // Load the index buffer as a typed array to batch features together for classification.
+  const loadForClassification = loader._loadForClassification && hasFeatureIds;
+
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
-  const outputBuffer = !loadAttributesAsTypedArray;
-  const outputTypedArray = loadAttributesAsTypedArray || loadForWireframe;
+  const outputTypedArrayOnly =
+    loadAttributesAsTypedArray || loadForClassification;
+  const outputBuffer = !outputTypedArrayOnly;
+  const outputTypedArray =
+    loadAttributesAsTypedArray || loadForWireframe || loadForClassification;
 
   // Determine what to load right now:
   //
@@ -1492,6 +1511,7 @@ function loadPrimitive(
 
   const draco = extensions.KHR_draco_mesh_compression;
 
+  let hasFeatureIds = false;
   const attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
     for (const semantic in attributes) {
@@ -1508,7 +1528,12 @@ function loadPrimitive(
           frameState
         );
         primitivePlan.attributePlans.push(attributePlan);
-        primitive.attributes.push(attributePlan.attribute);
+
+        const attribute = attributePlan.attribute;
+        if (attribute.semantic === VertexAttributeSemantic.FEATURE_ID) {
+          hasFeatureIds = true;
+        }
+        primitive.attributes.push(attribute);
       }
     }
   }
@@ -1537,6 +1562,7 @@ function loadPrimitive(
       gltf,
       indices,
       draco,
+      hasFeatureIds,
       needsPostProcessing,
       frameState
     );
@@ -1870,6 +1896,11 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const articulationsExtension = nodeExtensions.AGI_articulations;
 
   if (defined(instancingExtension)) {
+    if (loader._loadForClassification) {
+      throw new RuntimeError(
+        "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification."
+      );
+    }
     node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
   }
 
@@ -2197,7 +2228,7 @@ function parse(
   rejectTexturesPromise
 ) {
   const version = gltf.asset.version;
-  if (version !== "2.0") {
+  if (version !== "1.0" && version !== "2.0") {
     const url = loader._gltfResource.url;
     throw new RuntimeError(
       `Failed to load ${url}: \nUnsupported glTF version: ${version}`

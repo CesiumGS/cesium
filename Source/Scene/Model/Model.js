@@ -1542,12 +1542,22 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets the model's classification type. This indicates whether terrain,
-   * 3D Tiles or both will be classified by this model.
+   * Gets the model's classification type. This determines whether terrain,
+   * 3D Tiles, or both will be classified by this model.
+   * <p> Classification with glTFs containing the <code>EXT_mesh_gpu_instancing</code>
+   * extension is not supported. Additionally, if the model contains feature IDs,
+   * there are a few requirements/limitations:
+   * <ul>
+   *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If feature IDs are present without an index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
+   * </p>
    *
    * @memberof Model.prototype
    *
    * @type {ClassificationType}
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    * @readonly
    */
   classificationType: {
@@ -2514,6 +2524,7 @@ Model.fromGltf = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const basePath = defaultValue(options.basePath, "");
