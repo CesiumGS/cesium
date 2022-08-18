@@ -25,7 +25,7 @@ import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
 // See https://github.com/CesiumGS/cesium/issues/7249#issuecomment-546347729
-xdescribe(
+describe(
   "Scene/Vector3DTileContent",
   function () {
     const tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
