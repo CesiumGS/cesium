@@ -445,7 +445,10 @@ describe(
 
     it("Computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
       // Setup a position for the model.
-      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
+      const longitude = CesiumMath.toRadians(149.515332);
+      const latitude = CesiumMath.toRadians(-34.984799);
+      const height = 1000;
+      const position = Cartesian3.fromRadians(longitude, latitude, height);
 
       // Initialize the Entity and the ModelGraphics.
       const time = JulianDate.now();
@@ -476,7 +479,19 @@ describe(
         return state !== BoundingSphereState.PENDING;
       }).then(() => {
         expect(state).toBe(BoundingSphereState.DONE);
-        expect(result.center).toEqual(position);
+        // Ensure that the clamped position has height set to 0.
+        const cartographic = globe.ellipsoid.cartesianToCartographic(
+          result.center
+        );
+        expect(cartographic.height).toEqualEpsilon(0, CesiumMath.EPSILON6);
+        expect(cartographic.latitude).toEqualEpsilon(
+          latitude,
+          CesiumMath.EPSILON6
+        );
+        expect(cartographic.longitude).toEqualEpsilon(
+          longitude,
+          CesiumMath.EPSILON6
+        );
       });
     });
 
@@ -558,7 +573,10 @@ describe(
 
     it("Computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
       // Setup a position for the model.
-      const position = Cartesian3.fromDegrees(149.515332, -34.984799, 1000);
+      const longitude = CesiumMath.toRadians(149.515332);
+      const latitude = CesiumMath.toRadians(-34.984799);
+      const height = 1000;
+      const position = Cartesian3.fromRadians(longitude, latitude, height);
 
       // Initialize the Entity and the ModelGraphics.
       const time = JulianDate.now();
@@ -588,8 +606,18 @@ describe(
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
       }).then(() => {
-        expect(state).toBe(BoundingSphereState.DONE);
-        expect(result.center).toEqual(position);
+        const cartographic = globe.ellipsoid.cartesianToCartographic(
+          result.center
+        );
+        expect(cartographic.height).toEqualEpsilon(height, CesiumMath.EPSILON6);
+        expect(cartographic.latitude).toEqualEpsilon(
+          latitude,
+          CesiumMath.EPSILON6
+        );
+        expect(cartographic.longitude).toEqualEpsilon(
+          longitude,
+          CesiumMath.EPSILON6
+        );
       });
     });
 

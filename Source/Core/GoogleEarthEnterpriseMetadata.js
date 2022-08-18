@@ -1,4 +1,4 @@
-import protobuf from "../ThirdParty/protobufjs.js";
+import * as protobuf from "protobufjs/dist/minimal/protobuf.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";

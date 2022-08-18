@@ -156,6 +156,9 @@ describe("Scene/Model/PrimitiveRenderResources", function () {
     expect(RenderState.getState(primitiveResources.renderStateOptions)).toEqual(
       defaultRenderState
     );
+
+    expect(primitiveResources.hasSilhouette).toBe(false);
+    expect(primitiveResources.hasSkipLevelOfDetail).toBe(false);
   });
 
   it("constructs from primitive without indices", function () {
@@ -196,6 +199,8 @@ describe("Scene/Model/PrimitiveRenderResources", function () {
     modelResources.renderStateOptions.cull = {
       enabled: true,
     };
+    modelResources.hasSilhouette = true;
+    modelResources.hasSkipLevelOfDetail = true;
 
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
@@ -220,6 +225,10 @@ describe("Scene/Model/PrimitiveRenderResources", function () {
     expect(primitiveResources.renderStateOptions.cull).toEqual({
       enabled: true,
     });
+
+    // The primitive should have inherited the command flags from the model.
+    expect(primitiveResources.hasSilhouette).toBe(true);
+    expect(primitiveResources.hasSkipLevelOfDetail).toBe(true);
 
     // The defines should cascade through the three levels
     checkShaderDefines(modelResources.shaderBuilder, ["MODEL"]);

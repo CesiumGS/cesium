@@ -3,6 +3,9 @@ varying float v_depthFromNearPlusOne;
 
 #ifdef POLYGON_OFFSET
 uniform vec2 u_polygonOffset;
+#ifdef GL_OES_standard_derivatives
+#extension GL_OES_standard_derivatives : enable
+#endif
 #endif
 
 #endif
@@ -38,15 +41,17 @@ void czm_writeLogDepth(float depth)
     float factor = u_polygonOffset[0];
     float units = u_polygonOffset[1];
 
-    // If we can't compute derivatives, just leave out the factor I guess?
+// If we can't compute derivatives, just leave out the factor I guess?
 #ifdef GL_OES_standard_derivatives
-    // m = sqrt(dZdX^2 + dZdY^2);
-    float x = dFdx(depth);
-    float y = dFdy(depth);
-    float m = sqrt(x * x + y * y);
+    if (factor != 0.0) {
+        // m = sqrt(dZdX^2 + dZdY^2);
+        float x = dFdx(depth);
+        float y = dFdy(depth);
+        float m = sqrt(x * x + y * y);
 
-    // Apply the factor before computing the log depth.
-    depth += m * factor;
+        // Apply the factor before computing the log depth.
+        depth += m * factor;
+    }
 #endif
 
 #endif

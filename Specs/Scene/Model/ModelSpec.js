@@ -1461,6 +1461,27 @@ describe(
       });
     });
 
+    it("boundingSphere updates bounding sphere when invoked", function () {
+      return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        function (model) {
+          const expectedRadius = 0.8660254037844386;
+          const translation = new Cartesian3(10, 0, 0);
+          const modelMatrix = Matrix4.fromTranslation(translation);
+          model.modelMatrix = modelMatrix;
+          model.scale = 2.0;
+
+          // boundingSphere should still account for the model matrix
+          // even though the scene has not yet updated.
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(translation);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            2.0 * expectedRadius,
+            CesiumMath.EPSILON8
+          );
+        }
+      );
+    });
+
     describe("picking and id", function () {
       it("initializes with id", function () {
         // This model gets clipped if log depth is disabled, so zoom out

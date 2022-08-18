@@ -1,11 +1,15 @@
-import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Transforms from "../../Core/Transforms.js";
+import SceneMode from "../SceneMode.js";
+import SplitDirection from "../SplitDirection.js";
+import buildDrawCommand from "./buildDrawCommand.js";
+import TilesetPipelineStage from "./TilesetPipelineStage.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
@@ -17,11 +21,9 @@ import ModelUtility from "./ModelUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import ModelSilhouettePipelineStage from "./ModelSilhouettePipelineStage.js";
 import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
+import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import SceneMode from "../SceneMode.js";
-import SplitDirection from "../SplitDirection.js";
-import Transforms from "../../Core/Transforms.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -623,6 +625,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   ) {
     modelPipelineStages.push(ModelSplitterPipelineStage);
   }
+
+  if (ModelType.is3DTiles(model.type)) {
+    modelPipelineStages.push(TilesetPipelineStage);
+  }
 };
 
 ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
@@ -781,45 +787,45 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
   });
 };
 
+const scratchSilhouetteCommands = [];
+
 /**
- * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
- * the draw commands associated with each primitive.
+ * Traverses through the scene graph and pushes the draw commands associated
+ * with each primitive to the frame state's command list.
  *
  * @param {FrameState} frameState The frame state.
  *
- * @returns {DrawCommand[]} The draw commands of the primitives in the scene graph.
- *
  * @private
  */
-ModelSceneGraph.prototype.getDrawCommands = function (frameState) {
+ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires
   // gathering the original commands and the silhouette commands separately.
-  const drawCommands = [];
-  const silhouetteCommands = [];
 
   const passes = frameState.passes;
+
   const hasSilhouette = this._model.hasSilhouette(frameState);
+  const silhouetteCommands = scratchSilhouetteCommands;
+  silhouetteCommands.length = 0;
 
   forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
     const primitiveDrawCommand = runtimePrimitive.drawCommand;
+    primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
 
-    const result = primitiveDrawCommand.getCommands(frameState);
-    drawCommands.push.apply(drawCommands, result);
-
+    // If a model has silhouettes, the commands that draw the silhouettes for
+    // each primitive can only be invoked after the entire model has drawn.
+    // Otherwise, the silhouette may draw on top of the model. This requires
+    // gathering the original commands and the silhouette commands separately.
     if (hasSilhouette && !passes.pick) {
-      const silhouetteResult = primitiveDrawCommand.getSilhouetteCommands(
-        frameState
+      primitiveDrawCommand.pushSilhouetteCommands(
+        frameState,
+        silhouetteCommands
       );
-      silhouetteCommands.push.apply(silhouetteCommands, silhouetteResult);
     }
   });
 
-  // Submit the silhouette commands after all the original commands.
-  drawCommands.push.apply(drawCommands, silhouetteCommands);
-
-  return drawCommands;
+  frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
 };
 
 /**

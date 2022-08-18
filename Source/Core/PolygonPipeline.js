@@ -1,4 +1,4 @@
-import earcut from "../ThirdParty/earcut.js";
+import earcut from "earcut";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";

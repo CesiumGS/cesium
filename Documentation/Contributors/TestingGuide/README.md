@@ -36,6 +36,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Testing Exceptions](#testing-exceptions)
     - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
     - [Rendering Tests](#rendering-tests)
+      - [Debugging Rendering Tests](#debugging-rendering-tests)
     - [GLSL](#glsl)
     - [Spies](#spies)
     - [Test Data and Services](#test-data-and-services)
@@ -499,6 +500,56 @@ it("can declare automatic uniforms", function () {
     context: context,
     fragmentShader: fs,
   }).contextToRender();
+});
+```
+
+#### Debugging Rendering Tests
+
+Rendering tests typically render to a 1x1 pixel canvas. This is so each test runs as
+quickly as possible. However, when regressions happen, it is difficult to tell why the test is failing since the
+image is too small to see. To make debugging tests easier, the `debugCanvasWidth` and `debugCanvasHeight` arguments can
+be used to increase the canvas size as desired.
+
+Example using the command line:
+
+```bash
+# Render tests will use a 400x300 canvas
+npm run test -- --debugCanvasWidth 400 --debugCanvasHeight 300
+```
+
+Example using SpecRunner:
+
+```text
+http://localhost:8080/Specs/SpecRunner.html?debugCanvasWidth=400&debugCanvasHeight=300
+```
+
+For ease of use, `debugCanvasHeight` can be omitted to produce a square canvas. For example:
+
+```bash
+# Render tests will use a 300x300 canvas
+npm run test -- --debugCanvasWidth 300
+```
+
+An example debug workflow might look like this:
+
+1. Use `fit()` to focus on the test that is failing.
+2. Create a breakpoint where the first rendering code happens, such as a call of `scene.renderForSpecs()`.
+3. Run the tests using the debug options described above
+4. Step through the test. After each render, check the browser window to see the frame that was just rendered.
+
+```js
+// Focus the test that is failing
+fit("test that is failing", function () {
+  // Start a breakpoint here
+  scene.renderForSpecs();
+  // After each render call, check the browser for the frame that was just rendered.
+
+  // ...
+  scene.renderForSpecs();
+  // Check the browser again for the next frame
+
+  // ... and so on
+  scene.renderForSpecs();
 });
 ```
 

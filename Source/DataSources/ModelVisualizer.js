@@ -395,8 +395,16 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     // For a terrain provider that does not have availability, like the EllipsoidTerrainProvider,
     // we can directly assign the bounding sphere's center from model matrix's translation.
     if (!defined(terrainProvider.availability)) {
+      // Regardless of what the original model's position is set to, for CLAMP_TO_GROUND, we reset it to 0
+      // when computing the position to zoom/fly to.
+      if (model.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        cartoPosition.height = 0;
+      }
+
+      const scratchPosition = ellipsoid.cartographicToCartesian(cartoPosition);
       BoundingSphere.clone(model.boundingSphere, result);
       result.center = scratchPosition;
+
       return BoundingSphereState.DONE;
     }
 

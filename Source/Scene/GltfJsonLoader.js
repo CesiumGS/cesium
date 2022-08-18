@@ -11,6 +11,7 @@ import ForEach from "./GltfPipeline/ForEach.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
+import usesExtension from "./GltfPipeline/usesExtension";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -166,7 +167,12 @@ function handleError(gltfJsonLoader, error) {
 }
 
 function upgradeVersion(gltfJsonLoader, gltf) {
-  if (defined(gltf.asset) && gltf.asset.version === "2.0") {
+  if (
+    defined(gltf.asset) &&
+    gltf.asset.version === "2.0" &&
+    !usesExtension(gltf, "KHR_techniques_webgl") &&
+    !usesExtension(gltf, "KHR_materials_common")
+  ) {
     return Promise.resolve();
   }
 

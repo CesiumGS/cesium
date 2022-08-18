@@ -34,6 +34,8 @@ describe("Scene/Model/ModelRenderResources", function () {
     expect(modelResources.model).toBe(mockModel);
     expect(modelResources.shaderBuilder).toBeDefined();
     expect(modelResources.renderStateOptions).toEqual(defaultRenderState);
+    expect(modelResources.hasSilhouette).toBe(false);
+    expect(modelResources.hasSkipLevelOfDetail).toBe(false);
     checkShaderDefines(modelResources.shaderBuilder, []);
   });
 });

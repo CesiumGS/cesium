@@ -75,18 +75,17 @@ describe(
         scene
       ).then(function (model) {
         model.style = style;
+
         const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
+        const commandList = frameState.commandList;
+        commandList.length = 0;
+
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands(frameState);
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(frameState.commandList.length).toEqual(1);
+        expect(commandList.length).toEqual(1);
+        expect(commandList[0].pass).toEqual(Pass.OPAQUE);
       });
     });
 
@@ -103,18 +102,17 @@ describe(
         scene
       ).then(function (model) {
         model.style = style;
+
         const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
+        const commandList = frameState.commandList;
+        commandList.length = 0;
+
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands(frameState);
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(1);
+        expect(commandList.length).toEqual(1);
+        expect(commandList[0].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 
@@ -135,24 +133,24 @@ describe(
         scene
       ).then(function (model) {
         model.style = style;
+
         const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
+        const commandList = frameState.commandList;
+        commandList.length = 0;
+
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        frameState.commandList = [];
         scene.renderForSpecs();
 
-        const drawCommands = sceneGraph.getDrawCommands(frameState);
-        expect(drawCommands.length).toEqual(2);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(2);
+        expect(commandList.length).toEqual(2);
+        expect(commandList[0].pass).toEqual(Pass.TRANSLUCENT);
+        expect(commandList[1].pass).toEqual(Pass.OPAQUE);
       });
     });
 
     it("builds draw commands for each primitive", function () {
       spyOn(ModelSceneGraph.prototype, "buildDrawCommands").and.callThrough();
-      spyOn(ModelSceneGraph.prototype, "getDrawCommands").and.callThrough();
+      spyOn(ModelSceneGraph.prototype, "pushDrawCommands").and.callThrough();
       return loadAndZoomToModel({ gltf: parentGltfUrl }, scene).then(function (
         model
       ) {
@@ -165,20 +163,20 @@ describe(
         }
 
         const frameState = scene.frameState;
-        frameState.commandList = [];
+        frameState.commandList.length = 0;
         scene.renderForSpecs();
         expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
-        expect(ModelSceneGraph.prototype.getDrawCommands).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
 
         expect(model._drawCommandsBuilt).toEqual(true);
 
         // Reset the draw command list to see if they're re-built.
         model._drawCommandsBuilt = false;
-        frameState.commandList = [];
+        frameState.commandList.length = 0;
         scene.renderForSpecs();
         expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
-        expect(ModelSceneGraph.prototype.getDrawCommands).toHaveBeenCalled();
+        expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
       });
     });
@@ -353,13 +351,16 @@ describe(
       });
     });
 
-    it("getDrawCommands ignores hidden nodes", function () {
+    it("pushDrawCommands ignores hidden nodes", function () {
       return loadAndZoomToModel(
         {
           gltf: duckUrl,
         },
         scene
       ).then(function (model) {
+        const frameState = scene.frameState;
+        const commandList = frameState.commandList;
+
         const sceneGraph = model._sceneGraph;
         const rootNode = sceneGraph._runtimeNodes[0];
         const meshNode = sceneGraph._runtimeNodes[2];
@@ -367,22 +368,23 @@ describe(
         expect(rootNode.show).toBe(true);
         expect(meshNode.show).toBe(true);
 
-        let drawCommands = sceneGraph.getDrawCommands(scene.frameState);
-        const originalLength = drawCommands.length;
+        sceneGraph.pushDrawCommands(frameState);
+        const originalLength = commandList.length;
         expect(originalLength).not.toEqual(0);
 
+        commandList.length = 0;
         meshNode.show = false;
-        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
-        expect(drawCommands.length).toEqual(0);
+        sceneGraph.pushDrawCommands(frameState);
+        expect(commandList.length).toEqual(0);
 
         meshNode.show = true;
         rootNode.show = false;
-        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
-        expect(drawCommands.length).toEqual(0);
+        sceneGraph.pushDrawCommands(frameState);
+        expect(commandList.length).toEqual(0);
 
         rootNode.show = true;
-        drawCommands = sceneGraph.getDrawCommands(scene.frameState);
-        expect(drawCommands.length).toEqual(originalLength);
+        sceneGraph.pushDrawCommands(frameState);
+        expect(commandList.length).toEqual(originalLength);
       });
     });
 
