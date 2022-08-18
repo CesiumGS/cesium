@@ -308,49 +308,38 @@ describe(
       return loadAndZoomToModel(
         {
           url: boxTexturedUrl,
+          incrementallyLoadTextures: false,
           modelMatrix: modelMatrix,
         },
         scene
       ).then(function () {
-        /*scene.camera.lookAt(
-          origin,
-          new HeadingPitchRange(0.0, 0.0, 1.0)
-        );*/
+        scene.camera.lookAt(origin, new HeadingPitchRange(0.0, 0.0, 1.0));
 
-        const offset = new Cartesian3(
-          -5,
-          0,
-          0
-          /*
-        scene.postProcess
-          -37.048378684557974,
-          -24.852967044804245,
-          4.352023653686047*/
-        );
-        scene.camera.lookAt(origin, offset);
-
+        // Render without depth of field
+        let originalColor;
         expect(scene).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
           for (let i = 0; i < rgba.length; i += 4) {
             expect(rgba[i]).toBeGreaterThan(0);
-            expect(rgba[i + 1]).toBe(0);
-            expect(rgba[i + 2]).toBe(0);
+            expect(rgba[i + 1]).toBeGreaterThan(0);
+            expect(rgba[i + 2]).toBeGreaterThan(0);
             expect(rgba[i + 3]).toEqual(255);
           }
+        });
 
-          scene.postProcessStages.add(
-            PostProcessStageLibrary.createDepthOfFieldStage()
-          );
-          scene.renderForSpecs();
-          expect(scene).toRenderAndCall(function (rgba2) {
-            for (let i = 0; i < rgba.length; i += 4) {
-              expect(rgba2[i]).toBeGreaterThan(0);
-              expect(rgba2[i + 1]).toBe(0);
-              expect(rgba2[i + 2]).toBe(0);
-              expect(rgba2[i + 3]).toEqual(255);
-
-              expect(rgba2[i]).not.toEqual(rgba[i]);
-            }
-          });
+        // Render with depth of field and compare
+        scene.postProcessStages.add(
+          PostProcessStageLibrary.createDepthOfFieldStage()
+        );
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(originalColor);
+          for (let i = 0; i < rgba.length; i += 4) {
+            expect(rgba[i]).toBeGreaterThan(0);
+            expect(rgba[i + 1]).toBeGreaterThan(0);
+            expect(rgba[i + 2]).toBeGreaterThan(0);
+            expect(rgba[i + 3]).toEqual(255);
+          }
         });
       });
     });
