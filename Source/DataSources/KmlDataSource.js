@@ -41,7 +41,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "autolinker";
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
 import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";

@@ -1,8 +1,13 @@
+import Uri from "urijs";
 import {
   Clock,
   ClockStep,
   Credit,
   GeographicTilingScheme,
+  Imagery,
+  ImageryLayer,
+  ImageryProvider,
+  ImageryState,
   JulianDate,
   objectToQuery,
   queryToObject,
@@ -11,13 +16,8 @@ import {
   RequestState,
   Resource,
   TimeIntervalCollection,
-  WebMercatorTilingScheme,
-  Imagery,
-  ImageryLayer,
-  ImageryProvider,
-  ImageryState,
   WebMapTileServiceImageryProvider,
-  Uri,
+  WebMercatorTilingScheme,
 } from "../../../Source/Cesium.js";
 
 import pollToPromise from "../pollToPromise.js";
