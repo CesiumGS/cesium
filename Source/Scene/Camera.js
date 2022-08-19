@@ -3337,6 +3337,14 @@ Camera.prototype.flyTo = function (options) {
 
   this.cancelFlight();
 
+  const isRectangle = defined(destination.west);
+  if (isRectangle) {
+    destination = this.getRectangleCameraCoordinates(
+      destination,
+      scratchFlyToDestination
+    );
+  }
+
   let orientation = defaultValue(
     options.orientation,
     defaultValue.EMPTY_OBJECT
@@ -3363,14 +3371,6 @@ Camera.prototype.flyTo = function (options) {
       options.complete();
     }
     return;
-  }
-
-  const isRectangle = defined(destination.west);
-  if (isRectangle) {
-    destination = this.getRectangleCameraCoordinates(
-      destination,
-      scratchFlyToDestination
-    );
   }
 
   const that = this;
