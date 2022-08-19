@@ -3337,7 +3337,7 @@ Camera.prototype.flyTo = function (options) {
 
   this.cancelFlight();
 
-  const isRectangle = defined(destination.west);
+  const isRectangle = destination instanceof Rectangle;
   if (isRectangle) {
     destination = this.getRectangleCameraCoordinates(
       destination,
