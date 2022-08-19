@@ -125,6 +125,8 @@ describe(
     const centerLongitude = -1.31968;
     const centerLatitude = 0.698874;
 
+    const webglStub = !!window.webglStub;
+
     function setCamera(longitude, latitude, range) {
       // One feature is located at the center, point the camera there
       const center = Cartesian3.fromRadians(longitude, latitude);
@@ -1015,6 +1017,13 @@ describe(
       });
 
       it("Supports back face culling when there are per-point normals", function () {
+        // Since this test relies on picking, it will not work properly with webglStub
+        if (webglStub) {
+          return;
+        }
+        if (webglStub) {
+          return;
+        }
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl
