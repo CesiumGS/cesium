@@ -612,7 +612,7 @@ describe(
     });
 
     // This test does not yet work since models without normals are
-    // rendered as unlit
+    // rendered as unlit. See https://github.com/CesiumGS/cesium/issues/6506
     xit("renders model with emissive texture", function () {
       const resource = Resource.createIfNeeded(emissiveTextureUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -3462,8 +3462,8 @@ describe(
       });
     });
 
-    describe("cull", function () {
-      it("enables culling", function () {
+    describe("frustum culling ", function () {
+      it("enables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3486,8 +3486,7 @@ describe(
         });
       });
 
-      // This test does not yet work for Model
-      xit("disables culling", function () {
+      it("disables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3504,7 +3503,7 @@ describe(
 
           // Commands should still be submitted when model is out of view.
           model.modelMatrix = Matrix4.fromTranslation(
-            new Cartesian3(100.0, 0.0, 0.0)
+            new Cartesian3(0.0, 100.0, 0.0)
           );
           scene.renderForSpecs();
           expect(scene.frustumCommandsList.length).toEqual(length);
