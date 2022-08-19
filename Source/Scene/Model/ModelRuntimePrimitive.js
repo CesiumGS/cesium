@@ -203,16 +203,16 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   pipelineStages.push(GeometryPipelineStage);
 
-  if (generateWireframeIndices) {
+  // Classification models handle wireframes differently.
+  if (generateWireframeIndices && !hasClassification) {
     pipelineStages.push(WireframePipelineStage);
   }
 
-  // Morph targets and skinning are disabled for classification models.
-  if (hasMorphTargets && !hasClassification) {
+  if (hasMorphTargets) {
     pipelineStages.push(MorphTargetsPipelineStage);
   }
 
-  if (hasSkinning && !hasClassification) {
+  if (hasSkinning) {
     pipelineStages.push(SkinningPipelineStage);
   }
 

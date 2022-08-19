@@ -69,16 +69,6 @@ GeometryPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const hasClassification = defined(model.classificationType);
-
-  // Some shader stages must be handled differently for classification models.
-  if (hasClassification) {
-    shaderBuilder.addDefine(
-      "HAS_CLASSIFICATION",
-      undefined,
-      ShaderDestination.BOTH
-    );
-  }
 
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
@@ -177,19 +167,8 @@ GeometryPipelineStage.process = function (
     }
     //>>includeEnd('debug');
 
-    // Classification models only use the position, texcoord, and feature ID attributes.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
-    const isFeatureIdAttribute =
-      attribute.semantic === VertexAttributeSemantic.FEATURE_ID;
-    const isTexcoordAttribute =
-      attribute.semantic === VertexAttributeSemantic.TEXCOORD;
-
-    const isClassificationAttribute =
-      isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
-    if (hasClassification && !isClassificationAttribute) {
-      continue;
-    }
 
     let index;
     if (attributeLocationCount > 1) {
@@ -211,9 +190,7 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  if (!hasClassification) {
-    handleBitangents(shaderBuilder, primitive.attributes);
-  }
+  handleBitangents(shaderBuilder, primitive.attributes);
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");

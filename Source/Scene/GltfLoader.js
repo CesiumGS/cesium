@@ -811,6 +811,18 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
   return semanticInfo;
 }
 
+function isClassificationAttribute(attributeSemantic) {
+  // Classification models only use the position, texcoord, and feature ID attributes.
+  const isPositionAttribute =
+    attributeSemantic === VertexAttributeSemantic.POSITION;
+  const isFeatureIdAttribute =
+    attributeSemantic === VertexAttributeSemantic.FEATURE_ID;
+  const isTexcoordAttribute =
+    attributeSemantic === VertexAttributeSemantic.TEXCOORD;
+
+  return isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
+}
+
 function finalizeDracoAttribute(
   attribute,
   vertexBufferLoader,
@@ -944,39 +956,36 @@ function loadVertexAttribute(
   loader,
   gltf,
   accessorId,
-  gltfSemantic,
+  semanticInfo,
   draco,
   hasInstances,
   needsPostProcessing,
   frameState
 ) {
-  const semanticInfo = getSemanticInfo(
-    loader,
-    VertexAttributeSemantic,
-    gltfSemantic
-  );
-
   const modelSemantic = semanticInfo.modelSemantic;
 
   const isPositionAttribute =
     modelSemantic === VertexAttributeSemantic.POSITION;
-  const loadFor2D =
+  const isFeatureIdAttribute =
+    modelSemantic === VertexAttributeSemantic.FEATURE_ID;
+
+  const loadTypedArrayFor2D =
     isPositionAttribute &&
     !hasInstances &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
-  const loadForClassification =
-    loader._loadForClassification &&
-    modelSemantic === VertexAttributeSemantic.FEATURE_ID;
+  const loadTypedArrayForClassification =
+    loader._loadForClassification && isFeatureIdAttribute;
 
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
-  const outputTypedArrayOnly =
-    loader._loadAttributesAsTypedArray || loadForClassification;
+  const outputTypedArrayOnly = loader._loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray =
-    outputTypedArrayOnly || loadFor2D || loadForClassification;
+    outputTypedArrayOnly ||
+    loadTypedArrayFor2D ||
+    loadTypedArrayForClassification;
 
   // Determine what to load right now:
   //
@@ -1448,11 +1457,17 @@ function loadMorphTarget(
     if (target.hasOwnProperty(semantic)) {
       const accessorId = target[semantic];
 
+      const semanticInfo = getSemanticInfo(
+        loader,
+        VertexAttributeSemantic,
+        semantic
+      );
+
       const attributePlan = loadVertexAttribute(
         loader,
         gltf,
         accessorId,
-        semantic,
+        semanticInfo,
         draco,
         hasInstances,
         needsPostProcessing,
@@ -1509,6 +1524,7 @@ function loadPrimitive(
     );
   }
 
+  const loadForClassification = loader._loadForClassification;
   const draco = extensions.KHR_draco_mesh_compression;
 
   let hasFeatureIds = false;
@@ -1517,29 +1533,45 @@ function loadPrimitive(
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         const accessorId = attributes[semantic];
+        const semanticInfo = getSemanticInfo(
+          loader,
+          VertexAttributeSemantic,
+          semantic
+        );
+
+        const modelSemantic = semanticInfo.modelSemantic;
+
+        if (
+          loadForClassification &&
+          !isClassificationAttribute(modelSemantic)
+        ) {
+          continue;
+        }
+
+        if (modelSemantic === VertexAttributeSemantic.FEATURE_ID) {
+          hasFeatureIds = true;
+        }
+
         const attributePlan = loadVertexAttribute(
           loader,
           gltf,
           accessorId,
-          semantic,
+          semanticInfo,
           draco,
           hasInstances,
           needsPostProcessing,
           frameState
         );
-        primitivePlan.attributePlans.push(attributePlan);
 
-        const attribute = attributePlan.attribute;
-        if (attribute.semantic === VertexAttributeSemantic.FEATURE_ID) {
-          hasFeatureIds = true;
-        }
-        primitive.attributes.push(attribute);
+        primitivePlan.attributePlans.push(attributePlan);
+        primitive.attributes.push(attributePlan.attribute);
       }
     }
   }
 
   const targets = gltfPrimitive.targets;
-  if (defined(targets)) {
+  // Morph targets are disabled for classification models.
+  if (defined(targets) && !loadForClassification) {
     const targetsLength = targets.length;
     for (let i = 0; i < targetsLength; ++i) {
       primitive.morphTargets.push(
@@ -1999,23 +2031,23 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
 }
 
 function loadSkins(loader, gltf, nodes) {
-  let i;
-
   const gltfSkins = gltf.skins;
-  if (!defined(gltfSkins)) {
+
+  // Skins are disabled for classification models.
+  if (loader._loadForClassification || !defined(gltfSkins)) {
     return [];
   }
 
   const skinsLength = gltf.skins.length;
   const skins = new Array(skinsLength);
-  for (i = 0; i < skinsLength; ++i) {
+  for (let i = 0; i < skinsLength; ++i) {
     const skin = loadSkin(loader, gltf, gltf.skins[i], nodes);
     skin.index = i;
     skins[i] = skin;
   }
 
   const nodesLength = nodes.length;
-  for (i = 0; i < nodesLength; ++i) {
+  for (let i = 0; i < nodesLength; ++i) {
     const skinId = gltf.nodes[i].skin;
     if (defined(skinId)) {
       nodes[i].skin = skins[skinId];
@@ -2125,16 +2157,16 @@ function loadAnimation(loader, gltf, gltfAnimation, nodes) {
 }
 
 function loadAnimations(loader, gltf, nodes) {
-  let i;
-
   const gltfAnimations = gltf.animations;
-  if (!defined(gltfAnimations)) {
+
+  // Animations are disabled for classification models.
+  if (loader._loadForClassification || !defined(gltfAnimations)) {
     return [];
   }
 
   const animationsLength = gltf.animations.length;
   const animations = new Array(animationsLength);
-  for (i = 0; i < animationsLength; ++i) {
+  for (let i = 0; i < animationsLength; ++i) {
     const animation = loadAnimation(loader, gltf, gltf.animations[i], nodes);
     animation.index = i;
     animations[i] = animation;

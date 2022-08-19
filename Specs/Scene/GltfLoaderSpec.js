@@ -3926,7 +3926,48 @@ describe(
     });
 
     describe("loadForClassification", function () {
-      it("loads feature IDs and indices in typed arrays for classification", function () {
+      it("loads model without feature IDs for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(boxVertexColors, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[1];
+          const primitive = childNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const texcoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0
+          );
+          const colorAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.COLOR,
+            0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeUndefined();
+          expect(texcoordAttribute).toBeDefined();
+          expect(colorAttribute).toBeUndefined();
+
+          expect(positionAttribute.buffer).toBeDefined();
+          expect(texcoordAttribute.buffer).toBeDefined();
+        });
+      });
+
+      it("loads model with feature IDs for classification", function () {
         const options = {
           loadForClassification: true,
         };
@@ -3953,22 +3994,111 @@ describe(
           );
 
           expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
           expect(positionAttribute.typedArray).toBeUndefined();
 
-          expect(normalAttribute).toBeDefined();
-          expect(normalAttribute.typedArray).toBeUndefined();
+          // Normals are not loaded in for classification models.
+          expect(normalAttribute).toBeUndefined();
 
           expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
           expect(featureIdAttribute.semantic).toBe(
             VertexAttributeSemantic.FEATURE_ID
           );
           expect(featureIdAttribute.setIndex).toBe(0);
+          expect(featureIdAttribute.buffer).toBeDefined();
           expect(featureIdAttribute.typedArray).toBeDefined();
-          expect(featureIdAttribute.buffer).toBeUndefined();
 
           const indices = primitive.indices;
           expect(indices.buffer).toBeUndefined();
           expect(indices.typedArray).toBeDefined();
+        });
+      });
+
+      it("ignores morph targets for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(simpleMorph, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
+
+          const morphTargets = primitive.morphTargets;
+          expect(morphTargets.length).toBe(0);
+        });
+      });
+
+      it("ignores skins for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(simpleSkin, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+
+          const skin = rootNode.skin;
+          expect(skin).toBeUndefined();
+
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const jointsAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.JOINTS,
+            0
+          );
+          const weightsAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.WEIGHTS,
+            0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
+
+          expect(jointsAttribute).toBeUndefined();
+          expect(weightsAttribute).toBeUndefined();
+
+          expect(components.skins.length).toBe(0);
+        });
+      });
+
+      it("ignores animations for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(animatedTriangle, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
+
+          const animations = components.animations;
+          expect(animations.length).toBe(0);
         });
       });
 

@@ -7,6 +7,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
+import buildClassificationDrawCommand from "./buildClassificationDrawCommand.js";
 import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
@@ -444,6 +445,8 @@ const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
+ * If the model is used for classification, a {@link ClassificationModelDrawCommand}
+ * is generated for each primitive instead.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -453,6 +456,7 @@ const scratchPrimitivePositionMax = new Cartesian3();
 ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
   const model = this._model;
   const modelRenderResources = new ModelRenderResources(model);
+  const hasClassification = defined(model.classificationType);
 
   // Reset the memory counts before running the pipeline
   model.statistics.clear();
@@ -548,10 +552,15 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         modelPositionMax
       );
 
-      const drawCommand = buildDrawCommand(
-        primitiveRenderResources,
-        frameState
-      );
+      let drawCommand;
+      if (hasClassification) {
+        drawCommand = buildClassificationDrawCommand(
+          primitiveRenderResources,
+          frameState
+        );
+      } else {
+        drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
+      }
 
       runtimePrimitive.drawCommand = drawCommand;
     }
