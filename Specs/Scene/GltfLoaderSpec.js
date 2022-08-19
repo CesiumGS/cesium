@@ -4009,7 +4009,7 @@ describe(
           expect(featureIdAttribute.typedArray).toBeDefined();
 
           const indices = primitive.indices;
-          expect(indices.buffer).toBeUndefined();
+          expect(indices.buffer).toBeDefined();
           expect(indices.typedArray).toBeDefined();
         });
       });

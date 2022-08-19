@@ -1,6 +1,4 @@
 import ArticulationStageType from "../Core/ArticulationStageType.js";
-import AttributeType from "./AttributeType.js";
-import Axis from "./Axis.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -9,22 +7,25 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
-import ModelComponents from "./ModelComponents.js";
-import ModelUtility from "./Model/ModelUtility.js";
-import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
 import Quaternion from "../Core/Quaternion.js";
-import ResourceCache from "./ResourceCache.js";
-import ResourceLoader from "./ResourceLoader.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import getComponentReader from "./GltfPipeline/getComponentReader.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
+import ModelComponents from "./ModelComponents.js";
+import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
+import ResourceCache from "./ResourceCache.js";
+import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
@@ -1109,8 +1110,7 @@ function loadIndices(
 
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
-  const outputTypedArrayOnly =
-    loadAttributesAsTypedArray || loadForClassification;
+  const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray =
     loadAttributesAsTypedArray || loadForWireframe || loadForClassification;
@@ -1641,6 +1641,10 @@ function loadPrimitive(
   }
 
   primitive.primitiveType = gltfPrimitive.mode;
+  // TODO: add spec for this
+  if (primitive.primitiveType !== PrimitiveType.TRIANGLES) {
+    throw new RuntimeError("The primitive must be a triangle mesh.");
+  }
 
   return primitive;
 }

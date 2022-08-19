@@ -10,17 +10,19 @@ import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelVS from "../../Shaders/Model/ModelVS.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
+import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
 
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
- * using its render resources.
+ * using its render resources. If the model classifies another asset, it
+ * builds a {@link ClassificationModelDrawCommand} instead.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {ModelDrawCommand} The generated ModelDrawCommand.
+ * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or ClassificationModelDrawCommand.
  *
  * @private
  */
@@ -29,18 +31,15 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addVertexLines([ModelVS]);
   shaderBuilder.addFragmentLines([ModelFS]);
 
-  const model = primitiveRenderResources.model;
-
-  const context = frameState.context;
-
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
-    context: context,
+    context: frameState.context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
 
+  const model = primitiveRenderResources.model;
   model._pipelineResources.push(vertexArray);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
@@ -83,8 +82,13 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   );
   renderState = RenderState.fromCache(renderState);
 
-  const castShadows = ShadowMode.castShadows(model.shadows);
-  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
+  const hasClassification = defined(model.classificationType);
+  const castShadows = hasClassification
+    ? false
+    : ShadowMode.castShadows(model.shadows);
+  const receiveShadows = hasClassification
+    ? false
+    : ShadowMode.receiveShadows(model.shadows);
 
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
@@ -104,6 +108,13 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     castShadows: castShadows,
     receiveShadows: receiveShadows,
   });
+
+  if (hasClassification) {
+    return new ClassificationModelDrawCommand({
+      primitiveRenderResources: primitiveRenderResources,
+      command: command,
+    });
+  }
 
   return new ModelDrawCommand({
     primitiveRenderResources: primitiveRenderResources,

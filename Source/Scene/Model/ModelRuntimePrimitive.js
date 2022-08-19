@@ -91,7 +91,8 @@ function ModelRuntimePrimitive(options) {
   this.pipelineStages = [];
 
   /**
-   * The generated {@link ModelDrawCommand} or {@link ClassificationModelDrawCommand} associated with this primitive.
+   * The generated {@link ModelDrawCommand} or {@link ClassificationModelDrawCommand}
+   * associated with this primitive.
    *
    * @type {ModelDrawCommand|ClassificationModelDrawCommand}
    *
@@ -118,19 +119,43 @@ function ModelRuntimePrimitive(options) {
   this.boundingSphere2D = undefined;
 
   /**
-   * A buffer containing the primitive's positions projected to 2D world coordinates.
-   * Used for rendering in 2D / CV mode. The memory is managed by Model;
-   * this is just a reference.
+   * A buffer containing the primitive's positions projected to 2D world
+   * coordinates. Used for rendering in 2D / CV mode. The memory is managed
+   * by Model; this is just a reference.
    *
    * @type {Buffer}
-   * @readonly
    *
    * @private
    */
   this.positionBuffer2D = undefined;
 
+  /** TODO
+   * An array containing the lengths of the batches of vertices in model for classification.
+   * The memory is managed by Model;
+   * this is just a reference.
+   *
+   * @type {Number[]}
+   *
+   * @private
+   */
+  this.batchLengths = undefined;
+
+  /** TODO
+   * An array containing the offsets of the batches of vertices in model for classification.
+   * The memory is managed by Model;
+   * this is just a reference.
+   *
+   * @type {Number[]}
+   *
+   * @private
+   */
+  this.batchOffsets = undefined;
+
   /**
    * Update stages to apply to this primitive.
+   *
+   * @type {Object[]}
+   * @readonly
    *
    * @private
    */

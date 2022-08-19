@@ -60,7 +60,11 @@ function ClassificationModelDrawCommand(options) {
 
   this._commandList = [];
 
-  // Used for inverted classification.
+  this._commandsTerrain = [];
+  this._commands3DTiles = [];
+  this._commandsIgnoreShow = []; // Used for inverted classification.
+  this._commandsWireframe = [];
+
   this._ignoreShowCommand = undefined;
 
   initialize(this);
@@ -130,7 +134,12 @@ function initialize(drawCommand) {
   const command = drawCommand._command;
   const commandList = drawCommand._commandList;
 
+  //const runtimePrimitive = drawCommand._runtimePrimitive;
+  //const batchLengths = runtimePrimitive.batchLengths;
+  //const batchOffsets = runtimePrimitive.batchOFfsets;
+
   const model = drawCommand._model;
+
   const useDebugWireframe = model._enableDebugWireframe && model.debugWireframe;
 
   // If debug wireframe is enabled, don't derive any new commands.

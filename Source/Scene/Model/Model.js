@@ -1544,10 +1544,11 @@ Object.defineProperties(Model.prototype, {
   /**
    * Gets the model's classification type. This determines whether terrain,
    * 3D Tiles, or both will be classified by this model.
-   * <p> Classification with glTFs containing the <code>EXT_mesh_gpu_instancing</code>
-   * extension is not supported. Additionally, if the model contains feature IDs,
-   * there are a few requirements/limitations:
+   * <p>
+   * Classification with glTFs containing the <code>EXT_mesh_gpu_instancing</code>
+   * extension is not supported. Additionally, there are a few requirements/limitations:
    * <ul>
+   *     <li>The position attribute is required.</li>
    *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
    *     <li>If feature IDs are present without an index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
    * </p>
