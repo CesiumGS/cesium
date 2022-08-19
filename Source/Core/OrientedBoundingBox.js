@@ -18,13 +18,13 @@ import Rectangle from "./Rectangle.js";
 
 /**
  * Creates an instance of an OrientedBoundingBox.
- * An OrientedBoundingBox of some object is a closed and convex cuboid. It can provide a tighter bounding volume than {@link BoundingSphere} or {@link AxisAlignedBoundingBox} in many cases.
+ * An OrientedBoundingBox of some object is a closed and convex rectangular cuboid. It can provide a tighter bounding volume than {@link BoundingSphere} or {@link AxisAlignedBoundingBox} in many cases.
  * @alias OrientedBoundingBox
  * @constructor
  *
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
  * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
- *                                          Equivalently, the transformation matrix, to rotate and scale a 0x0x0
+ *                                          Equivalently, the transformation matrix, to rotate and scale a 1x1x1
  *                                          cube centered at the origin.
  *
  *
@@ -334,7 +334,7 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
  *
- * @exception {DeveloperError} rectangle.width must be between 0 and pi.
+ * @exception {DeveloperError} rectangle.width must be between 0 and 2 * pi.
  * @exception {DeveloperError} rectangle.height must be between 0 and pi.
  * @exception {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
  */
@@ -350,7 +350,7 @@ OrientedBoundingBox.fromRectangle = function (
     throw new DeveloperError("rectangle is required");
   }
   if (rectangle.width < 0.0 || rectangle.width > CesiumMath.TWO_PI) {
-    throw new DeveloperError("Rectangle width must be between 0 and 2*pi");
+    throw new DeveloperError("Rectangle width must be between 0 and 2 * pi");
   }
   if (rectangle.height < 0.0 || rectangle.height > CesiumMath.PI) {
     throw new DeveloperError("Rectangle height must be between 0 and pi");
@@ -372,25 +372,6 @@ OrientedBoundingBox.fromRectangle = function (
   minimumHeight = defaultValue(minimumHeight, 0.0);
   maximumHeight = defaultValue(maximumHeight, 0.0);
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-  if (rectangle.equals(Rectangle.MAX_VALUE)) {
-    if (!defined(result)) {
-      result = new OrientedBoundingBox();
-    }
-    result.halfAxes = Matrix3.fromScale(
-      Cartesian3.add(
-        ellipsoid.radii,
-        Cartesian3.fromElements(
-          maximumHeight,
-          maximumHeight,
-          maximumHeight,
-          scratchScale
-        ),
-        scratchScale
-      )
-    );
-    return result;
-  }
 
   let minX, maxX, minY, maxY, minZ, maxZ, plane;
 
