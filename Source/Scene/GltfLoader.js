@@ -1203,6 +1203,7 @@ function loadTexture(
 function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
   const material = new Material();
 
+  // TODO: don't make it load material if it's for classification
   const extensions = defaultValue(
     gltfMaterial.extensions,
     defaultValue.EMPTY_OBJECT

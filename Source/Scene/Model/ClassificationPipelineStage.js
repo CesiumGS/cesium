@@ -52,6 +52,20 @@ ClassificationPipelineStage.process = function (
     );
   }
 
+  const batchInfo = getClassificationBatchInfo(primitive);
+  const batchLengths = batchInfo.batchLengths;
+  const batchOffsets = batchInfo.batchOffsets;
+
+  const model = renderResources.model;
+  model._modelResources.push(batchLengths);
+  model._modelResources.push(batchOffsets);
+
+  const runtimePrimitive = renderResources.runtimePrimitive;
+  runtimePrimitive.batchLengths = batchLengths;
+  runtimePrimitive.batchOffsets = batchOffsets;
+};
+
+function getClassificationBatchInfo(primitive) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
@@ -63,20 +77,7 @@ ClassificationPipelineStage.process = function (
     );
   }
 
-  const batchInfo = getClassificationBatchInfo(primitive);
-  const batchLengths = batchInfo.batchLengths;
-  const batchOffsets = batchInfo.batchOffsets;
-
-  const model = renderResources.model;
-  model._modelresources.push(batchLengths);
-  model._modelresources.push(batchOffsets);
-
-  const runtimePrimitive = renderResources.runtimePrimitive;
-  runtimePrimitive.batchLengths = batchLengths;
-  runtimePrimitive.batchOffsets = batchOffsets;
-};
-
-function getClassificationBatchInfo(primitive) {
+  const count = positionAttribute.count;
   const featureIdAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.FEATURE_ID,
@@ -86,7 +87,7 @@ function getClassificationBatchInfo(primitive) {
   // If there are no feature IDs, render the primitive in a single batch.
   if (!defined(featureIdAttribute)) {
     return {
-      batchLengths: [featureIdAttribute.count],
+      batchLengths: [count],
       batchOffsets: [0],
     };
   }
@@ -99,24 +100,33 @@ function getClassificationBatchInfo(primitive) {
   featureIdAttribute.typedArray = undefined;
 
   let indicesArray;
+  let firstIndex;
+  let length;
+
   const indices = primitive.indices;
-  if (defined(indices)) {
+  const hasIndices = defined(indices);
+
+  if (hasIndices) {
     indicesArray = indices.typedArray;
     // Unload the typed array. This is just a pointer to the array in
     // the index buffer loader.
     indices.typedArray = undefined;
+
+    firstIndex = indicesArray[0];
+    length = indicesArray.length;
+  } else {
+    firstIndex = 0;
+    length = count;
   }
 
   const batchLengths = [];
   const batchOffsets = [0];
 
-  const firstIndex = defined(indicesArray) ? indicesArray[0] : 0;
   let currentBatchId = featureIds[firstIndex];
   let currentOffset = 0;
 
-  const length = indicesArray.length;
   for (let i = 1; i < length; i++) {
-    const index = defined(indicesArray) ? indicesArray[i] : i;
+    const index = hasIndices ? indicesArray[i] : i;
     const batchId = featureIds[index];
 
     if (batchId !== currentBatchId) {
