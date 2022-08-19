@@ -4177,7 +4177,7 @@ describe("Scene/Camera", function () {
 
     expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
     expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON6);
-    expect(camera.position).toEqualEpsilon(expectedDestination, 0.1);
+    expect(camera.position).toEqualEpsilon(expectedDestination, CesiumMath.EPSILON1);
   });
 
   it("flyTo does not zoom closer than minimumZoomDistance", function () {
