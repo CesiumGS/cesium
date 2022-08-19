@@ -19,6 +19,7 @@ import {
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
@@ -84,12 +85,6 @@ describe(
     const twoSidedPlane =
       "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
 
-    function expectShaderLines(shaderLines, expected) {
-      for (let i = 0; i < expected.length; i++) {
-        expect(shaderLines.indexOf(expected[i])).not.toBe(-1);
-      }
-    }
-
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
         if (expected.hasOwnProperty(key)) {
@@ -130,10 +125,13 @@ describe(
           mockFrameState
         );
 
-        expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, []);
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, []);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "USE_METALLIC_ROUGHNESS",
+        ]);
 
         const expectedUniforms = {};
         expectUniformMap(uniformMap, expectedUniforms);
@@ -154,22 +152,30 @@ describe(
           mockFrameState
         );
 
-        expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform sampler2D u_baseColorTexture;",
           "uniform sampler2D u_emissiveTexture;",
-          "uniform vec3 u_emissiveFactor;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
           "uniform sampler2D u_normalTexture;",
           "uniform sampler2D u_occlusionTexture;",
+          "uniform vec3 u_emissiveFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "HAS_EMISSIVE_TEXTURE",
-          "TEXCOORD_EMISSIVE v_texCoord_0",
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_BASE_COLOR_TEXTURE",
           "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
           "HAS_NORMAL_TEXTURE",
-          "TEXCOORD_NORMAL v_texCoord_0",
           "HAS_OCCLUSION_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
           "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
         ]);
 
         const material = primitive.material;
@@ -198,16 +204,30 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_emissiveTexture;",
           "uniform sampler2D u_metallicRoughnessTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+          "uniform vec3 u_emissiveFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_BASE_COLOR_TEXTURE",
-          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
           "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
           "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
         ]);
 
         const metallicRoughness = primitive.material.metallicRoughness;
@@ -240,22 +260,36 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
-          "uniform sampler2D u_baseColorTexture;",
-          "uniform vec4 u_baseColorFactor;",
-          "uniform sampler2D u_metallicRoughnessTexture;",
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform float u_metallicFactor;",
           "uniform float u_roughnessFactor;",
+          "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_emissiveTexture;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+          "uniform vec3 u_emissiveFactor;",
+          "uniform vec4 u_baseColorFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "HAS_BASE_COLOR_TEXTURE",
-          "TEXCOORD_BASE_COLOR v_texCoord_0",
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_BASE_COLOR_FACTOR",
-          "HAS_METALLIC_ROUGHNESS_TEXTURE",
-          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "HAS_BASE_COLOR_TEXTURE",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
           "HAS_METALLIC_FACTOR",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
           "HAS_ROUGHNESS_FACTOR",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
         ]);
 
         const expectedUniforms = {
@@ -283,19 +317,32 @@ describe(
           primitive,
           mockFrameState
         );
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
-          "uniform sampler2D u_diffuseTexture;",
-          "uniform sampler2D u_specularGlossinessTexture;",
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform float u_glossinessFactor;",
+          "uniform sampler2D u_diffuseTexture;",
+          "uniform sampler2D u_emissiveTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+          "uniform sampler2D u_specularGlossinessTexture;",
+          "uniform vec3 u_emissiveFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "USE_SPECULAR_GLOSSINESS",
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_DIFFUSE_TEXTURE",
-          "TEXCOORD_DIFFUSE v_texCoord_0",
-          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
-          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
           "HAS_GLOSSINESS_FACTOR",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
+          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
+          "TEXCOORD_DIFFUSE v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
+          "USE_SPECULAR_GLOSSINESS",
         ]);
 
         const specularGlossiness = primitive.material.specularGlossiness;
@@ -327,23 +374,37 @@ describe(
           primitive,
           mockFrameState
         );
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
-          "uniform sampler2D u_diffuseTexture;",
-          "uniform vec4 u_diffuseFactor;",
-          "uniform sampler2D u_specularGlossinessTexture;",
-          "uniform vec3 u_specularFactor;",
+
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform float u_glossinessFactor;",
+          "uniform sampler2D u_diffuseTexture;",
+          "uniform sampler2D u_emissiveTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+          "uniform sampler2D u_specularGlossinessTexture;",
+          "uniform vec3 u_emissiveFactor;",
+          "uniform vec3 u_specularFactor;",
+          "uniform vec4 u_diffuseFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "USE_SPECULAR_GLOSSINESS",
-          "HAS_DIFFUSE_TEXTURE",
-          "TEXCOORD_DIFFUSE v_texCoord_0",
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_DIFFUSE_FACTOR",
-          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
-          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
-          "HAS_SPECULAR_FACTOR",
+          "HAS_DIFFUSE_TEXTURE",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
           "HAS_GLOSSINESS_FACTOR",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
+          "HAS_SPECULAR_FACTOR",
+          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
+          "TEXCOORD_DIFFUSE v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
+          "USE_SPECULAR_GLOSSINESS",
         ]);
 
         const expectedUniforms = {
@@ -372,15 +433,16 @@ describe(
           mockFrameState
         );
 
-        expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform vec3 u_emissiveFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_EMISSIVE_FACTOR",
+          "USE_METALLIC_ROUGHNESS",
         ]);
-
         const material = primitive.material;
         const expectedUniforms = {
           u_emissiveFactor: material.emissiveFactor,
@@ -409,16 +471,36 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
-          "uniform vec4 u_baseColorFactor;",
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform float u_metallicFactor;",
           "uniform float u_roughnessFactor;",
+          "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_emissiveTexture;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+          "uniform vec3 u_emissiveFactor;",
+          "uniform vec4 u_baseColorFactor;",
         ]);
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_BASE_COLOR_FACTOR",
+          "HAS_BASE_COLOR_TEXTURE",
+          "HAS_EMISSIVE_FACTOR",
+          "HAS_EMISSIVE_TEXTURE",
           "HAS_METALLIC_FACTOR",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
           "HAS_ROUGHNESS_FACTOR",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_EMISSIVE v_texCoord_0",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
         ]);
 
         const expectedUniforms = {
@@ -638,8 +720,8 @@ describe(
           mockFrameState
         );
 
-        expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
-        expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
+        ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
           _shadersMaterialStageFS,
         ]);
       });
@@ -658,8 +740,18 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_DOUBLE_SIDED_MATERIAL",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_BASE_COLOR_TEXTURE",
+          "HAS_DOUBLE_SIDED_MATERIAL",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "HAS_NORMAL_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
         ]);
       });
     });
@@ -679,10 +771,12 @@ describe(
         "TEST"
       );
 
-      expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_TEST_TEXTURE_TRANSFORM",
       ]);
-      expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform mat3 u_testTextureTransform;",
       ]);
       expectUniformMap(uniformMap, {
@@ -709,12 +803,14 @@ describe(
         mockFrameState.context.defaultTexture
       );
 
-      expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_TEST_TEXTURE",
         "TEXCOORD_TEST v_texCoord_1",
         "HAS_TEST_TEXTURE_TRANSFORM",
       ]);
-      expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform sampler2D u_testTexture;",
         "uniform mat3 u_testTextureTransform;",
       ]);
