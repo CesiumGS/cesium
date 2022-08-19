@@ -708,7 +708,8 @@ function traverseSceneGraph(
   sceneGraph,
   runtimeNode,
   visibleNodesOnly,
-  callback
+  callback,
+  callbackOptions
 ) {
   if (visibleNodesOnly && !runtimeNode.show) {
     return;
@@ -721,7 +722,8 @@ function traverseSceneGraph(
       sceneGraph,
       childRuntimeNode,
       visibleNodesOnly,
-      callback
+      callback,
+      callbackOptions
     );
   }
 
@@ -729,17 +731,28 @@ function traverseSceneGraph(
   const runtimePrimitivesLength = runtimePrimitives.length;
   for (let j = 0; j < runtimePrimitivesLength; j++) {
     const runtimePrimitive = runtimePrimitives[j];
-    callback(runtimePrimitive);
+    callback(runtimePrimitive, callbackOptions);
   }
 }
 
-function forEachRuntimePrimitive(sceneGraph, visibleNodesOnly, callback) {
+function forEachRuntimePrimitive(
+  sceneGraph,
+  visibleNodesOnly,
+  callback,
+  callbackOptions
+) {
   const rootNodes = sceneGraph._rootNodes;
   const rootNodesLength = rootNodes.length;
   for (let i = 0; i < rootNodesLength; i++) {
     const rootNodeIndex = rootNodes[i];
     const runtimeNode = sceneGraph._runtimeNodes[rootNodeIndex];
-    traverseSceneGraph(sceneGraph, runtimeNode, visibleNodesOnly, callback);
+    traverseSceneGraph(
+      sceneGraph,
+      runtimeNode,
+      visibleNodesOnly,
+      callback,
+      callbackOptions
+    );
   }
 }
 
@@ -788,6 +801,10 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 };
 
 const scratchSilhouetteCommands = [];
+const scratchPushDrawCommandOptions = {
+  frameState: undefined,
+  hasSilhouette: undefined,
+};
 
 /**
  * Traverses through the scene graph and pushes the draw commands associated
@@ -803,30 +820,44 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // Otherwise, the silhouette may draw on top of the model. This requires
   // gathering the original commands and the silhouette commands separately.
 
-  const passes = frameState.passes;
-
-  const hasSilhouette = this._model.hasSilhouette(frameState);
   const silhouetteCommands = scratchSilhouetteCommands;
   silhouetteCommands.length = 0;
 
-  forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
-    const primitiveDrawCommand = runtimePrimitive.drawCommand;
-    primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+  // Since this function is called each frame, the options object is
+  // preallocated in a scratch variable
+  const pushDrawCommandOptions = scratchPushDrawCommandOptions;
+  pushDrawCommandOptions.hasSilhouette = this._model.hasSilhouette(frameState);
+  pushDrawCommandOptions.frameState = frameState;
 
-    // If a model has silhouettes, the commands that draw the silhouettes for
-    // each primitive can only be invoked after the entire model has drawn.
-    // Otherwise, the silhouette may draw on top of the model. This requires
-    // gathering the original commands and the silhouette commands separately.
-    if (hasSilhouette && !passes.pick) {
-      primitiveDrawCommand.pushSilhouetteCommands(
-        frameState,
-        silhouetteCommands
-      );
-    }
-  });
+  forEachRuntimePrimitive(
+    this,
+    true,
+    pushPrimitiveDrawCommands,
+    pushDrawCommandOptions
+  );
 
   frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
 };
+
+// This callback avoids allocating a closure every frame in pushDrawCommands() above
+function pushPrimitiveDrawCommands(runtimePrimitive, options) {
+  const frameState = options.frameState;
+  const hasSilhouette = options.hasSilhouette;
+
+  const passes = frameState.passes;
+  const silhouetteCommands = scratchSilhouetteCommands;
+  const primitiveDrawCommand = runtimePrimitive.drawCommand;
+
+  primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
+  // If a model has silhouettes, the commands that draw the silhouettes for
+  // each primitive can only be invoked after the entire model has drawn.
+  // Otherwise, the silhouette may draw on top of the model. This requires
+  // gathering the original commands and the silhouette commands separately.
+  if (hasSilhouette && !passes.pick) {
+    primitiveDrawCommand.pushSilhouetteCommands(frameState, silhouetteCommands);
+  }
+}
 
 /**
  * Sets the current value of an articulation stage.
