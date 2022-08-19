@@ -304,7 +304,6 @@ describe(
         origin,
         new HeadingPitchRoll()
       );
-      scene.postProcessStages.ambientOcclusion.enabled = false;
 
       return loadAndZoomToModel(
         {
