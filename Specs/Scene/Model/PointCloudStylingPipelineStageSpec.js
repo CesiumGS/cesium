@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
-  defined,
   defaultValue,
   Math as CesiumMath,
   Matrix4,
@@ -63,16 +62,11 @@ describe(
     };
 
     function mockGltfRenderResources(pointCloudShading) {
-      const attenuation = defined(pointCloudShading)
-        ? pointCloudShading.attenuation
-        : false;
-
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
         type: ModelType.GLTF,
         pointCloudShading: pointCloudShading,
-        _attenuation: attenuation,
       };
 
       return {
@@ -88,10 +82,6 @@ describe(
         options.pointCloudShading,
         new PointCloudShading()
       );
-      const attenuation = defined(pointCloudShading)
-        ? pointCloudShading.attenuation
-        : false;
-
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
@@ -99,7 +89,6 @@ describe(
         content: options.content,
         style: options.style,
         pointCloudShading: pointCloudShading,
-        _attenuation: attenuation,
         structuralMetadata: options.structuralMetadata,
         featureTableId: options.featureTableId,
         featureTables: options.featureTables,

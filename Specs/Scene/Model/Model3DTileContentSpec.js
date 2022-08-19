@@ -1020,6 +1020,7 @@ describe(
         if (webglStub) {
           return;
         }
+
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl

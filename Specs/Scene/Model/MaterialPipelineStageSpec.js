@@ -138,62 +138,10 @@ describe(
       });
     });
 
-    it("adds material uniforms", function () {
+    it("adds material and metallic roughness uniforms", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
-        const renderResources = mockRenderResources();
-        const shaderBuilder = renderResources.shaderBuilder;
-        const uniformMap = renderResources.uniformMap;
-
-        MaterialPipelineStage.process(
-          renderResources,
-          primitive,
-          mockFrameState
-        );
-
-        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-          "uniform sampler2D u_baseColorTexture;",
-          "uniform sampler2D u_emissiveTexture;",
-          "uniform sampler2D u_metallicRoughnessTexture;",
-          "uniform sampler2D u_normalTexture;",
-          "uniform sampler2D u_occlusionTexture;",
-          "uniform vec3 u_emissiveFactor;",
-        ]);
-
-        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-          "HAS_BASE_COLOR_TEXTURE",
-          "HAS_EMISSIVE_FACTOR",
-          "HAS_EMISSIVE_TEXTURE",
-          "HAS_METALLIC_ROUGHNESS_TEXTURE",
-          "HAS_NORMAL_TEXTURE",
-          "HAS_OCCLUSION_TEXTURE",
-          "TEXCOORD_BASE_COLOR v_texCoord_0",
-          "TEXCOORD_EMISSIVE v_texCoord_0",
-          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
-          "TEXCOORD_NORMAL v_texCoord_0",
-          "TEXCOORD_OCCLUSION v_texCoord_0",
-          "USE_METALLIC_ROUGHNESS",
-        ]);
-
-        const material = primitive.material;
-        const expectedUniforms = {
-          u_emissiveTexture: material.emissiveTexture.texture,
-          u_emissiveFactor: material.emissiveFactor,
-          u_normalTexture: material.normalTexture.texture,
-          u_occlusionTexture: material.occlusionTexture.texture,
-        };
-        expectUniformMap(uniformMap, expectedUniforms);
-      });
-    });
-
-    it("adds metallic roughness uniforms", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const primitive = components.nodes[0].primitives[0];
-
         const renderResources = mockRenderResources();
         const shaderBuilder = renderResources.shaderBuilder;
         const uniformMap = renderResources.uniformMap;
@@ -231,7 +179,12 @@ describe(
         ]);
 
         const metallicRoughness = primitive.material.metallicRoughness;
+        const material = primitive.material;
         const expectedUniforms = {
+          u_emissiveTexture: material.emissiveTexture.texture,
+          u_emissiveFactor: material.emissiveFactor,
+          u_normalTexture: material.normalTexture.texture,
+          u_occlusionTexture: material.occlusionTexture.texture,
           u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
           u_metallicRoughnessTexture:
             metallicRoughness.metallicRoughnessTexture.texture,

@@ -117,7 +117,7 @@ PointCloudStylingPipelineStage.process = function (
   }
 
   const pointCloudShading = model.pointCloudShading;
-  if (model._attenuation) {
+  if (pointCloudShading.attenuation) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_ATTENUATION",
       undefined,
