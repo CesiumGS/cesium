@@ -117,9 +117,17 @@ PointCloudStylingPipelineStage.process = function (
   }
 
   const pointCloudShading = model.pointCloudShading;
-  if (model._attenuation) {
+  if (pointCloudShading.attenuation) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_ATTENUATION",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+  }
+
+  if (pointCloudShading.backFaceCulling) {
+    shaderBuilder.addDefine(
+      "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       undefined,
       ShaderDestination.VERTEX
     );

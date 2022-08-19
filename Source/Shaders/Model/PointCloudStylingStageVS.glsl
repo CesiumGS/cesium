@@ -32,3 +32,14 @@ float pointCloudPointSizeStylingStage(in ProcessedAttributes attributes, in Meta
   return getPointSizeFromAttenuation(v_positionEC);
 }
 #endif
+
+#ifdef HAS_POINT_CLOUD_BACK_FACE_CULLING
+float pointCloudBackFaceCullingStage() {
+  #if defined(HAS_NORMALS) && !defined(HAS_DOUBLE_SIDED_MATERIAL)
+  // This needs to be computed in eye coordinates so we can't use attributes.normalMC
+  return step(-v_normalEC.z, 0.0);
+  #else
+  return 1.0;
+  #endif
+}
+#endif
