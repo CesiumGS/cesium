@@ -12,7 +12,6 @@ import {
   ColorGeometryInstanceAttribute,
   ContentMetadata,
   defaultValue,
-  defined,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
@@ -1021,52 +1020,27 @@ describe(
         if (webglStub) {
           return;
         }
-        if (webglStub) {
-          return;
-        }
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl
         ).then(function (tileset) {
-          const content = tileset.root.content;
-
           // Get the number of picked sections with back face culling on
           let pickedCountCulling = 0;
           let pickedCount = 0;
-          let picked;
-
-          const callback = function (result) {
-            picked = result;
-          };
 
           // Set culling to true
           tileset.pointCloudShading.backFaceCulling = true;
 
-          expect(scene).toPickAndCall(callback);
-
-          while (defined(picked)) {
-            picked.show = false;
-            expect(scene).toPickAndCall(callback);
-            ++pickedCountCulling;
-          }
-
-          // Set the shows back to true
-          const length = content.featuresLength;
-          for (let i = 0; i < length; ++i) {
-            const feature = content.getFeature(i);
-            feature.show = true;
-          }
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            pickedCountCulling = pickedObjects.length;
+          });
 
           // Set culling to false
           tileset.pointCloudShading.backFaceCulling = false;
 
-          expect(scene).toPickAndCall(callback);
-
-          while (defined(picked)) {
-            picked.show = false;
-            expect(scene).toPickAndCall(callback);
-            ++pickedCount;
-          }
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            pickedCount = pickedObjects.length;
+          });
 
           expect(pickedCount).toBeGreaterThan(pickedCountCulling);
         });
