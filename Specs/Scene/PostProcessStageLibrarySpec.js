@@ -304,10 +304,12 @@ describe(
         origin,
         new HeadingPitchRoll()
       );
+      scene.postProcessStages.ambientOcclusion.enabled = false;
 
       return loadAndZoomToModel(
         {
           url: boxTexturedUrl,
+          // Ensure the texture loads every time
           incrementallyLoadTextures: false,
           modelMatrix: modelMatrix,
         },
@@ -378,7 +380,6 @@ describe(
           expect(rgba[i + 3]).toEqual(255);
         }
       });
-      scene.postProcessStages.ambientOcclusion.enabled = false;
     });
 
     it("ambient occlusion uniforms", function () {
@@ -425,6 +426,7 @@ describe(
       return loadAndZoomToModel(
         {
           url: boxTexturedUrl,
+          // Ensure the texture loads every time
           incrementallyLoadTextures: false,
           modelMatrix: modelMatrix,
         },
@@ -447,8 +449,7 @@ describe(
         // Render with bloom and compare
         const bloom = scene.postProcessStages.bloom;
         bloom.enabled = true;
-        // increase the brightness to make the difference more
-        // noticeable
+        // increase the brightness to make the difference more noticeable
         bloom.uniforms.brightness = 0.5;
         scene.renderForSpecs();
         expect(scene).toRenderAndCall(function (rgba) {
@@ -460,7 +461,6 @@ describe(
             expect(rgba[i + 3]).toEqual(255);
           }
         });
-        scene.postProcessStages.bloom.enabled = false;
       });
     });
 
