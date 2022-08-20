@@ -22,11 +22,6 @@ describe(
 
       const translation = new Cartesian3(1.0, 2.0, 3.0);
       const scale = new Cartesian3(2.0, 3.0, 4.0);
-      const halfScale = Cartesian3.multiplyByScalar(
-        scale,
-        0.5,
-        new Cartesian3()
-      );
       const angle = CesiumMath.PI_OVER_FOUR;
       const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, angle);
       const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
@@ -37,25 +32,25 @@ describe(
       const minBounds = VoxelCylinderShape.DefaultMinBounds;
       const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
 
-      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
+      const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
       const expectedOrientedBoundingBox = new OrientedBoundingBox(
         translation,
         Matrix3.fromColumnMajorArray([
-          halfScale.x * Math.cos(angle),
-          halfScale.x * Math.sin(angle),
+          scale.x * Math.cos(angle),
+          scale.x * Math.sin(angle),
           0.0,
-          halfScale.y * Math.cos(angle + CesiumMath.PI_OVER_TWO),
-          halfScale.y * Math.sin(angle + CesiumMath.PI_OVER_TWO),
+          scale.y * Math.cos(angle + CesiumMath.PI_OVER_TWO),
+          scale.y * Math.sin(angle + CesiumMath.PI_OVER_TWO),
           0.0,
           0.0,
           0.0,
-          halfScale.z,
+          scale.z,
         ])
       );
       const expectedBoundingSphere = new BoundingSphere(
         translation,
-        Cartesian3.magnitude(halfScale)
+        Cartesian3.magnitude(scale)
       );
 
       expect(shape.orientedBoundingBox.center).toEqual(
@@ -68,7 +63,7 @@ describe(
       expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
       expect(shape.boundTransform).toEqual(modelMatrix);
       expect(shape.shapeTransform).toEqual(modelMatrix);
-      expect(shape.isVisible).toBeTrue();
+      expect(visible).toBeTrue();
     });
 
     it("update works with non-default minimum and maximum bounds", function () {
@@ -92,19 +87,19 @@ describe(
       const maxAngle = 0.0;
       const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
       const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
-      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
+      const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
       const expectedMinX = translation.x - maxRadius * scale.x;
       const expectedMaxX = translation.x + maxRadius * scale.x;
-      const expectedMinY = translation.y + minHeight * scale.y;
-      const expectedMaxY = translation.y + maxHeight * scale.y;
-      const expectedMinZ = translation.z - maxRadius * scale.z;
-      const expectedMaxZ = translation.z;
+      const expectedMinY = translation.y - maxRadius * scale.y;
+      const expectedMaxY = translation.y;
+      const expectedMinZ = translation.z + minHeight * scale.z;
+      const expectedMaxZ = translation.z + maxHeight * scale.z;
 
       const expectedScale = new Cartesian3(
-        expectedMaxX - expectedMinX,
-        expectedMaxY - expectedMinY,
-        expectedMaxZ - expectedMinZ
+        0.5 * (expectedMaxX - expectedMinX),
+        0.5 * (expectedMaxY - expectedMinY),
+        0.5 * (expectedMaxZ - expectedMinZ)
       );
       const expectedTranslation = new Cartesian3(
         0.5 * (expectedMaxX + expectedMinX),
@@ -112,18 +107,13 @@ describe(
         0.5 * (expectedMaxZ + expectedMinZ)
       );
 
-      const expectedHalfScale = Cartesian3.multiplyByScalar(
-        expectedScale,
-        0.5,
-        new Cartesian3()
-      );
       const expectedOrientedBoundingBox = new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedHalfScale)
+        Matrix3.fromScale(expectedScale)
       );
       const expectedBoundingSphere = new BoundingSphere(
         expectedTranslation,
-        Cartesian3.magnitude(expectedHalfScale)
+        Cartesian3.magnitude(expectedScale)
       );
       const expectedBoundTransform = Matrix4.setTranslation(
         Matrix4.fromScale(expectedScale, new Matrix4()),
@@ -142,7 +132,7 @@ describe(
       expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
       expect(shape.boundTransform).toEqual(expectedBoundTransform);
       expect(shape.shapeTransform).toEqual(modelMatrix);
-      expect(shape.isVisible).toBeTrue();
+      expect(visible).toBeTrue();
     });
 
     it("update works with minimum and maximum bounds that cross the 180th meridian", function () {
@@ -172,23 +162,18 @@ describe(
         defaultMaxBounds.y,
         maxAngle
       );
-      shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
+      const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
       const expectedScale = new Cartesian3(0.5, 1.0, 1.0);
       const expectedTranslation = new Cartesian3(-0.5, 0.0, 0.0);
 
-      const expectedHalfScale = Cartesian3.multiplyByScalar(
-        expectedScale,
-        0.5,
-        new Cartesian3()
-      );
       const expectedOrientedBoundingBox = new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedHalfScale)
+        Matrix3.fromScale(expectedScale)
       );
       const expectedBoundingSphere = new BoundingSphere(
         expectedTranslation,
-        Cartesian3.magnitude(expectedHalfScale)
+        Cartesian3.magnitude(expectedScale)
       );
       const expectedBoundTransform = Matrix4.setTranslation(
         Matrix4.fromScale(expectedScale, new Matrix4()),
@@ -204,10 +189,16 @@ describe(
         expectedOrientedBoundingBox.halfAxes,
         CesiumMath.EPSILON12
       );
-      expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
-      expect(shape.boundTransform).toEqual(expectedBoundTransform);
+      expect(shape.boundingSphere).toEqualEpsilon(
+        expectedBoundingSphere,
+        CesiumMath.EPSILON12
+      );
+      expect(shape.boundTransform).toEqualEpsilon(
+        expectedBoundTransform,
+        CesiumMath.EPSILON12
+      );
       expect(shape.shapeTransform).toEqual(modelMatrix);
-      expect(shape.isVisible).toBeTrue();
+      expect(visible).toBeTrue();
     });
   },
   "WebGL"

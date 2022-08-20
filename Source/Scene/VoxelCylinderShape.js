@@ -1,3 +1,4 @@
+import defaultValue from "../Core/defaultValue.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -161,8 +162,8 @@ const transformUvToLocal = Matrix4.fromRotationTranslation(
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- * @param {Cartesian3} clipMinBounds The minimum clip bounds.
- * @param {Cartesian3} clipMaxBounds The maximum clip bounds.
+ * @param {Cartesian3} [clipMinBounds=VoxelCylinderShape.DefaultMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds=VoxelCylinderShape.DefaultMaxBounds] The maximum clip bounds.
  */
 VoxelCylinderShape.prototype.update = function (
   modelMatrix,
@@ -171,6 +172,14 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds
 ) {
+  clipMinBounds = defaultValue(
+    clipMinBounds,
+    VoxelCylinderShape.DefaultMinBounds.clone()
+  );
+  clipMaxBounds = defaultValue(
+    clipMaxBounds,
+    VoxelCylinderShape.DefaultMaxBounds.clone()
+  );
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);

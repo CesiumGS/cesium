@@ -18,7 +18,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
   it("update works with model matrix", function () {
     const shape = new VoxelEllipsoidShape();
     const translation = new Cartesian3(1.0, 2.0, 3.0);
-    const scale = new Cartesian3(2.0, 2.0, 4.0);
+    const scale = new Cartesian3(2.0, 2.0, 2.0);
     const angle = CesiumMath.PI_OVER_FOUR;
     const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, angle);
 
@@ -42,16 +42,16 @@ describe("Scene/VoxelEllipsoidShape", function () {
 
     const expectedOrientedBoundingBox = new OrientedBoundingBox(
       translation,
-      Matrix3.fromColumnMajorArray([
-        (scale.x + maxHeight) * Math.cos(angle),
-        (scale.x + maxHeight) * Math.sin(angle),
-        0.0,
-        (scale.y + maxHeight) * Math.cos(angle + CesiumMath.PI_OVER_TWO),
-        (scale.y + maxHeight) * Math.sin(angle + CesiumMath.PI_OVER_TWO),
-        0.0,
+      Matrix3.fromRowMajorArray([
         0.0,
         0.0,
         scale.z + maxHeight,
+        (scale.x + maxHeight) * Math.cos(angle),
+        -(scale.y + maxHeight) * Math.sin(angle),
+        0.0,
+        (scale.x + maxHeight) * Math.sin(angle),
+        (scale.y + maxHeight) * Math.cos(angle),
+        0.0,
       ])
     );
 
@@ -60,7 +60,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
       new BoundingSphere()
     );
 
-    shape.update(modelMatrix, minBounds, maxBounds, minBounds, maxBounds);
+    const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
     expect(shape.orientedBoundingBox.center).toEqual(
       expectedOrientedBoundingBox.center
@@ -83,13 +83,29 @@ describe("Scene/VoxelEllipsoidShape", function () {
       Matrix4.getTranslation(shape.shapeTransform, new Cartesian3())
     ).toEqualEpsilon(expectedOrientedBoundingBox.center, CesiumMath.EPSILON12);
 
-    expect(
-      Matrix4.getMatrix3(shape.shapeTransform, new Matrix3())
-    ).toEqualEpsilon(expectedOrientedBoundingBox.halfAxes, CesiumMath.EPSILON9);
-
-    // expect(shape.boundTransform).toEqual(modelMatrix);
-    // expect(shape.shapeTransform).toEqual(modelMatrix);
-    // expect(shape.isVisible).toBeTrue();
+    const expectedShapeTransform = Matrix4.fromRowMajorArray([
+      (scale.x + maxHeight) * Math.cos(angle),
+      -(scale.x + maxHeight) * Math.sin(angle),
+      0.0,
+      expectedOrientedBoundingBox.center.x,
+      (scale.y + maxHeight) * Math.sin(angle),
+      (scale.y + maxHeight) * Math.cos(angle),
+      0.0,
+      expectedOrientedBoundingBox.center.y,
+      0.0,
+      0.0,
+      scale.z + maxHeight,
+      expectedOrientedBoundingBox.center.z,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+    expect(shape.shapeTransform).toEqualEpsilon(
+      expectedShapeTransform,
+      CesiumMath.EPSILON9
+    );
+    expect(visible).toBeTrue();
   });
 
   // const PI_OVER_TWO = CesiumMath.PI_OVER_TWO;
