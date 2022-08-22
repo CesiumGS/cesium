@@ -134,18 +134,20 @@ function initialize(drawCommand) {
   // Render normally in the opaque pass.
   if (drawCommand._useDebugWireframe) {
     command.pass = Pass.OPAQUE;
-    this._commandListDebugWireframe = createBatchCommands(
+
+    drawCommand._commandListDebugWireframe = createBatchCommands(
       drawCommand,
       [command],
-      this._commandListDebugWireframe
+      drawCommand._commandListDebugWireframe
     );
 
-    const length = this._commandListDebugWireframe.length;
+    const commandList = drawCommand._commandListDebugWireframe;
+    const length = commandList.length;
     for (let i = 0; i < length; i++) {
       // The lengths / offsets of the batches have to be adjusted for wireframe.
       // Only PrimitiveType.TRIANGLES is allowed for classification, so this
       // just requires doubling the values for the batches.
-      const command = this._commandListDebugWireframe[i];
+      const command = commandList[i];
       command.count *= 2;
       command.offset *= 2;
     }
@@ -159,10 +161,10 @@ function initialize(drawCommand) {
     const colorCommand = deriveColorCommand(command, pass);
     const terrainCommands = [stencilDepthCommand, colorCommand];
 
-    this._commandListTerrain = createBatchCommands(
+    drawCommand._commandListTerrain = createBatchCommands(
       drawCommand,
       terrainCommands,
-      this._commandListTerrain
+      drawCommand._commandListTerrain
     );
   }
 
@@ -172,10 +174,10 @@ function initialize(drawCommand) {
     const colorCommand = deriveColorCommand(command, pass);
     const tilesCommands = [stencilDepthCommand, colorCommand];
 
-    this._commandList3DTiles = createBatchCommands(
+    drawCommand._commandList3DTiles = createBatchCommands(
       drawCommand,
       tilesCommands,
-      this._commandList3DTiles
+      drawCommand._commandList3DTiles
     );
   }
 }
@@ -257,6 +259,36 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
   runtimePrimitive: {
     get: function () {
       return this._runtimePrimitive;
+    },
+  },
+
+  /**
+   * The batch lengths used to generate multiple draw commands.
+   *
+   * @memberof ClassificationModelDrawCommand.prototype
+   * @type {Number[]}
+   *
+   * @readonly
+   * @private
+   */
+  batchLengths: {
+    get: function () {
+      return this._runtimePrimitive.batchLengths;
+    },
+  },
+
+  /**
+   * The batch offsets used to generate multiple draw commands.
+   *
+   * @memberof ClassificationModelDrawCommand.prototype
+   * @type {Number[]}
+   *
+   * @readonly
+   * @private
+   */
+  batchOffsets: {
+    get: function () {
+      return this._runtimePrimitive.batchOffsets;
     },
   },
 
@@ -371,11 +403,11 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   }
 
   if (this._classifiesTerrain) {
-    result.push.apply(result, this._classifiesTerrain);
+    result.push.apply(result, this._commandListTerrain);
   }
 
   if (this._classifies3DTiles) {
-    result.push.apply(result, this._classifies3DTiles);
+    result.push.apply(result, this._commandList3DTiles);
   }
 
   const useIgnoreShowCommands =

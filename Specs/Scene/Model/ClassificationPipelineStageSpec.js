@@ -51,9 +51,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     return {
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
-      model: {
-        _modelResources: [],
-      },
+      model: {},
       primitive: primitive,
       runtimePrimitive: {
         batchLengths: undefined,
@@ -61,23 +59,6 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
       },
     };
   }
-
-  it("throws for primitive that isn't PrimitiveType.TRIANGLES", function () {
-    const inputBatchLengths = [6];
-    const featureIds = generateFeatureIds(inputBatchLengths);
-
-    const primitive = mockPrimitive(featureIds);
-    primitive.primitiveType = PrimitiveType.LINES;
-    const renderResources = mockRenderResources(primitive);
-
-    expect(function () {
-      ClassificationPipelineStage.process(
-        renderResources,
-        primitive,
-        mockFrameState
-      );
-    }).toThrowError(RuntimeError);
-  });
 
   it("throws for primitive with no position attribute", function () {
     const inputBatchLengths = [6];
@@ -137,13 +118,6 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
 
     expect(batchLengths).toEqual(inputBatchLengths);
     expect(batchOffsets).toEqual([0]);
-
-    const model = renderResources.model;
-    const modelResources = model._modelResources;
-
-    expect(modelResources.length).toBe(2);
-    expect(modelResources[0]).toBe(batchLengths);
-    expect(modelResources[1]).toBe(batchOffsets);
   });
 
   it("computes single batch for primitive with feature IDs", function () {
@@ -164,13 +138,6 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
 
     expect(batchLengths).toEqual(inputBatchLengths);
     expect(batchOffsets).toEqual([0]);
-
-    const model = renderResources.model;
-    const modelResources = model._modelResources;
-
-    expect(modelResources.length).toBe(2);
-    expect(modelResources[0]).toBe(batchLengths);
-    expect(modelResources[1]).toBe(batchOffsets);
   });
 
   it("computes multiple batches for primitive with feature IDs", function () {
@@ -191,13 +158,6 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
 
     expect(batchLengths).toEqual(inputBatchLengths);
     expect(batchOffsets).toEqual([0, 6, 9, 18]);
-
-    const model = renderResources.model;
-    const modelResources = model._modelResources;
-
-    expect(modelResources.length).toBe(2);
-    expect(modelResources[0]).toBe(batchLengths);
-    expect(modelResources[1]).toBe(batchOffsets);
   });
 
   it("computes multiple batches for primitive with feature IDs and indices", function () {
@@ -211,6 +171,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
         1, 4, 7,           // One triangle with feature ID 1
         0, 5, 6, 0, 6, 10  // Two triangles with feature ID 2
       ],
+      count: 15,
     };
 
     const primitive = mockPrimitive(featureIds, indices);
@@ -228,13 +189,6 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
 
     expect(batchLengths).toEqual([6, 3, 6]);
     expect(batchOffsets).toEqual([0, 6, 9]);
-
-    const model = renderResources.model;
-    const modelResources = model._modelResources;
-
-    expect(modelResources.length).toBe(2);
-    expect(modelResources[0]).toBe(batchLengths);
-    expect(modelResources[1]).toBe(batchOffsets);
   });
 
   it("doesn't recompute batches for primitive if they are already defined", function () {
@@ -258,10 +212,5 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
 
     expect(batchLengths).toEqual([]);
     expect(batchOffsets).toEqual([]);
-
-    const model = renderResources.model;
-    const modelResources = model._modelResources;
-
-    expect(modelResources.length).toBe(0);
   });
 });

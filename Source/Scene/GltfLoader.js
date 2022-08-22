@@ -1641,11 +1641,13 @@ function loadPrimitive(
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
-  primitive.primitiveType = gltfPrimitive.mode;
-  // TODO: add spec for this
-  if (primitive.primitiveType !== PrimitiveType.TRIANGLES) {
-    throw new RuntimeError("The primitive must be a triangle mesh.");
+  const primitiveType = gltfPrimitive.mode;
+  if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
+    throw new RuntimeError(
+      "Only triangle meshes can be used for classification."
+    );
   }
+  primitive.primitiveType = primitiveType;
 
   return primitive;
 }

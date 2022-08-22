@@ -2572,6 +2572,7 @@ Model.fromB3dm = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const loader = new B3dmLoader(loaderOptions);

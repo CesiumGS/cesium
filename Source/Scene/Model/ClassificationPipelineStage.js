@@ -1,6 +1,5 @@
 import defined from "../../Core/defined.js";
 import RuntimeError from "../../Core/RuntimeError.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
@@ -47,22 +46,12 @@ ClassificationPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  if (primitive.primitiveType !== PrimitiveType.TRIANGLES) {
-    throw new RuntimeError(
-      "Primitives must be of type TRIANGLES to be used for classification."
-    );
-  }
-
   const runtimePrimitive = renderResources.runtimePrimitive;
 
   if (!defined(runtimePrimitive.batchLengths)) {
     const batchInfo = getClassificationBatchInfo(primitive);
     const batchLengths = batchInfo.batchLengths;
     const batchOffsets = batchInfo.batchOffsets;
-
-    const model = renderResources.model;
-    model._modelResources.push(batchLengths);
-    model._modelResources.push(batchOffsets);
 
     runtimePrimitive.batchLengths = batchLengths;
     runtimePrimitive.batchOffsets = batchOffsets;
@@ -81,7 +70,17 @@ function getClassificationBatchInfo(primitive) {
     );
   }
 
-  const count = positionAttribute.count;
+  let indicesArray;
+  const indices = primitive.indices;
+  const hasIndices = defined(indices);
+  if (hasIndices) {
+    indicesArray = indices.typedArray;
+    // Unload the typed array. This is just a pointer to the array in
+    // the index buffer loader.
+    indices.typedArray = undefined;
+  }
+
+  const count = hasIndices ? indices.count : positionAttribute.count;
   const featureIdAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.FEATURE_ID,
@@ -103,33 +102,14 @@ function getClassificationBatchInfo(primitive) {
   // this will not affect the other primitives.
   featureIdAttribute.typedArray = undefined;
 
-  let indicesArray;
-  let firstIndex;
-  let length;
-
-  const indices = primitive.indices;
-  const hasIndices = defined(indices);
-
-  if (hasIndices) {
-    indicesArray = indices.typedArray;
-    // Unload the typed array. This is just a pointer to the array in
-    // the index buffer loader.
-    indices.typedArray = undefined;
-
-    firstIndex = indicesArray[0];
-    length = indicesArray.length;
-  } else {
-    firstIndex = 0;
-    length = count;
-  }
-
   const batchLengths = [];
   const batchOffsets = [0];
 
+  const firstIndex = hasIndices ? indicesArray[0] : 0;
   let currentBatchId = featureIds[firstIndex];
   let currentOffset = 0;
 
-  for (let i = 1; i < length; i++) {
+  for (let i = 1; i < count; i++) {
     const index = hasIndices ? indicesArray[i] : i;
     const batchId = featureIds[index];
 
@@ -146,7 +126,7 @@ function getClassificationBatchInfo(primitive) {
     }
   }
 
-  const finalBatchLength = length - currentOffset;
+  const finalBatchLength = count - currentOffset;
   batchLengths.push(finalBatchLength);
 
   return {

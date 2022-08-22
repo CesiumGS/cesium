@@ -3655,6 +3655,9 @@ describe(
           expect(normalAttribute.byteOffset).toBe(0);
           expect(normalAttribute.byteStride).toBeUndefined();
           expect(normalAttribute.typedArray.byteLength).toBe(288);
+
+          expect(primitive.indices).toBeDefined();
+          expect(primitive.indices.typedArray).toBeDefined();
         });
       });
 
@@ -4108,6 +4111,20 @@ describe(
         };
 
         return loadGltf(boxInstanced, options)
+          .then(function () {
+            fail();
+          })
+          .catch(function (error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+          });
+      });
+
+      it("throws when loading non-triangle mesh for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(pointCloudWithPropertyAttributes, options)
           .then(function () {
             fail();
           })
