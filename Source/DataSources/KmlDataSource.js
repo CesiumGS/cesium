@@ -421,7 +421,7 @@ function embedDataUris(div, elementType, attributeName, uriResolver) {
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
     const value = element.getAttribute(attributeName);
-    if (value !== null) {
+    if (defined(value)) {
       const relativeUri = new Uri(value);
       const uri = relativeUri.absoluteTo(baseUri).toString();
       const index = keys.indexOf(uri);
