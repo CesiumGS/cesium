@@ -756,6 +756,10 @@ function forEachRuntimePrimitive(
   }
 }
 
+const scratchBackFaceCullingOptions = {
+  backFaceCulling: undefined,
+};
+
 /**
  * Traverses through all draw commands and changes the back-face culling setting.
  *
@@ -764,10 +768,24 @@ function forEachRuntimePrimitive(
  * @private
  */
 ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.backFaceCulling = backFaceCulling;
-  });
+  const backFaceCullingOptions = scratchBackFaceCullingOptions;
+  backFaceCullingOptions.backFaceCulling = backFaceCulling;
+  forEachRuntimePrimitive(
+    this,
+    false,
+    updatePrimitiveBackFaceCulling,
+    backFaceCullingOptions
+  );
+};
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveBackFaceCulling(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.backFaceCulling = options.backFaceCulling;
+}
+
+const scratchShadowOptions = {
+  shadowMode: undefined,
 };
 
 /**
@@ -778,10 +796,19 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
  * @private
  */
 ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.shadows = shadowMode;
-  });
+  const shadowOptions = scratchShadowOptions;
+  shadowOptions.shadowMode = shadowMode;
+  forEachRuntimePrimitive(this, false, updatePrimitiveShadows, shadowOptions);
+};
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveShadows(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.shadows = options.shadowMode;
+}
+
+const scratchShowBoundingVolumeOptions = {
+  debugShowBoundingVolume: undefined,
 };
 
 /**
@@ -794,11 +821,22 @@ ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
 ModelSceneGraph.prototype.updateShowBoundingVolume = function (
   debugShowBoundingVolume
 ) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-  });
+  const showBoundingVolumeOptions = scratchShowBoundingVolumeOptions;
+  showBoundingVolumeOptions.debugShowBoundingVolume = debugShowBoundingVolume;
+
+  forEachRuntimePrimitive(
+    this,
+    false,
+    updatePrimitiveShowBoundingVolume,
+    showBoundingVolumeOptions
+  );
 };
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.debugShowBoundingVolume = options.debugShowBoundingVolume;
+}
 
 const scratchSilhouetteCommands = [];
 const scratchPushDrawCommandOptions = {
@@ -839,7 +877,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
 };
 
-// This callback avoids allocating a closure every frame in pushDrawCommands() above
+// Callback is defined here to avoid allocating a closure in the render loop
 function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const frameState = options.frameState;
   const hasSilhouette = options.hasSilhouette;
