@@ -693,6 +693,17 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
 };
 
 /**
+ * A callback to be applied once at each runtime primitive in the
+ * scene graph
+ * @callback traverseSceneGraphCallback
+ *
+ * @param {ModelRuntimePrimitive} runtimePrimitive The runtime primitive for the current step of the traversal
+ * @param {Object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
+ *
+ * @private
+ */
+
+/**
  * Recursively traverse through the runtime nodes in the scene graph
  * using a post-order depth-first traversal to perform a callback on
  * their runtime primitives.
@@ -700,9 +711,10 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * @param {ModelSceneGraph} sceneGraph The scene graph.
  * @param {ModelRuntimeNode} runtimeNode The current runtime node.
  * @param {Boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
- * @param {Function} callback The callback to perform on the runtime primitives of the node.
+ * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime primitives of the node.
+ * @param {Object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
  *
- * @private
+ * @privatewith
  */
 function traverseSceneGraph(
   sceneGraph,
@@ -857,7 +869,6 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires
   // gathering the original commands and the silhouette commands separately.
-
   const silhouetteCommands = scratchSilhouetteCommands;
   silhouetteCommands.length = 0;
 
