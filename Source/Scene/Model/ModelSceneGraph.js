@@ -714,7 +714,7 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime primitives of the node.
  * @param {Object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
  *
- * @privatewith
+ * @private
  */
 function traverseSceneGraph(
   sceneGraph,
