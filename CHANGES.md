@@ -28,6 +28,7 @@
 
 - `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
 - `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
+- The `sideEffects` field in `package.json` is now defined, allowing more conservative bundlers like Webpack to enable tree shaking by default.
 
 ##### Fixes :wrench:
 
