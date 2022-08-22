@@ -259,6 +259,13 @@ describe(
       });
     });
 
+    it("releases GLB typed array when finished loading", function () {
+      return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
+        expect(gltfLoader.components).toBeDefined();
+        expect(gltfLoader._typedArray).not.toBeDefined();
+      });
+    });
+
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
         const components = gltfLoader.components;

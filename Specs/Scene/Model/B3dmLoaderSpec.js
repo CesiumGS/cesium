@@ -78,6 +78,13 @@ describe("Scene/Model/B3dmLoader", function () {
     }).toThrowError(RuntimeError);
   }
 
+  it("releases array buffer when finished loading", function () {
+    return loadB3dm(noBatchIdsUrl).then(function (loader) {
+      expect(loader.components).toBeDefined();
+      expect(loader._arrayBuffer).not.toBeDefined();
+    });
+  });
+
   it("loads BatchedNoBatchIds", function () {
     return loadB3dm(noBatchIdsUrl).then(function (loader) {
       const components = loader.components;

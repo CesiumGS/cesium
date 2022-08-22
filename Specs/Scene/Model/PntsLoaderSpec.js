@@ -276,6 +276,13 @@ describe("Scene/Model/PntsLoader", function () {
     expect(attribute.quantization).not.toBeDefined();
   }
 
+  it("releases array buffer when finished", function () {
+    return loadPnts(pointCloudRGBUrl).then(function (loader) {
+      expect(loader.components).toBeDefined();
+      expect(loader._arrayBuffer).not.toBeDefined();
+    });
+  });
+
   it("loads PointCloudRGB", function () {
     return loadPnts(pointCloudRGBUrl).then(function (loader) {
       const components = loader.components;
