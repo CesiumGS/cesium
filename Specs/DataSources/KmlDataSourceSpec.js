@@ -429,6 +429,13 @@ describe("DataSources/KmlDataSource", function () {
       });
   });
 
+  it("can handle embedded data tags with missing source attributes", function () {
+    const dataSource = new KmlDataSource(options);
+    return Resource.fetchBlob("Data/KML/simpleScriptMissingSrcAttribute.kmz")
+      .then((blob) => dataSource.load(blob))
+      .catch(fail);
+  });
+
   it("sets DataSource name from Document", function () {
     const kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
