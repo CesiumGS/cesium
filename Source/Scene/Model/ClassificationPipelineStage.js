@@ -40,6 +40,7 @@ ClassificationPipelineStage.process = function (
   frameState
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
+
   shaderBuilder.addDefine(
     "HAS_CLASSIFICATION",
     undefined,
@@ -52,17 +53,20 @@ ClassificationPipelineStage.process = function (
     );
   }
 
-  const batchInfo = getClassificationBatchInfo(primitive);
-  const batchLengths = batchInfo.batchLengths;
-  const batchOffsets = batchInfo.batchOffsets;
-
-  const model = renderResources.model;
-  model._modelResources.push(batchLengths);
-  model._modelResources.push(batchOffsets);
-
   const runtimePrimitive = renderResources.runtimePrimitive;
-  runtimePrimitive.batchLengths = batchLengths;
-  runtimePrimitive.batchOffsets = batchOffsets;
+
+  if (!defined(runtimePrimitive.batchLengths)) {
+    const batchInfo = getClassificationBatchInfo(primitive);
+    const batchLengths = batchInfo.batchLengths;
+    const batchOffsets = batchInfo.batchOffsets;
+
+    const model = renderResources.model;
+    model._modelResources.push(batchLengths);
+    model._modelResources.push(batchOffsets);
+
+    runtimePrimitive.batchLengths = batchLengths;
+    runtimePrimitive.batchOffsets = batchOffsets;
+  }
 };
 
 function getClassificationBatchInfo(primitive) {

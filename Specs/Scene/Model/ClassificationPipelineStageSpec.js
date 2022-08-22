@@ -236,4 +236,32 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     expect(modelResources[0]).toBe(batchLengths);
     expect(modelResources[1]).toBe(batchOffsets);
   });
+
+  it("doesn't recompute batches for primitive if they are already defined", function () {
+    const inputBatchLengths = [6];
+    const featureIds = generateFeatureIds(inputBatchLengths);
+    const primitive = mockPrimitive(featureIds);
+    const renderResources = mockRenderResources(primitive);
+
+    const runtimePrimitive = renderResources.runtimePrimitive;
+    runtimePrimitive.batchLengths = [];
+    runtimePrimitive.batchOffsets = [];
+
+    ClassificationPipelineStage.process(
+      renderResources,
+      primitive,
+      mockFrameState
+    );
+
+    const batchLengths = runtimePrimitive.batchLengths;
+    const batchOffsets = runtimePrimitive.batchOffsets;
+
+    expect(batchLengths).toEqual([]);
+    expect(batchOffsets).toEqual([]);
+
+    const model = renderResources.model;
+    const modelResources = model._modelResources;
+
+    expect(modelResources.length).toBe(0);
+  });
 });

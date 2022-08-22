@@ -1,7 +1,6 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
@@ -58,14 +57,12 @@ function ClassificationModelDrawCommand(options) {
   this._classifiesTerrain = type !== ClassificationType.CESIUM_3D_TILE;
   this._classifies3DTiles = type !== ClassificationType.TERRAIN;
 
-  this._commandList = [];
+  this._useDebugWireframe = model._enableDebugWireframe && model.debugWireframe;
 
-  this._commandsTerrain = [];
-  this._commands3DTiles = [];
-  this._commandsIgnoreShow = []; // Used for inverted classification.
-  this._commandsWireframe = [];
-
-  this._ignoreShowCommand = undefined;
+  this._commandListTerrain = [];
+  this._commandList3DTiles = [];
+  this._commandListIgnoreShow = []; // Used for inverted classification.
+  this._commandListDebugWireframe = [];
 
   initialize(this);
 }
@@ -132,44 +129,79 @@ const colorRenderState = {
 
 function initialize(drawCommand) {
   const command = drawCommand._command;
-  const commandList = drawCommand._commandList;
-
-  //const runtimePrimitive = drawCommand._runtimePrimitive;
-  //const batchLengths = runtimePrimitive.batchLengths;
-  //const batchOffsets = runtimePrimitive.batchOFfsets;
-
-  const model = drawCommand._model;
-
-  const useDebugWireframe = model._enableDebugWireframe && model.debugWireframe;
 
   // If debug wireframe is enabled, don't derive any new commands.
-  // Render as normal.
-  if (useDebugWireframe) {
+  // Render normally in the opaque pass.
+  if (drawCommand._useDebugWireframe) {
     command.pass = Pass.OPAQUE;
-    commandList.push(command);
+    this._commandListDebugWireframe = createBatchCommands(
+      drawCommand,
+      [command],
+      this._commandListDebugWireframe
+    );
+
+    const length = this._commandListDebugWireframe.length;
+    for (let i = 0; i < length; i++) {
+      // The lengths / offsets of the batches have to be adjusted for wireframe.
+      // Only PrimitiveType.TRIANGLES is allowed for classification, so this
+      // just requires doubling the values for the batches.
+      const command = this._commandListDebugWireframe[i];
+      command.count *= 2;
+      command.offset *= 2;
+    }
 
     return;
   }
 
   if (drawCommand._classifiesTerrain) {
     const pass = Pass.TERRAIN_CLASSIFICATION;
-
     const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
-    commandList.push(stencilDepthCommand);
-
     const colorCommand = deriveColorCommand(command, pass);
-    commandList.push(colorCommand);
+    const terrainCommands = [stencilDepthCommand, colorCommand];
+
+    this._commandListTerrain = createBatchCommands(
+      drawCommand,
+      terrainCommands,
+      this._commandListTerrain
+    );
   }
 
   if (drawCommand._classifies3DTiles) {
     const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-
     const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
-    commandList.push(stencilDepthCommand);
-
     const colorCommand = deriveColorCommand(command, pass);
-    commandList.push(colorCommand);
+    const tilesCommands = [stencilDepthCommand, colorCommand];
+
+    this._commandList3DTiles = createBatchCommands(
+      drawCommand,
+      tilesCommands,
+      this._commandList3DTiles
+    );
   }
+}
+
+function createBatchCommands(drawCommand, derivedCommands, result) {
+  const runtimePrimitive = drawCommand._runtimePrimitive;
+  const batchLengths = runtimePrimitive.batchLengths;
+  const batchOffsets = runtimePrimitive.batchOffsets;
+
+  const numBatches = batchLengths.length;
+  const numDerivedCommands = derivedCommands.length;
+  for (let i = 0; i < numBatches; i++) {
+    const batchLength = batchLengths[i];
+    const batchOffset = batchOffsets[i];
+    // For multiple derived commands (e.g. stencil and color commands),
+    // they must be added in a certain order even within the batches.
+    for (let j = 0; j < numDerivedCommands; j++) {
+      const derivedCommand = derivedCommands[j];
+      const batchCommand = DrawCommand.shallowClone(derivedCommand);
+      batchCommand.count = batchLength;
+      batchCommand.offset = batchOffset;
+      result.push(batchCommand);
+    }
+  }
+
+  return result;
 }
 
 function deriveStencilDepthCommand(command, pass) {
@@ -333,20 +365,34 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   frameState,
   result
 ) {
-  // Derive the command for inverted classification if necessary.
-  const deriveIgnoreShowCommand =
-    frameState.invertClassification &&
-    this._classifies3DTiles &&
-    !defined(this._ignoreShowCommand);
-
-  if (deriveIgnoreShowCommand) {
-    const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-    const command = deriveStencilDepthCommand(this._command, pass);
-    this._ignoreShowCommand = command;
-    this._commandList.push(command);
+  if (this._useDebugWireframe) {
+    result.push.apply(result, this._commandListDebugWireframe);
+    return;
   }
 
-  result.push.apply(result, this._commandList);
+  if (this._classifiesTerrain) {
+    result.push.apply(result, this._classifiesTerrain);
+  }
+
+  if (this._classifies3DTiles) {
+    result.push.apply(result, this._classifies3DTiles);
+  }
+
+  const useIgnoreShowCommands =
+    frameState.invertClassification && this._classifies3DTiles;
+  if (useIgnoreShowCommands) {
+    if (this._commandListIgnoreShow.length === 0) {
+      const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+      const command = deriveStencilDepthCommand(this._command, pass);
+      this._commandListIgnoreShow = createBatchCommands(
+        this,
+        [command],
+        this._commandListIgnoreShow
+      );
+    }
+
+    result.push.apply(result, this._commandListIgnoreShow);
+  }
 
   return result;
 };
