@@ -260,6 +260,9 @@ B3dmLoader.prototype.load = function () {
       createStructuralMetadata(that, components);
       that._components = components;
 
+      // Now that we have the parsed components, we can release the array buffer
+      that._arrayBuffer = undefined;
+
       that._state = B3dmLoaderState.READY;
       return that;
     })
@@ -363,6 +366,7 @@ B3dmLoader.prototype.unload = function () {
   }
 
   this._components = undefined;
+  this._arrayBuffer = undefined;
 };
 
 export default B3dmLoader;

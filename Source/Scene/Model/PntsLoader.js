@@ -663,8 +663,9 @@ function makeComponents(loader, context) {
 
   loader._components = components;
 
-  // Free the parsed content so we don't hold onto the large typed arrays.
+  // Free the parsed content and array buffer so we don't hold onto the large arrays.
   loader._parsedContent = undefined;
+  loader._arrayBuffer = undefined;
 }
 
 function addPropertyAttributesToPrimitive(
@@ -707,6 +708,7 @@ PntsLoader.prototype.unload = function () {
 
   this._components = undefined;
   this._parsedContent = undefined;
+  this._arrayBuffer = undefined;
 };
 
 export default PntsLoader;
