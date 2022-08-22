@@ -106,7 +106,7 @@ describe("Scene/Vector3DTileContent", () => {
     "./Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable/tileset.json";
 
   function subdivideRectangle(rectangle) {
-    const center = Rectangle.center(tilesetRectangle);
+    const center = Rectangle.center(rectangle);
     const ulRect = new Rectangle(
       tilesetRectangle.west,
       center.latitude,
