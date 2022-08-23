@@ -42,7 +42,7 @@ ModelSplitterPipelineStage.process = function (
     undefined,
     ShaderDestination.FRAGMENT
   );
-  shaderBuilder.addFragmentLines([ModelSplitterStageFS]);
+  shaderBuilder.addFragmentLines(ModelSplitterStageFS);
 
   const stageUniforms = {};
 

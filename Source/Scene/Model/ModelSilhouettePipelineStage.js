@@ -59,8 +59,8 @@ ModelSilhouettePipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_SILHOUETTE", undefined, ShaderDestination.BOTH);
 
-  shaderBuilder.addVertexLines([ModelSilhouetteStageVS]);
-  shaderBuilder.addFragmentLines([ModelSilhouetteStageFS]);
+  shaderBuilder.addVertexLines(ModelSilhouetteStageVS);
+  shaderBuilder.addFragmentLines(ModelSilhouetteStageFS);
 
   shaderBuilder.addUniform(
     "vec4",

@@ -40,8 +40,8 @@ CPUStylingPipelineStage.process = function (
   const model = renderResources.model;
   const shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addVertexLines([CPUStylingStageVS]);
-  shaderBuilder.addFragmentLines([CPUStylingStageFS]);
+  shaderBuilder.addVertexLines(CPUStylingStageVS);
+  shaderBuilder.addFragmentLines(CPUStylingStageFS);
   shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
 
   // These uniforms may have already been added by the ModelColorStage if a static

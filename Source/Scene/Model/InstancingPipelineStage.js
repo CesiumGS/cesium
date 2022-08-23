@@ -57,7 +57,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
-  shaderBuilder.addVertexLines([InstancingStageCommon]);
+  shaderBuilder.addVertexLines(InstancingStageCommon);
 
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
@@ -168,9 +168,9 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       );
     };
 
-    shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
+    shaderBuilder.addVertexLines(LegacyInstancingStageVS);
   } else {
-    shaderBuilder.addVertexLines([InstancingStageVS]);
+    shaderBuilder.addVertexLines(InstancingStageVS);
   }
 
   if (use2D) {

@@ -1,3 +1,5 @@
+import DeveloperError from "../Core/DeveloperError.js";
+
 /**
  * A utility for dynamically-generating a GLSL function
  *
@@ -29,13 +31,27 @@ function ShaderFunction(signature) {
 
 /**
  * Add an array of lines to the body of the function
- * @param {String[]} lines An array of lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
+ * @param {String|String[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
-  const paddedLines = lines.map(function (line) {
-    return `    ${line}`;
-  });
-  Array.prototype.push.apply(this.body, paddedLines);
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+    );
+  }
+  //>>includeEnd('debug');
+  const body = this.body;
+
+  if (Array.isArray(lines)) {
+    const paddedLines = lines.map(function (line) {
+      return `    ${line}`;
+    });
+    body.push.apply(body, paddedLines);
+  } else {
+    // Single string case
+    body.push(`    ${lines}`);
+  }
 };
 
 /**
