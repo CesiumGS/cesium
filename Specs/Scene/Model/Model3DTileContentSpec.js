@@ -421,8 +421,10 @@ describe(
           function (tileset) {
             const content = tileset.root.content;
 
-            // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
-            // 10 * ((24 * (8 * 4 + 1 * 4)) + (36 * 2)) = 9360
+            // 10 buildings, 36 ushort indices and 24 vertices per building, 8
+            // float components (position, normal, uv) and 1 uint component
+            // (batchId) per vertex
+            // 10 * [(24 * (8 * 4 + 1 * 4)) + (36 * 2)] = 9360 bytes
             const geometryByteLength = 9360;
 
             // Texture is 128x128 RGBA bytes, not mipmapped

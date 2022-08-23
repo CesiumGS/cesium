@@ -619,8 +619,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileVisible.addEventListener(function(tile) {
-   *     if (tile.content instanceof Cesium.Batched3DModel3DTileContent) {
-   *         console.log('A Batched 3D Model tile is visible.');
+   *     if (tile.content instanceof Cesium.Model3DTileContent) {
+   *         console.log('A 3D model tile is visible.');
    *     }
    * });
    *
