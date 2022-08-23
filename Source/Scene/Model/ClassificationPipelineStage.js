@@ -6,7 +6,7 @@ import ModelUtility from "./ModelUtility.js";
 
 /**
  * The classification pipeline stage is responsible for batching features
- * together to be rendered separately in {@link ClassificationModelDrawCommand}.
+ * together to be rendered by the {@link ClassificationModelDrawCommand}.
  *
  * @namespace ClassificationPipelineStage
  *

@@ -1541,7 +1541,6 @@ function loadPrimitive(
         );
 
         const modelSemantic = semanticInfo.modelSemantic;
-
         if (
           loadForClassification &&
           !isClassificationAttribute(modelSemantic)
