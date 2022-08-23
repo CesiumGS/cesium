@@ -1,6 +1,5 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
@@ -306,12 +305,6 @@ function createPickCommands(drawCommand, derivedCommands, commandList) {
   pickColorCommand.pickOnly = true;
   pickColorCommand.renderState = renderState;
   pickColorCommand.pickId = drawCommand._pickId;
-
-  const uniformMap = clone(pickColorCommand.uniformMap);
-  uniformMap.u_classificationPickPass = function () {
-    return 1.0;
-  };
-  pickColorCommand.uniformMap = uniformMap;
 
   const pickCommands = scratchPickCommands;
   pickCommands.length = 0;
