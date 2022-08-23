@@ -86,6 +86,8 @@ function createClassificationBatches(primitive, runtimePrimitive) {
   if (!defined(featureIdAttribute)) {
     runtimePrimitive.batchLengths = [count];
     runtimePrimitive.batchOffsets = [0];
+
+    return;
   }
 
   const featureIds = featureIdAttribute.typedArray;

@@ -127,17 +127,23 @@ const colorRenderState = {
   blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
 };
 
+const scratchDerivedCommands = [];
+
 function initialize(drawCommand) {
   const command = drawCommand._command;
+  const derivedCommands = scratchDerivedCommands;
 
   // If debug wireframe is enabled, don't derive any new commands.
   // Render normally in the opaque pass.
   if (drawCommand._useDebugWireframe) {
     command.pass = Pass.OPAQUE;
 
+    derivedCommands.length = 0;
+    derivedCommands.push(command);
+
     drawCommand._commandListDebugWireframe = createBatchCommands(
       drawCommand,
-      [command],
+      derivedCommands,
       drawCommand._commandListDebugWireframe
     );
 
@@ -159,11 +165,13 @@ function initialize(drawCommand) {
     const pass = Pass.TERRAIN_CLASSIFICATION;
     const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
     const colorCommand = deriveColorCommand(command, pass);
-    const terrainCommands = [stencilDepthCommand, colorCommand];
+
+    derivedCommands.length = 0;
+    derivedCommands.push(stencilDepthCommand, colorCommand);
 
     drawCommand._commandListTerrain = createBatchCommands(
       drawCommand,
-      terrainCommands,
+      derivedCommands,
       drawCommand._commandListTerrain
     );
   }
@@ -172,11 +180,13 @@ function initialize(drawCommand) {
     const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
     const colorCommand = deriveColorCommand(command, pass);
-    const tilesCommands = [stencilDepthCommand, colorCommand];
+
+    derivedCommands.length = 0;
+    derivedCommands.push(stencilDepthCommand, colorCommand);
 
     drawCommand._commandList3DTiles = createBatchCommands(
       drawCommand,
-      tilesCommands,
+      derivedCommands,
       drawCommand._commandList3DTiles
     );
   }
@@ -412,13 +422,19 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
 
   const useIgnoreShowCommands =
     frameState.invertClassification && this._classifies3DTiles;
+
   if (useIgnoreShowCommands) {
     if (this._commandListIgnoreShow.length === 0) {
       const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
       const command = deriveStencilDepthCommand(this._command, pass);
+
+      const derivedCommands = scratchDerivedCommands;
+      derivedCommands.length = 0;
+      derivedCommands.push(command);
+
       this._commandListIgnoreShow = createBatchCommands(
         this,
-        [command],
+        derivedCommands,
         this._commandListIgnoreShow
       );
     }
