@@ -6,7 +6,7 @@ import ModelUtility from "./ModelUtility.js";
 
 /**
  * The classification pipeline stage is responsible for batching features
- * together to properly create draw commands in the
+ * together to be rendered separately in {@link ClassificationModelDrawCommand}.
  *
  * @namespace ClassificationPipelineStage
  *
@@ -16,15 +16,15 @@ const ClassificationPipelineStage = {};
 ClassificationPipelineStage.name = "ClassificationPipelineStage"; // Helps with debugging
 
 /**
- * Process a model. This modifies the following parts of the render resources:
+ * Process a primitive. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the shader to indicate that the model classifies other assets</li>
- *  <li>adds arrays containing batch lengths and offsets to the model's resources
+ *  <li>adds a define to the shader to indicate that the primitive classifies other assets</li>
+ *  <li>adds arrays containing batch lengths and offsets to the primitive's resources
  * </ul>
  *
  * <p>
- * See {@link ClassificationModelDrawCommand} for the use of the batch offsets / lengths.
+ * See {@link ClassificationModelDrawCommand} for the use of the batch offsets and lengths.
  * </p>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -49,16 +49,11 @@ ClassificationPipelineStage.process = function (
   const runtimePrimitive = renderResources.runtimePrimitive;
 
   if (!defined(runtimePrimitive.batchLengths)) {
-    const batchInfo = getClassificationBatchInfo(primitive);
-    const batchLengths = batchInfo.batchLengths;
-    const batchOffsets = batchInfo.batchOffsets;
-
-    runtimePrimitive.batchLengths = batchLengths;
-    runtimePrimitive.batchOffsets = batchOffsets;
+    createClassificationBatches(primitive, runtimePrimitive);
   }
 };
 
-function getClassificationBatchInfo(primitive) {
+function createClassificationBatches(primitive, runtimePrimitive) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
@@ -89,10 +84,8 @@ function getClassificationBatchInfo(primitive) {
 
   // If there are no feature IDs, render the primitive in a single batch.
   if (!defined(featureIdAttribute)) {
-    return {
-      batchLengths: [count],
-      batchOffsets: [0],
-    };
+    runtimePrimitive.batchLengths = [count];
+    runtimePrimitive.batchOffsets = [0];
   }
 
   const featureIds = featureIdAttribute.typedArray;
@@ -129,10 +122,8 @@ function getClassificationBatchInfo(primitive) {
   const finalBatchLength = count - currentOffset;
   batchLengths.push(finalBatchLength);
 
-  return {
-    batchLengths: batchLengths,
-    batchOffsets: batchOffsets,
-  };
+  runtimePrimitive.batchLengths = batchLengths;
+  runtimePrimitive.batchOffsets = batchOffsets;
 }
 
 export default ClassificationPipelineStage;

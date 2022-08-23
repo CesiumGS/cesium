@@ -3773,7 +3773,7 @@ describe(
         });
       });
 
-      it("loads instanced attributes as typed arrays only for 2D", function () {
+      it("loads instanced attributes as typed arrays for 2D", function () {
         const options = {
           loadAttributesFor2D: true,
         };
@@ -3819,7 +3819,7 @@ describe(
         });
       });
 
-      it("loads instanced translation without min/max as typed array only for 2D", function () {
+      it("loads instanced translation without min/max as typed array for 2D", function () {
         const options = {
           loadAttributesFor2D: true,
         };
@@ -4102,6 +4102,45 @@ describe(
 
           const animations = components.animations;
           expect(animations.length).toBe(0);
+        });
+      });
+
+      it("ignores normal textures for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(twoSidedPlane, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const tangentAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TANGENT
+          );
+          const texcoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(texcoordAttribute).toBeDefined();
+          expect(normalAttribute).toBeUndefined();
+          expect(tangentAttribute).toBeUndefined();
+
+          const material = primitive.material;
+          expect(material.normalTexture).toBeUndefined();
         });
       });
 
