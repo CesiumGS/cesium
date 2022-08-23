@@ -3,15 +3,13 @@ import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelFS from "../../Shaders/Model/ModelFS.js";
-import ModelVS from "../../Shaders/Model/ModelVS.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
-import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import VertexArray from "../../Renderer/VertexArray.js";
+import ModelFS from "../../Shaders/Model/ModelFS.js";
+import ModelVS from "../../Shaders/Model/ModelVS.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
-import StencilConstants from "../StencilConstants.js";
 import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
@@ -33,19 +31,15 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addVertexLines([ModelVS]);
   shaderBuilder.addFragmentLines([ModelFS]);
 
-  const model = primitiveRenderResources.model;
-  const hasClassification = defined(model.classificationType);
-
-  const context = frameState.context;
-
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
-    context: context,
+    context: frameState.context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
 
+  const model = primitiveRenderResources.model;
   model._pipelineResources.push(vertexArray);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
@@ -82,19 +76,13 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     true
   );
 
-  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
-    // Set stencil values for classification on 3D Tiles
-    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
   renderState.cull.face = ModelUtility.getCullFace(
     modelMatrix,
     primitiveRenderResources.primitiveType
   );
   renderState = RenderState.fromCache(renderState);
 
-  // Disable shadows if this renders a classification model.
+  const hasClassification = defined(model.classificationType);
   const castShadows = hasClassification
     ? false
     : ShadowMode.castShadows(model.shadows);
