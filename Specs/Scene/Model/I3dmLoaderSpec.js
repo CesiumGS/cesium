@@ -119,6 +119,13 @@ describe("Scene/Model/I3dmLoader", function () {
     }
   }
 
+  it("releases array buffer when finished loading", function () {
+    return loadI3dm(InstancedWithBatchTableUrl).then(function (loader) {
+      expect(loader.components).toBeDefined();
+      expect(loader._arrayBuffer).not.toBeDefined();
+    });
+  });
+
   it("loads InstancedGltfExternalUrl", function () {
     return loadI3dm(InstancedGltfExternalUrl).then(function (loader) {
       const components = loader.components;

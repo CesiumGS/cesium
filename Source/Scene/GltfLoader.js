@@ -400,7 +400,12 @@ GltfLoader.prototype.load = function () {
         }
 
         if (loader._state === GltfLoaderState.PROCESSED) {
-          unloadBufferViews(loader); // Buffer views can be unloaded after the data has been copied
+          // The buffer views can be unloaded once the data is copied.
+          unloadBufferViews(loader);
+
+          // Similarly, if the glTF was loaded from a typed array, release the memory
+          loader._typedArray = undefined;
+
           loader._state = GltfLoaderState.READY;
           resolve(loader);
         }
@@ -2399,6 +2404,7 @@ GltfLoader.prototype.unload = function () {
   unloadStructuralMetadata(this);
 
   this._components = undefined;
+  this._typedArray = undefined;
   this._state = GltfLoaderState.UNLOADED;
 };
 
