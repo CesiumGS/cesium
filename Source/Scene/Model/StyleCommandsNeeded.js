@@ -1,6 +1,8 @@
 /**
- * An enum describing what commands (opaque) are required by a Cesium3DTileStyle.
+ * An enum describing what commands (opaque or translucent) are required by
+ * a {@link Cesium3DTileStyle}.
  *
+ * @enum
  * @private
  */
 const StyleCommandsNeeded = {
