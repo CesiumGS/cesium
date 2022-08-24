@@ -149,7 +149,7 @@ function processPickTexture(renderResources, primitive, instances) {
     return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
   };
 
-  // The feature ID  is ignored if it is greater than the number of features.
+  // The feature ID is ignored if it is greater than the number of features.
   renderResources.pickId =
     "((selectedFeature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, selectedFeature.st) : vec4(0.0))";
 }

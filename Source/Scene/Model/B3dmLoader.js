@@ -48,11 +48,12 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {Boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
- * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- */
+ * @param {Boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+ * @param {Boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+ * @param {Boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+ * */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -78,6 +79,10 @@ function B3dmLoader(options) {
     false
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
+  const loadForClassification = defaultValue(
+    options.loadForClassification,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -99,6 +104,7 @@ function B3dmLoader(options) {
   this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
+  this._loadForClassification = loadForClassification;
 
   this._state = B3dmLoaderState.UNLOADED;
 
@@ -232,6 +238,7 @@ B3dmLoader.prototype.load = function () {
     loadAttributesFor2D: this._loadAttributesFor2D,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
     loadPrimitiveOutline: this._loadPrimitiveOutline,
+    loadForClassification: this._loadForClassification,
     renameBatchIdSemantic: true,
   });
 
@@ -259,6 +266,9 @@ B3dmLoader.prototype.load = function () {
       );
       createStructuralMetadata(that, components);
       that._components = components;
+
+      // Now that we have the parsed components, we can release the array buffer
+      that._arrayBuffer = undefined;
 
       that._state = B3dmLoaderState.READY;
       return that;
@@ -363,6 +373,7 @@ B3dmLoader.prototype.unload = function () {
   }
 
   this._components = undefined;
+  this._arrayBuffer = undefined;
 };
 
 export default B3dmLoader;

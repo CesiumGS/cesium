@@ -619,8 +619,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileVisible.addEventListener(function(tile) {
-   *     if (tile.content instanceof Cesium.Batched3DModel3DTileContent) {
-   *         console.log('A Batched 3D Model tile is visible.');
+   *     if (tile.content instanceof Cesium.Model3DTileContent) {
+   *         console.log('A 3D model tile is visible.');
    *     }
    * });
    *
@@ -1675,21 +1675,28 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * Determines whether terrain, 3D Tiles or both will be classified by this tileset.
+   * Determines whether terrain, 3D Tiles, or both will be classified by this tileset.
    * <p>
-   * This option is only applied to tilesets containing batched 3D models, geometry data, or vector data. Even when undefined, vector data and geometry data
-   * must render as classifications and will default to rendering on both terrain and other 3D Tiles tilesets.
+   * This option is only applied to tilesets containing batched 3D models,
+   * glTF content, geometry data, or vector data. Even when undefined, vector
+   * and geometry data must render as classifications and will default to
+   * rendering on both terrain and other 3D Tiles tilesets.
    * </p>
    * <p>
-   * When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:
+   * When enabled for batched 3D model and glTF tilesets, there are a few
+   * requirements/limitations on the glTF:
    * <ul>
-   *     <li>POSITION and _BATCHID semantics are required.</li>
-   *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
-   *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
-   *     <li>Only one node is supported.</li>
-   *     <li>Only one mesh per node is supported.</li>
-   *     <li>Only one primitive per mesh is supported.</li>
+   *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
+   *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
+   *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The <code>POSITION</code> semantic is required.</li>
+   *     <li>If <code>_BATCHID</code>s and an index buffer are both present, all indices with the same batch id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If <code>_BATCHID</code>s are present with no index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * Additionally, classification is not supported for points or instanced 3D
+   * models.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype

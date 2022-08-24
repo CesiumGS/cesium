@@ -444,6 +444,8 @@ const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
+ * If the model is used for classification, a {@link ClassificationModelDrawCommand}
+ * is generated for each primitive instead.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -552,7 +554,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         primitiveRenderResources,
         frameState
       );
-
       runtimePrimitive.drawCommand = drawCommand;
     }
   }
