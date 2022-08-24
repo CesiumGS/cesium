@@ -7,7 +7,8 @@ import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
- * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
+ * The CPU styling stage is responsible for ensuring that the feature's color
+ * is applied at runtime.
  *
  * @namespace CPUStylingPipelineStage
  *

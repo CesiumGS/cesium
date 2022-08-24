@@ -1668,7 +1668,7 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
- * Marks the model's {@link Cesium3DTileset#style} as dirty, which forces all
+ * Marks the model's {@link Model#style} as dirty, which forces all
  * features to re-evaluate the style in the next frame the model is visible.
  */
 Model.prototype.makeStyleDirty = function () {
@@ -1717,14 +1717,14 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
+  updateFeatureTableId(this);
+  updateFeatureTables(this, frameState);
+  updateStyle(this);
   updatePointCloudShading(this);
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
-  updateFeatureTableId(this);
-  updateFeatureTables(this, frameState);
-  updateStyle(this);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2734,7 +2734,7 @@ Model.prototype.applyStyle = function () {
     return;
   }
 
-  const style = this.style;
+  const style = this._style;
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
   if (hasFeatureTable) {

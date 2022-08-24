@@ -56,18 +56,22 @@ function ModelDrawCommand(options) {
   const isTranslucent = command.pass === Pass.TRANSLUCENT;
   const isDoubleSided = runtimePrimitive.primitive.material.doubleSided;
   const usesBackFaceCulling = !isDoubleSided && !isTranslucent;
+  const hasSilhouette = renderResources.hasSilhouette;
 
   // If the command was already translucent, there's no need to derive a new
   // translucent command. As of now, a style can't change an originally
   // translucent feature to opaque since the style's alpha is modulated,
-  // not replaced. When this changes, we need to derive new opaque commands \
+  // not replaced. When this changes, we need to derive new opaque commands
   // in initialize().
-  const needsTranslucentCommand = !isTranslucent;
+  //
+  // Silhouettes for primitives with both opaque and translucent features
+  // are not yet supported.
+  const needsTranslucentCommand = !isTranslucent && !hasSilhouette;
 
   const needsSkipLevelOfDetailCommands =
     renderResources.hasSkipLevelOfDetail && !isTranslucent;
 
-  const needsSilhouetteCommands = renderResources.hasSilhouette;
+  const needsSilhouetteCommands = hasSilhouette;
 
   this._command = command;
 
