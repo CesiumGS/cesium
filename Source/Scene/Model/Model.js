@@ -314,6 +314,7 @@ function Model(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._pointCloudShading = pointCloudShading;
   this._attenuation = pointCloudShading.attenuation;
+  this._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -400,6 +401,8 @@ function Model(options) {
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+
+  this._skipLevelOfDetail = false;
 
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
@@ -1102,6 +1105,11 @@ Object.defineProperties(Model.prototype, {
       }
       //>>includeEnd('debug');
 
+      const modelMatrix = defined(this._clampedModelMatrix)
+        ? this._clampedModelMatrix
+        : this.modelMatrix;
+      updateBoundingSphere(this, modelMatrix);
+
       return this._boundingSphere;
     },
   },
@@ -1535,12 +1543,26 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets the model's classification type. This indicates whether terrain,
-   * 3D Tiles or both will be classified by this model.
+   * Gets the model's classification type. This determines whether terrain,
+   * 3D Tiles, or both will be classified by this model.
+   * <p>
+   * Additionally, there are a few requirements/limitations:
+   * <ul>
+   *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
+   *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
+   *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The position attribute is required.</li>
+   *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
+   * </ul>
+   * </p>
    *
    * @memberof Model.prototype
    *
    * @type {ClassificationType}
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    * @readonly
    */
   classificationType: {
@@ -1667,8 +1689,9 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  updatePointCloudAttenuation(this);
+  updatePointCloudShading(this);
   updateSilhouette(this, frameState);
+  updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
   updateFeatureTableId(this);
@@ -1725,12 +1748,19 @@ function updateImageBasedLighting(model, frameState) {
   }
 }
 
-function updatePointCloudAttenuation(model) {
+function updatePointCloudShading(model) {
+  const pointCloudShading = model.pointCloudShading;
+
   // Check if the shader needs to be updated for point cloud attenuation
   // settings.
-  if (model.pointCloudShading.attenuation !== model._attenuation) {
+  if (pointCloudShading.attenuation !== model._attenuation) {
     model.resetDrawCommands();
-    model._attenuation = model.pointCloudShading.attenuation;
+    model._attenuation = pointCloudShading.attenuation;
+  }
+
+  if (pointCloudShading.backFaceCulling !== model._pointCloudBackFaceCulling) {
+    model.resetDrawCommands();
+    model._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
   }
 }
 
@@ -1742,6 +1772,14 @@ function updateSilhouette(model, frameState) {
     }
 
     model._silhouetteDirty = false;
+  }
+}
+
+function updateSkipLevelOfDetail(model, frameState) {
+  const skipLevelOfDetail = model.hasSkipLevelOfDetail(frameState);
+  if (skipLevelOfDetail !== model._skipLevelOfDetail) {
+    model.resetDrawCommands();
+    model._skipLevelOfDetail = skipLevelOfDetail;
   }
 }
 
@@ -1911,17 +1949,67 @@ function updateBoundingSphereAndScale(model, frameState) {
     ? model._clampedModelMatrix
     : model.modelMatrix;
 
-  model._clampedScale = defined(model._maximumScale)
-    ? Math.min(model._scale, model._maximumScale)
-    : model._scale;
+  updateBoundingSphere(model, modelMatrix);
+  updateComputedScale(model, modelMatrix, frameState);
+}
 
+function updateBoundingSphere(model, modelMatrix) {
   model._boundingSphere = BoundingSphere.transform(
     model._sceneGraph.boundingSphere,
     modelMatrix,
     model._boundingSphere
   );
+
+  model._clampedScale = defined(model._maximumScale)
+    ? Math.min(model._scale, model._maximumScale)
+    : model._scale;
+
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
-  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updateComputedScale(model, modelMatrix, frameState) {
+  let scale = model.scale;
+
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
+    // Compute size of bounding sphere in pixels
+    const context = frameState.context;
+    const maxPixelSize = Math.max(
+      context.drawingBufferWidth,
+      context.drawingBufferHeight
+    );
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
+
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      SceneTransforms.computeActualWgs84Position(
+        frameState,
+        scratchPosition,
+        scratchPosition
+      );
+    }
+
+    const radius = model._boundingSphere.radius;
+    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / metersPerPixel;
+    const diameterInPixels = Math.min(
+      pixelsPerMeter * (2.0 * radius),
+      maxPixelSize
+    );
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale =
+        (model.minimumPixelSize * metersPerPixel) /
+        (2.0 * model._initialRadius);
+    }
+  }
+
+  model._computedScale = defined(model.maximumScale)
+    ? Math.min(model.maximumScale, scale)
+    : scale;
 }
 
 function updatePickIds(model) {
@@ -2075,8 +2163,7 @@ function submitDrawCommands(model, frameState) {
 
   if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
-    const drawCommands = model._sceneGraph.getDrawCommands(frameState);
-    frameState.commandList.push.apply(frameState.commandList, drawCommands);
+    model._sceneGraph.pushDrawCommands(frameState);
   }
 }
 
@@ -2090,51 +2177,6 @@ function scaleInPixels(positionWC, radius, frameState) {
     frameState.context.drawingBufferWidth,
     frameState.context.drawingBufferHeight
   );
-}
-
-function getScale(model, modelMatrix, frameState) {
-  let scale = model.scale;
-
-  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
-    // Compute size of bounding sphere in pixels
-    const context = frameState.context;
-    const maxPixelSize = Math.max(
-      context.drawingBufferWidth,
-      context.drawingBufferHeight
-    );
-    scratchPosition.x = modelMatrix[12];
-    scratchPosition.y = modelMatrix[13];
-    scratchPosition.z = modelMatrix[14];
-
-    if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
-        frameState,
-        scratchPosition,
-        scratchPosition
-      );
-    }
-
-    const radius = model._boundingSphere.radius;
-    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
-    // metersPerPixel is always > 0.0
-    const pixelsPerMeter = 1.0 / metersPerPixel;
-    const diameterInPixels = Math.min(
-      pixelsPerMeter * (2.0 * radius),
-      maxPixelSize
-    );
-
-    // Maintain model's minimum pixel size
-    if (diameterInPixels < model.minimumPixelSize) {
-      scale =
-        (model.minimumPixelSize * metersPerPixel) /
-        (2.0 * model._initialRadius);
-    }
-  }
-
-  return defined(model.maximumScale)
-    ? Math.min(model.maximumScale, scale)
-    : scale;
 }
 
 function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
@@ -2223,7 +2265,7 @@ function addCreditsToCreditDisplay(model, frameState) {
  * If the model color's alpha is equal to zero, then it is considered invisible,
  * not translucent.
  *
- * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is translucent, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.isTranslucent = function () {
@@ -2235,7 +2277,7 @@ Model.prototype.isTranslucent = function () {
  * Gets whether or not the model is invisible, i.e. if the model color's alpha
  * is equal to zero.
  *
- * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is invisible, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.isInvisible = function () {
@@ -2254,7 +2296,8 @@ function supportsSilhouettes(frameState) {
  * If the model classifies another model, its silhouette will be disabled.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
+ * @param {FrameState} The frame state.
+ * @returns {Boolean} <code>true</code> if the model has silhouettes, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.hasSilhouette = function (frameState) {
@@ -2264,6 +2307,29 @@ Model.prototype.hasSilhouette = function (frameState) {
     this._silhouetteColor.alpha > 0.0 &&
     !defined(this._classificationType)
   );
+};
+
+function supportsSkipLevelOfDetail(frameState) {
+  return frameState.context.stencilBuffer;
+}
+
+/**
+ * Gets whether or not the model is part of a tileset that uses the
+ * skipLevelOfDetail optimization. This accounts for whether skipLevelOfDetail
+ * is supported (i.e. the context supports stencil buffers).
+ *
+ * @param {FrameState} frameState The frame state.
+ * @returns {Boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, <code>false</code> otherwise.
+ * @private
+ */
+Model.prototype.hasSkipLevelOfDetail = function (frameState) {
+  const is3DTiles = ModelType.is3DTiles(this.type);
+  if (!is3DTiles) {
+    return false;
+  }
+
+  const tileset = this._content.tileset;
+  return supportsSkipLevelOfDetail(frameState) && tileset.skipLevelOfDetail;
 };
 
 /**
@@ -2470,6 +2536,7 @@ Model.fromGltf = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const basePath = defaultValue(options.basePath, "");
@@ -2516,6 +2583,7 @@ Model.fromB3dm = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const loader = new B3dmLoader(loaderOptions);

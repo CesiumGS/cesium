@@ -25,7 +25,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfDracoLoader(options) {
+function GltfDracoLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -246,3 +246,5 @@ GltfDracoLoader.prototype.unload = function () {
   this._decodedData = undefined;
   this._gltf = undefined;
 };
+
+export default GltfDracoLoader;

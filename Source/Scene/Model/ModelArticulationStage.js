@@ -21,7 +21,7 @@ const articulationEpsilon = CesiumMath.EPSILON16;
  *
  * @private
  */
-export default function ModelArticulationStage(options) {
+function ModelArticulationStage(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const stage = options.stage;
@@ -257,3 +257,5 @@ ModelArticulationStage.prototype.applyStageToMatrix = function (result) {
 
   return result;
 };
+
+export default ModelArticulationStage;

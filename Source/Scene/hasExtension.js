@@ -8,10 +8,12 @@ import defined from "../Core/defined.js";
  * @returns {Boolean} True if the extension is present
  * @private
  */
-export default function hasExtension(json, extensionName) {
+function hasExtension(json, extensionName) {
   return (
     defined(json) &&
     defined(json.extensions) &&
     defined(json.extensions[extensionName])
   );
 }
+
+export default hasExtension;

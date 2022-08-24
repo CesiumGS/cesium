@@ -23,7 +23,7 @@ vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     #endif
 
     #ifdef HAS_NORMALS
-    v_normalEC = normal * attributes.normalMC;
+    v_normalEC = normalize(normal * attributes.normalMC);
     #endif
 
     #ifdef HAS_TANGENTS

@@ -469,6 +469,35 @@ describe(
       );
     });
 
+    it("addFunctionLines adds a single line to the body of the function", function () {
+      const shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      shaderBuilder.addFunction(
+        "testFunctionFS",
+        signature,
+        ShaderDestination.FRAGMENT
+      );
+
+      shaderBuilder.addFunctionLines("testFunctionVS", "return 1.0;");
+      shaderBuilder.addFunctionLines("testFunctionFS", "return 2.0;");
+
+      const shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(
+        shaderProgram,
+        [],
+        [signature, "{", "    return 1.0;", "}"]
+      );
+      checkFragmentShader(
+        shaderProgram,
+        [],
+        [signature, "{", "    return 2.0;", "}"]
+      );
+    });
+
     it("addUniform throws for undefined type", function () {
       const shaderBuilder = new ShaderBuilder();
       expect(function () {
@@ -721,7 +750,7 @@ describe(
     it("addVertexLines throws for invalid lines", function () {
       const shaderBuilder = new ShaderBuilder();
       expect(function () {
-        return shaderBuilder.addVertexLines("v_uv = a_uv;");
+        return shaderBuilder.addVertexLines(-1);
       }).toThrowDeveloperError();
     });
 
@@ -738,6 +767,13 @@ describe(
       checkVertexShader(shaderProgram, [], vertexLines);
     });
 
+    it("addVertexLines appends a single line to the shader", function () {
+      const shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addVertexLines("float sum;");
+      const shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(shaderProgram, [], ["float sum;"]);
+    });
+
     it("addFragmentLines throws for undefined lines", function () {
       const shaderBuilder = new ShaderBuilder();
       expect(function () {
@@ -748,11 +784,11 @@ describe(
     it("addFragmentLines throws for invalid lines", function () {
       const shaderBuilder = new ShaderBuilder();
       expect(function () {
-        return shaderBuilder.addFragmentLines("gl_FragColor = vec4(1.0);");
+        return shaderBuilder.addFragmentLines(-1);
       }).toThrowDeveloperError();
     });
 
-    it("addFragmentLines appends lines to the vertex shader", function () {
+    it("addFragmentLines appends lines to the fragment shader", function () {
       const shaderBuilder = new ShaderBuilder();
       const fragmentLines = [
         "void main()",
@@ -763,6 +799,13 @@ describe(
       shaderBuilder.addFragmentLines(fragmentLines);
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkFragmentShader(shaderProgram, [], fragmentLines);
+    });
+
+    it("addFragmentLines appends a single line to the fragment shader", function () {
+      const shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFragmentLines("float sum;");
+      const shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkFragmentShader(shaderProgram, [], ["float sum;"]);
     });
 
     it("buildShaderProgram throws for undefined context", function () {

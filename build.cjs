@@ -301,7 +301,7 @@ async function buildWorkers(options) {
   // 1) They can be built as AMD style modules
   // 2) They can be built using code-splitting, resulting in smaller modules
   const files = await globby(["Source/WorkersES6/*.js"]);
-  const plugins = [rollupResolve(), rollupCommonjs()];
+  const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
 
   if (options.removePragmas) {
     plugins.push(

@@ -24,7 +24,7 @@ import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
-export default function ImageBasedLighting(options) {
+function ImageBasedLighting(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
     ? Cartesian2.clone(options.imageBasedLightingFactor)
@@ -506,3 +506,5 @@ ImageBasedLighting.prototype.destroy = function () {
     this._specularEnvironmentMapAtlas.destroy();
   return destroyObject(this);
 };
+
+export default ImageBasedLighting;

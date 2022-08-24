@@ -61,6 +61,8 @@ describe(
 
     let box;
     let boxTranslucent;
+    // copy of box that can be repositioned in the scene
+    let boxPointLights;
     let boxCutout;
     let boxNoNormals;
 
@@ -135,6 +137,16 @@ describe(
           show: false,
         }).then(function (model) {
           boxTranslucent = model;
+        })
+      );
+      modelPromises.push(
+        loadModel({
+          url: boxUrl,
+          modelMatrix: boxTransform,
+          scale: 0.2,
+          show: false,
+        }).then(function (model) {
+          boxPointLights = model;
         })
       );
       modelPromises.push(
@@ -708,8 +720,7 @@ describe(
       renderAndExpect(shadowedColor);
     });
 
-    // TODO: need to debug why the color is slightly off
-    xit("sun shadow map works", function () {
+    it("sun shadow map works", function () {
       box.show = true;
       floor.show = true;
 
@@ -719,7 +730,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the sun as a light source
@@ -732,23 +743,42 @@ describe(
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
-      });
+      }, startTime);
 
       // Render with shadows
+      let shadowedColor;
       scene.shadowMap.enabled = true;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       }, startTime);
 
       // Change the time so that the shadows are no longer pointing straight down
-      renderAndExpect(unshadowedColor, endTime);
+      renderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the sunlight direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(red).toBeGreaterThan(shadowedRed);
+        expect(red).toBeLessThan(unshadowedRed);
+      }, endTime);
 
       scene.shadowMap = undefined;
     });
 
-    // TODO: need to debug why the color is slightly off
-    xit("uses scene's light source", function () {
+    it("uses scene's light source", function () {
       const originalLight = scene.light;
 
       box.show = true;
@@ -768,7 +798,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the scene's light source
@@ -788,16 +818,36 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
+      let shadowedColor;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       });
 
       // Change the light so that the shadows are no longer pointing straight down
       scene.light = new DirectionalLight({
         direction: lightDirectionAngle,
       });
-      renderAndExpect(unshadowedColor);
+      renderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the light direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(red).toBeGreaterThan(shadowedRed);
+        expect(red).toBeLessThan(unshadowedRed);
+      });
 
       scene.shadowMap = undefined;
       scene.light = originalLight;
@@ -824,8 +874,9 @@ describe(
       verifyShadows(box, floor);
     });
 
-    // TODO: Need to debug this test
-    xit("point light shadows", function () {
+    it("point light shadows", function () {
+      boxPointLights.show = true;
+
       // Check that shadows are cast from all directions.
       // Place the point light in the middle of an enclosed area and place a box on each side.
       room.show = true;
@@ -854,17 +905,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        const box = scene.primitives.add(
-          Model.fromGltf({
-            url: boxUrl,
-            modelMatrix: Transforms.headingPitchRollToFixedFrame(
-              origins[i],
-              new HeadingPitchRoll()
-            ),
-            scale: 0.2,
-          })
+        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
+          origins[i],
+          new HeadingPitchRoll()
         );
-        scene.render(); // Model is pre-loaded, render one frame to make it ready
+        scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);
         scene.camera.moveForward(0.5);
@@ -895,8 +940,6 @@ describe(
         // Move the camera away from the shadow
         scene.camera.moveRight(0.5);
         renderAndExpect(unshadowedColor);
-
-        scene.primitives.remove(box);
       }
     });
 

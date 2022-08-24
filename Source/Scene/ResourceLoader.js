@@ -17,7 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-export default function ResourceLoader() {}
+function ResourceLoader() {}
 
 Object.defineProperties(ResourceLoader.prototype, {
   /**
@@ -135,3 +135,5 @@ ResourceLoader.prototype.destroy = function () {
   this.unload();
   return destroyObject(this);
 };
+
+export default ResourceLoader;

@@ -25,7 +25,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  *
  * @private
  */
-export default function ModelRuntimeNode(options) {
+function ModelRuntimeNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const node = options.node;
@@ -599,3 +599,5 @@ ModelRuntimeNode.prototype.updateJointMatrices = function () {
     );
   }
 };
+
+export default ModelRuntimeNode;

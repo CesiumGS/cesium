@@ -14,7 +14,7 @@ import clone from "../../Core/clone.js";
  *
  * @private
  */
-export default function NodeRenderResources(modelRenderResources, runtimeNode) {
+function NodeRenderResources(modelRenderResources, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelRenderResources", modelRenderResources);
   Check.typeOf.object("runtimeNode", runtimeNode);
@@ -46,7 +46,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * values. Inherited from the model render resources.
    *
    * @type {Object.<String, Function>}
-   *
    * @readonly
    *
    * @private
@@ -54,8 +53,8 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.uniformMap = clone(modelRenderResources.uniformMap);
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha cutoff. Inherited from the model
-   * render resources.
+   * Options for configuring the alpha stage such as pass and alpha cutoff.
+   * Inherited from the model render resources.
    *
    * @type {ModelAlphaOptions}
    * @readonly
@@ -79,6 +78,29 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
     modelRenderResources.renderStateOptions,
     true
   );
+
+  /**
+   * Whether the model has a silhouette. This value indicates what draw commands
+   * are needed. Inherited from the model render resources.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasSilhouette = modelRenderResources.hasSilhouette;
+
+  /**
+   * Whether the model is part of a tileset that uses the skipLevelOfDetail
+   * optimization. This value indicates what draw commands are needed.
+   * Inherited from the model render resources.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasSkipLevelOfDetail = modelRenderResources.hasSkipLevelOfDetail;
 
   // Other properties.
   /**
@@ -104,31 +126,31 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.attributes = [];
 
   /**
-   * The index to give to the next vertex attribute added to the attributes array. POSITION
-   * takes index 0.
+   * The index to give to the next vertex attribute added to the attributes array.
+   * POSITION takes index 0.
    *
    * @type {Number}
-   * @readonly
    *
    * @private
    */
   this.attributeIndex = 1;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the
+   * offset/repeat in the feature ID attribute.
    *
    * @type {Number}
-   * @readonly
+   * @default 0
    *
    * @private
    */
   this.featureIdVertexAttributeSetIndex = 0;
 
   /**
-   * The number of instances. Default is 0, if instancing is not used.
+   * The number of instances. This value is set by InstancingPipelineStage.
    *
    * @type {Number}
-   * @readonly
+   * @default 0
    *
    * @private
    */
@@ -136,6 +158,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
 
   /**
    * The component-wise maximum value of the translations of the instances.
+   * This value is set by InstancingPipelineStage.
    *
    * @type {Cartesian3}
    *
@@ -145,6 +168,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
 
   /**
    * The component-wise minimum value of the translations of the instances.
+   * This value is set by InstancingPipelineStage.
    *
    * @type {Cartesian3}
    *
@@ -156,6 +180,9 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * If the model is instanced and projected to 2D, the reference point is the
    * average of the instancing translation max and min. The 2D translations are
    * defined relative to this point to avoid precision issues on the GPU.
+   * <p>
+   * This value is set by InstancingPipelineStage.
+   * </p>
    *
    * @type {Cartesian3}
    *
@@ -163,3 +190,5 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.instancingReferencePoint2D = undefined;
 }
+
+export default NodeRenderResources;

@@ -94,6 +94,8 @@ describe(
       "./Data/Models/GltfLoader/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
       "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
+    const boxCesiumRtcUrl =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -610,7 +612,7 @@ describe(
     });
 
     // This test does not yet work since models without normals are
-    // rendered as unlit
+    // rendered as unlit. See https://github.com/CesiumGS/cesium/issues/6506
     xit("renders model with emissive texture", function () {
       const resource = Resource.createIfNeeded(emissiveTextureUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -779,6 +781,17 @@ describe(
           zoomToModel: false,
           time: time,
         });
+      });
+    });
+
+    it("renders model with CESIUM_RTC extension", function () {
+      return loadAndZoomToModel(
+        {
+          gltf: boxCesiumRtcUrl,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
       });
     });
 
@@ -1433,6 +1446,40 @@ describe(
           });
         });
       });
+
+      it("boundingSphere accounts for transform from CESIUM_RTC extension", function () {
+        return loadAndZoomToModel(
+          {
+            gltf: boxCesiumRtcUrl,
+          },
+          scene
+        ).then(function (model) {
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3(6378137, 0, 0));
+        });
+      });
+    });
+
+    it("boundingSphere updates bounding sphere when invoked", function () {
+      return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        function (model) {
+          const expectedRadius = 0.8660254037844386;
+          const translation = new Cartesian3(10, 0, 0);
+          const modelMatrix = Matrix4.fromTranslation(translation);
+          model.modelMatrix = modelMatrix;
+          model.scale = 2.0;
+
+          // boundingSphere should still account for the model matrix
+          // even though the scene has not yet updated.
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(translation);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            2.0 * expectedRadius,
+            CesiumMath.EPSILON8
+          );
+        }
+      );
     });
 
     describe("picking and id", function () {
@@ -3415,8 +3462,8 @@ describe(
       });
     });
 
-    describe("cull", function () {
-      it("enables culling", function () {
+    describe("frustum culling ", function () {
+      it("enables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3439,8 +3486,7 @@ describe(
         });
       });
 
-      // This test does not yet work for Model
-      xit("disables culling", function () {
+      it("disables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3457,7 +3503,7 @@ describe(
 
           // Commands should still be submitted when model is out of view.
           model.modelMatrix = Matrix4.fromTranslation(
-            new Cartesian3(100.0, 0.0, 0.0)
+            new Cartesian3(0.0, 100.0, 0.0)
           );
           scene.renderForSpecs();
           expect(scene.frustumCommandsList.length).toEqual(length);

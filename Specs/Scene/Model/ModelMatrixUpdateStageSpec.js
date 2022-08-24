@@ -60,11 +60,18 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
+    const mockPrimitive = {
+      material: {
+        doubleSided: false,
+      },
+    };
+
     function mockRenderResources(model) {
       return {
         model: model,
         runtimePrimitive: {
           boundingSphere: new BoundingSphere(),
+          primitive: mockPrimitive,
         },
       };
     }
@@ -92,6 +99,7 @@ describe(
           command: rootDrawCommand,
           primitiveRenderResources: renderResources,
         }),
+        primitive: mockPrimitive,
       });
       rootNode._transformDirty = true;
 
@@ -105,6 +113,7 @@ describe(
           command: leafDrawCommand,
           primitiveRenderResources: renderResources,
         }),
+        primitive: mockPrimitive,
       });
       leafNode._transformDirty = true;
     }

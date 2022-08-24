@@ -15,10 +15,7 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  *
  * @private
  */
-export default function PrimitiveRenderResources(
-  nodeRenderResources,
-  runtimePrimitive
-) {
+function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("nodeRenderResources", nodeRenderResources);
   Check.typeOf.object("runtimePrimitive", runtimePrimitive);
@@ -34,6 +31,7 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.model = nodeRenderResources.model;
+
   /**
    * A reference to the runtime node. Inherited from the node render resources.
    *
@@ -43,30 +41,32 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.runtimeNode = nodeRenderResources.runtimeNode;
+
   /**
    * The vertex attributes. This is shallow cloned from the node render
    * resources as the primitive will add additional properties.
    *
    * @type {Object[]}
+   * @readonly
    *
    * @private
    */
   this.attributes = nodeRenderResources.attributes.slice();
 
   /**
-   * The index to give to the next vertex attribute added to the attributes array. POSITION
-   * takes index 0. Inherited from the node render resources.
+   * The index to give to the next vertex attribute added to the attributes
+   * array. POSITION takes index 0. Inherited from the node render resources.
    *
    * @type {Number}
-   * @readonly
    *
    * @private
    */
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
-   * Inherited from the node render resources.
+   * The set index to assign to feature ID vertex attribute(s) created from the
+   * offset/repeat in the feature ID attribute. Inherited from the node render
+   * resources.
    *
    * @type {Number}
    *
@@ -74,18 +74,6 @@ export default function PrimitiveRenderResources(
    */
   this.featureIdVertexAttributeSetIndex =
     nodeRenderResources.featureIdVertexAttributeSetIndex;
-
-  /**
-   * Whether or not this primitive has a property table for storing metadata.
-   * When present, picking and styling can use this.
-   *
-   * @type {Boolean}
-   * @default false
-   * @readonly
-   *
-   * @private
-   */
-  this.hasPropertyTable = false;
 
   /**
    * A dictionary mapping uniform name to functions that return the uniform
@@ -99,8 +87,8 @@ export default function PrimitiveRenderResources(
   this.uniformMap = clone(nodeRenderResources.uniformMap);
 
   /**
-   * Options for configuring the alpha stage such as pass and alpha cutoff. Inherited from the node
-   * render resources.
+   * Options for configuring the alpha stage such as pass and alpha cutoff.
+   * Inherited from the node render resources.
    *
    * @type {ModelAlphaOptions}
    * @readonly
@@ -108,6 +96,42 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
+
+  /**
+   * An object storing options for creating a {@link RenderState}.
+   * The pipeline stages simply set the options; the actual render state
+   * is created when the {@link DrawCommand} is constructed. Inherited from
+   * the node render resources.
+   *
+   * @type {Object}
+   * @readonly
+   *
+   * @private
+   */
+  this.renderStateOptions = clone(nodeRenderResources.renderStateOptions, true);
+
+  /**
+   * Whether the model has a silhouette. This value indicates what draw commands
+   * are needed. Inherited from the node render resources.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasSilhouette = nodeRenderResources.hasSilhouette;
+
+  /**
+   * Whether the model is part of a tileset that uses the skipLevelOfDetail
+   * optimization. This value indicates what draw commands are needed.
+   * Inherited from the node render resources.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasSkipLevelOfDetail = nodeRenderResources.hasSkipLevelOfDetail;
 
   /**
    * An object used to build a shader incrementally. This is cloned from the
@@ -121,7 +145,8 @@ export default function PrimitiveRenderResources(
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
   /**
-   * The number of instances. Default is 0, if instancing is not used. Inherited from the node render resources.
+   * The number of instances. Default is 0, if instancing is not used.
+   * Inherited from the node render resources.
    *
    * @type {Number}
    * @readonly
@@ -130,6 +155,7 @@ export default function PrimitiveRenderResources(
    */
   this.instanceCount = nodeRenderResources.instanceCount;
 
+  // Other properties
   /**
    * A reference to the runtime primitive.
    *
@@ -150,7 +176,6 @@ export default function PrimitiveRenderResources(
    */
   const primitive = runtimePrimitive.primitive;
 
-  // other properties
   /**
    * The number of indices in the primitive. The interpretation of this
    * depends on the primitive type.
@@ -165,6 +190,18 @@ export default function PrimitiveRenderResources(
     : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
 
   /**
+   * Whether or not this primitive has a property table for storing metadata.
+   * When present, picking and styling can use this. This value is set by
+   * SelectedFeatureIdPipelineStage.
+   *
+   * @type {Boolean}
+   * @default false
+   *
+   * @private
+   */
+  this.hasPropertyTable = false;
+
+  /**
    * The indices for this primitive.
    *
    * @type {ModelComponents.Indices}
@@ -175,7 +212,8 @@ export default function PrimitiveRenderResources(
   this.indices = primitive.indices;
 
   /**
-   * Additional index buffer for wireframe mode (if enabled).
+   * Additional index buffer for wireframe mode (if enabled). This value is set
+   * by WireframePipelineStage.
    *
    * @type {Buffer}
    * @readonly
@@ -246,34 +284,24 @@ export default function PrimitiveRenderResources(
   this.lightingOptions = new ModelLightingOptions();
 
   /**
-   * The shader variable to use for picking.
+   * The shader variable to use for picking. If picking is enabled, this value
+   * is set by PickingPipelineStage.
    *
    * @type {String}
-   * @readonly
    *
    * @private
    */
   this.pickId = undefined;
 
   /**
-   * An object storing options for creating a {@link RenderState}.
-   * the pipeline stages simply set the options, the render state is created
-   * when the {@link DrawCommand} is constructed.
-   *
-   * @type {Object}
-   * @readonly
-   *
-   * @private
-   */
-  this.renderStateOptions = clone(nodeRenderResources.renderStateOptions, true);
-
-  /**
    * An enum describing the types of draw commands needed, based on the style.
+   * This value is set by CPUStylingPipelineStage.
    *
    * @type {StyleCommandsNeeded}
-   * @readonly
    *
    * @private
    */
   this.styleCommandsNeeded = undefined;
 }
+
+export default PrimitiveRenderResources;

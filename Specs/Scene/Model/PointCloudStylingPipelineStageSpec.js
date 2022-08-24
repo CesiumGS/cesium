@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
-  defined,
   defaultValue,
   Math as CesiumMath,
   Matrix4,
@@ -63,16 +62,11 @@ describe(
     };
 
     function mockGltfRenderResources(pointCloudShading) {
-      const attenuation = defined(pointCloudShading)
-        ? pointCloudShading.attenuation
-        : false;
-
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
         type: ModelType.GLTF,
         pointCloudShading: pointCloudShading,
-        _attenuation: attenuation,
       };
 
       return {
@@ -88,10 +82,6 @@ describe(
         options.pointCloudShading,
         new PointCloudShading()
       );
-      const attenuation = defined(pointCloudShading)
-        ? pointCloudShading.attenuation
-        : false;
-
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {
@@ -99,7 +89,6 @@ describe(
         content: options.content,
         style: options.style,
         pointCloudShading: pointCloudShading,
-        _attenuation: attenuation,
         structuralMetadata: options.structuralMetadata,
         featureTableId: options.featureTableId,
         featureTables: options.featureTables,
@@ -136,7 +125,8 @@ describe(
     });
 
     it("adds common uniform and code to the shader", function () {
-      const renderResources = mockGltfRenderResources();
+      const pointCloudShading = new PointCloudShading();
+      const renderResources = mockGltfRenderResources(pointCloudShading);
       const shaderBuilder = renderResources.shaderBuilder;
       const uniformMap = renderResources.uniformMap;
 
@@ -648,6 +638,36 @@ describe(
       expect(uniformMap.model_pointCloudParameters).toBeDefined();
 
       // No additional functions from the style should have been added.
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersPointCloudStylingStageVS,
+      ]);
+    });
+
+    it("adds point cloud back face culling define to the shader", function () {
+      const pointCloudShading = new PointCloudShading({
+        backFaceCulling: true,
+      });
+      const renderResources = mockGltfRenderResources(pointCloudShading);
+      const shaderBuilder = renderResources.shaderBuilder;
+      const uniformMap = renderResources.uniformMap;
+
+      PointCloudStylingPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        scene.frameState
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_BACK_FACE_CULLING",
+      ]);
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec4 model_pointCloudParameters;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap.model_pointCloudParameters).toBeDefined();
+
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersPointCloudStylingStageVS,
       ]);

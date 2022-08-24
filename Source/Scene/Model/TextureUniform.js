@@ -28,7 +28,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function TextureUniform(options) {
+function TextureUniform(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   const hasTypedArray = defined(options.typedArray);
@@ -70,3 +70,5 @@ export default function TextureUniform(options) {
     maximumAnisotropy: options.maximumAnisotropy,
   });
 }
+
+export default TextureUniform;

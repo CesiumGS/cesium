@@ -43,7 +43,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  *
  * @private
  */
-export default function GltfVertexBufferLoader(options) {
+function GltfVertexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -526,3 +526,5 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._buffer = undefined;
   this._gltf = undefined;
 };
+
+export default GltfVertexBufferLoader;

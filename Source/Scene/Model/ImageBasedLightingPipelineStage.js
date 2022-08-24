@@ -114,7 +114,7 @@ ImageBasedLightingPipelineStage.process = function (
     );
   }
 
-  shaderBuilder.addFragmentLines([ImageBasedLightingStageFS]);
+  shaderBuilder.addFragmentLines(ImageBasedLightingStageFS);
 
   const uniformMap = {
     model_iblFactor: function () {

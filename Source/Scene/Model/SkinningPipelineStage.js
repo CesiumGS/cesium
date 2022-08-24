@@ -48,7 +48,7 @@ SkinningPipelineStage.process = function (renderResources, primitive) {
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([SkinningStageVS]);
+  shaderBuilder.addVertexLines(SkinningStageVS);
 
   const uniformMap = {
     u_jointMatrices: function () {

@@ -27,7 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfImageLoader(options) {
+function GltfImageLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -323,3 +323,5 @@ GltfImageLoader.prototype.unload = function () {
 
 // Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;
+
+export default GltfImageLoader;

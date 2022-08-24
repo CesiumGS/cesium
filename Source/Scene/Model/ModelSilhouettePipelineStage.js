@@ -33,6 +33,7 @@ ModelSilhouettePipelineStage.silhouettesLength = 0;
  *  <li>adds a function to the fragment shader to apply color to the silhouette</li>
  *  <li>adds the uniforms to the shaders for the corresponding silhouette properties</li>
  *  <li>adds a uniform to distinguish which draw command is used to render the silhouette</li>
+ *  <li>sets a variable in the render resources denoting whether the model has a silhouette</li>
  * </ul>
  *
  * <p>
@@ -58,8 +59,8 @@ ModelSilhouettePipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_SILHOUETTE", undefined, ShaderDestination.BOTH);
 
-  shaderBuilder.addVertexLines([ModelSilhouetteStageVS]);
-  shaderBuilder.addFragmentLines([ModelSilhouetteStageFS]);
+  shaderBuilder.addVertexLines(ModelSilhouetteStageVS);
+  shaderBuilder.addFragmentLines(ModelSilhouetteStageFS);
 
   shaderBuilder.addUniform(
     "vec4",
@@ -101,6 +102,7 @@ ModelSilhouettePipelineStage.process = function (
   };
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
+  renderResources.hasSilhouette = true;
 };
 
 export default ModelSilhouettePipelineStage;

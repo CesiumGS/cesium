@@ -290,6 +290,9 @@ I3dmLoader.prototype.load = function () {
       createStructuralMetadata(that, components);
       that._components = components;
 
+      // Now that we have the parsed components, we can release the array buffer
+      that._arrayBuffer = undefined;
+
       that._state = I3dmLoaderState.READY;
       return that;
     })
@@ -767,6 +770,7 @@ I3dmLoader.prototype.unload = function () {
     this._gltfLoader.unload();
   }
   this._components = undefined;
+  this._arrayBuffer = undefined;
 };
 
 export default I3dmLoader;
