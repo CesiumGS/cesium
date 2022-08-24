@@ -58,11 +58,15 @@ function ClassificationModelDrawCommand(options) {
   this._classifies3DTiles = type !== ClassificationType.TERRAIN;
 
   this._useDebugWireframe = model._enableDebugWireframe && model.debugWireframe;
+  this._pickId = renderResources.pickId;
 
   this._commandListTerrain = [];
   this._commandList3DTiles = [];
   this._commandListIgnoreShow = []; // Used for inverted classification.
   this._commandListDebugWireframe = [];
+
+  this._commandListTerrainPicking = [];
+  this._commandList3DTilesPicking = [];
 
   initialize(this);
 }
@@ -127,6 +131,31 @@ const colorRenderState = {
   blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
 };
 
+const pickRenderState = {
+  stencilTest: {
+    enabled: true,
+    frontFunction: StencilFunction.NOT_EQUAL,
+    frontOperation: {
+      fail: StencilOperation.ZERO,
+      zFail: StencilOperation.ZERO,
+      zPass: StencilOperation.ZERO,
+    },
+    backFunction: StencilFunction.NOT_EQUAL,
+    backOperation: {
+      fail: StencilOperation.ZERO,
+      zFail: StencilOperation.ZERO,
+      zPass: StencilOperation.ZERO,
+    },
+    reference: 0,
+    mask: StencilConstants.CLASSIFICATION_MASK,
+  },
+  stencilMask: StencilConstants.CLASSIFICATION_MASK,
+  depthTest: {
+    enabled: false,
+  },
+  depthMask: false,
+};
+
 const scratchDerivedCommands = [];
 
 function initialize(drawCommand) {
@@ -161,6 +190,9 @@ function initialize(drawCommand) {
     return;
   }
 
+  const model = drawCommand.model;
+  const allowPicking = model.allowPicking;
+
   if (drawCommand._classifiesTerrain) {
     const pass = Pass.TERRAIN_CLASSIFICATION;
     const stencilDepthCommand = deriveStencilDepthCommand(command, pass);
@@ -174,6 +206,14 @@ function initialize(drawCommand) {
       derivedCommands,
       drawCommand._commandListTerrain
     );
+
+    if (allowPicking) {
+      drawCommand._commandListTerrainPicking = createPickCommands(
+        drawCommand,
+        derivedCommands,
+        drawCommand._commandListTerrainPicking
+      );
+    }
   }
 
   if (drawCommand._classifies3DTiles) {
@@ -189,6 +229,14 @@ function initialize(drawCommand) {
       derivedCommands,
       drawCommand._commandList3DTiles
     );
+
+    if (allowPicking) {
+      drawCommand._commandList3DTilesPicking = createPickCommands(
+        drawCommand,
+        derivedCommands,
+        drawCommand._commandList3DTilesPicking
+      );
+    }
   }
 }
 
@@ -239,6 +287,30 @@ function deriveColorCommand(command, pass) {
   colorCommand.renderState = RenderState.fromCache(colorRenderState);
 
   return colorCommand;
+}
+
+const scratchPickCommands = [];
+
+function createPickCommands(drawCommand, derivedCommands, commandList) {
+  const renderState = RenderState.fromCache(pickRenderState);
+  const stencilDepthCommand = derivedCommands[0];
+  const colorCommand = derivedCommands[1];
+
+  const pickStencilDepthCommand = DrawCommand.shallowClone(stencilDepthCommand);
+  pickStencilDepthCommand.cull = true;
+  pickStencilDepthCommand.pickOnly = true;
+
+  const pickColorCommand = DrawCommand.shallowClone(colorCommand);
+  pickColorCommand.cull = true;
+  pickColorCommand.pickOnly = true;
+  pickColorCommand.renderState = renderState;
+  pickColorCommand.pickId = drawCommand._pickId;
+
+  const pickCommands = scratchPickCommands;
+  pickCommands.length = 0;
+  pickCommands.push(pickStencilDepthCommand, pickColorCommand);
+
+  return createBatchCommands(drawCommand, pickCommands, commandList);
 }
 
 Object.defineProperties(ClassificationModelDrawCommand.prototype, {
@@ -407,39 +479,52 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   frameState,
   result
 ) {
-  if (this._useDebugWireframe) {
-    result.push.apply(result, this._commandListDebugWireframe);
-    return;
-  }
-
-  if (this._classifiesTerrain) {
-    result.push.apply(result, this._commandListTerrain);
-  }
-
-  if (this._classifies3DTiles) {
-    result.push.apply(result, this._commandList3DTiles);
-  }
-
-  const useIgnoreShowCommands =
-    frameState.invertClassification && this._classifies3DTiles;
-
-  if (useIgnoreShowCommands) {
-    if (this._commandListIgnoreShow.length === 0) {
-      const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-      const command = deriveStencilDepthCommand(this._command, pass);
-
-      const derivedCommands = scratchDerivedCommands;
-      derivedCommands.length = 0;
-      derivedCommands.push(command);
-
-      this._commandListIgnoreShow = createBatchCommands(
-        this,
-        derivedCommands,
-        this._commandListIgnoreShow
-      );
+  const passes = frameState.passes;
+  if (passes.render) {
+    if (this._useDebugWireframe) {
+      result.push.apply(result, this._commandListDebugWireframe);
+      return;
     }
 
-    result.push.apply(result, this._commandListIgnoreShow);
+    if (this._classifiesTerrain) {
+      result.push.apply(result, this._commandListTerrain);
+    }
+
+    if (this._classifies3DTiles) {
+      result.push.apply(result, this._commandList3DTiles);
+    }
+
+    const useIgnoreShowCommands =
+      frameState.invertClassification && this._classifies3DTiles;
+
+    if (useIgnoreShowCommands) {
+      if (this._commandListIgnoreShow.length === 0) {
+        const pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+        const command = deriveStencilDepthCommand(this._command, pass);
+
+        const derivedCommands = scratchDerivedCommands;
+        derivedCommands.length = 0;
+        derivedCommands.push(command);
+
+        this._commandListIgnoreShow = createBatchCommands(
+          this,
+          derivedCommands,
+          this._commandListIgnoreShow
+        );
+      }
+
+      result.push.apply(result, this._commandListIgnoreShow);
+    }
+  }
+
+  if (passes.pick) {
+    if (this._classifiesTerrain) {
+      result.push.apply(result, this._commandListTerrainPicking);
+    }
+
+    if (this._classifies3DTiles) {
+      result.push.apply(result, this._commandList3DTilesPicking);
+    }
   }
 
   return result;

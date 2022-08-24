@@ -89,6 +89,11 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   const receiveShadows = hasClassification
     ? false
     : ShadowMode.receiveShadows(model.shadows);
+  // Pick IDs are only added to specific draw commands for classification.
+  // This behavior is handled by ClassificationModelDrawCommand.
+  const pickId = hasClassification
+    ? undefined
+    : primitiveRenderResources.pickId;
 
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
@@ -101,7 +106,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     pass: pass,
     count: primitiveRenderResources.count,
     owner: model,
-    pickId: primitiveRenderResources.pickId,
+    pickId: pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,

@@ -21,26 +21,52 @@ describe(
   "Scene/Model/ClassificationModelDrawCommand",
   function () {
     const noColor = new Color(0, 0, 0, 0);
+
+    const batchLengths = [6, 6, 3];
+    const batchOffsets = [0, 6, 12];
+    const mockPickId = "mockPickId";
+
     const mockFrameState = {
       commandList: [],
+      passes: {
+        render: true,
+        pick: false,
+      },
     };
+
     const mockFrameStateWithInvertedClassification = {
       commandList: [],
       invertClassification: true,
+      passes: {
+        render: true,
+        pick: false,
+      },
+    };
+
+    const mockFrameStatePickOnly = {
+      commandList: [],
+      passes: {
+        render: false,
+        pick: true,
+      },
     };
 
     function mockRenderResources(options) {
+      const debugWireframe = defaultValue(options.debugWireframe, false);
+      const allowPicking = defaultValue(options.allowPicking, false);
       return {
         model: {
           classificationType: options.classificationType,
-          _enableDebugWireframe: options.debugWireframe,
-          debugWireframe: options.debugWireframe,
+          _enableDebugWireframe: debugWireframe,
+          debugWireframe: debugWireframe,
+          allowPicking: allowPicking,
         },
         runtimePrimitive: {
           boundingSphere: new BoundingSphere(Cartesian3.ZERO, 1.0),
           batchLengths: options.batchLengths,
           batchOffsets: options.batchOffsets,
         },
+        pickId: options.pickId,
       };
     }
 
@@ -69,10 +95,19 @@ describe(
     function verifyStencilDepthCommand(
       command,
       expectedPass,
-      expectedStencilFunction
+      expectedStencilFunction,
+      testForPicking
     ) {
-      expect(command.cull).toBe(false);
+      testForPicking = defaultValue(testForPicking, false);
+
       expect(command.pass).toBe(expectedPass);
+      expect(command.pickId).toBeUndefined();
+
+      // These settings depend on whether or not the command
+      // is for picking.
+      const expectedValue = testForPicking;
+      expect(command.cull).toBe(expectedValue);
+      expect(command.pickOnly).toBe(expectedValue);
 
       const renderState = command.renderState;
       expect(renderState.colorMask).toEqual({
@@ -119,9 +154,22 @@ describe(
     );
     expectedColorCommandBlending.color = noColor;
 
-    function verifyColorCommand(command, expectedPass) {
-      expect(command.cull).toBe(false);
+    function verifyColorCommand(command, expectedPass, testForPicking) {
+      testForPicking = defaultValue(testForPicking, false);
+
       expect(command.pass).toBe(expectedPass);
+
+      // These settings depend on whether or not the command
+      // is for picking.
+      if (testForPicking) {
+        expect(command.cull).toBe(true);
+        expect(command.pickOnly).toBe(true);
+        expect(command.pickId).toBeDefined();
+      } else {
+        expect(command.cull).toBe(false);
+        expect(command.pickOnly).toBe(false);
+        expect(command.pickId).toBeUndefined();
+      }
 
       const renderState = command.renderState;
       const expectedStencilTest = {
@@ -149,25 +197,33 @@ describe(
       expect(renderState.depthTest.enabled).toEqual(false);
       expect(renderState.depthMask).toEqual(false);
 
-      expect(renderState.blending).toEqual(expectedColorCommandBlending);
+      if (testForPicking) {
+        expect(renderState.blending.enabled).toBe(false);
+      } else {
+        expect(renderState.blending).toEqual(expectedColorCommandBlending);
+      }
     }
 
     beforeEach(function () {
       mockFrameState.commandList.length = 0;
       mockFrameStateWithInvertedClassification.commandList.length = 0;
+      mockFrameStatePickOnly.commandList.length = 0;
     });
 
     function verifyBatchedStencilAndColorCommands(
       drawCommand,
       commandList,
       expectedPass,
-      expectedStencilFunction
+      expectedStencilFunction,
+      testForPicking
     ) {
       const batchLengths = drawCommand.batchLengths;
       const batchOffsets = drawCommand.batchOffsets;
 
       const numBatches = batchLengths.length;
       expect(commandList.length).toEqual(numBatches * 2);
+
+      testForPicking = defaultValue(testForPicking, false);
 
       for (let i = 0; i < numBatches; i++) {
         const stencilDepthCommand = commandList[i * 2];
@@ -176,11 +232,12 @@ describe(
         verifyStencilDepthCommand(
           stencilDepthCommand,
           expectedPass,
-          expectedStencilFunction
+          expectedStencilFunction,
+          testForPicking
         );
 
         const colorCommand = commandList[i * 2 + 1];
-        verifyColorCommand(colorCommand, expectedPass);
+        verifyColorCommand(colorCommand, expectedPass, testForPicking);
         expect(colorCommand.count).toBe(batchLengths[i]);
         expect(colorCommand.offset).toBe(batchOffsets[i]);
       }
@@ -207,8 +264,8 @@ describe(
     it("constructs for terrain classification", function () {
       const renderResources = mockRenderResources({
         classificationType: ClassificationType.TERRAIN,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+        batchLengths: batchLengths,
+        batchOffsets: batchOffsets,
       });
       const command = createDrawCommand();
       const drawCommand = new ClassificationModelDrawCommand({
@@ -248,8 +305,8 @@ describe(
     it("constructs for 3D Tiles classification", function () {
       const renderResources = mockRenderResources({
         classificationType: ClassificationType.CESIUM_3D_TILE,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+        batchLengths: batchLengths,
+        batchOffsets: batchOffsets,
       });
       const command = createDrawCommand();
       const drawCommand = new ClassificationModelDrawCommand({
@@ -291,8 +348,8 @@ describe(
     it("constructs for both classifications", function () {
       const renderResources = mockRenderResources({
         classificationType: ClassificationType.BOTH,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+        batchLengths: batchLengths,
+        batchOffsets: batchOffsets,
       });
       const command = createDrawCommand();
       const drawCommand = new ClassificationModelDrawCommand({
@@ -343,8 +400,8 @@ describe(
       const renderResources = mockRenderResources({
         classificationType: ClassificationType.BOTH,
         debugWireframe: true,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+        batchLengths: batchLengths,
+        batchOffsets: batchOffsets,
       });
       const command = createDrawCommand();
       const drawCommand = new ClassificationModelDrawCommand({
@@ -367,10 +424,7 @@ describe(
 
       expect(drawCommand._useDebugWireframe).toBe(true);
 
-      const batchLengths = drawCommand.batchLengths;
-      const batchOffsets = drawCommand.batchOffsets;
       const numBatches = batchLengths.length;
-
       const commandList = drawCommand._commandListDebugWireframe;
       expect(commandList.length).toEqual(numBatches);
 
@@ -386,125 +440,370 @@ describe(
       expect(drawCommand._commandListIgnoreShow.length).toBe(0);
     });
 
-    it("pushCommands works", function () {
-      const renderResources = mockRenderResources({
-        classificationType: ClassificationType.BOTH,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+    describe("pick commands", function () {
+      it("constructs pick commands for terrain classification", function () {
+        const renderResources = mockRenderResources({
+          allowPicking: true,
+          pickId: mockPickId,
+          classificationType: ClassificationType.TERRAIN,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        expect(drawCommand.classificationType).toBe(ClassificationType.TERRAIN);
+        expect(drawCommand._classifiesTerrain).toBe(true);
+        expect(drawCommand._classifies3DTiles).toBe(false);
+        expect(drawCommand._pickId).toEqual(mockPickId);
+
+        const commandList = drawCommand._commandListTerrainPicking;
+        const expectedPass = Pass.TERRAIN_CLASSIFICATION;
+        const expectedStencilFunction = StencilFunction.ALWAYS;
+        const testForPicking = true;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
+
+        expect(drawCommand._commandListTerrain.length).toBe(6);
+
+        expect(drawCommand._commandList3DTiles.length).toBe(0);
+        expect(drawCommand._commandList3DTilesPicking.length).toBe(0);
+        expect(drawCommand._commandListIgnoreShow.length).toBe(0);
+        expect(drawCommand._commandListDebugWireframe.length).toBe(0);
       });
-      const command = createDrawCommand();
-      const drawCommand = new ClassificationModelDrawCommand({
-        primitiveRenderResources: renderResources,
-        command: command,
+
+      it("constructs pick commands for 3D Tiles classification", function () {
+        const renderResources = mockRenderResources({
+          allowPicking: true,
+          pickId: mockPickId,
+          classificationType: ClassificationType.CESIUM_3D_TILE,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        expect(drawCommand.classificationType).toBe(
+          ClassificationType.CESIUM_3D_TILE
+        );
+        expect(drawCommand._classifiesTerrain).toBe(false);
+        expect(drawCommand._classifies3DTiles).toBe(true);
+        expect(drawCommand._pickId).toEqual(mockPickId);
+
+        const commandList = drawCommand._commandList3DTilesPicking;
+        const expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        const expectedStencilFunction = StencilFunction.EQUAL;
+        const testForPicking = true;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
+
+        expect(drawCommand._commandList3DTiles.length).toBe(6);
+
+        expect(drawCommand._commandListTerrain.length).toBe(0);
+        expect(drawCommand._commandListTerrainPicking.length).toBe(0);
+        expect(drawCommand._commandListIgnoreShow.length).toBe(0);
+        expect(drawCommand._commandListDebugWireframe.length).toBe(0);
       });
 
-      const commandList = mockFrameState.commandList;
-      drawCommand.pushCommands(mockFrameState, commandList);
-      expect(commandList.length).toEqual(12);
+      it("constructs pick commands for both classifications", function () {
+        const renderResources = mockRenderResources({
+          allowPicking: true,
+          pickId: mockPickId,
+          classificationType: ClassificationType.BOTH,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
 
-      const commandListTerrain = commandList.slice(0, 6);
-      let expectedPass = Pass.TERRAIN_CLASSIFICATION;
-      let expectedStencilFunction = StencilFunction.ALWAYS;
+        expect(drawCommand.classificationType).toBe(ClassificationType.BOTH);
+        expect(drawCommand._classifiesTerrain).toBe(true);
+        expect(drawCommand._classifies3DTiles).toBe(true);
 
-      verifyBatchedStencilAndColorCommands(
-        drawCommand,
-        commandListTerrain,
-        expectedPass,
-        expectedStencilFunction
-      );
+        const testForPicking = true;
+        let commandList = drawCommand._commandListTerrainPicking;
+        let expectedPass = Pass.TERRAIN_CLASSIFICATION;
+        let expectedStencilFunction = StencilFunction.ALWAYS;
 
-      const commandList3DTiles = commandList.slice(6, 12);
-      expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-      expectedStencilFunction = StencilFunction.EQUAL;
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
 
-      verifyBatchedStencilAndColorCommands(
-        drawCommand,
-        commandList3DTiles,
-        expectedPass,
-        expectedStencilFunction
-      );
+        commandList = drawCommand._commandList3DTilesPicking;
+        expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        expectedStencilFunction = StencilFunction.EQUAL;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
+
+        expect(drawCommand._commandListTerrain.length).toBe(6);
+        expect(drawCommand._commandList3DTiles.length).toBe(6);
+        expect(drawCommand._commandListIgnoreShow.length).toBe(0);
+        expect(drawCommand._commandListDebugWireframe.length).toBe(0);
+      });
+
+      it("does not construct pick commands if allowPicking is false", function () {
+        const renderResources = mockRenderResources({
+          allowPicking: false,
+          pickId: mockPickId,
+          classificationType: ClassificationType.BOTH,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        expect(drawCommand.classificationType).toBe(ClassificationType.BOTH);
+        expect(drawCommand._classifiesTerrain).toBe(true);
+        expect(drawCommand._classifies3DTiles).toBe(true);
+        expect(drawCommand._pickId).toEqual(mockPickId);
+
+        expect(drawCommand._commandListTerrain.length).toBe(6);
+        expect(drawCommand._commandList3DTiles.length).toBe(6);
+        expect(drawCommand._commandListTerrainPicking.length).toBe(0);
+        expect(drawCommand._commandList3DTilesPicking.length).toBe(0);
+      });
     });
 
-    it("pushCommands derives ignore show commands for 3D Tiles", function () {
-      const renderResources = mockRenderResources({
-        classificationType: ClassificationType.CESIUM_3D_TILE,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
-      });
-      const command = createDrawCommand();
-      const drawCommand = new ClassificationModelDrawCommand({
-        primitiveRenderResources: renderResources,
-        command: command,
-      });
+    describe("pushCommands", function () {
+      it("pushCommands works for render pass", function () {
+        const renderResources = mockRenderResources({
+          classificationType: ClassificationType.BOTH,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
 
-      const commandListIgnoreShow = drawCommand._commandListIgnoreShow;
-      expect(commandListIgnoreShow.length).toBe(0);
+        const commandList = mockFrameState.commandList;
+        drawCommand.pushCommands(mockFrameState, commandList);
+        expect(commandList.length).toEqual(12);
 
-      const commandList = mockFrameStateWithInvertedClassification.commandList;
-      drawCommand.pushCommands(
-        mockFrameStateWithInvertedClassification,
-        commandList
-      );
-      expect(commandList.length).toBe(9);
+        const commandListTerrain = commandList.slice(0, 6);
+        let expectedPass = Pass.TERRAIN_CLASSIFICATION;
+        let expectedStencilFunction = StencilFunction.ALWAYS;
 
-      const commandList3DTiles = commandList.slice(0, 6);
-      let expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-      const expectedStencilFunction = StencilFunction.EQUAL;
-
-      verifyBatchedStencilAndColorCommands(
-        drawCommand,
-        commandList3DTiles,
-        expectedPass,
-        expectedStencilFunction
-      );
-
-      const length = commandListIgnoreShow.length;
-      expect(length).toBe(3);
-
-      expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
-      const indexOffset = 6;
-      for (let i = 0; i < length; i++) {
-        const ignoreShowCommand = commandListIgnoreShow[i];
-        expect(commandList[indexOffset + i]).toBe(ignoreShowCommand);
-
-        verifyStencilDepthCommand(
-          ignoreShowCommand,
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandListTerrain,
           expectedPass,
           expectedStencilFunction
         );
-      }
-    });
 
-    it("pushCommands doesn't derive ignore show command for terrain", function () {
-      const renderResources = mockRenderResources({
-        classificationType: ClassificationType.TERRAIN,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
-      });
-      const command = createDrawCommand();
-      const drawCommand = new ClassificationModelDrawCommand({
-        primitiveRenderResources: renderResources,
-        command: command,
+        const commandList3DTiles = commandList.slice(6, 12);
+        expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        expectedStencilFunction = StencilFunction.EQUAL;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList3DTiles,
+          expectedPass,
+          expectedStencilFunction
+        );
       });
 
-      const commandListIgnoreShow = drawCommand._commandListIgnoreShow;
-      expect(commandListIgnoreShow.length).toBe(0);
+      it("pushCommands works for render pass", function () {
+        const renderResources = mockRenderResources({
+          classificationType: ClassificationType.BOTH,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
 
-      const commandList = mockFrameStateWithInvertedClassification.commandList;
-      drawCommand.pushCommands(
-        mockFrameStateWithInvertedClassification,
-        commandList
-      );
+        const commandList = mockFrameState.commandList;
+        drawCommand.pushCommands(mockFrameState, commandList);
+        expect(commandList.length).toEqual(12);
 
-      expect(commandList.length).toBe(6);
-      expect(commandListIgnoreShow.length).toBe(0);
+        const commandListTerrain = commandList.slice(0, 6);
+        let expectedPass = Pass.TERRAIN_CLASSIFICATION;
+        let expectedStencilFunction = StencilFunction.ALWAYS;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandListTerrain,
+          expectedPass,
+          expectedStencilFunction
+        );
+
+        const commandList3DTiles = commandList.slice(6, 12);
+        expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        expectedStencilFunction = StencilFunction.EQUAL;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList3DTiles,
+          expectedPass,
+          expectedStencilFunction
+        );
+      });
+
+      it("pushCommands works for pick pass", function () {
+        const renderResources = mockRenderResources({
+          allowPicking: true,
+          pickId: mockPickId,
+          classificationType: ClassificationType.BOTH,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const commandList = mockFrameStatePickOnly.commandList;
+        drawCommand.pushCommands(mockFrameStatePickOnly, commandList);
+        expect(commandList.length).toEqual(12);
+
+        const testForPicking = true;
+        const commandListTerrain = commandList.slice(0, 6);
+        let expectedPass = Pass.TERRAIN_CLASSIFICATION;
+        let expectedStencilFunction = StencilFunction.ALWAYS;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandListTerrain,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
+
+        const commandList3DTiles = commandList.slice(6, 12);
+        expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        expectedStencilFunction = StencilFunction.EQUAL;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList3DTiles,
+          expectedPass,
+          expectedStencilFunction,
+          testForPicking
+        );
+      });
+
+      it("pushCommands derives ignore show commands for 3D Tiles", function () {
+        const renderResources = mockRenderResources({
+          classificationType: ClassificationType.CESIUM_3D_TILE,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const commandListIgnoreShow = drawCommand._commandListIgnoreShow;
+        expect(commandListIgnoreShow.length).toBe(0);
+
+        const commandList =
+          mockFrameStateWithInvertedClassification.commandList;
+        drawCommand.pushCommands(
+          mockFrameStateWithInvertedClassification,
+          commandList
+        );
+        expect(commandList.length).toBe(9);
+
+        const commandList3DTiles = commandList.slice(0, 6);
+        let expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        const expectedStencilFunction = StencilFunction.EQUAL;
+
+        verifyBatchedStencilAndColorCommands(
+          drawCommand,
+          commandList3DTiles,
+          expectedPass,
+          expectedStencilFunction
+        );
+
+        const length = commandListIgnoreShow.length;
+        expect(length).toBe(3);
+
+        expectedPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+        const indexOffset = 6;
+        for (let i = 0; i < length; i++) {
+          const ignoreShowCommand = commandListIgnoreShow[i];
+          expect(commandList[indexOffset + i]).toBe(ignoreShowCommand);
+
+          verifyStencilDepthCommand(
+            ignoreShowCommand,
+            expectedPass,
+            expectedStencilFunction
+          );
+        }
+      });
+
+      it("pushCommands doesn't derive ignore show command for terrain", function () {
+        const renderResources = mockRenderResources({
+          classificationType: ClassificationType.TERRAIN,
+          batchLengths: batchLengths,
+          batchOffsets: batchOffsets,
+        });
+        const command = createDrawCommand();
+        const drawCommand = new ClassificationModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const commandListIgnoreShow = drawCommand._commandListIgnoreShow;
+        expect(commandListIgnoreShow.length).toBe(0);
+
+        const commandList =
+          mockFrameStateWithInvertedClassification.commandList;
+        drawCommand.pushCommands(
+          mockFrameStateWithInvertedClassification,
+          commandList
+        );
+
+        expect(commandList.length).toBe(6);
+        expect(commandListIgnoreShow.length).toBe(0);
+      });
     });
 
     it("updates model matrix", function () {
       const renderResources = mockRenderResources({
         classificationType: ClassificationType.BOTH,
-        batchLengths: [6, 6, 3],
-        batchOffsets: [0, 6, 12],
+        batchLengths: batchLengths,
+        batchOffsets: batchOffsets,
       });
       const command = createDrawCommand();
       const drawCommand = new ClassificationModelDrawCommand({
