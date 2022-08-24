@@ -196,8 +196,8 @@ GeometryPipelineStage.process = function (
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryStageVS]);
-  shaderBuilder.addFragmentLines([GeometryStageFS]);
+  shaderBuilder.addVertexLines(GeometryStageVS);
+  shaderBuilder.addFragmentLines(GeometryStageFS);
 };
 
 function processAttribute(

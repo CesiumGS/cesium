@@ -122,7 +122,7 @@ MaterialPipelineStage.process = function (
     alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
-  shaderBuilder.addFragmentLines([MaterialStageFS]);
+  shaderBuilder.addFragmentLines(MaterialStageFS);
 
   if (material.doubleSided) {
     shaderBuilder.addDefine(

@@ -8,13 +8,33 @@ describe("Renderer/ShaderFunction", function () {
     expect(func.body).toEqual([]);
   });
 
+  it("addLines throws without lines", function () {
+    const func = new ShaderFunction("TestFunction");
+    expect(function () {
+      return func.addLines();
+    }).toThrowDeveloperError();
+  });
+
+  it("addLines throws for invalid lines", function () {
+    const func = new ShaderFunction("TestFunction");
+    expect(function () {
+      return func.addLines(100);
+    }).toThrowDeveloperError();
+  });
+
   it("addLines adds lines to the function body", function () {
-    const func = new ShaderFunction("TestStruct");
+    const func = new ShaderFunction("TestFunction");
     func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);
     expect(func.body).toEqual([
       "    v_color = a_color;",
       "    return vec3(0.0, 0.0, 1.0);",
     ]);
+  });
+
+  it("addLines accepts a single string", function () {
+    const func = new ShaderFunction("TestFunction");
+    func.addLines("v_color = a_color;");
+    expect(func.body).toEqual(["    v_color = a_color;"]);
   });
 
   it("generateGlslLines generates a function", function () {

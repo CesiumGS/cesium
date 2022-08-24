@@ -28,8 +28,8 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  */
 function buildDrawCommand(primitiveRenderResources, frameState) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
-  shaderBuilder.addVertexLines([ModelVS]);
-  shaderBuilder.addFragmentLines([ModelFS]);
+  shaderBuilder.addVertexLines(ModelVS);
+  shaderBuilder.addFragmentLines(ModelFS);
 
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
