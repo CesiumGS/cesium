@@ -3,6 +3,7 @@ import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import {
   Cartesian3,
   Cesium3DTileFeature,
+  Cesium3DTilePointFeature,
   Cesium3DTileset,
   ClassificationType,
   Color,
@@ -226,74 +227,41 @@ describe("Scene/Vector3DTileContent", () => {
         scene,
         vectorTilePointsTileset
       ).then((tileset) => {
+        const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+          tilesetRectangle
+        );
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
+          ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
         });
-      });
-    });
-
-    it("renders points on 3D Tiles", () => {
-      scene.primitives.add(tilesetMockPrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorTilePointsTileset, {
-        classificationType: ClassificationType.CESIUM_3D_TILE,
-      }).then((tileset) => {
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
+          ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-
-        globeMockPrimitive.show = false;
-        tilesetMockPrimitive.show = true;
-        expect(scene).toRender(whitePixel);
-
-        globeMockPrimitive.show = true;
-        tilesetMockPrimitive.show = false;
-        expect(scene).toRender(depthColor);
-      });
-    });
-
-    it("renders points on terrain", () => {
-      scene.primitives.add(tilesetMockPrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorTilePointsTileset, {
-        classificationType: ClassificationType.TERRAIN,
-      }).then((tileset) => {
+        expect(scene).toPickAndCall((result) => {
+          expect(result).toBeDefined();
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+        });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
+          ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-
-        globeMockPrimitive.show = false;
-        tilesetMockPrimitive.show = true;
-        expect(scene).toRender(depthColor);
-
-        globeMockPrimitive.show = true;
-        tilesetMockPrimitive.show = false;
-        expect(scene).toRender(whitePixel);
-      });
-    });
-
-    it("renders points on 3D Tiles and terrain", () => {
-      scene.primitives.add(tilesetMockPrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorTilePointsTileset, {
-        classificationType: ClassificationType.BOTH,
-      }).then((tileset) => {
+        expect(scene).toPickAndCall((result) => {
+          expect(result).toBeDefined();
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+        });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
+          ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-
-        globeMockPrimitive.show = false;
-        tilesetMockPrimitive.show = true;
-        expect(scene).toRender(whitePixel);
-
-        globeMockPrimitive.show = true;
-        tilesetMockPrimitive.show = false;
-        expect(scene).toRender(whitePixel);
+        expect(scene).toPickAndCall((result) => {
+          expect(result).toBeDefined();
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+        });
       });
     });
 
@@ -344,7 +312,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result._batchId).toEqual(0);
         });
         camera.lookAt(
@@ -353,7 +321,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result._batchId).toEqual(1);
         });
         camera.lookAt(
@@ -362,7 +330,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result._batchId).toEqual(3);
         });
         camera.lookAt(
@@ -371,7 +339,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result._batchId).toEqual(2);
         });
       });
@@ -424,7 +392,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result.getProperty("name")).toEqual("upper left");
         });
         camera.lookAt(
@@ -433,7 +401,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result.getProperty("name")).toEqual("upper right");
         });
         camera.lookAt(
@@ -442,7 +410,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result.getProperty("name")).toEqual("lower right");
         });
         camera.lookAt(
@@ -451,7 +419,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result.getProperty("name")).toEqual("lower left");
         });
       });
@@ -882,30 +850,58 @@ describe("Scene/Vector3DTileContent", () => {
         scene,
         vectorTilePolylinesTileset
       ).then((tileset) => {
-        // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
         const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
           tilesetRectangle
         );
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+
+        const nwCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northwest(ulRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const neCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northeast(urRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const seCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southeast(lrRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const swCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southwest(llRect)
         );
-        expect(scene).toRender(whitePixel);
+
+        camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -1040,26 +1036,55 @@ describe("Scene/Vector3DTileContent", () => {
         const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
           tilesetRectangle
         );
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+
+        const nwCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northwest(ulRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const neCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northeast(urRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const seCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southeast(lrRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const swCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southwest(llRect)
         );
-        expect(scene).toRender(whitePixel);
+
+        camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -1120,26 +1145,55 @@ describe("Scene/Vector3DTileContent", () => {
         const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
           tilesetRectangle
         );
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+
+        const nwCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northwest(ulRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const neCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.northeast(urRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const seCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southeast(lrRect)
         );
-        expect(scene).toRender(whitePixel);
-        camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+        const swCorner = ellipsoid.cartographicToCartesian(
+          Rectangle.southwest(llRect)
         );
-        expect(scene).toRender(whitePixel);
+
+        camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
+
+        camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -1204,22 +1258,46 @@ describe("Scene/Vector3DTileContent", () => {
           ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -1236,22 +1314,46 @@ describe("Scene/Vector3DTileContent", () => {
           ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
         camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
-        expect(scene).toRender(whitePixel);
+        expect(scene).toRenderAndCall((rgba) => {
+          // Account for mitering at the corners.
+          expect(rgba[0]).toBeCloseTo(255, -1);
+          expect(rgba[1]).toBeCloseTo(255, -1);
+          expect(rgba[2]).toBeCloseTo(255, -1);
+          expect(rgba[3]).toEqual(255);
+        });
       });
     });
 
@@ -1508,7 +1610,7 @@ describe("Scene/Vector3DTileContent", () => {
         );
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeDefined();
-          expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
           expect(result._batchId).toEqual(0);
         });
       });
