@@ -43,11 +43,12 @@ ShaderFunction.prototype.addLines = function (lines) {
   //>>includeEnd('debug');
   const body = this.body;
 
+  // Indent the body of the function by 4 spaces
   if (Array.isArray(lines)) {
-    const paddedLines = lines.map(function (line) {
-      return `    ${line}`;
-    });
-    body.push.apply(body, paddedLines);
+    const length = lines.length;
+    for (let i = 0; i < length; i++) {
+      body.push(`    ${lines[i]}`);
+    }
   } else {
     // Single string case
     body.push(`    ${lines}`);
