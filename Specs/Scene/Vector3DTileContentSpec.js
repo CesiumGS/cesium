@@ -923,7 +923,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result).toBeInstanceOf(Cesium3DTileFeature);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(urRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -931,7 +931,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result).toBeInstanceOf(Cesium3DTileFeature);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(lrRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -939,7 +939,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result).toBeInstanceOf(Cesium3DTileFeature);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(llRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1107,7 +1107,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result._batchId).toEqual(0);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(urRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1116,7 +1116,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result._batchId).toEqual(1);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(lrRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1125,7 +1125,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result._batchId).toEqual(3);
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(llRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1216,7 +1216,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result.getProperty("name")).toEqual("upper left");
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(urRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1225,7 +1225,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result.getProperty("name")).toEqual("upper right");
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(lrRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
@@ -1234,7 +1234,7 @@ describe("Scene/Vector3DTileContent", () => {
           expect(result.getProperty("name")).toEqual("lower right");
         });
         camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.northwest(llRect)),
+          ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
           new Cartesian3(0.0, 0.0, 5.0)
         );
         expect(scene).toPickAndCall((result) => {
