@@ -191,6 +191,8 @@ function VoxelPrimitive(options) {
 
   /**
    * Keeps track of when the clipping planes are enabled / disabled
+   * @type {Boolean}
+   * @private
    */
   this._clippingPlanesEnabled = false;
 
@@ -1081,8 +1083,10 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 
 /**
  * Updates the voxel primitive.
+ * @function
  *
  * @param {FrameState} frameState
+ * @private
  */
 VoxelPrimitive.prototype.update = function (frameState) {
   const context = frameState.context;

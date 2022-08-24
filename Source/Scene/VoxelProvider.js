@@ -145,6 +145,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {MetadataType[]}
    * @readonly
+   * @private
    */
   types: {
     get: DeveloperError.throwInstantiationError,
@@ -157,6 +158,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {MetadataComponentType[]}
    * @readonly
+   * @private
    */
   componentTypes: {
     get: DeveloperError.throwInstantiationError,
@@ -224,6 +226,7 @@ Object.defineProperties(VoxelProvider.prototype, {
 /**
  * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
  * This function should not be called before {@link VoxelProvider#ready} returns true.
+ * @function
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.tileLevel=0] The tile's level.
@@ -240,8 +243,10 @@ VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
 /**
  * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
  * If the provider doesn't need this functionality it should leave this function undefined.
+ * @function
  *
  * @param {FrameState} frameState
+ * @private
  */
 VoxelProvider.prototype.update = DeveloperError.throwInstantiationError;
 

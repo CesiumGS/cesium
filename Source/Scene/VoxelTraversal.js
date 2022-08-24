@@ -933,6 +933,7 @@ const GpuOctreeFlag = {
  * @param {FrameState} frameState
  * @param {Number} sampleCount
  * @param {Number} levelBlendFactor
+ * @private
  */
 function generateOctree(that, sampleCount, levelBlendFactor) {
   const primitive = that._primitive;
