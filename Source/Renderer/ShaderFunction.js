@@ -30,7 +30,7 @@ function ShaderFunction(signature) {
 }
 
 /**
- * Add an array of lines to the body of the function
+ * Adds one or more lines to the body of the function
  * @param {String|String[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {

@@ -252,7 +252,6 @@ ShaderBuilder.prototype.addFunction = function (
 ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("functionName", functionName);
-
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
       `Expected lines to be a string or an array of strings, actual value was ${lines}`
@@ -372,8 +371,7 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
  *
  * @example
- * // creates the line "varyin
-    Array.prototype.push.apply(this._vertexShaderParts.shaderLines, lines);g vec3 v_color;" in both shaders
+ * // creates the line "varying vec3 v_color;" in both shaders
  * shaderBuilder.addVarying("vec3", "v_color");
  */
 ShaderBuilder.prototype.addVarying = function (type, identifier) {

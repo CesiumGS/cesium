@@ -604,9 +604,9 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
 }
 
 const scratchShaderLines = [];
+
 function addLinesToShader(shaderBuilder, customShader, generatedCode) {
   const vertexLines = generatedCode.vertexLines;
-
   const shaderLines = scratchShaderLines;
 
   if (vertexLines.enabled) {
