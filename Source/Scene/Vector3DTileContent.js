@@ -673,7 +673,6 @@ Vector3DTileContent.prototype.getFeature = function (batchId) {
   }
   //>>includeEnd('debug');
 
-  createFeatures(this);
   return this._features[batchId];
 };
 
@@ -690,7 +689,6 @@ Vector3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
 };
 
 Vector3DTileContent.prototype.applyStyle = function (style) {
-  createFeatures(this);
   if (defined(this._polygons)) {
     this._polygons.applyStyle(style, this._features);
   }
@@ -719,10 +717,10 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
     ready = ready && this._points._ready;
   }
   if (defined(this._batchTable) && ready) {
-    this._batchTable.update(tileset, frameState);
     if (!defined(this._features)) {
       createFeatures(this);
     }
+    this._batchTable.update(tileset, frameState);
   }
 };
 
