@@ -358,8 +358,17 @@ ShaderSource.replaceMain = function (source, renamedMain) {
   return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
 };
 
+/**
+ * Since {@link ShaderSource#createCombinedVertexShader} and
+ * {@link ShaderSource#createCombinedFragmentShader} are both expensive to
+ * compute, create a simpler string key for lookups in the {@link ShaderCache}.
+ *
+ * @returns {String} A key for identifying this shader
+ *
+ * @private
+ */
 ShaderSource.prototype.getCacheKey = function () {
-  // Sort defines
+  // Sort defines to make the key comparison deterministic
   const sortedDefines = this.defines.slice().sort();
   const definesKey = sortedDefines.join(",");
   const pickKey = this.pickColorQualifier;
