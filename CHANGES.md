@@ -32,6 +32,7 @@
 
 - Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
 - Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
+- Fixed rendering bug with points in .vctr format where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
 
 ### 1.96 - 2022-08-01
 
