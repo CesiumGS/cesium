@@ -530,7 +530,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
       pushCommand(result, this._translucentCommand, use2D);
     }
 
-    // If the opaque command is needed, don't return here.
+    // Continue only if opaque commands are needed.
     if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
       return;
     }
