@@ -1575,8 +1575,8 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The {@link StyleCommandsNeeded} for the style currently applied to
-   * the features in the model. This is referenced by the {@link ModelDrawCommand}
-   * when determining what commands to submit in each update.
+   * the features in the model. This is used internally by the {@link ModelDrawCommand}
+   * when determining which commands to submit in an update.
    *
    * @memberof Model.prototype
    *
@@ -1668,8 +1668,8 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
- * Marks the model's {@link Model#style} as dirty, which forces all
- * features to re-evaluate the style in the next frame the model is visible.
+ * Marks the model's {@link Model#style} as dirty, which forces all features
+ * to re-evaluate the style in the next frame the model is visible.
  */
 Model.prototype.makeStyleDirty = function () {
   this._styleDirty = true;
@@ -1777,11 +1777,61 @@ function updateImageBasedLighting(model, frameState) {
   }
 }
 
+function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
+  const components = model._sceneGraph.components;
+  const structuralMetadata = components.structuralMetadata;
+
+  if (
+    defined(structuralMetadata) &&
+    structuralMetadata.propertyTableCount > 0
+  ) {
+    model.featureTableId = selectFeatureTableId(components, model);
+
+    // Mark the style dirty to re-apply it and reflect the new feature ID table.
+    model._styleDirty = true;
+
+    // Trigger a rebuild of the draw commands.
+    model.resetDrawCommands();
+  }
+}
+
 function updateStyle(model) {
   if (model._styleDirty) {
-    model.applyStyle();
+    model.applyStyle(model._style);
     model._styleDirty = false;
   }
+}
+
+function updateFeatureTables(model, frameState) {
+  const featureTables = model._featureTables;
+  const length = featureTables.length;
+
+  let styleCommandsNeededDirty = false;
+  for (let i = 0; i < length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      styleCommandsNeededDirty = true;
+    }
+  }
+
+  if (styleCommandsNeededDirty) {
+    updateStyleCommandsNeeded(model);
+  }
+}
+
+function updateStyleCommandsNeeded(model) {
+  const featureTable = model.featureTables[model.featureTableId];
+  model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    featureTable.featuresLength,
+    featureTable.batchTexture.translucentFeaturesLength
+  );
 }
 
 function updatePointCloudShading(model) {
@@ -1843,48 +1893,6 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
-  }
-}
-
-function updateFeatureTables(model, frameState) {
-  const featureTables = model._featureTables;
-  const length = featureTables.length;
-
-  let styleCommandsNeededDirty = false;
-  for (let i = 0; i < length; i++) {
-    featureTables[i].update(frameState);
-    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-    // to ensure that translucent and opaque features are handled in the correct passes.
-    if (featureTables[i].styleCommandsNeededDirty) {
-      styleCommandsNeededDirty = true;
-    }
-  }
-
-  if (styleCommandsNeededDirty) {
-    updateStyleCommandsNeeded(model);
-  }
-}
-
-function updateFeatureTableId(model) {
-  if (!model._featureTableIdDirty) {
-    return;
-  }
-  model._featureTableIdDirty = false;
-
-  const components = model._sceneGraph.components;
-  const structuralMetadata = components.structuralMetadata;
-
-  if (
-    defined(structuralMetadata) &&
-    structuralMetadata.propertyTableCount > 0
-  ) {
-    model.featureTableId = selectFeatureTableId(components, model);
-
-    // Mark the style dirty to re-apply it and reflect the new feature ID table.
-    model._styleDirty = true;
-
-    // Trigger a rebuild of the draw commands.
-    model.resetDrawCommands();
   }
 }
 
@@ -2715,7 +2723,7 @@ Model.prototype.applyColorAndShow = function (style) {
 /**
  * @private
  */
-Model.prototype.applyStyle = function () {
+Model.prototype.applyStyle = function (style) {
   const isPnts = this.type === ModelType.TILE_PNTS;
 
   const hasFeatureTable =
@@ -2739,7 +2747,6 @@ Model.prototype.applyStyle = function () {
     return;
   }
 
-  const style = this._style;
   // The style is only set by the ModelFeatureTable. If there are no features,
   // the color and show from the style are directly applied.
   if (hasFeatureTable) {
@@ -2751,14 +2758,6 @@ Model.prototype.applyStyle = function () {
     this._styleCommandsNeeded = undefined;
   }
 };
-
-function updateStyleCommandsNeeded(model) {
-  const featureTable = model.featureTables[model.featureTableId];
-  model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
-    featureTable.featuresLength,
-    featureTable.batchTexture.translucentFeaturesLength
-  );
-}
 
 function makeModelOptions(loader, modelType, options) {
   return {
