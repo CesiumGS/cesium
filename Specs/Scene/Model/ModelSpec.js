@@ -956,9 +956,7 @@ describe(
         function (result) {
           model = result;
           // Renders without style.
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
 
           // Renders with opaque style.
           style = new Cesium3DTileStyle({
@@ -968,9 +966,10 @@ describe(
           });
 
           model.style = style;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
+          expect(model._styleCommandsNeeded).toBe(
+            StyleCommandsNeeded.ALL_OPAQUE
+          );
 
           // Renders with translucent style.
           style = new Cesium3DTileStyle({
@@ -980,27 +979,31 @@ describe(
           });
 
           model.style = style;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
+          expect(model._styleCommandsNeeded).toBe(
+            StyleCommandsNeeded.ALL_TRANSLUCENT
+          );
 
-          // Does not render when style disables show.
+          // Does not render with invisible color.
           style = new Cesium3DTileStyle({
             color: {
               conditions: [["${height} > 1", "color('red', 0.0)"]],
             },
           });
 
-          model.style = style;
-          verifyRender(model, false, {
-            zoomToModel: false,
+          // Does not render when style disables show.
+          style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${height} > 1", "false"]],
+            },
           });
+
+          model.style = style;
+          verifyRender(model, false);
 
           // Render when style is removed.
           model.style = undefined;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
         }
       );
     });
@@ -2815,27 +2818,6 @@ describe(
             const reference2 = commands[2].renderState.stencilTest.reference;
             expect(reference2).toEqual(reference1 + 1);
           });
-        });
-      });
-
-      it("silhouette works with style", function () {
-        const style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.5)"]],
-          },
-        });
-        return loadAndZoomToModel(
-          { gltf: buildingsMetadata, silhouetteSize: 1.0 },
-          scene
-        ).then(function (model) {
-          model.style = style;
-          scene.renderForSpecs();
-          const commandList = scene.frameState.commandList;
-          expect(commandList.length).toBe(2);
-          expect(commandList[0].renderState.stencilTest.enabled).toBe(true);
-          expect(commandList[0].pass).toBe(Pass.TRANSLUCENT);
-          expect(commandList[1].renderState.stencilTest.enabled).toBe(true);
-          expect(commandList[1].pass).toBe(Pass.TRANSLUCENT);
         });
       });
     });
