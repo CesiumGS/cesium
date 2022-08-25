@@ -1718,8 +1718,8 @@ Model.prototype.update = function (frameState) {
   }
 
   updateFeatureTableId(this);
-  updateFeatureTables(this, frameState);
   updateStyle(this);
+  updateFeatureTables(this, frameState);
   updatePointCloudShading(this);
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
@@ -2698,6 +2698,7 @@ Model.fromGeoJson = function (options) {
  * @private
  */
 Model.prototype.applyColorAndShow = function (style) {
+  const previousColor = this._color;
   const hasColorStyle = defined(style) && defined(style.color);
   const hasShowStyle = defined(style) && defined(style.show);
 
@@ -2705,6 +2706,10 @@ Model.prototype.applyColorAndShow = function (style) {
     ? style.color.evaluateColor(undefined, this._color)
     : Color.clone(Color.WHITE, this._color);
   this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+
+  if (isColorAlphaDirty(previousColor, this._color)) {
+    this.resetDrawCommands();
+  }
 };
 
 /**
