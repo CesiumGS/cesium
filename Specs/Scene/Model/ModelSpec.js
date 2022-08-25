@@ -966,8 +966,6 @@ describe(
           });
 
           model.style = style;
-          //model.applyStyle(); // TODO: why is this not taking effect when called by
-          // verifyRender?
           verifyRender(model, true);
           expect(model._styleCommandsNeeded).toBe(
             StyleCommandsNeeded.ALL_OPAQUE
@@ -981,11 +979,17 @@ describe(
           });
 
           model.style = style;
-          model.applyStyle();
           verifyRender(model, true);
           expect(model._styleCommandsNeeded).toBe(
             StyleCommandsNeeded.ALL_TRANSLUCENT
           );
+
+          // Does not render with invisible color.
+          style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red', 0.0)"]],
+            },
+          });
 
           // Does not render when style disables show.
           style = new Cesium3DTileStyle({
