@@ -358,6 +358,17 @@ ShaderSource.replaceMain = function (source, renamedMain) {
   return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
 };
 
+ShaderSource.prototype.getCacheKey = function () {
+  // Sort defines
+  const sortedDefines = this.defines.slice().sort();
+  const definesKey = sortedDefines.join(",");
+  const pickKey = this.pickColorQualifier;
+  const builtinsKey = this.includeBuiltIns;
+  const sourcesKey = this.sources.join("\n");
+
+  return `${definesKey}:${pickKey}:${builtinsKey}:${sourcesKey}`;
+};
+
 /**
  * Create a single string containing the full, combined vertex shader with all dependencies and defines.
  *
