@@ -2165,9 +2165,17 @@ describe(
       });
     });
 
-    it("loads BoxInstanced", function () {
-      return loadGltf(boxInstanced).then(function (gltfLoader) {
-        const components = gltfLoader.components;
+    describe("loads instanced models", function () {
+      let sceneWithNoInstancing;
+
+      beforeAll(function () {
+        // Disable instancing extension.
+        sceneWithNoInstancing = createScene();
+        sceneWithNoInstancing.context._instancedArrays = undefined;
+      });
+
+      function verifyBoxInstancedAttributes(loader) {
+        const components = loader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
         const primitive = rootNode.primitives[0];
@@ -2180,7 +2188,6 @@ describe(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
@@ -2283,10 +2290,20 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeDefined();
+        expect(featureIdAttribute.typedArray).toEqual(
+          new Float32Array([0, 0, 1, 1])
+        );
         expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
+      }
+
+      function verifyBoxInstancedStructuralMetadata(loader) {
+        const components = loader.components;
+        const structuralMetadata = components.structuralMetadata;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const instances = rootNode.instances;
 
         expect(instances.featureIds.length).toBe(2);
 
@@ -2357,131 +2374,14 @@ describe(
         expect(sectionTable.getProperty(0, "id")).toBe(10293);
         expect(sectionTable.getProperty(1, "name")).toBe("right");
         expect(sectionTable.getProperty(1, "id")).toBe(54923);
-      });
-    });
+      }
 
-    it("loads BoxInstanced with EXT_feature_metadata", function () {
-      return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
-        const components = gltfLoader.components;
+      function verifyBoxInstancedStructuralMetadataLegacy(loader) {
+        const components = loader.components;
+        const structuralMetadata = components.structuralMetadata;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        const rotationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.ROTATION
-        );
-        const scaleAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.SCALE
-        );
-        const featureIdAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.FEATURE_ID,
-          0
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toBeUndefined();
-        expect(translationAttribute.max).toBeUndefined();
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toEqual(
-          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-        );
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
-
-        expect(rotationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.ROTATION
-        );
-        expect(rotationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(rotationAttribute.type).toBe(AttributeType.VEC4);
-        expect(rotationAttribute.normalized).toBe(false);
-        expect(rotationAttribute.count).toBe(4);
-        expect(rotationAttribute.min).toBeUndefined();
-        expect(rotationAttribute.max).toBeUndefined();
-        expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
-        expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.typedArray).toEqual(
-          // prettier-ignore
-          new Float32Array([
-            0.3826833963394165, 0, 0, 0.9238795042037964,
-            0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-            0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-            0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-          ])
-        );
-        expect(rotationAttribute.buffer).toBeUndefined();
-        expect(rotationAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
-
-        expect(scaleAttribute.semantic).toBe(InstanceAttributeSemantic.SCALE);
-        expect(scaleAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
-        expect(scaleAttribute.type).toBe(AttributeType.VEC3);
-        expect(scaleAttribute.normalized).toBe(false);
-        expect(scaleAttribute.count).toBe(4);
-        expect(scaleAttribute.min).toBeUndefined();
-        expect(scaleAttribute.max).toBeUndefined();
-        expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.typedArray).toEqual(
-          // prettier-ignore
-          new Float32Array([
-            0.6000000238418579, 0.699999988079071, 1,
-            1, 1, 0.5,
-            0.75, 0.20000000298023224, 0.5,
-            0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-          ])
-        );
-        expect(scaleAttribute.buffer).toBeUndefined();
-        expect(scaleAttribute.byteOffset).toBe(0);
-        expect(scaleAttribute.byteStride).toBeUndefined();
-
-        expect(featureIdAttribute.setIndex).toBe(0);
-        expect(featureIdAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
-        expect(featureIdAttribute.normalized).toBe(false);
-        expect(featureIdAttribute.count).toBe(4);
-        expect(featureIdAttribute.min).toBeUndefined();
-        expect(featureIdAttribute.max).toBeUndefined();
-        expect(featureIdAttribute.constant).toBe(0);
-        expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeDefined();
-        expect(featureIdAttribute.buffer).toBeUndefined();
-        expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
 
         expect(instances.featureIds.length).toBe(2);
 
@@ -2550,107 +2450,44 @@ describe(
         expect(sectionTable.getProperty(0, "id")).toBe(10293);
         expect(sectionTable.getProperty(1, "name")).toBe("right");
         expect(sectionTable.getProperty(1, "id")).toBe(54923);
-      });
-    });
-
-    it("loads BoxInstanced when WebGL instancing is disabled", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstanced)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          const rotationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.ROTATION
-          );
-          const scaleAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.SCALE
-          );
-          const featureIdAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID,
-            0
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
-          expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-          );
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-
-          expect(rotationAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.3826833963394165, 0, 0, 0.9238795042037964,
-              0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-              0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-              0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-            ])
-          );
-          expect(rotationAttribute.buffer).toBeUndefined();
-          expect(rotationAttribute.byteOffset).toBe(0);
-          expect(rotationAttribute.byteStride).toBeUndefined();
-
-          expect(scaleAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.6000000238418579, 0.699999988079071, 1,
-              1, 1, 0.5,
-              0.75, 0.20000000298023224, 0.5,
-              0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-            ])
-          );
-          expect(scaleAttribute.buffer).toBeUndefined();
-          expect(scaleAttribute.byteOffset).toBe(0);
-          expect(scaleAttribute.byteStride).toBeUndefined();
-
-          expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
-          );
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.byteOffset).toBe(0);
-          expect(featureIdAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
-        });
-    });
-
-    it("loads BoxInstanced with default feature ids", function () {
-      function modifyGltf(gltf) {
-        // Delete feature ID accessor's buffer view
-        delete gltf.accessors[6].bufferView;
-        return gltf;
       }
 
-      return loadModifiedGltfAndTest(boxInstanced, undefined, modifyGltf).then(
-        function (gltfLoader) {
+      it("loads BoxInstanced", function () {
+        return loadGltf(boxInstanced).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedStructuralMetadata(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced with EXT_feature_metadata", function () {
+        return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedStructuralMetadataLegacy(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced when WebGL instancing is disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstanced, options).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedStructuralMetadata(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced with default feature ids", function () {
+        function modifyGltf(gltf) {
+          // Delete feature ID accessor's buffer view
+          delete gltf.accessors[6].bufferView;
+          return gltf;
+        }
+
+        return loadModifiedGltfAndTest(
+          boxInstanced,
+          undefined,
+          modifyGltf
+        ).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
@@ -2665,151 +2502,33 @@ describe(
           expect(featureIdAttribute.buffer).toBeUndefined();
           expect(featureIdAttribute.typedArray).toBeUndefined();
           expect(featureIdAttribute.constant).toEqual(0.0);
-        }
-      );
-    });
-
-    it("loads BoxInstancedInterleaved", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstancedInterleaved)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          const rotationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.ROTATION
-          );
-          const scaleAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.SCALE
-          );
-          const featureIdAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID,
-            0
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
-          expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-          );
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-
-          expect(rotationAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.3826833963394165, 0, 0, 0.9238795042037964,
-              0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-              0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-              0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-            ])
-          );
-          expect(rotationAttribute.buffer).toBeUndefined();
-          expect(rotationAttribute.byteOffset).toBe(0);
-          expect(rotationAttribute.byteStride).toBeUndefined();
-
-          expect(scaleAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.6000000238418579, 0.699999988079071, 1,
-              1, 1, 0.5,
-              0.75, 0.20000000298023224, 0.5,
-              0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-            ])
-          );
-          expect(scaleAttribute.buffer).toBeUndefined();
-          expect(scaleAttribute.byteOffset).toBe(0);
-          expect(scaleAttribute.byteStride).toBeUndefined();
-
-          expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
-          );
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.byteOffset).toBe(0);
-          expect(featureIdAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
         });
-    });
-
-    it("loads BoxInstancedTranslation", function () {
-      return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toBeUndefined();
-        expect(translationAttribute.max).toBeUndefined();
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toEqual(
-          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-        );
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
       });
-    });
 
-    it("loads BoxInstancedTranslationWithMinMax", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
+      it("loads BoxInstancedInterleaved", function () {
+        return loadGltf(boxInstancedInterleaved).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstancedInterleaved with instancing disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstancedInterleaved, options).then(function (
+          gltfLoader
+        ) {
+          verifyBoxInstancedAttributes(gltfLoader);
+        });
+      });
+
+      function verifyBoxInstancedTranslation(
+        loader,
+        expectMinMax,
+        expectBufferDefined,
+        expectTypedArrayDefined
       ) {
-        const components = gltfLoader.components;
+        const components = loader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
         const primitive = rootNode.primitives[0];
@@ -2841,104 +2560,93 @@ describe(
         expect(translationAttribute.type).toBe(AttributeType.VEC3);
         expect(translationAttribute.normalized).toBe(false);
         expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+
+        if (expectMinMax) {
+          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+        } else {
+          expect(translationAttribute.min).toBeUndefined();
+          expect(translationAttribute.max).toBeUndefined();
+        }
+
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeUndefined();
-        expect(translationAttribute.buffer).toBeDefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(12);
-      });
-    });
 
-    it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstancedTranslation)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
+        if (expectTypedArrayDefined) {
           expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
+        } else {
+          expect(translationAttribute.typedArray).toBeUndefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+        }
+
+        if (expectBufferDefined) {
+          expect(translationAttribute.buffer).toBeDefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBe(12);
+        } else {
           expect(translationAttribute.buffer).toBeUndefined();
+          // Byte stride is undefined for typed arrays.
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
+        }
+      }
+
+      it("loads BoxInstancedTranslation", function () {
+        return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
+          // The translation accessor does not have a min/max, so it must load
+          // the typed array in addition to the buffer.
+          const expectMinMax = false;
+          const expectBufferDefined = true;
+          const expectTypedArrayDefined = true;
+
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
         });
-    });
+      });
 
-    it("loads BoxInstancedTranslationWithMinMax for 2D", function () {
-      return loadGltf(boxInstancedTranslationMinMax, {
-        loadAttributesFor2D: true,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
+      it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstancedTranslation, options).then(function (
+          gltfLoader
+        ) {
+          const expectMinMax = false;
+          const expectBufferDefined = false;
+          const expectTypedArrayDefined = true;
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
+        });
+      });
 
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeDefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(undefined);
+      it("loads BoxInstancedTranslationWithMinMax", function () {
+        return loadGltf(boxInstancedTranslationMinMax).then(function (
+          gltfLoader
+        ) {
+          // The translation accessor does have a min/max, so it only needs to
+          // load the buffer.
+          const expectMinMax = true;
+          const expectBufferDefined = true;
+          const expectTypedArrayDefined = false;
+
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
+        });
       });
     });
 
@@ -3744,8 +3452,8 @@ describe(
 
           expect(positionAttribute.buffer).toBeDefined();
           expect(positionAttribute.typedArray).toBeDefined();
-          expect(positionAttribute.byteOffset).toBe(0);
-          expect(positionAttribute.byteStride).toBeUndefined();
+          expect(positionAttribute.byteOffset).toBe(12);
+          expect(positionAttribute.byteStride).toBe(24);
 
           // Typed arrays of other attributes should not be defined
           expect(normalAttribute.buffer).toBeDefined();
@@ -3835,8 +3543,8 @@ describe(
           gltfLoader
         ) {
           // Since the translation attribute has no min / max readily defined,
-          // it will load in as a typed array to find these bounds at runtime.
-          // This ensures no additional buffers are created for 2D.
+          // it will load in as a typed array in addition to a buffer in order
+          // to find these bounds at runtime.
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
@@ -3872,9 +3580,9 @@ describe(
           expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
           expect(translationAttribute.quantization).toBeUndefined();
           expect(translationAttribute.typedArray).toBeDefined();
-          expect(translationAttribute.buffer).toBeUndefined();
+          expect(translationAttribute.buffer).toBeDefined();
           expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
+          expect(translationAttribute.byteStride).toBe(12);
         });
       });
 
@@ -3886,11 +3594,8 @@ describe(
         return loadGltf(boxInstancedTranslationMinMax, options).then(function (
           gltfLoader
         ) {
-          // Since the only instanced attribute is translation, and since its
-          // min / max is defined, this will be loaded as a buffer normally
-          // because it doesn't need further processing with a typed array.
-          // However, typed arrays are necessary for 2D projection, so this
-          // should load both a buffer and a typed array for the attribute.
+          // Typed arrays are necessary for 2D projection, so this should load
+          // both a buffer and a typed array for the attribute.
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
@@ -3930,7 +3635,7 @@ describe(
           expect(translationAttribute.typedArray).toBeDefined();
           expect(translationAttribute.buffer).toBeDefined();
           expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
+          expect(translationAttribute.byteStride).toBe(12);
         });
       });
     });

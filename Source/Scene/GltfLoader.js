@@ -870,16 +870,20 @@ function finalizeAttribute(
   }
 
   if (loadTypedArray) {
-    // The accessor's byteOffset and byteStride should be ignored since values
-    // are tightly packed in a typed array
     const bufferViewTypedArray = vertexBufferLoader.typedArray;
     attribute.typedArray = getPackedTypedArray(
       gltf,
       accessor,
       bufferViewTypedArray
     );
-    attribute.byteOffset = 0;
-    attribute.byteStride = undefined;
+
+    if (!loadBuffer) {
+      // If the buffer isn't loaded, then the accessor's byteOffset and
+      // byteStride should be ignored, since values are only available in a
+      // tightly packed typed array
+      attribute.byteOffset = 0;
+      attribute.byteStride = undefined;
+    }
   }
 }
 
@@ -1043,39 +1047,37 @@ function loadInstancedAttribute(
     InstanceAttributeSemantic,
     gltfSemantic
   );
-
   const modelSemantic = semanticInfo.modelSemantic;
-
-  const isTransformAttribute =
-    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
-    modelSemantic === InstanceAttributeSemantic.ROTATION ||
-    modelSemantic === InstanceAttributeSemantic.SCALE;
 
   const isTranslationAttribute =
     modelSemantic === InstanceAttributeSemantic.TRANSLATION;
+  const isFeatureIdAttribute =
+    modelSemantic === InstanceAttributeSemantic.FEATURE_ID;
 
-  const loadFor2D =
-    isTranslationAttribute &&
-    loader._loadAttributesFor2D &&
-    !frameState.scene3DOnly;
-
-  // In addition to the loader options, load the attributes as typed arrays if:
-  // - the instances have rotations, so that instance matrices are computed on the CPU.
+  // Load the attributes as typed arrays only if:
+  // - the loader specifies (loadAttributesAsTypedArray)
+  // - the instances have rotations. The instance matrices are computed on the CPU.
   //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
-  // - the translation accessor does not have a min and max, so the values can be used
-  //   for computing an accurate bounding volume.
-  // - the attributes contain feature IDs, in order to add the instance's feature ID
+  // - the attribute contains feature IDs, in order to add the instance's feature ID
   //   to the pick object.
-  // - translations are required for 2D
   // - GPU instancing is not supported.
-  let loadTypedArray =
+  const loadAsTypedArrayOnly =
     loader._loadAttributesAsTypedArray ||
-    ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
-    modelSemantic === InstanceAttributeSemantic.FEATURE_ID ||
+    isFeatureIdAttribute ||
+    hasRotation ||
     !frameState.context.instancedArrays;
 
-  const loadBuffer = !loadTypedArray;
-  loadTypedArray = loadTypedArray || loadFor2D;
+  const loadBuffer = !loadAsTypedArrayOnly;
+
+  // Load the translations as a typed array in addition to the buffer if
+  // - the accessor does not have a min and max. The values will be used
+  //   for computing an accurate bounding volume.
+  // - the model will be projected to 2D.
+  const loadFor2D = loader._loadAttributesFor2D && !frameState.scene3DOnly;
+  const loadTranslationAsTypedArray =
+    isTranslationAttribute && (!hasTranslationMinMax || loadFor2D);
+
+  const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
 
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
