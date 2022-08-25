@@ -1,4 +1,4 @@
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
 import clone from "./clone.js";
@@ -2059,59 +2059,65 @@ function loadWithHttpRequest(
   overrideMimeType
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-  /* eslint-disable no-undef */
-  const URL = require("url").parse(url);
-  const http = URL.protocol === "https:" ? require("https") : require("http");
-  const zlib = require("zlib");
-  /* eslint-enable no-undef */
+  let URL;
+  let zlib;
+  Promise.all([import("url"), import("zlib")])
+    .then(([urlImport, zlibImport]) => {
+      URL = urlImport.parse(url);
+      zlib = zlibImport;
 
-  const options = {
-    protocol: URL.protocol,
-    hostname: URL.hostname,
-    port: URL.port,
-    path: URL.path,
-    query: URL.query,
-    method: method,
-    headers: headers,
-  };
+      return URL.protocol === "https:" ? import("https") : import("http");
+    })
+    .then((http) => {
+      const options = {
+        protocol: URL.protocol,
+        hostname: URL.hostname,
+        port: URL.port,
+        path: URL.path,
+        query: URL.query,
+        method: method,
+        headers: headers,
+      };
+      http
+        .request(options)
+        .on("response", function (res) {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            deferred.reject(
+              new RequestErrorEvent(res.statusCode, res, res.headers)
+            );
+            return;
+          }
 
-  http
-    .request(options)
-    .on("response", function (res) {
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        deferred.reject(
-          new RequestErrorEvent(res.statusCode, res, res.headers)
-        );
-        return;
-      }
+          const chunkArray = [];
+          res.on("data", function (chunk) {
+            chunkArray.push(chunk);
+          });
 
-      const chunkArray = [];
-      res.on("data", function (chunk) {
-        chunkArray.push(chunk);
-      });
-
-      res.on("end", function () {
-        // eslint-disable-next-line no-undef
-        const result = Buffer.concat(chunkArray);
-        if (res.headers["content-encoding"] === "gzip") {
-          zlib.gunzip(result, function (error, resultUnzipped) {
-            if (error) {
-              deferred.reject(
-                new RuntimeError("Error decompressing response.")
-              );
+          res.on("end", function () {
+            // eslint-disable-next-line no-undef
+            const result = Buffer.concat(chunkArray);
+            if (res.headers["content-encoding"] === "gzip") {
+              zlib.gunzip(result, function (error, resultUnzipped) {
+                if (error) {
+                  deferred.reject(
+                    new RuntimeError("Error decompressing response.")
+                  );
+                } else {
+                  deferred.resolve(
+                    decodeResponse(resultUnzipped, responseType)
+                  );
+                }
+              });
             } else {
-              deferred.resolve(decodeResponse(resultUnzipped, responseType));
+              deferred.resolve(decodeResponse(result, responseType));
             }
           });
-        } else {
-          deferred.resolve(decodeResponse(result, responseType));
-        }
-      });
-    })
-    .on("error", function (e) {
-      deferred.reject(new RequestErrorEvent());
-    })
-    .end();
+        })
+        .on("error", function (e) {
+          deferred.reject(new RequestErrorEvent());
+        })
+        .end();
+    });
 }
 
 const noXMLHttpRequest = typeof XMLHttpRequest === "undefined";

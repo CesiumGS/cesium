@@ -292,16 +292,6 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * @private
    */
   this.pickId = undefined;
-
-  /**
-   * An enum describing the types of draw commands needed, based on the style.
-   * This value is set by CPUStylingPipelineStage.
-   *
-   * @type {StyleCommandsNeeded}
-   *
-   * @private
-   */
-  this.styleCommandsNeeded = undefined;
 }
 
 export default PrimitiveRenderResources;

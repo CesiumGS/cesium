@@ -1,3 +1,4 @@
+import Uri from "urijs";
 import {
   DefaultProxy,
   defaultValue,
@@ -8,7 +9,6 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-  Uri,
 } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";

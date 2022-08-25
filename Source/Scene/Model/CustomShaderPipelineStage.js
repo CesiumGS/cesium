@@ -603,27 +603,37 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   shaderBuilder.addFunctionLines(functionId, initializationLines);
 }
 
+const scratchShaderLines = [];
+
 function addLinesToShader(shaderBuilder, customShader, generatedCode) {
   const vertexLines = generatedCode.vertexLines;
+  const shaderLines = scratchShaderLines;
+
   if (vertexLines.enabled) {
     addVertexLinesToShader(shaderBuilder, vertexLines);
 
-    shaderBuilder.addVertexLines([
+    shaderLines.length = 0;
+    shaderLines.push(
       "#line 0",
       customShader.vertexShaderText,
-      CustomShaderStageVS,
-    ]);
+      CustomShaderStageVS
+    );
+
+    shaderBuilder.addVertexLines(shaderLines);
   }
 
   const fragmentLines = generatedCode.fragmentLines;
   if (fragmentLines.enabled) {
     addFragmentLinesToShader(shaderBuilder, fragmentLines);
 
-    shaderBuilder.addFragmentLines([
+    shaderLines.length = 0;
+    shaderLines.push(
       "#line 0",
       customShader.fragmentShaderText,
-      CustomShaderStageFS,
-    ]);
+      CustomShaderStageFS
+    );
+
+    shaderBuilder.addFragmentLines(shaderLines);
   }
 }
 

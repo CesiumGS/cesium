@@ -87,6 +87,8 @@ ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
       return attribute;
     }
   }
+
+  return undefined;
 };
 
 /**
@@ -108,6 +110,8 @@ ModelUtility.getAttributeByName = function (object, name) {
       return attribute;
     }
   }
+
+  return undefined;
 };
 
 /**

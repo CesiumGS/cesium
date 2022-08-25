@@ -103,7 +103,7 @@ ModelClippingPlanesPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  shaderBuilder.addFragmentLines([ModelClippingPlanesStageFS]);
+  shaderBuilder.addFragmentLines(ModelClippingPlanesStageFS);
 
   const uniformMap = {
     model_clippingPlanes: function () {

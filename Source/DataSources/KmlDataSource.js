@@ -41,7 +41,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "autolinker";
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
 import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
@@ -421,14 +421,16 @@ function embedDataUris(div, elementType, attributeName, uriResolver) {
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
     const value = element.getAttribute(attributeName);
-    const relativeUri = new Uri(value);
-    const uri = relativeUri.absoluteTo(baseUri).toString();
-    const index = keys.indexOf(uri);
-    if (index !== -1) {
-      const key = keys[index];
-      element.setAttribute(attributeName, uriResolver[key]);
-      if (elementType === "a" && element.getAttribute("download") === null) {
-        element.setAttribute("download", key);
+    if (defined(value)) {
+      const relativeUri = new Uri(value);
+      const uri = relativeUri.absoluteTo(baseUri).toString();
+      const index = keys.indexOf(uri);
+      if (index !== -1) {
+        const key = keys[index];
+        element.setAttribute(attributeName, uriResolver[key]);
+        if (elementType === "a" && element.getAttribute("download") === null) {
+          element.setAttribute("download", key);
+        }
       }
     }
   }
@@ -440,7 +442,9 @@ function applyBasePath(div, elementType, attributeName, sourceResource) {
     const element = elements[i];
     const value = element.getAttribute(attributeName);
     const resource = resolveHref(value, sourceResource);
-    element.setAttribute(attributeName, resource.url);
+    if (defined(resource)) {
+      element.setAttribute(attributeName, resource.url);
+    }
   }
 }
 

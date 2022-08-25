@@ -612,7 +612,7 @@ describe(
     });
 
     // This test does not yet work since models without normals are
-    // rendered as unlit
+    // rendered as unlit. See https://github.com/CesiumGS/cesium/issues/6506
     xit("renders model with emissive texture", function () {
       const resource = Resource.createIfNeeded(emissiveTextureUrl);
       return resource.fetchJson().then(function (gltf) {
@@ -956,9 +956,7 @@ describe(
         function (result) {
           model = result;
           // Renders without style.
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
 
           // Renders with opaque style.
           style = new Cesium3DTileStyle({
@@ -968,9 +966,10 @@ describe(
           });
 
           model.style = style;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
+          expect(model._styleCommandsNeeded).toBe(
+            StyleCommandsNeeded.ALL_OPAQUE
+          );
 
           // Renders with translucent style.
           style = new Cesium3DTileStyle({
@@ -980,27 +979,31 @@ describe(
           });
 
           model.style = style;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
+          expect(model._styleCommandsNeeded).toBe(
+            StyleCommandsNeeded.ALL_TRANSLUCENT
+          );
 
-          // Does not render when style disables show.
+          // Does not render with invisible color.
           style = new Cesium3DTileStyle({
             color: {
               conditions: [["${height} > 1", "color('red', 0.0)"]],
             },
           });
 
-          model.style = style;
-          verifyRender(model, false, {
-            zoomToModel: false,
+          // Does not render when style disables show.
+          style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${height} > 1", "false"]],
+            },
           });
+
+          model.style = style;
+          verifyRender(model, false);
 
           // Render when style is removed.
           model.style = undefined;
-          verifyRender(model, true, {
-            zoomToModel: false,
-          });
+          verifyRender(model, true);
         }
       );
     });
@@ -2817,27 +2820,6 @@ describe(
           });
         });
       });
-
-      it("silhouette works with style", function () {
-        const style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.5)"]],
-          },
-        });
-        return loadAndZoomToModel(
-          { gltf: buildingsMetadata, silhouetteSize: 1.0 },
-          scene
-        ).then(function (model) {
-          model.style = style;
-          scene.renderForSpecs();
-          const commandList = scene.frameState.commandList;
-          expect(commandList.length).toBe(2);
-          expect(commandList[0].renderState.stencilTest.enabled).toBe(true);
-          expect(commandList[0].pass).toBe(Pass.TRANSLUCENT);
-          expect(commandList[1].renderState.stencilTest.enabled).toBe(true);
-          expect(commandList[1].pass).toBe(Pass.TRANSLUCENT);
-        });
-      });
     });
 
     describe("light color", function () {
@@ -3462,8 +3444,8 @@ describe(
       });
     });
 
-    describe("cull", function () {
-      it("enables culling", function () {
+    describe("frustum culling ", function () {
+      it("enables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3486,8 +3468,7 @@ describe(
         });
       });
 
-      // This test does not yet work for Model
-      xit("disables culling", function () {
+      it("disables frustum culling", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
@@ -3504,7 +3485,7 @@ describe(
 
           // Commands should still be submitted when model is out of view.
           model.modelMatrix = Matrix4.fromTranslation(
-            new Cartesian3(100.0, 0.0, 0.0)
+            new Cartesian3(0.0, 100.0, 0.0)
           );
           scene.renderForSpecs();
           expect(scene.frustumCommandsList.length).toEqual(length);

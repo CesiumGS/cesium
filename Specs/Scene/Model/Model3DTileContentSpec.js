@@ -12,7 +12,6 @@ import {
   ColorGeometryInstanceAttribute,
   ContentMetadata,
   defaultValue,
-  defined,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
@@ -124,6 +123,8 @@ describe(
     let scene;
     const centerLongitude = -1.31968;
     const centerLatitude = 0.698874;
+
+    const webglStub = !!window.webglStub;
 
     function setCamera(longitude, latitude, range) {
       // One feature is located at the center, point the camera there
@@ -420,8 +421,10 @@ describe(
           function (tileset) {
             const content = tileset.root.content;
 
-            // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
-            // 10 * ((24 * (8 * 4 + 1 * 4)) + (36 * 2)) = 9360
+            // 10 buildings, 36 ushort indices and 24 vertices per building, 8
+            // float components (position, normal, uv) and 1 uint component
+            // (batchId) per vertex
+            // 10 * [(24 * (8 * 4 + 1 * 4)) + (36 * 2)] = 9360 bytes
             const geometryByteLength = 9360;
 
             // Texture is 128x128 RGBA bytes, not mipmapped
@@ -1014,55 +1017,35 @@ describe(
         });
       });
 
-      // This will be added in a separate PR
-      xit("Supports back face culling when there are per-point normals", function () {
+      it("Supports back face culling when there are per-point normals", function () {
+        // Since this test relies on picking, it will not work properly with webglStub
+        if (webglStub) {
+          return;
+        }
+
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudBatchedUrl
         ).then(function (tileset) {
-          const content = tileset.root.content;
-
           // Get the number of picked sections with back face culling on
           let pickedCountCulling = 0;
           let pickedCount = 0;
-          let picked;
 
-          const callback = function (result) {
-            picked = result;
-          };
+          // Set culling to true
+          tileset.pointCloudShading.backFaceCulling = true;
 
-          expect(scene).toPickAndCall(function (result) {
-            // Set culling to true
-            tileset.pointCloudShading.backFaceCulling = true;
-
-            expect(scene).toPickAndCall(callback);
-
-            while (defined(picked)) {
-              picked.show = false;
-              expect(scene).toPickAndCall(callback);
-              ++pickedCountCulling;
-            }
-
-            // Set the shows back to true
-            const length = content.featuresLength;
-            for (let i = 0; i < length; ++i) {
-              const feature = content.getFeature(i);
-              feature.show = true;
-            }
-
-            // Set culling to false
-            tileset.pointCloudShading.backFaceCulling = false;
-
-            expect(scene).toPickAndCall(callback);
-
-            while (defined(picked)) {
-              picked.show = false;
-              expect(scene).toPickAndCall(callback);
-              ++pickedCount;
-            }
-
-            expect(pickedCount).toBeGreaterThan(pickedCountCulling);
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            pickedCountCulling = pickedObjects.length;
           });
+
+          // Set culling to false
+          tileset.pointCloudShading.backFaceCulling = false;
+
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            pickedCount = pickedObjects.length;
+          });
+
+          expect(pickedCount).toBeGreaterThan(pickedCountCulling);
         });
       });
 

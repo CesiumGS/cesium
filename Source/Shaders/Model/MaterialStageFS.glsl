@@ -64,7 +64,6 @@ vec3 computeNormal(ProcessedAttributes attributes)
 
 void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, SelectedFeature feature)
 {
-
     #ifdef HAS_NORMALS
     material.normalEC = computeNormal(attributes);
     #endif

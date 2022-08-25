@@ -90,9 +90,9 @@ SelectedFeatureIdPipelineStage.process = function (
   }
 
   if (selectedFeatureIds.shaderDestination === ShaderDestination.BOTH) {
-    shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);
+    shaderBuilder.addVertexLines(SelectedFeatureIdStageCommon);
   }
-  shaderBuilder.addFragmentLines([SelectedFeatureIdStageCommon]);
+  shaderBuilder.addFragmentLines(SelectedFeatureIdStageCommon);
 };
 
 function getFeatureIdDefine(featureIds) {
