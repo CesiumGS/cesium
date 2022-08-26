@@ -158,6 +158,29 @@ describe(
       });
     });
 
+    it("_countInstancingAttributes counts instancing transform buffer", function () {
+      return loadGltf(boxInstanced).then(function (gltfLoader) {
+        const statistics = new ModelStatistics();
+        const mockRuntimeNode = {
+          instancingTransformsBuffer: {
+            // Matrices are stored as 3 vec4s, so this is
+            // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+            sizeInBytes: 192,
+          },
+        };
+
+        NodeStatisticsPipelineStage._countInstancingAttributes(
+          statistics,
+          mockRuntimeNode
+        );
+
+        const transformsBuffer = mockRuntimeNode.instancingTransformsBuffer;
+        expect(statistics.geometryByteLength).toBe(
+          transformsBuffer.sizeInBytes
+        );
+      });
+    });
+
     it("_countInstancing2DBuffers counts instancing transform buffer for 2D", function () {
       return loadGltf(boxInstanced).then(function (gltfLoader) {
         const statistics = new ModelStatistics();

@@ -234,8 +234,8 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
 
   const positionMinMax = ModelUtility.getPositionMinMax(
     primitive,
-    nodeRenderResources.instancingTranslationMin,
-    nodeRenderResources.instancingTranslationMax
+    this.runtimeNode.instancingTranslationMin,
+    this.runtimeNode.instancingTranslationMax
   );
 
   /**
@@ -273,7 +273,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   );
 
   /**
-   * Options for configuring the lighting stage such as selecting between
+   * Options for configuring the lighting stage, such as selecting between
    * unlit and PBR shading.
    *
    * @type {ModelLightingOptions}

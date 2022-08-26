@@ -1,36 +1,40 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
-import Axis from "../Axis.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import StructuralMetadata from "../StructuralMetadata.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
-import GltfLoader from "../GltfLoader.js";
-import I3dmParser from "../I3dmParser.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Quaternion from "../../Core/Quaternion.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import Transforms from "../../Core/Transforms.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import AttributeType from "../AttributeType.js";
+import Axis from "../Axis.js";
+import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
+import GltfLoader from "../GltfLoader.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import I3dmParser from "../I3dmParser.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import parseBatchTable from "../parseBatchTable.js";
 import PropertyTable from "../PropertyTable.js";
-import Quaternion from "../../Core/Quaternion.js";
 import ResourceLoader from "../ResourceLoader.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
-import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
-import AttributeType from "../AttributeType.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 
 const I3dmLoaderState = {
-  UNLOADED: 0,
+  NOT_LOADED: 0,
   LOADING: 1,
   PROCESSING: 2,
-  READY: 3,
-  FAILED: 4,
+  POST_PROCESSING: 3,
+  READY: 4,
+  FAILED: 5,
+  UNLOADED: 6,
 };
 
 const Attribute = ModelComponents.Attribute;
@@ -107,10 +111,19 @@ function I3dmLoader(options) {
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
 
-  this._state = I3dmLoaderState.UNLOADED;
+  this._state = I3dmLoaderState.NOT_LOADED;
   this._promise = undefined;
 
   this._gltfLoader = undefined;
+  this._process = function (loader, frameState) {};
+  this._postProcess = function (loader, frameState) {};
+
+  // Instanced attributes are initially parsed as typed arrays, but if they
+  // do not to be further processed (e.g. turned into transform matrices), it is
+  // more efficient to turn them into buffers. The I3dmLoader will own the
+  // resources and store them here.
+  this._buffers = [];
+  this._components = undefined;
 
   this._transform = Matrix4.IDENTITY;
   this._batchTable = undefined;
@@ -269,32 +282,12 @@ I3dmLoader.prototype.load = function () {
 
   const that = this;
   gltfLoader.load();
-  this._promise = gltfLoader.promise
+  gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
       }
-
-      const components = gltfLoader.components;
-
-      // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
-      // transform from the glTF. In practice CESIUM_RTC is not set for
-      // instanced models but multiply the transforms just in case.
-      components.transform = Matrix4.multiplyTransformation(
-        that._transform,
-        components.transform,
-        components.transform
-      );
-
-      createInstances(that, components);
-      createStructuralMetadata(that, components);
-      that._components = components;
-
-      // Now that we have the parsed components, we can release the array buffer
-      that._arrayBuffer = undefined;
-
-      that._state = I3dmLoaderState.READY;
-      return that;
+      that._state = I3dmLoaderState.POST_PROCESSING;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
@@ -302,6 +295,38 @@ I3dmLoader.prototype.load = function () {
       }
       return handleError(that, error);
     });
+
+  const processPromise = new Promise(function (resolve) {
+    that._process = function (loader, frameState) {
+      loader._gltfLoader.process(frameState);
+    };
+
+    that._postProcess = function (loader, frameState) {
+      const gltfLoader = loader._gltfLoader;
+      const components = gltfLoader.components;
+
+      // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
+      // transform from the glTF. In practice CESIUM_RTC is not set for
+      // instanced models but multiply the transforms just in case.
+      components.transform = Matrix4.multiplyTransformation(
+        loader._transform,
+        components.transform,
+        components.transform
+      );
+
+      createInstances(loader, components, frameState);
+      createStructuralMetadata(loader, components);
+      loader._components = components;
+
+      // Now that we have the parsed components, we can release the array buffer
+      loader._arrayBuffer = undefined;
+
+      loader._state = I3dmLoaderState.READY;
+      resolve(loader);
+    };
+  });
+
+  this._promise = processPromise;
 
   return this._promise;
 };
@@ -324,7 +349,11 @@ I3dmLoader.prototype.process = function (frameState) {
   }
 
   if (this._state === I3dmLoaderState.PROCESSING) {
-    this._gltfLoader.process(frameState);
+    this._process(this, frameState);
+  }
+
+  if (this._state === I3dmLoaderState.POST_PROCESSING) {
+    this._postProcess(this, frameState);
   }
 };
 
@@ -363,7 +392,7 @@ const positionScratch = new Cartesian3();
 const propertyScratch1 = new Array(4);
 const transformScratch = new Matrix4();
 
-function createInstances(loader, components) {
+function createInstances(loader, components, frameState) {
   let i;
   const featureTable = loader._featureTable;
   const instancesLength = loader._instancesLength;
@@ -507,6 +536,7 @@ function createInstances(loader, components) {
   // Create instances.
   const instances = new Instances();
   instances.transformInWorldSpace = true;
+  const buffers = loader._buffers;
 
   // Create translation vertex attribute.
   const translationAttribute = new Attribute();
@@ -515,7 +545,23 @@ function createInstances(loader, components) {
   translationAttribute.componentDatatype = ComponentDatatype.FLOAT;
   translationAttribute.type = AttributeType.VEC3;
   translationAttribute.count = instancesLength;
-  translationAttribute.typedArray = translationTypedArray;
+  if (hasRotation) {
+    // If rotations are present, all transform attributes are loaded
+    // as typed arrays to compute transform matrices for the model.
+    translationAttribute.typedArray = translationTypedArray;
+  } else {
+    const buffer = Buffer.createVertexBuffer({
+      context: frameState.context,
+      typedArray: translationTypedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    // Destruction of resources is handled by I3dmLoader.unload().
+    buffer.vertexArrayDestroyable = false;
+    buffers.push(buffer);
+
+    translationAttribute.buffer = buffer;
+  }
+
   instances.attributes.push(translationAttribute);
 
   // Create rotation vertex attribute.
@@ -538,7 +584,23 @@ function createInstances(loader, components) {
     scaleAttribute.componentDatatype = ComponentDatatype.FLOAT;
     scaleAttribute.type = AttributeType.VEC3;
     scaleAttribute.count = instancesLength;
-    scaleAttribute.typedArray = scaleTypedArray;
+    if (hasRotation) {
+      // If rotations are present, all transform attributes are loaded
+      // as typed arrays to compute transform matrices for the model.
+      scaleAttribute.typedArray = scaleTypedArray;
+    } else {
+      const buffer = Buffer.createVertexBuffer({
+        context: frameState.context,
+        typedArray: translationTypedArray,
+        usage: BufferUsage.STATIC_DRAW,
+      });
+      // Destruction of resources is handled by I3dmLoader.unload().
+      buffer.vertexArrayDestroyable = false;
+      buffers.push(buffer);
+
+      scaleAttribute.buffer = buffer;
+    }
+
     instances.attributes.push(scaleAttribute);
   }
 
@@ -550,7 +612,16 @@ function createInstances(loader, components) {
   featureIdAttribute.componentDatatype = ComponentDatatype.FLOAT;
   featureIdAttribute.type = AttributeType.SCALAR;
   featureIdAttribute.count = instancesLength;
-  featureIdAttribute.typedArray = featureIdArray;
+  const buffer = Buffer.createVertexBuffer({
+    context: frameState.context,
+    typedArray: featureIdArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  // Destruction of resources is handled by I3dmLoader.unload().
+  buffer.vertexArrayDestroyable = false;
+  buffers.push(buffer);
+  featureIdAttribute.buffer = buffer;
+
   instances.attributes.push(featureIdAttribute);
 
   // Create feature ID attribute.
@@ -765,12 +836,32 @@ function processScale(featureTable, i, instanceScale) {
   }
 }
 
+function unloadBuffers(loader) {
+  const buffers = loader._buffers;
+  const length = buffers.length;
+  for (let i = 0; i < length; i++) {
+    const buffer = buffers[i];
+    if (!buffer.isDestroyed()) {
+      buffer.destroy();
+    }
+  }
+  buffers.length = 0;
+}
+
+GltfLoader.prototype.isUnloaded = function () {
+  return this._state === I3dmLoaderState.UNLOADED;
+};
+
 I3dmLoader.prototype.unload = function () {
   if (defined(this._gltfLoader)) {
     this._gltfLoader.unload();
   }
+
+  unloadBuffers(this);
+
   this._components = undefined;
   this._arrayBuffer = undefined;
+  this._state = I3dmLoaderState.UNLOADED;
 };
 
 export default I3dmLoader;

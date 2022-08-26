@@ -2174,7 +2174,14 @@ describe(
         sceneWithNoInstancing.context._instancedArrays = undefined;
       });
 
-      function verifyBoxInstancedAttributes(loader) {
+      function verifyBoxInstancedAttributes(loader, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        const interleaved = defaultValue(options.interleaved, false);
+        const instancingDisabled = defaultValue(
+          options.instancingDisabled,
+          false
+        );
+
         const components = loader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
@@ -2290,12 +2297,29 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toEqual(
-          new Float32Array([0, 0, 1, 1])
-        );
-        expect(featureIdAttribute.buffer).toBeUndefined();
-        expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
+        // The feature IDs should only be loaded as a typed array
+        // if instancing is disabled.
+        if (instancingDisabled) {
+          expect(featureIdAttribute.typedArray).toEqual(
+            new Float32Array([0, 0, 1, 1])
+          );
+          expect(featureIdAttribute.buffer).toBeUndefined();
+        } else {
+          expect(featureIdAttribute.typedArray).toBeUndefined();
+          expect(featureIdAttribute.buffer).toBeDefined();
+        }
+
+        if (interleaved && !instancingDisabled) {
+          expect(featureIdAttribute.byteOffset).toBe(40);
+          expect(featureIdAttribute.byteStride).toBe(44);
+        } else if (instancingDisabled) {
+          // Feature IDs are available in a packed array.
+          expect(featureIdAttribute.byteOffset).toBe(0);
+          expect(featureIdAttribute.byteStride).toBeUndefined();
+        } else {
+          expect(featureIdAttribute.byteOffset).toBe(0);
+          expect(featureIdAttribute.byteStride).toBe(4);
+        }
       }
 
       function verifyBoxInstancedStructuralMetadata(loader) {
@@ -2471,7 +2495,9 @@ describe(
           scene: sceneWithNoInstancing,
         };
         return loadGltf(boxInstanced, options).then(function (gltfLoader) {
-          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedAttributes(gltfLoader, {
+            instancingDisabled: true,
+          });
           verifyBoxInstancedStructuralMetadata(gltfLoader);
         });
       });
@@ -2507,7 +2533,9 @@ describe(
 
       it("loads BoxInstancedInterleaved", function () {
         return loadGltf(boxInstancedInterleaved).then(function (gltfLoader) {
-          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedAttributes(gltfLoader, {
+            interleaved: true,
+          });
         });
       });
 
@@ -2518,7 +2546,10 @@ describe(
         return loadGltf(boxInstancedInterleaved, options).then(function (
           gltfLoader
         ) {
-          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedAttributes(gltfLoader, {
+            interleaved: true,
+            instancingDisabled: true,
+          });
         });
       });
 
@@ -3529,8 +3560,8 @@ describe(
             InstanceAttributeSemantic.FEATURE_ID,
             0
           );
-          expect(featureIdAttribute.typedArray).toBeDefined();
-          expect(featureIdAttribute.buffer).toBeUndefined();
+          expect(featureIdAttribute.typedArray).toBeUndefined();
+          expect(featureIdAttribute.buffer).toBeDefined();
         });
       });
 

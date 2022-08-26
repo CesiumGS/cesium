@@ -155,40 +155,6 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.instanceCount = 0;
-
-  /**
-   * The component-wise maximum value of the translations of the instances.
-   * This value is set by InstancingPipelineStage.
-   *
-   * @type {Cartesian3}
-   *
-   * @private
-   */
-  this.instancingTranslationMax = undefined;
-
-  /**
-   * The component-wise minimum value of the translations of the instances.
-   * This value is set by InstancingPipelineStage.
-   *
-   * @type {Cartesian3}
-   *
-   * @private
-   */
-  this.instancingTranslationMin = undefined;
-
-  /**
-   * If the model is instanced and projected to 2D, the reference point is the
-   * average of the instancing translation max and min. The 2D translations are
-   * defined relative to this point to avoid precision issues on the GPU.
-   * <p>
-   * This value is set by InstancingPipelineStage.
-   * </p>
-   *
-   * @type {Cartesian3}
-   *
-   * @private
-   */
-  this.instancingReferencePoint2D = undefined;
 }
 
 export default NodeRenderResources;

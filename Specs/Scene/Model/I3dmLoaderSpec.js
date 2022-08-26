@@ -101,14 +101,26 @@ describe(
       }).toThrowError(RuntimeError);
     }
 
-    function verifyInstances(components, expectedSemantics, instancesLength) {
+    function verifyInstances(loader, expectedSemantics, instancesLength) {
+      const components = loader.components;
+      const structuralMetadata = components.structuralMetadata;
+      expect(structuralMetadata).toBeDefined();
+
+      let bufferCount = 0;
       for (let i = 0; i < components.nodes.length; i++) {
         const node = components.nodes[i];
-        // Every node that has a primitive should have an ModelComponents.Instances object.
+
+        // Every node that has a primitive should have a
+        // ModelComponents.Instances object.
         if (node.primitives.length > 0) {
-          expect(node.instances).toBeDefined();
-          const attributesLength = node.instances.attributes.length;
+          const instances = node.instances;
+          expect(instances).toBeDefined();
+          const attributesLength = instances.attributes.length;
           expect(attributesLength).toEqual(expectedSemantics.length);
+
+          const hasRotation =
+            expectedSemantics.indexOf(InstanceAttributeSemantic.ROTATION) >= 0;
+
           // Iterate through the attributes of the node with instances and check for all expected semantics.
           for (let j = 0; j < attributesLength; j++) {
             const attribute = node.instances.attributes[j];
@@ -116,9 +128,25 @@ describe(
               true
             );
             expect(attribute.count).toEqual(instancesLength);
+
+            const isTransformAttribute =
+              attribute.semantic === InstanceAttributeSemantic.TRANSLATION ||
+              attribute.semantic === InstanceAttributeSemantic.ROTATION ||
+              attribute.semantic === InstanceAttributeSemantic.SCALE;
+
+            if (hasRotation && isTransformAttribute) {
+              expect(attribute.typedArray).toBeDefined();
+              expect(attribute.buffer).toBeUndefined();
+            } else {
+              expect(attribute.typedArray).toBeUndefined();
+              expect(attribute.buffer).toBeDefined();
+              bufferCount++;
+            }
           }
         }
       }
+
+      expect(loader._buffers.length).toEqual(bufferCount);
     }
 
     it("releases array buffer when finished loading", function () {
@@ -130,13 +158,8 @@ describe(
 
     it("loads InstancedGltfExternalUrl", function () {
       return loadI3dm(instancedGltfExternalUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
-
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -149,13 +172,8 @@ describe(
 
     it("loads InstancedWithBatchTableUrl", function () {
       return loadI3dm(instancedWithBatchTableUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
-
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -168,13 +186,8 @@ describe(
 
     it("loads InstancedWithBatchTableBinaryUrl", function () {
       return loadI3dm(instancedWithBatchTableBinaryUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
-
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -187,13 +200,8 @@ describe(
 
     it("loads InstancedWithoutBatchTableUrl", function () {
       return loadI3dm(instancedWithoutBatchTableUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
-
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -206,12 +214,8 @@ describe(
 
     it("loads InstancedOrientationUrl", function () {
       return loadI3dm(instancedOrientationUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -224,12 +228,8 @@ describe(
 
     it("loads InstancedOct32POrientationUrl", function () {
       return loadI3dm(instancedOct32POrientationUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -242,12 +242,8 @@ describe(
 
     it("loads InstancedScaleUrl", function () {
       return loadI3dm(instancedScaleUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -261,12 +257,8 @@ describe(
 
     it("loads InstancedScaleNonUniformUrl", function () {
       return loadI3dm(instancedScaleNonUniformUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -280,12 +272,8 @@ describe(
 
     it("loads InstancedRTCUrl", function () {
       return loadI3dm(instancedRTCUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -307,12 +295,8 @@ describe(
 
     it("loads InstancedQuantizedUrl", function () {
       return loadI3dm(instancedQuantizedUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -320,9 +304,11 @@ describe(
           ],
           25
         );
+
+        const transform = loader.components.transform;
         // The transform is computed from the quantized positions
         // prettier-ignore
-        expect(components.transform).toEqualEpsilon(new Matrix4(
+        expect(transform).toEqualEpsilon(new Matrix4(
         1, 0, 0, 1215013.8125,
         0, 1, 0, -4736316.75,
         0, 0, 1, 4081608.5,
@@ -335,12 +321,8 @@ describe(
       return loadI3dm(instancedQuantizedOct32POrientationUrl).then(function (
         loader
       ) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -353,12 +335,8 @@ describe(
 
     it("loads InstancedWithTransformUrl", function () {
       return loadI3dm(instancedWithTransformUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.FEATURE_ID,
@@ -370,12 +348,8 @@ describe(
 
     it("loads InstancedWithBatchIdsUrl", function () {
       return loadI3dm(instancedWithBatchIdsUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -388,12 +362,8 @@ describe(
 
     it("loads InstancedTexturedUrl", function () {
       return loadI3dm(instancedTexturedUrl).then(function (loader) {
-        const components = loader.components;
-        const structuralMetadata = components.structuralMetadata;
-
-        expect(structuralMetadata).toBeDefined();
         verifyInstances(
-          components,
+          loader,
           [
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.ROTATION,
@@ -401,6 +371,19 @@ describe(
           ],
           25
         );
+      });
+    });
+
+    it("destroys buffers when unloaded", function () {
+      return loadI3dm(instancedGltfExternalUrl).then(function (loader) {
+        // This i3dm has a rotation attribute, so only the feature IDs
+        // are loaded in a buffer.
+        const buffers = loader._buffers;
+        expect(buffers.length).toBe(1);
+
+        const buffer = buffers[0];
+        loader.destroy();
+        expect(buffer.isDestroyed()).toBe(true);
       });
     });
 

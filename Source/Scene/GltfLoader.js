@@ -1056,15 +1056,13 @@ function loadInstancedAttribute(
 
   // Load the attributes as typed arrays only if:
   // - the loader specifies (loadAttributesAsTypedArray)
-  // - the instances have rotations. The instance matrices are computed on the CPU.
-  //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
-  // - the attribute contains feature IDs, in order to add the instance's feature ID
-  //   to the pick object.
+  // - the instances have rotations. This only applies to the transform attributes,
+  //   since The instance matrices are computed on the CPU. This avoids the
+  //   expensive quaternion -> rotation matrix conversion in the shader.
   // - GPU instancing is not supported.
   const loadAsTypedArrayOnly =
     loader._loadAttributesAsTypedArray ||
-    isFeatureIdAttribute ||
-    hasRotation ||
+    (hasRotation && !isFeatureIdAttribute) ||
     !frameState.context.instancedArrays;
 
   const loadBuffer = !loadAsTypedArrayOnly;
