@@ -24,11 +24,11 @@ NodeStatisticsPipelineStage.process = function (
   const instances = node.instances;
   const runtimeNode = renderResources.runtimeNode;
 
-  countInstancingAttributes(statistics, instances, runtimeNode);
-  countInstancing2DBuffers(statistics, runtimeNode);
+  countInstancingAttributes(statistics, instances);
+  countGeneratedBuffers(statistics, runtimeNode);
 };
 
-function countInstancingAttributes(statistics, instances, runtimeNode) {
+function countInstancingAttributes(statistics, instances) {
   if (!defined(instances)) {
     return;
   }
@@ -43,16 +43,15 @@ function countInstancingAttributes(statistics, instances, runtimeNode) {
       statistics.addBuffer(attribute.buffer, hasCpuCopy);
     }
   }
+}
 
+function countGeneratedBuffers(statistics, runtimeNode) {
   if (defined(runtimeNode.instancingTransformsBuffer)) {
     // The typed array containing the computed transforms isn't saved
     // after the buffer is created.
     const hasCpuCopy = false;
     statistics.addBuffer(runtimeNode.instancingTransformsBuffer, hasCpuCopy);
   }
-}
-
-function countInstancing2DBuffers(statistics, runtimeNode) {
   if (defined(runtimeNode.instancingTransformsBuffer2D)) {
     // The typed array containing the computed 2D transforms isn't saved
     // after the buffer is created.
@@ -70,6 +69,6 @@ function countInstancing2DBuffers(statistics, runtimeNode) {
 
 // Exposed for testing
 NodeStatisticsPipelineStage._countInstancingAttributes = countInstancingAttributes;
-NodeStatisticsPipelineStage._countInstancing2DBuffers = countInstancing2DBuffers;
+NodeStatisticsPipelineStage._countGeneratedBuffers = countGeneratedBuffers;
 
 export default NodeStatisticsPipelineStage;

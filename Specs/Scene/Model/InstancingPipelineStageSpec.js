@@ -276,7 +276,7 @@ describe(
 
         // A resource will be created for the computed matrix transforms.
         expect(renderResources.model._modelResources.length).toEqual(1);
-
+        // The resource will be counted by NodeStatisticsPipelineStage.
         expect(renderResources.model.statistics.geometryByteLength).toBe(0);
       });
     });
@@ -340,15 +340,11 @@ describe(
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
 
-        expect(renderResources.model._pipelineResources.length).toEqual(1);
+        expect(renderResources.model._pipelineResources.length).toEqual(0);
         expect(renderResources.model._modelResources.length).toEqual(2);
 
-        // The 2D buffer will be counted by NodeStatisticsPipelineStage,
-        // so the memory counted here should stay the same.
-        const featureIdSize = 16;
-        expect(renderResources.model.statistics.geometryByteLength).toBe(
-          featureIdSize
-        );
+        // The 2D buffer will be counted by NodeStatisticsPipelineStage.
+        expect(renderResources.model.statistics.geometryByteLength).toBe(0);
       });
     });
 
@@ -460,12 +456,12 @@ describe(
           "attribute vec3 a_instanceTranslation;",
         ]);
 
-        // No additional buffer was created
+        // No additional buffer was created.
         expect(renderResources.model._pipelineResources.length).toEqual(0);
         expect(renderResources.model._modelResources.length).toEqual(0);
 
         // Attributes with buffers already loaded in will be counted
-        // in NodeStatisticsPipelineStage
+        // in NodeStatisticsPipelineStage.
         expect(renderResources.model.statistics.geometryByteLength).toBe(0);
       });
     });
@@ -507,12 +503,12 @@ describe(
           "attribute vec3 a_instanceTranslation;",
         ]);
 
-        // No additional buffer was created
+        // No additional buffer was created.
         expect(renderResources.model._pipelineResources.length).toEqual(0);
         expect(renderResources.model._modelResources.length).toEqual(0);
 
         // Attributes with buffers already loaded in will be counted
-        // in NodeStatisticsPipelineStage
+        // in NodeStatisticsPipelineStage.
         expect(renderResources.model.statistics.geometryByteLength).toBe(0);
       });
     });
@@ -586,7 +582,7 @@ describe(
         expect(model._pipelineResources.length).toEqual(0);
         expect(model._modelResources.length).toEqual(1);
 
-        // Both resources will be counted in NodeStatisticsPipelineStage.
+        // The resource will be counted in NodeStatisticsPipelineStage.
         expect(model.statistics.geometryByteLength).toBe(0);
       });
     });
@@ -696,14 +692,8 @@ describe(
           CesiumMath.EPSILON8
         );
 
-        // Matrices are stored as 3 vec4s, so this is
-        // 25 matrices * 12 floats/matrix * 4 bytes/float = 1200
-        const matrixSize = 1200;
-        // 25 floats
-        const featureIdSize = 100;
-        expect(renderResources.model.statistics.geometryByteLength).toBe(
-          matrixSize + featureIdSize
-        );
+        // The matrix transforms buffer will be counted by NodeStatisticsPipelineStage.
+        expect(renderResources.model.statistics.geometryByteLength).toBe(0);
       });
     });
   },

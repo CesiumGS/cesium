@@ -115,6 +115,7 @@ function I3dmLoader(options) {
   this._promise = undefined;
 
   this._gltfLoader = undefined;
+  this._gltfLoaderPromise = undefined;
   this._process = function (loader, frameState) {};
   this._postProcess = function (loader, frameState) {};
 
@@ -280,22 +281,9 @@ I3dmLoader.prototype.load = function () {
   this._gltfLoader = gltfLoader;
   this._state = I3dmLoaderState.LOADING;
 
-  const that = this;
   gltfLoader.load();
-  gltfLoader.promise
-    .then(function () {
-      if (that.isDestroyed()) {
-        return;
-      }
-      that._state = I3dmLoaderState.POST_PROCESSING;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      return handleError(that, error);
-    });
 
+  const that = this;
   const processPromise = new Promise(function (resolve) {
     that._process = function (loader, frameState) {
       loader._gltfLoader.process(frameState);
@@ -326,7 +314,21 @@ I3dmLoader.prototype.load = function () {
     };
   });
 
-  this._promise = processPromise;
+  this._promise = gltfLoader.promise
+    .then(function () {
+      if (that.isDestroyed()) {
+        return;
+      }
+      that._state = I3dmLoaderState.POST_PROCESSING;
+
+      return processPromise;
+    })
+    .catch(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
+      return handleError(that, error);
+    });
 
   return this._promise;
 };
@@ -354,6 +356,10 @@ I3dmLoader.prototype.process = function (frameState) {
 
   if (this._state === I3dmLoaderState.POST_PROCESSING) {
     this._postProcess(this, frameState);
+  }
+
+  if (this._state === I3dmLoaderState.FAILED) {
+    this._fail(this);
   }
 };
 
