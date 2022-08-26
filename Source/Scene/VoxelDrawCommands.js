@@ -29,33 +29,24 @@ import MetadataType from "./MetadataType.js";
 /**
  * @function
  *
- * @param {VoxelPrimitive} that
+ * @param {VoxelPrimitive} primitive
  * @param {Context} context
  *
  * @private
  */
-function buildVoxelDrawCommands(that, context) {
-  const provider = that._provider;
-  const traversal = that._traversal;
-  const shapeType = provider.shape;
-  const names = provider.names;
+function buildVoxelDrawCommands(primitive, context) {
+  const provider = primitive._provider;
+  const traversal = primitive._traversal;
   const types = provider.types;
   const componentTypes = provider.componentTypes;
-  const depthTest = that._depthTest;
-  const useLogDepth = that._useLogDepth;
-  const paddingBefore = that.paddingBefore;
-  const paddingAfter = that.paddingAfter;
-  const shape = that._shape;
-  const shapeDefines = shape.shaderDefines;
+  const depthTest = primitive._depthTest;
+  const shape = primitive._shape;
   const minimumValues = provider.minimumValues;
   const maximumValues = provider.maximumValues;
-  const jitter = that._jitter;
-  const nearestSampling = that._nearestSampling;
-  const sampleCount = traversal._sampleCount;
-  const customShader = that._customShader;
+  const customShader = primitive._customShader;
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
-  const clippingPlanes = that._clippingPlanes;
+  const clippingPlanes = primitive._clippingPlanes;
   const clippingPlanesLength =
     defined(clippingPlanes) && clippingPlanes.enabled
       ? clippingPlanes.length
@@ -63,8 +54,6 @@ function buildVoxelDrawCommands(that, context) {
   const clippingPlanesUnion = defined(clippingPlanes)
     ? clippingPlanes.unionClippingRegions
     : false;
-
-  let uniformMap = that._uniformMap;
 
   // Build shader
 
@@ -87,6 +76,8 @@ function buildVoxelDrawCommands(that, context) {
   if (clippingPlanesLength > 0) {
     shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
   }
+
+  const shapeType = provider.shape;
   if (shapeType === "BOX") {
     shaderBuilder.addFragmentLines([
       IntersectBox,
@@ -106,6 +97,7 @@ function buildVoxelDrawCommands(that, context) {
       convertUvToEllipsoid,
     ]);
   }
+
   shaderBuilder.addFragmentLines([Octree, Megatexture, VoxelFS]);
 
   // Fragment shader defines
@@ -117,8 +109,8 @@ function buildVoxelDrawCommands(that, context) {
   );
 
   if (
-    !Cartesian3.equals(paddingBefore, Cartesian3.ZERO) ||
-    !Cartesian3.equals(paddingAfter, Cartesian3.ZERO)
+    !Cartesian3.equals(primitive.paddingBefore, Cartesian3.ZERO) ||
+    !Cartesian3.equals(primitive.paddingAfter, Cartesian3.ZERO)
   ) {
     shaderBuilder.addDefine("PADDING", undefined, ShaderDestination.FRAGMENT);
   }
@@ -133,25 +125,23 @@ function buildVoxelDrawCommands(that, context) {
   // Allow reading from log depth texture, but don't write log depth anywhere.
   // Note: This needs to be set even if depthTest is off because it affects the
   // derived command system.
-  if (useLogDepth) {
+  if (primitive._useLogDepth) {
     shaderBuilder.addDefine(
       "LOG_DEPTH_READ_ONLY",
       undefined,
       ShaderDestination.FRAGMENT
     );
   }
-  if (jitter) {
+  if (primitive._jitter) {
     shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
   }
-
-  if (nearestSampling) {
+  if (primitive._nearestSampling) {
     shaderBuilder.addDefine(
       "NEAREST_SAMPLING",
       undefined,
       ShaderDestination.FRAGMENT
     );
   }
-
   if (hasStatistics) {
     shaderBuilder.addDefine(
       "STATISTICS",
@@ -212,20 +202,13 @@ function buildVoxelDrawCommands(that, context) {
     intersectionCount,
     ShaderDestination.FRAGMENT
   );
-
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",
-    `${sampleCount}`,
+    `${traversal._sampleCount}`,
     ShaderDestination.FRAGMENT
   );
 
-  // Shape specific defines
-  shaderBuilder.addDefine(
-    `SHAPE_${shapeType}`,
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
-
+  const shapeDefines = shape.shaderDefines;
   for (const key in shapeDefines) {
     if (shapeDefines.hasOwnProperty(key)) {
       let value = shapeDefines[key];
@@ -242,7 +225,11 @@ function buildVoxelDrawCommands(that, context) {
 
   // Custom shader uniforms
   const customShaderUniforms = customShader.uniforms;
-  uniformMap = that._uniformMap = combine(uniformMap, customShader.uniformMap);
+  let uniformMap = primitive._uniformMap;
+  uniformMap = primitive._uniformMap = combine(
+    uniformMap,
+    customShader.uniformMap
+  );
   for (const uniformName in customShaderUniforms) {
     if (customShaderUniforms.hasOwnProperty(uniformName)) {
       const uniform = customShaderUniforms[uniformName];
@@ -263,6 +250,7 @@ function buildVoxelDrawCommands(that, context) {
   );
 
   // Fragment shader structs
+  const names = provider.names;
 
   // PropertyStatistics structs
   for (let i = 0; i < attributeLength; i++) {
@@ -640,19 +628,19 @@ function buildVoxelDrawCommands(that, context) {
   drawCommandPick.pickOnly = true;
 
   // Delete the old shader programs
-  if (defined(that._drawCommand)) {
-    const command = that._drawCommand;
+  if (defined(primitive._drawCommand)) {
+    const command = primitive._drawCommand;
     command.shaderProgram =
       command.shaderProgram && command.shaderProgram.destroy();
   }
-  if (defined(that._drawCommandPick)) {
-    const command = that._drawCommandPick;
+  if (defined(primitive._drawCommandPick)) {
+    const command = primitive._drawCommandPick;
     command.shaderProgram =
       command.shaderProgram && command.shaderProgram.destroy();
   }
 
-  that._drawCommand = drawCommand;
-  that._drawCommandPick = drawCommandPick;
+  primitive._drawCommand = drawCommand;
+  primitive._drawCommandPick = drawCommandPick;
 }
 
 // Shader builder helpers

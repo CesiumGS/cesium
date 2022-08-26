@@ -17,6 +17,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @param {Number} z
  * @param {SpatialNode} parent
  * @param {VoxelShapeType} shape
+ * @param {Cartesian3} voxelDimensions
  *
  * @private
  */
@@ -238,14 +239,6 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
         (keyframeDistanceNext >= 0
           ? keyframeDistanceNext * normalKeyframeWeight
           : -keyframeDistanceNext * reverseKeyframeWeight);
-
-      // // Prioritize visual quality
-      // const distancePrev = levelDistance === 0.0 ? 0.0 : Number.MAX_VALUE;
-      // const distanceNext = levelDistance === 0.0 ? 0.0 : Number.MAX_VALUE;
-
-      // // Prioritize temporal quality
-      // const distancePrev = keyframeDistancePrev >= 0 ? keyframeDistancePrev : Number.MAX_VALUE + keyframeDistancePrev;
-      // const distanceNext = keyframeDistanceNext >= 0 ? keyframeDistanceNext : Number.MAX_VALUE + keyframeDistanceNext;
 
       if (distancePrev < minimumDistancePrev) {
         minimumDistancePrev = distancePrev;
