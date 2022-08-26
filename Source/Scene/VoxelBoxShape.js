@@ -5,6 +5,7 @@ import Check from "../Core/Check.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A box {@link VoxelShape}.
@@ -140,8 +141,8 @@ const transformXYZToXZY = Matrix4.fromRotation(
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- * @param {Cartesian3} clipMinBounds The minimum clip bounds.
- * @param {Cartesian3} clipMaxBounds The maximum clip bounds.
+ * @param {Cartesian3} [clipMinBounds=VoxelBoxShape.DefaultMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds=VoxelBoxShape.DefaultMaxBounds] The maximum clip bounds.
  * @returns {Boolean} Whether the shape is visible.
  */
 VoxelBoxShape.prototype.update = function (
@@ -151,6 +152,14 @@ VoxelBoxShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds
 ) {
+  clipMinBounds = defaultValue(
+    clipMinBounds,
+    VoxelBoxShape.DefaultMinBounds.clone()
+  );
+  clipMaxBounds = defaultValue(
+    clipMaxBounds,
+    VoxelBoxShape.DefaultMaxBounds.clone()
+  );
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
@@ -207,9 +216,9 @@ VoxelBoxShape.prototype.update = function (
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
   // Box is not visible if:
-  // - any of the min bounds exceed the max bounds
+  // - any of the min render bounds exceed the max render bounds
   // - two or more of the min bounds equal the max bounds (line / point)
-  // - same as above, but for clip bounds
+  // - any of the min clip bounds exceed the max clip bounds
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   if (
     renderMinBounds.x > renderMaxBounds.x ||
@@ -222,10 +231,6 @@ VoxelBoxShape.prototype.update = function (
     clipMinBounds.x > clipMaxBounds.x ||
     clipMinBounds.y > clipMaxBounds.y ||
     clipMinBounds.z > clipMaxBounds.z ||
-    (clipMinBounds.x === clipMaxBounds.x) +
-      (clipMinBounds.y === clipMaxBounds.y) +
-      (clipMinBounds.z === clipMaxBounds.z) >=
-      2 ||
     scale.x === 0.0 ||
     scale.y === 0.0 ||
     scale.z === 0.0
@@ -481,8 +486,8 @@ VoxelBoxShape.DefaultMaxBounds = new Cartesian3(+1.0, +1.0, +1.0);
  *
  * @function
  *
- * @param {Number} minimumBounds The minimum bounds.
- * @param {Number} maximumBounds The maximum bounds.
+ * @param {Cartesian3} minimumBounds The minimum bounds, in the local coordinates of the shape.
+ * @param {Cartesian3} maximumBounds The maximum bounds, in the local coordinates of the shape.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.

@@ -130,7 +130,7 @@ function Cesium3DTilesVoxelProvider(options) {
   // TODO is there a good user-facing way to set names, types, componentTypes, min, max, etc? MetadataComponents.Primitive is close, but private and has some fields that voxels don't use
 
   /**
-   * Gets stuff
+   * Gets the metadata names.
    *
    * @type {String[]}
    * @readonly
@@ -138,23 +138,24 @@ function Cesium3DTilesVoxelProvider(options) {
   this.names = new Array();
 
   /**
-   * Gets stuff
+   * Gets the metadata types
    *
    * @type {MetadataType[]}
    * @readonly
+   * @private
    */
   this.types = new Array();
 
   /**
-   * Gets stuff
+   * Gets the metadata component types
    *
    * @type {MetadataComponentType[]}
    * @readonly
+   * @private
    */
   this.componentTypes = new Array();
 
   /**
-   * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the minimum value
    *
    * @type {Number[][]|undefined}
@@ -163,7 +164,6 @@ function Cesium3DTilesVoxelProvider(options) {
   this.minimumValues = undefined;
 
   /**
-   * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the maximum value
    *
    * @type {Number[][]|undefined}
@@ -535,8 +535,10 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 
 /**
  * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
+ * @function
  *
  * @param {FrameState} frameState
+ * @private
  */
 Cesium3DTilesVoxelProvider.prototype.update = function (frameState) {
   const loaders = this._gltfLoaders;

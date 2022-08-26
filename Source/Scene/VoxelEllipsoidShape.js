@@ -8,6 +8,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
+import defaultValue from "../Core/defaultValue.js";
 
 /**
  * An ellipsoid {@link VoxelShape}.
@@ -162,8 +163,8 @@ const scratchInnerExtentRender = new Cartesian3();
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- * @param {Cartesian3} clipMinBounds The minimum clip bounds.
- * @param {Cartesian3} clipMaxBounds The maximum clip bounds.
+ * @param {Cartesian3} [clipMinBounds=VoxelEllipsoidShape.DefaultMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds=VoxelEllipsoidShape.DefaultMaxBounds] The maximum clip bounds.
  * @returns {Boolean} Whether the shape is visible.
  */
 VoxelEllipsoidShape.prototype.update = function (
@@ -173,6 +174,14 @@ VoxelEllipsoidShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds
 ) {
+  clipMinBounds = defaultValue(
+    clipMinBounds,
+    VoxelEllipsoidShape.DefaultMinBounds.clone()
+  );
+  clipMaxBounds = defaultValue(
+    clipMaxBounds,
+    VoxelEllipsoidShape.DefaultMaxBounds.clone()
+  );
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("modelMatrix", modelMatrix);
   Check.typeOf.object("minBounds", minBounds);
@@ -911,7 +920,8 @@ VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
  * @param {Number} minHeight The minimumZ.
  * @param {Number} maxHeight The maximumZ.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
- * @param {Matrix4} matrix The matrix to transform the points.
+ * @param {Cartesian3} translation The translation applied to the shape
+ * @param {Matrix3} rotation The rotation applied to the shape
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
  *

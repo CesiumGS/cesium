@@ -19,7 +19,8 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|Uint8Array|Object|GltfLoader} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * options.gltf could also have type GltfLoader, but that is a private type
  *
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelProvider
@@ -125,7 +126,7 @@ function GltfVoxelProvider(options) {
   // TODO is there a good user-facing way to set names, types, componentTypes, min, max, etc? MetadataComponents.Primitive is close, but private and has some fields that voxels don't use
 
   /**
-   * Gets stuff
+   * Gets the metadata names.
    *
    * @type {String[]}
    * @readonly
@@ -133,23 +134,24 @@ function GltfVoxelProvider(options) {
   this.names = new Array();
 
   /**
-   * Gets stuff
+   * Gets the metadata types
    *
    * @type {MetadataType[]}
    * @readonly
+   * @private
    */
   this.types = new Array();
 
   /**
-   * Gets stuff
+   * Gets the metadata component types
    *
    * @type {MetadataComponentType[]}
    * @readonly
+   * @private
    */
   this.componentTypes = new Array();
 
   /**
-   * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the minimum value
    *
    * @type {Number[][]|undefined}
@@ -158,7 +160,6 @@ function GltfVoxelProvider(options) {
   this.minimumValues = undefined;
 
   /**
-   * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the maximum value
    *
    * @type {Number[][]|undefined}
@@ -296,9 +297,10 @@ function GltfVoxelProvider(options) {
 
 /**
  * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
- * If the provider doesn't need this functionality it should leave this function undefined.
+ * @function
  *
  * @param {FrameState} frameState
+ * @private
  */
 GltfVoxelProvider.prototype.update = function (frameState) {
   const loader = this._loader;

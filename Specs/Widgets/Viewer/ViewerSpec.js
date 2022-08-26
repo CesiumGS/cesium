@@ -1401,8 +1401,8 @@ describe(
     function loadVoxelPrimitive(viewer) {
       const voxelPrimitive = new VoxelPrimitive({
         provider: new GltfVoxelProvider({
-          url:
-            "./Data/Cesium3DTiles/Voxel/SimpleWithMetadata/0/0/0/0/tile.gltf",
+          gltf:
+            "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/0/0/0/0/tile.gltf",
         }),
       });
       viewer.scene.primitives.add(voxelPrimitive);
