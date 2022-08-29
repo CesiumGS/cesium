@@ -56,7 +56,7 @@ describe("Scene/Model/LightingPipelineStage", function () {
     LightingPipelineStage.process(renderResources, mockPrimitive);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "LIGHTING_UNLIT",
     ]);
 
@@ -81,7 +81,7 @@ describe("Scene/Model/LightingPipelineStage", function () {
     LightingPipelineStage.process(renderResources, mockPrimitive);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "LIGHTING_PBR",
     ]);
 
