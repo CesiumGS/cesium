@@ -689,6 +689,9 @@ Vector3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
 };
 
 Vector3DTileContent.prototype.applyStyle = function (style) {
+  if (!defined(this._features)) {
+    createFeatures(this);
+  }
   if (defined(this._polygons)) {
     this._polygons.applyStyle(style, this._features);
   }
