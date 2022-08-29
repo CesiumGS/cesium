@@ -34,8 +34,8 @@ describe("Scene/Vector3DTileContent", () => {
   let tilesetPrimitive;
 
   let depthColor;
-  const whitePixel = [255, 255, 255, 255];
-  const blackPixel = [0, 0, 0, 255];
+  const whitePixel = [255.0, 255.0, 255.0, 255.0];
+  const blackPixel = [0.0, 0.0, 0.0, 255.0];
 
   function MockPrimitive(primitive, pass) {
     this._primitive = primitive;
