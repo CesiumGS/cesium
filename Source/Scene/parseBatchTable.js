@@ -61,12 +61,21 @@ function parseBatchTable(options) {
   // divide properties into binary, json and hierarchy
   const partitionResults = partitionProperties(batchTable);
 
-  const jsonMetadataTable = new JsonMetadataTable({
-    count: featureCount,
-    properties: partitionResults.jsonProperties,
-  });
+  let jsonMetadataTable;
+  if (defined(partitionResults.jsonProperties)) {
+    jsonMetadataTable = new JsonMetadataTable({
+      count: featureCount,
+      properties: partitionResults.jsonProperties,
+    });
+  }
 
-  const hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
+  let hierarchy;
+  if (defined(partitionResults.hierarchy)) {
+    hierarchy = new BatchTableHierarchy({
+      extension: partitionResults.hierarchy,
+      binaryBody: binaryBody,
+    });
+  }
 
   const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
@@ -106,18 +115,26 @@ function parseBatchTable(options) {
     propertyAttributes = [];
   }
 
-  const propertyTable = new PropertyTable({
-    id: 0,
-    name: "Batch Table",
-    count: featureCount,
-    metadataTable: metadataTable,
-    jsonMetadataTable: jsonMetadataTable,
-    batchTableHierarchy: hierarchy,
-  });
+  const propertyTables = [];
+  if (
+    defined(metadataTable) ||
+    defined(jsonMetadataTable) ||
+    defined(hierarchy)
+  ) {
+    const propertyTable = new PropertyTable({
+      id: 0,
+      name: "Batch Table",
+      count: featureCount,
+      metadataTable: metadataTable,
+      jsonMetadataTable: jsonMetadataTable,
+      batchTableHierarchy: hierarchy,
+    });
+    propertyTables.push(propertyTable);
+  }
 
   const metadataOptions = {
     schema: transcodedSchema,
-    propertyTables: [propertyTable],
+    propertyTables: propertyTables,
     propertyAttributes: propertyAttributes,
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
@@ -151,8 +168,8 @@ function partitionProperties(batchTable) {
     hierarchyExtension = extensions["3DTILES_batch_table_hierarchy"];
   }
 
-  const jsonProperties = {};
-  const binaryProperties = {};
+  let jsonProperties;
+  let binaryProperties;
   for (const propertyId in batchTable) {
     if (
       !batchTable.hasOwnProperty(propertyId) ||
@@ -166,8 +183,10 @@ function partitionProperties(batchTable) {
 
     const property = batchTable[propertyId];
     if (Array.isArray(property)) {
+      jsonProperties = defined(jsonProperties) ? jsonProperties : {};
       jsonProperties[propertyId] = property;
     } else {
+      binaryProperties = defined(binaryProperties) ? binaryProperties : {};
       binaryProperties[propertyId] = property;
     }
   }
@@ -409,26 +428,6 @@ function transcodeComponentType(componentType) {
     case "DOUBLE":
       return "FLOAT64";
   }
-}
-
-/**
- * Construct a batch table hierarchy object if the <code>3DTILES_batch_table_hierarchy</code> extension is present
- *
- * @param {Object} [hierarchyExtension] The <code>3DTILES_batch_table_hierarchy</code> extension object.
- * @param {Uint8Array} binaryBody The binary body of the batch table
- * @return {BatchTableHierarchy} A batch table hierarchy, or <code>undefined</code> if the extension is not present.
- *
- * @private
- */
-function initializeHierarchy(hierarchyExtension, binaryBody) {
-  if (defined(hierarchyExtension)) {
-    return new BatchTableHierarchy({
-      extension: hierarchyExtension,
-      binaryBody: binaryBody,
-    });
-  }
-
-  return undefined;
 }
 
 // exposed for testing
