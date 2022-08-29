@@ -8,6 +8,7 @@ import {
   NodeRenderResources,
   RenderState,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/NodeRenderResources",
@@ -29,12 +30,6 @@ describe(
       sceneGraph: mockSceneGraph,
       children: [],
     });
-
-    function checkShaderDefines(shaderBuilder, expectedDefines) {
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual(
-        expectedDefines
-      );
-    }
 
     it("throws for undefined modelRenderResources", function () {
       expect(function () {
@@ -106,10 +101,16 @@ describe(
       );
 
       // The model shader must not be modified by the node...
-      checkShaderDefines(modelResources.shaderBuilder, ["MODEL"]);
+      ShaderBuilderTester.expectHasFragmentDefines(
+        modelResources.shaderBuilder,
+        ["MODEL"]
+      );
 
       // ...but the node shader will be updated.
-      checkShaderDefines(nodeResources.shaderBuilder, ["MODEL", "NODE"]);
+      ShaderBuilderTester.expectHasFragmentDefines(
+        nodeResources.shaderBuilder,
+        ["MODEL", "NODE"]
+      );
     });
   },
   "WebGL"

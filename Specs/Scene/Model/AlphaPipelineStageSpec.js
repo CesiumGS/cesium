@@ -7,6 +7,7 @@ import {
   RenderState,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/AlphaPipelineStage",
@@ -72,10 +73,10 @@ describe(
       );
 
       const shaderBuilder = renderResources.shaderBuilder;
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "ALPHA_MODE_MASK",
       ]);
-      expect(shaderBuilder._fragmentShaderParts.uniformLines).toEqual([
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform float u_alphaCutoff;",
       ]);
       expect(renderResources.uniformMap.u_alphaCutoff()).toBe(cutoff);

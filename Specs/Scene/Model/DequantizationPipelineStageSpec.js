@@ -99,7 +99,7 @@ describe(
           ]
         );
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
-        expect(shaderBuilder._fragmentShaderParts.functionIds).toEqual([]);
+        ShaderBuilderTester.expectHasFragmentFunctionIds(shaderBuilder, []);
       });
     });
 
@@ -287,7 +287,7 @@ describe(
           []
         );
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
-        expect(shaderBuilder._fragmentShaderParts.functionIds).toEqual([]);
+        ShaderBuilderTester.expectHasFragmentFunctionIds(shaderBuilder, []);
       });
     });
   },

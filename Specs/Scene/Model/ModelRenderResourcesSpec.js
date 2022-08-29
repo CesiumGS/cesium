@@ -3,17 +3,12 @@ import {
   ModelRenderResources,
   RenderState,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/ModelRenderResources",
   function () {
     const mockModel = {};
-
-    function checkShaderDefines(shaderBuilder, expectedDefines) {
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual(
-        expectedDefines
-      );
-    }
 
     it("throws for undefined model", function () {
       expect(function () {
@@ -38,7 +33,10 @@ describe(
       expect(modelResources.renderStateOptions).toEqual(defaultRenderState);
       expect(modelResources.hasSilhouette).toBe(false);
       expect(modelResources.hasSkipLevelOfDetail).toBe(false);
-      checkShaderDefines(modelResources.shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(
+        modelResources.shaderBuilder,
+        []
+      );
     });
   },
   "WebGL"
