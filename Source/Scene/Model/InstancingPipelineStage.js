@@ -611,7 +611,11 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   return transforms;
 }
 
-function getInstanceTranslations(translationAttribute, count, renderResources) {
+function getInstanceTranslationsAsCartesian3s(
+  translationAttribute,
+  count,
+  renderResources
+) {
   const instancingTranslations = new Array(count);
   const translationTypedArray = translationAttribute.typedArray;
 
@@ -830,7 +834,7 @@ function processTransformVec3Attributes(
     // This function computes and set the translation min / max, and unloads
     // the typed array associated with the attribute.
     // The translations are also returned in case they're used for 2D projection.
-    instancingTranslations = getInstanceTranslations(
+    instancingTranslations = getInstanceTranslationsAsCartesian3s(
       translationAttribute,
       translationAttribute.count,
       renderResources

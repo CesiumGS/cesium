@@ -134,9 +134,16 @@ describe(
               attribute.semantic === InstanceAttributeSemantic.ROTATION ||
               attribute.semantic === InstanceAttributeSemantic.SCALE;
 
+            const isTranslationAttribute =
+              attribute.semantic === InstanceAttributeSemantic.TRANSLATION;
+
             if (hasRotation && isTransformAttribute) {
               expect(attribute.typedArray).toBeDefined();
               expect(attribute.buffer).toBeUndefined();
+            } else if (isTranslationAttribute) {
+              expect(attribute.typedArray).toBeDefined();
+              expect(attribute.buffer).toBeDefined();
+              bufferCount++;
             } else {
               expect(attribute.typedArray).toBeUndefined();
               expect(attribute.buffer).toBeDefined();

@@ -357,10 +357,6 @@ I3dmLoader.prototype.process = function (frameState) {
   if (this._state === I3dmLoaderState.POST_PROCESSING) {
     this._postProcess(this, frameState);
   }
-
-  if (this._state === I3dmLoaderState.FAILED) {
-    this._fail(this);
-  }
 };
 
 function createStructuralMetadata(loader, components) {
@@ -551,11 +547,12 @@ function createInstances(loader, components, frameState) {
   translationAttribute.componentDatatype = ComponentDatatype.FLOAT;
   translationAttribute.type = AttributeType.VEC3;
   translationAttribute.count = instancesLength;
-  if (hasRotation) {
-    // If rotations are present, all transform attributes are loaded
-    // as typed arrays to compute transform matrices for the model.
-    translationAttribute.typedArray = translationTypedArray;
-  } else {
+  // The min / max values of the translation attribute need to be computed
+  // by the model pipeline, so so a pointer to the typed array is stored.
+  translationAttribute.typedArray = translationTypedArray;
+  // If there is no rotation attribute, however, the translations can also be
+  // loaded as a buffer to prevent additional resource creation in the pipeline.
+  if (!hasRotation) {
     const buffer = Buffer.createVertexBuffer({
       context: frameState.context,
       typedArray: translationTypedArray,
@@ -854,7 +851,7 @@ function unloadBuffers(loader) {
   buffers.length = 0;
 }
 
-GltfLoader.prototype.isUnloaded = function () {
+I3dmLoader.prototype.isUnloaded = function () {
   return this._state === I3dmLoaderState.UNLOADED;
 };
 

@@ -1049,10 +1049,12 @@ function loadInstancedAttribute(
   );
   const modelSemantic = semanticInfo.modelSemantic;
 
+  const isTransformAttribute =
+    modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
+    modelSemantic === InstanceAttributeSemantic.ROTATION ||
+    modelSemantic === InstanceAttributeSemantic.SCALE;
   const isTranslationAttribute =
     modelSemantic === InstanceAttributeSemantic.TRANSLATION;
-  const isFeatureIdAttribute =
-    modelSemantic === InstanceAttributeSemantic.FEATURE_ID;
 
   // Load the attributes as typed arrays only if:
   // - the loader specifies (loadAttributesAsTypedArray)
@@ -1062,7 +1064,7 @@ function loadInstancedAttribute(
   // - GPU instancing is not supported.
   const loadAsTypedArrayOnly =
     loader._loadAttributesAsTypedArray ||
-    (hasRotation && !isFeatureIdAttribute) ||
+    (hasRotation && isTransformAttribute) ||
     !frameState.context.instancedArrays;
 
   const loadBuffer = !loadAsTypedArrayOnly;
