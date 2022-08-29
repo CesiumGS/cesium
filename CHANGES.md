@@ -35,6 +35,7 @@
 - Fixed issues running CesiumJS under Node.js when using ESM modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
 - Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
 - Fixed developer error with `Camera.flyTo` with an `orientation` and a `Rectangle` value for `destination`. [#10704](https://github.com/CesiumGS/cesium/issues/10704)
+- Fixed rendering bug with points in .vctr format, where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
 
 ### 1.96 - 2022-08-01
 
