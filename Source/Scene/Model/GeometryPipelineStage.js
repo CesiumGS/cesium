@@ -327,8 +327,8 @@ function addAttributeToRenderResources(
     count: attribute.count,
     componentsPerAttribute: componentsPerAttribute,
     componentDatatype: ComponentDatatype.FLOAT, // Projected positions will always be floats.
-    offsetInBytes: attribute.byteOffset,
-    strideInBytes: attribute.byteStride,
+    offsetInBytes: 0,
+    strideInBytes: undefined,
     normalize: attribute.normalized,
   };
 

@@ -894,6 +894,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
           projectTo2D: true,
+          incrementallyLoadTextures: false,
         },
         scene2D
       ).then(function (model) {
@@ -911,6 +912,7 @@ describe(
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
           projectTo2D: true,
+          incrementallyLoadTextures: false,
         },
         sceneCV
       ).then(function (model) {
