@@ -719,8 +719,7 @@ describe("Scene/parseBatchTable", function () {
       binaryBatchTable.windDirection.typedArray
     );
 
-    // A property table wil still be defined, but since we didn't have JSON
-    // or batch table hierarchy, it will be empty.
+    // No property table will be created.
     const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable).not.toBeDefined();
 

@@ -999,8 +999,8 @@ describe(
       });
 
       it("point cloud with per-point properties work", function () {
-        // When the batch table contains per-point properties, aka no batching,
-        // a ModelFeatureTable is created, but it will have no properties
+        // When the batch table contains only per-point properties, no feature
+        // table will be created.
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudWithPerPointPropertiesUrl
