@@ -116,10 +116,11 @@ describe(
       const batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
       const properties = batchClass.properties;
 
-      expect(structuralMetadata.propertyTableCount).toEqual(1);
+      const expectedPropertyTableCount = isBatched ? 1 : 0;
+      expect(structuralMetadata.propertyTableCount).toEqual(
+        expectedPropertyTableCount
+      );
       const propertyTable = structuralMetadata.getPropertyTable(0);
-
-      const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
 
       const tablePropertyNames = [];
       const attributePropertyNames = [];
@@ -151,11 +152,14 @@ describe(
         }
       }
 
-      expect(propertyTable.getPropertyIds(0).sort()).toEqual(
-        tablePropertyNames.sort()
-      );
-
-      if (!isBatched) {
+      // Check that the list of property IDs match in either the batch table
+      // (batched points) or the property attribute (per-point properties)
+      if (isBatched) {
+        expect(propertyTable.getPropertyIds(0).sort()).toEqual(
+          tablePropertyNames.sort()
+        );
+      } else {
+        const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
         expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
           attributePropertyNames.sort()
         );
