@@ -93,7 +93,8 @@ ShaderCache.prototype.getShaderProgram = function (options) {
   }
 
   // Since ShaderSource.createCombinedXxxShader() can be expensive, use a
-  // simpler key for caching.
+  // simpler key for caching. This way, the function does not have to be called
+  // for each cache lookup.
   const vertexShaderKey = vertexShaderSource.getCacheKey();
   const fragmentShaderKey = fragmentShaderSource.getCacheKey();
   // Sort the keys in the JSON to ensure a consistent order
@@ -112,10 +113,10 @@ ShaderCache.prototype.getShaderProgram = function (options) {
     const context = this._context;
 
     const vertexShaderText = vertexShaderSource.createCombinedVertexShader(
-      this._context
+      context
     );
     const fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(
-      this._context
+      context
     );
 
     const shaderProgram = new ShaderProgram({
