@@ -1057,7 +1057,7 @@ function loadInstancedAttribute(
     modelSemantic === InstanceAttributeSemantic.TRANSLATION;
 
   // Load the attributes as typed arrays only if:
-  // - the loader specifies (loadAttributesAsTypedArray)
+  // - loadAttributesAsTypedArray is true
   // - the instances have rotations. This only applies to the transform attributes,
   //   since The instance matrices are computed on the CPU. This avoids the
   //   expensive quaternion -> rotation matrix conversion in the shader.

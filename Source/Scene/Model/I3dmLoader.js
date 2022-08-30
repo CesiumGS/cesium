@@ -120,8 +120,8 @@ function I3dmLoader(options) {
   this._postProcess = function (loader, frameState) {};
 
   // Instanced attributes are initially parsed as typed arrays, but if they
-  // do not to be further processed (e.g. turned into transform matrices), it is
-  // more efficient to turn them into buffers. The I3dmLoader will own the
+  // do not need to be further processed (e.g. turned into transform matrices),
+  // it is more efficient to turn them into buffers. The I3dmLoader will own the
   // resources and store them here.
   this._buffers = [];
   this._components = undefined;
