@@ -359,6 +359,26 @@ ShaderSource.replaceMain = function (source, renamedMain) {
 };
 
 /**
+ * Since {@link ShaderSource#createCombinedVertexShader} and
+ * {@link ShaderSource#createCombinedFragmentShader} are both expensive to
+ * compute, create a simpler string key for lookups in the {@link ShaderCache}.
+ *
+ * @returns {String} A key for identifying this shader
+ *
+ * @private
+ */
+ShaderSource.prototype.getCacheKey = function () {
+  // Sort defines to make the key comparison deterministic
+  const sortedDefines = this.defines.slice().sort();
+  const definesKey = sortedDefines.join(",");
+  const pickKey = this.pickColorQualifier;
+  const builtinsKey = this.includeBuiltIns;
+  const sourcesKey = this.sources.join("\n");
+
+  return `${definesKey}:${pickKey}:${builtinsKey}:${sourcesKey}`;
+};
+
+/**
  * Create a single string containing the full, combined vertex shader with all dependencies and defines.
  *
  * @param {Context} context The current rendering context
