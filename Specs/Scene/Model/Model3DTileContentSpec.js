@@ -1006,14 +1006,8 @@ describe(
           pointCloudWithPerPointPropertiesUrl
         ).then(function (tileset) {
           const content = tileset.root.content;
-          expect(content.featuresLength).toBe(1000);
+          expect(content.featuresLength).toBe(0);
           expect(content.innerContents).toBeUndefined();
-
-          const feature = content.getFeature(0);
-          expect(feature).toBeDefined();
-          const propertyNames = [];
-          feature.getPropertyNames(propertyNames);
-          expect(propertyNames).toEqual([]);
         });
       });
 
