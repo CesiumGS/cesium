@@ -78,6 +78,7 @@ function parseBatchTable(options) {
   }
 
   const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+  const binaryProperties = partitionResults.binaryProperties;
 
   let metadataTable;
   let propertyAttributes;
@@ -86,7 +87,7 @@ function parseBatchTable(options) {
     const attributeResults = transcodeBinaryPropertiesAsPropertyAttributes(
       featureCount,
       className,
-      partitionResults.binaryProperties,
+      binaryProperties,
       binaryBody,
       customAttributeOutput
     );
@@ -101,7 +102,7 @@ function parseBatchTable(options) {
     const binaryResults = transcodeBinaryProperties(
       featureCount,
       className,
-      partitionResults.binaryProperties,
+      binaryProperties,
       binaryBody
     );
     transcodedSchema = binaryResults.transcodedSchema;
@@ -168,8 +169,11 @@ function partitionProperties(batchTable) {
     hierarchyExtension = extensions["3DTILES_batch_table_hierarchy"];
   }
 
+  // A JsonMetadataTable is only allocated as needed.
   let jsonProperties;
-  let binaryProperties;
+  // A MetadataTable or PropertyAttribute will always be created, even if
+  // there are no properties.
+  const binaryProperties = {};
   for (const propertyId in batchTable) {
     if (
       !batchTable.hasOwnProperty(propertyId) ||
@@ -186,7 +190,6 @@ function partitionProperties(batchTable) {
       jsonProperties = defined(jsonProperties) ? jsonProperties : {};
       jsonProperties[propertyId] = property;
     } else {
-      binaryProperties = defined(binaryProperties) ? binaryProperties : {};
       binaryProperties[propertyId] = property;
     }
   }
