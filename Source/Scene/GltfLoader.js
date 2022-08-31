@@ -224,6 +224,11 @@ function GltfLoader(options) {
   this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
+
+  // This flag will be set in parse() if the KHR_mesh_quantization extension is
+  // present in extensionsRequired. This flag is used later when parsing
+  // attributes. When the extension is present, attributes may be stored as
+  // quantized integer values instead of floats.
   this._hasKhrMeshQuantization = false;
 
   // When loading EXT_feature_metadata, the feature tables and textures
@@ -836,9 +841,9 @@ function createAttribute(
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
     attribute.semantic === VertexAttributeSemantic.TEXCOORD;
 
-  // In the glTF 2.0 spec, min and max are not impacted by normalized. However,
-  // for KHR_mesh_quantization, min and max must be dequantized for normalized
-  // values, else the bounding volume will be computed incorrectly.
+  // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
+  // However, for KHR_mesh_quantization, min and max must be dequantized for
+  // normalized values, else the bounding sphere will be computed incorrectly.
   if (hasKhrMeshQuantization && normalized && isQuantizable) {
     dequantizeMinMax(attribute, MathType);
   }
@@ -2353,7 +2358,8 @@ function parse(
   if (defined(extensionsRequired)) {
     ModelUtility.checkSupportedExtensions(extensionsRequired);
 
-    // Check for the extension here, it will be used in loadAttribute
+    // Check for the KHR_mesh_quantization extension here, it will be used later
+    // in loadAttribute().
     loader._hasKhrMeshQuantization = extensionsRequired.includes(
       "KHR_mesh_quantization"
     );
