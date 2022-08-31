@@ -77,7 +77,6 @@ import WebMercatorProjection from "../Core/WebMercatorProjection.js";
  * @param {String} [name] The name of this data source.  If undefined, a name will be derived from the url.
  * @param {Scene} [scene] The scene to populate with the tileset
  *
- *
  * @example
  * let i3sData = new I3SDataProvider();
  * i3sData.loadUrl('https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
@@ -94,10 +93,9 @@ import WebMercatorProjection from "../Core/WebMercatorProjection.js";
  * viewer.scene.primitives.add(i3sData);
  *
  */
-
 function I3SDataProvider(name, scene, options, cesium3dTilesetOptions) {
-  //All public configuration is defined as ES5 properties
-  //These are just the "private" variables and their defaults.
+  // All public configuration is defined as ES5 properties
+  // These are just the "private" variables and their defaults.
   this._name = name;
   this._changed = new Event();
   this._error = new Event();
@@ -106,24 +104,16 @@ function I3SDataProvider(name, scene, options, cesium3dTilesetOptions) {
   this._scene = scene;
   this._traceFetches = false;
   this._autoCenterCameraOnStart = false;
-  this._cesium3dTilesetOptions = {};
-  if (defined(cesium3dTilesetOptions)) {
-    this._cesium3dTilesetOptions = cesium3dTilesetOptions;
-  }
+  this._cesium3dTilesetOptions = defaultValue(
+    cesium3dTilesetOptions,
+    defaultValue.EMPTY_OBJECT
+  );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  if (defined(options.traceFetches)) {
-    this._traceFetches = options.traceFetches;
-  }
-
-  if (defined(options.autoCenterCameraOnStart)) {
-    this._autoCenterCameraOnStart = options.autoCenterCameraOnStart;
-  }
-
-  if (defined(options.geoidTiledTerrainProvider)) {
-    this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-  }
+  this._traceFetches = options.traceFetches;
+  this._autoCenterCameraOnStart = options.autoCenterCameraOnStart;
+  this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
 }
 
 Object.defineProperties(I3SDataProvider.prototype, {
