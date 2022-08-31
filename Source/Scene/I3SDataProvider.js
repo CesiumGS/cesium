@@ -133,7 +133,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import I3SNode from "../Scene/I3SNode.js";
-import Lerc from "../ThirdParty/lerc.js";
+import Lerc from "lerc";
 import Resource from "../Core/Resource.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
