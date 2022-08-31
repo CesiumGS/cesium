@@ -1,6 +1,5 @@
 import ArticulationStageType from "../Core/ArticulationStageType.js";
-import AttributeType from "./AttributeType.js";
-import Axis from "./Axis.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -9,20 +8,25 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import InterpolationType from "../Core/InterpolationType.js";
 import Matrix4 from "../Core/Matrix4.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
+import Quaternion from "../Core/Quaternion.js";
+import RuntimeError from "../Core/RuntimeError.js";
+import Sampler from "../Renderer/Sampler.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import getComponentReader from "./GltfPipeline/getComponentReader.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
-import Quaternion from "../Core/Quaternion.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
-import Sampler from "../Renderer/Sampler.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
@@ -160,13 +164,14 @@ const GltfLoaderState = {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {Boolean} [options.loadIndicesForWireframe=false] If true, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
- * @param {Boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
+ * @param {Boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {Boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
+ * @param {Boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+ * @param {Boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+ * @param {Boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
-export default function GltfLoader(options) {
+function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const gltfResource = options.gltfResource;
   let baseResource = options.baseResource;
@@ -189,7 +194,10 @@ export default function GltfLoader(options) {
     false
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-
+  const loadForClassification = defaultValue(
+    options.loadForClassification,
+    false
+  );
   const renameBatchIdSemantic = defaultValue(
     options.renameBatchIdSemantic,
     false
@@ -214,7 +222,14 @@ export default function GltfLoader(options) {
   this._loadAttributesFor2D = loadAttributesFor2D;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
+  this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
+
+  // This flag will be set in parse() if the KHR_mesh_quantization extension is
+  // present in extensionsRequired. This flag is used later when parsing
+  // attributes. When the extension is present, attributes may be stored as
+  // quantized integer values instead of floats.
+  this._hasKhrMeshQuantization = false;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -398,7 +413,12 @@ GltfLoader.prototype.load = function () {
         }
 
         if (loader._state === GltfLoaderState.PROCESSED) {
-          unloadBufferViews(loader); // Buffer views can be unloaded after the data has been copied
+          // The buffer views can be unloaded once the data is copied.
+          unloadBufferViews(loader);
+
+          // Similarly, if the glTF was loaded from a typed array, release the memory
+          loader._typedArray = undefined;
+
           loader._state = GltfLoaderState.READY;
           resolve(loader);
         }
@@ -747,9 +767,59 @@ function getDefault(MathType) {
   return new MathType(); // defaults to 0.0 for all types
 }
 
-function createAttribute(gltf, accessorId, name, semantic, setIndex) {
+function getQuantizationDivisor(componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return 127;
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return 255;
+    case ComponentDatatype.SHORT:
+      return 32767;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return 65535;
+    default:
+      return 1.0;
+  }
+}
+
+const minimumBoundsByType = {
+  VEC2: new Cartesian2(-1.0, -1.0),
+  VEC3: new Cartesian3(-1.0, -1.0, -1.0),
+  VEC4: new Cartesian4(-1.0, -1.0, -1.0, -1.0),
+};
+
+function dequantizeMinMax(attribute, VectorType) {
+  const divisor = getQuantizationDivisor(attribute.componentDatatype);
+  const minimumBound = minimumBoundsByType[attribute.type];
+
+  // dequantized = max(quantized / divisor, -1.0)
+  let min = attribute.min;
+  if (defined(min)) {
+    min = VectorType.divideByScalar(min, divisor, min);
+    min = VectorType.maximumByComponent(min, minimumBound, min);
+  }
+
+  let max = attribute.max;
+  if (defined(max)) {
+    max = VectorType.divideByScalar(max, divisor, max);
+    max = VectorType.maximumByComponent(max, minimumBound, max);
+  }
+
+  attribute.min = min;
+  attribute.max = max;
+}
+
+function createAttribute(
+  gltf,
+  accessorId,
+  name,
+  semantic,
+  setIndex,
+  hasKhrMeshQuantization
+) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
+  const normalized = defaultValue(accessor.normalized, false);
 
   const attribute = new Attribute();
   attribute.name = name;
@@ -757,13 +827,26 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   attribute.setIndex = setIndex;
   attribute.constant = getDefault(MathType);
   attribute.componentDatatype = accessor.componentType;
-  attribute.normalized = defaultValue(accessor.normalized, false);
+  attribute.normalized = normalized;
   attribute.count = accessor.count;
   attribute.type = accessor.type;
   attribute.min = fromArray(MathType, accessor.min);
   attribute.max = fromArray(MathType, accessor.max);
   attribute.byteOffset = accessor.byteOffset;
   attribute.byteStride = getAccessorByteStride(gltf, accessor);
+
+  const isQuantizable =
+    attribute.semantic === VertexAttributeSemantic.POSITION ||
+    attribute.semantic === VertexAttributeSemantic.NORMAL ||
+    attribute.semantic === VertexAttributeSemantic.TANGENT ||
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+
+  // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
+  // However, for KHR_mesh_quantization, min and max must be dequantized for
+  // normalized values, else the bounding sphere will be computed incorrectly.
+  if (hasKhrMeshQuantization && normalized && isQuantizable) {
+    dequantizeMinMax(attribute, MathType);
+  }
 
   return attribute;
 }
@@ -804,6 +887,18 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
   return semanticInfo;
 }
 
+function isClassificationAttribute(attributeSemantic) {
+  // Classification models only use the position, texcoord, and feature ID attributes.
+  const isPositionAttribute =
+    attributeSemantic === VertexAttributeSemantic.POSITION;
+  const isFeatureIdAttribute =
+    attributeSemantic === VertexAttributeSemantic.FEATURE_ID;
+  const isTexcoordAttribute =
+    attributeSemantic === VertexAttributeSemantic.TEXCOORD;
+
+  return isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
+}
+
 function finalizeDracoAttribute(
   attribute,
   vertexBufferLoader,
@@ -821,8 +916,12 @@ function finalizeDracoAttribute(
   }
 
   if (loadTypedArray) {
+    const componentDatatype = defined(vertexBufferLoader.quantization)
+      ? vertexBufferLoader.quantization.componentDatatype
+      : attribute.componentDatatype;
+
     attribute.typedArray = ComponentDatatype.createArrayBufferView(
-      vertexBufferLoader.quantization.componentDatatype,
+      componentDatatype,
       vertexBufferLoader.typedArray.buffer
     );
   }
@@ -841,16 +940,20 @@ function finalizeAttribute(
   }
 
   if (loadTypedArray) {
-    // The accessor's byteOffset and byteStride should be ignored since values
-    // are tightly packed in a typed array
     const bufferViewTypedArray = vertexBufferLoader.typedArray;
     attribute.typedArray = getPackedTypedArray(
       gltf,
       accessor,
       bufferViewTypedArray
     );
-    attribute.byteOffset = 0;
-    attribute.byteStride = undefined;
+
+    if (!loadBuffer) {
+      // If the buffer isn't loaded, then the accessor's byteOffset and
+      // byteStride should be ignored, since values are only available in a
+      // tightly packed typed array
+      attribute.byteOffset = 0;
+      attribute.byteStride = undefined;
+    }
   }
 }
 
@@ -881,7 +984,8 @@ function loadAttribute(
     accessorId,
     name,
     modelSemantic,
-    setIndex
+    setIndex,
+    loader._hasKhrMeshQuantization
   );
 
   if (!defined(draco) && !defined(bufferViewId)) {
@@ -937,32 +1041,36 @@ function loadVertexAttribute(
   loader,
   gltf,
   accessorId,
-  gltfSemantic,
+  semanticInfo,
   draco,
   hasInstances,
   needsPostProcessing,
   frameState
 ) {
-  const semanticInfo = getSemanticInfo(
-    loader,
-    VertexAttributeSemantic,
-    gltfSemantic
-  );
-
   const modelSemantic = semanticInfo.modelSemantic;
+
   const isPositionAttribute =
     modelSemantic === VertexAttributeSemantic.POSITION;
-  const loadFor2D =
+  const isFeatureIdAttribute =
+    modelSemantic === VertexAttributeSemantic.FEATURE_ID;
+
+  const loadTypedArrayFor2D =
     isPositionAttribute &&
     !hasInstances &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
 
+  const loadTypedArrayForClassification =
+    loader._loadForClassification && isFeatureIdAttribute;
+
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
   const outputTypedArrayOnly = loader._loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
-  const outputTypedArray = outputTypedArrayOnly || loadFor2D;
+  const outputTypedArray =
+    outputTypedArrayOnly ||
+    loadTypedArrayFor2D ||
+    loadTypedArrayForClassification;
 
   // Determine what to load right now:
   //
@@ -1010,39 +1118,37 @@ function loadInstancedAttribute(
     InstanceAttributeSemantic,
     gltfSemantic
   );
-
   const modelSemantic = semanticInfo.modelSemantic;
 
   const isTransformAttribute =
     modelSemantic === InstanceAttributeSemantic.TRANSLATION ||
     modelSemantic === InstanceAttributeSemantic.ROTATION ||
     modelSemantic === InstanceAttributeSemantic.SCALE;
-
   const isTranslationAttribute =
     modelSemantic === InstanceAttributeSemantic.TRANSLATION;
 
-  const loadFor2D =
-    isTranslationAttribute &&
-    loader._loadAttributesFor2D &&
-    !frameState.scene3DOnly;
-
-  // In addition to the loader options, load the attributes as typed arrays if:
-  // - the instances have rotations, so that instance matrices are computed on the CPU.
-  //   This avoids the expensive quaternion -> rotation matrix conversion in the shader.
-  // - the translation accessor does not have a min and max, so the values can be used
-  //   for computing an accurate bounding volume.
-  // - the attributes contain feature IDs, in order to add the instance's feature ID
-  //   to the pick object.
-  // - translations are required for 2D
+  // Load the attributes as typed arrays only if:
+  // - loadAttributesAsTypedArray is true
+  // - the instances have rotations. This only applies to the transform attributes,
+  //   since The instance matrices are computed on the CPU. This avoids the
+  //   expensive quaternion -> rotation matrix conversion in the shader.
   // - GPU instancing is not supported.
-  let loadTypedArray =
+  const loadAsTypedArrayOnly =
     loader._loadAttributesAsTypedArray ||
-    ((hasRotation || !hasTranslationMinMax) && isTransformAttribute) ||
-    modelSemantic === InstanceAttributeSemantic.FEATURE_ID ||
+    (hasRotation && isTransformAttribute) ||
     !frameState.context.instancedArrays;
 
-  const loadBuffer = !loadTypedArray;
-  loadTypedArray = loadTypedArray || loadFor2D;
+  const loadBuffer = !loadAsTypedArrayOnly;
+
+  // Load the translations as a typed array in addition to the buffer if
+  // - the accessor does not have a min and max. The values will be used
+  //   for computing an accurate bounding volume.
+  // - the model will be projected to 2D.
+  const loadFor2D = loader._loadAttributesFor2D && !frameState.scene3DOnly;
+  const loadTranslationAsTypedArray =
+    isTranslationAttribute && (!hasTranslationMinMax || loadFor2D);
+
+  const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
 
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
@@ -1062,6 +1168,7 @@ function loadIndices(
   gltf,
   accessorId,
   draco,
+  hasFeatureIds,
   needsPostProcessing,
   frameState
 ) {
@@ -1080,10 +1187,15 @@ function loadIndices(
   const loadForWireframe =
     loader._loadIndicesForWireframe && !frameState.context.webgl2;
 
+  // Load the index buffer as a typed array to batch features together for classification.
+  const loadForClassification = loader._loadForClassification && hasFeatureIds;
+
   // Whether the final output should be a buffer or typed array
   // after loading and post-processing.
-  const outputBuffer = !loadAttributesAsTypedArray;
-  const outputTypedArray = loadAttributesAsTypedArray || loadForWireframe;
+  const outputTypedArrayOnly = loadAttributesAsTypedArray;
+  const outputBuffer = !outputTypedArrayOnly;
+  const outputTypedArray =
+    loadAttributesAsTypedArray || loadForWireframe || loadForClassification;
 
   // Determine what to load right now:
   //
@@ -1252,7 +1364,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
       supportedImageFormats
     );
   }
-  if (defined(gltfMaterial.normalTexture)) {
+  // Normals aren't used for classification, so don't load the normal texture.
+  if (defined(gltfMaterial.normalTexture) && !loader._loadForClassification) {
     material.normalTexture = loadTexture(
       loader,
       gltf,
@@ -1427,11 +1540,17 @@ function loadMorphTarget(
     if (target.hasOwnProperty(semantic)) {
       const accessorId = target[semantic];
 
+      const semanticInfo = getSemanticInfo(
+        loader,
+        VertexAttributeSemantic,
+        semantic
+      );
+
       const attributePlan = loadVertexAttribute(
         loader,
         gltf,
         accessorId,
-        semantic,
+        semanticInfo,
         draco,
         hasInstances,
         needsPostProcessing,
@@ -1488,23 +1607,44 @@ function loadPrimitive(
     );
   }
 
+  const loadForClassification = loader._loadForClassification;
   const draco = extensions.KHR_draco_mesh_compression;
 
+  let hasFeatureIds = false;
   const attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
     for (const semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         const accessorId = attributes[semantic];
+        const semanticInfo = getSemanticInfo(
+          loader,
+          VertexAttributeSemantic,
+          semantic
+        );
+
+        const modelSemantic = semanticInfo.modelSemantic;
+        if (
+          loadForClassification &&
+          !isClassificationAttribute(modelSemantic)
+        ) {
+          continue;
+        }
+
+        if (modelSemantic === VertexAttributeSemantic.FEATURE_ID) {
+          hasFeatureIds = true;
+        }
+
         const attributePlan = loadVertexAttribute(
           loader,
           gltf,
           accessorId,
-          semantic,
+          semanticInfo,
           draco,
           hasInstances,
           needsPostProcessing,
           frameState
         );
+
         primitivePlan.attributePlans.push(attributePlan);
         primitive.attributes.push(attributePlan.attribute);
       }
@@ -1512,7 +1652,8 @@ function loadPrimitive(
   }
 
   const targets = gltfPrimitive.targets;
-  if (defined(targets)) {
+  // Morph targets are disabled for classification models.
+  if (defined(targets) && !loadForClassification) {
     const targetsLength = targets.length;
     for (let i = 0; i < targetsLength; ++i) {
       primitive.morphTargets.push(
@@ -1535,6 +1676,7 @@ function loadPrimitive(
       gltf,
       indices,
       draco,
+      hasFeatureIds,
       needsPostProcessing,
       frameState
     );
@@ -1580,7 +1722,13 @@ function loadPrimitive(
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
-  primitive.primitiveType = gltfPrimitive.mode;
+  const primitiveType = gltfPrimitive.mode;
+  if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
+    throw new RuntimeError(
+      "Only triangle meshes can be used for classification."
+    );
+  }
+  primitive.primitiveType = primitiveType;
 
   return primitive;
 }
@@ -1868,6 +2016,11 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const articulationsExtension = nodeExtensions.AGI_articulations;
 
   if (defined(instancingExtension)) {
+    if (loader._loadForClassification) {
+      throw new RuntimeError(
+        "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification."
+      );
+    }
     node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
   }
 
@@ -1966,23 +2119,23 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
 }
 
 function loadSkins(loader, gltf, nodes) {
-  let i;
-
   const gltfSkins = gltf.skins;
-  if (!defined(gltfSkins)) {
+
+  // Skins are disabled for classification models.
+  if (loader._loadForClassification || !defined(gltfSkins)) {
     return [];
   }
 
   const skinsLength = gltf.skins.length;
   const skins = new Array(skinsLength);
-  for (i = 0; i < skinsLength; ++i) {
+  for (let i = 0; i < skinsLength; ++i) {
     const skin = loadSkin(loader, gltf, gltf.skins[i], nodes);
     skin.index = i;
     skins[i] = skin;
   }
 
   const nodesLength = nodes.length;
-  for (i = 0; i < nodesLength; ++i) {
+  for (let i = 0; i < nodesLength; ++i) {
     const skinId = gltf.nodes[i].skin;
     if (defined(skinId)) {
       nodes[i].skin = skins[skinId];
@@ -2092,16 +2245,16 @@ function loadAnimation(loader, gltf, gltfAnimation, nodes) {
 }
 
 function loadAnimations(loader, gltf, nodes) {
-  let i;
-
   const gltfAnimations = gltf.animations;
-  if (!defined(gltfAnimations)) {
+
+  // Animations are disabled for classification models.
+  if (loader._loadForClassification || !defined(gltfAnimations)) {
     return [];
   }
 
   const animationsLength = gltf.animations.length;
   const animations = new Array(animationsLength);
-  for (i = 0; i < animationsLength; ++i) {
+  for (let i = 0; i < animationsLength; ++i) {
     const animation = loadAnimation(loader, gltf, gltf.animations[i], nodes);
     animation.index = i;
     animations[i] = animation;
@@ -2194,6 +2347,24 @@ function parse(
   rejectPromise,
   rejectTexturesPromise
 ) {
+  const version = gltf.asset.version;
+  if (version !== "1.0" && version !== "2.0") {
+    const url = loader._gltfResource.url;
+    throw new RuntimeError(
+      `Failed to load ${url}: \nUnsupported glTF version: ${version}`
+    );
+  }
+  const extensionsRequired = gltf.extensionsRequired;
+  if (defined(extensionsRequired)) {
+    ModelUtility.checkSupportedExtensions(extensionsRequired);
+
+    // Check for the KHR_mesh_quantization extension here, it will be used later
+    // in loadAttribute().
+    loader._hasKhrMeshQuantization = extensionsRequired.includes(
+      "KHR_mesh_quantization"
+    );
+  }
+
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
@@ -2381,5 +2552,8 @@ GltfLoader.prototype.unload = function () {
   unloadStructuralMetadata(this);
 
   this._components = undefined;
+  this._typedArray = undefined;
   this._state = GltfLoaderState.UNLOADED;
 };
+
+export default GltfLoader;

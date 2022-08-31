@@ -82,8 +82,6 @@ function addDefaults(gltf) {
         : [0.0, 0.0, 0.0, 1.0];
 
       values.transparency = defaultValue(values.transparency, 1.0);
-      values.transparent = defaultValue(values.transparent, false);
-      values.doubleSided = defaultValue(values.doubleSided, false);
 
       if (technique !== "CONSTANT") {
         values.diffuse = defined(values.diffuse)
@@ -96,6 +94,17 @@ function addDefaults(gltf) {
           values.shininess = defaultValue(values.shininess, 0.0);
         }
       }
+
+      // These actually exist on the extension object, not the values object despite what's shown in the spec
+      materialsCommon.transparent = defaultValue(
+        materialsCommon.transparent,
+        false
+      );
+      materialsCommon.doubleSided = defaultValue(
+        materialsCommon.doubleSided,
+        false
+      );
+
       return;
     }
 

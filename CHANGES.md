@@ -1,5 +1,45 @@
 # Change Log
 
+### 1.97 - 2022-09-01
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS has switched to a new architecture for loading glTF models and tilesets that enables features includes:
+  - User-defined GLSL shaders via [`CustomShader`](Documentation/CustomShaderGuide/README.md)
+  - Support for [3D Tiles Next](https://cesium.com/blog/2021/11/10/introducing-3d-tiles-next/) metadata extensions: [`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata), [`EXT_mesh_features`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_mesh_features/extensions/2.0/Vendor/EXT_mesh_features) and [`EXT_instance_features`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features)
+  - Support for [`EXT_mesh_gpu_instancing`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing)
+  - Support for [`EXT_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression)
+  - Texture caching across different tiles
+  - Numerous bug fixes
+- Usage notes for the new glTF architecture:
+  - Those using `ModelExperimental.fromGltf()` should now use `Model.fromGltf()`
+  - The `enableModelExperimental` flag was removed, as tilesets and entities always use the new architecture
+  - The new implementation of `Model` uses the same public API as before, so no other changes are necessary.
+
+#### Breaking Changes :mega:
+
+- glTF 1.0 assets are no longer fully supported. glTF 1.0 techniques are converted to PBR materials where possible, but more complex techniques will no longer function correctly. If custom GLSL shaders are needed, use `CustomShader` instead. [#10648](https://github.com/CesiumGS/cesium/pull/10648)
+- The glTF 2.0 extension `KHR_techniques_webgl` and `KHR_materials_common` are also no longer fully supported. Materials are converted to PBR materials where possible.
+- Support for rendering instanced models on the CPU has been removed.
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
+- `ModelMesh` and `ModelMaterial` have been removed.
+
+##### Additions :tada:
+
+- `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
+- `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
+- Export asset files such as CSS in `package.json`, allowing bundlers to import without additional configuration. [#9212](https://github.com/CesiumGS/cesium/pull/9212)
+- The `sideEffects` field in `package.json` is now defined, allowing more conservative bundlers like Webpack to enable tree shaking by default.
+
+##### Fixes :wrench:
+
+- Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
+- Fixed issues running CesiumJS under Node.js when using ESM modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
+- Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
+- Fixed developer error with `Camera.flyTo` with an `orientation` and a `Rectangle` value for `destination`. [#10704](https://github.com/CesiumGS/cesium/issues/10704)
+- Fixed rendering bug with points in .vctr format, where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
+- Fixed bounding volume calculations for glTF models with `KHR_mesh_quantization` and normalized positions. [#10741](https://github.com/CesiumGS/cesium/pull/10741)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:

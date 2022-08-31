@@ -5,6 +5,7 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
+  defined,
   EllipsoidTerrainProvider,
   GeometryInstance,
   HeadingPitchRange,
@@ -24,7 +25,6 @@ import {
   DirectionalLight,
   Globe,
   Model,
-  ModelExperimental,
   PerInstanceColorAppearance,
   Primitive,
   ShadowMap,
@@ -49,19 +49,22 @@ describe(
     const boxHeight = 4.0;
     const floorHeight = -1.0;
 
-    const boxUrl = "./Data/Models/Shadows/Box.gltf";
-    const boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
-    const boxNoNormalsUrl = "./Data/Models/Shadows/BoxNoNormals.gltf";
-    const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
-    const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
+    const boxUrl = "./Data/Models/PBR/Box/Box.gltf";
+    const boxTranslucentUrl =
+      "./Data/Models/GltfLoader/BoxInterleavedTranslucent/glTF/BoxInterleavedTranslucent.gltf";
+    const boxNoNormalsUrl =
+      "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
+    const boxCutoutUrl =
+      "./Data/Models/GltfLoader/BoxCutout/glTF/BoxCutout.gltf";
+    const boxInvertedUrl =
+      "./Data/Models/GltfLoader/BoxInverted/glTF/BoxInverted.gltf";
 
     let box;
     let boxTranslucent;
+    // copy of box that can be repositioned in the scene
+    let boxPointLights;
     let boxCutout;
-
-    let boxExperimental;
-    let boxTranslucentExperimental;
-    let boxNoNormalsExperimental;
+    let boxNoNormals;
 
     let room;
     let floor;
@@ -92,12 +95,8 @@ describe(
 
       const boxScale = 0.5;
       const boxScaleCartesian = new Cartesian3(boxScale, boxScale, boxScale);
-      const boxTransformExperimental = new Matrix4();
-      Matrix4.setScale(
-        boxTransform,
-        boxScaleCartesian,
-        boxTransformExperimental
-      );
+      const boxTransformNoNormals = new Matrix4();
+      Matrix4.setScale(boxTransform, boxScaleCartesian, boxTransformNoNormals);
 
       const floorOrigin = new Cartesian3.fromRadians(
         longitude,
@@ -142,6 +141,16 @@ describe(
       );
       modelPromises.push(
         loadModel({
+          url: boxUrl,
+          modelMatrix: boxTransform,
+          scale: 0.2,
+          show: false,
+        }).then(function (model) {
+          boxPointLights = model;
+        })
+      );
+      modelPromises.push(
+        loadModel({
           url: boxCutoutUrl,
           modelMatrix: boxTransform,
           scale: boxScale,
@@ -152,30 +161,12 @@ describe(
         })
       );
       modelPromises.push(
-        loadModelExperimental({
-          gltf: boxUrl,
-          modelMatrix: boxTransformExperimental,
-          show: false,
-        }).then(function (model) {
-          boxExperimental = model;
-        })
-      );
-      modelPromises.push(
-        loadModelExperimental({
-          gltf: boxTranslucentUrl,
-          modelMatrix: boxTransformExperimental,
-          show: false,
-        }).then(function (model) {
-          boxTranslucentExperimental = model;
-        })
-      );
-      modelPromises.push(
-        loadModelExperimental({
+        loadModel({
           gltf: boxNoNormalsUrl,
-          modelMatrix: boxTransformExperimental,
+          modelMatrix: boxTransformNoNormals,
           show: false,
         }).then(function (model) {
-          boxNoNormalsExperimental = model;
+          boxNoNormals = model;
         })
       );
       modelPromises.push(
@@ -293,20 +284,6 @@ describe(
 
     function loadModel(options) {
       const model = scene.primitives.add(Model.fromGltf(options));
-      return pollToPromise(
-        function () {
-          // Render scene to progressively load the model
-          scene.render();
-          return model.ready;
-        },
-        { timeout: 10000 }
-      ).then(function () {
-        return model;
-      });
-    }
-
-    function loadModelExperimental(options) {
-      const model = scene.primitives.add(ModelExperimental.fromGltf(options));
       return pollToPromise(
         function () {
           // Render scene to progressively load the model
@@ -561,42 +538,28 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("model casts shadows onto another model", function () {
+    it("Model casts shadows onto another model", function () {
       box.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(box, floor);
     });
 
-    it("model experimental casts shadows onto another model", function () {
-      boxExperimental.show = true;
-      floor.show = true;
-      createCascadedShadowMap();
-      verifyShadows(boxExperimental, floor);
-    });
-
-    it("translucent model casts shadows onto another model", function () {
+    it("translucent Model casts shadows onto another model", function () {
       boxTranslucent.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucent, floor);
     });
 
-    it("translucent model experimental casts shadows onto another model", function () {
-      boxTranslucentExperimental.show = true;
+    it("Model without normals casts shadows onto another model", function () {
+      boxNoNormals.show = true;
       floor.show = true;
       createCascadedShadowMap();
-      verifyShadows(boxTranslucentExperimental, floor);
+      verifyShadows(boxNoNormals, floor);
     });
 
-    it("model without normals casts shadows onto another model", function () {
-      boxNoNormalsExperimental.show = true;
-      floor.show = true;
-      createCascadedShadowMap();
-      verifyShadows(boxNoNormalsExperimental, floor);
-    });
-
-    it("model with cutout texture casts shadows onto another model", function () {
+    it("Model with cutout texture casts shadows onto another model", function () {
       boxCutout.show = true;
       floor.show = true;
       createCascadedShadowMap();
@@ -648,7 +611,7 @@ describe(
       verifyShadows(primitiveBoxTranslucent, primitiveFloor);
     });
 
-    it("model casts shadow onto globe", function () {
+    it("Model casts shadow onto globe", function () {
       box.show = true;
       scene.globe = new Globe();
       scene.camera.frustum._sseDenominator = 0.005;
@@ -767,7 +730,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the sun as a light source
@@ -780,17 +743,37 @@ describe(
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
-      });
+      }, startTime);
 
       // Render with shadows
+      let shadowedColor;
       scene.shadowMap.enabled = true;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       }, startTime);
 
       // Change the time so that the shadows are no longer pointing straight down
-      renderAndExpect(unshadowedColor, endTime);
+      renderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the sunlight direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(red).toBeGreaterThan(shadowedRed);
+        expect(red).toBeLessThan(unshadowedRed);
+      }, endTime);
 
       scene.shadowMap = undefined;
     });
@@ -815,7 +798,7 @@ describe(
       const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
-        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0)
       );
 
       // Use the default shadow map which uses the scene's light source
@@ -835,16 +818,36 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
+      let shadowedColor;
       renderAndCall(function (rgba) {
+        shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
+
+        // The floor is red, and when shadowed, the red
+        // component should be darker
+        const shadowedRed = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        expect(shadowedRed).toBeLessThan(unshadowedRed);
       });
 
       // Change the light so that the shadows are no longer pointing straight down
       scene.light = new DirectionalLight({
         direction: lightDirectionAngle,
       });
-      renderAndExpect(unshadowedColor);
+      renderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(backgroundColor);
+        expect(rgba).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(unshadowedColor);
+
+        // After changing the light direction, the floor will appear
+        // a bit darker, but not as dark as when it was shadowed by the box
+        const red = rgba[0];
+        const unshadowedRed = unshadowedColor[0];
+        const shadowedRed = shadowedColor[0];
+        expect(red).toBeGreaterThan(shadowedRed);
+        expect(red).toBeLessThan(unshadowedRed);
+      });
 
       scene.shadowMap = undefined;
       scene.light = originalLight;
@@ -872,6 +875,8 @@ describe(
     });
 
     it("point light shadows", function () {
+      boxPointLights.show = true;
+
       // Check that shadows are cast from all directions.
       // Place the point light in the middle of an enclosed area and place a box on each side.
       room.show = true;
@@ -900,17 +905,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        const box = scene.primitives.add(
-          Model.fromGltf({
-            url: boxUrl,
-            modelMatrix: Transforms.headingPitchRollToFixedFrame(
-              origins[i],
-              new HeadingPitchRoll()
-            ),
-            scale: 0.2,
-          })
+        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
+          origins[i],
+          new HeadingPitchRoll()
         );
-        scene.render(); // Model is pre-loaded, render one frame to make it ready
+        scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);
         scene.camera.moveForward(0.5);
@@ -941,8 +940,6 @@ describe(
         // Move the camera away from the shadow
         scene.camera.moveRight(0.5);
         renderAndExpect(unshadowedColor);
-
-        scene.primitives.remove(box);
       }
     });
 
@@ -1241,12 +1238,13 @@ describe(
 
     it("set normalOffset", function () {
       createCascadedShadowMap();
-      scene.shadowMap.normalOffset = false;
+      const shadowMap = scene.shadowMap;
+      shadowMap.normalOffset = false;
 
-      expect(scene.shadowMap._normalOffset, false);
-      expect(scene.shadowMap._terrainBias, false);
-      expect(scene.shadowMap._primitiveBias, false);
-      expect(scene.shadowMap._pointBias, false);
+      expect(shadowMap._normalOffset).toBe(false);
+      expect(shadowMap._terrainBias.normalOffset).toBe(false);
+      expect(shadowMap._primitiveBias.normalOffset).toBe(false);
+      expect(shadowMap._pointBias.normalOffset).toBe(false);
     });
 
     it("set maximumDistance", function () {
@@ -1296,7 +1294,8 @@ describe(
         const count = spy.calls.count();
         for (let i = 0; i < count; ++i) {
           const drawCommand = spy.calls.argsFor(i)[0];
-          if (drawCommand.owner.primitive instanceof Model) {
+          const owner = drawCommand.owner;
+          if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
                 "czm_shadow"
@@ -1313,7 +1312,8 @@ describe(
         const count = spy.calls.count();
         for (let i = 0; i < count; ++i) {
           const drawCommand = spy.calls.argsFor(i)[0];
-          if (drawCommand.owner.primitive instanceof Model) {
+          const owner = drawCommand.owner;
+          if (defined(owner) && owner instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
                 "czm_shadow"
@@ -1324,7 +1324,7 @@ describe(
       });
     });
 
-    it("model updates derived commands when the shadow map is dirty", function () {
+    it("Model updates derived commands when the shadow map is dirty", function () {
       const spy1 = spyOn(
         ShadowMap,
         "createReceiveDerivedCommand"

@@ -1004,7 +1004,9 @@ describe(
     });
 
     it("verify memory usage statistics", function () {
-      // Calculations in Batched3DModel3DTileContentSpec, minus uvs
+      // 10 buildings, 36 ushort indices and 24 vertices per building, 6 float
+      // components (position, normal) and 1 uint component (batchId) per vertex
+      // 10 * [(24 * (6 * 4 + 1 * 4)) + (36 * 2)] = 7440 bytes
       const singleTileGeometryMemory = 7440;
       const singleTileTextureMemory = 0;
       const singleTileBatchTextureMemory = 40;
@@ -1118,14 +1120,9 @@ describe(
         b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
       const expectedTextureMemory = texturesByteLength * 5;
 
-      // This test was revised for ModelExperimental, which tracks shared memory
-      // differently from Model.
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithExternalResourcesUrl,
-        {
-          enableModelExperimental: true,
-        }
+        tilesetWithExternalResourcesUrl
       ).then(function (tileset) {
         // Contents are not aware of whether their resources are shared by
         // other contents, so check ResourceCache.

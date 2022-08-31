@@ -27,7 +27,7 @@ import Texture from "../Renderer/Texture.js";
  *
  * @private
  */
-export default function BatchTexture(options) {
+function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.featuresLength", options.featuresLength);
   Check.typeOf.object("options.owner", options.owner);
@@ -570,3 +570,5 @@ BatchTexture.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+export default BatchTexture;

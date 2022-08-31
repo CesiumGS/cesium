@@ -31,7 +31,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function GltfStructuralMetadataLoader(options) {
+function GltfStructuralMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const gltf = options.gltf;
   const extension = options.extension;
@@ -494,3 +494,5 @@ GltfStructuralMetadataLoader.prototype.unload = function () {
 
   this._structuralMetadata = undefined;
 };
+
+export default GltfStructuralMetadataLoader;

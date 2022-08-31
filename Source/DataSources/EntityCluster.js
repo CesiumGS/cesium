@@ -13,7 +13,7 @@ import LabelCollection from "../Scene/LabelCollection.js";
 import PointPrimitive from "../Scene/PointPrimitive.js";
 import PointPrimitiveCollection from "../Scene/PointPrimitiveCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
-import KDBush from "../ThirdParty/kdbush.js";
+import KDBush from "kdbush";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.

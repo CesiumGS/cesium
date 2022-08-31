@@ -493,14 +493,9 @@ describe("Scene/parseBatchTable", function () {
     );
     expect(windDirectionAttribute.typedArray).toEqual(values.slice(3));
 
-    // A property table wil still be defined, but since we didn't have JSON
-    // or batch table hierarchy, it will be empty.
+    // The property table will not be created
     const propertyTable = metadata.getPropertyTable(0);
-    expect(propertyTable).toBeDefined();
-    // An empty table is created
-    expect(propertyTable._jsonMetadataTable).toBeDefined();
-    expect(propertyTable._metadataTable).not.toBeDefined();
-    expect(propertyTable._batchTableHierarchy).not.toBeDefined();
+    expect(propertyTable).not.toBeDefined();
 
     expect(metadata.propertyAttributes.length).toBe(1);
     const [propertyAttribute] = metadata.propertyAttributes;
@@ -724,14 +719,9 @@ describe("Scene/parseBatchTable", function () {
       binaryBatchTable.windDirection.typedArray
     );
 
-    // A property table wil still be defined, but since we didn't have JSON
-    // or batch table hierarchy, it will be empty.
+    // No property table will be created.
     const propertyTable = metadata.getPropertyTable(0);
-    expect(propertyTable).toBeDefined();
-    // An empty table is created
-    expect(propertyTable._jsonMetadataTable).toBeDefined();
-    expect(propertyTable._metadataTable).not.toBeDefined();
-    expect(propertyTable._batchTableHierarchy).not.toBeDefined();
+    expect(propertyTable).not.toBeDefined();
 
     expect(metadata.propertyAttributes.length).toBe(1);
     const [propertyAttribute] = metadata.propertyAttributes;

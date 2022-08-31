@@ -34,15 +34,20 @@
   "types": "./Source/Cesium.d.ts",
   "exports": {
     "./package.json": "./package.json",
+    "./Source/*": "./Source/*",
+    "./Source/*.js": null,
+    "./Build/*": "./Build/*",
+    "./Build/*.js": null,
     ".": {
       "require": "./index.cjs",
       "import": "./Source/Cesium.js"
     }
   },
   "type": "module",
+  "sideEffects": ["./Source/ThirdParty/**/*", "./Source/Widgets/**/*.css", "./Source/Workers/*", "./Specs/**/*"],
   "dependencies": {
-    "@zip.js/zip.js": "^2.3.12",
     "@tweenjs/tween.js": "^18.6.4",
+    "@zip.js/zip.js": "2.4.x",
     "autolinker": "^3.14.3",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^2.2.2",

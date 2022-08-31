@@ -1,3 +1,4 @@
+import Uri from "urijs";
 import {
   DefaultProxy,
   defaultValue,
@@ -8,7 +9,6 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-  Uri,
 } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
@@ -2108,22 +2108,18 @@ describe("Core/Resource", function () {
       describe("returns a promise that resolves when the request loads", function () {
         it("a non-null response with default responseType", function () {
           return loadWithXhr({
-            url: "Data/Models/Box/ReadMe.txt",
+            url: "Data/textString.txt",
           }).then(function (result) {
-            expect(result).toBe(
-              "CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed."
-            );
+            expect(result).toBe("Hello, World!");
           });
         });
 
         it("a non-null response with a browser-supported responseType", function () {
           return loadWithXhr({
-            url: "Data/Models/Box/ReadMe.txt",
+            url: "Data/textString.txt",
             responseType: "text",
           }).then(function (result) {
-            expect(result).toBe(
-              "CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed."
-            );
+            expect(result).toBe("Hello, World!");
           });
         });
 

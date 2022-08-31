@@ -1,4 +1,4 @@
-import DOMPurify from "../ThirdParty/dompurify.js";
+import DOMPurify from "dompurify";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";

@@ -51,7 +51,7 @@ describe(
             vectorKeepDecodedPositions: true,
           }
         ).then(function (tileset) {
-          const feature = tileset.root.content.getFeature(0);
+          const feature = tileset.root.children[0].content.getFeature(0);
           const polylinePositions = feature.polylinePositions;
           expect(polylinePositions.length).toBe(60);
           expect(polylinePositions[0]).toEqualEpsilon(

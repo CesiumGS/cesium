@@ -1,21 +1,21 @@
+import Uri from "urijs";
 import {
   decodeGoogleEarthEnterpriseData,
   defaultValue,
   defined,
+  DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
+  GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTileInformation,
-  Rectangle,
-  Request,
-  RequestScheduler,
-  Resource,
-  DiscardMissingTileImagePolicy,
-  GoogleEarthEnterpriseImageryProvider,
   Imagery,
   ImageryLayer,
   ImageryProvider,
   ImageryState,
-  Uri,
+  Rectangle,
+  Request,
+  RequestScheduler,
+  Resource,
 } from "../../../Source/Cesium.js";
 
 import pollToPromise from "../pollToPromise.js";

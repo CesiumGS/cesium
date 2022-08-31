@@ -79,6 +79,7 @@ const filesToClean = [
   "Source/Workers/**",
   "!Source/Workers/cesiumWorkerBootstrapper.js",
   "!Source/Workers/transferTypedArrayTest.js",
+  "!Source/Workers/package.json",
   "Source/ThirdParty/Shaders/*.js",
   "Source/**/*.d.ts",
   "Specs/SpecList.js",
@@ -1097,6 +1098,8 @@ gulp.task("test", function (done) {
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
   const debug = argv.debug ? false : true;
+  const debugCanvasWidth = argv.debugCanvasWidth;
+  const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
 
   let browsers = ["Chrome"];
@@ -1154,6 +1157,8 @@ gulp.task("test", function (done) {
         webglValidation,
         webglStub,
         release,
+        debugCanvasWidth,
+        debugCanvasHeight,
       ],
     },
   });

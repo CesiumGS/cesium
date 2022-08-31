@@ -1,4 +1,4 @@
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";

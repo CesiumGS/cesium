@@ -20,7 +20,7 @@ import MetadataTable from "./MetadataTable.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseStructuralMetadata(options) {
+function parseStructuralMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const extension = options.extension;
 
@@ -98,3 +98,5 @@ export default function parseStructuralMetadata(options) {
     extensions: extension.extensions,
   });
 }
+
+export default parseStructuralMetadata;

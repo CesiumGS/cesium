@@ -23,7 +23,7 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import MersenneTwister from "../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
@@ -46,12 +46,11 @@ const DecodingState = {
 /**
  * Represents the contents of a
  * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
- * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
+ * tile. Used internally by {@link TimeDynamicPointCloud}.
  *
  * @alias PointCloud
  * @constructor
  *
- * @see PointCloud3DTileContent
  * @see TimeDynamicPointCloud
  *
  * @private
@@ -962,7 +961,7 @@ function createShaders(pointCloud, frameState, style) {
     "uniform vec4 u_highlightColor; \n";
 
   // The time variable is named differently for compatibility with custom
-  // shaders in ModelExperimental.
+  // shaders in Model.
   vs += "float u_pointSize; \n" + "float tiles3d_tileset_time; \n";
 
   if (attenuation) {
