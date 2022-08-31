@@ -1,4 +1,4 @@
-import defined from "../Core/defined";
+import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
@@ -7,8 +7,8 @@ import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
-import VoxelRenderResources from "./VoxelRenderResources";
-import processVoxelProperties from "./processVoxelProperties";
+import VoxelRenderResources from "./VoxelRenderResources.js";
+import processVoxelProperties from "./processVoxelProperties.js";
 
 /**
  * @function

@@ -1,4 +1,4 @@
-import defined from "../Core/defined";
+import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 
