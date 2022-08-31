@@ -289,10 +289,7 @@ I3SDataProvider.prototype.isDestroyed = function () {
  */
 I3SDataProvider.prototype.update = function (frameState) {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
-    if (
-      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneLayer._layerCollection[i]._tileset.ready
-    ) {
+    if (defined(this._sceneLayer._layerCollection[i]._tileset)) {
       this._sceneLayer._layerCollection[i]._tileset.update(frameState);
     }
   }
@@ -303,10 +300,7 @@ I3SDataProvider.prototype.update = function (frameState) {
  */
 I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
-    if (
-      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneLayer._layerCollection[i]._tileset.ready
-    ) {
+    if (defined(this._sceneLayer._layerCollection[i]._tileset)) {
       this._sceneLayer._layerCollection[i]._tileset.prePassesUpdate(frameState);
     }
   }
@@ -317,10 +311,7 @@ I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
  */
 I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
-    if (
-      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneLayer._layerCollection[i]._tileset.ready
-    ) {
+    if (defined(this._sceneLayer._layerCollection[i]._tileset)) {
       this._sceneLayer._layerCollection[i]._tileset.postPassesUpdate(
         frameState
       );
@@ -333,10 +324,7 @@ I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
  */
 I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
-    if (
-      typeof this._sceneLayer._layerCollection[i]._tileset !== "undefined" &&
-      this._sceneLayer._layerCollection[i]._tileset.ready
-    ) {
+    if (defined(this._sceneLayer._layerCollection[i]._tileset)) {
       this._sceneLayer._layerCollection[i]._tileset.updateForPass(
         frameState,
         passState
