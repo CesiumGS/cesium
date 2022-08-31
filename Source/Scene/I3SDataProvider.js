@@ -52,10 +52,10 @@ import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTile from "../Scene/Cesium3DTile.js";
 import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
 import CesiumMath from "../Core/Math.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
@@ -179,9 +179,10 @@ Object.defineProperties(I3SDataProvider.prototype, {
       return this._traceFetches;
     },
     set: function (value) {
-      if (!defined(value)) {
-        throw new DeveloperError("value must be defined.");
-      }
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
+
       this._traceFetches = value;
     },
   },
@@ -195,9 +196,10 @@ Object.defineProperties(I3SDataProvider.prototype, {
       return this._autoCenterCameraOnStart;
     },
     set: function (value) {
-      if (!defined(value)) {
-        throw new DeveloperError("value must be defined.");
-      }
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
+
       this._autoCenterCameraOnStart = value;
     },
   },
@@ -224,9 +226,7 @@ I3SDataProvider.prototype.loadUrl = function (url) {
  */
 I3SDataProvider.prototype.load = function (data) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(data)) {
-    throw new DeveloperError("data is required.");
-  }
+  Check.defined("data", data);
   //>>includeEnd('debug');
 
   //Clear out any data that might already exist.
