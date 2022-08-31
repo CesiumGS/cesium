@@ -663,16 +663,18 @@ I3SSceneLayer.prototype._computeExtent = function () {
     );
   }
 };
+
 /**
- * This class implements an I3S layer, in Cesium, each I3SLayer
- * creates a Cesium3DTileset
- * @private
+ * This class implements an I3S layer. Each I3SLayer creates a Cesium3DTileset.
+ *
  * @alias I3SLayer
  * @constructor
- * @param {I3SSceneLayer} [sceneLayer] The scene layer
- * @param {object} [layerData] The layer data that is loaded from the scene
- * layer
- * @param {number} [index] The index of the layer to be reflected
+ *
+ * @param {I3SSceneLayer} sceneLayer The scene layer
+ * @param {Object} layerData The layer data that is loaded from the scene layer
+ * @param {Number} index The index of the layer to be reflected
+ *
+ * @private
  */
 function I3SLayer(sceneLayer, layerData, index) {
   this._parent = sceneLayer;
