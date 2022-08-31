@@ -234,8 +234,8 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
 
   const positionMinMax = ModelUtility.getPositionMinMax(
     primitive,
-    nodeRenderResources.instancingTranslationMin,
-    nodeRenderResources.instancingTranslationMax
+    this.runtimeNode.instancingTranslationMin,
+    this.runtimeNode.instancingTranslationMax
   );
 
   /**
@@ -273,7 +273,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   );
 
   /**
-   * Options for configuring the lighting stage such as selecting between
+   * Options for configuring the lighting stage, such as selecting between
    * unlit and PBR shading.
    *
    * @type {ModelLightingOptions}
@@ -292,16 +292,6 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * @private
    */
   this.pickId = undefined;
-
-  /**
-   * An enum describing the types of draw commands needed, based on the style.
-   * This value is set by CPUStylingPipelineStage.
-   *
-   * @type {StyleCommandsNeeded}
-   *
-   * @private
-   */
-  this.styleCommandsNeeded = undefined;
 }
 
 export default PrimitiveRenderResources;

@@ -90,7 +90,7 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([MorphTargetsStageVS]);
+  shaderBuilder.addVertexLines(MorphTargetsStageVS);
 
   const uniformMap = {
     u_morphWeights: function () {

@@ -37,7 +37,13 @@ void cpuStylingStage(inout czm_modelMaterial material, SelectedFeature feature)
 
     featureColor = czm_gammaCorrect(featureColor);
 
+    // Classification models compute the diffuse differently.
+    #ifdef HAS_CLASSIFICATION
+    material.diffuse = featureColor.rgb * featureColor.a;
+    #else
     float highlight = ceil(model_colorBlend);
     material.diffuse *= mix(featureColor.rgb, vec3(1.0), highlight);
+    #endif
+    
     material.alpha *= featureColor.a;
 }

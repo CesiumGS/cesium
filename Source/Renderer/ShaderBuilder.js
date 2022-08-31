@@ -234,7 +234,7 @@ ShaderBuilder.prototype.addFunction = function (
 /**
  * Add lines to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
- * @param {String[]} lines An array of lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
+ * @param {String|String[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  *
  * @example
  * // generates the following function in the vertex shader
@@ -252,7 +252,11 @@ ShaderBuilder.prototype.addFunction = function (
 ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("functionName", functionName);
-  Check.typeOf.object("lines", lines);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+    );
+  }
   //>>includeEnd('debug');
   this._functions[functionName].addLines(lines);
 };
@@ -384,7 +388,7 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
 /**
  * Appends lines of GLSL code to the vertex shader
  *
- * @param {String[]} lines The lines to add to the end of the vertex shader source
+ * @param {String|String[]} lines One or more lines to add to the end of the vertex shader source
  *
  * @example
  * shaderBuilder.addVertexLines([
@@ -397,10 +401,20 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
  */
 ShaderBuilder.prototype.addVertexLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("lines", lines);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+    );
+  }
   //>>includeEnd('debug');
 
-  Array.prototype.push.apply(this._vertexShaderParts.shaderLines, lines);
+  const vertexLines = this._vertexShaderParts.shaderLines;
+  if (Array.isArray(lines)) {
+    vertexLines.push.apply(vertexLines, lines);
+  } else {
+    // Single string case
+    vertexLines.push(lines);
+  }
 };
 
 /**
@@ -422,9 +436,20 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  */
 ShaderBuilder.prototype.addFragmentLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("lines", lines);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+    );
+  }
   //>>includeEnd('debug');
-  Array.prototype.push.apply(this._fragmentShaderParts.shaderLines, lines);
+
+  const fragmentLines = this._fragmentShaderParts.shaderLines;
+  if (Array.isArray(lines)) {
+    fragmentLines.push.apply(fragmentLines, lines);
+  } else {
+    // Single string case
+    fragmentLines.push(lines);
+  }
 };
 
 /**

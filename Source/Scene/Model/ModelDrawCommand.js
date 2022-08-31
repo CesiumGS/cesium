@@ -56,25 +56,22 @@ function ModelDrawCommand(options) {
   const isTranslucent = command.pass === Pass.TRANSLUCENT;
   const isDoubleSided = runtimePrimitive.primitive.material.doubleSided;
   const usesBackFaceCulling = !isDoubleSided && !isTranslucent;
+  const hasSilhouette = renderResources.hasSilhouette;
 
-  const hasOpaqueAndTranslucentFeatures =
-    renderResources.styleCommandsNeeded ===
-    StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
-
-  // CPUStylingPipelineStage sets the pass to translucent if the style commands
-  // needed are all translucent, so if the command was already translucent,
-  // there's no need to derive a new command.
+  // If the command was already translucent, there's no need to derive a new
+  // translucent command. As of now, a style can't change an originally
+  // translucent feature to opaque since the style's alpha is modulated,
+  // not replaced. When this changes, we need to derive new opaque commands
+  // in initialize().
   //
-  // As of now, a style can't change an originally translucent feature to opaque
-  // since the style's alpha is modulated, not a replacement. When this changes,
-  // we need to derive new opaque commands in initialize().
-  const needsTranslucentCommand =
-    hasOpaqueAndTranslucentFeatures && !isTranslucent;
+  // Silhouettes for primitives with both opaque and translucent features
+  // are not yet supported.
+  const needsTranslucentCommand = !isTranslucent && !hasSilhouette;
 
   const needsSkipLevelOfDetailCommands =
     renderResources.hasSkipLevelOfDetail && !isTranslucent;
 
-  const needsSilhouetteCommands = renderResources.hasSilhouette;
+  const needsSilhouetteCommands = hasSilhouette;
 
   this._command = command;
 
@@ -526,9 +523,17 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     this._modelMatrix2DDirty = false;
   }
 
-  if (this._needsTranslucentCommand) {
-    pushCommand(result, this._translucentCommand, use2D);
-    // Don't return here; the opaque command still needs to be pushed.
+  const styleCommandsNeeded = this.model.styleCommandsNeeded;
+  if (this._needsTranslucentCommand && defined(styleCommandsNeeded)) {
+    // StyleCommandsNeeded has three values: all opaque, all translucent, or both.
+    if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+      pushCommand(result, this._translucentCommand, use2D);
+    }
+
+    // Continue only if opaque commands are needed.
+    if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
+      return;
+    }
   }
 
   if (this._needsSkipLevelOfDetailCommands) {

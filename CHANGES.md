@@ -29,6 +29,7 @@
 - `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
 - `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
 - Export asset files such as CSS in `package.json`, allowing bundlers to import without additional configuration. [#9212](https://github.com/CesiumGS/cesium/pull/9212)
+- The `sideEffects` field in `package.json` is now defined, allowing more conservative bundlers like Webpack to enable tree shaking by default.
 
 ##### Fixes :wrench:
 
@@ -36,6 +37,7 @@
 - Fixed issues running CesiumJS under Node.js when using ESM modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
 - Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
 - Fixed developer error with `Camera.flyTo` with an `orientation` and a `Rectangle` value for `destination`. [#10704](https://github.com/CesiumGS/cesium/issues/10704)
+- Fixed rendering bug with points in .vctr format, where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
 
 ### 1.96 - 2022-08-01
 

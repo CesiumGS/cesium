@@ -444,6 +444,8 @@ const scratchPrimitivePositionMin = new Cartesian3();
 const scratchPrimitivePositionMax = new Cartesian3();
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
+ * If the model is used for classification, a {@link ClassificationModelDrawCommand}
+ * is generated for each primitive instead.
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
@@ -552,7 +554,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         primitiveRenderResources,
         frameState
       );
-
       runtimePrimitive.drawCommand = drawCommand;
     }
   }
@@ -693,6 +694,17 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
 };
 
 /**
+ * A callback to be applied once at each runtime primitive in the
+ * scene graph
+ * @callback traverseSceneGraphCallback
+ *
+ * @param {ModelRuntimePrimitive} runtimePrimitive The runtime primitive for the current step of the traversal
+ * @param {Object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
+ *
+ * @private
+ */
+
+/**
  * Recursively traverse through the runtime nodes in the scene graph
  * using a post-order depth-first traversal to perform a callback on
  * their runtime primitives.
@@ -700,7 +712,8 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * @param {ModelSceneGraph} sceneGraph The scene graph.
  * @param {ModelRuntimeNode} runtimeNode The current runtime node.
  * @param {Boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
- * @param {Function} callback The callback to perform on the runtime primitives of the node.
+ * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime primitives of the node.
+ * @param {Object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
  *
  * @private
  */
@@ -708,7 +721,8 @@ function traverseSceneGraph(
   sceneGraph,
   runtimeNode,
   visibleNodesOnly,
-  callback
+  callback,
+  callbackOptions
 ) {
   if (visibleNodesOnly && !runtimeNode.show) {
     return;
@@ -721,7 +735,8 @@ function traverseSceneGraph(
       sceneGraph,
       childRuntimeNode,
       visibleNodesOnly,
-      callback
+      callback,
+      callbackOptions
     );
   }
 
@@ -729,19 +744,34 @@ function traverseSceneGraph(
   const runtimePrimitivesLength = runtimePrimitives.length;
   for (let j = 0; j < runtimePrimitivesLength; j++) {
     const runtimePrimitive = runtimePrimitives[j];
-    callback(runtimePrimitive);
+    callback(runtimePrimitive, callbackOptions);
   }
 }
 
-function forEachRuntimePrimitive(sceneGraph, visibleNodesOnly, callback) {
+function forEachRuntimePrimitive(
+  sceneGraph,
+  visibleNodesOnly,
+  callback,
+  callbackOptions
+) {
   const rootNodes = sceneGraph._rootNodes;
   const rootNodesLength = rootNodes.length;
   for (let i = 0; i < rootNodesLength; i++) {
     const rootNodeIndex = rootNodes[i];
     const runtimeNode = sceneGraph._runtimeNodes[rootNodeIndex];
-    traverseSceneGraph(sceneGraph, runtimeNode, visibleNodesOnly, callback);
+    traverseSceneGraph(
+      sceneGraph,
+      runtimeNode,
+      visibleNodesOnly,
+      callback,
+      callbackOptions
+    );
   }
 }
+
+const scratchBackFaceCullingOptions = {
+  backFaceCulling: undefined,
+};
 
 /**
  * Traverses through all draw commands and changes the back-face culling setting.
@@ -751,10 +781,24 @@ function forEachRuntimePrimitive(sceneGraph, visibleNodesOnly, callback) {
  * @private
  */
 ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.backFaceCulling = backFaceCulling;
-  });
+  const backFaceCullingOptions = scratchBackFaceCullingOptions;
+  backFaceCullingOptions.backFaceCulling = backFaceCulling;
+  forEachRuntimePrimitive(
+    this,
+    false,
+    updatePrimitiveBackFaceCulling,
+    backFaceCullingOptions
+  );
+};
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveBackFaceCulling(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.backFaceCulling = options.backFaceCulling;
+}
+
+const scratchShadowOptions = {
+  shadowMode: undefined,
 };
 
 /**
@@ -765,10 +809,19 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
  * @private
  */
 ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.shadows = shadowMode;
-  });
+  const shadowOptions = scratchShadowOptions;
+  shadowOptions.shadowMode = shadowMode;
+  forEachRuntimePrimitive(this, false, updatePrimitiveShadows, shadowOptions);
+};
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveShadows(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.shadows = options.shadowMode;
+}
+
+const scratchShowBoundingVolumeOptions = {
+  debugShowBoundingVolume: undefined,
 };
 
 /**
@@ -781,13 +834,28 @@ ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
 ModelSceneGraph.prototype.updateShowBoundingVolume = function (
   debugShowBoundingVolume
 ) {
-  forEachRuntimePrimitive(this, false, function (runtimePrimitive) {
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-  });
+  const showBoundingVolumeOptions = scratchShowBoundingVolumeOptions;
+  showBoundingVolumeOptions.debugShowBoundingVolume = debugShowBoundingVolume;
+
+  forEachRuntimePrimitive(
+    this,
+    false,
+    updatePrimitiveShowBoundingVolume,
+    showBoundingVolumeOptions
+  );
 };
 
+// Callback is defined here to avoid allocating a closure in the render loop
+function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
+  const drawCommand = runtimePrimitive.drawCommand;
+  drawCommand.debugShowBoundingVolume = options.debugShowBoundingVolume;
+}
+
 const scratchSilhouetteCommands = [];
+const scratchPushDrawCommandOptions = {
+  frameState: undefined,
+  hasSilhouette: undefined,
+};
 
 /**
  * Traverses through the scene graph and pushes the draw commands associated
@@ -802,31 +870,44 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires
   // gathering the original commands and the silhouette commands separately.
-
-  const passes = frameState.passes;
-
-  const hasSilhouette = this._model.hasSilhouette(frameState);
   const silhouetteCommands = scratchSilhouetteCommands;
   silhouetteCommands.length = 0;
 
-  forEachRuntimePrimitive(this, true, function (runtimePrimitive) {
-    const primitiveDrawCommand = runtimePrimitive.drawCommand;
-    primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+  // Since this function is called each frame, the options object is
+  // preallocated in a scratch variable
+  const pushDrawCommandOptions = scratchPushDrawCommandOptions;
+  pushDrawCommandOptions.hasSilhouette = this._model.hasSilhouette(frameState);
+  pushDrawCommandOptions.frameState = frameState;
 
-    // If a model has silhouettes, the commands that draw the silhouettes for
-    // each primitive can only be invoked after the entire model has drawn.
-    // Otherwise, the silhouette may draw on top of the model. This requires
-    // gathering the original commands and the silhouette commands separately.
-    if (hasSilhouette && !passes.pick) {
-      primitiveDrawCommand.pushSilhouetteCommands(
-        frameState,
-        silhouetteCommands
-      );
-    }
-  });
+  forEachRuntimePrimitive(
+    this,
+    true,
+    pushPrimitiveDrawCommands,
+    pushDrawCommandOptions
+  );
 
   frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
 };
+
+// Callback is defined here to avoid allocating a closure in the render loop
+function pushPrimitiveDrawCommands(runtimePrimitive, options) {
+  const frameState = options.frameState;
+  const hasSilhouette = options.hasSilhouette;
+
+  const passes = frameState.passes;
+  const silhouetteCommands = scratchSilhouetteCommands;
+  const primitiveDrawCommand = runtimePrimitive.drawCommand;
+
+  primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
+  // If a model has silhouettes, the commands that draw the silhouettes for
+  // each primitive can only be invoked after the entire model has drawn.
+  // Otherwise, the silhouette may draw on top of the model. This requires
+  // gathering the original commands and the silhouette commands separately.
+  if (hasSilhouette && !passes.pick) {
+    primitiveDrawCommand.pushSilhouetteCommands(frameState, silhouetteCommands);
+  }
+}
 
 /**
  * Sets the current value of an articulation stage.

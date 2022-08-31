@@ -421,8 +421,10 @@ describe(
           function (tileset) {
             const content = tileset.root.content;
 
-            // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
-            // 10 * ((24 * (8 * 4 + 1 * 4)) + (36 * 2)) = 9360
+            // 10 buildings, 36 ushort indices and 24 vertices per building, 8
+            // float components (position, normal, uv) and 1 uint component
+            // (batchId) per vertex
+            // 10 * [(24 * (8 * 4 + 1 * 4)) + (36 * 2)] = 9360 bytes
             const geometryByteLength = 9360;
 
             // Texture is 128x128 RGBA bytes, not mipmapped
@@ -997,21 +999,15 @@ describe(
       });
 
       it("point cloud with per-point properties work", function () {
-        // When the batch table contains per-point properties, aka no batching,
-        // a ModelFeatureTable is created, but it will have no properties
+        // When the batch table contains only per-point properties, no feature
+        // table will be created.
         return Cesium3DTilesTester.loadTileset(
           scene,
           pointCloudWithPerPointPropertiesUrl
         ).then(function (tileset) {
           const content = tileset.root.content;
-          expect(content.featuresLength).toBe(1000);
+          expect(content.featuresLength).toBe(0);
           expect(content.innerContents).toBeUndefined();
-
-          const feature = content.getFeature(0);
-          expect(feature).toBeDefined();
-          const propertyNames = [];
-          feature.getPropertyNames(propertyNames);
-          expect(propertyNames).toEqual([]);
         });
       });
 

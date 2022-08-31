@@ -45,7 +45,7 @@ ModelColorPipelineStage.process = function (
     undefined,
     ShaderDestination.FRAGMENT
   );
-  shaderBuilder.addFragmentLines([ModelColorStageFS]);
+  shaderBuilder.addFragmentLines(ModelColorStageFS);
 
   const stageUniforms = {};
 

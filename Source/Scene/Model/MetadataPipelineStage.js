@@ -81,8 +81,8 @@ MetadataPipelineStage.process = function (
   // Always declare the Metadata and MetadataClass structs, and the
   // initializeMetadata() function, even if not used
   declareStructsAndFunctions(shaderBuilder);
-  shaderBuilder.addVertexLines([MetadataStageVS]);
-  shaderBuilder.addFragmentLines([MetadataStageFS]);
+  shaderBuilder.addVertexLines(MetadataStageVS);
+  shaderBuilder.addFragmentLines(MetadataStageFS);
 
   if (defined(propertyAttributes)) {
     processPropertyAttributes(renderResources, primitive, propertyAttributes);

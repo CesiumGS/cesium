@@ -56,6 +56,11 @@ ShaderCache.prototype.replaceShaderProgram = function (options) {
   return this.getShaderProgram(options);
 };
 
+function toSortedJson(dictionary) {
+  const sortedKeys = Object.keys(dictionary).sort();
+  return JSON.stringify(dictionary, sortedKeys);
+}
+
 /**
  * Returns a shader program from the cache, or creates and caches a new shader program,
  * given the GLSL vertex and fragment shader source and attribute locations.
@@ -87,17 +92,18 @@ ShaderCache.prototype.getShaderProgram = function (options) {
     });
   }
 
-  const vertexShaderText = vertexShaderSource.createCombinedVertexShader(
-    this._context
-  );
-  const fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(
-    this._context
-  );
+  // Since ShaderSource.createCombinedXxxShader() can be expensive, use a
+  // simpler key for caching. This way, the function does not have to be called
+  // for each cache lookup.
+  const vertexShaderKey = vertexShaderSource.getCacheKey();
+  const fragmentShaderKey = fragmentShaderSource.getCacheKey();
+  // Sort the keys in the JSON to ensure a consistent order
+  const attributeLocationKey = defined(attributeLocations)
+    ? toSortedJson(attributeLocations)
+    : "";
+  const keyword = `${vertexShaderKey}:${fragmentShaderKey}:${attributeLocationKey}`;
 
-  const keyword =
-    vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
   let cachedShader;
-
   if (defined(this._shaders[keyword])) {
     cachedShader = this._shaders[keyword];
 
@@ -105,6 +111,14 @@ ShaderCache.prototype.getShaderProgram = function (options) {
     delete this._shadersToRelease[keyword];
   } else {
     const context = this._context;
+
+    const vertexShaderText = vertexShaderSource.createCombinedVertexShader(
+      context
+    );
+    const fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(
+      context
+    );
+
     const shaderProgram = new ShaderProgram({
       gl: context._gl,
       logShaderCompilation: context.logShaderCompilation,

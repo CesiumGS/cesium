@@ -1,18 +1,18 @@
+import createScene from "../createScene.js";
+import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import {
   Cartesian3,
-  Cesium3DContentGroup,
+  Cesium3DTileFeature,
+  Cesium3DTilePointFeature,
   Cesium3DTileset,
   Cesium3DTileStyle,
   ClassificationType,
   Color,
   ColorGeometryInstanceAttribute,
-  ContentMetadata,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
-  MetadataClass,
   Math as CesiumMath,
-  GroupMetadata,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
@@ -21,99 +21,23 @@ import {
   RenderState,
   StencilConstants,
 } from "../../Source/Cesium.js";
-import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
 
-// See https://github.com/CesiumGS/cesium/issues/7249#issuecomment-546347729
-xdescribe(
+describe(
   "Scene/Vector3DTileContent",
-  function () {
-    const tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
-    const combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
-
-    const vectorPoints =
-      "./Data/Cesium3DTiles/Vector/VectorTilePoints/tileset.json";
-    const vectorPointsBatchedChildren =
-      "./Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren/tileset.json";
-    const vectorPointsBatchedChildrenWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable/tileset.json";
-    const vectorPointsWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable/tileset.json";
-    const vectorPointsWithBatchIds =
-      "./Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds/tileset.json";
-
-    const vectorPolygons =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json";
-    const vectorPolygonsBatchedChildren =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren/tileset.json";
-    const vectorPolygonsBatchedChildrenWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable/tileset.json";
-    const vectorPolygonsWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable/tileset.json";
-    const vectorPolygonsWithBatchIds =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds/tileset.json";
-
-    const vectorPolylines =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json";
-    const vectorPolylinesBatchedChildren =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren/tileset.json";
-    const vectorPolylinesBatchedChildrenWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable/tileset.json";
-    const vectorPolylinesWithBatchTable =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable/tileset.json";
-    const vectorPolylinesWithBatchIds =
-      "./Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds/tileset.json";
-
-    const vectorCombined =
-      "./Data/Cesium3DTiles/Vector/VectorTileCombined/tileset.json";
-    const vectorCombinedWithBatchIds =
-      "./Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds/tileset.json";
-
+  () => {
     let scene;
-    let rectangle;
-    let tileset;
+    let camera;
+    let ellipsoid;
+
+    let globeMockPrimitive;
+    let tilesetMockPrimitive;
+
     let globePrimitive;
     let tilesetPrimitive;
-    let reusableGlobePrimitive;
-    let reusableTilesetPrimitive;
+
     let depthColor;
-
-    const ellipsoid = Ellipsoid.WGS84;
-
-    function createPrimitive(rectangle, pass) {
-      let renderState;
-      if (pass === Pass.CESIUM_3D_TILE) {
-        renderState = RenderState.fromCache({
-          stencilTest: StencilConstants.setCesium3DTileBit(),
-          stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,
-          depthTest: {
-            enabled: true,
-          },
-        });
-      }
-      const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 0.0, 0.0, 1.0)
-      );
-      depthColor = depthColorAttribute.value;
-      return new Primitive({
-        geometryInstances: new GeometryInstance({
-          geometry: new RectangleGeometry({
-            ellipsoid: Ellipsoid.WGS84,
-            rectangle: rectangle,
-          }),
-          id: "depth rectangle",
-          attributes: {
-            color: depthColorAttribute,
-          },
-        }),
-        appearance: new PerInstanceColorAppearance({
-          translucent: false,
-          flat: true,
-          renderState: renderState,
-        }),
-        asynchronous: false,
-      });
-    }
+    const whitePixel = [255.0, 255.0, 255.0, 255.0];
+    const blackPixel = [0.0, 0.0, 0.0, 255.0];
 
     function MockPrimitive(primitive, pass) {
       this._primitive = primitive;
@@ -144,425 +68,1935 @@ xdescribe(
       return destroyObject(this);
     };
 
-    beforeAll(function () {
-      scene = createScene();
+    function createPrimitive(rectangle, pass) {
+      let renderState;
 
-      rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
-      reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
-      reusableTilesetPrimitive = createPrimitive(
-        rectangle,
-        Pass.CESIUM_3D_TILE
+      if (pass === Pass.CESIUM_3D_TILE) {
+        renderState = RenderState.fromCache({
+          stencilTest: StencilConstants.setCesium3DTileBit(),
+          stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,
+          depthTest: {
+            enabled: true,
+          },
+        });
+      }
+
+      const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+        new Color(1.0, 0.0, 0.0, 1.0)
       );
+      depthColor = depthColorAttribute.value;
+      return new Primitive({
+        geometryInstances: new GeometryInstance({
+          geometry: new RectangleGeometry({
+            ellipsoid: ellipsoid,
+            rectangle: rectangle,
+          }),
+          id: "depth rectangle",
+          attributes: {
+            color: depthColorAttribute,
+          },
+        }),
+        appearance: new PerInstanceColorAppearance({
+          translucent: false,
+          flat: true,
+          renderState: renderState,
+        }),
+        asynchronous: false,
+      });
+    }
+
+    const tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
+
+    const vectorTilePolygonsWithBatchTableTileset =
+      "./Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable/tileset.json";
+
+    function subdivideRectangle(rectangle) {
+      const center = Rectangle.center(rectangle);
+      const ulRect = new Rectangle(
+        tilesetRectangle.west,
+        center.latitude,
+        center.longitude,
+        tilesetRectangle.north
+      );
+      const urRect = new Rectangle(
+        center.longitude,
+        center.longitude,
+        tilesetRectangle.east,
+        tilesetRectangle.north
+      );
+      const lrRect = new Rectangle(
+        center.longitude,
+        tilesetRectangle.south,
+        tilesetRectangle.east,
+        center.latitude
+      );
+      const llRect = new Rectangle(
+        tilesetRectangle.west,
+        tilesetRectangle.south,
+        center.longitude,
+        center.latitude
+      );
+      return [ulRect, urRect, lrRect, llRect];
+    }
+
+    beforeAll(() => {
+      scene = createScene();
+      camera = scene.camera;
+      ellipsoid = Ellipsoid.WGS84;
+
+      const rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
+      globePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+      tilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
     });
 
-    afterAll(function () {
-      reusableGlobePrimitive.destroy();
-      reusableTilesetPrimitive.destroy();
+    afterAll(() => {
+      tilesetPrimitive.destroy();
+      globePrimitive.destroy();
       scene.destroyForSpecs();
     });
 
-    beforeEach(function () {
-      // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
-      globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
-      tilesetPrimitive = new MockPrimitive(
-        reusableTilesetPrimitive,
+    beforeEach(() => {
+      globeMockPrimitive = new MockPrimitive(globePrimitive, Pass.GLOBE);
+      tilesetMockPrimitive = new MockPrimitive(
+        tilesetPrimitive,
         Pass.CESIUM_3D_TILE
       );
+
+      // Add the globe mock primitive to the scene.
+      scene.primitives.add(globeMockPrimitive);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
         new Cartesian3(0.0, 0.0, 0.01)
       );
     });
 
-    afterEach(function () {
+    afterEach(() => {
       scene.primitives.removeAll();
-      globePrimitive =
-        globePrimitive &&
-        !globePrimitive.isDestroyed() &&
-        globePrimitive.destroy();
-      tilesetPrimitive =
-        tilesetPrimitive &&
-        !tilesetPrimitive.isDestroyed() &&
-        tilesetPrimitive.destroy();
-      tileset = tileset && !tileset.isDestroyed() && tileset.destroy();
+      globeMockPrimitive =
+        globeMockPrimitive &&
+        !globeMockPrimitive.isDestroyed() &&
+        globeMockPrimitive.destroy();
+      tilesetMockPrimitive =
+        tilesetMockPrimitive &&
+        !tilesetMockPrimitive.isDestroyed() &&
+        tilesetMockPrimitive.destroy();
     });
 
-    function expectPick(scene) {
-      expect(scene).toPickAndCall(function (result) {
-        expect(result).toBeDefined();
+    describe("points", () => {
+      const vectorTilePointsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePoints/tileset.json";
+      const vectorTilePointsBatchedChildrenTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren/tileset.json";
+      const vectorTilePointsBatchedChildrenWithBatchTableTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable/tileset.json";
+      const vectorTilePointsWithBatchTableTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable/tileset.json";
+      const vectorTilePointsWithBatchIdsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds/tileset.json";
 
-        result.color = Color.clone(Color.YELLOW, result.color);
-
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[2]).toEqual(0);
-          expect(rgba[3]).toEqual(255);
-        });
-
-        // Turn show off and on
-        result.show = false;
-        expect(scene).toRender([255, 0, 0, 255]);
-        result.show = true;
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[2]).toEqual(0);
-          expect(rgba[3]).toEqual(255);
-        });
-      });
-    }
-
-    function verifyPick(scene) {
-      const center = Rectangle.center(tilesetRectangle);
-      const ulRect = new Rectangle(
-        tilesetRectangle.west,
-        center.latitude,
-        center.longitude,
-        tilesetRectangle.north
-      );
-      const urRect = new Rectangle(
-        center.longitude,
-        center.longitude,
-        tilesetRectangle.east,
-        tilesetRectangle.north
-      );
-      const llRect = new Rectangle(
-        tilesetRectangle.west,
-        tilesetRectangle.south,
-        center.longitude,
-        center.latitude
-      );
-      const lrRect = new Rectangle(
-        center.longitude,
-        tilesetRectangle.south,
-        tilesetRectangle.east,
-        center.latitude
-      );
-
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPick(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPick(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPick(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPick(scene);
-    }
-
-    function expectRender(scene, color) {
-      const center = Rectangle.center(tilesetRectangle);
-      const ulRect = new Rectangle(
-        tilesetRectangle.west,
-        center.latitude,
-        center.longitude,
-        tilesetRectangle.north
-      );
-      const urRect = new Rectangle(
-        center.longitude,
-        center.longitude,
-        tilesetRectangle.east,
-        tilesetRectangle.north
-      );
-      const llRect = new Rectangle(
-        tilesetRectangle.west,
-        tilesetRectangle.south,
-        center.longitude,
-        center.latitude
-      );
-      const lrRect = new Rectangle(
-        center.longitude,
-        tilesetRectangle.south,
-        tilesetRectangle.east,
-        center.latitude
-      );
-
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-    }
-
-    function verifyRender(tileset, scene) {
-      tileset.style = undefined;
-      expectRender(scene, [255, 255, 255, 255]);
-
-      tileset.style = new Cesium3DTileStyle({
-        show: "false",
-      });
-      expectRender(scene, [255, 0, 0, 255]);
-      tileset.style = new Cesium3DTileStyle({
-        show: "true",
-      });
-      expectRender(scene, [255, 255, 255, 255]);
-
-      tileset.style = new Cesium3DTileStyle({
-        color: "rgba(0, 0, 255, 1.0)",
-      });
-      expectRender(scene, [0, 0, 255, 255]);
-    }
-
-    function expectPickPoints(scene) {
-      expect(scene).toPickAndCall(function (result) {
-        expect(result).toBeDefined();
-
-        result.color = Color.clone(Color.YELLOW, result.color);
-
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[2]).toEqual(0);
-          expect(rgba[3]).toEqual(255);
-        });
-
-        // Turn show off and on
-        result.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        result.show = true;
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[2]).toEqual(0);
-          expect(rgba[3]).toEqual(255);
+      it("renders points", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
         });
       });
-    }
 
-    function verifyPickPoints(scene) {
-      const center = Rectangle.center(tilesetRectangle);
-      const ulRect = new Rectangle(
-        tilesetRectangle.west,
-        center.latitude,
-        center.longitude,
-        tilesetRectangle.north
-      );
-      const urRect = new Rectangle(
-        center.longitude,
-        center.longitude,
-        tilesetRectangle.east,
-        tilesetRectangle.north
-      );
-      const llRect = new Rectangle(
-        tilesetRectangle.west,
-        tilesetRectangle.south,
-        center.longitude,
-        center.latitude
-      );
-      const lrRect = new Rectangle(
-        center.longitude,
-        tilesetRectangle.south,
-        tilesetRectangle.east,
-        center.latitude
-      );
-
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPickPoints(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPickPoints(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPickPoints(scene);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expectPickPoints(scene);
-    }
-
-    function expectRenderPoints(scene, callback) {
-      const center = Rectangle.center(tilesetRectangle);
-      const ulRect = new Rectangle(
-        tilesetRectangle.west,
-        center.latitude,
-        center.longitude,
-        tilesetRectangle.north
-      );
-      const urRect = new Rectangle(
-        center.longitude,
-        center.longitude,
-        tilesetRectangle.east,
-        tilesetRectangle.north
-      );
-      const llRect = new Rectangle(
-        tilesetRectangle.west,
-        tilesetRectangle.south,
-        center.longitude,
-        center.latitude
-      );
-      const lrRect = new Rectangle(
-        center.longitude,
-        tilesetRectangle.south,
-        tilesetRectangle.east,
-        center.latitude
-      );
-
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(callback);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(callback);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(callback);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(callback);
-    }
-
-    function verifyRenderPoints(tileset, scene) {
-      tileset.style = undefined;
-      expectRenderPoints(scene, function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toBeGreaterThan(0);
-        expect(rgba[2]).toBeGreaterThan(0);
-        expect(rgba[3]).toEqual(255);
+      it("picks points", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsTileset
+        ).then((tileset) => {
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+          });
+        });
       });
 
-      tileset.style = new Cesium3DTileStyle({
-        show: "false",
-      });
-      expectRender(scene, [0, 0, 0, 255]);
-      tileset.style = new Cesium3DTileStyle({
-        show: "true",
-      });
-      expectRenderPoints(scene, function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toBeGreaterThan(0);
-        expect(rgba[2]).toBeGreaterThan(0);
-        expect(rgba[3]).toEqual(255);
+      it("styles points for show", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          // Set show to true.
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "true",
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+
+          // Set style to undefined.
+
+          tileset.style = undefined;
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
       });
 
-      tileset.style = new Cesium3DTileStyle({
-        color: "rgba(0, 0, 255, 1.0)",
+      it("styles points for color", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          return new Promise((resolve) => {
+            tileset.style = new Cesium3DTileStyle({
+              color: `color("black")`,
+            });
+            scene.renderForSpecs();
+            window.requestAnimationFrame(() => {
+              resolve();
+            });
+          }).then(() => {
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(blackPixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(blackPixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(blackPixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(blackPixel);
+
+            // Set style to undefined.
+
+            tileset.style = undefined;
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(whitePixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(whitePixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(whitePixel);
+            camera.lookAt(
+              ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+              new Cartesian3(0.0, 0.0, 5.0)
+            );
+            expect(scene).toRender(whitePixel);
+          });
+        });
       });
-      expectRenderPoints(scene, function (rgba) {
-        expect(rgba[0]).toEqual(0);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toBeGreaterThan(0);
-        expect(rgba[3]).toEqual(255);
+
+      it("renders batched points with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
       });
-    }
 
-    function expectRenderPolylines(scene, color) {
-      const center = Rectangle.center(tilesetRectangle);
-      const ulRect = new Rectangle(
-        tilesetRectangle.west,
-        center.latitude,
-        center.longitude,
-        tilesetRectangle.north
-      );
-      const urRect = new Rectangle(
-        center.longitude,
-        center.longitude,
-        tilesetRectangle.east,
-        tilesetRectangle.north
-      );
-      const llRect = new Rectangle(
-        tilesetRectangle.west,
-        tilesetRectangle.south,
-        center.longitude,
-        center.latitude
-      );
-      const lrRect = new Rectangle(
-        center.longitude,
-        tilesetRectangle.south,
-        tilesetRectangle.east,
-        center.latitude
-      );
-
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-    }
-
-    function verifyRenderPolylines(tileset, scene) {
-      tileset.style = undefined;
-      expectRenderPolylines(scene, [255, 255, 255, 255]);
-
-      tileset.style = new Cesium3DTileStyle({
-        show: "false",
+      it("picks batched points with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result._batchId).toEqual(0);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result._batchId).toEqual(1);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result._batchId).toEqual(3);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result._batchId).toEqual(2);
+          });
+        });
       });
-      expectRenderPolylines(scene, [0, 0, 0, 255]);
-      tileset.style = new Cesium3DTileStyle({
-        show: "true",
-      });
-      expectRenderPolylines(scene, [255, 255, 255, 255]);
 
-      tileset.style = new Cesium3DTileStyle({
-        color: "rgba(0, 0, 255, 1.0)",
+      it("renders batched points with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
       });
-      expectRenderPolylines(scene, [0, 0, 255, 255]);
-    }
 
-    function expectRenderCombined(scene, color) {
-      const width = combinedRectangle.width;
+      it("picks batched points with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result.getProperty("name")).toEqual("upper left");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result.getProperty("name")).toEqual("upper right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result.getProperty("name")).toEqual("lower right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result.getProperty("name")).toEqual("lower left");
+          });
+        });
+      });
+
+      it("renders batched points with children", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsBatchedChildrenTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders batched polygons with children with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePointsBatchedChildrenWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+    });
+
+    describe("polygons", () => {
+      const vectorTilePolygonsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json";
+      const vectorTilePolygonsWithBatchIdsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds/tileset.json";
+      const vectorTilePolygonsBatchedChildrenTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren/tileset.json";
+      const vectorTilePolygonsBatchedChildrenWithBatchTable =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable/tileset.json";
+
+      it("renders polygons", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("picks polygons", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.center(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+        });
+      });
+
+      it("styles polygons for show", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          // Set show to false.
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "false",
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+
+          // Set show to true.
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "true",
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+
+          // Set style to undefined.
+
+          tileset.style = undefined;
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("styles polygons for color", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          // Set color to black.
+
+          tileset.style = new Cesium3DTileStyle({
+            color: `color("black")`,
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(blackPixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(blackPixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(blackPixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(blackPixel);
+
+          // Set style to undefined.
+
+          tileset.style = undefined;
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders polygons on 3D Tiles", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset,
+          {
+            classificationType: ClassificationType.CESIUM_3D_TILE,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.center(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(whitePixel);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(depthColor);
+        });
+      });
+
+      it("renders polygons on terrain", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset,
+          {
+            classificationType: ClassificationType.TERRAIN,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.center(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(depthColor);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders polygons on 3D Tiles and terrain", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsTileset,
+          {
+            classificationType: ClassificationType.BOTH,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.center(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(whitePixel);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders batched polygons with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("picks batched polygons with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(0);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(1);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(3);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(2);
+          });
+        });
+      });
+
+      it("renders batched polygons with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("picks batched polygons with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("upper left");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("upper right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("lower right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("lower left");
+          });
+        });
+      });
+
+      it("renders batched polygons with children", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsBatchedChildrenTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders batched polygons with children with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolygonsBatchedChildrenWithBatchTable
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
+      });
+    });
+
+    describe("polylines", () => {
+      const vectorTilePolylinesTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json";
+      const vectorTilePolylinesBatchedChildrenTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren/tileset.json";
+      const vectorTilePolylinesBatchedChildrenWithBatchTableTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable/tileset.json";
+      const vectorTilePolylinesWithBatchTableTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable/tileset.json";
+      const vectorTilePolylinesWithBatchIdsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds/tileset.json";
+
+      it("renders polylines", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset
+        ).then((tileset) => {
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          const nwCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northwest(ulRect)
+          );
+          const neCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northeast(urRect)
+          );
+          const seCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southeast(lrRect)
+          );
+          const swCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southwest(llRect)
+          );
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("picks polylines", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+        });
+      });
+
+      it("styles polylines for show", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset
+        ).then((tileset) => {
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          const nwCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northwest(ulRect)
+          );
+          const neCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northeast(urRect)
+          );
+          const seCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southeast(lrRect)
+          );
+          const swCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southwest(llRect)
+          );
+
+          // Set show to false.
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "false",
+          });
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender([255.0, 0.0, 0.0, 255.0]);
+
+          // Set show to true.
+
+          tileset.style = new Cesium3DTileStyle({
+            show: "true",
+          });
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          // Set show to undefined.
+
+          tileset.style = undefined;
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("styles polylines for color", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset
+        ).then((tileset) => {
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          const nwCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northwest(ulRect)
+          );
+          const neCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northeast(urRect)
+          );
+          const seCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southeast(lrRect)
+          );
+          const swCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southwest(llRect)
+          );
+
+          // Set color to black.
+
+          tileset.style = new Cesium3DTileStyle({
+            color: `color("black")`,
+          });
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender(blackPixel);
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender(blackPixel);
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender(blackPixel);
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRender(blackPixel);
+
+          // Set show to undefined.
+
+          tileset.style = undefined;
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("renders polylines on 3D Tiles", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset,
+          {
+            classificationType: ClassificationType.CESIUM_3D_TILE,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.northeast(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(whitePixel);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(depthColor);
+        });
+      });
+
+      it("renders polylines on terrain", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset,
+          {
+            classificationType: ClassificationType.TERRAIN,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.northeast(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(depthColor);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders polylines on 3D Tiles and terrain", () => {
+        scene.primitives.add(tilesetMockPrimitive);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesTileset,
+          {
+            classificationType: ClassificationType.BOTH,
+          }
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.northeast(tilesetRectangle)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+
+          globeMockPrimitive.show = false;
+          tilesetMockPrimitive.show = true;
+          expect(scene).toRender(whitePixel);
+
+          globeMockPrimitive.show = true;
+          tilesetMockPrimitive.show = false;
+          expect(scene).toRender(whitePixel);
+        });
+      });
+
+      it("renders polylines with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          const nwCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northwest(ulRect)
+          );
+          const neCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northeast(urRect)
+          );
+          const seCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southeast(lrRect)
+          );
+          const swCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southwest(llRect)
+          );
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("picks polylines with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesWithBatchIdsTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(0);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(1);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(3);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(2);
+          });
+        });
+      });
+
+      it("renders polylines with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+
+          const nwCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northwest(ulRect)
+          );
+          const neCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.northeast(urRect)
+          );
+          const seCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southeast(lrRect)
+          );
+          const swCorner = ellipsoid.cartographicToCartesian(
+            Rectangle.southwest(llRect)
+          );
+
+          camera.lookAt(nwCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(neCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(seCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+
+          camera.lookAt(swCorner, new Cartesian3(0.0, 0.0, 5.0));
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("picks polylines with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("upper left");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("upper right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("lower right");
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result.getProperty("name")).toEqual("lower left");
+          });
+        });
+      });
+
+      it("renders batched polylines with children", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesBatchedChildrenTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      it("renders batched polylines with children with batch table", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTilePolylinesBatchedChildrenWithBatchTableTileset
+        ).then((tileset) => {
+          // Subdivide the rectangle into 4, and look at the center of each sub-rectangle.
+          const [ulRect, urRect, lrRect, llRect] = subdivideRectangle(
+            tilesetRectangle
+          );
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northwest(ulRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(urRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southeast(lrRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(llRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+        });
+      });
+
+      describe("getPolylinePositions", () => {
+        it("gets polyline positions", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolylinesWithBatchIdsTileset,
+            {
+              vectorKeepDecodedPositions: true,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.content;
+            const polylinePositions = content.getPolylinePositions(0);
+            expect(polylinePositions.length).toBe(60);
+            expect(polylinePositions[0]).toEqualEpsilon(
+              6378136.806372941,
+              CesiumMath.EPSILON7
+            );
+            expect(polylinePositions[1]).toEqualEpsilon(
+              -1113.194885441724,
+              CesiumMath.EPSILON7
+            );
+            expect(polylinePositions[2]).toEqualEpsilon(
+              1105.675261474196,
+              CesiumMath.EPSILON7
+            );
+          });
+        });
+
+        it("gets polyline positions for individual polylines in a batch", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolylinesBatchedChildrenTileset,
+            {
+              vectorKeepDecodedPositions: true,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.children[0].content;
+            expect(content.getPolylinePositions(0).length).toBe(60);
+            expect(content.getPolylinePositions(1).length).toBe(60);
+            expect(content.getPolylinePositions(2).length).toBe(60);
+            expect(content.getPolylinePositions(3).length).toBe(60);
+          });
+        });
+
+        it("gets polyline positions for clamped polylines", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolylinesWithBatchIdsTileset,
+            {
+              vectorKeepDecodedPositions: true,
+              classificationType: ClassificationType.TERRAIN,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.content;
+            const polylinePositions = content.getPolylinePositions(0);
+            expect(polylinePositions.length).toBe(54); // duplicate positions are removed
+            expect(polylinePositions[0]).toEqualEpsilon(
+              6378136.806372941,
+              CesiumMath.EPSILON7
+            );
+            expect(polylinePositions[1]).toEqualEpsilon(
+              -1113.194885441724,
+              CesiumMath.EPSILON7
+            );
+            expect(polylinePositions[2]).toEqualEpsilon(
+              1105.675261474196,
+              CesiumMath.EPSILON7
+            );
+          });
+        });
+
+        it("getPolylinePositions returns undefined if there are no positions associated with the given batchId", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolylinesWithBatchIdsTileset,
+            {
+              vectorKeepDecodedPositions: true,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.content;
+            const polylinePositions = content.getPolylinePositions(1);
+            expect(polylinePositions).toBeUndefined();
+          });
+        });
+
+        it("getPolylinePositions returns undefined if there are no polylines", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolygonsWithBatchTableTileset,
+            {
+              vectorKeepDecodedPositions: true,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.content;
+            const polylinePositions = content.getPolylinePositions(0);
+            expect(polylinePositions).toBeUndefined();
+          });
+        });
+
+        it("getPolylinePositions returns undefined if tileset.vectorKeepDecodedPositions is false", function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            vectorTilePolylinesWithBatchIdsTileset,
+            {
+              vectorKeepDecodedPositions: false,
+            }
+          ).then(function (tileset) {
+            const content = tileset.root.content;
+            const polylinePositions = content.getPolylinePositions(0);
+            expect(polylinePositions).toBeUndefined();
+          });
+        });
+      });
+    });
+
+    describe("combined", () => {
+      const vectorTileCombinedTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTileCombined/tileset.json";
+      const vectorTileCombinedWithBatchIdsTileset =
+        "./Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds/tileset.json";
+
+      const combinedTilesetRectangle = Rectangle.fromDegrees(
+        -0.02,
+        -0.01,
+        0.02,
+        0.01
+      );
+      const width = combinedTilesetRectangle.width;
       const step = width / 3;
-
-      const west = combinedRectangle.west;
-      const north = combinedRectangle.north;
-      const south = combinedRectangle.south;
+      const west = combinedTilesetRectangle.west;
+      const north = combinedTilesetRectangle.north;
+      const south = combinedTilesetRectangle.south;
 
       const polygonRect = new Rectangle(west, south, west + step, north);
       const polylineRect = new Rectangle(
@@ -578,447 +2012,145 @@ xdescribe(
         north
       );
 
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRender(color);
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(function (rgba) {
-        for (let i = 0; i < color.length; ++i) {
-          if (color[i] === 0) {
-            expect(rgba[i]).toEqual(0);
-          } else {
-            expect(rgba[i]).toBeGreaterThan(0);
-          }
-        }
-      });
-      scene.camera.lookAt(
-        ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
-      );
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        if (
-          !(
-            color[0] === 255 &&
-            color[1] === 0 &&
-            color[2] === 0 &&
-            color[3] === 255
-          )
-        ) {
-          expect(rgba).not.toEqual([255, 0, 0, 255]);
-        }
-      });
-    }
-
-    function verifyRenderCombined(tileset, scene) {
-      tileset.style = undefined;
-      expectRenderCombined(scene, [255, 255, 255, 255]);
-
-      tileset.style = new Cesium3DTileStyle({
-        show: "false",
-      });
-      expectRenderCombined(scene, [255, 0, 0, 255]);
-      tileset.style = new Cesium3DTileStyle({
-        show: "true",
-      });
-      expectRenderCombined(scene, [255, 255, 255, 255]);
-
-      tileset.style = new Cesium3DTileStyle({
-        color: "rgba(0, 0, 255, 1.0)",
-      });
-      expectRenderCombined(scene, [0, 0, 255, 255]);
-    }
-
-    it("renders points", function () {
-      return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
-        function (tileset) {
-          verifyRenderPoints(tileset, scene);
-          verifyPickPoints(scene);
-        }
-      );
-    });
-
-    it("renders batched points", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPointsBatchedChildren
-      ).then(function (tileset) {
-        verifyRenderPoints(tileset, scene);
-        verifyPickPoints(scene);
-      });
-    });
-
-    it("renders points with a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPointsWithBatchTable
-      ).then(function (tileset) {
-        verifyRenderPoints(tileset, scene);
-        verifyPickPoints(scene);
-      });
-    });
-
-    it("renders batched points with a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPointsBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRenderPoints(tileset, scene);
-        verifyPickPoints(scene);
-      });
-    });
-
-    it("renders points with batch ids", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPointsWithBatchIds
-      ).then(function (tileset) {
-        verifyRenderPoints(tileset, scene);
-        verifyPickPoints(scene);
-      });
-    });
-
-    it("renders polygons", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorPolygons).then(
-        function (tileset) {
-          verifyRender(tileset, scene);
-          verifyPick(scene);
-        }
-      );
-    });
-
-    it("renders batched polygons", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
-    });
-
-    it("renders polygons with a batch table", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
-    });
-
-    it("renders batched polygons with a batch table", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
-    });
-
-    it("renders polygons with batch ids", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
-    });
-
-    it("renders polylines", function () {
-      return Cesium3DTilesTester.loadTileset(scene, vectorPolylines).then(
-        function (tileset) {
-          verifyRenderPolylines(tileset, scene);
-        }
-      );
-    });
-
-    it("renders batched polylines", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesBatchedChildren
-      ).then(function (tileset) {
-        verifyRenderPolylines(tileset, scene);
-      });
-    });
-
-    it("renders polylines with a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchTable
-      ).then(function (tileset) {
-        verifyRenderPolylines(tileset, scene);
-      });
-    });
-
-    it("renders batched polylines with a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRenderPolylines(tileset, scene);
-      });
-    });
-
-    it("renders polylines with batch ids", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchIds
-      ).then(function (tileset) {
-        verifyRenderPolylines(tileset, scene);
-      });
-    });
-
-    it("renders combined tile", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorCombined).then(
-        function (tileset) {
-          verifyRenderCombined(tileset, scene);
-        }
-      );
-    });
-
-    it("renders combined tile with batch ids", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorCombinedWithBatchIds
-      ).then(function (tileset) {
-        verifyRenderCombined(tileset, scene);
-      });
-    });
-
-    it("renders with debug color", function () {
-      scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, vectorCombined, {
-        debugColorizeTiles: true,
-      }).then(function () {
-        const width = combinedRectangle.width;
-        const step = width / 3;
-
-        const west = combinedRectangle.west;
-        const north = combinedRectangle.north;
-        const south = combinedRectangle.south;
-        const rect = new Rectangle(west, south, west + step, north);
-
-        scene.camera.lookAt(
-          ellipsoid.cartographicToCartesian(Rectangle.center(rect)),
-          new Cartesian3(0.0, 0.0, 5.0)
-        );
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([255, 255, 255, 255]);
-          expect(rgba).not.toEqual([255, 0, 0, 255]);
+      it("renders", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTileCombinedTileset
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.southeast(polylineRect)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
         });
       });
-    });
 
-    it("renders on 3D Tiles", function () {
-      scene.primitives.add(globePrimitive);
-      scene.primitives.add(tilesetPrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsBatchedChildren,
-        {
-          classificationType: ClassificationType.CESIUM_3D_TILE,
-        }
-      ).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        expectRender(scene, depthColor);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
+      it("picks", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTileCombinedTileset
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.southeast(polylineRect)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+          });
+        });
       });
-    });
 
-    it("renders on globe", function () {
-      scene.primitives.add(globePrimitive);
-      scene.primitives.add(tilesetPrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsBatchedChildren,
-        {
-          classificationType: ClassificationType.TERRAIN,
-        }
-      ).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        expectRender(scene, depthColor);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
+      it("renders with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTileCombinedWithBatchIdsTileset
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.southeast(polylineRect)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRenderAndCall((rgba) => {
+            // Account for mitering at the corners.
+            expect(rgba[0]).toBeCloseTo(255, -1);
+            expect(rgba[1]).toBeCloseTo(255, -1);
+            expect(rgba[2]).toBeCloseTo(255, -1);
+            expect(rgba[3]).toEqual(255);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toRender(whitePixel);
+        });
       });
-    });
 
-    it("renders on 3D Tiles and globe", function () {
-      scene.primitives.add(globePrimitive);
-      scene.primitives.add(tilesetPrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsBatchedChildren,
-        {
-          classificationType: ClassificationType.BOTH,
-        }
-      ).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
-      });
-    });
-
-    it("can get features and properties", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsWithBatchTable
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        expect(content.featuresLength).toBe(1);
-        expect(content.innerContents).toBeUndefined();
-        expect(content.hasProperty(0, "name")).toBe(true);
-        expect(content.getFeature(0)).toBeDefined();
-      });
-    });
-
-    it("gets polyline positions", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchIds,
-        {
-          vectorKeepDecodedPositions: true,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        const polylinePositions = content.getPolylinePositions(0);
-        expect(polylinePositions.length).toBe(60);
-        expect(polylinePositions[0]).toEqualEpsilon(
-          6378136.806372941,
-          CesiumMath.EPSILON7
-        );
-        expect(polylinePositions[1]).toEqualEpsilon(
-          -1113.194885441724,
-          CesiumMath.EPSILON7
-        );
-        expect(polylinePositions[2]).toEqualEpsilon(
-          1105.675261474196,
-          CesiumMath.EPSILON7
-        );
-      });
-    });
-
-    it("gets polyline positions for individual polylines in a batch", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesBatchedChildren,
-        {
-          vectorKeepDecodedPositions: true,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.children[0].content;
-        expect(content.getPolylinePositions(0).length).toBe(60);
-        expect(content.getPolylinePositions(1).length).toBe(60);
-        expect(content.getPolylinePositions(2).length).toBe(60);
-        expect(content.getPolylinePositions(3).length).toBe(60);
-      });
-    });
-
-    it("gets polyline positions for clamped polylines", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchIds,
-        {
-          vectorKeepDecodedPositions: true,
-          classificationType: ClassificationType.TERRAIN,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        const polylinePositions = content.getPolylinePositions(0);
-        expect(polylinePositions.length).toBe(54); // duplicate positions are removed
-        expect(polylinePositions[0]).toEqualEpsilon(
-          6378136.806372941,
-          CesiumMath.EPSILON7
-        );
-        expect(polylinePositions[1]).toEqualEpsilon(
-          -1113.194885441724,
-          CesiumMath.EPSILON7
-        );
-        expect(polylinePositions[2]).toEqualEpsilon(
-          1105.675261474196,
-          CesiumMath.EPSILON7
-        );
-      });
-    });
-
-    it("getPolylinePositions returns undefined if there are no positions associated with the given batchId", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchIds,
-        {
-          vectorKeepDecodedPositions: true,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        const polylinePositions = content.getPolylinePositions(1);
-        expect(polylinePositions).toBeUndefined();
-      });
-    });
-
-    it("getPolylinePositions returns undefined if there are no polylines", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolygonsWithBatchIds,
-        {
-          vectorKeepDecodedPositions: true,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        const polylinePositions = content.getPolylinePositions(0);
-        expect(polylinePositions).toBeUndefined();
-      });
-    });
-
-    it("getPolylinePositions returns undefined if tileset.vectorKeepDecodedPositions is false", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        vectorPolylinesWithBatchIds,
-        {
-          vectorKeepDecodedPositions: false,
-        }
-      ).then(function (tileset) {
-        const content = tileset.root.content;
-        const polylinePositions = content.getPolylinePositions(0);
-        expect(polylinePositions).toBeUndefined();
+      it("picks with batch ids", () => {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          vectorTileCombinedWithBatchIdsTileset
+        ).then((tileset) => {
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(2);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(
+              Rectangle.southeast(polylineRect)
+            ),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTileFeature);
+            expect(result._batchId).toEqual(1);
+          });
+          camera.lookAt(
+            ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)),
+            new Cartesian3(0.0, 0.0, 5.0)
+          );
+          expect(scene).toPickAndCall((result) => {
+            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(Cesium3DTilePointFeature);
+            expect(result._batchId).toEqual(0);
+          });
+        });
       });
     });
 
     it("throws when calling getFeature with invalid index", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        vectorPolygonsWithBatchTable
+        vectorTilePolygonsWithBatchTableTileset
       ).then(function (tileset) {
         const content = tileset.root.content;
         expect(function () {
@@ -1068,93 +2200,11 @@ xdescribe(
 
     it("destroys", function () {
       const tileset = new Cesium3DTileset({
-        url: vectorCombined,
+        url: vectorTilePolygonsWithBatchTableTileset,
       });
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);
-    });
-
-    describe("metadata", function () {
-      let metadataClass;
-      let groupMetadata;
-      let contentMetadataClass;
-      let contentMetadata;
-
-      beforeAll(function () {
-        metadataClass = new MetadataClass({
-          id: "test",
-          class: {
-            properties: {
-              name: {
-                type: "STRING",
-              },
-              height: {
-                type: "SCALAR",
-                componentType: "FLOAT32",
-              },
-            },
-          },
-        });
-
-        groupMetadata = new GroupMetadata({
-          id: "testGroup",
-          group: {
-            properties: {
-              name: "Test Group",
-              height: 35.6,
-            },
-          },
-          class: metadataClass,
-        });
-
-        contentMetadataClass = new MetadataClass({
-          id: "contentTest",
-          class: {
-            properties: {
-              author: {
-                type: "STRING",
-              },
-              color: {
-                type: "VEC3",
-                componentType: "UINT8",
-              },
-            },
-          },
-        });
-
-        contentMetadata = new ContentMetadata({
-          content: {
-            properties: {
-              author: "Test Author",
-              color: [255, 0, 0],
-            },
-          },
-          class: contentMetadataClass,
-        });
-      });
-
-      it("assigns group metadata", function () {
-        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
-          function (tileset) {
-            const content = tileset.root.content;
-            content.group = new Cesium3DContentGroup({
-              metadata: groupMetadata,
-            });
-            expect(content.group.metadata).toBe(groupMetadata);
-          }
-        );
-      });
-
-      it("assigns metadata", function () {
-        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
-          function (tileset) {
-            const content = tileset.root.content;
-            content.metadata = contentMetadata;
-            expect(content.metadata).toBe(contentMetadata);
-          }
-        );
-      });
     });
   },
   "WebGL"

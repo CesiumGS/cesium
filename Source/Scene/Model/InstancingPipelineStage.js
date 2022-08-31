@@ -37,7 +37,7 @@ InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debuggin
  * <ul>
  *  <li> creates buffers for the typed arrays of each attribute, if they do not yet exist
  *  <li> adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
- *  <li> adds an instancing translation min and max to compute an accurate bounding volume</li>
+ *  <li> sets the instancing translation min and max to compute an accurate bounding volume</li>
  * </ul>
  *
  * If the scene is in either 2D or CV mode, this stage also:
@@ -57,10 +57,12 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
-  shaderBuilder.addVertexLines([InstancingStageCommon]);
+  shaderBuilder.addVertexLines(InstancingStageCommon);
 
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
+  const runtimeNode = renderResources.runtimeNode;
+
   const use2D =
     frameState.mode !== SceneMode.SCENE3D &&
     !frameState.scene3DOnly &&
@@ -163,14 +165,14 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         sceneGraph.axisCorrectionMatrix,
         // This transforms from the node's coordinate system to the root
         // of the node hierarchy
-        renderResources.runtimeNode.computedTransform,
+        runtimeNode.computedTransform,
         nodeTransformScratch
       );
     };
 
-    shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
+    shaderBuilder.addVertexLines(LegacyInstancingStageVS);
   } else {
-    shaderBuilder.addVertexLines([InstancingStageVS]);
+    shaderBuilder.addVertexLines(InstancingStageVS);
   }
 
   if (use2D) {
@@ -184,7 +186,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
     const context = frameState.context;
     const modelMatrix2D = Matrix4.fromTranslation(
-      renderResources.instancingReferencePoint2D,
+      runtimeNode.instancingReferencePoint2D,
       new Matrix4()
     );
 
@@ -333,7 +335,9 @@ function projectTransformsTo2D(
     nodeComputedTransform
   );
 
-  const referencePoint = renderResources.instancingReferencePoint2D;
+  const runtimeNode = renderResources.runtimeNode;
+  const referencePoint = runtimeNode.instancingReferencePoint2D;
+
   const count = transforms.length;
   for (let i = 0; i < count; i++) {
     const transform = transforms[i];
@@ -382,7 +386,8 @@ function projectTranslationsTo2D(
     nodeComputedTransform
   );
 
-  const referencePoint = renderResources.instancingReferencePoint2D;
+  const runtimeNode = renderResources.runtimeNode;
+  const referencePoint = runtimeNode.instancingReferencePoint2D;
   const count = translations.length;
   for (let i = 0; i < count; i++) {
     const translation = translations[i];
@@ -411,10 +416,11 @@ const scratchProjectedMax = new Cartesian3();
 function computeReferencePoint2D(renderResources, frameState) {
   // Compute the reference point by averaging the instancing translation
   // min / max values after they are projected to 2D.
+  const runtimeNode = renderResources.runtimeNode;
   const modelMatrix = renderResources.model.sceneGraph.computedModelMatrix;
   const transformedPositionMin = Matrix4.multiplyByPoint(
     modelMatrix,
-    renderResources.instancingTranslationMin,
+    runtimeNode.instancingTranslationMin,
     scratchProjectedMin
   );
 
@@ -426,7 +432,7 @@ function computeReferencePoint2D(renderResources, frameState) {
 
   const transformedPositionMax = Matrix4.multiplyByPoint(
     modelMatrix,
-    renderResources.instancingTranslationMax,
+    runtimeNode.instancingTranslationMax,
     scratchProjectedMax
   );
 
@@ -436,7 +442,12 @@ function computeReferencePoint2D(renderResources, frameState) {
     transformedPositionMax
   );
 
-  return Cartesian3.lerp(projectedMin, projectedMax, 0.5, new Cartesian3());
+  runtimeNode.instancingReferencePoint2D = Cartesian3.lerp(
+    projectedMin,
+    projectedMax,
+    0.5,
+    new Cartesian3()
+  );
 }
 
 function transformsToTypedArray(transforms) {
@@ -521,10 +532,13 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const translationTypedArray = hasTranslation
     ? translationAttribute.typedArray
     : new Float32Array(count * 3);
-  // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
+
+  // Rotations get initialized to (0, 0, 0, 0).
+  // The w-component is set to 1 in the loop below.
   const rotationTypedArray = hasRotation
     ? rotationAttribute.typedArray
     : new Float32Array(count * 4);
+
   // Scales get initialized to (1, 1, 1).
   let scaleTypedArray;
   if (hasScale) {
@@ -578,25 +592,74 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
     transforms[i] = transform;
   }
 
-  renderResources.instancingTranslationMax = instancingTranslationMax;
-  renderResources.instancingTranslationMin = instancingTranslationMin;
+  const runtimeNode = renderResources.runtimeNode;
+  runtimeNode.instancingTranslationMin = instancingTranslationMin;
+  runtimeNode.instancingTranslationMax = instancingTranslationMax;
+
+  // Unload the typed arrays. These are just pointers to the arrays
+  // in the vertex buffer loader.
+  if (hasTranslation) {
+    translationAttribute.typedArray = undefined;
+  }
+  if (hasRotation) {
+    rotationAttribute.typedArray = undefined;
+  }
+  if (hasScale) {
+    scaleAttribute.typedArray = undefined;
+  }
 
   return transforms;
 }
 
-function getInstanceTranslationsAsCartesian3s(translationAttribute, count) {
-  const translations = new Array(count);
+function getInstanceTranslationsAsCartesian3s(
+  translationAttribute,
+  count,
+  renderResources
+) {
+  const instancingTranslations = new Array(count);
   const translationTypedArray = translationAttribute.typedArray;
 
+  const instancingTranslationMin = new Cartesian3(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE
+  );
+  const instancingTranslationMax = new Cartesian3(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE
+  );
+
   for (let i = 0; i < count; i++) {
-    translations[i] = new Cartesian3(
+    const translation = new Cartesian3(
       translationTypedArray[i * 3],
       translationTypedArray[i * 3 + 1],
       translationTypedArray[i * 3 + 2]
     );
+
+    instancingTranslations[i] = translation;
+
+    Cartesian3.minimumByComponent(
+      instancingTranslationMin,
+      translation,
+      instancingTranslationMin
+    );
+    Cartesian3.maximumByComponent(
+      instancingTranslationMax,
+      translation,
+      instancingTranslationMax
+    );
   }
 
-  return translations;
+  const runtimeNode = renderResources.runtimeNode;
+  runtimeNode.instancingTranslationMin = instancingTranslationMin;
+  runtimeNode.instancingTranslationMax = instancingTranslationMax;
+
+  // Unload the typed array. This is just a pointer to the array
+  // in the vertex buffer loader.
+  translationAttribute.typedArray = undefined;
+
+  return instancingTranslations;
 }
 
 function createVertexBuffer(typedArray, frameState) {
@@ -620,43 +683,52 @@ function processTransformAttributes(
   instancingVertexAttributes,
   use2D
 ) {
-  const translationAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
-    InstanceAttributeSemantic.TRANSLATION
-  );
-
-  let translationMax;
-  let translationMin;
-  if (defined(translationAttribute)) {
-    translationMax = translationAttribute.max;
-    translationMin = translationAttribute.min;
-  }
-
   const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION
   );
 
+  // Only use matrices for the transforms if the rotation attribute is defined.
+  if (defined(rotationAttribute)) {
+    processTransformMatrixAttributes(
+      renderResources,
+      instances,
+      instancingVertexAttributes,
+      frameState,
+      use2D
+    );
+  } else {
+    processTransformVec3Attributes(
+      renderResources,
+      instances,
+      instancingVertexAttributes,
+      frameState,
+      use2D
+    );
+  }
+}
+
+function processTransformMatrixAttributes(
+  renderResources,
+  instances,
+  instancingVertexAttributes,
+  frameState,
+  use2D
+) {
   const shaderBuilder = renderResources.shaderBuilder;
   const count = instances.attributes[0].count;
-  const useMatrices =
-    defined(rotationAttribute) ||
-    !defined(translationMax) ||
-    !defined(translationMin);
 
-  const statistics = renderResources.model.statistics;
+  const model = renderResources.model;
+  const runtimeNode = renderResources.runtimeNode;
 
-  // Packed typed arrays are omitted from statistics because they don't
-  // necessarily correspond to the size of the GPU buffer containing
-  // their data. It's also difficult to track which typed arrays have
-  // already been counted.
-  const hasCpuCopy = false;
+  shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
+  const attributeString = "Transform";
 
   let transforms;
-  if (useMatrices) {
-    shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
-    const attributeString = "Transform";
-
+  let buffer = runtimeNode.instancingTransformsBuffer;
+  if (!defined(buffer)) {
+    // This function computes the transforms, sets the translation min / max,
+    // and unloads the typed arrays associated with the attributes.
     transforms = getInstanceTransformsAsMatrices(
       instances,
       count,
@@ -664,97 +736,18 @@ function processTransformAttributes(
     );
 
     const transformsTypedArray = transformsToTypedArray(transforms);
-    const buffer = createVertexBuffer(transformsTypedArray, frameState);
-    renderResources.model._pipelineResources.push(buffer);
+    buffer = createVertexBuffer(transformsTypedArray, frameState);
+    model._modelResources.push(buffer);
 
-    processMatrixAttributes(
-      renderResources,
-      buffer,
-      instancingVertexAttributes,
-      attributeString
-    );
-
-    // Count the buffer here since it had to be allocated
-    // in this stage.
-    statistics.addBuffer(buffer, hasCpuCopy);
-  } else {
-    if (defined(translationAttribute)) {
-      shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
-
-      const translationMax = translationAttribute.max;
-      const translationMin = translationAttribute.min;
-      renderResources.instancingTranslationMax = translationMax;
-      renderResources.instancingTranslationMin = translationMin;
-
-      let buffer = translationAttribute.buffer;
-      let byteOffset = translationAttribute.byteOffset;
-      let byteStride = translationAttribute.byteStride;
-
-      if (!defined(buffer)) {
-        buffer = createVertexBuffer(
-          translationAttribute.typedArray,
-          frameState
-        );
-        renderResources.model._pipelineResources.push(buffer);
-
-        byteOffset = 0;
-        byteStride = undefined;
-
-        // Count the buffer here if it had to be allocated
-        // in this stage. Otherwise, it will be counted in
-        // NodeStatisticsPipelineStage.
-        statistics.addBuffer(buffer, hasCpuCopy);
-      }
-
-      const attributeString = "Translation";
-
-      processVec3Attribute(
-        renderResources,
-        buffer,
-        byteOffset,
-        byteStride,
-        instancingVertexAttributes,
-        attributeString
-      );
-    }
-
-    const scaleAttribute = ModelUtility.getAttributeBySemantic(
-      instances,
-      InstanceAttributeSemantic.SCALE
-    );
-
-    if (defined(scaleAttribute)) {
-      shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
-
-      let buffer = scaleAttribute.buffer;
-      let byteOffset = scaleAttribute.byteOffset;
-      let byteStride = scaleAttribute.byteStride;
-
-      if (!defined(buffer)) {
-        buffer = createVertexBuffer(scaleAttribute.typedArray, frameState);
-        renderResources.model._pipelineResources.push(buffer);
-
-        byteOffset = 0;
-        byteStride = undefined;
-
-        // Count the buffer here if it had to be allocated
-        // in this stage. Otherwise, it will be counted in
-        // NodeStatisticsPipelineStage.
-        statistics.addBuffer(buffer, hasCpuCopy);
-      }
-
-      const attributeString = "Scale";
-
-      processVec3Attribute(
-        renderResources,
-        buffer,
-        byteOffset,
-        byteStride,
-        instancingVertexAttributes,
-        attributeString
-      );
-    }
+    runtimeNode.instancingTransformsBuffer = buffer;
   }
+
+  processMatrixAttributes(
+    renderResources,
+    buffer,
+    instancingVertexAttributes,
+    attributeString
+  );
 
   if (!use2D) {
     return;
@@ -769,76 +762,146 @@ function processTransformAttributes(
   // To prevent jitter, the positions are defined relative to a common
   // reference point. For convenience, this is the center of the instanced
   // translation bounds projected to 2D.
-  const referencePoint = computeReferencePoint2D(renderResources, frameStateCV);
-  renderResources.instancingReferencePoint2D = referencePoint;
+  computeReferencePoint2D(renderResources, frameStateCV);
 
-  const runtimeNode = renderResources.runtimeNode;
-
-  if (useMatrices) {
-    let buffer = runtimeNode.instancingTransformsBuffer2D;
-    if (!defined(buffer)) {
-      const projectedTransforms = projectTransformsTo2D(
-        transforms,
-        renderResources,
-        frameStateCV,
-        transforms
-      );
-      const projectedTypedArray = transformsToTypedArray(projectedTransforms);
-
-      // This memory is counted during the statistics stage at the end
-      // of the pipeline.
-      buffer = createVertexBuffer(projectedTypedArray, frameState);
-      renderResources.model._modelResources.push(buffer);
-
-      runtimeNode.instancingTransformsBuffer2D = buffer;
-    }
-
-    const attributeString2D = "Transform2D";
-    processMatrixAttributes(
+  let buffer2D = runtimeNode.instancingTransformsBuffer2D;
+  if (!defined(buffer2D)) {
+    const projectedTransforms = projectTransformsTo2D(
+      transforms,
       renderResources,
-      buffer,
-      instancingVertexAttributes,
-      attributeString2D
+      frameStateCV,
+      transforms
     );
-  } else {
-    let buffer = runtimeNode.instancingTranslationBuffer2D;
+    const projectedTypedArray = transformsToTypedArray(projectedTransforms);
 
-    if (!defined(buffer)) {
-      const translations = getInstanceTranslationsAsCartesian3s(
-        translationAttribute,
-        count
-      );
-      const projectedTranslations = projectTranslationsTo2D(
-        translations,
-        renderResources,
-        frameStateCV,
-        translations
-      );
-      const projectedTypedArray = translationsToTypedArray(
-        projectedTranslations
-      );
+    // This memory is counted during the statistics stage at the end
+    // of the pipeline.
+    buffer2D = createVertexBuffer(projectedTypedArray, frameState);
+    model._modelResources.push(buffer2D);
 
-      // This memory is counted during the statistics stage at the end
-      // of the pipeline.
-      buffer = createVertexBuffer(projectedTypedArray, frameState);
-      renderResources.model._modelResources.push(buffer);
+    runtimeNode.instancingTransformsBuffer2D = buffer2D;
+  }
 
-      runtimeNode.instancingTranslationBuffer2D = buffer;
-    }
+  const attributeString2D = "Transform2D";
+  processMatrixAttributes(
+    renderResources,
+    buffer2D,
+    instancingVertexAttributes,
+    attributeString2D
+  );
+}
 
-    const byteOffset = 0;
-    const byteStride = undefined;
+function processTransformVec3Attributes(
+  renderResources,
+  instances,
+  instancingVertexAttributes,
+  frameState,
+  use2D
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  const runtimeNode = renderResources.runtimeNode;
+  const translationAttribute = ModelUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION
+  );
+  const scaleAttribute = ModelUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.SCALE
+  );
 
-    const attributeString2D = "Translation2D";
+  if (defined(scaleAttribute)) {
+    shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
+    const attributeString = "Scale";
+
+    // Instanced scale attributes are loaded as buffers only.
     processVec3Attribute(
       renderResources,
-      buffer,
-      byteOffset,
-      byteStride,
+      scaleAttribute.buffer,
+      scaleAttribute.byteOffset,
+      scaleAttribute.byteStride,
       instancingVertexAttributes,
-      attributeString2D
+      attributeString
     );
   }
+
+  if (!defined(translationAttribute)) {
+    return;
+  }
+
+  let instancingTranslations;
+  const typedArray = translationAttribute.typedArray;
+  if (defined(typedArray)) {
+    // This function computes and set the translation min / max, and unloads
+    // the typed array associated with the attribute.
+    // The translations are also returned in case they're used for 2D projection.
+    instancingTranslations = getInstanceTranslationsAsCartesian3s(
+      translationAttribute,
+      translationAttribute.count,
+      renderResources
+    );
+  } else if (!defined(runtimeNode.instancingTranslationMin)) {
+    runtimeNode.instancingTranslationMin = translationAttribute.min;
+    runtimeNode.instancingTranslationMax = translationAttribute.max;
+  }
+
+  shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
+  const attributeString = "Translation";
+
+  processVec3Attribute(
+    renderResources,
+    translationAttribute.buffer,
+    translationAttribute.byteOffset,
+    translationAttribute.byteStride,
+    instancingVertexAttributes,
+    attributeString
+  );
+
+  if (!use2D) {
+    return;
+  }
+
+  // Force the scene mode to be CV. In 2D, projected positions will have
+  // an x-coordinate of 0, which eliminates the height data that is
+  // necessary for rendering in CV mode.
+  const frameStateCV = clone(frameState);
+  frameStateCV.mode = SceneMode.COLUMBUS_VIEW;
+
+  // To prevent jitter, the positions are defined relative to a common
+  // reference point. For convenience, this is the center of the instanced
+  // translation bounds projected to 2D.
+  computeReferencePoint2D(renderResources, frameStateCV);
+
+  let buffer2D = runtimeNode.instancingTranslationBuffer2D;
+
+  if (!defined(buffer2D)) {
+    const projectedTranslations = projectTranslationsTo2D(
+      instancingTranslations,
+      renderResources,
+      frameStateCV,
+      instancingTranslations
+    );
+    const projectedTypedArray = translationsToTypedArray(projectedTranslations);
+
+    // This memory is counted during the statistics stage at the end
+    // of the pipeline.
+    buffer2D = createVertexBuffer(projectedTypedArray, frameState);
+    renderResources.model._modelResources.push(buffer2D);
+
+    runtimeNode.instancingTranslationBuffer2D = buffer2D;
+  }
+
+  const byteOffset = 0;
+  const byteStride = undefined;
+
+  const attributeString2D = "Translation2D";
+  processVec3Attribute(
+    renderResources,
+    buffer2D,
+    byteOffset,
+    byteStride,
+    instancingVertexAttributes,
+    attributeString2D
+  );
 }
 
 function processMatrixAttributes(
@@ -927,7 +990,6 @@ function processFeatureIdAttributes(
   instancingVertexAttributes
 ) {
   const attributes = instances.attributes;
-  const model = renderResources.model;
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
@@ -944,24 +1006,9 @@ function processFeatureIdAttributes(
       renderResources.featureIdVertexAttributeSetIndex = attribute.setIndex + 1;
     }
 
-    const vertexBuffer = Buffer.createVertexBuffer({
-      context: frameState.context,
-      typedArray: attribute.typedArray,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-    vertexBuffer.vertexArrayDestroyable = false;
-    model._pipelineResources.push(vertexBuffer);
-
-    // Packed typed arrays are omitted from statistics because they don't
-    // necessarily correspond to the size of the GPU buffer containing
-    // their data. It's also difficult to track which typed arrays have
-    // already been counted.
-    const hasCpuCopy = false;
-    model.statistics.addBuffer(vertexBuffer, hasCpuCopy);
-
     instancingVertexAttributes.push({
       index: renderResources.attributeIndex++,
-      vertexBuffer: vertexBuffer,
+      vertexBuffer: attribute.buffer,
       componentsPerAttribute: AttributeType.getNumberOfComponents(
         attribute.type
       ),
