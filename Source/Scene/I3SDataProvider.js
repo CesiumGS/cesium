@@ -229,18 +229,18 @@ I3SDataProvider.prototype.load = function (data) {
   Check.defined("data", data);
   //>>includeEnd('debug');
 
-  //Clear out any data that might already exist.
+  // Clear out any data that might already exist.
   this._setLoading(true);
   const entities = this._entityCollection;
 
-  //It's a good idea to suspend events when making changes to a
-  //large amount of entities.  This will cause events to be batched up
-  //into the minimal amount of function calls and all take place at the
-  //end of processing (when resumeEvents is called).
+  // It's a good idea to suspend events when making changes to a
+  // large amount of entities.  This will cause events to be batched up
+  // into the minimal amount of function calls and all take place at the
+  // end of processing (when resumeEvents is called).
   entities.suspendEvents();
   entities.removeAll();
 
-  //Once all data is processed, call resumeEvents and raise the changed event.
+  // Once all data is processed, call resumeEvents and raise the changed event.
   entities.resumeEvents();
   this._changed.raiseEvent(this);
   this._setLoading(false);
@@ -830,7 +830,7 @@ function getTiles(terrainProvider, extents) {
   const minCornerXY = tilingScheme.positionToTileXY(minCorner, maxLevel);
   const maxCornerXY = tilingScheme.positionToTileXY(maxCorner, maxLevel);
 
-  //Get all the tiles in between
+  // Get all the tiles in between
   for (let x = minCornerXY.x; x <= maxCornerXY.x; x++) {
     for (let y = minCornerXY.y; y <= maxCornerXY.y; y++) {
       const xy = new Cartesian2(x, y);
@@ -925,7 +925,7 @@ I3SLayer.prototype.load = function () {
 
     that._computeExtent();
 
-    //Load tiles from arcgis
+    // Load tiles from arcgis
     const geoidTerrainProvider = that._dataProvider._geoidTiledTerrainProvider;
     let geoidDataList = [];
     const dataIsReadyPromise = new Promise(function (resolve, reject) {
