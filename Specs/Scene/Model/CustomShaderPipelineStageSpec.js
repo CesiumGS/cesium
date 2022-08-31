@@ -575,11 +575,12 @@ describe(
 
       CustomShaderPipelineStage.process(renderResources, primitive);
 
-      expect(shaderBuilder._vertexShaderParts.structIds).toEqual([
+      // Check that structs are defined in the correct order
+      ShaderBuilderTester.expectHasVertexStructIds(shaderBuilder, [
         CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
         CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       ]);
-      expect(shaderBuilder._fragmentShaderParts.structIds).toEqual([
+      ShaderBuilderTester.expectHasFragmentStructIds(shaderBuilder, [
         CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
         CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       ]);
@@ -792,8 +793,8 @@ describe(
       // once for the vertex shader, once for the fragment shader
       expect(CustomShaderPipelineStage._oneTimeWarning.calls.count()).toBe(2);
 
-      expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
     });
 
     it("disables vertex shader if vertexShaderText is not provided", function () {
@@ -805,17 +806,17 @@ describe(
 
       CustomShaderPipelineStage.process(renderResources, primitive);
 
-      expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_CUSTOM_FRAGMENT_SHADER",
         "CUSTOM_SHADER_MODIFY_MATERIAL",
       ]);
 
-      expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
-      const fragmentShaderIndex = shaderBuilder._fragmentShaderParts.shaderLines.indexOf(
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+      ShaderBuilderTester.expectFragmentLinesContains(
+        shaderBuilder,
         emptyFragmentShader
       );
-      expect(fragmentShaderIndex).not.toBe(-1);
     });
 
     it("disables fragment shader if fragmentShaderText is not provided", function () {
@@ -827,16 +828,16 @@ describe(
 
       CustomShaderPipelineStage.process(renderResources, primitive);
 
-      expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_CUSTOM_VERTEX_SHADER",
       ]);
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
-      const vertexShaderIndex = shaderBuilder._vertexShaderParts.shaderLines.indexOf(
+      ShaderBuilderTester.expectVertexLinesContains(
+        shaderBuilder,
         emptyVertexShader
       );
-      expect(vertexShaderIndex).not.toBe(-1);
-      expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([]);
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, []);
     });
 
     it("disables custom shader if neither fragmentShaderText nor vertexShaderText are provided", function () {
@@ -876,7 +877,7 @@ describe(
         "CUSTOM_SHADER_MODIFY_MATERIAL",
       ]);
 
-      expect(shaderBuilder._vertexShaderParts.structIds).toEqual([]);
+      ShaderBuilderTester.expectHasVertexStructIds(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentStruct(
         shaderBuilder,
         CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
@@ -896,7 +897,7 @@ describe(
         ]
       );
 
-      expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
+      ShaderBuilderTester.expectHasVertexFunctionIds(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentFunctionUnordered(
         shaderBuilder,
         CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,

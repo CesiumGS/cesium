@@ -119,24 +119,6 @@ describe(
       });
     });
 
-    it("_countInstancingAttributes does not count attributes without buffers", function () {
-      // This model contains instanced rotations, so the transformation
-      // attributes will be loaded in as packed typed arrays only.
-      // Feature IDs are also only loaded as packed typed arrays.
-      return loadGltf(boxInstanced).then(function (gltfLoader) {
-        const statistics = new ModelStatistics();
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-
-        NodeStatisticsPipelineStage._countInstancingAttributes(
-          statistics,
-          node.instances
-        );
-
-        expect(statistics.geometryByteLength).toBe(0);
-      });
-    });
-
     it("_countInstancingAttributes counts attributes with buffers", function () {
       return loadGltf(boxInstancedTranslationMinMax).then(function (
         gltfLoader
@@ -153,12 +135,54 @@ describe(
         // Model contains four translated instances:
         // 4 instances * 3 floats * 4 bytes per float
         const expectedByteLength = 4 * 12;
-
         expect(statistics.geometryByteLength).toBe(expectedByteLength);
       });
     });
 
-    it("_countInstancing2DBuffers counts instancing transform buffer for 2D", function () {
+    it("_countInstancingAttributes does not count attributes without buffers", function () {
+      // This model contains instanced rotations, so the transformation
+      // attributes will be loaded in as packed typed arrays only.
+      // Feature IDs, however, are loaded as buffers.
+      return loadGltf(boxInstanced).then(function (gltfLoader) {
+        const statistics = new ModelStatistics();
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+
+        NodeStatisticsPipelineStage._countInstancingAttributes(
+          statistics,
+          node.instances
+        );
+
+        // 4 feature ids * 4 bytes per float
+        const expectedByteLength = 16;
+        expect(statistics.geometryByteLength).toBe(expectedByteLength);
+      });
+    });
+
+    it("_countGeneratedBuffers counts instancing transform buffer", function () {
+      return loadGltf(boxInstanced).then(function (gltfLoader) {
+        const statistics = new ModelStatistics();
+        const mockRuntimeNode = {
+          instancingTransformsBuffer: {
+            // Matrices are stored as 3 vec4s, so this is
+            // 4 matrices * 12 floats/matrix * 4 bytes/float = 192
+            sizeInBytes: 192,
+          },
+        };
+
+        NodeStatisticsPipelineStage._countGeneratedBuffers(
+          statistics,
+          mockRuntimeNode
+        );
+
+        const transformsBuffer = mockRuntimeNode.instancingTransformsBuffer;
+        expect(statistics.geometryByteLength).toBe(
+          transformsBuffer.sizeInBytes
+        );
+      });
+    });
+
+    it("_countGeneratedBuffers counts instancing transform buffer for 2D", function () {
       return loadGltf(boxInstanced).then(function (gltfLoader) {
         const statistics = new ModelStatistics();
         const mockRuntimeNode = {
@@ -169,7 +193,7 @@ describe(
           },
         };
 
-        NodeStatisticsPipelineStage._countInstancing2DBuffers(
+        NodeStatisticsPipelineStage._countGeneratedBuffers(
           statistics,
           mockRuntimeNode
         );
@@ -181,7 +205,7 @@ describe(
       });
     });
 
-    it("_countInstancing2DBuffers counts instancing translation buffer for 2D", function () {
+    it("_countGeneratedBuffers counts instancing translation buffer for 2D", function () {
       return loadGltf(boxInstancedTranslationMinMax).then(function (
         gltfLoader
       ) {
@@ -194,7 +218,7 @@ describe(
           },
         };
 
-        NodeStatisticsPipelineStage._countInstancing2DBuffers(
+        NodeStatisticsPipelineStage._countGeneratedBuffers(
           statistics,
           mockRuntimeNode
         );

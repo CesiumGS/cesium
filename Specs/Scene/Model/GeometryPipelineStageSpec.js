@@ -383,8 +383,8 @@ describe(
         expect(position2DAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
-        expect(position2DAttribute.offsetInBytes).toBe(288);
-        expect(position2DAttribute.strideInBytes).toBe(12);
+        expect(position2DAttribute.offsetInBytes).toBe(0);
+        expect(position2DAttribute.strideInBytes).toBeUndefined();
 
         const texCoord0Attribute = attributes[3];
         expect(texCoord0Attribute.index).toEqual(3);

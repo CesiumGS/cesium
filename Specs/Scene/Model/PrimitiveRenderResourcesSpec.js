@@ -18,6 +18,7 @@ import {
   RenderState,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/PrimitiveRenderResources",
@@ -42,12 +43,6 @@ describe(
       sceneGraph: mockSceneGraph,
       children: [],
     });
-
-    function checkShaderDefines(shaderBuilder, expectedDefines) {
-      expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual(
-        expectedDefines
-      );
-    }
 
     const primitive = {
       indices: {
@@ -246,13 +241,18 @@ describe(
       expect(primitiveResources.hasSkipLevelOfDetail).toBe(true);
 
       // The defines should cascade through the three levels
-      checkShaderDefines(modelResources.shaderBuilder, ["MODEL"]);
-      checkShaderDefines(nodeResources.shaderBuilder, ["MODEL", "NODE"]);
-      checkShaderDefines(primitiveResources.shaderBuilder, [
-        "MODEL",
-        "NODE",
-        "PRIMITIVE",
-      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(
+        modelResources.shaderBuilder,
+        ["MODEL"]
+      );
+      ShaderBuilderTester.expectHasFragmentDefines(
+        nodeResources.shaderBuilder,
+        ["MODEL", "NODE"]
+      );
+      ShaderBuilderTester.expectHasFragmentDefines(
+        primitiveResources.shaderBuilder,
+        ["MODEL", "NODE", "PRIMITIVE"]
+      );
     });
 
     it("inherits from node render resources", function () {

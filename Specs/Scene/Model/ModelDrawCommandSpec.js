@@ -113,7 +113,6 @@ describe(
           },
           boundingSphere: new BoundingSphere(Cartesian3.ZERO, 1.0),
         },
-        styleCommandsNeeded: options.styleCommandsNeeded,
         hasSilhouette: model.hasSilhouette(),
         hasSkipLevelOfDetail: model.hasSkipLevelOfDetail(),
       };
@@ -177,7 +176,8 @@ describe(
 
     // Creates a ModelDrawCommand with the specified derived commands.
     function createModelDrawCommand(options) {
-      const deriveTranslucent = options.deriveTranslucent;
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
       const deriveSilhouette = options.deriveSilhouette;
       const derive2D = options.derive2D;
       const deriveSkipLevelOfDetail = options.deriveSkipLevelOfDetail;
@@ -187,20 +187,16 @@ describe(
         skipLevelOfDetail: deriveSkipLevelOfDetail,
       };
 
-      const styleCommandsNeeded = deriveTranslucent
-        ? StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
-        : undefined;
-
       const transform2D = derive2D ? idlMatrix2D : Matrix4.IDENTITY;
 
       const renderResources = mockRenderResources({
         modelOptions: modelOptions,
-        styleCommandsNeeded: styleCommandsNeeded,
         boundingSphereTransform2D: transform2D,
       });
 
       const command = createDrawCommand({
         modelMatrix: transform2D,
+        pass: Pass.OPAQUE,
       });
 
       const drawCommand = new ModelDrawCommand({
@@ -321,111 +317,62 @@ describe(
       });
 
       const derivedCommands = drawCommand._derivedCommands;
-      expect(derivedCommands.length).toEqual(1);
+      expect(derivedCommands.length).toEqual(2);
       expect(derivedCommands[0]).toBe(originalCommand);
 
-      // No other commands should be derived.
+      // The translucent command is derived by default.
       verifyDerivedCommandsDefined(drawCommand, {
-        translucent: false,
+        translucent: true,
         skipLevelOfDetail: false,
         silhouette: false,
       });
+
+      const translucentCommand = drawCommand._translucentCommand;
+      expect(derivedCommands[1]).toBe(translucentCommand);
+      expect(translucentCommand.is2D).toBe(false);
+
+      verifyDerivedCommandUpdateFlags(translucentCommand, {
+        updateShadows: true,
+        updateBackFaceCulling: false,
+        updateCullFace: false,
+        updateDebugShowBoundingVolume: true,
+      });
+
+      const innerCommand = translucentCommand.command;
+      expect(innerCommand).not.toEqual(command);
+      expect(innerCommand.pass).toEqual(Pass.TRANSLUCENT);
+
+      const renderState = innerCommand.renderState;
+      expect(renderState.cull.enabled).toBe(false);
+      expect(renderState.depthTest.enabled).toBe(true);
+      expect(renderState.depthMask).toBe(false);
+
+      // The RenderState constructor adds an additional default value
+      // that is not in BlendingState.ALPHA_BLEND.
+      const expectedBlending = clone(BlendingState.ALPHA_BLEND);
+      expectedBlending.color = noColor;
+      expect(renderState.blending).toEqual(expectedBlending);
     });
 
-    describe("translucent command", function () {
-      it("derives translucent command", function () {
-        const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-        });
-        const command = createDrawCommand();
-        const drawCommand = new ModelDrawCommand({
-          primitiveRenderResources: renderResources,
-          command: command,
-        });
-
-        const derivedCommands = drawCommand._derivedCommands;
-        expect(derivedCommands.length).toEqual(2);
-
-        const originalCommand = drawCommand._originalCommand;
-        expect(derivedCommands[0]).toBe(originalCommand);
-        expect(originalCommand.is2D).toBe(false);
-
-        verifyDerivedCommandsDefined(drawCommand, {
-          translucent: true,
-          skipLevelOfDetail: false,
-          silhouette: false,
-        });
-
-        const translucentCommand = drawCommand._translucentCommand;
-        expect(derivedCommands[1]).toBe(translucentCommand);
-        expect(translucentCommand.is2D).toBe(false);
-
-        verifyDerivedCommandUpdateFlags(translucentCommand, {
-          updateShadows: true,
-          updateBackFaceCulling: false,
-          updateCullFace: false,
-          updateDebugShowBoundingVolume: true,
-        });
-
-        const innerCommand = translucentCommand.command;
-        expect(innerCommand).not.toEqual(command);
-        expect(innerCommand.pass).toEqual(Pass.TRANSLUCENT);
-
-        const renderState = innerCommand.renderState;
-        expect(renderState.cull.enabled).toBe(false);
-        expect(renderState.depthTest.enabled).toBe(true);
-        expect(renderState.depthMask).toBe(false);
-
-        // The RenderState constructor adds an additional default value
-        // that is not in BlendingState.ALPHA_BLEND.
-        const expectedBlending = clone(BlendingState.ALPHA_BLEND);
-        expectedBlending.color = noColor;
-        expect(renderState.blending).toEqual(expectedBlending);
+    it("doesn't derive translucent command if original command is translucent", function () {
+      const renderResources = mockRenderResources();
+      const command = createDrawCommand({
+        pass: Pass.TRANSLUCENT,
+      });
+      const drawCommand = new ModelDrawCommand({
+        primitiveRenderResources: renderResources,
+        command: command,
       });
 
-      it("doesn't derive translucent command if style is opaque", function () {
-        const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.ALL_OPAQUE,
-        });
-        const command = createDrawCommand();
-        const drawCommand = new ModelDrawCommand({
-          primitiveRenderResources: renderResources,
-          command: command,
-        });
+      const originalCommand = drawCommand._originalCommand;
+      expect(originalCommand).toBeDefined();
+      expect(originalCommand.command.pass).toBe(Pass.TRANSLUCENT);
 
-        const originalCommand = drawCommand._originalCommand;
-        expect(originalCommand).toBeDefined();
-        expect(originalCommand.command.pass).toBe(Pass.OPAQUE);
+      const derivedCommands = drawCommand._derivedCommands;
+      expect(derivedCommands.length).toEqual(1);
+      expect(derivedCommands[0]).toBe(originalCommand);
 
-        const derivedCommands = drawCommand._derivedCommands;
-        expect(derivedCommands.length).toEqual(1);
-        expect(derivedCommands[0]).toBe(originalCommand);
-
-        expect(drawCommand._translucentCommand).toBeUndefined();
-      });
-
-      it("doesn't derive translucent command if original command is translucent", function () {
-        const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.ALL_TRANSLUCENT,
-        });
-        const command = createDrawCommand({
-          pass: Pass.TRANSLUCENT,
-        });
-        const drawCommand = new ModelDrawCommand({
-          primitiveRenderResources: renderResources,
-          command: command,
-        });
-
-        const originalCommand = drawCommand._originalCommand;
-        expect(originalCommand).toBeDefined();
-        expect(originalCommand.command.pass).toBe(Pass.TRANSLUCENT);
-
-        const derivedCommands = drawCommand._derivedCommands;
-        expect(derivedCommands.length).toEqual(1);
-        expect(derivedCommands[0]).toBe(originalCommand);
-
-        expect(drawCommand._translucentCommand).toBeUndefined();
-      });
+      expect(drawCommand._translucentCommand).toBeUndefined();
     });
 
     describe("silhouette commands", function () {
@@ -743,20 +690,24 @@ describe(
         });
 
         const derivedCommands = drawCommand._derivedCommands;
-        expect(derivedCommands.length).toEqual(3);
+        expect(derivedCommands.length).toEqual(4);
 
         const originalCommand = drawCommand._originalCommand;
         expect(derivedCommands[0]).toBe(originalCommand);
         expect(originalCommand.is2D).toBe(false);
 
         verifyDerivedCommandsDefined(drawCommand, {
-          translucent: false,
+          translucent: true,
           skipLevelOfDetail: true,
           silhouette: false,
         });
 
+        const translucentCommand = drawCommand._translucentCommand;
+        expect(derivedCommands[1]).toBe(translucentCommand);
+        expect(translucentCommand.is2D).toBe(false);
+
         const skipLodBackfaceCommand = drawCommand._skipLodBackfaceCommand;
-        expect(derivedCommands[1]).toBe(skipLodBackfaceCommand);
+        expect(derivedCommands[2]).toBe(skipLodBackfaceCommand);
         expect(skipLodBackfaceCommand.is2D).toBe(false);
 
         verifyDerivedCommandUpdateFlags(skipLodBackfaceCommand, {
@@ -771,7 +722,7 @@ describe(
         verifySkipLodBackfaceCommand(innerBackfaceCommand);
 
         const skipLodStencilCommand = drawCommand._skipLodStencilCommand;
-        expect(derivedCommands[2]).toBe(skipLodStencilCommand);
+        expect(derivedCommands[3]).toBe(skipLodStencilCommand);
         expect(skipLodStencilCommand.is2D).toBe(false);
 
         verifyDerivedCommandUpdateFlags(skipLodStencilCommand, {
@@ -818,7 +769,7 @@ describe(
     });
 
     describe("pushCommands", function () {
-      it("pushCommands pushes original command", function () {
+      it("pushCommands pushes original command if styleCommandsNeeded is undefined", function () {
         const renderResources = mockRenderResources();
         const command = createDrawCommand();
         const drawCommand = new ModelDrawCommand({
@@ -832,15 +783,49 @@ describe(
         expect(commandList[0]).toBe(command);
       });
 
-      it("pushCommands pushes translucent command", function () {
-        const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
-        });
+      it("pushCommands pushes original command if style is ALL_OPAQUE", function () {
+        const renderResources = mockRenderResources();
         const command = createDrawCommand();
         const drawCommand = new ModelDrawCommand({
           primitiveRenderResources: renderResources,
           command: command,
         });
+        const model = renderResources.model;
+        model.styleCommandsNeeded = StyleCommandsNeeded.ALL_OPAQUE;
+
+        const commandList = mockFrameState.commandList;
+        drawCommand.pushCommands(mockFrameState, commandList);
+        expect(commandList.length).toEqual(1);
+        expect(commandList[0]).toBe(command);
+      });
+
+      it("pushCommands pushes translucent command if style is ALL_TRANSLUCENT", function () {
+        const renderResources = mockRenderResources();
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+        const model = renderResources.model;
+        model.styleCommandsNeeded = StyleCommandsNeeded.ALL_TRANSLUCENT;
+
+        const commandList = mockFrameState.commandList;
+        drawCommand.pushCommands(mockFrameState, commandList);
+        expect(commandList.length).toEqual(1);
+
+        const translucentDrawCommand = drawCommand._translucentCommand.command;
+        expect(commandList[0]).toBe(translucentDrawCommand);
+      });
+
+      it("pushCommands pushes both commands if style is OPAQUE_AND_TRANSLUCENT", function () {
+        const renderResources = mockRenderResources();
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+        const model = renderResources.model;
+        model.styleCommandsNeeded = StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
 
         const originalDrawCommand = drawCommand._originalCommand.command;
         const translucentDrawCommand = drawCommand._translucentCommand.command;
@@ -966,7 +951,6 @@ describe(
 
       it("pushCommands derives 2D translucent command", function () {
         const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
           boundingSphereTransform2D: idlMatrix2D,
         });
         const command = createDrawCommand({
@@ -976,6 +960,8 @@ describe(
           primitiveRenderResources: renderResources,
           command: command,
         });
+        const model = renderResources.model;
+        model.styleCommandsNeeded = StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
 
         // 2D commands aren't derived until pushCommands is called
         const originalCommand = drawCommand._originalCommand;
@@ -1169,7 +1155,6 @@ describe(
 
       it("pushCommands updates model matrix for 2D commands", function () {
         const renderResources = mockRenderResources({
-          styleCommandsNeeded: StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT,
           boundingSphereTransform2D: idlMatrix2D,
         });
         const command = createDrawCommand({
@@ -1292,9 +1277,7 @@ describe(
 
     describe("model matrix", function () {
       it("updates model matrix", function () {
-        const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
-        });
+        const drawCommand = createModelDrawCommand();
         expect(drawCommand.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(drawCommand.boundingVolume.center).toEqual(Cartesian3.ZERO);
 
@@ -1325,7 +1308,6 @@ describe(
 
       it("updates model matrix for 2D commands", function () {
         const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
           derive2D: true,
         });
 
@@ -1384,9 +1366,7 @@ describe(
 
     describe("shadows", function () {
       it("updates shadows", function () {
-        const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
-        });
+        const drawCommand = createModelDrawCommand();
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
@@ -1445,7 +1425,7 @@ describe(
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
-        expect(length).toEqual(3);
+        expect(length).toEqual(4);
 
         for (let i = 0; i < length; i++) {
           const command = derivedCommands[i].command;
@@ -1459,7 +1439,7 @@ describe(
           const command = derivedCommand.command;
 
           // Expect shadow updates to be disabled for the
-          // silhouette color command.
+          // skipLevelOfDetail backface command.
           const updateShadows = derivedCommand.updateShadows;
           if (!updateShadows) {
             expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
@@ -1472,7 +1452,6 @@ describe(
 
       it("doesn't update shadows for 2D commands", function () {
         const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
           derive2D: true,
         });
 
@@ -1504,31 +1483,8 @@ describe(
     });
 
     describe("back face culling", function () {
-      it("updates back face culling", function () {
-        const drawCommand = createModelDrawCommand({
-          derive2D: true,
-        });
-
-        const derivedCommands = drawCommand._derivedCommands;
-        const length = derivedCommands.length;
-        expect(length).toEqual(2);
-
-        for (let i = 0; i < length; i++) {
-          const command = derivedCommands[i].command;
-          expect(command.renderState.cull.enabled).toBe(false);
-        }
-
-        drawCommand.backFaceCulling = true;
-        for (let i = 0; i < length; i++) {
-          const command = derivedCommands[i].command;
-          expect(command.renderState.cull.enabled).toBe(true);
-        }
-      });
-
-      it("doesn't update back face culling for translucent command", function () {
-        const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
-        });
+      it("updates back face culling for opaque command", function () {
+        const drawCommand = createModelDrawCommand();
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
@@ -1568,7 +1524,6 @@ describe(
         }
 
         drawCommand.backFaceCulling = true;
-
         for (let i = 0; i < length; i++) {
           const derivedCommand = derivedCommands[i];
           const command = derivedCommand.command;
@@ -1589,7 +1544,7 @@ describe(
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
-        expect(length).toEqual(3);
+        expect(length).toEqual(4);
 
         for (let i = 0; i < length; i++) {
           const derivedCommand = derivedCommands[i];
@@ -1607,12 +1562,21 @@ describe(
           const derivedCommand = derivedCommands[i];
           const command = derivedCommand.command;
 
-          const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
-          if (!updateBackFaceCulling) {
-            expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
-          }
+          const isBackfaceCommand =
+            derivedCommand === drawCommand._skipLodBackfaceCommand;
+          const isTranslucentCommand =
+            derivedCommand === drawCommand._translucentCommand;
 
-          expect(command.renderState.cull.enabled).toBe(true);
+          if (isTranslucentCommand) {
+            expect(derivedCommand.updateBackFaceCulling).toBe(false);
+            expect(command.renderState.cull.enabled).toBe(false);
+          } else if (isBackfaceCommand) {
+            expect(derivedCommand.updateBackFaceCulling).toBe(false);
+            expect(command.renderState.cull.enabled).toBe(true);
+          } else {
+            expect(derivedCommand.updateBackFaceCulling).toBe(true);
+            expect(command.renderState.cull.enabled).toBe(true);
+          }
         }
 
         drawCommand.backFaceCulling = false;
@@ -1620,11 +1584,19 @@ describe(
           const derivedCommand = derivedCommands[i];
           const command = derivedCommand.command;
 
-          const updateBackFaceCulling = derivedCommand.updateBackFaceCulling;
-          if (!updateBackFaceCulling) {
-            expect(derivedCommand).toBe(drawCommand._skipLodBackfaceCommand);
+          const isBackfaceCommand =
+            derivedCommand === drawCommand._skipLodBackfaceCommand;
+          const isTranslucentCommand =
+            derivedCommand === drawCommand._translucentCommand;
+
+          if (isTranslucentCommand) {
+            expect(derivedCommand.updateBackFaceCulling).toBe(false);
+            expect(command.renderState.cull.enabled).toBe(false);
+          } else if (isBackfaceCommand) {
+            expect(derivedCommand.updateBackFaceCulling).toBe(false);
             expect(command.renderState.cull.enabled).toBe(true);
           } else {
+            expect(derivedCommand.updateBackFaceCulling).toBe(true);
             expect(command.renderState.cull.enabled).toBe(false);
           }
         }
@@ -1632,32 +1604,8 @@ describe(
     });
 
     describe("cull face", function () {
-      it("updates cull face", function () {
-        const drawCommand = createModelDrawCommand({
-          derive2D: true,
-        });
-
-        const derivedCommands = drawCommand._derivedCommands;
-        const length = derivedCommands.length;
-        expect(length).toEqual(2);
-
-        for (let i = 0; i < length; i++) {
-          const command = derivedCommands[i].command;
-          expect(command.renderState.cull.face).toBe(CullFace.BACK);
-        }
-
-        drawCommand.cullFace = CullFace.FRONT;
-
-        for (let i = 0; i < length; i++) {
-          const command = derivedCommands[i].command;
-          expect(command.renderState.cull.face).toBe(CullFace.FRONT);
-        }
-      });
-
-      it("doesn't update cull face for translucent command", function () {
-        const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
-        });
+      it("updates cull face for opaque command", function () {
+        const drawCommand = createModelDrawCommand();
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
@@ -1717,9 +1665,7 @@ describe(
 
     describe("debugShowBoundingVolume", function () {
       it("updates debugShowBoundingVolume", function () {
-        const drawCommand = createModelDrawCommand({
-          deriveTranslucent: true,
-        });
+        const drawCommand = createModelDrawCommand();
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
@@ -1776,7 +1722,7 @@ describe(
 
         const derivedCommands = drawCommand._derivedCommands;
         const length = derivedCommands.length;
-        expect(length).toEqual(3);
+        expect(length).toEqual(4);
 
         for (let i = 0; i < length; i++) {
           const command = derivedCommands[i].command;

@@ -1,4 +1,4 @@
-import { ShaderCache } from "../../Source/Cesium.js";
+import { ShaderCache, ShaderSource } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 
 describe(
@@ -72,6 +72,17 @@ describe(
         "attribute vec4 position; void main() { gl_Position = position; }";
       const fs = "void main() { gl_FragColor = vec4(1.0); }";
 
+      // These functions can be expensive for large shaders, so they should
+      // only be called the first time a shader is created.
+      spyOn(
+        ShaderSource.prototype,
+        "createCombinedVertexShader"
+      ).and.callThrough();
+      spyOn(
+        ShaderSource.prototype,
+        "createCombinedFragmentShader"
+      ).and.callThrough();
+
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
         vertexShaderSource: vs,
@@ -91,6 +102,75 @@ describe(
       expect(sp).toBe(sp2);
       expect(sp._cachedShader.count).toEqual(2);
       expect(cache.numberOfShaders).toEqual(1);
+
+      expect(
+        ShaderSource.prototype.createCombinedVertexShader
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        ShaderSource.prototype.createCombinedFragmentShader
+      ).toHaveBeenCalledTimes(1);
+
+      sp.destroy();
+      sp2.destroy();
+      cache.destroyReleasedShaderPrograms();
+
+      expect(sp.isDestroyed()).toEqual(true);
+      expect(cache.numberOfShaders).toEqual(0);
+
+      cache.destroy();
+    });
+
+    it("cache handles unordered attributeLocations dictionary", function () {
+      const vs =
+        "attribute vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+
+      // Create a case where JSON.stringify(x) may produce two different results
+      // without sorting the keys
+      const attributeLocations = {
+        position: 0,
+        normal: 1,
+        color: 2,
+      };
+      const attributeLocationsReordered = {
+        color: 2,
+        position: 0,
+        normal: 1,
+      };
+
+      // These functions can be expensive for large shaders, so they should
+      // only be called the first time a shader is created.
+      spyOn(
+        ShaderSource.prototype,
+        "createCombinedVertexShader"
+      ).and.callThrough();
+      spyOn(
+        ShaderSource.prototype,
+        "createCombinedFragmentShader"
+      ).and.callThrough();
+
+      const cache = new ShaderCache(context);
+      const sp = cache.getShaderProgram({
+        vertexShaderSource: vs,
+        fragmentShaderSource: fs,
+        attributeLocations: attributeLocations,
+      });
+      const sp2 = cache.getShaderProgram({
+        vertexShaderSource: vs,
+        fragmentShaderSource: fs,
+        attributeLocations: attributeLocationsReordered,
+      });
+
+      expect(sp).toBe(sp2);
+      expect(sp._cachedShader.count).toEqual(2);
+      expect(cache.numberOfShaders).toEqual(1);
+
+      expect(
+        ShaderSource.prototype.createCombinedVertexShader
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        ShaderSource.prototype.createCombinedFragmentShader
+      ).toHaveBeenCalledTimes(1);
 
       sp.destroy();
       sp2.destroy();

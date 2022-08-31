@@ -3,37 +3,38 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
-import ColorBlendMode from "../ColorBlendMode.js";
-import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Resource from "../../Core/Resource.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import Pass from "../../Renderer/Pass.js";
+import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
-import ModelAnimationCollection from "./ModelAnimationCollection.js";
-import ModelSceneGraph from "./ModelSceneGraph.js";
-import ModelStatistics from "./ModelStatistics.js";
-import ModelType from "./ModelType.js";
-import ModelUtility from "./ModelUtility.js";
-import Pass from "../../Renderer/Pass.js";
-import Resource from "../../Core/Resource.js";
-import destroyObject from "../../Core/destroyObject.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
-import B3dmLoader from "./B3dmLoader.js";
-import GeoJsonLoader from "./GeoJsonLoader.js";
-import I3dmLoader from "./I3dmLoader.js";
-import PntsLoader from "./PntsLoader.js";
-import Color from "../../Core/Color.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
+import B3dmLoader from "./B3dmLoader.js";
+import GeoJsonLoader from "./GeoJsonLoader.js";
+import I3dmLoader from "./I3dmLoader.js";
+import ModelAnimationCollection from "./ModelAnimationCollection.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
+import ModelSceneGraph from "./ModelSceneGraph.js";
+import ModelStatistics from "./ModelStatistics.js";
+import ModelType from "./ModelType.js";
+import ModelUtility from "./ModelUtility.js";
+import PntsLoader from "./PntsLoader.js";
+import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
  * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
@@ -253,6 +254,8 @@ function Model(options) {
   this._show = defaultValue(options.show, true);
 
   this._style = undefined;
+  this._styleDirty = false;
+  this._styleCommandsNeeded = undefined;
 
   let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
   if (typeof featureIdLabel === "number") {
@@ -397,12 +400,15 @@ function Model(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
+  this._classificationType = options.classificationType;
+
   this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
 
   this._skipLevelOfDetail = false;
+  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
@@ -410,10 +416,6 @@ function Model(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
-
-  this._classificationType = options.classificationType;
-
-  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -959,7 +961,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   * The style to apply to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
    * @memberof Model.prototype
    *
@@ -970,8 +972,8 @@ Object.defineProperties(Model.prototype, {
       return this._style;
     },
     set: function (value) {
-      this.applyStyle(value);
       this._style = value;
+      this._styleDirty = true;
     },
   },
 
@@ -1526,23 +1528,6 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Reference to the pick IDs. This is only used internally, e.g. for
-   * per-feature post-processing in {@link PostProcessStage}.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {PickId[]}
-   * @readonly
-   *
-   * @private
-   */
-  pickIds: {
-    get: function () {
-      return this._pickIds;
-    },
-  },
-
-  /**
    * Gets the model's classification type. This determines whether terrain,
    * 3D Tiles, or both will be classified by this model.
    * <p>
@@ -1568,6 +1553,41 @@ Object.defineProperties(Model.prototype, {
   classificationType: {
     get: function () {
       return this._classificationType;
+    },
+  },
+
+  /**
+   * Reference to the pick IDs. This is only used internally, e.g. for
+   * per-feature post-processing in {@link PostProcessStage}.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {PickId[]}
+   * @readonly
+   *
+   * @private
+   */
+  pickIds: {
+    get: function () {
+      return this._pickIds;
+    },
+  },
+
+  /**
+   * The {@link StyleCommandsNeeded} for the style currently applied to
+   * the features in the model. This is used internally by the {@link ModelDrawCommand}
+   * when determining which commands to submit in an update.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {StyleCommandsNeeded}
+   * @readonly
+   *
+   * @private
+   */
+  styleCommandsNeeded: {
+    get: function () {
+      return this._styleCommandsNeeded;
     },
   },
 });
@@ -1648,6 +1668,14 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
+ * Marks the model's {@link Model#style} as dirty, which forces all features
+ * to re-evaluate the style in the next frame the model is visible.
+ */
+Model.prototype.makeStyleDirty = function () {
+  this._styleDirty = true;
+};
+
+/**
  * Resets the draw commands for this model.
  *
  * @private
@@ -1689,13 +1717,14 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
+  updateFeatureTableId(this);
+  updateStyle(this);
+  updateFeatureTables(this, frameState);
   updatePointCloudShading(this);
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
-  updateFeatureTableId(this);
-  updateFeatureTables(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1746,6 +1775,63 @@ function updateImageBasedLighting(model, frameState) {
   if (model._imageBasedLighting.shouldRegenerateShaders) {
     model.resetDrawCommands();
   }
+}
+
+function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
+  const components = model._sceneGraph.components;
+  const structuralMetadata = components.structuralMetadata;
+
+  if (
+    defined(structuralMetadata) &&
+    structuralMetadata.propertyTableCount > 0
+  ) {
+    model.featureTableId = selectFeatureTableId(components, model);
+
+    // Mark the style dirty to re-apply it and reflect the new feature ID table.
+    model._styleDirty = true;
+
+    // Trigger a rebuild of the draw commands.
+    model.resetDrawCommands();
+  }
+}
+
+function updateStyle(model) {
+  if (model._styleDirty) {
+    model.applyStyle(model._style);
+    model._styleDirty = false;
+  }
+}
+
+function updateFeatureTables(model, frameState) {
+  const featureTables = model._featureTables;
+  const length = featureTables.length;
+
+  let styleCommandsNeededDirty = false;
+  for (let i = 0; i < length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      styleCommandsNeededDirty = true;
+    }
+  }
+
+  if (styleCommandsNeededDirty) {
+    updateStyleCommandsNeeded(model);
+  }
+}
+
+function updateStyleCommandsNeeded(model) {
+  const featureTable = model.featureTables[model.featureTableId];
+  model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    featureTable.featuresLength,
+    featureTable.batchTexture.translucentFeaturesLength
+  );
 }
 
 function updatePointCloudShading(model) {
@@ -1807,40 +1893,6 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
-  }
-}
-
-function updateFeatureTables(model, frameState) {
-  const featureTables = model._featureTables;
-  const length = featureTables.length;
-  for (let i = 0; i < length; i++) {
-    featureTables[i].update(frameState);
-    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-    // to ensure that translucent and opaque features are handled in the correct passes.
-    if (featureTables[i].styleCommandsNeededDirty) {
-      model.resetDrawCommands();
-    }
-  }
-}
-
-function updateFeatureTableId(model) {
-  if (!model._featureTableIdDirty) {
-    return;
-  }
-  model._featureTableIdDirty = false;
-
-  const components = model._sceneGraph.components;
-  const structuralMetadata = components.structuralMetadata;
-
-  if (
-    defined(structuralMetadata) &&
-    structuralMetadata.propertyTableCount > 0
-  ) {
-    model.featureTableId = selectFeatureTableId(components, model);
-
-    // Re-apply the style to reflect the new feature ID table.
-    // This in turn triggers a rebuild of the draw commands.
-    model.applyStyle(model._style);
   }
 }
 
@@ -2654,6 +2706,7 @@ Model.fromGeoJson = function (options) {
  * @private
  */
 Model.prototype.applyColorAndShow = function (style) {
+  const previousColor = this._color;
   const hasColorStyle = defined(style) && defined(style.color);
   const hasShowStyle = defined(style) && defined(style.show);
 
@@ -2661,14 +2714,16 @@ Model.prototype.applyColorAndShow = function (style) {
     ? style.color.evaluateColor(undefined, this._color)
     : Color.clone(Color.WHITE, this._color);
   this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+
+  if (isColorAlphaDirty(previousColor, this._color)) {
+    this.resetDrawCommands();
+  }
 };
 
 /**
  * @private
  */
 Model.prototype.applyStyle = function (style) {
-  this.resetDrawCommands();
-
   const isPnts = this.type === ModelType.TILE_PNTS;
 
   const hasFeatureTable =
@@ -2681,11 +2736,14 @@ Model.prototype.applyStyle = function (style) {
   const hasPropertyAttributes =
     defined(propertyAttributes) && defined(propertyAttributes[0]);
 
-  // Point clouds will be styled on the GPU unless they contain
-  // a batch table. That is, CPU styling will not be applied if
+  // Point clouds will be styled on the GPU unless they contain a batch table.
+  // That is, CPU styling will not be applied if:
   // - points have no metadata at all, or
   // - points have metadata stored as a property attribute
   if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    // Commands are rebuilt for point cloud styling since the new style may
+    // contain different shader functions.
+    this.resetDrawCommands();
     return;
   }
 
@@ -2694,8 +2752,10 @@ Model.prototype.applyStyle = function (style) {
   if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
+    updateStyleCommandsNeeded(this, style);
   } else {
     this.applyColorAndShow(style);
+    this._styleCommandsNeeded = undefined;
   }
 };
 
