@@ -285,17 +285,7 @@ I3SDataProvider.prototype.isDestroyed = function () {
 };
 
 /**
- * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
- * get the draw commands needed to render this primitive.
- * <p>
- * Do not call this function directly.  This is documented just to
- * list the exceptions that may be propagated when the scene is rendered:
- * </p>
- *
- * @exception {DeveloperError} All instance geometries must have the same primitiveType.
- * @exception {DeveloperError} Appearance and material have a uniform with the same name.
- * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
- * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
+ * @private
  */
 I3SDataProvider.prototype.update = function (frameState) {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
