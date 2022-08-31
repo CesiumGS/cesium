@@ -789,11 +789,16 @@ function dequantizeMinMax(attribute, VectorType) {
 
   // dequantized = max(quantized / divisor, -1.0)
   let min = attribute.min;
+  if (defined(min)) {
+    min = VectorType.divideByScalar(min, divisor, min);
+    min = VectorType.maximumByComponent(min, minimumBound, min);
+  }
+
   let max = attribute.max;
-  min = VectorType.divideByScalar(min, divisor, min);
-  max = VectorType.divideByScalar(max, divisor, max);
-  min = VectorType.maximumByComponent(min, minimumBound, min);
-  max = VectorType.maximumByComponent(max, minimumBound, max);
+  if (defined(max)) {
+    max = VectorType.divideByScalar(max, divisor, max);
+    max = VectorType.maximumByComponent(max, minimumBound, max);
+  }
 
   attribute.min = min;
   attribute.max = max;
@@ -831,6 +836,9 @@ function createAttribute(
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
     attribute.semantic === VertexAttributeSemantic.TEXCOORD;
 
+  // In the glTF 2.0 spec, min and max are not impacted by normalized. However,
+  // for KHR_mesh_quantization, min and max must be dequantized for normalized
+  // values, else the bounding volume will be computed incorrectly.
   if (hasKhrMeshQuantization && normalized && isQuantizable) {
     dequantizeMinMax(attribute, MathType);
   }

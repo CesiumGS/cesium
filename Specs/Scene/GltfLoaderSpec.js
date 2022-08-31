@@ -117,6 +117,8 @@ describe(
       "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
     const boxCesiumRtc =
       "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+    const torusQuantized =
+      "./Data/Models/GltfLoader/TorusQuantized/glTF/TorusQuantized.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -2978,6 +2980,42 @@ describe(
           new Cartesian3(6378137, 0, 0)
         );
         expect(components.transform).toEqual(expectedTransform);
+      });
+    });
+
+    it("loads TorusQuantized", function () {
+      return loadGltf(torusQuantized).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const primitive = scene.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBe(4);
+        expect(positionAttribute.normalized).toBe(true);
+
+        // For KHR_mesh_quantization with a normalized POSITION attribute,
+        // the min and max must be dequantized.
+        const dequantizedValue = 127 / 255.0;
+        expect(positionAttribute.min).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+        expect(positionAttribute.max).toEqual(
+          new Cartesian3(dequantizedValue, dequantizedValue, dequantizedValue)
+        );
+
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(4);
+        expect(normalAttribute.min).not.toBeDefined();
+        expect(normalAttribute.max).not.toBeDefined();
       });
     });
 
