@@ -2,6 +2,7 @@ import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -639,7 +640,7 @@ function createInstances(loader, components, frameState) {
   const nodesLength = nodes.length;
   let makeInstancesCopy = false;
   for (i = 0; i < nodesLength; i++) {
-    const node = components.nodes[i];
+    const node = nodes[i];
     if (node.primitives.length > 0) {
       // If the instances have not been assigned to a node already, assign
       // it to the first node encountered. Otherwise, make a copy of them
@@ -672,17 +673,7 @@ function createInstancesCopy(instances) {
   const attributesLength = attributes.length;
 
   for (let i = 0; i < attributesLength; i++) {
-    const attribute = attributes[i];
-    const attributeCopy = new Attribute();
-    attributeCopy.name = attribute.name;
-    attributeCopy.setIndex = attribute.setIndex;
-    attributeCopy.semantic = attribute.semantic;
-    attributeCopy.componentDatatype = attribute.componentDatatype;
-    attributeCopy.type = attribute.type;
-    attributeCopy.count = attribute.count;
-    attributeCopy.typedArray = attribute.typedArray;
-    attributeCopy.buffer = attribute.buffer;
-
+    const attributeCopy = clone(attributes[i], false);
     instancesCopy.attributes.push(attributeCopy);
   }
 
