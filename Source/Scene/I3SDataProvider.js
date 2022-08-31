@@ -461,11 +461,13 @@ function longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
 
 /**
  * This class implements an I3S scene layer
- * @private
+ *
  * @alias I3SSceneLayer
- * @param {I3SDataProvider} [dataProvider] The data source that is the
- * owner of this scene layer
  * @constructor
+ *
+ * @param {I3SDataProvider} dataProvider The data source that is the owner of this scene layer
+ *
+ * @private
  */
 function I3SSceneLayer(dataProvider) {
   this._dataProvider = dataProvider;
