@@ -394,35 +394,35 @@ I3SDataProvider.prototype._loadBinary = function (uri, success, fail) {
 /**
  * @private
  */
-I3SDataProvider.prototype._binarizeGLTF = function (rawGLTF) {
+I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
   const encoder = new TextEncoder();
-  const rawGLTFData = encoder.encode(JSON.stringify(rawGLTF));
-  const binaryGLTFData = new Uint8Array(rawGLTFData.byteLength + 20);
-  const binaryGLTF = {
-    magic: new Uint8Array(binaryGLTFData.buffer, 0, 4),
-    version: new Uint32Array(binaryGLTFData.buffer, 4, 1),
-    length: new Uint32Array(binaryGLTFData.buffer, 8, 1),
-    chunkLength: new Uint32Array(binaryGLTFData.buffer, 12, 1),
-    chunkType: new Uint32Array(binaryGLTFData.buffer, 16, 1),
+  const rawGltfData = encoder.encode(JSON.stringify(rawGltf));
+  const binaryGltfData = new Uint8Array(rawGltfData.byteLength + 20);
+  const binaryGltf = {
+    magic: new Uint8Array(binaryGltfData.buffer, 0, 4),
+    version: new Uint32Array(binaryGltfData.buffer, 4, 1),
+    length: new Uint32Array(binaryGltfData.buffer, 8, 1),
+    chunkLength: new Uint32Array(binaryGltfData.buffer, 12, 1),
+    chunkType: new Uint32Array(binaryGltfData.buffer, 16, 1),
     chunkData: new Uint8Array(
-      binaryGLTFData.buffer,
+      binaryGltfData.buffer,
       20,
-      rawGLTFData.byteLength
+      rawGltfData.byteLength
     ),
   };
 
-  binaryGLTF.magic[0] = "g".charCodeAt();
-  binaryGLTF.magic[1] = "l".charCodeAt();
-  binaryGLTF.magic[2] = "T".charCodeAt();
-  binaryGLTF.magic[3] = "F".charCodeAt();
+  binaryGltf.magic[0] = "g".charCodeAt();
+  binaryGltf.magic[1] = "l".charCodeAt();
+  binaryGltf.magic[2] = "T".charCodeAt();
+  binaryGltf.magic[3] = "F".charCodeAt();
 
-  binaryGLTF.version[0] = 2;
-  binaryGLTF.length[0] = binaryGLTFData.byteLength;
-  binaryGLTF.chunkLength[0] = rawGLTFData.byteLength;
-  binaryGLTF.chunkType[0] = 0x4e4f534a; // JSON
-  binaryGLTF.chunkData.set(rawGLTFData);
+  binaryGltf.version[0] = 2;
+  binaryGltf.length[0] = binaryGltfData.byteLength;
+  binaryGltf.chunkLength[0] = rawGltfData.byteLength;
+  binaryGltf.chunkType[0] = 0x4e4f534a; // JSON
+  binaryGltf.chunkData.set(rawGltfData);
 
-  return binaryGLTFData;
+  return binaryGltfData;
 };
 
 /**

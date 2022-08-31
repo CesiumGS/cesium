@@ -678,7 +678,7 @@ function createI3SDecoderTask(dataProvider, data) {
  * @private
  */
 I3SNode.prototype._createContentURL = function (resolve, tile) {
-  let rawGLTF = {
+  let rawGltf = {
     scene: 0,
     scenes: [
       {
@@ -708,8 +708,8 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
 
   const that = this;
   Promise.all(dataPromises).then(function () {
-    // Binary GLTF
-    const generateGLTF = new Promise(function (resolve, reject) {
+    // Binary glTF
+    const generateGltf = new Promise(function (resolve, reject) {
       if (that._geometryData && that._geometryData.length > 0) {
         const parameters = {
           geometryData: that._geometryData[0],
@@ -727,7 +727,7 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
         }
 
         task.then(function (result) {
-          rawGLTF = parameters.geometryData._generateGLTF(
+          rawGltf = parameters.geometryData._generateGltf(
             result.meshData.nodesInScene,
             result.meshData.nodes,
             result.meshData.meshes,
@@ -745,9 +745,9 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
       }
     });
 
-    generateGLTF.then(function () {
-      const binaryGLTFData = that._dataProvider._binarizeGLTF(rawGLTF);
-      const glbDataBlob = new Blob([binaryGLTFData], {
+    generateGltf.then(function () {
+      const binaryGltfData = that._dataProvider._binarizeGltf(rawGltf);
+      const glbDataBlob = new Blob([binaryGltfData], {
         type: "application/binary",
       });
       that._glbURL = URL.createObjectURL(glbDataBlob);
@@ -1007,7 +1007,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
 /**
  * @private
  */
-I3SGeometry.prototype._generateGLTF = function (
+I3SGeometry.prototype._generateGltf = function (
   nodesInScene,
   nodes,
   meshes,

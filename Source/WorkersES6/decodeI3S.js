@@ -200,7 +200,7 @@ function cropUVs(vertexCount, uv0s, uvRegions) {
   }
 }
 
-function generateGLTFBuffer(
+function generateGltfBuffer(
   vertexCount,
   indices,
   positions,
@@ -956,7 +956,7 @@ function decodeI3S(parameters, transferableObjects) {
   }
 
   // Create the final buffer
-  const meshData = generateGLTFBuffer(
+  const meshData = generateGltfBuffer(
     geometryData.vertexCount,
     geometryData.indices,
     geometryData.positions,
