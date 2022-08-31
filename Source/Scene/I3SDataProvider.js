@@ -257,7 +257,7 @@ I3SDataProvider.prototype.load = function (data) {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see Primitive#isDestroyed
+ * @see I3SDataProvider#isDestroyed
  */
 I3SDataProvider.prototype.destroy = function () {
   for (let i = 0; i < this._sceneLayer._layerCollection.length; i++) {
@@ -274,7 +274,7 @@ I3SDataProvider.prototype.destroy = function () {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see Primitive#destroy
+ * @see I3SDataProvider#destroy
  */
 I3SDataProvider.prototype.isDestroyed = function () {
   if (this._sceneLayer._layerCollection.length !== 0) {
