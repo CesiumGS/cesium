@@ -442,9 +442,6 @@ I3SDataProvider.prototype._getDecoderTaskProcessor = function () {
   return this._decoderTaskProcessor;
 };
 
-/**
- * @private
- */
 function wgs84ToCartesian(long, lat, height) {
   return Ellipsoid.WGS84.cartographicToCartesian(
     new Cartographic(
@@ -455,9 +452,6 @@ function wgs84ToCartesian(long, lat, height) {
   );
 }
 
-/**
- * @private
- */
 function longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
   const p1 = wgs84ToCartesian(longitude1, latitude1, 0);
   const p2 = wgs84ToCartesian(longitude2, latitude2, 0);
@@ -592,9 +586,6 @@ I3SSceneLayer.prototype.centerCamera = function (mode) {
   }
 };
 
-/**
- * @private
- */
 function computeExtent(minLongitude, minLatitude, maxLongitude, maxLatitude) {
   const extent = {
     minLongitude: minLongitude,
@@ -779,9 +770,6 @@ Object.defineProperties(I3SLayer.prototype, {
   },
 });
 
-/**
- * @private
- */
 function getCoveredTiles(terrainProvider, extents) {
   return terrainProvider.readyPromise.then(function () {
     return getTiles(terrainProvider, extents);
