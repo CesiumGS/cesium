@@ -173,7 +173,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets or sets debugging and tracing of I3S fetches.
    * @memberof I3SDataProvider.prototype
-   * @type {bool}
+   * @type {Boolean}
    */
   traceFetches: {
     get: function () {
@@ -189,7 +189,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets or sets auto centering of the camera on the data set.
    * @memberof I3SDataProvider.prototype
-   * @type {bool}
+   * @type {Boolean}
    */
   autoCenterCameraOnStart: {
     get: function () {
