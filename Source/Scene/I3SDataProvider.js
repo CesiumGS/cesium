@@ -694,7 +694,7 @@ function I3SLayer(sceneLayer, layerData, index) {
   if (`${sceneLayer._dataProvider._url}`.match(/layers\/\d/)) {
     tilesetUrl = `${sceneLayer._dataProvider._url}`.replace(/\/+$/, "");
   } else {
-    // Add '/' to url if needed + `${this._uri}` if tileseturl not already in ../layers/[id] foramt
+    // Add '/' to url if needed + `${this._uri}` if tilesetUrl not already in ../layers/[id] format
     tilesetUrl = `${sceneLayer._dataProvider._url}`
       .replace(/\/?$/, "/")
       .concat(`${this._uri}`);
@@ -713,7 +713,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * Gets the uri for the layer.
    * @memberof I3SLayer.prototype
-   * @type {string}
+   * @type {String}
    */
   uri: {
     get: function () {
@@ -723,7 +723,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * Gets the complete uri for the layer.
    * @memberof I3SLayer.prototype
-   * @type {string}
+   * @type {String}
    */
   completeUri: {
     get: function () {
@@ -1251,7 +1251,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Gets the I3S Node for the tile content.
    * @memberof Batched3DModel3DTileContent.prototype
-   * @type {string}
+   * @type {String}
    */
   i3sNode: {
     get: function () {

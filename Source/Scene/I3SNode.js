@@ -66,7 +66,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the uri for the node.
    * @memberof I3SNode.prototype
-   * @type {string}
+   * @type {String}
    */
   uri: {
     get: function () {
@@ -76,7 +76,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the complete uri for the node.
    * @memberof I3SNode.prototype
-   * @type {string}
+   * @type {String}
    */
   completeUri: {
     get: function () {
@@ -787,7 +787,7 @@ Object.defineProperties(I3SGeometry.prototype, {
   /**
    * Gets the uri for the geometry.
    * @memberof I3SGeometry.prototype
-   * @type {string}
+   * @type {String}
    */
   uri: {
     get: function () {
@@ -797,7 +797,7 @@ Object.defineProperties(I3SGeometry.prototype, {
   /**
    * Gets the complete uri for the geometry.
    * @memberof I3SGeometry.prototype
-   * @type {string}
+   * @type {String}
    */
   completeUri: {
     get: function () {
@@ -1213,7 +1213,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the uri for the field.
    * @memberof I3SField.prototype
-   * @type {string}
+   * @type {String}
    */
   uri: {
     get: function () {
@@ -1223,7 +1223,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the complete uri for the field.
    * @memberof I3SField.prototype
-   * @type {string}
+   * @type {String}
    */
   completeUri: {
     get: function () {
@@ -1255,7 +1255,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the name for the field.
    * @memberof I3SField.prototype
-   * @type {string}
+   * @type {String}
    */
   name: {
     get: function () {

@@ -24,7 +24,7 @@ Object.defineProperties(I3SFeature.prototype, {
   /**
    * Gets the uri for the feature.
    * @memberof I3SFeature.prototype
-   * @type {string}
+   * @type {String}
    */
   uri: {
     get: function () {
@@ -34,7 +34,7 @@ Object.defineProperties(I3SFeature.prototype, {
   /**
    * Gets the complete uri for the feature.
    * @memberof I3SFeature.prototype
-   * @type {string}
+   * @type {String}
    */
   completeUri: {
     get: function () {
