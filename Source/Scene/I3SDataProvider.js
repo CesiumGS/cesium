@@ -510,7 +510,7 @@ Object.defineProperties(I3SSceneLayer.prototype, {
 
 /**
  * Loads the data from the provided I3S Scene layer.
- * @param {String} [uri] The uri where to fetch the data from.
+ * @param {String} uri The uri where to fetch the data from.
  */
 I3SSceneLayer.prototype.load = function (uri) {
   const that = this;
@@ -680,7 +680,7 @@ function I3SLayer(sceneLayer, layerData, index) {
   this._parent = sceneLayer;
   this._dataProvider = sceneLayer._dataProvider;
 
-  if (layerData.href === undefined) {
+  if (!defined(layerData.href)) {
     // assign a default layer
     layerData.href = `./layers/${index}`;
   }
@@ -1044,7 +1044,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
 I3SLayer.prototype._loadRootNode = function () {
   if (this._data.nodePages) {
     let rootIndex = 0;
-    if (this._data.nodePages.rootIndex !== undefined) {
+    if (defined(this._data.nodePages.rootIndex)) {
       rootIndex = this._data.nodePages.rootIndex;
     }
     this._rootNode = new I3SNode(this, rootIndex, true);
@@ -1075,9 +1075,9 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
 I3SLayer.prototype._loadNodePage = function (page) {
   const that = this;
   return new Promise(function (resolve, reject) {
-    if (that._nodePages[page] !== undefined) {
+    if (defined(that._nodePages[page])) {
       resolve();
-    } else if (that._nodePageFetches[page] !== undefined) {
+    } else if (defined(that._nodePageFetches[page])) {
       that._nodePageFetches[page]._promise = that._nodePageFetches[
         page
       ]._promise.then(function () {
