@@ -1,7 +1,6 @@
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
-  defined,
   Matrix4,
   VoxelPrimitive,
 } from "../../Source/Cesium.js";
@@ -46,7 +45,7 @@ describe(
         expect(primitive.shape._type).toBe(provider.shape._type);
         expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
         expect(primitive._tileCount).toBe(provider._tileCount);
-        expect(defined(primitive._traversal)).toBe(true);
+        expect(primitive._traversal).toBeDefined();
         // TODO should we test writing glsl functions? i.e. sample functions, setting style input values for each metadata
       });
     });
