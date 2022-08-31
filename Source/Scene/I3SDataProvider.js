@@ -10,7 +10,7 @@
  * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the CesiumJS viewer.
  * It enables the user to access an I3S layer via its URL and load it inside of the CesiumJS viewer.
  *
- * When a scene layer is initialized, and the I3SDataProvider.loadURL function is invoked, it accomplishes the following:
+ * When a scene layer is initialized, and the I3SDataProvider.loadUrl function is invoked, it accomplishes the following:
  *
  * It processes the 3D Scene Layer resource (https://github.com/Esri/i3s-spec/blob/master/docs/1.8/3DSceneLayer.cmn.md) of an I3S dataset
  * and loads the layers data. It does so by creating a Cesium 3D Tileset for the given i3s layer and loads the root node.
