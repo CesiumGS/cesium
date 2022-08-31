@@ -471,7 +471,6 @@ function longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
  */
 function I3SSceneLayer(dataProvider) {
   this._dataProvider = dataProvider;
-  this._entities = {};
   this._layerCollection = [];
   this._uri = "";
 }
@@ -701,7 +700,6 @@ function I3SLayer(sceneLayer, layerData, index) {
   this._completeUriWithoutQuery = tilesetUrl;
   this._completeUri = this._completeUriWithoutQuery + query;
   this._data = layerData;
-  this._entities = {};
   this._rootNode = null;
   this._nodePages = {};
   this._nodePageFetches = {};

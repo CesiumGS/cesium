@@ -55,7 +55,6 @@ function I3SNode(parent, ref, isRoot) {
     this._completeUri = this._completeUriWithoutQuery + query;
   }
 
-  this._entities = {};
   this._tile = null;
   this._geometryData = [];
   this._featureData = [];
