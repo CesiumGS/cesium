@@ -918,7 +918,6 @@ I3SLayer.prototype.load = function () {
 
     dataIsReadyPromise.then(function () {
       that._dataProvider._geoidDataList = geoidDataList;
-
       that._loadNodePage(0).then(function () {
         that._loadRootNode().then(function () {
           that._create3DTileSet();
