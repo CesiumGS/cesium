@@ -91,7 +91,6 @@ import WebMercatorProjection from "../Core/WebMercatorProjection.js";
  * });
  * i3sData.loadUrl('https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
  * viewer.scene.primitives.add(i3sData);
- *
  */
 function I3SDataProvider(name, scene, options, cesium3dTilesetOptions) {
   // All public configuration is defined as ES5 properties
@@ -202,26 +201,11 @@ Object.defineProperties(I3SDataProvider.prototype, {
       this._autoCenterCameraOnStart = value;
     },
   },
-
-  /**
-   * The terrain provider referencing the GEOID service to be used for orthometric to ellipsoidal conversion
-   * @memberof Viewer.prototype
-   *
-   * @type {TerrainProvider}
-   */
-  geoidTiledServiceProvider: {
-    get: function () {
-      return this._geoidTiledServiceProvider;
-    },
-    set: function (value) {
-      this.geoidTiledServiceProvider = value;
-    },
-  },
 });
 
 /**
  * Asynchronously loads the I3S scene at the provided url, replacing any existing data.
- * @param {Object} [url] The url to be processed.
+ * @param {Object} url The url to be processed.
  * @returns {Promise<void>} a promise that will resolve when the I3S scene is loaded.
  */
 I3SDataProvider.prototype.loadUrl = function (url) {
