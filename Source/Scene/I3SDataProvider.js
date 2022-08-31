@@ -950,7 +950,6 @@ I3SLayer.prototype.load = function () {
 
     dataIsReadyPromise.then(function () {
       that._dataProvider._geoidDataList = geoidDataList;
-      console.log("Starting to load visual elements");
 
       that._loadNodePage(0).then(function () {
         that._loadRootNode().then(function () {
