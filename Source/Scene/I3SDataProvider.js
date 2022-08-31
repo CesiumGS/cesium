@@ -1,26 +1,26 @@
 /*
-* Esri Contribution: This code implements support for I3S (Indexed 3D Scene Layers), an OGC Community Standard.
-* Co-authored-by: Alexandre Jean-Claude ajeanclaude@spiria.com
-* Co-authored-by: Anthony Mirabeau anthony.mirabeau@presagis.com
-* Co-authored-by: Elizabeth Rudkin elizabeth.rudkin@presagis.com
-* Co-authored-by: Tamrat Belayneh tbelayneh@esri.com
-
+ * Esri Contribution: This code implements support for I3S (Indexed 3D Scene Layers), an OGC Community Standard.
+ * Co-authored-by: Alexandre Jean-Claude ajeanclaude@spiria.com
+ * Co-authored-by: Anthony Mirabeau anthony.mirabeau@presagis.com
+ * Co-authored-by: Elizabeth Rudkin elizabeth.rudkin@presagis.com
+ * Co-authored-by: Tamrat Belayneh tbelayneh@esri.com
+ *
  * The I3S format has been developed by Esri and is shared under an Apache 2.0 license and is maintained @ https://github.com/Esri/i3s-spec.
  * This implementation supports loading, displaying, and querying an I3S layer (supported versions include Esri github I3S versions 1.6, 1.7/1.8 -
- * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the Cesium viewer.
- * It enables the user to access an I3S layer via its URL and load it inside of the Cesium viewer.
+ * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the CesiumJS viewer.
+ * It enables the user to access an I3S layer via its URL and load it inside of the CesiumJS viewer.
  *
  * When a scene layer is initialized, and the I3SDataProvider.loadURL function is invoked, it accomplishes the following:
  *
- * It processes the 3D Scene Layer  resource (https://github.com/Esri/i3s-spec/blob/master/docs/1.8/3DSceneLayer.cmn.md) of an I3S dataset
- * and loads the layers data. It does so by creating a Cesium 3D Tile Set for the given i3s layer and loads the root node.
- * When the root node is imported, it creates a Cesium 3D tile that is parented to the Cesium 3D tile set
+ * It processes the 3D Scene Layer resource (https://github.com/Esri/i3s-spec/blob/master/docs/1.8/3DSceneLayer.cmn.md) of an I3S dataset
+ * and loads the layers data. It does so by creating a Cesium 3D Tileset for the given i3s layer and loads the root node.
+ * When the root node is imported, it creates a Cesium 3D Tile that is parented to the Cesium 3D Tileset
  * and loads all children of the root node:
  *  for each children
  *   Create a place holder 3D tile so that the LOD display can use the nodes' selection criteria (maximumScreenSpaceError) to select the appropriate node
  *   based on the current LOD display & evaluation. If the Cesium 3D tile is visible, it invokes requestContent on it.
  *   At that moment, we intercept the call to requestContent, and we load the geometry in I3S format
- *   That geometry is transcoded on the fly to gltf format and ingested by Cesium
+ *   That geometry is transcoded on the fly to glTF format and ingested by CesiumJS
  *   When the geometry is loaded, we then load all children of this node as placeholders so that the LOD
  *   can know about them too.
  *
@@ -30,8 +30,8 @@
  * The steps are:
  *
  * Decode geometry attributes (positions, normals, etc..) either from DRACO or Binary format.
- * If requested, (when creating an I3SDataProvider the user has the option to specify a tiled elevation terrain provider
- * (geoidTiledTerrainProvider) such as the one shown in the sandbox example based on ArcGISTiledElevationTerrainProvider, that allows
+ * If requested, when creating an I3SDataProvider the user has the option to specify a tiled elevation terrain provider
+ * (geoidTiledTerrainProvider) such as the one shown in the sandcastle example based on ArcGISTiledElevationTerrainProvider, that allows
  * conversion of heights for all vertices & bounding boxes of an I3S layer from (typically) gravity related (Orthometric) heights to Ellipsoidal.
  * This step is essential when fusing data with varying height sources (as is the case when fusing the I3S dataset (gravity related) in the sandcastle examples with the cesium world terrain (ellipsoidal)).
  * We then transform vertex coordinates from LONG/LAT/HEIGHT to Cartesian in local space and
@@ -44,81 +44,8 @@
  * We provide the ability to use GEOID data to convert heights from gravity related (orthometric) height systems to ellipsoidal.
  * We employ a service architecture to get the conversion factor for a given long lat values, leveraging existing implementation based on ArcGISTiledElevationTerrainProvider
  * to avoid requiring bloated look up files. The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on
- * EGM2008 Gravity Model. The Sandbox examples show how to set the terrain provider service if required.
- *
- *
+ * EGM2008 Gravity Model. The sandcastle examples show how to set the terrain provider service if required.
  */
-
-/// Sandcastle example:
-/*
-// Create a Viewer instances and add the Scene's primitives.
-let viewer = new Cesium.Viewer("cesiumContainer", {
-    animation: false,
-    timeline: false,
-});
-viewer.clock.shouldAnimate = false;
-let tours = {
-    "Frankfurt": "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0;
-/layers/0"
-    };
-// Initialize the terrain provider which provides the geoid conversion
-// If this is not specified, or the URL is invalid no geoid conversion will be applied.
-let geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
-    url : "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
-});
-let i3sOptions = {
-    traceFetches : false, // for tracing I3S fetches
-    autoCenterCameraOnStart : true, // auto center to the location of the i3s
-    geoidTiledTerrainProvider : geoidService,  // pass the geoid service
-};
-let cesiumTilesetOptions = {
-    show : true,
-    skipLevelOfDetail : true,
-    maximumScreenSpaceError : 16,
-};
-let dataProvider = new Cesium.I3SDataProvider("", viewer.scene, i3sOptions, cesiumTilesetOptions);
-dataProvider.camera = viewer.camera; // for debug
-dataProvider
-    .loadUrl(tours["Frankfurt"])
-    .then(function () {
-    });
-viewer.scene.primitives.add(dataProvider);
-// Silhouette a feature on selection and show metadata in the InfoBox.
-viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
-    movement
-) {
-    // Pick a new feature
-    let pickedFeature = viewer.scene.pick(movement.position);
-    if (!Cesium.defined(pickedFeature)) {
-        return;
-    }
-    let pickedPosition = viewer.scene.pickPosition(movement.position);
-    if (pickedFeature && pickedFeature.content &&
-        pickedFeature.content.i3sNode) {
-        let i3sNode = pickedFeature.content.i3sNode;
-        i3sNode.loadFields().then(function() {
-            console.log(i3sNode);
-            let geometry = i3sNode.geometryData[0];
-            console.log(geometry);
-            if (pickedPosition) {
-                const location = geometry.getClosestPointIndexOnTriangle(
-                    pickedPosition.x, pickedPosition.y, pickedPosition.z);
-                console.log("Location", location);
-                if (location.index !== -1 && geometry.customAttributes["feature-index"]) {
-                    const featureIndex = geometry.customAttributes["feature-index"][location.index];
-                    for (let fieldName=0; fieldName < i3sNode.fields.length; fieldName++) {
-                        const field = i3sNode.fields[fieldName];
-                        console.log(field.name + ": " + field.values[featureIndex]);
-                    }
-                }
-            }
-        });
-    }
-    console.log(viewer.scene.camera);
-},
-    Cesium.ScreenSpaceEventType.LEFT_CLICK);
-*/
-
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -138,18 +65,8 @@ import Resource from "../Core/Resource.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 
-// Maps i3Snode by URI
-
-// Code traces
-// set to true to turn on code tracing for debugging purposes
-const _tracecode = false;
-let traceCode = function () {};
-if (_tracecode) {
-  traceCode = console.log;
-}
-
 /**
- * This class implements using an I3S Scene Layer as a Cesium data source. The URL
+ * This class implements an I3S Scene Layer. The URL
  * that is used for loadUrl should return a scene object. Currently supported I3S
  * versions are 1.6 and 1.7/1.8 (OGC I3S 1.2). An I3SDataProvider is the main public class for I3S support.
  * I3SFeature and I3SNode classes implement the Object Model for I3S entities, with public interfaces
@@ -157,24 +74,24 @@ if (_tracecode) {
  * @alias I3SDataProvider
  * @constructor
  *
- * @param {String} [name] The name of this data source.  If undefined, a name
- *                        will be derived from the url.
+ * @param {String} [name] The name of this data source.  If undefined, a name will be derived from the url.
  * @param {Scene} [scene] The scene to populate with the tileset
  *
  *
  * @example
  * let i3sData = new I3SDataProvider();
-
  * i3sData.loadUrl('https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
  * viewer.scene.primitives.add(i3sData);
  *
  * @example
  * let geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
- *   url : "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
- *   });
+ *   url: "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
+ * });
  * let dataProvider = new I3SDataProvider("", viewer.scene, {
- *   autoCenterCameraOnStart : true, // auto center to the location of the i3s
- *   geoidTiledTerrainProvider : geoidService,  // pass the geoid service
+ *   geoidTiledTerrainProvider: geoidService,  // pass the geoid service
+ * });
+ * i3sData.loadUrl('https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
+ * viewer.scene.primitives.add(i3sData);
  *
  */
 
@@ -508,7 +425,7 @@ I3SDataProvider.prototype._loadBinary = function (uri, success, fail) {
   const that = this;
   return new Promise(function (resolve, reject) {
     if (that._traceFetches) {
-      traceCode("I3S FETCH:", uri);
+      console.log("I3S FETCH:", uri);
     }
     const request = Resource.fetchArrayBuffer(uri);
     request.then(function (data) {
