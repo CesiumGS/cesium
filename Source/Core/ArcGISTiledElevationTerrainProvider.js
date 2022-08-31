@@ -115,8 +115,8 @@ function ArcGISTiledElevationTerrainProvider(options) {
         );
         that._tilingScheme = new GeographicTilingScheme(tilingSchemeOptions);
       } else if (wkid === 3857) {
-        //clamp extent to EPSG 3857 bounds
-        const epsg3857Bounds = Math.PI * ellipsoid._maximumRadius;
+        // Clamp extent to EPSG 3857 bounds
+        const epsg3857Bounds = Math.PI * ellipsoid.maximumRadius;
         if (metadata.extent.xmax > epsg3857Bounds) {
           metadata.extent.xmax = epsg3857Bounds;
         }
@@ -126,7 +126,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
         if (metadata.extent.xmin < -epsg3857Bounds) {
           metadata.extent.xmin = -epsg3857Bounds;
         }
-        if (metadata.extent.ymin < epsg3857Bounds) {
+        if (metadata.extent.ymin < -epsg3857Bounds) {
           metadata.extent.ymin = -epsg3857Bounds;
         }
 
@@ -188,7 +188,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
         );
       }
 
-      if (metadata.minValues && metadata.maxValues) {
+      if (defined(metadata.minValues) && defined(metadata.maxValues)) {
         that._terrainDataStructure = {
           elementMultiplier: 1.0,
           lowestEncodedHeight: metadata.minValues[0],
