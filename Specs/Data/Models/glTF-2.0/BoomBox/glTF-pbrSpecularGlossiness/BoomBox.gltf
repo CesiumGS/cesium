@@ -4,19 +4,49 @@
       "bufferView": 0,
       "componentType": 5126,
       "count": 3575,
-      "type": "VEC2"
+      "type": "VEC2",
+      "max": [
+        0.9999003,
+        -0.0221377648
+      ],
+      "min": [
+        0.0006585993,
+        -0.996773958
+      ]
     },
     {
       "bufferView": 1,
       "componentType": 5126,
       "count": 3575,
-      "type": "VEC3"
+      "type": "VEC3",
+      "max": [
+        1.0,
+        1.0,
+        0.9999782
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -0.9980823
+      ]
     },
     {
       "bufferView": 2,
       "componentType": 5126,
       "count": 3575,
-      "type": "VEC4"
+      "type": "VEC4",
+      "max": [
+        1.0,
+        0.9999976,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -0.9991289,
+        -0.999907851,
+        -1.0,
+        1.0
+      ]
     },
     {
       "bufferView": 3,
@@ -38,7 +68,13 @@
       "bufferView": 4,
       "componentType": 5123,
       "count": 18108,
-      "type": "SCALAR"
+      "type": "SCALAR",
+      "max": [
+        3574
+      ],
+      "min": [
+        0
+      ]
     }
   ],
   "asset": {
@@ -152,7 +188,10 @@
           },
           "specularGlossinessTexture": {
             "index": 6
-          }
+          },
+          "specularFactor": [1.0, 1.0, 1.0],
+          "diffuseFactor": [1.0, 1.0, 1.0, 1.0],
+          "glossinessFactor": 0.5
         }
       }
     }
@@ -160,12 +199,6 @@
   "nodes": [
     {
       "mesh": 0,
-      "rotation": [
-        0.0,
-        1.0,
-        0.0,
-        0.0
-      ],
       "name": "BoomBox"
     }
   ],

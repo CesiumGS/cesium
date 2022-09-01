@@ -75,9 +75,9 @@ describe(
       return waitForLoaderProcess(gltfLoader, scene);
     }
 
-    const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
+    const boomBox = "./Data/Models/glTF-2.0/BoomBox/glTF/BoomBox.gltf";
     const boomBoxSpecularGlossiness =
-      "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxUnlit = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
     const boxNoNormals =
       "./Data/Models/glTF-2.0/BoxNoNormals/glTF/BoxNoNormals.gltf";

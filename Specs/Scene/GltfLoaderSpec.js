@@ -2861,12 +2861,12 @@ describe(
 
         expect(components.upAxis).toBe(Axis.Y);
         expect(components.forwardAxis).toBe(Axis.Z);
-        expect(material.occlusionTexture.texture.width).toBe(128);
-        expect(material.normalTexture.texture.width).toBe(128);
-        expect(material.emissiveTexture.texture.width).toBe(128);
-        expect(specularGlossiness.diffuseTexture.texture.width).toBe(128);
+        expect(material.occlusionTexture.texture.width).toBe(256);
+        expect(material.normalTexture.texture.width).toBe(256);
+        expect(material.emissiveTexture.texture.width).toBe(256);
+        expect(specularGlossiness.diffuseTexture.texture.width).toBe(256);
         expect(specularGlossiness.specularGlossinessTexture.texture.width).toBe(
-          128
+          256
         );
 
         expect(specularGlossiness.diffuseFactor).toEqual(
@@ -2875,7 +2875,7 @@ describe(
         expect(specularGlossiness.specularFactor).toEqual(
           new Cartesian3(1.0, 1.0, 1.0)
         );
-        expect(specularGlossiness.glossinessFactor).toBe(1.0);
+        expect(specularGlossiness.glossinessFactor).toBe(0.5);
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);

@@ -14,9 +14,9 @@ describe(
   function () {
     const animatedMorphCube =
       "./Data/Models/glTF-2.0/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
-    const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
+    const boomBox = "./Data/Models/glTF-2.0/BoomBox/glTF/BoomBox.gltf";
     const boomBoxSpecularGlossiness =
-      "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxTextured =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedBinary =
