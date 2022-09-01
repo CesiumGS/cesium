@@ -30,6 +30,7 @@
 - `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
 - Export asset files such as CSS in `package.json`, allowing bundlers to import without additional configuration. [#9212](https://github.com/CesiumGS/cesium/pull/9212)
 - The `sideEffects` field in `package.json` is now defined, allowing more conservative bundlers like Webpack to enable tree shaking by default.
+- Model entities now support `CustomShader`. [#10747](https://github.com/CesiumGS/cesium/pull/10747)
 
 ##### Fixes :wrench:
 
