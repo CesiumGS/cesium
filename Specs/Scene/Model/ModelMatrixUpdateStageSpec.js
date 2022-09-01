@@ -15,8 +15,7 @@ import loadAndZoomToModel from "./loadAndZoomToModel.js";
 describe(
   "Scene/Model/ModelMatrixUpdateStage",
   function () {
-    const simpleSkin =
-      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+    const simpleSkin = "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
 
     // These functions are specific to the SimpleSkin model.
     // The child leaf node is transformed relative to its parent,

@@ -17,10 +17,10 @@ describe(
   "Scene/Model/PickingPipelineStage",
   function () {
     const boxVertexColors =
-      "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+      "./Data/Models/glTF-2.0/BoxVertexColors/glTF/BoxVertexColors.gltf";
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
 
     const mockIdObject = {};
 

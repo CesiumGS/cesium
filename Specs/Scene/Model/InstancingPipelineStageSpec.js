@@ -26,11 +26,11 @@ describe(
     const scratchMatrix4 = new Matrix4();
 
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
     const boxInstancedTranslation =
-      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
     const boxInstancedTranslationMinMax =
-      "./Data/Models/GltfLoader/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
     const i3dmInstancedOrientation =
       "./Data/Cesium3DTiles/Instanced/InstancedOrientation/instancedOrientation.i3dm";
 

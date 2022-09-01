@@ -49,9 +49,9 @@ describe(
     const webglStub = !!window.webglStub;
 
     const triangleWithoutIndicesUrl =
-      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+      "./Data/Models/glTF-2.0/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
     const animatedTriangleUrl =
-      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+      "./Data/Models/glTF-2.0/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
     const animatedTriangleOffset = new HeadingPitchRange(
       CesiumMath.PI / 2.0,
       0,
@@ -59,17 +59,17 @@ describe(
     );
 
     const boxTexturedGltfUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
     const boxTexturedGlbUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
     const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
     const boxArticulationsUrl =
-      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+      "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     // prettier-ignore
     const boxArticulationsMatrix = Matrix4.fromRowMajorArray([
       1, 0, 0, 0,
@@ -78,24 +78,24 @@ describe(
       0, 0, 0, 1
     ]);
 
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
     const morphPrimitivesTestUrl =
-      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
+      "./Data/Models/glTF-2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
     const pointCloudUrl =
-      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+      "./Data/Models/glTF-2.0/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const twoSidedPlaneUrl =
-      "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+      "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
     const vertexColorTestUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
     const emissiveTextureUrl = "./Data/Models/PBR/BoxEmissive/BoxEmissive.gltf";
     const boomBoxUrl =
-      "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const riggedFigureUrl =
-      "./Data/Models/GltfLoader/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
+      "./Data/Models/glTF-2.0/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
-      "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
+      "./Data/Models/glTF-2.0/CesiumMan/glTF-Draco/CesiumMan.gltf";
     const boxCesiumRtcUrl =
-      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+      "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -1012,7 +1012,7 @@ describe(
 
     describe("credits", function () {
       const boxWithCreditsUrl =
-        "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
+        "./Data/Models/glTF-2.0/BoxWithCopyright/glTF/Box.gltf";
 
       it("initializes with credit", function () {
         const credit = new Credit("User Credit");
@@ -1240,9 +1240,9 @@ describe(
 
     describe("debugWireframe", function () {
       const triangleStripUrl =
-        "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+        "./Data/Models/glTF-2.0/TriangleStrip/glTF/TriangleStrip.gltf";
       const triangleFanUrl =
-        "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
+        "./Data/Models/glTF-2.0/TriangleFan/glTF/TriangleFan.gltf";
 
       let sceneWithWebgl2;
 
@@ -3497,7 +3497,7 @@ describe(
 
     describe("back-face culling", function () {
       const boxBackFaceCullingUrl =
-        "./Data/Models/GltfLoader/BoxBackFaceCulling/glTF/BoxBackFaceCulling.gltf";
+        "./Data/Models/glTF-2.0/BoxBackFaceCulling/glTF/BoxBackFaceCulling.gltf";
       const boxBackFaceCullingOffset = new HeadingPitchRange(
         Math.PI / 2,
         0,

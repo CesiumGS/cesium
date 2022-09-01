@@ -22,12 +22,12 @@ describe(
     const vertexColorGltfUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const simpleSkinGltfUrl =
-      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+      "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
     const boxArticulationsUrl =
-      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
-    const duckUrl = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
+      "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
+    const duckUrl = "./Data/Models/glTF-2.0/Duck/glTF-Draco/Duck.gltf";
 
     let scene;
 

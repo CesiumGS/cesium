@@ -18,7 +18,7 @@ describe(
   "Scene/Model/PrimitiveOutlinePipelineStage",
   function () {
     const boxWithPrimitiveOutline =
-      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+      "./Data/Models/glTF-2.0/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
 
     let scene;
     const gltfLoaders = [];

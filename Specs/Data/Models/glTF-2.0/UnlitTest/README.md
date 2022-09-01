@@ -18,7 +18,7 @@ The above screenshot shows a case where normal lighting calculations have been a
 
 This model lists the unlit extension in both lists, like this:
 
-```
+```json
     "extensionsUsed": [
         "KHR_materials_unlit"
     ],
