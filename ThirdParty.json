@@ -4,7 +4,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "2.6.7",
+    "version": "2.4.26",
     "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {
@@ -12,7 +12,7 @@
     "license": [
       "MIT"
     ],
-    "version": "3.15.0",
+    "version": "3.16.0",
     "url": "https://www.npmjs.com/package/autolinker"
   },
   {
@@ -36,7 +36,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "2.3.10",
+    "version": "2.4.0",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -178,12 +178,7 @@
     "url": "https://www.npmjs.com/package/topojson-client"
   },
   {
-    "name": "tween.js",
-    "license": [
-      "MIT"
-    ],
-    "version": "16.6.0",
-    "url": "https://www.npmjs.com/package/tween.js"
+    "name": "tween.js"
   },
   {
     "name": "urijs",

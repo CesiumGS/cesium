@@ -1,20 +1,16 @@
 import {
   BoundingRectangle,
-  Cartesian3,
   Color,
   defined,
-  HeadingPitchRange,
-  Matrix4,
   PixelFormat,
-  Transforms,
   PixelDatatype,
-  Model,
   PostProcessStage,
   PostProcessStageSampleMode,
 } from "../../../Source/Cesium.js";
 
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
+import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
 
 describe(
   "Scene/PostProcessStage",
@@ -236,78 +232,40 @@ describe(
         });
     });
 
-    let model;
-
-    function loadModel(url) {
-      model = scene.primitives.add(
-        Model.fromGltf({
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
-            Cartesian3.fromDegrees(0.0, 0.0, 100.0)
-          ),
-          url: url,
-        })
-      );
-      model.zoomTo = function () {
-        const camera = scene.camera;
-        const center = Matrix4.multiplyByPoint(
-          model.modelMatrix,
-          model.boundingSphereInternal.center,
-          new Cartesian3()
-        );
-        const r =
-          4.0 *
-          Math.max(model.boundingSphereInternal.radius, camera.frustum.near);
-        camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
-      };
-
-      return pollToPromise(
-        function () {
-          // Render scene to progressively load the model
-          scene.renderForSpecs();
-          return model.ready;
-        },
-        { timeout: 10000 }
-      )
-        .then(function () {
-          return model;
-        })
-        .catch(function () {
-          return Promise.reject(model);
-        });
-    }
-
     it("per-feature post process stage", function () {
-      return loadModel("./Data/Models/Box/CesiumBoxTest.gltf").then(
-        function () {
-          model.zoomTo();
-          const fs =
-            "uniform sampler2D colorTexture; \n" +
-            "varying vec2 v_textureCoordinates; \n" +
-            "void main() { \n" +
-            "    if (czm_selected(v_textureCoordinates)) { \n" +
-            "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +
-            "    } else { \n" +
-            "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
-            "    } \n" +
-            "} \n";
-          const stage = scene.postProcessStages.add(
-            new PostProcessStage({
-              fragmentShader: fs,
-            })
-          );
-          stage.selected = [];
-          return pollToPromise(function () {
-            scene.renderForSpecs();
-            return stage.ready;
-          }).then(function () {
-            expect(scene).toRender([255, 0, 0, 255]);
-            stage.selected = [model];
-            expect(scene).toRenderAndCall(function (rgba) {
-              expect(rgba).not.toEqual([255, 0, 0, 255]);
-            });
+      return loadAndZoomToModel(
+        {
+          url: "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf",
+        },
+        scene
+      ).then(function (model) {
+        const fs =
+          "uniform sampler2D colorTexture; \n" +
+          "varying vec2 v_textureCoordinates; \n" +
+          "void main() { \n" +
+          "    if (czm_selected(v_textureCoordinates)) { \n" +
+          "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +
+          "    } else { \n" +
+          "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+          "    } \n" +
+          "} \n";
+        const stage = scene.postProcessStages.add(
+          new PostProcessStage({
+            fragmentShader: fs,
+          })
+        );
+        stage.selected = [];
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          return stage.ready;
+        }).then(function () {
+          expect(scene).toRender([255, 0, 0, 255]);
+          stage.selected = [model];
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual([255, 0, 0, 255]);
           });
-        }
-      );
+        });
+      });
     });
 
     it("destroys", function () {

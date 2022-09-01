@@ -28,6 +28,7 @@ import {
   Resource,
   ResourceCache,
   ResourceLoaderState,
+  RuntimeError,
   Sampler,
   Texture,
   TextureMagnificationFilter,
@@ -70,7 +71,7 @@ describe(
     const animatedMorphCube =
       "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/InterpolationTest/InterpolationTest.glb";
+      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
     const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
@@ -112,21 +113,22 @@ describe(
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
       "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+    const multiUvTest =
+      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
+    const boxCesiumRtc =
+      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+    const torusQuantized =
+      "./Data/Models/GltfLoader/TorusQuantized/glTF/TorusQuantized.gltf";
 
     let scene;
-    let sceneWithWebgl2;
     const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
-
-      sceneWithWebgl2 = createScene();
-      sceneWithWebgl2.context._webgl2 = true;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-      sceneWithWebgl2.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -147,6 +149,21 @@ describe(
           gltfResource: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("throws if an unsupported extension is required", function () {
+      function modifyGltf(gltf) {
+        gltf.extensionsRequired = ["NOT_supported_extension"];
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf)
+        .then(function () {
+          fail();
+        })
+        .catch(function (error) {
+          expect(error).toBeInstanceOf(RuntimeError);
+        });
     });
 
     function getOptions(gltfPath, options) {
@@ -231,6 +248,22 @@ describe(
       }
       return undefined;
     }
+
+    it("preserves query string in url", function () {
+      const params = "?param1=1&param2=2";
+      const url = boxTextured + params;
+      return loadGltf(url).then(function (gltfLoader) {
+        const loaderResource = gltfLoader._gltfResource;
+        expect(loaderResource.url).toEndWith(params);
+      });
+    });
+
+    it("releases GLB typed array when finished loading", function () {
+      return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
+        expect(gltfLoader.components).toBeDefined();
+        expect(gltfLoader._typedArray).not.toBeDefined();
+      });
+    });
 
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
@@ -1038,6 +1071,51 @@ describe(
         const material1 = primitive1.material;
         expect(material0.unlit).toBe(true);
         expect(material1.unlit).toBe(true);
+      });
+    });
+
+    it("loads MultiUVTest", function () {
+      return loadGltf(multiUvTest).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const emissiveTexture = material.emissiveTexture;
+
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const tangentAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TANGENT
+        );
+        const texcoordAttribute0 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        const texcoordAttribute1 = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          1
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+        expect(tangentAttribute).toBeDefined();
+        expect(texcoordAttribute0).toBeDefined();
+        expect(texcoordAttribute1).toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(emissiveTexture.texCoord).toBe(1);
       });
     });
 
@@ -2089,9 +2167,24 @@ describe(
       });
     });
 
-    it("loads BoxInstanced", function () {
-      return loadGltf(boxInstanced).then(function (gltfLoader) {
-        const components = gltfLoader.components;
+    describe("loads instanced models", function () {
+      let sceneWithNoInstancing;
+
+      beforeAll(function () {
+        // Disable instancing extension.
+        sceneWithNoInstancing = createScene();
+        sceneWithNoInstancing.context._instancedArrays = undefined;
+      });
+
+      function verifyBoxInstancedAttributes(loader, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        const interleaved = defaultValue(options.interleaved, false);
+        const instancingDisabled = defaultValue(
+          options.instancingDisabled,
+          false
+        );
+
+        const components = loader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
         const primitive = rootNode.primitives[0];
@@ -2104,7 +2197,6 @@ describe(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
@@ -2207,10 +2299,37 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeDefined();
-        expect(featureIdAttribute.buffer).toBeUndefined();
-        expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
+        // The feature IDs should only be loaded as a typed array
+        // if instancing is disabled.
+        if (instancingDisabled) {
+          expect(featureIdAttribute.typedArray).toEqual(
+            new Float32Array([0, 0, 1, 1])
+          );
+          expect(featureIdAttribute.buffer).toBeUndefined();
+        } else {
+          expect(featureIdAttribute.typedArray).toBeUndefined();
+          expect(featureIdAttribute.buffer).toBeDefined();
+        }
+
+        if (interleaved && !instancingDisabled) {
+          expect(featureIdAttribute.byteOffset).toBe(40);
+          expect(featureIdAttribute.byteStride).toBe(44);
+        } else if (instancingDisabled) {
+          // Feature IDs are available in a packed array.
+          expect(featureIdAttribute.byteOffset).toBe(0);
+          expect(featureIdAttribute.byteStride).toBeUndefined();
+        } else {
+          expect(featureIdAttribute.byteOffset).toBe(0);
+          expect(featureIdAttribute.byteStride).toBe(4);
+        }
+      }
+
+      function verifyBoxInstancedStructuralMetadata(loader) {
+        const components = loader.components;
+        const structuralMetadata = components.structuralMetadata;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const instances = rootNode.instances;
 
         expect(instances.featureIds.length).toBe(2);
 
@@ -2281,131 +2400,14 @@ describe(
         expect(sectionTable.getProperty(0, "id")).toBe(10293);
         expect(sectionTable.getProperty(1, "name")).toBe("right");
         expect(sectionTable.getProperty(1, "id")).toBe(54923);
-      });
-    });
+      }
 
-    it("loads BoxInstanced with EXT_feature_metadata", function () {
-      return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
-        const components = gltfLoader.components;
+      function verifyBoxInstancedStructuralMetadataLegacy(loader) {
+        const components = loader.components;
+        const structuralMetadata = components.structuralMetadata;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        const rotationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.ROTATION
-        );
-        const scaleAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.SCALE
-        );
-        const featureIdAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.FEATURE_ID,
-          0
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toBeUndefined();
-        expect(translationAttribute.max).toBeUndefined();
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toEqual(
-          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-        );
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
-
-        expect(rotationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.ROTATION
-        );
-        expect(rotationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(rotationAttribute.type).toBe(AttributeType.VEC4);
-        expect(rotationAttribute.normalized).toBe(false);
-        expect(rotationAttribute.count).toBe(4);
-        expect(rotationAttribute.min).toBeUndefined();
-        expect(rotationAttribute.max).toBeUndefined();
-        expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
-        expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.typedArray).toEqual(
-          // prettier-ignore
-          new Float32Array([
-            0.3826833963394165, 0, 0, 0.9238795042037964,
-            0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-            0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-            0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-          ])
-        );
-        expect(rotationAttribute.buffer).toBeUndefined();
-        expect(rotationAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
-
-        expect(scaleAttribute.semantic).toBe(InstanceAttributeSemantic.SCALE);
-        expect(scaleAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
-        expect(scaleAttribute.type).toBe(AttributeType.VEC3);
-        expect(scaleAttribute.normalized).toBe(false);
-        expect(scaleAttribute.count).toBe(4);
-        expect(scaleAttribute.min).toBeUndefined();
-        expect(scaleAttribute.max).toBeUndefined();
-        expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.typedArray).toEqual(
-          // prettier-ignore
-          new Float32Array([
-            0.6000000238418579, 0.699999988079071, 1,
-            1, 1, 0.5,
-            0.75, 0.20000000298023224, 0.5,
-            0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-          ])
-        );
-        expect(scaleAttribute.buffer).toBeUndefined();
-        expect(scaleAttribute.byteOffset).toBe(0);
-        expect(scaleAttribute.byteStride).toBeUndefined();
-
-        expect(featureIdAttribute.setIndex).toBe(0);
-        expect(featureIdAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
-        expect(featureIdAttribute.normalized).toBe(false);
-        expect(featureIdAttribute.count).toBe(4);
-        expect(featureIdAttribute.min).toBeUndefined();
-        expect(featureIdAttribute.max).toBeUndefined();
-        expect(featureIdAttribute.constant).toBe(0);
-        expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeDefined();
-        expect(featureIdAttribute.buffer).toBeUndefined();
-        expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBeUndefined();
 
         expect(instances.featureIds.length).toBe(2);
 
@@ -2474,107 +2476,46 @@ describe(
         expect(sectionTable.getProperty(0, "id")).toBe(10293);
         expect(sectionTable.getProperty(1, "name")).toBe("right");
         expect(sectionTable.getProperty(1, "id")).toBe(54923);
-      });
-    });
-
-    it("loads BoxInstanced when WebGL instancing is disabled", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstanced)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          const rotationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.ROTATION
-          );
-          const scaleAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.SCALE
-          );
-          const featureIdAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID,
-            0
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
-          expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-          );
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-
-          expect(rotationAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.3826833963394165, 0, 0, 0.9238795042037964,
-              0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-              0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-              0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-            ])
-          );
-          expect(rotationAttribute.buffer).toBeUndefined();
-          expect(rotationAttribute.byteOffset).toBe(0);
-          expect(rotationAttribute.byteStride).toBeUndefined();
-
-          expect(scaleAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.6000000238418579, 0.699999988079071, 1,
-              1, 1, 0.5,
-              0.75, 0.20000000298023224, 0.5,
-              0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-            ])
-          );
-          expect(scaleAttribute.buffer).toBeUndefined();
-          expect(scaleAttribute.byteOffset).toBe(0);
-          expect(scaleAttribute.byteStride).toBeUndefined();
-
-          expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
-          );
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.byteOffset).toBe(0);
-          expect(featureIdAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
-        });
-    });
-
-    it("loads BoxInstanced with default feature ids", function () {
-      function modifyGltf(gltf) {
-        // Delete feature ID accessor's buffer view
-        delete gltf.accessors[6].bufferView;
-        return gltf;
       }
 
-      return loadModifiedGltfAndTest(boxInstanced, undefined, modifyGltf).then(
-        function (gltfLoader) {
+      it("loads BoxInstanced", function () {
+        return loadGltf(boxInstanced).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedStructuralMetadata(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced with EXT_feature_metadata", function () {
+        return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader);
+          verifyBoxInstancedStructuralMetadataLegacy(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced when WebGL instancing is disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstanced, options).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader, {
+            instancingDisabled: true,
+          });
+          verifyBoxInstancedStructuralMetadata(gltfLoader);
+        });
+      });
+
+      it("loads BoxInstanced with default feature ids", function () {
+        function modifyGltf(gltf) {
+          // Delete feature ID accessor's buffer view
+          delete gltf.accessors[6].bufferView;
+          return gltf;
+        }
+
+        return loadModifiedGltfAndTest(
+          boxInstanced,
+          undefined,
+          modifyGltf
+        ).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
           const rootNode = scene.nodes[0];
@@ -2589,151 +2530,38 @@ describe(
           expect(featureIdAttribute.buffer).toBeUndefined();
           expect(featureIdAttribute.typedArray).toBeUndefined();
           expect(featureIdAttribute.constant).toEqual(0.0);
-        }
-      );
-    });
-
-    it("loads BoxInstancedInterleaved", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstancedInterleaved)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-          const rotationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.ROTATION
-          );
-          const scaleAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.SCALE
-          );
-          const featureIdAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID,
-            0
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
-          expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-          );
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-
-          expect(rotationAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.3826833963394165, 0, 0, 0.9238795042037964,
-              0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-              0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-              0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-            ])
-          );
-          expect(rotationAttribute.buffer).toBeUndefined();
-          expect(rotationAttribute.byteOffset).toBe(0);
-          expect(rotationAttribute.byteStride).toBeUndefined();
-
-          expect(scaleAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-              0.6000000238418579, 0.699999988079071, 1,
-              1, 1, 0.5,
-              0.75, 0.20000000298023224, 0.5,
-              0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-            ])
-          );
-          expect(scaleAttribute.buffer).toBeUndefined();
-          expect(scaleAttribute.byteOffset).toBe(0);
-          expect(scaleAttribute.byteStride).toBeUndefined();
-
-          expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
-          );
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.byteOffset).toBe(0);
-          expect(featureIdAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
         });
-    });
-
-    it("loads BoxInstancedTranslation", function () {
-      return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
-
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toBeUndefined();
-        expect(translationAttribute.max).toBeUndefined();
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toEqual(
-          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-        );
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
       });
-    });
 
-    it("loads BoxInstancedTranslationWithMinMax", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
+      it("loads BoxInstancedInterleaved", function () {
+        return loadGltf(boxInstancedInterleaved).then(function (gltfLoader) {
+          verifyBoxInstancedAttributes(gltfLoader, {
+            interleaved: true,
+          });
+        });
+      });
+
+      it("loads BoxInstancedInterleaved with instancing disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstancedInterleaved, options).then(function (
+          gltfLoader
+        ) {
+          verifyBoxInstancedAttributes(gltfLoader, {
+            interleaved: true,
+            instancingDisabled: true,
+          });
+        });
+      });
+
+      function verifyBoxInstancedTranslation(
+        loader,
+        expectMinMax,
+        expectBufferDefined,
+        expectTypedArrayDefined
       ) {
-        const components = gltfLoader.components;
+        const components = loader.components;
         const scene = components.scene;
         const rootNode = scene.nodes[0];
         const primitive = rootNode.primitives[0];
@@ -2765,104 +2593,93 @@ describe(
         expect(translationAttribute.type).toBe(AttributeType.VEC3);
         expect(translationAttribute.normalized).toBe(false);
         expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+
+        if (expectMinMax) {
+          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+        } else {
+          expect(translationAttribute.min).toBeUndefined();
+          expect(translationAttribute.max).toBeUndefined();
+        }
+
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeUndefined();
-        expect(translationAttribute.buffer).toBeDefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(12);
-      });
-    });
 
-    it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
-      // Disable extension
-      const instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstancedTranslation)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const scene = components.scene;
-          const rootNode = scene.nodes[0];
-          const primitive = rootNode.primitives[0];
-          const attributes = primitive.attributes;
-          const positionAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.POSITION
-          );
-          const normalAttribute = getAttribute(
-            attributes,
-            VertexAttributeSemantic.NORMAL
-          );
-          const instances = rootNode.instances;
-          const instancedAttributes = instances.attributes;
-          const translationAttribute = getAttribute(
-            instancedAttributes,
-            InstanceAttributeSemantic.TRANSLATION
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
+        if (expectTypedArrayDefined) {
           expect(translationAttribute.typedArray).toEqual(
             new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
           );
+        } else {
+          expect(translationAttribute.typedArray).toBeUndefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+        }
+
+        if (expectBufferDefined) {
+          expect(translationAttribute.buffer).toBeDefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBe(12);
+        } else {
           expect(translationAttribute.buffer).toBeUndefined();
+          // Byte stride is undefined for typed arrays.
           expect(translationAttribute.byteOffset).toBe(0);
           expect(translationAttribute.byteStride).toBeUndefined();
-        })
-        .finally(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
+        }
+      }
+
+      it("loads BoxInstancedTranslation", function () {
+        return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
+          // The translation accessor does not have a min/max, so it must load
+          // the typed array in addition to the buffer.
+          const expectMinMax = false;
+          const expectBufferDefined = true;
+          const expectTypedArrayDefined = true;
+
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
         });
-    });
+      });
 
-    it("loads BoxInstancedTranslationWithMinMax for 2D", function () {
-      return loadGltf(boxInstancedTranslationMinMax, {
-        loadAttributesFor2D: true,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
+      it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
+        const options = {
+          scene: sceneWithNoInstancing,
+        };
+        return loadGltf(boxInstancedTranslation, options).then(function (
+          gltfLoader
+        ) {
+          const expectMinMax = false;
+          const expectBufferDefined = false;
+          const expectTypedArrayDefined = true;
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
+        });
+      });
 
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeDefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(undefined);
+      it("loads BoxInstancedTranslationWithMinMax", function () {
+        return loadGltf(boxInstancedTranslationMinMax).then(function (
+          gltfLoader
+        ) {
+          // The translation accessor does have a min/max, so it only needs to
+          // load the buffer.
+          const expectMinMax = true;
+          const expectBufferDefined = true;
+          const expectTypedArrayDefined = false;
+
+          verifyBoxInstancedTranslation(
+            gltfLoader,
+            expectMinMax,
+            expectBufferDefined,
+            expectTypedArrayDefined
+          );
+        });
       });
     });
 
@@ -3156,54 +2973,49 @@ describe(
       });
     });
 
-    it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-      }).then(function (gltfLoader) {
+    it("loads model with CESIUM_RTC", function () {
+      return loadGltf(boxCesiumRtc).then(function (gltfLoader) {
         const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
+        const expectedTransform = Matrix4.fromTranslation(
+          new Cartesian3(6378137, 0, 0)
         );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
-        expect(primitive.indices.buffer).toBeDefined();
+        expect(components.transform).toEqual(expectedTransform);
       });
     });
 
-    it("loads indices in buffer only for wireframes in WebGL2", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-        scene: sceneWithWebgl2,
-      }).then(function (gltfLoader) {
+    it("loads TorusQuantized", function () {
+      return loadGltf(torusQuantized).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
+        const primitive = scene.nodes[0].primitives[0];
         const attributes = primitive.attributes;
         const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
         );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).not.toBeDefined();
-        expect(primitive.indices.buffer).toBeDefined();
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBe(4);
+        expect(positionAttribute.normalized).toBe(true);
+
+        // For KHR_mesh_quantization with a normalized POSITION attribute,
+        // the min and max must be dequantized.
+        const dequantizedValue = 127 / 255.0;
+        expect(positionAttribute.min).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+        expect(positionAttribute.max).toEqual(
+          new Cartesian3(dequantizedValue, dequantizedValue, dequantizedValue)
+        );
+
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(4);
+        expect(normalAttribute.min).not.toBeDefined();
+        expect(normalAttribute.max).not.toBeDefined();
       });
     });
 
@@ -3530,351 +3342,615 @@ describe(
       return resolveGltfJsonAfterDestroy(true);
     });
 
-    it("loads vertex attributes and indices as typed arrays", function () {
-      const options = {
-        loadAttributesAsTypedArray: true,
-      };
+    describe("loadIndicesForWireframe", function () {
+      let sceneWithWebgl2;
 
-      return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const childNode = rootNode.children[0];
-        const primitive = childNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
+      beforeAll(function () {
+        sceneWithWebgl2 = createScene();
+        sceneWithWebgl2.context._webgl2 = true;
+      });
 
-        expect(positionAttribute.buffer).toBeUndefined();
-        expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(0);
-        expect(positionAttribute.byteStride).toBeUndefined();
-        expect(positionAttribute.typedArray.byteLength).toBe(288);
+      afterAll(function () {
+        sceneWithWebgl2.destroyForSpecs();
+      });
 
-        expect(normalAttribute.buffer).toBeUndefined();
-        expect(normalAttribute.typedArray).toBeDefined();
-        expect(normalAttribute.byteOffset).toBe(0);
-        expect(normalAttribute.byteStride).toBeUndefined();
-        expect(normalAttribute.typedArray.byteLength).toBe(288);
+      it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
+        return loadGltf(triangle, {
+          loadIndicesForWireframe: true,
+        }).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(primitive.indices).toBeDefined();
+          expect(primitive.indices.indexDatatype).toBe(
+            IndexDatatype.UNSIGNED_SHORT
+          );
+          expect(primitive.indices.count).toBe(3);
+          expect(primitive.indices.typedArray).toBeDefined();
+          expect(primitive.indices.buffer).toBeDefined();
+        });
+      });
+
+      it("loads indices in buffer only for wireframes in WebGL2", function () {
+        return loadGltf(triangle, {
+          loadIndicesForWireframe: true,
+          scene: sceneWithWebgl2,
+        }).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(primitive.indices).toBeDefined();
+          expect(primitive.indices.indexDatatype).toBe(
+            IndexDatatype.UNSIGNED_SHORT
+          );
+          expect(primitive.indices.count).toBe(3);
+          expect(primitive.indices.typedArray).not.toBeDefined();
+          expect(primitive.indices.buffer).toBeDefined();
+        });
       });
     });
 
-    it("loads position attribute as buffer and typed array for 2D projection", function () {
-      const options = {
-        loadAttributesFor2D: true,
-      };
+    describe("loadAttributesAsTypedArray", function () {
+      it("loads vertex attributes and indices as typed arrays", function () {
+        const options = {
+          loadAttributesAsTypedArray: true,
+        };
 
-      return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const childNode = rootNode.children[0];
-        const primitive = childNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
+        return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[0];
+          const primitive = childNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
 
-        expect(positionAttribute.buffer).toBeDefined();
-        expect(positionAttribute.typedArray).toBeDefined();
-        expect(positionAttribute.byteOffset).toBe(0);
-        expect(positionAttribute.byteStride).toBeUndefined();
+          expect(positionAttribute.buffer).toBeUndefined();
+          expect(positionAttribute.typedArray).toBeDefined();
+          expect(positionAttribute.byteOffset).toBe(0);
+          expect(positionAttribute.byteStride).toBeUndefined();
+          expect(positionAttribute.typedArray.byteLength).toBe(288);
 
-        // Typed arrays of other attributes should not be defined
-        expect(normalAttribute.buffer).toBeDefined();
-        expect(normalAttribute.typedArray).toBeUndefined();
-        expect(normalAttribute.byteOffset).toBe(0);
-        expect(normalAttribute.byteStride).toBe(24);
+          expect(normalAttribute.buffer).toBeUndefined();
+          expect(normalAttribute.typedArray).toBeDefined();
+          expect(normalAttribute.byteOffset).toBe(0);
+          expect(normalAttribute.byteStride).toBeUndefined();
+          expect(normalAttribute.typedArray.byteLength).toBe(288);
 
-        expect(positionAttribute.typedArray.byteLength).toBe(288);
+          expect(primitive.indices).toBeDefined();
+          expect(primitive.indices.typedArray).toBeDefined();
+        });
+      });
+
+      it("loads instanced attributes as typed arrays only", function () {
+        const options = {
+          loadAttributesAsTypedArray: true,
+        };
+
+        return loadGltf(boxInstancedTranslationMinMax, options).then(function (
+          gltfLoader
+        ) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+
+          expect(translationAttribute.semantic).toBe(
+            InstanceAttributeSemantic.TRANSLATION
+          );
+          expect(translationAttribute.componentDatatype).toBe(
+            ComponentDatatype.FLOAT
+          );
+          expect(translationAttribute.type).toBe(AttributeType.VEC3);
+          expect(translationAttribute.normalized).toBe(false);
+          expect(translationAttribute.count).toBe(4);
+          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+          expect(translationAttribute.quantization).toBeUndefined();
+          expect(translationAttribute.typedArray).toBeDefined();
+          expect(translationAttribute.buffer).toBeUndefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBeUndefined();
+        });
       });
     });
 
-    it("loads position attribute as buffer only if model is instanced", function () {
-      const options = {
-        loadAttributesFor2D: true,
-      };
+    describe("loadAttributesFor2D", function () {
+      it("loads position attribute as buffer and typed array for 2D projection", function () {
+        const options = {
+          loadAttributesFor2D: true,
+        };
 
-      return loadGltf(boxInstanced, options).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
+        return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[0];
+          const primitive = childNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
 
-        // Projecting instanced models to 2D doesn't require the position
-        // attribute to be loaded as a typed array.
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        expect(positionAttribute.buffer).toBeDefined();
-        expect(positionAttribute.typedArray).toBeUndefined();
+          expect(positionAttribute.buffer).toBeDefined();
+          expect(positionAttribute.typedArray).toBeDefined();
+          expect(positionAttribute.byteOffset).toBe(12);
+          expect(positionAttribute.byteStride).toBe(24);
+
+          // Typed arrays of other attributes should not be defined
+          expect(normalAttribute.buffer).toBeDefined();
+          expect(normalAttribute.typedArray).toBeUndefined();
+          expect(normalAttribute.byteOffset).toBe(0);
+          expect(normalAttribute.byteStride).toBe(24);
+
+          expect(positionAttribute.typedArray.byteLength).toBe(288);
+        });
+      });
+
+      it("loads position attribute as buffer only if model is instanced", function () {
+        const options = {
+          loadAttributesFor2D: true,
+        };
+
+        return loadGltf(boxInstanced, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+
+          // Projecting instanced models to 2D doesn't require the position
+          // attribute to be loaded as a typed array.
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          expect(positionAttribute.buffer).toBeDefined();
+          expect(positionAttribute.typedArray).toBeUndefined();
+        });
+      });
+
+      it("loads instanced attributes as typed arrays for 2D", function () {
+        const options = {
+          loadAttributesFor2D: true,
+        };
+
+        return loadGltf(boxInstanced, options).then(function (gltfLoader) {
+          // Since the instances have rotation attributes, they should be
+          // loaded in as typed arrays only anyway. This ensures no additional
+          // buffers are created for 2D.
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+          expect(translationAttribute.typedArray).toBeDefined();
+          expect(translationAttribute.buffer).toBeUndefined();
+
+          const rotationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.ROTATION
+          );
+          expect(rotationAttribute.typedArray).toBeDefined();
+          expect(rotationAttribute.buffer).toBeUndefined();
+
+          const scaleAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.SCALE
+          );
+          expect(scaleAttribute.typedArray).toBeDefined();
+          expect(scaleAttribute.buffer).toBeUndefined();
+
+          const featureIdAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.FEATURE_ID,
+            0
+          );
+          expect(featureIdAttribute.typedArray).toBeUndefined();
+          expect(featureIdAttribute.buffer).toBeDefined();
+        });
+      });
+
+      it("loads instanced translation without min/max as typed array for 2D", function () {
+        const options = {
+          loadAttributesFor2D: true,
+        };
+
+        return loadGltf(boxInstancedTranslation, options).then(function (
+          gltfLoader
+        ) {
+          // Since the translation attribute has no min / max readily defined,
+          // it will load in as a typed array in addition to a buffer in order
+          // to find these bounds at runtime.
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+
+          expect(translationAttribute.semantic).toBe(
+            InstanceAttributeSemantic.TRANSLATION
+          );
+          expect(translationAttribute.componentDatatype).toBe(
+            ComponentDatatype.FLOAT
+          );
+          expect(translationAttribute.type).toBe(AttributeType.VEC3);
+          expect(translationAttribute.normalized).toBe(false);
+          expect(translationAttribute.count).toBe(4);
+          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+          expect(translationAttribute.quantization).toBeUndefined();
+          expect(translationAttribute.typedArray).toBeDefined();
+          expect(translationAttribute.buffer).toBeDefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBe(12);
+        });
+      });
+
+      it("loads instanced translation with min/max as buffer and typed array for 2D", function () {
+        const options = {
+          loadAttributesFor2D: true,
+        };
+
+        return loadGltf(boxInstancedTranslationMinMax, options).then(function (
+          gltfLoader
+        ) {
+          // Typed arrays are necessary for 2D projection, so this should load
+          // both a buffer and a typed array for the attribute.
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+
+          expect(translationAttribute.semantic).toBe(
+            InstanceAttributeSemantic.TRANSLATION
+          );
+          expect(translationAttribute.componentDatatype).toBe(
+            ComponentDatatype.FLOAT
+          );
+          expect(translationAttribute.type).toBe(AttributeType.VEC3);
+          expect(translationAttribute.normalized).toBe(false);
+          expect(translationAttribute.count).toBe(4);
+          expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+          expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
+          expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+          expect(translationAttribute.quantization).toBeUndefined();
+          expect(translationAttribute.typedArray).toBeDefined();
+          expect(translationAttribute.buffer).toBeDefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBe(12);
+        });
       });
     });
 
-    it("loads indices in typed array for wireframes in WebGL1", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
+    describe("loadForClassification", function () {
+      it("loads model without feature IDs for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.typedArray).toBeDefined();
+        return loadGltf(boxVertexColors, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[1];
+          const primitive = childNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const texcoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0
+          );
+          const colorAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.COLOR,
+            0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeUndefined();
+          expect(texcoordAttribute).toBeDefined();
+          expect(colorAttribute).toBeUndefined();
+
+          expect(positionAttribute.buffer).toBeDefined();
+          expect(texcoordAttribute.buffer).toBeDefined();
+        });
       });
-    });
 
-    it("loads indices in buffer for wireframes in WebGL2", function () {
-      return loadGltf(triangle, {
-        loadIndicesForWireframe: true,
-        scene: sceneWithWebgl2,
-      }).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
+      it("loads model with feature IDs for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-        expect(positionAttribute).toBeDefined();
-        expect(primitive.indices).toBeDefined();
-        expect(primitive.indices.indexDatatype).toBe(
-          IndexDatatype.UNSIGNED_SHORT
-        );
-        expect(primitive.indices.count).toBe(3);
-        expect(primitive.indices.buffer).toBeDefined();
+        return loadGltf(buildingsMetadata, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[0];
+          const primitive = childNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const featureIdAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.FEATURE_ID,
+            0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
+          expect(positionAttribute.typedArray).toBeUndefined();
+
+          // Normals are not loaded in for classification models.
+          expect(normalAttribute).toBeUndefined();
+
+          expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
+          expect(featureIdAttribute.semantic).toBe(
+            VertexAttributeSemantic.FEATURE_ID
+          );
+          expect(featureIdAttribute.setIndex).toBe(0);
+          expect(featureIdAttribute.buffer).toBeDefined();
+          expect(featureIdAttribute.typedArray).toBeDefined();
+
+          const indices = primitive.indices;
+          expect(indices.buffer).toBeDefined();
+          expect(indices.typedArray).toBeDefined();
+        });
       });
-    });
 
-    it("loads instanced attributes as typed arrays only", function () {
-      const options = {
-        loadAttributesAsTypedArray: true,
-      };
+      it("ignores morph targets for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-      return loadGltf(boxInstancedTranslationMinMax, options).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
+        return loadGltf(simpleMorph, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
-
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
+          const morphTargets = primitive.morphTargets;
+          expect(morphTargets.length).toBe(0);
+        });
       });
-    });
 
-    it("loads instanced attributes as typed arrays only for 2D", function () {
-      const options = {
-        loadAttributesFor2D: true,
-      };
+      it("ignores skins for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-      return loadGltf(boxInstanced, options).then(function (gltfLoader) {
-        // Since the instances have rotation attributes, they should be
-        // loaded in as typed arrays only anyway. This ensures no additional
-        // buffers are created for 2D.
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
+        return loadGltf(simpleSkin, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
 
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeUndefined();
+          const skin = rootNode.skin;
+          expect(skin).toBeUndefined();
 
-        const rotationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.ROTATION
-        );
-        expect(rotationAttribute.typedArray).toBeDefined();
-        expect(rotationAttribute.buffer).toBeUndefined();
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const jointsAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.JOINTS,
+            0
+          );
+          const weightsAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.WEIGHTS,
+            0
+          );
 
-        const scaleAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.SCALE
-        );
-        expect(scaleAttribute.typedArray).toBeDefined();
-        expect(scaleAttribute.buffer).toBeUndefined();
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
 
-        const featureIdAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.FEATURE_ID,
-          0
-        );
-        expect(featureIdAttribute.typedArray).toBeDefined();
-        expect(featureIdAttribute.buffer).toBeUndefined();
+          expect(jointsAttribute).toBeUndefined();
+          expect(weightsAttribute).toBeUndefined();
+
+          expect(components.skins.length).toBe(0);
+        });
       });
-    });
 
-    it("loads instanced translation without min/max as typed array only for 2D", function () {
-      const options = {
-        loadAttributesFor2D: true,
-      };
+      it("ignores animations for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-      return loadGltf(boxInstancedTranslation, options).then(function (
-        gltfLoader
-      ) {
-        // Since the translation attribute has no min / max readily defined,
-        // it will load in as a typed array to find these bounds at runtime.
-        // This ensures no additional buffers are created for 2D.
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
+        return loadGltf(animatedTriangle, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
 
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeUndefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
+          expect(positionAttribute).toBeDefined();
+          expect(positionAttribute.buffer).toBeDefined();
+
+          const animations = components.animations;
+          expect(animations.length).toBe(0);
+        });
       });
-    });
 
-    it("loads instanced translation with min/max as buffer and typed array for 2D", function () {
-      const options = {
-        loadAttributesFor2D: true,
-      };
+      it("ignores normal textures for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
 
-      return loadGltf(boxInstancedTranslationMinMax, options).then(function (
-        gltfLoader
-      ) {
-        // Since the only instanced attribute is translation, and since its
-        // min / max is defined, this will be loaded as a buffer normally
-        // because it doesn't need further processing with a typed array.
-        // However, typed arrays are necessary for 2D projection, so this
-        // should load both a buffer and a typed array for the attribute.
-        const components = gltfLoader.components;
-        const scene = components.scene;
-        const rootNode = scene.nodes[0];
-        const primitive = rootNode.primitives[0];
-        const attributes = primitive.attributes;
-        const positionAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.POSITION
-        );
-        const normalAttribute = getAttribute(
-          attributes,
-          VertexAttributeSemantic.NORMAL
-        );
-        const instances = rootNode.instances;
-        const instancedAttributes = instances.attributes;
-        const translationAttribute = getAttribute(
-          instancedAttributes,
-          InstanceAttributeSemantic.TRANSLATION
-        );
+        return loadGltf(twoSidedPlane, options).then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          const normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          const tangentAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TANGENT
+          );
+          const texcoordAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.TEXCOORD,
+            0
+          );
 
-        expect(positionAttribute).toBeDefined();
-        expect(normalAttribute).toBeDefined();
+          expect(positionAttribute).toBeDefined();
+          expect(texcoordAttribute).toBeDefined();
+          expect(normalAttribute).toBeUndefined();
+          expect(tangentAttribute).toBeUndefined();
 
-        expect(translationAttribute.semantic).toBe(
-          InstanceAttributeSemantic.TRANSLATION
-        );
-        expect(translationAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(translationAttribute.type).toBe(AttributeType.VEC3);
-        expect(translationAttribute.normalized).toBe(false);
-        expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
-        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
-        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
-        expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeDefined();
-        expect(translationAttribute.buffer).toBeDefined();
-        expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBeUndefined();
+          const material = primitive.material;
+          expect(material.normalTexture).toBeUndefined();
+        });
+      });
+
+      it("throws when loading instanced model for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(boxInstanced, options)
+          .then(function () {
+            fail();
+          })
+          .catch(function (error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+          });
+      });
+
+      it("throws when loading non-triangle mesh for classification", function () {
+        const options = {
+          loadForClassification: true,
+        };
+
+        return loadGltf(pointCloudWithPropertyAttributes, options)
+          .then(function () {
+            fail();
+          })
+          .catch(function (error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+          });
       });
     });
 
@@ -3907,7 +3983,7 @@ describe(
         const indices = primitive.indices;
         expect(indices).toBeDefined();
         expect(indices.buffer).toBeDefined();
-        expect(indices.typedArray).not.toBeDefined();
+        expect(indices.typedArray).toBeUndefined();
         expect(indices.count).toBe(36);
 
         const outlineCoordinates = primitive.outlineCoordinates;

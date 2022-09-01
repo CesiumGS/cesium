@@ -5,7 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import TimeConstants from "../Core/TimeConstants.js";
-import TweenJS from "../ThirdParty/Tween.js";
+import { Tween as TweenJS } from "@tweenjs/tween.js";
 
 /**
  * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
@@ -244,7 +244,7 @@ TweenCollection.prototype.add = function (options) {
   );
 
   const value = options.startObject;
-  const tweenjs = new TweenJS.Tween(value);
+  const tweenjs = new TweenJS(value);
   tweenjs.to(clone(options.stopObject), duration);
   tweenjs.delay(delay);
   tweenjs.easing(easingFunction);

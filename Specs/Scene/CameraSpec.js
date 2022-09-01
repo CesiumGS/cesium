@@ -4153,6 +4153,36 @@ describe("Scene/Camera", function () {
     ).toBe(true);
   });
 
+  it("flyTo rectangle with orientation", function () {
+    scene.mode = SceneMode.SCENE3D;
+
+    const direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    const up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+    const west = 0.3323436621771766;
+    const south = 0.8292930502744068;
+    const east = 0.3325710961342694;
+    const north = 0.8297059734014236;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+    camera.flyTo({
+      destination: rectangle,
+      orientation: {
+        direction: direction,
+        up: up,
+      },
+      duration: 0.0,
+    });
+
+    expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
+    expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON6);
+    expect(camera.position).toEqualEpsilon(
+      expectedDestination,
+      CesiumMath.EPSILON1
+    );
+  });
+
   it("flyTo does not zoom closer than minimumZoomDistance", function () {
     const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");

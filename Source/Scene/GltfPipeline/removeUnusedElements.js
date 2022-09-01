@@ -225,6 +225,38 @@ Remove.bufferView = function (gltf, bufferViewId) {
       }
     }
   }
+
+  if (usesExtension(gltf, "EXT_structural_metadata")) {
+    const extension = gltf.extensions.EXT_structural_metadata;
+    const propertyTables = extension.propertyTables;
+    if (defined(propertyTables)) {
+      const propertyTablesLength = propertyTables.length;
+      for (let i = 0; i < propertyTablesLength; ++i) {
+        const propertyTable = propertyTables[i];
+        const properties = propertyTable.properties;
+        for (const propertyId in properties) {
+          if (properties.hasOwnProperty(propertyId)) {
+            const property = properties[propertyId];
+            if (defined(property.values) && property.values > bufferViewId) {
+              property.values--;
+            }
+            if (
+              defined(property.arrayOffsets) &&
+              property.arrayOffsets > bufferViewId
+            ) {
+              property.arrayOffsets--;
+            }
+            if (
+              defined(property.stringOffsets) &&
+              property.stringOffsets > bufferViewId
+            ) {
+              property.stringOffsets--;
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 Remove.image = function (gltf, imageId) {
@@ -406,6 +438,49 @@ Remove.texture = function (gltf, textureId) {
       }
     }
   }
+
+  if (usesExtension(gltf, "EXT_mesh_features")) {
+    ForEach.mesh(gltf, function (mesh) {
+      ForEach.meshPrimitive(mesh, function (primitive) {
+        const extensions = primitive.extensions;
+        if (defined(extensions) && defined(extensions.EXT_mesh_features)) {
+          const extension = extensions.EXT_mesh_features;
+          const featureIds = extension.featureIds;
+          if (defined(featureIds)) {
+            const featureIdsLength = featureIds.length;
+            for (let i = 0; i < featureIdsLength; ++i) {
+              const featureId = featureIds[i];
+              if (defined(featureId.texture)) {
+                if (featureId.texture.index > textureId) {
+                  --featureId.texture.index;
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  if (usesExtension(gltf, "EXT_structural_metadata")) {
+    const extension = gltf.extensions.EXT_structural_metadata;
+    const propertyTextures = extension.propertyTextures;
+    if (defined(propertyTextures)) {
+      const propertyTexturesLength = propertyTextures.length;
+      for (let i = 0; i < propertyTexturesLength; ++i) {
+        const propertyTexture = propertyTextures[i];
+        const properties = propertyTexture.properties;
+        for (const propertyId in properties) {
+          if (properties.hasOwnProperty(propertyId)) {
+            const property = properties[propertyId];
+            if (property.index > textureId) {
+              --property.index;
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 /**
@@ -552,6 +627,32 @@ getListOfElementsIdsInUse.bufferView = function (gltf) {
               if (defined(property.stringOffsetBufferView)) {
                 usedBufferViewIds[property.stringOffsetBufferView] = true;
               }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (usesExtension(gltf, "EXT_structural_metadata")) {
+    const extension = gltf.extensions.EXT_structural_metadata;
+    const propertyTables = extension.propertyTables;
+    if (defined(propertyTables)) {
+      const propertyTablesLength = propertyTables.length;
+      for (let i = 0; i < propertyTablesLength; ++i) {
+        const propertyTable = propertyTables[i];
+        const properties = propertyTable.properties;
+        for (const propertyId in properties) {
+          if (properties.hasOwnProperty(propertyId)) {
+            const property = properties[propertyId];
+            if (defined(property.values)) {
+              usedBufferViewIds[property.values] = true;
+            }
+            if (defined(property.arrayOffsets)) {
+              usedBufferViewIds[property.arrayOffsets] = true;
+            }
+            if (defined(property.stringOffsets)) {
+              usedBufferViewIds[property.stringOffsets] = true;
             }
           }
         }
@@ -717,6 +818,45 @@ getListOfElementsIdsInUse.texture = function (gltf) {
               const textureInfo = property.texture;
               usedTextureIds[textureInfo.index] = true;
             }
+          }
+        }
+      }
+    }
+  }
+
+  if (usesExtension(gltf, "EXT_mesh_features")) {
+    ForEach.mesh(gltf, function (mesh) {
+      ForEach.meshPrimitive(mesh, function (primitive) {
+        const extensions = primitive.extensions;
+        if (defined(extensions) && defined(extensions.EXT_mesh_features)) {
+          const extension = extensions.EXT_mesh_features;
+          const featureIds = extension.featureIds;
+          if (defined(featureIds)) {
+            const featureIdsLength = featureIds.length;
+            for (let i = 0; i < featureIdsLength; ++i) {
+              const featureId = featureIds[i];
+              if (defined(featureId.texture)) {
+                usedTextureIds[featureId.texture.index] = true;
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  if (usesExtension(gltf, "EXT_structural_metadata")) {
+    const extension = gltf.extensions.EXT_structural_metadata;
+    const propertyTextures = extension.propertyTextures;
+    if (defined(propertyTextures)) {
+      const propertyTexturesLength = propertyTextures.length;
+      for (let i = 0; i < propertyTexturesLength; ++i) {
+        const propertyTexture = propertyTextures[i];
+        const properties = propertyTexture.properties;
+        for (const propertyId in properties) {
+          if (properties.hasOwnProperty(propertyId)) {
+            const property = properties[propertyId];
+            usedTextureIds[property.index] = true;
           }
         }
       }

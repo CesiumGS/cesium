@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
-import MeshoptDecoder from "../ThirdParty/meshoptimizer.js";
+import { MeshoptDecoder } from "meshoptimizer";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-export default function GltfBufferViewLoader(options) {
+function GltfBufferViewLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -264,3 +264,5 @@ GltfBufferViewLoader.prototype.unload = function () {
   this._bufferLoader = undefined;
   this._typedArray = undefined;
 };
+
+export default GltfBufferViewLoader;

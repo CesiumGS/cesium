@@ -13,7 +13,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
-import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
@@ -111,7 +110,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work for ModelExperimental in WebGL1. This cannot be set after the tileset has loaded.
+ * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
@@ -620,8 +619,8 @@ function Cesium3DTileset(options) {
    *
    * @example
    * tileset.tileVisible.addEventListener(function(tile) {
-   *     if (tile.content instanceof Cesium.Batched3DModel3DTileContent) {
-   *         console.log('A Batched 3D Model tile is visible.');
+   *     if (tile.content instanceof Cesium.Model3DTileContent) {
+   *         console.log('A 3D model tile is visible.');
    *     }
    * });
    *
@@ -761,11 +760,6 @@ function Cesium3DTileset(options) {
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
-   * <p>
-   * When enableModelExperimental is set to true, this property can be toggled
-   * at runtime. However, when enableModelExperimental is false, this property
-   * is readonly (it can only be set in the constructor).
-   * </p>
    *
    * @type {Boolean}
    * @default true
@@ -773,8 +767,7 @@ function Cesium3DTileset(options) {
   this.showOutline = defaultValue(options.showOutline, true);
 
   /**
-   * The color to use when rendering outlines. This option is only used
-   * when enableModelExperimental is set to true.
+   * The color to use when rendering outlines.
    *
    * @type {Color}
    * @default Color.BLACK
@@ -951,22 +944,6 @@ function Cesium3DTileset(options) {
   this._metadataExtension = undefined;
 
   this._customShader = options.customShader;
-
-  /**
-   * If true, {@link ModelExperimental} will be used instead of {@link Model}
-   * for each tile with a glTF or 3D Tiles 1.0 content (where applicable).
-   * <p>
-   * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
-   * </p>
-   *
-   * @memberof Cesium3DTileset.prototype
-   * @type {Boolean}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.enableModelExperimental = defaultValue(
-    options.enableModelExperimental,
-    ExperimentalFeatures.enableModelExperimental
-  );
 
   let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
   if (typeof featureIdLabel === "number") {
@@ -1358,11 +1335,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * A custom shader to apply to all tiles in the tileset. Only used for
-   * contents that use {@link ModelExperimental}. Using custom shaders with a
+   * contents that use {@link Model}. Using custom shaders with a
    * {@link Cesium3DTileStyle} may lead to undefined behavior.
-   * <p>
-   * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} or tileset.enableModelExperimental to <code>true</code>.
-   * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1701,22 +1675,28 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * Determines whether terrain, 3D Tiles or both will be classified by this tileset.
+   * Determines whether terrain, 3D Tiles, or both will be classified by this tileset.
    * <p>
-   * This option is only applied to tilesets containing batched 3D models, geometry data, or vector data. Even when undefined, vector data and geometry data
-   * must render as classifications and will default to rendering on both terrain and other 3D Tiles tilesets.
+   * This option is only applied to tilesets containing batched 3D models,
+   * glTF content, geometry data, or vector data. Even when undefined, vector
+   * and geometry data must render as classifications and will default to
+   * rendering on both terrain and other 3D Tiles tilesets.
    * </p>
    * <p>
-   * When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:
+   * When enabled for batched 3D model and glTF tilesets, there are a few
+   * requirements/limitations on the glTF:
    * <ul>
-   *     <li>POSITION and _BATCHID semantics are required.</li>
-   *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
-   *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
-   *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>
-   *     <li>Only one node is supported.</li>
-   *     <li>Only one mesh per node is supported.</li>
-   *     <li>Only one primitive per mesh is supported.</li>
+   *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
+   *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
+   *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The <code>POSITION</code> semantic is required.</li>
+   *     <li>If <code>_BATCHID</code>s and an index buffer are both present, all indices with the same batch id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If <code>_BATCHID</code>s are present with no index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * Additionally, classification is not supported for points or instanced 3D
+   * models.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype

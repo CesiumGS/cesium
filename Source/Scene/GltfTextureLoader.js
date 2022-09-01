@@ -34,7 +34,7 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  *
  * @private
  */
-export default function GltfTextureLoader(options) {
+function GltfTextureLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -379,3 +379,5 @@ GltfTextureLoader.prototype.unload = function () {
   this._texture = undefined;
   this._gltf = undefined;
 };
+
+export default GltfTextureLoader;

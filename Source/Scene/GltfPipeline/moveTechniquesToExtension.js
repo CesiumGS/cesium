@@ -119,7 +119,9 @@ function moveTechniquesToExtension(gltf) {
         }
 
         const uniformName = mappedUniforms[material.technique][parameterName];
-        materialExtension.values[uniformName] = value;
+        if (defined(uniformName)) {
+          materialExtension.values[uniformName] = value;
+        }
       });
 
       if (!defined(material.extensions)) {

@@ -1,22 +1,23 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
-import Model from "../Scene/Model.js";
-import ModelExperimental from "../Scene/ModelExperimental/ModelExperimental.js";
+import Model from "../Scene/Model/Model.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
+import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
 const defaultMinimumPixelSize = 0.0;
@@ -114,11 +115,7 @@ ModelVisualizer.prototype.update = function (time) {
         delete modelHash[entity.id];
       }
 
-      const ModelType = ExperimentalFeatures.enableModelExperimental
-        ? ModelExperimental
-        : Model;
-
-      model = ModelType.fromGltf({
+      model = Model.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,
@@ -137,6 +134,9 @@ ModelVisualizer.prototype.update = function (time) {
         nodeTransformationsScratch: {},
         articulationsScratch: {},
         loadFail: false,
+        awaitingSampleTerrain: false,
+        clampedBoundingSphere: undefined,
+        sampleTerrainFailed: false,
       };
       modelHash[entity.id] = modelData;
 
@@ -216,6 +216,10 @@ ModelVisualizer.prototype.update = function (time) {
     );
     model.lightColor = Property.getValueOrUndefined(
       modelGraphics._lightColor,
+      time
+    );
+    model.customShader = Property.getValueOrUndefined(
+      modelGraphics._customShader,
       time
     );
 
@@ -334,6 +338,11 @@ ModelVisualizer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+// Used for testing.
+ModelVisualizer._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
+
+const scratchPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
@@ -368,10 +377,104 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   if (!model.ready) {
     return BoundingSphereState.PENDING;
   }
+  const scene = this._scene;
+  const globe = scene.globe;
+  const ellipsoid = globe.ellipsoid;
+  const terrainProvider = globe.terrainProvider;
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
-  if (hasHeightReference && !defined(model._clampedModelMatrix)) {
-    return BoundingSphereState.PENDING;
+  if (hasHeightReference) {
+    // We cannot query the availability of the terrain provider till its ready, so the
+    // bounding sphere state will remain pending till the terrain provider is ready.
+    if (!terrainProvider.ready) {
+      return BoundingSphereState.PENDING;
+    }
+
+    const modelMatrix = model.modelMatrix;
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
+    const cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+    // For a terrain provider that does not have availability, like the EllipsoidTerrainProvider,
+    // we can directly assign the bounding sphere's center from model matrix's translation.
+    if (!defined(terrainProvider.availability)) {
+      // Regardless of what the original model's position is set to, for CLAMP_TO_GROUND, we reset it to 0
+      // when computing the position to zoom/fly to.
+      if (model.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        cartoPosition.height = 0;
+      }
+
+      const scratchPosition = ellipsoid.cartographicToCartesian(cartoPosition);
+      BoundingSphere.clone(model.boundingSphere, result);
+      result.center = scratchPosition;
+
+      return BoundingSphereState.DONE;
+    }
+
+    // Otherwise, in the case of terrain providers with availability,
+    // since the model's bounding sphere may be clamped to a lower LOD tile if
+    // the camera is initially far away, we use sampleTerrainMostDetailed to estimate
+    // where the bounding sphere should be and set that as the target bounding sphere
+    // for the camera.
+    let clampedBoundingSphere = this._modelHash[entity.id]
+      .clampedBoundingSphere;
+
+    // Check if the sample terrain function has failed.
+    const sampleTerrainFailed = this._modelHash[entity.id].sampleTerrainFailed;
+    if (sampleTerrainFailed) {
+      this._modelHash[entity.id].sampleTerrainFailed = false;
+      return BoundingSphereState.FAILED;
+    }
+
+    if (!defined(clampedBoundingSphere)) {
+      clampedBoundingSphere = new BoundingSphere();
+
+      // Since this function is called per-frame, we set a flag when sampleTerrainMostDetailed
+      // is called and check for it to avoid calling it again.
+      const awaitingSampleTerrain = this._modelHash[entity.id]
+        .awaitingSampleTerrain;
+      if (!awaitingSampleTerrain) {
+        Cartographic.clone(cartoPosition, scratchCartographic);
+        this._modelHash[entity.id].awaitingSampleTerrain = true;
+        ModelVisualizer._sampleTerrainMostDetailed(terrainProvider, [
+          scratchCartographic,
+        ])
+          .then((result) => {
+            this._modelHash[entity.id].awaitingSampleTerrain = false;
+
+            const updatedCartographic = result[0];
+            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+              updatedCartographic.height += cartoPosition.height;
+            }
+            ellipsoid.cartographicToCartesian(
+              updatedCartographic,
+              scratchPosition
+            );
+
+            // Update the bounding sphere with the updated position.
+            BoundingSphere.clone(model.boundingSphere, clampedBoundingSphere);
+            clampedBoundingSphere.center = scratchPosition;
+
+            this._modelHash[
+              entity.id
+            ].clampedBoundingSphere = BoundingSphere.clone(
+              clampedBoundingSphere
+            );
+          })
+          .catch((e) => {
+            this._modelHash[entity.id].sampleTerrainFailed = true;
+            this._modelHash[entity.id].awaitingSampleTerrain = false;
+          });
+      }
+
+      // We will return the state as pending until the clamped bounding sphere is defined,
+      // which happens when the sampleTerrainMostDetailed promise returns.
+      return BoundingSphereState.PENDING;
+    }
+
+    BoundingSphere.clone(clampedBoundingSphere, result);
+    return BoundingSphereState.DONE;
   }
 
   BoundingSphere.clone(model.boundingSphere, result);
