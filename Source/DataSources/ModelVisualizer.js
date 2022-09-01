@@ -218,6 +218,9 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._lightColor,
       time
     );
+    model.customShader = Property.getValueOrUndefined(
+      modelGraphics._customShader
+    );
 
     if (model.ready) {
       const runAnimations = Property.getValueOrDefault(

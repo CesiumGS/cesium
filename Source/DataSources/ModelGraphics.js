@@ -105,6 +105,7 @@ function ModelGraphics(options) {
   this._articulationsSubscription = undefined;
   this._clippingPlanes = undefined;
   this._clippingPlanesSubscription = undefined;
+  this._customShader = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -308,6 +309,13 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   clippingPlanes: createPropertyDescriptor("clippingPlanes"),
+
+  /**
+   * Gets or sets the {@link CustomShader} to apply to this model. When <code>undefined</code>, no custom shader code is used.
+   * @memberof ModelGraphics.prototype
+   * @type {Property|undefined}
+   */
+  customShader: createPropertyDescriptor("customShader"),
 });
 
 /**
@@ -340,6 +348,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.nodeTransformations = this.nodeTransformations;
   result.articulations = this.articulations;
   result.clippingPlanes = this.clippingPlanes;
+  result.customShader = this.customShader;
   return result;
 };
 
@@ -408,6 +417,7 @@ ModelGraphics.prototype.merge = function (source) {
     this.clippingPlanes,
     source.clippingPlanes
   );
+  this.customShader = defaultValue(this.customShader, source.customShader);
 
   const sourceNodeTransformations = source.nodeTransformations;
   if (defined(sourceNodeTransformations)) {
