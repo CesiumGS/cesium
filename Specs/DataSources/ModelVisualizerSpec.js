@@ -20,6 +20,7 @@ import {
   NodeTransformationProperty,
   ClippingPlane,
   ClippingPlaneCollection,
+  CustomShader,
   Globe,
   Cartographic,
   createWorldTerrain,
@@ -136,6 +137,9 @@ describe(
       });
       model.clippingPlanes = new ConstantProperty(clippingPlanes);
 
+      const customShader = new CustomShader();
+      model.customShader = new ConstantProperty(customShader);
+
       model.imageBasedLightingFactor = new ConstantProperty(
         new Cartesian2(0.5, 0.5)
       );
@@ -177,6 +181,9 @@ describe(
       expect(primitive.clippingPlanes._planes[0].distance).toEqual(
         clippingPlanes._planes[0].distance
       );
+
+      expect(primitive.customShader).toEqual(customShader);
+
       expect(primitive.imageBasedLighting.imageBasedLightingFactor).toEqual(
         new Cartesian2(0.5, 0.5)
       );

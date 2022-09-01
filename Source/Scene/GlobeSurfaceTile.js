@@ -703,7 +703,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
       return;
     }
 
-    // Initially assume failure.  handleError may retry, in which case the state will
+    // Initially assume failure.  reportError may retry, in which case the state will
     // change to RECEIVING or UNLOADED.
     surfaceTile.terrainState = TerrainState.FAILED;
     surfaceTile.request = undefined;
