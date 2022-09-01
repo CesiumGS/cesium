@@ -219,7 +219,8 @@ ModelVisualizer.prototype.update = function (time) {
       time
     );
     model.customShader = Property.getValueOrUndefined(
-      modelGraphics._customShader
+      modelGraphics._customShader,
+      time
     );
 
     if (model.ready) {

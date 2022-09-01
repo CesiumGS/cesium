@@ -44,6 +44,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {PropertyBag | Object.<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
  * @property {PropertyBag | Object.<string, number>} [articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
  * @property {Property | ClippingPlaneCollection} [clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @property {Property | CustomShader} [customShader] A property specifying the {@link CustomShader} to apply to this model.
  */
 
 /**
@@ -106,6 +107,7 @@ function ModelGraphics(options) {
   this._clippingPlanes = undefined;
   this._clippingPlanesSubscription = undefined;
   this._customShader = undefined;
+  this._customShaderSubscription = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
