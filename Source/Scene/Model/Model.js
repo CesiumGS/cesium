@@ -416,6 +416,13 @@ function Model(options) {
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  /**
+   * Used for picking primitives that wrap a model.
+   *
+   * @private
+   */
+  this.pickObject = options.pickObject;
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -2803,6 +2810,7 @@ function makeModelOptions(loader, modelType, options) {
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
+    pickObject: options.pickObject,
   };
 }
 
