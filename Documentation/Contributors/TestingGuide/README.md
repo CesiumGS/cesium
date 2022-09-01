@@ -683,7 +683,7 @@ For asynchronous testing, Jasmine's `it` function uses a `done` callback. For be
 Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/ModelSpec.js):
 
 ```javascript
-const modelUrl = "./Data/Models/PBR/Box/Box.gltf";
+const modelUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
 
 let scene;
 beforeAll(function () {

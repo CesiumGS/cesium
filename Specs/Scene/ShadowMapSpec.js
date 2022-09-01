@@ -49,7 +49,7 @@ describe(
     const boxHeight = 4.0;
     const floorHeight = -1.0;
 
-    const boxUrl = "./Data/Models/PBR/Box/Box.gltf";
+    const boxUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
     const boxTranslucentUrl =
       "./Data/Models/glTF-2.0/BoxInterleavedTranslucent/glTF/BoxInterleavedTranslucent.gltf";
     const boxNoNormalsUrl =

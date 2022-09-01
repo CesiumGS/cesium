@@ -20,7 +20,7 @@ describe(
   function () {
     const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
     const vertexColorGltfUrl =
-      "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
+      "./Data/Models/glTF-2.0/VertexColorTest/glTF/VertexColorTest.gltf";
     const buildingsMetadata =
       "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const simpleSkinGltfUrl =

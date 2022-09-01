@@ -67,7 +67,7 @@ describe(
 
     const boxInstanced =
       "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
-    const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
+    const boxUnlitUrl = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
     const boxArticulationsUrl =
       "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     // prettier-ignore
@@ -86,8 +86,9 @@ describe(
     const twoSidedPlaneUrl =
       "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
     const vertexColorTestUrl =
-      "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
-    const emissiveTextureUrl = "./Data/Models/PBR/BoxEmissive/BoxEmissive.gltf";
+      "./Data/Models/glTF-2.0/VertexColorTest/glTF/VertexColorTest.gltf";
+    const emissiveTextureUrl =
+      "./Data/Models/glTF-2.0/BoxEmissive/glTF/BoxEmissive.gltf";
     const boomBoxUrl =
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const riggedFigureUrl =
@@ -2853,10 +2854,15 @@ describe(
         return loadAndZoomToModel({ gltf: boxUnlitUrl }, scene).then(function (
           model
         ) {
-          verifyRender(model, true);
+          const options = {
+            zoomToModel: false,
+          };
+          // Move the camera to face one of the two boxes.
+          scene.camera.moveRight(1.0);
+          verifyRender(model, true, options);
 
           model.lightColor = Cartesian3.ZERO;
-          verifyRender(model, true);
+          verifyRender(model, true, options);
         });
       });
     });
