@@ -1089,18 +1089,14 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
  * @private
  */
 VoxelPrimitive.prototype.update = function (frameState) {
-  const context = frameState.context;
-  const provider = this._provider;
-  const uniforms = this._uniforms;
-  const customShader = this._customShader;
-
   // Update the provider, if applicable.
+  const provider = this._provider;
   if (defined(provider.update)) {
     provider.update(frameState);
   }
 
   // Update the custom shader in case it has texture uniforms.
-  customShader.update(frameState);
+  this._customShader.update(frameState);
 
   // Exit early if it's not ready yet.
   if (!this._ready && !provider.ready) {
@@ -1108,6 +1104,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   // Initialize from the ready provider. This only happens once.
+  const context = frameState.context;
+  const uniforms = this._uniforms;
   if (!this._ready) {
     // Don't make the primitive ready until after its first update because
     // external code may want to change some of its properties before it's rendered.
@@ -1123,196 +1121,24 @@ VoxelPrimitive.prototype.update = function (frameState) {
     });
     uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
 
-    const shapeType = provider.shape;
-
-    // Set the bounds
-    const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-    const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-    const minBounds = defaultValue(provider.minBounds, defaultMinBounds);
-    const maxBounds = defaultValue(provider.maxBounds, defaultMaxBounds);
-    this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
-    this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
-    this._minBoundsOld = Cartesian3.clone(this._minBounds, this._minBoundsOld);
-    this._maxBoundsOld = Cartesian3.clone(this._maxBounds, this._maxBoundsOld);
-    this._minClippingBounds = Cartesian3.clone(
-      defaultMinBounds,
-      this._minClippingBounds
-    );
-    this._maxClippingBounds = Cartesian3.clone(
-      defaultMaxBounds,
-      this._maxClippingBounds
-    );
-    this._minClippingBoundsOld = Cartesian3.clone(
-      this._minClippingBounds,
-      this._minClippingBoundsOld
-    );
-    this._maxClippingBoundsOld = Cartesian3.clone(
-      this._maxClippingBounds,
-      this._maxClippingBoundsOld
-    );
-
-    // Create the shape object
-    const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
-    this._shape = new ShapeConstructor();
-
-    const shape = this._shape;
-    this._shapeDefinesOld = clone(shape.shaderDefines, true);
-
-    // Add shape uniforms to the uniform map
-    const shapeUniforms = shape.shaderUniforms;
-    const uniformMap = this._uniformMap;
-    for (const key in shapeUniforms) {
-      if (shapeUniforms.hasOwnProperty(key)) {
-        const name = `u_${key}`;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(uniformMap[name])) {
-          throw new DeveloperError(`Uniform name "${name}" is already defined`);
-        }
-        //>>includeEnd('debug');
-
-        uniformMap[name] = function () {
-          return shapeUniforms[key];
-        };
-      }
-    }
-
-    this._paddingBefore = Cartesian3.clone(
-      defaultValue(provider.paddingBefore, Cartesian3.ZERO),
-      this._paddingBefore
-    );
-    this._paddingAfter = Cartesian3.clone(
-      defaultValue(provider.paddingAfter, Cartesian3.ZERO),
-      this._paddingBefore
-    );
-
-    // Set uniforms that come from the provider.
-    // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-    const dimensions = provider.dimensions;
-    uniforms.dimensions = Cartesian3.clone(dimensions, uniforms.dimensions);
-    uniforms.paddingBefore = Cartesian3.clone(
-      this._paddingBefore,
-      uniforms.paddingBefore
-    );
-    uniforms.paddingAfter = Cartesian3.clone(
-      this._paddingAfter,
-      uniforms.paddingAfter
-    );
+    initFromProvider(this, provider);
   }
 
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const providerTransform = defaultValue(
-    provider.modelMatrix,
-    Matrix4.IDENTITY
-  );
-  const compoundTransform = Matrix4.multiplyTransformation(
-    providerTransform,
-    this._modelMatrix,
-    this._compoundModelMatrix
-  );
-  const compoundTransformDirty = this.updateBound(
-    "_compoundModelMatrix",
-    "_compoundModelMatrixOld"
-  );
-  const minBoundsDirty = this.updateBound("_minBounds", "_minBoundsOld");
-  const maxBoundsDirty = this.updateBound("_maxBounds", "_maxBoundsOld");
-  const clipMinBoundsDirty = this.updateBound(
-    "_minClippingBounds",
-    "_minClippingBoundsOld"
-  );
-  const clipMaxBoundsDirty = this.updateBound(
-    "_maxClippingBounds",
-    "_maxClippingBoundsOld"
-  );
-
-  const shapeDirty =
-    compoundTransformDirty ||
-    minBoundsDirty ||
-    maxBoundsDirty ||
-    clipMinBoundsDirty ||
-    clipMaxBoundsDirty;
-
-  // Update the shape on the first frame or if it's dirty.
+  const shapeDirty = checkTransformAndBounds(this, provider);
   const shape = this._shape;
   if (!this._ready || shapeDirty) {
-    this._shapeVisible = shape.update(
-      compoundTransform,
-      this._minBounds,
-      this._maxBounds,
-      this._clipMinBounds,
-      this._clipMaxBounds
-    );
-  }
-  // If the shape is visible it will need to do some extra work.
-  if ((!this._ready || shapeDirty) && this._shapeVisible) {
-    // Rebuild the shader if any of the shape defines changed.
-    const shapeDefines = shape.shaderDefines;
-    const shapeDefinesOld = this._shapeDefinesOld;
-    let shapeDefinesChanged = false;
-    for (const property in shapeDefines) {
-      if (shapeDefines.hasOwnProperty(property)) {
-        if (shapeDefines[property] !== shapeDefinesOld[property]) {
-          shapeDefinesChanged = true;
-          break;
-        }
-      }
-    }
+    const shapeDefinesChanged = updateShapeAndTransforms(this, shape, provider);
     if (shapeDefinesChanged) {
       this._shaderDirty = true;
-      this._shapeDefinesOld = clone(shapeDefines, true);
     }
-
-    const transformPositionLocalToWorld = shape.shapeTransform;
-    const transformPositionWorldToLocal = Matrix4.inverse(
-      transformPositionLocalToWorld,
-      scratchTransformPositionWorldToLocal
-    );
-    const rotation = Matrix4.getRotation(
-      transformPositionLocalToWorld,
-      scratchRotation
-    );
-    // Note that inverse(rotation) is the same as transpose(rotation)
-    const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
-    const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-    const localScale = Cartesian3.divideByScalar(
-      scale,
-      maximumScaleComponent,
-      scratchLocalScale
-    );
-    const rotationAndLocalScale = Matrix3.multiplyByScale(
-      rotation,
-      localScale,
-      scratchRotationAndLocalScale
-    );
-
-    // Set member variables when the shape is dirty
-    const dimensions = provider.dimensions;
-    this._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-    //  TODO: check which of the `multiply` can be `multiplyTransformation`
-    this._transformPositionWorldToUv = Matrix4.multiply(
-      transformPositionLocalToUv,
-      transformPositionWorldToLocal,
-      this._transformPositionWorldToUv
-    );
-    this._transformPositionUvToWorld = Matrix4.multiply(
-      transformPositionLocalToWorld,
-      transformPositionUvToLocal,
-      this._transformPositionUvToWorld
-    );
-    this._transformDirectionWorldToLocal = Matrix4.getMatrix3(
-      transformPositionWorldToLocal,
-      this._transformDirectionWorldToLocal
-    );
-    this._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-      rotationAndLocalScale,
-      this._transformNormalLocalToWorld
-    );
   }
 
   // Initialize from the ready shape. This only happens once.
   if (!this._ready) {
+    //initFromShape(this, context);
     const dimensions = provider.dimensions;
     const paddingBefore = this._paddingBefore;
     const paddingAfter = this._paddingAfter;
@@ -1526,22 +1352,207 @@ VoxelPrimitive.prototype.update = function (frameState) {
 };
 
 /**
+ * Initialize primitive properties that are derived from the voxel provider
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @private
+ */
+function initFromProvider(primitive, provider) {
+  const {
+    shape: shapeType,
+    minBounds = VoxelShapeType.getMinBounds(shapeType),
+    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
+  } = provider;
+
+  // Set the bounds
+  primitive._minBounds = Cartesian3.clone(minBounds, primitive._minBounds);
+  primitive._maxBounds = Cartesian3.clone(maxBounds, primitive._maxBounds);
+  primitive._minClippingBounds = Cartesian3.clone(
+    VoxelShapeType.getMinBounds(shapeType),
+    primitive._minClippingBounds
+  );
+  primitive._maxClippingBounds = Cartesian3.clone(
+    VoxelShapeType.getMinBounds(shapeType),
+    primitive._maxClippingBounds
+  );
+
+  // Create the shape object
+  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
+  primitive._shape = new ShapeConstructor();
+
+  const { shaderDefines, shaderUniforms: shapeUniforms } = primitive._shape;
+  primitive._shapeDefinesOld = clone(shaderDefines, true);
+
+  // Add shape uniforms to the uniform map
+  const uniformMap = primitive._uniformMap;
+  for (const key in shapeUniforms) {
+    if (shapeUniforms.hasOwnProperty(key)) {
+      const name = `u_${key}`;
+
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(uniformMap[name])) {
+        throw new DeveloperError(`Uniform name "${name}" is already defined`);
+      }
+      //>>includeEnd('debug');
+
+      uniformMap[name] = function () {
+        return shapeUniforms[key];
+      };
+    }
+  }
+
+  // Set uniforms that come from the provider.
+  // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
+  const uniforms = primitive._uniforms;
+  uniforms.dimensions = Cartesian3.clone(
+    provider.dimensions,
+    uniforms.dimensions
+  );
+  primitive._paddingBefore = Cartesian3.clone(
+    defaultValue(provider.paddingBefore, Cartesian3.ZERO),
+    primitive._paddingBefore
+  );
+  uniforms.paddingBefore = Cartesian3.clone(
+    primitive._paddingBefore,
+    uniforms.paddingBefore
+  );
+  primitive._paddingAfter = Cartesian3.clone(
+    defaultValue(provider.paddingAfter, Cartesian3.ZERO),
+    primitive._paddingBefore
+  );
+  uniforms.paddingAfter = Cartesian3.clone(
+    primitive._paddingAfter,
+    uniforms.paddingAfter
+  );
+}
+
+/**
+ * Track changes in provider transform and primitive bounds
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @returns {Boolean} Whether any of the transform or bounds changed
+ */
+function checkTransformAndBounds(primitive, provider) {
+  const providerTransform = defaultValue(
+    provider.modelMatrix,
+    Matrix4.IDENTITY
+  );
+  primitive._compoundModelMatrix = Matrix4.multiplyTransformation(
+    providerTransform,
+    primitive._modelMatrix,
+    primitive._compoundModelMatrix
+  );
+  return (
+    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") &&
+    updateBound(primitive, "_minBounds", "_minBoundsOld") &&
+    updateBound(primitive, "_maxBounds", "_maxBoundsOld") &&
+    updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") &&
+    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld")
+  );
+}
+
+/**
  * Compare old and new values of a bound and update the old if it is different.
- * @param {String} oldBoundKey A key pointing to a bounds object of type Cartesian3 or Matrix4
- * @param {String} newBoundKey A key pointing to a bounds object of the same type as the object at oldBoundKey
+ * @param {VoxelPrimitive} The primitive with bounds properties
+ * @param {String} oldBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
+ * @param {String} newBoundKey A key pointing to a bounds property of the same type as the property at oldBoundKey
  * @returns {Boolean} Whether the bound value changed
  *
  * @private
  */
-VoxelPrimitive.prototype.updateBound = function (newBoundKey, oldBoundKey) {
-  const newBound = this[newBoundKey];
+function updateBound(primitive, newBoundKey, oldBoundKey) {
+  const newBound = primitive[newBoundKey];
   const BoundClass = newBound.constructor;
-  const dirty = !BoundClass.equals(newBound, this[oldBoundKey]);
+  const dirty = !BoundClass.equals(newBound, primitive[oldBoundKey]);
   if (dirty) {
-    this[oldBoundKey] = BoundClass.clone(newBound, this[oldBoundKey]);
+    primitive[oldBoundKey] = BoundClass.clone(newBound, primitive[oldBoundKey]);
   }
   return dirty;
-};
+}
+
+/**
+ * Update the shape and related transforms
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelShape} shape
+ * @param {VoxelProvider} provider
+ * @returns {Boolean} Whether any of the shape defines changed, requiring the shader to be rebuilt
+ */
+function updateShapeAndTransforms(primitive, shape, provider) {
+  primitive._shapeVisible = shape.update(
+    primitive._compoundModelMatrix,
+    primitive._minBounds,
+    primitive._maxBounds,
+    primitive._clipMinBounds,
+    primitive._clipMaxBounds
+  );
+  if (!primitive._shapeVisible) {
+    return false;
+  }
+
+  // Check if any of the shape defines changed.
+  const shapeDefines = shape.shaderDefines;
+  const shapeDefinesOld = primitive._shapeDefinesOld;
+  let shapeDefinesChanged = false;
+  for (const property in shapeDefines) {
+    if (shapeDefines.hasOwnProperty(property)) {
+      if (shapeDefines[property] !== shapeDefinesOld[property]) {
+        shapeDefinesChanged = true;
+        break;
+      }
+    }
+  }
+  if (shapeDefinesChanged) {
+    primitive._shapeDefinesOld = clone(shapeDefines, true);
+  }
+
+  const transformPositionLocalToWorld = shape.shapeTransform;
+  const transformPositionWorldToLocal = Matrix4.inverse(
+    transformPositionLocalToWorld,
+    scratchTransformPositionWorldToLocal
+  );
+  const rotation = Matrix4.getRotation(
+    transformPositionLocalToWorld,
+    scratchRotation
+  );
+  // Note that inverse(rotation) is the same as transpose(rotation)
+  const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
+  const maximumScaleComponent = Cartesian3.maximumComponent(scale);
+  const localScale = Cartesian3.divideByScalar(
+    scale,
+    maximumScaleComponent,
+    scratchLocalScale
+  );
+  const rotationAndLocalScale = Matrix3.multiplyByScale(
+    rotation,
+    localScale,
+    scratchRotationAndLocalScale
+  );
+
+  // Set member variables when the shape is dirty
+  const dimensions = provider.dimensions;
+  primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
+  //  TODO: check which of the `multiply` can be `multiplyTransformation`
+  primitive._transformPositionWorldToUv = Matrix4.multiply(
+    transformPositionLocalToUv,
+    transformPositionWorldToLocal,
+    primitive._transformPositionWorldToUv
+  );
+  primitive._transformPositionUvToWorld = Matrix4.multiply(
+    transformPositionLocalToWorld,
+    transformPositionUvToLocal,
+    primitive._transformPositionUvToWorld
+  );
+  primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
+    transformPositionWorldToLocal,
+    primitive._transformDirectionWorldToLocal
+  );
+  primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
+    rotationAndLocalScale,
+    primitive._transformNormalLocalToWorld
+  );
+
+  return shapeDefinesChanged;
+}
 
 /**
  * Find the keyframe location to render at. Doesn't need to be a whole number.
