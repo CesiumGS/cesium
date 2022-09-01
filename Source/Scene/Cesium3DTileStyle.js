@@ -1,7 +1,6 @@
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import ConditionsExpression from "./ConditionsExpression.js";
@@ -83,24 +82,7 @@ function Cesium3DTileStyle(style) {
 
   this._colorShaderTranslucent = false;
 
-  if (typeof style === "string" || style instanceof Resource) {
-    //>>includeStart('debug', pragmas.debug);
-    deprecationWarning(
-      "Cesium3DTileStyle constructor",
-      "string or Resource style parameter in the Cesium3DTileStyle constructor was deprecated in CesiumJS 1.94.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
-    );
-    //>>includeEnd('debug');
-
-    const resource = Resource.createIfNeeded(style);
-    const that = this;
-    this._readyPromise = resource.fetchJson(style).then(function (styleJson) {
-      setup(that, styleJson);
-      return that;
-    });
-  } else {
-    setup(this, style);
-    this._readyPromise = Promise.resolve(this);
-  }
+  setup(this, style);
 }
 
 function setup(that, styleJson) {
@@ -202,51 +184,6 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
       //>>includeEnd('debug');
 
       return this._style;
-    },
-  },
-
-  /**
-   * When <code>true</code>, the style is ready and its expressions can be evaluated.  When
-   * a style is constructed with an object, as opposed to a url, this is <code>true</code> immediately.
-   *
-   * @memberof Cesium3DTileStyle.prototype
-   *
-   * @type {Boolean}
-   * @readonly
-   * @deprecated
-   *
-   * @default false
-   */
-  ready: {
-    get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      deprecationWarning(
-        "ready",
-        "ready was deprecated in CesiumJS 1.94.  It will be removed in 1.96.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
-      );
-      //>>includeEnd('debug');
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the the style is ready and its expressions can be evaluated.
-   *
-   * @memberof Cesium3DTileStyle.prototype
-   *
-   * @type {Promise.<Cesium3DTileStyle>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      deprecationWarning(
-        "readyPromise",
-        "readyPromise was deprecated in CesiumJS 1.94.  It will be removed in 1.96.  If loading a style from a url, use Cesium3DTileStyle.fromUrl instead."
-      );
-      //>>includeEnd('debug');
-      return this._readyPromise;
     },
   },
 
