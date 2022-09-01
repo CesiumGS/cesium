@@ -4,7 +4,7 @@
 
 #### Major Announcements :loudspeaker:
 
-- CesiumJS has switched to a new architecture for loading glTF models and tilesets that enables features includes:
+- CesiumJS has switched to a new architecture for loading glTF models and tilesets to enable:
   - User-defined GLSL shaders via [`CustomShader`](Documentation/CustomShaderGuide/README.md)
   - Support for [3D Tiles Next](https://cesium.com/blog/2021/11/10/introducing-3d-tiles-next/) metadata extensions: [`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata), [`EXT_mesh_features`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_mesh_features/extensions/2.0/Vendor/EXT_mesh_features) and [`EXT_instance_features`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features)
   - Support for [`EXT_mesh_gpu_instancing`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing)
@@ -12,8 +12,8 @@
   - Texture caching across different tiles
   - Numerous bug fixes
 - Usage notes for the new glTF architecture:
-  - Those using `ModelExperimental.fromGltf()` should now use `Model.fromGltf()`
-  - The `enableModelExperimental` flag was removed, as tilesets and entities always use the new architecture
+  - Those using `ModelExperimental.fromGltf()` should now use `Model.fromGltf()`.
+  - The `enableModelExperimental` flag was removed, as tilesets and entities always use the new architecture.
   - The new implementation of `Model` uses the same public API as before, so no other changes are necessary.
 
 #### Breaking Changes :mega:
@@ -29,12 +29,12 @@
 - `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
 - `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
 - Export asset files such as CSS in `package.json`, allowing bundlers to import without additional configuration. [#9212](https://github.com/CesiumGS/cesium/pull/9212)
-- The `sideEffects` field in `package.json` is now defined, allowing more conservative bundlers like Webpack to enable tree shaking by default.
+- The `sideEffects` field in `package.json` is now specified, allowing more conservative bundlers like Webpack to enable tree shaking by default. [#10714](https://github.com/CesiumGS/cesium/pull/10714)
 
 ##### Fixes :wrench:
 
 - Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
-- Fixed issues running CesiumJS under Node.js when using ESM modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
+- Fixed issues running CesiumJS under Node.js when using ES modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
 - Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
 - Fixed developer error with `Camera.flyTo` with an `orientation` and a `Rectangle` value for `destination`. [#10704](https://github.com/CesiumGS/cesium/issues/10704)
 - Fixed rendering bug with points in .vctr format, where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
