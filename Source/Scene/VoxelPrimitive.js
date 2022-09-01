@@ -1123,7 +1123,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     });
     uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
 
-    const dimensions = provider.dimensions;
     const shapeType = provider.shape;
 
     // Set the bounds
@@ -1157,8 +1156,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._shape = new ShapeConstructor();
 
     const shape = this._shape;
-    const shapeDefines = shape.shaderDefines;
-    this._shapeDefinesOld = clone(shapeDefines, true);
+    this._shapeDefinesOld = clone(shape.shaderDefines, true);
 
     // Add shape uniforms to the uniform map
     const shapeUniforms = shape.shaderUniforms;
@@ -1190,6 +1188,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     // Set uniforms that come from the provider.
     // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
+    const dimensions = provider.dimensions;
     uniforms.dimensions = Cartesian3.clone(dimensions, uniforms.dimensions);
     uniforms.paddingBefore = Cartesian3.clone(
       this._paddingBefore,
@@ -1204,40 +1203,28 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const primitiveTransform = this._modelMatrix;
   const providerTransform = defaultValue(
     provider.modelMatrix,
     Matrix4.IDENTITY
   );
   const compoundTransform = Matrix4.multiplyTransformation(
     providerTransform,
-    primitiveTransform,
+    this._modelMatrix,
     this._compoundModelMatrix
   );
-  const compoundTransformOld = this._compoundModelMatrixOld;
-  const compoundTransformDirty = !Matrix4.equals(
-    compoundTransform,
-    compoundTransformOld
+  const compoundTransformDirty = this.updateBound(
+    "_compoundModelMatrix",
+    "_compoundModelMatrixOld"
   );
-
-  const shape = this._shape;
-  const minBounds = this._minBounds;
-  const maxBounds = this._maxBounds;
-  const minBoundsOld = this._minBoundsOld;
-  const maxBoundsOld = this._maxBoundsOld;
-  const minBoundsDirty = !Cartesian3.equals(minBounds, minBoundsOld);
-  const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
-  const clipMinBounds = this._minClippingBounds;
-  const clipMaxBounds = this._maxClippingBounds;
-  const clipMinBoundsOld = this._minClippingBoundsOld;
-  const clipMaxBoundsOld = this._maxClippingBoundsOld;
-  const clipMinBoundsDirty = !Cartesian3.equals(
-    clipMinBounds,
-    clipMinBoundsOld
+  const minBoundsDirty = this.updateBound("_minBounds", "_minBoundsOld");
+  const maxBoundsDirty = this.updateBound("_maxBounds", "_maxBoundsOld");
+  const clipMinBoundsDirty = this.updateBound(
+    "_minClippingBounds",
+    "_minClippingBoundsOld"
   );
-  const clipMaxBoundsDirty = !Cartesian3.equals(
-    clipMaxBounds,
-    clipMaxBoundsOld
+  const clipMaxBoundsDirty = this.updateBound(
+    "_maxClippingBounds",
+    "_maxClippingBoundsOld"
   );
 
   const shapeDirty =
@@ -1247,54 +1234,26 @@ VoxelPrimitive.prototype.update = function (frameState) {
     clipMinBoundsDirty ||
     clipMaxBoundsDirty;
 
-  if (shapeDirty) {
-    if (compoundTransformDirty) {
-      this._compoundModelMatrixOld = Matrix4.clone(
-        compoundTransform,
-        this._compoundModelMatrixOld
-      );
-    }
-    if (minBoundsDirty) {
-      this._minBoundsOld = Cartesian3.clone(minBounds, this._minBoundsOld);
-    }
-    if (maxBoundsDirty) {
-      this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
-    }
-    if (clipMinBoundsDirty) {
-      this._minClippingBoundsOld = Cartesian3.clone(
-        clipMinBounds,
-        this._minClippingBoundsOld
-      );
-    }
-    if (clipMaxBoundsDirty) {
-      this._maxClippingBoundsOld = Cartesian3.clone(
-        clipMaxBounds,
-        this._maxClippingBoundsOld
-      );
-    }
-  }
-
   // Update the shape on the first frame or if it's dirty.
-  // If the shape is visible it will need to do some extra work.
-  if (
-    (!this._ready || shapeDirty) &&
-    (this._shapeVisible = shape.update(
+  const shape = this._shape;
+  if (!this._ready || shapeDirty) {
+    this._shapeVisible = shape.update(
       compoundTransform,
-      minBounds,
-      maxBounds,
-      clipMinBounds,
-      clipMaxBounds
-    ))
-  ) {
+      this._minBounds,
+      this._maxBounds,
+      this._clipMinBounds,
+      this._clipMaxBounds
+    );
+  }
+  // If the shape is visible it will need to do some extra work.
+  if ((!this._ready || shapeDirty) && this._shapeVisible) {
     // Rebuild the shader if any of the shape defines changed.
     const shapeDefines = shape.shaderDefines;
     const shapeDefinesOld = this._shapeDefinesOld;
     let shapeDefinesChanged = false;
     for (const property in shapeDefines) {
       if (shapeDefines.hasOwnProperty(property)) {
-        const value = shapeDefines[property];
-        const valueOld = shapeDefinesOld[property];
-        if (value !== valueOld) {
+        if (shapeDefines[property] !== shapeDefinesOld[property]) {
           shapeDefinesChanged = true;
           break;
         }
@@ -1436,203 +1395,251 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Update the traversal and prepare for rendering.
   // This doesn't happen on the first update frame. It needs to wait until the
   // primitive is made ready after the end of the first update frame.
-  if (this._ready && this._shapeVisible) {
-    const traversal = this._traversal;
-    const clock = this._clock;
-    const timeIntervalCollection = provider.timeIntervalCollection;
+  if (!this._ready || !this._shapeVisible) {
+    return;
+  }
+  const clock = this._clock;
+  const timeIntervalCollection = provider.timeIntervalCollection;
+  const keyframeLocation = getKeyframeLocation(timeIntervalCollection, clock);
 
-    // Find the keyframe location to render at. Doesn't need to be a whole number.
-    let keyframeLocation = 0.0;
-    if (defined(timeIntervalCollection) && defined(clock)) {
-      let date = clock.currentTime;
-      let timeInterval;
-      let timeIntervalIndex = timeIntervalCollection.indexOf(date);
-      if (timeIntervalIndex >= 0) {
-        timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-      } else {
-        // Date fell outside the range
-        timeIntervalIndex = ~timeIntervalIndex;
-        if (timeIntervalIndex === timeIntervalCollection.length) {
-          // Date past range
-          timeIntervalIndex = timeIntervalCollection.length - 1;
-          timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-          date = timeInterval.stop;
-        } else {
-          // Date before range
-          timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-          date = timeInterval.start;
-        }
-      }
+  const traversal = this._traversal;
+  const sampleCountOld = traversal._sampleCount;
 
-      // De-lerp between the start and end of the interval
-      const totalSeconds = JulianDate.secondsDifference(
-        timeInterval.stop,
-        timeInterval.start
-      );
-      const secondsDifferenceStart = JulianDate.secondsDifference(
-        date,
-        timeInterval.start
-      );
-      const t = secondsDifferenceStart / totalSeconds;
-      keyframeLocation = timeIntervalIndex + t;
-    }
+  // Update the voxel traversal
+  traversal.update(
+    frameState,
+    keyframeLocation,
+    shapeDirty, // recomputeBoundingVolumes
+    this._disableUpdate // pauseUpdate
+  );
 
-    const sampleCountOld = traversal._sampleCount;
+  if (sampleCountOld !== traversal._sampleCount) {
+    this._shaderDirty = true;
+  }
 
-    // Update the voxel traversal
-    traversal.update(
-      frameState,
-      keyframeLocation,
-      shapeDirty, // recomputeBoundingVolumes
-      this._disableUpdate // pauseUpdate
+  const hasLoadedData = traversal.isRenderable(traversal.rootNode);
+  if (!hasLoadedData) {
+    return;
+  }
+
+  if (this._debugDraw) {
+    // Debug draw bounding boxes and other things. Must go after traversal update
+    // because that's what updates the tile bounding boxes.
+    debugDraw(this, frameState);
+  }
+
+  if (this._disableRender) {
+    return;
+  }
+
+  // Check if log depth changed
+  if (this._useLogDepth !== frameState.useLogDepth) {
+    this._useLogDepth = frameState.useLogDepth;
+    this._shaderDirty = true;
+  }
+
+  // Check if clipping planes changed
+  const clippingPlanesChanged = updateClippingPlanes(this, frameState);
+  if (clippingPlanesChanged) {
+    this._shaderDirty = true;
+  }
+
+  const leafNodeTexture = traversal.leafNodeTexture;
+  if (defined(leafNodeTexture)) {
+    uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
+    uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
+      traversal.leafNodeTexelSizeUv,
+      uniforms.octreeLeafNodeTexelSizeUv
     );
+    uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
+  }
 
-    if (sampleCountOld !== traversal._sampleCount) {
-      this._shaderDirty = true;
-    }
+  // Rebuild shaders
+  if (this._shaderDirty) {
+    buildVoxelDrawCommands(this, context);
+    this._shaderDirty = false;
+  }
 
-    const hasLoadedData = traversal.isRenderable(traversal.rootNode);
+  // Calculate the NDC-space AABB to "scissor" the fullscreen quad
+  const transformPositionWorldToProjection =
+    context.uniformState.viewProjection;
+  const orientedBoundingBox = shape.orientedBoundingBox;
+  const ndcAabb = orientedBoundingBoxToNdcAabb(
+    orientedBoundingBox,
+    transformPositionWorldToProjection,
+    scratchNdcAabb
+  );
 
-    if (hasLoadedData && this._debugDraw) {
-      // Debug draw bounding boxes and other things. Must go after traversal update
-      // because that's what updates the tile bounding boxes.
-      debugDraw(this, frameState);
-    }
+  // If the object is offscreen, don't render it.
+  const offscreen =
+    ndcAabb.x === +1.0 ||
+    ndcAabb.y === +1.0 ||
+    ndcAabb.z === -1.0 ||
+    ndcAabb.w === -1.0;
+  if (offscreen) {
+    return;
+  }
 
-    if (hasLoadedData && !this._disableRender) {
-      // Check if log depth changed
-      if (this._useLogDepth !== frameState.useLogDepth) {
-        this._useLogDepth = frameState.useLogDepth;
-        this._shaderDirty = true;
-      }
+  // Prepare to render: update uniforms that can change every frame
+  // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
+  uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
+    ndcAabb,
+    uniforms.ndcSpaceAxisAlignedBoundingBox
+  );
+  const transformPositionViewToWorld = context.uniformState.inverseView;
+  uniforms.transformPositionViewToUv = Matrix4.multiply(
+    this._transformPositionWorldToUv,
+    transformPositionViewToWorld,
+    uniforms.transformPositionViewToUv
+  );
+  const transformPositionWorldToView = context.uniformState.view;
+  uniforms.transformPositionUvToView = Matrix4.multiply(
+    transformPositionWorldToView,
+    this._transformPositionUvToWorld,
+    uniforms.transformPositionUvToView
+  );
+  const transformDirectionViewToWorld =
+    context.uniformState.inverseViewRotation;
+  uniforms.transformDirectionViewToLocal = Matrix3.multiply(
+    this._transformDirectionWorldToLocal,
+    transformDirectionViewToWorld,
+    uniforms.transformDirectionViewToLocal
+  );
+  uniforms.transformNormalLocalToWorld = Matrix3.clone(
+    this._transformNormalLocalToWorld,
+    uniforms.transformNormalLocalToWorld
+  );
+  const cameraPositionWorld = frameState.camera.positionWC;
+  uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
+    this._transformPositionWorldToUv,
+    cameraPositionWorld,
+    uniforms.cameraPositionUv
+  );
+  uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
 
-      // Check if clipping planes changed
-      const clippingPlanes = this._clippingPlanes;
-      if (defined(clippingPlanes)) {
-        clippingPlanes.update(frameState);
-        const clippingPlanesState = clippingPlanes.clippingPlanesState;
-        const clippingPlanesEnabled = clippingPlanes.enabled;
-        if (
-          this._clippingPlanesState !== clippingPlanesState ||
-          this._clippingPlanesEnabled !== clippingPlanesEnabled
-        ) {
-          this._clippingPlanesState = clippingPlanesState;
-          this._clippingPlanesEnabled = clippingPlanesEnabled;
-          if (clippingPlanesEnabled) {
-            uniforms.clippingPlanesTexture = clippingPlanes.texture;
+  // Render the primitive
+  const command = frameState.passes.pick
+    ? this._drawCommandPick
+    : this._drawCommand;
+  command.boundingVolume = shape.boundingSphere;
+  frameState.commandList.push(command);
+};
 
-            // Compute the clipping plane's transformation to uv space and then take the inverse
-            // transpose to properly transform the hessian normal form of the plane.
+/**
+ * Compare old and new values of a bound and update the old if it is different.
+ * @param {String} oldBoundKey A key pointing to a bounds object of type Cartesian3 or Matrix4
+ * @param {String} newBoundKey A key pointing to a bounds object of the same type as the object at oldBoundKey
+ * @returns {Boolean} Whether the bound value changed
+ *
+ * @private
+ */
+VoxelPrimitive.prototype.updateBound = function (newBoundKey, oldBoundKey) {
+  const newBound = this[newBoundKey];
+  const BoundClass = newBound.constructor;
+  const dirty = !BoundClass.equals(newBound, this[oldBoundKey]);
+  if (dirty) {
+    this[oldBoundKey] = BoundClass.clone(newBound, this[oldBoundKey]);
+  }
+  return dirty;
+};
 
-            // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
-            // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
-            // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
-
-            const transformPositionUvToWorld = this._transformPositionUvToWorld;
-            uniforms.clippingPlanesMatrix = Matrix4.transpose(
-              Matrix4.multiplyTransformation(
-                Matrix4.inverse(
-                  clippingPlanes.modelMatrix,
-                  uniforms.clippingPlanesMatrix
-                ),
-                transformPositionUvToWorld,
-                uniforms.clippingPlanesMatrix
-              ),
-              uniforms.clippingPlanesMatrix
-            );
-          }
-          this._shaderDirty = true;
-        }
-      }
-
-      const leafNodeTexture = traversal.leafNodeTexture;
-      if (defined(leafNodeTexture)) {
-        uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
-        uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
-          traversal.leafNodeTexelSizeUv,
-          uniforms.octreeLeafNodeTexelSizeUv
-        );
-        uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
-      }
-
-      // Rebuild shaders
-      if (this._shaderDirty) {
-        buildVoxelDrawCommands(this, context);
-        this._shaderDirty = false;
-      }
-
-      // Calculate the NDC-space AABB to "scissor" the fullscreen quad
-      const transformPositionWorldToProjection =
-        context.uniformState.viewProjection;
-      const orientedBoundingBox = shape.orientedBoundingBox;
-      const ndcAabb = orientedBoundingBoxToNdcAabb(
-        orientedBoundingBox,
-        transformPositionWorldToProjection,
-        scratchNdcAabb
-      );
-
-      // If the object is offscreen, don't render it.
-      const offscreen =
-        ndcAabb.x === +1.0 ||
-        ndcAabb.y === +1.0 ||
-        ndcAabb.z === -1.0 ||
-        ndcAabb.w === -1.0;
-
-      if (!offscreen) {
-        const transformPositionWorldToView = context.uniformState.view;
-        const transformPositionViewToWorld = context.uniformState.inverseView;
-        const transformDirectionViewToWorld =
-          context.uniformState.inverseViewRotation;
-        const transformDirectionWorldToLocal = this
-          ._transformDirectionWorldToLocal;
-        const transformPositionUvToWorld = this._transformPositionUvToWorld;
-        const transformPositionWorldToUv = this._transformPositionWorldToUv;
-        const transformNormalLocalToWorld = this._transformNormalLocalToWorld;
-        const cameraPositionWorld = frameState.camera.positionWC;
-
-        // Update uniforms that can change every frame
-        uniforms.transformPositionViewToUv = Matrix4.multiply(
-          transformPositionWorldToUv,
-          transformPositionViewToWorld,
-          uniforms.transformPositionViewToUv
-        );
-        uniforms.transformPositionUvToView = Matrix4.multiply(
-          transformPositionWorldToView,
-          transformPositionUvToWorld,
-          uniforms.transformPositionUvToView
-        );
-        uniforms.transformDirectionViewToLocal = Matrix3.multiply(
-          transformDirectionWorldToLocal,
-          transformDirectionViewToWorld,
-          uniforms.transformDirectionViewToLocal
-        );
-        uniforms.transformNormalLocalToWorld = Matrix3.clone(
-          transformNormalLocalToWorld,
-          uniforms.transformNormalLocalToWorld
-        );
-        uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
-          transformPositionWorldToUv,
-          cameraPositionWorld,
-          uniforms.cameraPositionUv
-        );
-        uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
-
-        // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
-        uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
-          ndcAabb,
-          uniforms.ndcSpaceAxisAlignedBoundingBox
-        );
-
-        // Render the primitive
-        const command = frameState.passes.pick
-          ? this._drawCommandPick
-          : this._drawCommand;
-        command.boundingVolume = shape.boundingSphere;
-        frameState.commandList.push(command);
-      }
+/**
+ * Find the keyframe location to render at. Doesn't need to be a whole number.
+ * @param {TimeIntervalCollection} timeIntervalCollection
+ * @param {Clock} clock
+ * @returns {Number}
+ *
+ * @private
+ */
+function getKeyframeLocation(timeIntervalCollection, clock) {
+  if (!defined(timeIntervalCollection) || !defined(clock)) {
+    return 0.0;
+  }
+  let date = clock.currentTime;
+  let timeInterval;
+  let timeIntervalIndex = timeIntervalCollection.indexOf(date);
+  if (timeIntervalIndex >= 0) {
+    timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+  } else {
+    // Date fell outside the range
+    timeIntervalIndex = ~timeIntervalIndex;
+    if (timeIntervalIndex === timeIntervalCollection.length) {
+      // Date past range
+      timeIntervalIndex = timeIntervalCollection.length - 1;
+      timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+      date = timeInterval.stop;
+    } else {
+      // Date before range
+      timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+      date = timeInterval.start;
     }
   }
-};
+  // De-lerp between the start and end of the interval
+  const totalSeconds = JulianDate.secondsDifference(
+    timeInterval.stop,
+    timeInterval.start
+  );
+  const secondsDifferenceStart = JulianDate.secondsDifference(
+    date,
+    timeInterval.start
+  );
+  const t = secondsDifferenceStart / totalSeconds;
+
+  return timeIntervalIndex + t;
+}
+
+/**
+ * Update the clipping planes state and associated uniforms
+ *
+ * @param {VoxelPrimitive} primitive
+ * @param {FrameState} frameState
+ * @returns {Boolean} Whether the clipping planes changed
+ * @private
+ */
+function updateClippingPlanes(primitive, frameState) {
+  const clippingPlanes = primitive._clippingPlanes;
+  if (!defined(clippingPlanes)) {
+    return false;
+  }
+
+  clippingPlanes.update(frameState);
+
+  const { clippingPlanesState, enabled } = clippingPlanes;
+  if (
+    primitive._clippingPlanesState === clippingPlanesState &&
+    primitive._clippingPlanesEnabled === enabled
+  ) {
+    return false;
+  }
+  primitive._clippingPlanesState = clippingPlanesState;
+  primitive._clippingPlanesEnabled = enabled;
+
+  if (enabled) {
+    const uniforms = primitive._uniforms;
+    uniforms.clippingPlanesTexture = clippingPlanes.texture;
+
+    // Compute the clipping plane's transformation to uv space and then take the inverse
+    // transpose to properly transform the hessian normal form of the plane.
+
+    // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
+    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
+    // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+
+    uniforms.clippingPlanesMatrix = Matrix4.transpose(
+      Matrix4.multiplyTransformation(
+        Matrix4.inverse(
+          clippingPlanes.modelMatrix,
+          uniforms.clippingPlanesMatrix
+        ),
+        primitive._transformPositionUvToWorld,
+        uniforms.clippingPlanesMatrix
+      ),
+      uniforms.clippingPlanesMatrix
+    );
+  }
+
+  return true;
+}
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
