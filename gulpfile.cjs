@@ -1518,7 +1518,7 @@ async function buildCesiumViewer() {
   };
   config.format = "iife";
   config.inject = ["Apps/CesiumViewer/index.js"];
-  config.external = ["https", "http", "zlib"];
+  config.external = ["https", "http", "zlib", "url"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
