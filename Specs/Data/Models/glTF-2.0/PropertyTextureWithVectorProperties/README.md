@@ -5,7 +5,7 @@ types. This model is contrived, it is intended for unit testing only.
 
 The sample contains a glTF asset with a single mesh primitive. The mesh primitive consists of a quad (the unit square), formed by 2 triangles. The vertices in this mesh primitive have the usual `POSITION`, `NORMAL`, and `TEXCOORD_0` vertex attributes.
 
-### Metadata Structure
+## Metadata Structure
 
 This model contains the following metadata properties to set up several
 different test cases. The properties share the same texture, reinterpreting the

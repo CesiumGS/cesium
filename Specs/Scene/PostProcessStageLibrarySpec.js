@@ -16,7 +16,7 @@ describe(
   "Scene/PostProcessStageLibrary",
   function () {
     const boxTexturedUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
 
     let scene;
     let originalBloomBrightness;

@@ -19,13 +19,13 @@ describe(
   "Scene/Model/DequantizationPipelineStage",
   function () {
     const boxUncompressed =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxWithLines =
-      "./Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf";
+      "./Data/Models/glTF-2.0/BoxWithLines/glTF-Draco/BoxWithLines.gltf";
     const milkTruck =
-      "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
+      "./Data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf";
     const boxDracoRGBColors =
-      "./Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf";
+      "./Data/Models/glTF-2.0/BoxVertexColorsDracoRGB/glTF-Draco/BoxVertexColorsDracoRGB.gltf";
 
     let scene;
     const gltfLoaders = [];

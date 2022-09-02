@@ -235,7 +235,7 @@ describe(
     it("per-feature post process stage", function () {
       return loadAndZoomToModel(
         {
-          url: "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf",
+          url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
         },
         scene
       ).then(function (model) {

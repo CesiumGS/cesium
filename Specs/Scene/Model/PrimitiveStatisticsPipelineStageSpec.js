@@ -13,32 +13,32 @@ describe(
   "Scene/Model/PrimitiveStatisticsPipelineStage",
   function () {
     const animatedMorphCube =
-      "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
-    const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
+    const boomBox = "./Data/Models/glTF-2.0/BoomBox/glTF/BoomBox.gltf";
     const boomBoxSpecularGlossiness =
-      "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxTextured =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedBinary =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxWithPrimitiveOutline =
-      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+      "./Data/Models/glTF-2.0/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
     const pointCloudRGB =
-      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+      "./Data/Models/glTF-2.0/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     const pointCloudWithPropertyAttributes =
-      "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+      "./Data/Models/glTF-2.0/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
     const simplePropertyTexture =
-      "./Data/Models/GltfLoader/SimplePropertyTexture/SimplePropertyTexture.gltf";
-    const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
+      "./Data/Models/glTF-2.0/SimplePropertyTexture/glTF/SimplePropertyTexture.gltf";
+    const triangle = "./Data/Models/glTF-2.0/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
-      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+      "./Data/Models/glTF-2.0/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
     const triangleStrip =
-      "./Data/Models/GltfLoader/TriangleStrip/glTF/TriangleStrip.gltf";
+      "./Data/Models/glTF-2.0/TriangleStrip/glTF/TriangleStrip.gltf";
     const triangleFan =
-      "./Data/Models/GltfLoader/TriangleFan/glTF/TriangleFan.gltf";
+      "./Data/Models/glTF-2.0/TriangleFan/glTF/TriangleFan.gltf";
 
     let scene;
     const gltfLoaders = [];

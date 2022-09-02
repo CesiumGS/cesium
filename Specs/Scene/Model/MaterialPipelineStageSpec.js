@@ -75,15 +75,15 @@ describe(
       return waitForLoaderProcess(gltfLoader, scene);
     }
 
-    const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
+    const boomBox = "./Data/Models/glTF-2.0/BoomBox/glTF/BoomBox.gltf";
     const boomBoxSpecularGlossiness =
-      "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
-    const boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+    const boxUnlit = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
     const boxNoNormals =
-      "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
-    const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
+      "./Data/Models/glTF-2.0/BoxNoNormals/glTF/BoxNoNormals.gltf";
+    const triangle = "./Data/Models/glTF-2.0/Triangle/glTF/Triangle.gltf";
     const twoSidedPlane =
-      "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+      "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {

@@ -15,13 +15,13 @@ describe(
   "Scene/Model/MetadataPipelineStage",
   function () {
     const pointCloudWithPropertyAttributes =
-      "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+      "./Data/Models/glTF-2.0/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
     const simplePropertyTexture =
-      "./Data/Models/GltfLoader/SimplePropertyTexture/SimplePropertyTexture.gltf";
+      "./Data/Models/glTF-2.0/SimplePropertyTexture/glTF/SimplePropertyTexture.gltf";
     const propertyTextureWithVectorProperties =
-      "./Data/Models/GltfLoader/PropertyTextureWithVectorProperties/PropertyTextureWithVectorProperties.gltf";
+      "./Data/Models/glTF-2.0/PropertyTextureWithVectorProperties/glTF/PropertyTextureWithVectorProperties.gltf";
     const boxTexturedBinary =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
 
     let scene;
     const gltfLoaders = [];
