@@ -5,11 +5,12 @@ We release Cesium on the first work day of every month. [This file](../../../.sl
 There is no release manager; instead, our community shares the responsibility. Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured ([more info](https://community.cesium.com/t/cesium-releases/45)).
 
 ## One week before release
+
 1. Check for any outdated dependencies with `npm outdated`.
-1. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
-1. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatable, open an issue.
-1. Check the [`priority - next release` issues](https://github.com/CesiumGS/cesium/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+-+next+release%22) and [`priority - next release` pull requests](https://github.com/CesiumGS/cesium/pulls?q=is%3Apr+is%3Aopen+label%3A"priority+-+next+release"). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
-1. Merge [`cesium` to `cesium-analytics`](https://github.com/CesiumGS/cesium-analytics/wiki/Merging-between-Cesium-Analytics-and-CesiumJS) and address any conflicts. Doing this before the release helps detect problems sooner.
+2. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
+3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatable, open an issue.
+4. Check the [`priority - next release` issues](https://github.com/CesiumGS/cesium/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+-+next+release%22) and [`priority - next release` pull requests](https://github.com/CesiumGS/cesium/pulls?q=is%3Apr+is%3Aopen+label%3A"priority+-+next+release"). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
+5. Merge [`cesium` to `cesium-analytics`](https://github.com/CesiumGS/cesium-analytics/wiki/Merging-between-Cesium-Analytics-and-CesiumJS) and address any conflicts. Doing this before the release helps detect problems sooner.
 
 ## Release testing and packaging
 
