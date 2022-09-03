@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.98 - 2022-10-03
+
+##### Additions :tada:
+
+- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models.
+
 ### 1.97 - 2022-09-01
 
 #### Major Announcements :loudspeaker:
