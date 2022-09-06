@@ -313,12 +313,12 @@ function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
   const accessor = gltf.accessors[accessorId];
   const count = accessor.count;
   const indexDatatype = accessor.componentType;
+  const indexSize = IndexDatatype.getSizeInBytes(indexDatatype);
 
   let arrayBuffer = bufferViewTypedArray.buffer;
   let byteOffset = bufferViewTypedArray.byteOffset + accessor.byteOffset;
 
-  if (byteOffset % IndexDatatype.getSizeInBytes(indexDatatype) !== 0) {
-    const indexSize = IndexDatatype.getSizeInBytes(indexDatatype);
+  if (byteOffset % indexSize !== 0) {
     const byteLength = count * indexSize;
     const view = new Uint8Array(arrayBuffer, byteOffset, byteLength);
     const copy = new Uint8Array(view);
