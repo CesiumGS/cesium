@@ -118,6 +118,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
     const torusQuantized =
       "./Data/Models/glTF-2.0/TorusQuantized/glTF/TorusQuantized.gltf";
+    const boxWeb3dQuantizedAttributes =
+      "./Data/Models/glTF-2.0/BoxWeb3dQuantizedAttributes/glTF/BoxWeb3dQuantizedAttributes.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -3015,6 +3017,59 @@ describe(
         expect(normalAttribute.byteStride).toBe(4);
         expect(normalAttribute.min).not.toBeDefined();
         expect(normalAttribute.max).not.toBeDefined();
+      });
+    });
+
+    it("loads WEB3D_quantized_attributes extension", function () {
+      return loadGltf(boxWeb3dQuantizedAttributes).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const primitive = scene.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const scalarAttribute = getAttributeByName(attributes, "_SCALAR_TEST");
+
+        const positionQuantization = positionAttribute.quantization;
+        expect(positionQuantization).toBeDefined();
+        expect(positionQuantization.quantizedVolumeOffset).toEqual(
+          new Cartesian3(-0.5, -0.5, -0.5)
+        );
+        expect(positionQuantization.quantizedVolumeStepSize).toEqual(
+          new Cartesian3(
+            0.000015259021896696422,
+            0.000015259021896696422,
+            0.000015259021896696422
+          )
+        );
+        expect(positionAttribute.min).toEqual(new Cartesian3(-0.5, -0.5, -0.5));
+        expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
+
+        const normalQuantization = normalAttribute.quantization;
+        expect(normalQuantization).toBeDefined();
+        expect(normalQuantization.quantizedVolumeOffset).toEqual(
+          new Cartesian3(-1.0, -1.0, -1.0)
+        );
+        expect(normalQuantization.quantizedVolumeStepSize).toEqual(
+          new Cartesian3(
+            0.000030518043793392844,
+            0.000030518043793392844,
+            0.000030518043793392844
+          )
+        );
+
+        const scalarQuantization = scalarAttribute.quantization;
+        expect(scalarQuantization).toBeDefined();
+        expect(scalarQuantization.quantizedVolumeOffset).toBe(1);
+        expect(scalarQuantization.quantizedVolumeStepSize).toBe(0);
+        expect(scalarAttribute.min).toEqual(1);
+        expect(scalarAttribute.max).toEqual(1);
       });
     });
 

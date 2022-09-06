@@ -22,6 +22,7 @@ import ModelUtility from "./Model/ModelUtility.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import hasExtension from "./hasExtension.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
@@ -809,6 +810,65 @@ function dequantizeMinMax(attribute, VectorType) {
   attribute.max = max;
 }
 
+function setQuantizationFromWeb3dQuantizedAttributes(
+  extension,
+  attribute,
+  MathType
+) {
+  const decodeMatrix = extension.decodeMatrix;
+  const decodedMin = fromArray(MathType, extension.decodedMin);
+  const decodedMax = fromArray(MathType, extension.decodedMax);
+
+  if (defined(decodedMin) && defined(decodedMax)) {
+    attribute.min = decodedMin;
+    attribute.max = decodedMax;
+  }
+
+  const quantization = new ModelComponents.Quantization();
+  quantization.componentDatatype = attribute.componentDatatype;
+  quantization.type = attribute.type;
+
+  if (decodeMatrix.length === 4) {
+    quantization.quantizedVolumeOffset = decodeMatrix[2];
+    quantization.quantizedVolumeStepSize = decodeMatrix[0];
+  } else if (decodeMatrix.length === 9) {
+    quantization.quantizedVolumeOffset = new Cartesian2(
+      decodeMatrix[6],
+      decodeMatrix[7]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian2(
+      decodeMatrix[0],
+      decodeMatrix[4]
+    );
+  } else if (decodeMatrix.length === 16) {
+    quantization.quantizedVolumeOffset = new Cartesian3(
+      decodeMatrix[12],
+      decodeMatrix[13],
+      decodeMatrix[14]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian3(
+      decodeMatrix[0],
+      decodeMatrix[5],
+      decodeMatrix[10]
+    );
+  } else if (decodeMatrix.length === 25) {
+    quantization.quantizedVolumeOffset = new Cartesian4(
+      decodeMatrix[20],
+      decodeMatrix[21],
+      decodeMatrix[22],
+      decodeMatrix[23]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian4(
+      decodeMatrix[0],
+      decodeMatrix[6],
+      decodeMatrix[12],
+      decodeMatrix[18]
+    );
+  }
+
+  attribute.quantization = quantization;
+}
+
 function createAttribute(
   gltf,
   accessorId,
@@ -834,6 +894,14 @@ function createAttribute(
   attribute.max = fromArray(MathType, accessor.max);
   attribute.byteOffset = accessor.byteOffset;
   attribute.byteStride = getAccessorByteStride(gltf, accessor);
+
+  if (hasExtension(accessor, "WEB3D_quantized_attributes")) {
+    setQuantizationFromWeb3dQuantizedAttributes(
+      accessor.extensions.WEB3D_quantized_attributes,
+      attribute,
+      MathType
+    );
+  }
 
   const isQuantizable =
     attribute.semantic === VertexAttributeSemantic.POSITION ||
