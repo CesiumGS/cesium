@@ -1059,7 +1059,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 // TODO 3-channel + 1-channel metadata is a problem right now
 // Individually, they both work, but together the 1-channel is messed up
 
-const scratchTotalDimensions = new Cartesian3();
+const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
@@ -1136,86 +1136,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
   }
 
-  // Initialize from the ready shape. This only happens once.
+  // Set up traversal using the updated shape. This only happens once.
   if (!this._ready) {
-    //initFromShape(this, context);
-    const dimensions = provider.dimensions;
-    const paddingBefore = this._paddingBefore;
-    const paddingAfter = this._paddingAfter;
-    const totalDimensions = Cartesian3.clone(
-      dimensions,
-      scratchTotalDimensions
-    );
-    Cartesian3.add(totalDimensions, paddingBefore, totalDimensions);
-    Cartesian3.add(totalDimensions, paddingAfter, totalDimensions);
-
-    const types = provider.types;
-    const componentTypes = provider.componentTypes;
-
-    // Traversal setup
-    // It's ok for memory byte length to be undefined.
-    // The system will choose a default memory size.
-    const maximumTileCount = provider.maximumTileCount;
-    const maximumTextureMemoryByteLength = defined(maximumTileCount)
-      ? VoxelTraversal.getApproximateTextureMemoryByteLength(
-          maximumTileCount,
-          totalDimensions,
-          types,
-          componentTypes
-        )
-      : undefined;
-
-    const keyframeCount = defaultValue(provider.keyframeCount, 1);
-
-    this._traversal = new VoxelTraversal(
-      this,
-      context,
-      totalDimensions,
-      types,
-      componentTypes,
-      keyframeCount,
-      maximumTextureMemoryByteLength
-    );
-
-    // Set uniforms that come from the traversal.
-    // TODO: should this be done in VoxelTraversal?
-    const traversal = this._traversal;
-
-    uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
-    uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
-      traversal.internalNodeTexelSizeUv,
-      uniforms.octreeInternalNodeTexelSizeUv
-    );
-    uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
-
-    const megatextures = traversal.megatextures;
-    const megatexture = megatextures[0];
-    const megatextureLength = megatextures.length;
-    uniforms.megatextureTextures = new Array(megatextureLength);
-    for (let i = 0; i < megatextureLength; i++) {
-      uniforms.megatextureTextures[i] = megatextures[i].texture;
-    }
-
-    uniforms.megatextureSliceDimensions = Cartesian2.clone(
-      megatexture.sliceCountPerRegion,
-      uniforms.megatextureSliceDimensions
-    );
-    uniforms.megatextureTileDimensions = Cartesian2.clone(
-      megatexture.regionCountPerMegatexture,
-      uniforms.megatextureTileDimensions
-    );
-    uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
-      megatexture.voxelSizeUv,
-      uniforms.megatextureVoxelSizeUv
-    );
-    uniforms.megatextureSliceSizeUv = Cartesian2.clone(
-      megatexture.sliceSizeUv,
-      uniforms.megatextureSliceSizeUv
-    );
-    uniforms.megatextureTileSizeUv = Cartesian2.clone(
-      megatexture.regionSizeUv,
-      uniforms.megatextureTileSizeUv
-    );
+    this._traversal = setupTraversal(this, provider, context);
+    setTraversalUniforms(this._traversal, uniforms);
   }
 
   // Update the traversal and prepare for rendering.
@@ -1231,7 +1155,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
   const traversal = this._traversal;
   const sampleCountOld = traversal._sampleCount;
 
-  // Update the voxel traversal
   traversal.update(
     frameState,
     keyframeLocation,
@@ -1243,8 +1166,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._shaderDirty = true;
   }
 
-  const hasLoadedData = traversal.isRenderable(traversal.rootNode);
-  if (!hasLoadedData) {
+  if (!traversal.isRenderable(traversal.rootNode)) {
     return;
   }
 
@@ -1442,13 +1364,13 @@ function checkTransformAndBounds(primitive, provider) {
     primitive._modelMatrix,
     primitive._compoundModelMatrix
   );
-  return (
-    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") &&
-    updateBound(primitive, "_minBounds", "_minBoundsOld") &&
-    updateBound(primitive, "_maxBounds", "_maxBoundsOld") &&
-    updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") &&
-    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld")
-  );
+  const numChanges =
+    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") +
+    updateBound(primitive, "_minBounds", "_minBoundsOld") +
+    updateBound(primitive, "_maxBounds", "_maxBoundsOld") +
+    updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
+    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
+  return numChanges > 0;
 }
 
 /**
@@ -1456,18 +1378,18 @@ function checkTransformAndBounds(primitive, provider) {
  * @param {VoxelPrimitive} The primitive with bounds properties
  * @param {String} oldBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
  * @param {String} newBoundKey A key pointing to a bounds property of the same type as the property at oldBoundKey
- * @returns {Boolean} Whether the bound value changed
+ * @returns {Number} 1 if the bound value changed, 0 otherwise
  *
  * @private
  */
 function updateBound(primitive, newBoundKey, oldBoundKey) {
   const newBound = primitive[newBoundKey];
   const BoundClass = newBound.constructor;
-  const dirty = !BoundClass.equals(newBound, primitive[oldBoundKey]);
-  if (dirty) {
+  const changed = !BoundClass.equals(newBound, primitive[oldBoundKey]);
+  if (changed) {
     primitive[oldBoundKey] = BoundClass.clone(newBound, primitive[oldBoundKey]);
   }
-  return dirty;
+  return changed ? 1 : 0;
 }
 
 /**
@@ -1552,6 +1474,89 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   );
 
   return shapeDefinesChanged;
+}
+
+/**
+ * Set up a VoxelTraversal based on dimensions and types from the primitive and provider
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @param {Context} context
+ * @returns {VoxelTraversal}
+ * @private
+ */
+function setupTraversal(primitive, provider, context) {
+  const dimensions = Cartesian3.clone(provider.dimensions, scratchDimensions);
+  Cartesian3.add(dimensions, primitive._paddingBefore, dimensions);
+  Cartesian3.add(dimensions, primitive._paddingAfter, dimensions);
+
+  // It's ok for memory byte length to be undefined.
+  // The system will choose a default memory size.
+  const maximumTileCount = provider.maximumTileCount;
+  const maximumTextureMemoryByteLength = defined(maximumTileCount)
+    ? VoxelTraversal.getApproximateTextureMemoryByteLength(
+        maximumTileCount,
+        dimensions,
+        provider.types,
+        provider.componentTypes
+      )
+    : undefined;
+
+  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+
+  return new VoxelTraversal(
+    primitive,
+    context,
+    dimensions,
+    provider.types,
+    provider.componentTypes,
+    keyframeCount,
+    maximumTextureMemoryByteLength
+  );
+}
+
+/**
+ * Set uniforms that come from the traversal.
+ * TODO: should this be done in VoxelTraversal?
+ * @param {VoxelTraversal} traversal
+ * @param {Object} uniforms
+ * @private
+ */
+function setTraversalUniforms(traversal, uniforms) {
+  uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
+  uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
+    traversal.internalNodeTexelSizeUv,
+    uniforms.octreeInternalNodeTexelSizeUv
+  );
+  uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
+
+  const megatextures = traversal.megatextures;
+  const megatexture = megatextures[0];
+  const megatextureLength = megatextures.length;
+  uniforms.megatextureTextures = new Array(megatextureLength);
+  for (let i = 0; i < megatextureLength; i++) {
+    uniforms.megatextureTextures[i] = megatextures[i].texture;
+  }
+
+  uniforms.megatextureSliceDimensions = Cartesian2.clone(
+    megatexture.sliceCountPerRegion,
+    uniforms.megatextureSliceDimensions
+  );
+  uniforms.megatextureTileDimensions = Cartesian2.clone(
+    megatexture.regionCountPerMegatexture,
+    uniforms.megatextureTileDimensions
+  );
+  uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
+    megatexture.voxelSizeUv,
+    uniforms.megatextureVoxelSizeUv
+  );
+  uniforms.megatextureSliceSizeUv = Cartesian2.clone(
+    megatexture.sliceSizeUv,
+    uniforms.megatextureSliceSizeUv
+  );
+  uniforms.megatextureTileSizeUv = Cartesian2.clone(
+    megatexture.regionSizeUv,
+    uniforms.megatextureTileSizeUv
+  );
 }
 
 /**
