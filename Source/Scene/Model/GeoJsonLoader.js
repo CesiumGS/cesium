@@ -203,7 +203,7 @@ function parseMultiPoint(coordinates) {
   const pointsLength = coordinates.length;
   const points = new Array(pointsLength);
   for (let i = 0; i < pointsLength; i++) {
-    points[i] = parsePoint(coordinates[i])[0];
+    points[i] = parsePosition(coordinates[i]);
   }
   return points;
 }
@@ -318,45 +318,44 @@ function createLinesPrimitive(features, toLocal, frameState) {
 
   for (let i = 0; i < featureCount; i++) {
     const feature = features[i];
-    if (defined(feature.lines)) {
-      const linesLength = feature.lines.length;
-      for (let j = 0; j < linesLength; j++) {
-        const line = feature.lines[j];
-        const positionsLength = line.length;
-        for (let k = 0; k < positionsLength; k++) {
-          const cartographic = line[k];
-          const globalCartesian = Cartesian3.fromDegrees(
-            cartographic.x,
-            cartographic.y,
-            cartographic.z,
-            Ellipsoid.WGS84,
-            scratchCartesian
-          );
-          const localCartesian = Matrix4.multiplyByPoint(
-            toLocal,
-            globalCartesian,
-            scratchCartesian
-          );
 
-          Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
-          Cartesian3.maximumByComponent(localMax, localCartesian, localMax);
+    if (!defined(feature.lines)) {
+      continue;
+    }
 
-          Cartesian3.pack(
-            localCartesian,
-            positionsTypedArray,
-            vertexCounter * 3
-          );
+    const linesLength = feature.lines.length;
+    for (let j = 0; j < linesLength; j++) {
+      const line = feature.lines[j];
+      const positionsLength = line.length;
+      for (let k = 0; k < positionsLength; k++) {
+        const cartographic = line[k];
+        const globalCartesian = Cartesian3.fromDegrees(
+          cartographic.x,
+          cartographic.y,
+          cartographic.z,
+          Ellipsoid.WGS84,
+          scratchCartesian
+        );
+        const localCartesian = Matrix4.multiplyByPoint(
+          toLocal,
+          globalCartesian,
+          scratchCartesian
+        );
 
-          featureIdsTypedArray[vertexCounter] = i;
+        Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
+        Cartesian3.maximumByComponent(localMax, localCartesian, localMax);
 
-          if (k < positionsLength - 1) {
-            indicesTypedArray[segmentCounter * 2] = vertexCounter;
-            indicesTypedArray[segmentCounter * 2 + 1] = vertexCounter + 1;
-            segmentCounter++;
-          }
+        Cartesian3.pack(localCartesian, positionsTypedArray, vertexCounter * 3);
 
-          vertexCounter++;
+        featureIdsTypedArray[vertexCounter] = i;
+
+        if (k < positionsLength - 1) {
+          indicesTypedArray[segmentCounter * 2] = vertexCounter;
+          indicesTypedArray[segmentCounter * 2 + 1] = vertexCounter + 1;
+          segmentCounter++;
         }
+
+        vertexCounter++;
       }
     }
   }
@@ -464,32 +463,35 @@ function createPointsPrimitive(features, toLocal, frameState) {
 
   for (let i = 0; i < featureCount; i++) {
     const feature = features[i];
-    if (defined(feature.points)) {
-      const pointsLength = feature.points.length;
-      for (let j = 0; j < pointsLength; j++) {
-        const cartographic = feature.points[j];
-        const globalCartesian = Cartesian3.fromDegrees(
-          cartographic.x,
-          cartographic.y,
-          cartographic.z,
-          Ellipsoid.WGS84,
-          scratchCartesian
-        );
-        const localCartesian = Matrix4.multiplyByPoint(
-          toLocal,
-          globalCartesian,
-          scratchCartesian
-        );
 
-        Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
-        Cartesian3.maximumByComponent(localMax, localCartesian, localMax);
+    if (!defined(feature.points)) {
+      continue;
+    }
 
-        Cartesian3.pack(localCartesian, positionsTypedArray, vertexCounter * 3);
+    const pointsLength = feature.points.length;
+    for (let j = 0; j < pointsLength; j++) {
+      const cartographic = feature.points[j];
+      const globalCartesian = Cartesian3.fromDegrees(
+        cartographic.x,
+        cartographic.y,
+        cartographic.z,
+        Ellipsoid.WGS84,
+        scratchCartesian
+      );
+      const localCartesian = Matrix4.multiplyByPoint(
+        toLocal,
+        globalCartesian,
+        scratchCartesian
+      );
 
-        featureIdsTypedArray[vertexCounter] = i;
+      Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
+      Cartesian3.maximumByComponent(localMax, localCartesian, localMax);
 
-        vertexCounter++;
-      }
+      Cartesian3.pack(localCartesian, positionsTypedArray, vertexCounter * 3);
+
+      featureIdsTypedArray[vertexCounter] = i;
+
+      vertexCounter++;
     }
   }
 
@@ -649,6 +651,7 @@ function parse(geoJson, frameState) {
         }
       }
     }
+
     if (defined(feature.points)) {
       hasPoints = true;
       const pointsLength = feature.points.length;
