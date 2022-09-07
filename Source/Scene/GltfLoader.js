@@ -571,7 +571,6 @@ function loadVertexBuffer(
   accessorId,
   semantic,
   draco,
-  dequantize,
   loadBuffer,
   loadTypedArray
 ) {
@@ -587,7 +586,6 @@ function loadVertexBuffer(
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
-    dequantize: dequantize,
     loadBuffer: loadBuffer,
     loadTypedArray: loadTypedArray,
   });
@@ -1031,7 +1029,6 @@ function loadAttribute(
   accessorId,
   semanticInfo,
   draco,
-  dequantize,
   loadBuffer,
   loadTypedArray
 ) {
@@ -1066,7 +1063,6 @@ function loadAttribute(
     accessorId,
     gltfSemantic,
     draco,
-    dequantize,
     loadBuffer,
     loadTypedArray
   );
@@ -1155,7 +1151,6 @@ function loadVertexAttribute(
     accessorId,
     semanticInfo,
     draco,
-    false,
     loadBuffer,
     loadTypedArray
   );
@@ -1225,7 +1220,6 @@ function loadInstancedAttribute(
     accessorId,
     semanticInfo,
     undefined,
-    true,
     loadBuffer,
     loadTypedArray
   );
