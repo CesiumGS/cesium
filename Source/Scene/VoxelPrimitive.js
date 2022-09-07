@@ -1105,7 +1105,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
   // Initialize from the ready provider. This only happens once.
   const context = frameState.context;
-  const uniforms = this._uniforms;
   if (!this._ready) {
     // Don't make the primitive ready until after its first update because
     // external code may want to change some of its properties before it's rendered.
@@ -1115,13 +1114,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
       primitive._readyPromise.resolve(primitive);
     });
 
-    // Create pickId here instead of the constructor because it needs the context object.
-    this._pickId = context.createPickId({
-      primitive: this,
-    });
-    uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
-
-    initFromProvider(this, provider);
+    initFromProvider(this, provider, context);
+    return;
   }
 
   // Check if the shape is dirty before updating it. This needs to happen every
@@ -1129,28 +1123,21 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // getters.
   const shapeDirty = checkTransformAndBounds(this, provider);
   const shape = this._shape;
-  if (!this._ready || shapeDirty) {
-    const shapeDefinesChanged = updateShapeAndTransforms(this, shape, provider);
-    if (shapeDefinesChanged) {
+  if (shapeDirty) {
+    this._shapeVisible = updateShapeAndTransforms(this, shape, provider);
+    if (checkShapeDefines(this, shape)) {
       this._shaderDirty = true;
     }
   }
-
-  // Set up traversal using the updated shape. This only happens once.
-  if (!this._ready) {
-    this._traversal = setupTraversal(this, provider, context);
-    setTraversalUniforms(this._traversal, uniforms);
+  if (!this._shapeVisible) {
+    return;
   }
 
   // Update the traversal and prepare for rendering.
-  // This doesn't happen on the first update frame. It needs to wait until the
-  // primitive is made ready after the end of the first update frame.
-  if (!this._ready || !this._shapeVisible) {
-    return;
-  }
-  const clock = this._clock;
-  const timeIntervalCollection = provider.timeIntervalCollection;
-  const keyframeLocation = getKeyframeLocation(timeIntervalCollection, clock);
+  const keyframeLocation = getKeyframeLocation(
+    provider.timeIntervalCollection,
+    this._clock
+  );
 
   const traversal = this._traversal;
   const sampleCountOld = traversal._sampleCount;
@@ -1193,6 +1180,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   const leafNodeTexture = traversal.leafNodeTexture;
+  const uniforms = this._uniforms;
   if (defined(leafNodeTexture)) {
     uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
     uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
@@ -1277,16 +1265,22 @@ VoxelPrimitive.prototype.update = function (frameState) {
  * Initialize primitive properties that are derived from the voxel provider
  * @param {VoxelPrimitive} primitive
  * @param {VoxelProvider} provider
+ * @param {Context} context
  * @private
  */
-function initFromProvider(primitive, provider) {
+function initFromProvider(primitive, provider, context) {
+  const uniforms = primitive._uniforms;
+
+  primitive._pickId = context.createPickId({ primitive });
+  uniforms.pickColor = Color.clone(primitive._pickId.color, uniforms.pickColor);
+
+  // Set the bounds
   const {
     shape: shapeType,
     minBounds = VoxelShapeType.getMinBounds(shapeType),
     maxBounds = VoxelShapeType.getMaxBounds(shapeType),
   } = provider;
 
-  // Set the bounds
   primitive._minBounds = Cartesian3.clone(minBounds, primitive._minBounds);
   primitive._maxBounds = Cartesian3.clone(maxBounds, primitive._maxBounds);
   primitive._minClippingBounds = Cartesian3.clone(
@@ -1298,9 +1292,16 @@ function initFromProvider(primitive, provider) {
     primitive._maxClippingBounds
   );
 
-  // Create the shape object
+  checkTransformAndBounds(primitive, provider);
+
+  // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
+  primitive._shapeVisible = updateShapeAndTransforms(
+    primitive,
+    primitive._shape,
+    provider
+  );
 
   const { shaderDefines, shaderUniforms: shapeUniforms } = primitive._shape;
   primitive._shapeDefinesOld = clone(shaderDefines, true);
@@ -1325,7 +1326,6 @@ function initFromProvider(primitive, provider) {
 
   // Set uniforms that come from the provider.
   // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-  const uniforms = primitive._uniforms;
   uniforms.dimensions = Cartesian3.clone(
     provider.dimensions,
     uniforms.dimensions
@@ -1346,6 +1346,10 @@ function initFromProvider(primitive, provider) {
     primitive._paddingAfter,
     uniforms.paddingAfter
   );
+
+  // Create the VoxelTraversal, and set related uniforms
+  primitive._traversal = setupTraversal(primitive, provider, context);
+  setTraversalUniforms(primitive._traversal, uniforms);
 }
 
 /**
@@ -1397,34 +1401,19 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
  * @param {VoxelPrimitive} primitive
  * @param {VoxelShape} shape
  * @param {VoxelProvider} provider
- * @returns {Boolean} Whether any of the shape defines changed, requiring the shader to be rebuilt
+ * @returns {Boolean} True if the shape is visible
+ * @private
  */
 function updateShapeAndTransforms(primitive, shape, provider) {
-  primitive._shapeVisible = shape.update(
+  const visible = shape.update(
     primitive._compoundModelMatrix,
     primitive._minBounds,
     primitive._maxBounds,
     primitive._clipMinBounds,
     primitive._clipMaxBounds
   );
-  if (!primitive._shapeVisible) {
+  if (!visible) {
     return false;
-  }
-
-  // Check if any of the shape defines changed.
-  const shapeDefines = shape.shaderDefines;
-  const shapeDefinesOld = primitive._shapeDefinesOld;
-  let shapeDefinesChanged = false;
-  for (const property in shapeDefines) {
-    if (shapeDefines.hasOwnProperty(property)) {
-      if (shapeDefines[property] !== shapeDefinesOld[property]) {
-        shapeDefinesChanged = true;
-        break;
-      }
-    }
-  }
-  if (shapeDefinesChanged) {
-    primitive._shapeDefinesOld = clone(shapeDefines, true);
   }
 
   const transformPositionLocalToWorld = shape.shapeTransform;
@@ -1473,7 +1462,7 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     primitive._transformNormalLocalToWorld
   );
 
-  return shapeDefinesChanged;
+  return true;
 }
 
 /**
@@ -1560,6 +1549,24 @@ function setTraversalUniforms(traversal, uniforms) {
 }
 
 /**
+ * Track changes in shape-related shader defines
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelShape} shape
+ * @returns {Boolean} True if any of the shape defines changed, requiring a shader rebuild
+ * @private
+ */
+function checkShapeDefines(primitive, shape) {
+  const shapeDefines = shape.shaderDefines;
+  const shapeDefinesChanged = Object.keys(shapeDefines).some(
+    (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key]
+  );
+  if (shapeDefinesChanged) {
+    primitive._shapeDefinesOld = clone(shapeDefines, true);
+  }
+  return shapeDefinesChanged;
+}
+
+/**
  * Find the keyframe location to render at. Doesn't need to be a whole number.
  * @param {TimeIntervalCollection} timeIntervalCollection
  * @param {Clock} clock
@@ -1609,7 +1616,7 @@ function getKeyframeLocation(timeIntervalCollection, clock) {
  *
  * @param {VoxelPrimitive} primitive
  * @param {FrameState} frameState
- * @returns {Boolean} Whether the clipping planes changed
+ * @returns {Boolean} Whether the clipping planes changed, requiring a shader rebuild
  * @private
  */
 function updateClippingPlanes(primitive, frameState) {
