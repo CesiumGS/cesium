@@ -992,8 +992,6 @@ function processFeatureIdAttributes(
   const attributes = instances.attributes;
   const shaderBuilder = renderResources.shaderBuilder;
 
-  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
-  // because we want to expose the instance feature ID when picking.
   for (let i = 0; i < attributes.length; i++) {
     const attribute = attributes[i];
     if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
