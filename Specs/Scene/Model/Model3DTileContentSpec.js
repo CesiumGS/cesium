@@ -73,6 +73,8 @@ describe(
       "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
     const instancedExternalGltfUrl =
       "./Data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json";
+    const instancedWithoutNormalsUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedWithoutNormals/tileset.json";
     const instancedWithoutBatchTableUrl =
       "./Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json";
     const instancedWithBatchIdsUrl =
@@ -530,6 +532,15 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           instancedExternalGltfUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+      });
+
+      it("renders without normals", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          instancedWithoutNormalsUrl
         ).then(function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
