@@ -87,6 +87,25 @@ describe(
         expect(primitive._stepSizeUv).toBe(stepSizeUv);
       });
     });
+
+    it("destroys", function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+      expect(primitive.isDestroyed()).toBe(false);
+
+      return primitive.readyPromise.then(function () {
+        primitive.update(scene.frameState);
+        expect(primitive.isDestroyed()).toBe(false);
+        expect(primitive._pickId).toBeDefined();
+        expect(primitive._traversal).toBeDefined();
+
+        primitive.destroy();
+        expect(primitive.isDestroyed()).toBe(true);
+        expect(primitive._pickId).toBeUndefined();
+        expect(primitive._traversal).toBeUndefined();
+      });
+    });
   },
   "WebGL"
 );

@@ -547,19 +547,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Matrix4}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   compoundModelMatrix: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "compoundModelMatrix must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._compoundModelMatrix;
     },
   },
@@ -849,29 +839,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   minBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._minBounds;
     },
     set: function (minBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minBounds", minBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
@@ -883,29 +858,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maxBounds;
     },
     set: function (maxBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("maxBounds", maxBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
@@ -919,29 +879,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   minClippingBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minClippingBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._minClippingBounds;
     },
     set: function (minClippingBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minClippingBounds", minClippingBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minClippingBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._minClippingBounds = Cartesian3.clone(
@@ -958,29 +903,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxClippingBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxClippingBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maxClippingBounds;
     },
     set: function (maxClippingBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("maxClippingBounds", maxClippingBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxClippingBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._maxClippingBounds = Cartesian3.clone(
@@ -1281,16 +1211,10 @@ function initFromProvider(primitive, provider, context) {
     maxBounds = VoxelShapeType.getMaxBounds(shapeType),
   } = provider;
 
-  primitive._minBounds = Cartesian3.clone(minBounds, primitive._minBounds);
-  primitive._maxBounds = Cartesian3.clone(maxBounds, primitive._maxBounds);
-  primitive._minClippingBounds = Cartesian3.clone(
-    VoxelShapeType.getMinBounds(shapeType),
-    primitive._minClippingBounds
-  );
-  primitive._maxClippingBounds = Cartesian3.clone(
-    VoxelShapeType.getMinBounds(shapeType),
-    primitive._maxClippingBounds
-  );
+  primitive.minBounds = minBounds;
+  primitive.maxBounds = maxBounds;
+  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
+  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
 
   checkTransformAndBounds(primitive, provider);
 
@@ -1357,6 +1281,7 @@ function initFromProvider(primitive, provider, context) {
  * @param {VoxelPrimitive} primitive
  * @param {VoxelProvider} provider
  * @returns {Boolean} Whether any of the transform or bounds changed
+ * @private
  */
 function checkTransformAndBounds(primitive, provider) {
   const providerTransform = defaultValue(
@@ -1406,11 +1331,11 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
  */
 function updateShapeAndTransforms(primitive, shape, provider) {
   const visible = shape.update(
-    primitive._compoundModelMatrix,
-    primitive._minBounds,
-    primitive._maxBounds,
-    primitive._clipMinBounds,
-    primitive._clipMaxBounds
+    primitive.compoundModelMatrix,
+    primitive.minBounds,
+    primitive.maxBounds,
+    primitive.minClippingBounds,
+    primitive.maxClippingBounds
   );
   if (!visible) {
     return false;
@@ -1620,7 +1545,7 @@ function getKeyframeLocation(timeIntervalCollection, clock) {
  * @private
  */
 function updateClippingPlanes(primitive, frameState) {
-  const clippingPlanes = primitive._clippingPlanes;
+  const clippingPlanes = primitive.clippingPlanes;
   if (!defined(clippingPlanes)) {
     return false;
   }
