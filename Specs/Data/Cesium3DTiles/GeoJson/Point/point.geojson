@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "UL",
+        "code": 12
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.61209430782448,
+          40.042530611425896
+        ]
+      }
+    }
+  ]
+}
