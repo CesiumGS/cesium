@@ -641,12 +641,19 @@ describe(
     });
 
     it("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       const resource = Resource.createIfNeeded(boomBoxUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModel(
           {
             gltf: gltf,
             basePath: boomBoxUrl,
+            // This model is tiny, so scale it up so it's visible.
+            scale: 10.0,
+            offset: offset,
           },
           scene
         ).then(function (model) {
@@ -656,12 +663,17 @@ describe(
     });
 
     it("renders model with morph targets", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModel(
           {
             gltf: gltf,
             basePath: morphPrimitivesTestUrl,
+            offset: offset,
           },
           scene
         ).then(function (model) {
@@ -2398,9 +2410,14 @@ describe(
       });
 
       it("renders with translucent color", function () {
+        // This model gets clipped if log depth is disabled, so zoom out
+        // the camera just a little
+        const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
           },
           scene
         ).then(function (model) {
@@ -2425,10 +2442,15 @@ describe(
       });
 
       it("doesn't render invisible model", function () {
+        // This model gets clipped if log depth is disabled, so zoom out
+        // the camera just a little
+        const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
             color: Color.fromAlpha(Color.BLACK, 0.0),
+            offset: offset,
           },
           scene
         ).then(function (model) {
@@ -2469,10 +2491,15 @@ describe(
     }
 
     describe("colorBlendMode", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       it("initializes with ColorBlendMode.HIGHLIGHT", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
             color: Color.RED,
             colorBlendMode: ColorBlendMode.HIGHLIGHT,
           },
@@ -2494,6 +2521,7 @@ describe(
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
             color: Color.RED,
             colorBlendMode: ColorBlendMode.REPLACE,
           },
@@ -2515,6 +2543,7 @@ describe(
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
             color: Color.RED,
             colorBlendMode: ColorBlendMode.MIX,
           },
@@ -2536,6 +2565,7 @@ describe(
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
             color: Color.RED,
             colorBlendMode: ColorBlendMode.REPLACE,
           },
@@ -2569,10 +2599,15 @@ describe(
     });
 
     describe("colorBlendAmount", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       it("initializes with colorBlendAmount", function () {
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
             color: Color.RED,
             colorBlendMode: ColorBlendMode.MIX,
             colorBlendAmount: 1.0,
@@ -2597,6 +2632,7 @@ describe(
         return loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
+            offset: offset,
           },
           scene
         ).then(function (model) {
@@ -3076,6 +3112,7 @@ describe(
         return loadAndZoomToModel(
           {
             gltf: boomBoxUrl,
+            scale: 10.0,
             imageBasedLighting: new ImageBasedLighting({
               specularEnvironmentMaps: url,
             }),
