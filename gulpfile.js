@@ -560,13 +560,43 @@ export async function deployS3() {
     return;
   }
 
-  const argv = yargs
+  const argv = yargs(process.argv)
     .usage("Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]")
-    .demand(["b", "d"]).argv;
+    .options({
+      bucket: {
+        alias: "b",
+        description: "Bucket name.",
+        type: "string",
+        demandOption: true,
+      },
+      directory: {
+        alias: "d",
+        description: "Upload directory.",
+        type: "string",
+        demandOption: true,
+      },
+      "cache-control": {
+        alias: "c",
+        description: "Only print file paths and S3 keys.",
+        type: "string",
+        default: "max-age=3600",
+      },
+      "dry-run": {
+        description: "Only print file paths and S3 keys.",
+        type: "boolean",
+        default: false,
+      },
+      confirm: {
+        description: "Skip confirmation step.",
+        type: "boolean",
+        default: false,
+      },
+    }).argv;
 
-  const uploadDirectory = argv.d;
-  const bucketName = argv.b;
-  const cacheControl = argv.c ? argv.c : "max-age=3600";
+  const uploadDirectory = argv.directory;
+  const bucketName = argv.bucket;
+  const dryRun = argv.dryRun;
+  const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
 
   if (argv.confirm) {
     // skip prompt for travis
@@ -585,7 +615,9 @@ export async function deployS3() {
       function (answer) {
         iface.close();
         if (answer === "y") {
-          resolve(deployCesium(bucketName, uploadDirectory, cacheControl));
+          resolve(
+            deployCesium(bucketName, uploadDirectory, cacheControl, dryRun)
+          );
         } else {
           console.log("Deploy aborted by user.");
           resolve();
@@ -596,7 +628,7 @@ export async function deployS3() {
 }
 
 // Deploy cesium to s3
-async function deployCesium(bucketName, uploadDirectory, cacheControl) {
+async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   // Limit promise concurrency since we are reading many
   // files off disk in parallel
   const limit = pLimit(2000);
@@ -746,6 +778,11 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl) {
       CacheControl: cacheControl,
     };
 
+    if (dryRun) {
+      uploaded++;
+      return;
+    }
+
     try {
       await s3.putObject(params).promise();
       uploaded++;
@@ -790,14 +827,17 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl) {
 
     const deleteObjects = async (objects) => {
       try {
-        await s3
-          .deleteObjects({
-            Bucket: bucketName,
-            Delete: {
-              Objects: objects,
-            },
-          })
-          .promise();
+        if (!dryRun) {
+          await s3
+            .deleteObjects({
+              Bucket: bucketName,
+              Delete: {
+                Objects: objects,
+              },
+            })
+            .promise();
+        }
+
         if (verbose) {
           console.log(`Cleaned ${objects.length} files.`);
         }
@@ -857,7 +897,7 @@ function getMimeType(filename) {
 
 // get all files currently in bucket asynchronously
 async function listAll(s3, bucketName, prefix, files, marker) {
-  const data = s3
+  const data = await s3
     .listObjects({
       Bucket: bucketName,
       MaxKeys: 1000,
