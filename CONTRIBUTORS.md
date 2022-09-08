@@ -181,7 +181,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Novatron Oy](https://novatron.fi/en/)
   - [Jussi Hirvonen](https://github.com/VsKatshuma)
   
-
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
 - [Victor Berchet](https://github.com/vicb)
