@@ -23,6 +23,8 @@ import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 describe(
   "Scene/Model/InstancingPipelineStage",
   function () {
+    const webglStub = !!window.webglStub;
+
     const scratchMatrix4 = new Matrix4();
 
     const boxInstanced =
@@ -428,6 +430,11 @@ describe(
     });
 
     it("dequantizes normalized rotations", function () {
+      // The WebGL stub doesn't support UNSIGNED_INT index buffers
+      if (webglStub) {
+        return;
+      }
+
       return loadGltf(instancedWithNormalizedRotation).then(function (
         gltfLoader
       ) {
