@@ -6,6 +6,10 @@
 
 - Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models.
 
+##### Fixes :wrench:
+
+- Fixed a regression where instanced feature IDs were not processed correctly [#10771](https://github.com/CesiumGS/cesium/pull/10771)
+
 ### 1.97 - 2022-09-01
 
 #### Major Announcements :loudspeaker:
