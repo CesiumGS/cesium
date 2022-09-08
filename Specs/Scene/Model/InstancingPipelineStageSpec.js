@@ -31,6 +31,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
     const boxInstancedTranslationMinMax =
       "./Data/Models/glTF-2.0/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
+    const instancedWithNormalizedRotation =
+      "./Data/Models/glTF-2.0/InstancedWithNormalizedRotation/glTF/InstancedWithNormalizedRotation.gltf";
     const i3dmInstancedOrientation =
       "./Data/Cesium3DTiles/Instanced/InstancedOrientation/instancedOrientation.i3dm";
 
@@ -419,6 +421,58 @@ describe(
         for (let i = 0; i < expectedTransformsTypedArray.length; i++) {
           expect(transformsTypedArray[i]).toEqualEpsilon(
             expectedTransformsTypedArray[i],
+            CesiumMath.EPSILON10
+          );
+        }
+      });
+    });
+
+    it("dequantizes normalized rotations", function () {
+      return loadGltf(instancedWithNormalizedRotation).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const renderResources = mockRenderResources(node);
+
+        // Check that the first two matrices are dequantized correctly. The
+        // first matrix is the identity matrix, and the second matrix has a
+        // slight translation, rotation and scale.
+        const secondMatrixComponents = [
+          1.1007905724243354,
+          0.07140440309598281,
+          -0.1331359457080602,
+          0,
+          -0.04344372372420601,
+          1.0874251248973055,
+          0.22401538735190446,
+          0,
+          0.1446942006095891,
+          -0.21672946758564085,
+          1.0801183172918447,
+          0,
+          1.1111111640930176,
+          1.1111111640930176,
+          1.1111111640930176,
+          1,
+        ];
+        const expectedTransforms = [
+          Matrix4.IDENTITY,
+          Matrix4.unpack(secondMatrixComponents),
+        ];
+
+        const transforms = InstancingPipelineStage._getInstanceTransformsAsMatrices(
+          node.instances,
+          node.instances.attributes[0].count,
+          renderResources
+        );
+
+        expect(transforms.length).toBe(10);
+
+        const length = expectedTransforms.length;
+        for (let i = 0; i < length; i++) {
+          expect(transforms[i]).toEqualEpsilon(
+            expectedTransforms[i],
             CesiumMath.EPSILON10
           );
         }
