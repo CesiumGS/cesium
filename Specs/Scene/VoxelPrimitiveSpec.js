@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
+  CustomShader,
   Matrix4,
   VoxelPrimitive,
 } from "../../Source/Cesium.js";
@@ -85,6 +86,32 @@ describe(
           primitive.dimensions
         );
         expect(primitive._stepSizeUv).toBe(stepSizeUv);
+      });
+    });
+
+    it("accepts a new Custom Shader", function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+
+      return primitive.readyPromise.then(function () {
+        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+
+        // If new shader is undefined, we should get DefaultCustomShader again
+        primitive.customShader = undefined;
+        scene.renderForSpecs();
+        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+
+        const modifiedShader = new CustomShader({
+          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+    material.diffuse = vec3(1.0, 1.0, 0.0);
+    material.alpha = 0.8;
+}`,
+        });
+        primitive.customShader = modifiedShader;
+        scene.renderForSpecs();
+        expect(primitive.customShader).toBe(modifiedShader);
       });
     });
 

@@ -309,26 +309,27 @@ VoxelTraversal.prototype.update = function (
     recomputeBoundingVolumesRecursive(this, this.rootNode);
   }
 
-  if (!pauseUpdate) {
-    this._frameNumber = frameState.frameNumber;
-    const timestamp0 = getTimestamp();
-    loadAndUnload(this, frameState);
-    const timestamp1 = getTimestamp();
-    generateOctree(this, sampleCount, levelBlendFactor);
-    const timestamp2 = getTimestamp();
+  if (pauseUpdate) {
+    return;
+  }
 
-    const debugStatistics = this._debugPrint;
-    if (debugStatistics) {
-      const loadAndUnloadTimeMs = timestamp1 - timestamp0;
-      const generateOctreeTimeMs = timestamp2 - timestamp1;
-      const totalTimeMs = timestamp2 - timestamp0;
-      printDebugInformation(
-        this,
-        loadAndUnloadTimeMs,
-        generateOctreeTimeMs,
-        totalTimeMs
-      );
-    }
+  this._frameNumber = frameState.frameNumber;
+  const timestamp0 = getTimestamp();
+  loadAndUnload(this, frameState);
+  const timestamp1 = getTimestamp();
+  generateOctree(this, sampleCount, levelBlendFactor);
+  const timestamp2 = getTimestamp();
+
+  if (this._debugPrint) {
+    const loadAndUnloadTimeMs = timestamp1 - timestamp0;
+    const generateOctreeTimeMs = timestamp2 - timestamp1;
+    const totalTimeMs = timestamp2 - timestamp0;
+    printDebugInformation(
+      this,
+      loadAndUnloadTimeMs,
+      generateOctreeTimeMs,
+      totalTimeMs
+    );
   }
 };
 
@@ -445,14 +446,12 @@ function requestData(that, keyframeNode) {
     } else {
       const megatextures = that.megatextures;
       for (let i = 0; i < length; i++) {
-        const megatexture = megatextures[i];
-        const tileVoxelCount =
-          megatexture.voxelCountPerTile.x *
-          megatexture.voxelCountPerTile.y *
-          megatexture.voxelCountPerTile.z;
+        const { voxelCountPerTile, channelCount } = megatextures[i];
+        const { x, y, z } = voxelCountPerTile;
+        const tileVoxelCount = x * y * z;
 
         const data = result[i];
-        const expectedLength = tileVoxelCount * megatexture.channelCount;
+        const expectedLength = tileVoxelCount * channelCount;
         if (data.length === expectedLength) {
           keyframeNode.metadatas[i] = data;
           // State is received only when all metadata requests have been received
@@ -632,98 +631,46 @@ function loadAndUnload(that, frameState) {
 
     const meetsScreenSpaceError =
       spatialNode.screenSpaceError < targetScreenSpaceError;
-    if (!meetsScreenSpaceError && hasLoadedKeyframe) {
-      if (!defined(spatialNode.children)) {
-        const childLevel = spatialNode.level + 1;
-        const childXMin = spatialNode.x * 2 + 0;
-        const childXMax = spatialNode.x * 2 + 1;
-        const childYMin = spatialNode.y * 2 + 0;
-        const childYMax = spatialNode.y * 2 + 1;
-        const childZMin = spatialNode.z * 2 + 0;
-        const childZMax = spatialNode.z * 2 + 1;
-
-        spatialNode.children = new Array(
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMin,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMin,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMax,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMax,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMin,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMin,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMax,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMax,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          )
-        );
-      }
-      for (let childIndex = 0; childIndex < 8; childIndex++) {
-        const child = spatialNode.children[childIndex];
-        addToQueueRecursive(child, visibilityPlaneMask);
-      }
-    } else {
+    if (meetsScreenSpaceError || !hasLoadedKeyframe) {
       // Free up memory
       spatialNode.children = undefined;
+      return;
+    }
+
+    if (!defined(spatialNode.children)) {
+      const childLevel = spatialNode.level + 1;
+      const childXMin = spatialNode.x * 2 + 0;
+      const childXMax = spatialNode.x * 2 + 1;
+      const childYMin = spatialNode.y * 2 + 0;
+      const childYMax = spatialNode.y * 2 + 1;
+      const childZMin = spatialNode.z * 2 + 0;
+      const childZMax = spatialNode.z * 2 + 1;
+
+      const childCoords = [
+        [childXMin, childYMin, childZMin],
+        [childXMax, childYMin, childZMin],
+        [childXMin, childYMax, childZMin],
+        [childXMax, childYMax, childZMin],
+        [childXMin, childYMin, childZMax],
+        [childXMax, childYMin, childZMax],
+        [childXMin, childYMax, childZMax],
+        [childXMax, childYMax, childZMax],
+      ];
+      spatialNode.children = childCoords.map(([x, y, z]) => {
+        return new SpatialNode(
+          childLevel,
+          x,
+          y,
+          z,
+          spatialNode,
+          shape,
+          voxelDimensions
+        );
+      });
+    }
+    for (let childIndex = 0; childIndex < 8; childIndex++) {
+      const child = spatialNode.children[childIndex];
+      addToQueueRecursive(child, visibilityPlaneMask);
     }
   }
 

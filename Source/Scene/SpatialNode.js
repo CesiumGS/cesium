@@ -137,38 +137,21 @@ const scratchBinarySearchKeyframeNode = {
 };
 
 /**
- * Finds the index of the keyframe if it exists, or the complement (~) of the index where it would be in the sorted array.
- *
+ * Find the index of a given key frame position within an array of KeyframeNodes,
+ * or the complement (~) of the index where it would be in the sorted array.
  * @param {Number} keyframe
+ * @param {KeyframeNode[]} keyframeNodes
  * @returns {Number}
+ * @private
  */
-SpatialNode.prototype.findKeyframeIndex = function (keyframe) {
-  const keyframeNodes = this.keyframeNodes;
+function findKeyframeIndex(keyframe, keyframeNodes) {
   scratchBinarySearchKeyframeNode.keyframe = keyframe;
-  const index = binarySearch(
+  return binarySearch(
     keyframeNodes,
     scratchBinarySearchKeyframeNode,
     KeyframeNode.searchComparator
   );
-  return index;
-};
-
-/**
- * Finds the index of the renderable keyframe if it exists, or the complement (~) of the index where it would be in the sorted array.
- *
- * @param {Number} keyframe
- * @returns {Number}
- */
-SpatialNode.prototype.findRenderableKeyframeIndex = function (keyframe) {
-  const renderableKeyframeNodes = this.renderableKeyframeNodes;
-  scratchBinarySearchKeyframeNode.keyframe = keyframe;
-  const index = binarySearch(
-    renderableKeyframeNodes,
-    scratchBinarySearchKeyframeNode,
-    KeyframeNode.searchComparator
-  );
-  return index;
-};
+}
 
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
@@ -193,8 +176,9 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
     const renderableKeyframeNodes = spatialNode.renderableKeyframeNodes;
 
     if (renderableKeyframeNodes.length >= 1) {
-      let keyframeNodeIndexPrev = spatialNode.findRenderableKeyframeIndex(
-        targetKeyframePrev
+      let keyframeNodeIndexPrev = findKeyframeIndex(
+        targetKeyframePrev,
+        renderableKeyframeNodes
       );
       if (keyframeNodeIndexPrev < 0) {
         keyframeNodeIndexPrev = CesiumMath.clamp(
@@ -286,48 +270,44 @@ SpatialNode.prototype.isVisited = function (frameNumber) {
  * @param {Number} keyframe
  */
 SpatialNode.prototype.createKeyframeNode = function (keyframe) {
-  let index = this.findKeyframeIndex(keyframe);
+  let index = findKeyframeIndex(keyframe, this.keyframeNodes);
   if (index < 0) {
     index = ~index; // convert to insertion index
     const keyframeNode = new KeyframeNode(this, keyframe);
     this.keyframeNodes.splice(index, 0, keyframeNode);
   }
 };
+
 /**
  * @param {KeyframeNode} keyframeNode
- * @param {Megatexture} megatexture
+ * @param {Megatexture[]} megatextures
  */
 SpatialNode.prototype.destroyKeyframeNode = function (
   keyframeNode,
   megatextures
 ) {
   const keyframe = keyframeNode.keyframe;
-  const keyframeIndex = this.findKeyframeIndex(keyframe);
+  const keyframeIndex = findKeyframeIndex(keyframe, this.keyframeNodes);
   if (keyframeIndex < 0) {
     throw new DeveloperError("Keyframe node does not exist.");
   }
 
-  const keyframeNodes = this.keyframeNodes;
-  keyframeNodes.splice(keyframeIndex, 1);
+  this.keyframeNodes.splice(keyframeIndex, 1);
 
   if (keyframeNode.megatextureIndex !== -1) {
-    const megatextureArray = Object.keys(megatextures).map(function (key) {
-      return megatextures[key];
-    }); // Object.values workaround
-    const numberOfMegatextures = megatextureArray.length;
-    for (let i = 0; i < numberOfMegatextures; i++) {
-      megatextureArray[i].remove(keyframeNode.megatextureIndex);
+    for (let i = 0; i < megatextures.length; i++) {
+      megatextures[i].remove(keyframeNode.megatextureIndex);
     }
 
-    const renderableKeyframeNodeIndex = this.findRenderableKeyframeIndex(
-      keyframe
+    const renderableKeyframeNodeIndex = findKeyframeIndex(
+      keyframe,
+      this.renderableKeyframeNodes
     );
     if (renderableKeyframeNodeIndex < 0) {
       throw new DeveloperError("Renderable keyframe node does not exist.");
     }
 
-    const renderableKeyframeNodes = this.renderableKeyframeNodes;
-    renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 1);
+    this.renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 1);
   }
 
   keyframeNode.spatialNode = undefined;
@@ -354,8 +334,7 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
-  const length = megatextures.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
     keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadatas[i]);
     keyframeNode.metadatas[i] = undefined; // data is in megatexture so no need to hold onto it
@@ -364,41 +343,9 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   keyframeNode.state = KeyframeNode.LoadState.LOADED;
 
   const renderableKeyframeNodes = this.renderableKeyframeNodes;
-  let renderableKeyframeNodeIndex = this.findRenderableKeyframeIndex(
-    keyframeNode.keyframe
-  );
-  if (renderableKeyframeNodeIndex >= 0) {
-    throw new DeveloperError("Keyframe already renderable");
-  }
-  renderableKeyframeNodeIndex = ~renderableKeyframeNodeIndex;
-  renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 0, keyframeNode);
-};
-
-/**
- * @param {KeyframeNode} keyframeNode
- * @param {Megatexture} megatexture
- */
-SpatialNode.prototype.addKeyframeNodeToMegatexture = function (
-  keyframeNode,
-  megatexture
-) {
-  if (
-    keyframeNode.state !== KeyframeNode.LoadState.RECEIVED ||
-    keyframeNode.megatextureIndex !== -1 ||
-    !defined(keyframeNode.metadatas[megatexture.metadataName])
-  ) {
-    throw new DeveloperError("Keyframe node cannot be added to megatexture");
-  }
-
-  keyframeNode.megatextureIndex = megatexture.add(
-    keyframeNode.metadatas[megatexture.metadataName]
-  );
-  keyframeNode.metadatas[megatexture.metadataName] = undefined; // data is in megatexture so no need to hold onto it
-  keyframeNode.state = KeyframeNode.LoadState.LOADED;
-
-  const renderableKeyframeNodes = this.renderableKeyframeNodes;
-  let renderableKeyframeNodeIndex = this.findRenderableKeyframeIndex(
-    keyframeNode.keyframe
+  let renderableKeyframeNodeIndex = findKeyframeIndex(
+    keyframeNode.keyframe,
+    renderableKeyframeNodes
   );
   if (renderableKeyframeNodeIndex >= 0) {
     throw new DeveloperError("Keyframe already renderable");
@@ -409,6 +356,7 @@ SpatialNode.prototype.addKeyframeNodeToMegatexture = function (
 
 /**
  * @param {Number} frameNumber
+ * @returns Boolean
  */
 SpatialNode.prototype.isRenderable = function (frameNumber) {
   const previousNode = this.renderableKeyframeNodePrevious;
