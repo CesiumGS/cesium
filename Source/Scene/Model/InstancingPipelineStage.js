@@ -1,3 +1,4 @@
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
@@ -535,9 +536,19 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
   // Rotations get initialized to (0, 0, 0, 0).
   // The w-component is set to 1 in the loop below.
-  const rotationTypedArray = hasRotation
+  let rotationTypedArray = hasRotation
     ? rotationAttribute.typedArray
     : new Float32Array(count * 4);
+
+  // The rotation attribute may be normalized
+  if (hasRotation && rotationAttribute.normalized) {
+    rotationTypedArray = AttributeCompression.dequantize(
+      rotationTypedArray,
+      rotationAttribute.componentDatatype,
+      rotationAttribute.type,
+      count
+    );
+  }
 
   // Scales get initialized to (1, 1, 1).
   let scaleTypedArray;
