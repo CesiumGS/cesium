@@ -6,10 +6,6 @@
 
 - Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models.
 
-##### Fixes :wrench:
-
-- Fixed scene crash when loading Cesium3DTilest with tiles containing no `gltf.nodes` attribute. [#10769](https://github.com/CesiumGS/cesium/issues/10769)
-
 ### 1.97 - 2022-09-01
 
 #### Major Announcements :loudspeaker:
