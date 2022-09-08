@@ -4,7 +4,6 @@ void legacyInstancingStage(
     out mat3 instanceModelViewInverseTranspose)
 {
     vec3 positionMC = attributes.positionMC;
-    vec3 normalMC = attributes.normalMC;
 
     mat4 instancingTransform = getInstancingTransform();
  

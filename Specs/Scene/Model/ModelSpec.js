@@ -67,6 +67,8 @@ describe(
 
     const boxInstanced =
       "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
+    const boxInstancedNoNormalsUrl =
+      "./Data/Models/glTF-2.0/BoxInstancedNoNormals/glTF/BoxInstancedNoNormals.gltf";
     const boxUnlitUrl = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
     const boxArticulationsUrl =
       "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
@@ -821,6 +823,34 @@ describe(
           expect(animationCollection.length).toBe(1);
         }
       );
+    });
+
+    it("renders model with instancing but no normals", function () {
+      // None of the 4 instanced cubes are in the center of the model's bounding
+      // sphere, so set up a camera view that focuses in on one of them.
+      const offset = new HeadingPitchRange(
+        CesiumMath.PI_OVER_TWO,
+        -CesiumMath.PI_OVER_FOUR,
+        1
+      );
+
+      const resource = Resource.createIfNeeded(boxInstancedNoNormalsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModel(
+          {
+            gltf: gltf,
+            basePath: boxInstancedNoNormalsUrl,
+            offset: offset,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            zoomToModel: false,
+          };
+
+          verifyRender(model, true, renderOptions);
+        });
+      });
     });
 
     it("show works", function () {
