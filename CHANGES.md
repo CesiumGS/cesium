@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug where instanced models without normals would not render. [#10765](https://github.com/CesiumGS/cesium/pull/10765)
+- Fixed a regression where instanced feature IDs were not processed correctly [#10771](https://github.com/CesiumGS/cesium/pull/10771)
 
 ### 1.97 - 2022-09-01
 
