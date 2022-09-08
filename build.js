@@ -637,10 +637,10 @@ export async function createJsHintOptions() {
  * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise.<*>}
  */
-export async function buildSpecs(options) {
+export function buildSpecs(options) {
   options = options || {};
 
-  const results = await esbuild.build({
+  return esbuild.build({
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
@@ -655,6 +655,4 @@ export async function buildSpecs(options) {
     incremental: options.incremental,
     write: options.write,
   });
-
-  return results;
 }
