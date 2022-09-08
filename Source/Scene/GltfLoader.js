@@ -2131,6 +2131,10 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
 }
 
 function loadNodes(loader, gltf, supportedImageFormats, frameState) {
+  if (!defined(gltf.nodes)) {
+    return [];
+  }
+
   let i;
   let j;
 
