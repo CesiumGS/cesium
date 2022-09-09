@@ -5,7 +5,7 @@ import { join, basename, relative, extname, resolve } from "path";
 import { cpus } from "os";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
-import { gzip } from "zlib";
+import { gzipSync } from "zlib";
 import { createInterface } from "readline";
 import fetch from "node-fetch";
 import { createRequire } from "module";
@@ -703,7 +703,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       };
     }
 
-    content = await gzip(content);
+    content = gzipSync(content);
 
     const index = existingBlobs.indexOf(blobName);
     if (index <= -1) {
