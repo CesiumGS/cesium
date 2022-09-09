@@ -11,21 +11,25 @@ import PolylinePipeline from "../Core/PolylinePipeline.js";
 import Material from "./Material.js";
 
 /**
- * A renderable polyline. Create this by calling {@link PolylineCollection#add}
+ * <div class="notice">
+ * Create this by calling {@link PolylineCollection#add}. Do not call the constructor directly.
+ * </div>
+ *
+ * A renderable polyline.
  *
  * @alias Polyline
  * @internalConstructor
  * @class
  *
- * @param {Object} options Object with the following properties:
- * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
- * @param {Number} [options.width=1.0] The width of the polyline in pixels.
- * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
- * @param {Material} [options.material=Material.ColorType] The material.
- * @param {Cartesian3[]} [options.positions] The positions.
- * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
- * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
- * @param {PolylineCollection} polylineCollection The renderable polyline collection.
+ * @privateParam {Object} options Object with the following properties:
+ * @privateParam {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
+ * @privateParam {Number} [options.width=1.0] The width of the polyline in pixels.
+ * @privateParam {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
+ * @privateParam {Material} [options.material=Material.ColorType] The material.
+ * @privateParam {Cartesian3[]} [options.positions] The positions.
+ * @privateParam {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+ * @privateParam {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
+ * @privateParam {PolylineCollection} polylineCollection The renderable polyline collection.
  *
  * @see PolylineCollection
  *

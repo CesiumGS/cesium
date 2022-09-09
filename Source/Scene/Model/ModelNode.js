@@ -2,14 +2,15 @@ import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 
 /**
+ * <div class="notice">
+ * Use {@link Model#getNode} to get a node from a loaded model. Do not call the constructor directly.
+ * </div>
+ *
  * A model node with a modifiable transform to allow users to define their
  * own animations. While a model's asset can contain animations that target
  * a node's transform, this class allows users to change a node's transform
  * externally. In this way, animation can be driven by another source, not
  * just by the model's asset.
- * <p>
- * Use {@link Model#getNode} to get an instance from a loaded model.
- * </p>
  *
  * @alias ModelNode
  * @internalConstructor

@@ -6,9 +6,11 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
- * A cumulus cloud billboard positioned in the 3D scene, that is created and rendered using a {@link CloudCollection}.
+ * <div class="notice">
  * A cloud is created and its initial properties are set by calling {@link CloudCollection#add}.
- * and {@link CloudCollection#remove}.
+ * and {@link CloudCollection#remove}. Do not call the constructor directly.
+ * </div>
+ * A cumulus cloud billboard positioned in the 3D scene, that is created and rendered using a {@link CloudCollection}.
  * <br /><br />
  * <div align='center'>
  * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />

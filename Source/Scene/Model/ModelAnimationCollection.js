@@ -9,7 +9,11 @@ import ModelAnimationLoop from ".././ModelAnimationLoop.js";
 import ModelAnimationState from ".././ModelAnimationState.js";
 
 /**
- * A collection of active model animations. Access this using {@link Model#activeAnimations}.
+ * <div class="notice">
+ * Access a model's animations {@link Model#activeAnimations}. Do not call the constructor directly
+ * </div>
+ *
+ * A collection of active model animations.
  *
  * @alias ModelAnimationCollection
  * @internalConstructor
