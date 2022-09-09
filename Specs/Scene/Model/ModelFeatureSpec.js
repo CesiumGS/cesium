@@ -112,7 +112,7 @@ describe("Scene/Model/ModelFeature", function () {
 
   it("setProperty works", function () {
     expect(feature.getProperty("height")).toEqual(1.0);
-    expect(feature.setProperty("height", 3.0)).toEqual(true);
+    feature.setProperty("height", 3.0);
     expect(feature.getProperty("height")).toEqual(3.0);
   });
 });
