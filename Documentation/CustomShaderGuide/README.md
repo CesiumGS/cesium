@@ -815,12 +815,8 @@ struct floatMetadataStatistics {
   float variance;
   float sum;
 }
-struct enum2MetadataStatistics {
-  int occurrences[2];
-}
 struct MetadataStatistics {
   floatMetadataStatistics intensity;
-  enum2MetadataStatistics classification;
 }
 ```
 
@@ -837,31 +833,7 @@ or similarly from the `fsInput` struct in the fragment shader.
 
 For `SCALAR`, `VECN`, and `MATN` type properties, the statistics struct fields `minValue`, `maxValue`, `median`, and `sum` will be declared with the same type as the metadata property they describe. The fields `mean`, `standardDeviation`, and `variance` are declared with a type of the same dimension as the metadata property, but with floating-point components.
 
-For `ENUM` type metadata, the statistics struct for that property will only contain an `occurrence` field. This describes the number of times a given enumerated value occurs in the data.
-
-The `occurrences` property is a fixed-length integer array. The number of occurrences of a given enum name is stored at the array index corresponding to the associated index from the enum type.
-
-For example, consider a schema with the following enum type:
-
-```json
-      "classificationEnumType" : {
-        "valueType": "UINT16",
-        "values" : [ {
-          "name" : "MediumVegetation",
-          "value" : 0
-        }, {
-          "name" : "Buildings",
-          "value" : 1
-        } ]
-      }
-```
-
-The number of entities classified as "Buildings" will be accessible in the shader as follows:
-
-```glsl
-#define BUILDINGS 1
-int buildingsCount = vsInput.metadataStatistics.classification.occurrences[BUILDINGS];
-```
+For `ENUM` type metadata, the statistics struct for that property should contain an `occurrence` field, but this field is not yet implemented.
 
 ## `czm_modelVertexOutput` struct
 
