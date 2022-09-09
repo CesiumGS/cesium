@@ -38,7 +38,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
  * <div class="notice">
- * To construct a Model, call {@link Model.fromGltf}.
+ * To construct a Model, call {@link Model.fromGltf}. Do not call the constructor directly.
  * </div>
  * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
  * <p>
@@ -74,8 +74,10 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * </p>
  *
  * @alias Model
- * @constructor
+ * @internalConstructor
  *
+ * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
+ * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
  * @privateParam {Object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {Boolean} [options.show=true] Whether or not to render the model.
@@ -117,6 +119,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ 
  *
  * @see Model.fromGltf
  *
@@ -131,8 +134,6 @@ function Model(options) {
 
   /**
    * The loader used to load resources for this model.
-   * The corresponding constructor parameter is undocumented, since
-   * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
    * @private
@@ -142,8 +143,7 @@ function Model(options) {
 
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
-   * internally. The corresponding constructor parameter is undocumented, since
-   * ModelType is part of the private API.
+   * internally.
    *
    * @type {ModelType}
    * @readonly

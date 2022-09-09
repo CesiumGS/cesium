@@ -1,5 +1,14 @@
 exports.defineTags = function (dictionary) {
-  dictionary.lookUp("class").synonym("internalConstructor");
+  // @internalConstructor defines some formatting options, but otherwise
+  // is formatted like a class.
+  const classTag = dictionary.lookUp("class");
+  const classOnTagged = classTag.onTagged;
+  dictionary.defineTag("internalConstructor", {
+    onTagged: function (doclet, tag) {
+      classOnTagged(doclet, tag);
+      doclet.isInternalConstructor = true;
+    },
+  });
 
   dictionary
     .defineTag("glsl", {
