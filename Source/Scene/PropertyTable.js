@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
+import JsonMetadataTable from "./JsonMetadataTable.js";
 
 /**
  * A property table for use with the <code>EXT_structural_metadata</code> extension or
@@ -186,15 +187,15 @@ PropertyTable.prototype.hasProperty = function (index, propertyId) {
   }
 
   if (
-    defined(this._jsonMetadataTable) &&
-    this._jsonMetadataTable.hasProperty(propertyId)
+    defined(this._batchTableHierarchy) &&
+    this._batchTableHierarchy.hasProperty(index, propertyId)
   ) {
     return true;
   }
 
   if (
-    defined(this._batchTableHierarchy) &&
-    this._batchTableHierarchy.hasProperty(index, propertyId)
+    defined(this._jsonMetadataTable) &&
+    this._jsonMetadataTable.hasProperty(propertyId)
   ) {
     return true;
   }
@@ -244,15 +245,15 @@ PropertyTable.prototype.propertyExists = function (propertyId) {
   }
 
   if (
-    defined(this._jsonMetadataTable) &&
-    this._jsonMetadataTable.hasProperty(propertyId)
+    defined(this._batchTableHierarchy) &&
+    this._batchTableHierarchy.propertyExists(propertyId)
   ) {
     return true;
   }
 
   if (
-    defined(this._batchTableHierarchy) &&
-    this._batchTableHierarchy.propertyExists(propertyId)
+    defined(this._jsonMetadataTable) &&
+    this._jsonMetadataTable.hasProperty(propertyId)
   ) {
     return true;
   }
@@ -301,17 +302,17 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
     );
   }
 
-  if (defined(this._jsonMetadataTable)) {
-    results.push.apply(
-      results,
-      this._jsonMetadataTable.getPropertyIds(scratchResults)
-    );
-  }
-
   if (defined(this._batchTableHierarchy)) {
     results.push.apply(
       results,
       this._batchTableHierarchy.getPropertyIds(index, scratchResults)
+    );
+  }
+
+  if (defined(this._jsonMetadataTable)) {
+    results.push.apply(
+      results,
+      this._jsonMetadataTable.getPropertyIds(scratchResults)
     );
   }
 
@@ -338,15 +339,15 @@ PropertyTable.prototype.getProperty = function (index, propertyId) {
     }
   }
 
-  if (defined(this._jsonMetadataTable)) {
-    result = this._jsonMetadataTable.getProperty(index, propertyId);
+  if (defined(this._batchTableHierarchy)) {
+    result = this._batchTableHierarchy.getProperty(index, propertyId);
     if (defined(result)) {
       return result;
     }
   }
 
-  if (defined(this._batchTableHierarchy)) {
-    result = this._batchTableHierarchy.getProperty(index, propertyId);
+  if (defined(this._jsonMetadataTable)) {
+    result = this._jsonMetadataTable.getProperty(index, propertyId);
     if (defined(result)) {
       return result;
     }
@@ -356,7 +357,9 @@ PropertyTable.prototype.getProperty = function (index, propertyId) {
 };
 
 /**
- * Sets the value of the property with the given ID.
+ * Sets the value of the property with the given ID. If the property did not
+ * exist, it will be created as a JSON metadata property
+ *
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
@@ -364,7 +367,6 @@ PropertyTable.prototype.getProperty = function (index, propertyId) {
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 PropertyTable.prototype.setProperty = function (index, propertyId, value) {
@@ -372,20 +374,26 @@ PropertyTable.prototype.setProperty = function (index, propertyId, value) {
     defined(this._metadataTable) &&
     this._metadataTable.setProperty(index, propertyId, value)
   ) {
-    return true;
+    return;
   }
 
   if (
-    defined(this._jsonMetadataTable) &&
-    this._jsonMetadataTable.setProperty(index, propertyId, value)
-  ) {
-    return true;
-  }
-
-  return (
     defined(this._batchTableHierarchy) &&
     this._batchTableHierarchy.setProperty(index, propertyId, value)
-  );
+  ) {
+    return;
+  }
+
+  // Ensure we have a table for JSON properties
+  if (!defined(this._jsonMetadataTable)) {
+    this._jsonMetadataTable = new JsonMetadataTable({
+      count: this._count,
+      properties: {},
+    });
+  }
+
+  // JsonMetadataTable will handle creating a new property at runtime.
+  this._jsonMetadataTable.setProperty(index, propertyId, value);
 };
 
 /**
