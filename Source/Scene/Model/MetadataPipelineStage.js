@@ -151,17 +151,15 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
   const classId = propertyAttribute.class.id;
   const classStatistics = statistics?.classes[classId];
 
-  return Object.entries(propertyAttribute.properties).map(
-    getPropertyAttributePropertyInfo
-  );
+  const propertiesArray = Object.entries(propertyAttribute.properties);
+  const infoArray = new Array(propertiesArray.length);
 
-  function getPropertyAttributePropertyInfo([propertyId, property]) {
-    // Get information about the attribute the same way as the
-    // GeometryPipelineStage to ensure we have the correct GLSL type
+  for (let i = 0; i < propertiesArray.length; i++) {
+    const [propertyId, property] = propertiesArray[i];
     const modelAttribute = getAttributeByName(primitive, property.attribute);
     const { glslType, variableName } = getAttributeInfo(modelAttribute);
 
-    return {
+    infoArray[i] = {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
@@ -171,6 +169,8 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
       shaderDestination: ShaderDestination.BOTH,
     };
   }
+
+  return infoArray;
 }
 
 /**
@@ -203,16 +203,15 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
   const classId = propertyTexture.class.id;
   const classStatistics = statistics?.classes[classId];
 
-  return Object.entries(propertyTexture.properties)
-    .map(getPropertyTexturePropertyInfo)
-    .filter(defined);
+  const propertiesArray = Object.entries(
+    propertyTexture.properties
+  ).filter(([id, property]) => property.isGpuCompatible());
+  const infoArray = new Array(propertiesArray.length);
 
-  function getPropertyTexturePropertyInfo([propertyId, property]) {
-    if (!property.isGpuCompatible()) {
-      return;
-    }
+  for (let i = 0; i < propertiesArray.length; i++) {
+    const [propertyId, property] = propertiesArray[i];
 
-    return {
+    infoArray[i] = {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
@@ -221,6 +220,8 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
       shaderDestination: ShaderDestination.FRAGMENT,
     };
   }
+
+  return infoArray;
 }
 
 /**
