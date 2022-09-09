@@ -25,7 +25,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function MetadataSchemaLoader(options) {
+function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const schema = options.schema;
   const resource = options.resource;
@@ -141,3 +141,5 @@ function loadExternalSchema(schemaLoader) {
 MetadataSchemaLoader.prototype.unload = function () {
   this._schema = undefined;
 };
+
+export default MetadataSchemaLoader;

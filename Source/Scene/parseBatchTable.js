@@ -35,7 +35,7 @@ import ModelUtility from "./Model/ModelUtility.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseBatchTable(options) {
+function parseBatchTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
   Check.typeOf.object("options.batchTable", options.batchTable);
@@ -61,14 +61,24 @@ export default function parseBatchTable(options) {
   // divide properties into binary, json and hierarchy
   const partitionResults = partitionProperties(batchTable);
 
-  const jsonMetadataTable = new JsonMetadataTable({
-    count: featureCount,
-    properties: partitionResults.jsonProperties,
-  });
+  let jsonMetadataTable;
+  if (defined(partitionResults.jsonProperties)) {
+    jsonMetadataTable = new JsonMetadataTable({
+      count: featureCount,
+      properties: partitionResults.jsonProperties,
+    });
+  }
 
-  const hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
+  let hierarchy;
+  if (defined(partitionResults.hierarchy)) {
+    hierarchy = new BatchTableHierarchy({
+      extension: partitionResults.hierarchy,
+      binaryBody: binaryBody,
+    });
+  }
 
   const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+  const binaryProperties = partitionResults.binaryProperties;
 
   let metadataTable;
   let propertyAttributes;
@@ -77,7 +87,7 @@ export default function parseBatchTable(options) {
     const attributeResults = transcodeBinaryPropertiesAsPropertyAttributes(
       featureCount,
       className,
-      partitionResults.binaryProperties,
+      binaryProperties,
       binaryBody,
       customAttributeOutput
     );
@@ -92,7 +102,7 @@ export default function parseBatchTable(options) {
     const binaryResults = transcodeBinaryProperties(
       featureCount,
       className,
-      partitionResults.binaryProperties,
+      binaryProperties,
       binaryBody
     );
     transcodedSchema = binaryResults.transcodedSchema;
@@ -106,18 +116,26 @@ export default function parseBatchTable(options) {
     propertyAttributes = [];
   }
 
-  const propertyTable = new PropertyTable({
-    id: 0,
-    name: "Batch Table",
-    count: featureCount,
-    metadataTable: metadataTable,
-    jsonMetadataTable: jsonMetadataTable,
-    batchTableHierarchy: hierarchy,
-  });
+  const propertyTables = [];
+  if (
+    defined(metadataTable) ||
+    defined(jsonMetadataTable) ||
+    defined(hierarchy)
+  ) {
+    const propertyTable = new PropertyTable({
+      id: 0,
+      name: "Batch Table",
+      count: featureCount,
+      metadataTable: metadataTable,
+      jsonMetadataTable: jsonMetadataTable,
+      batchTableHierarchy: hierarchy,
+    });
+    propertyTables.push(propertyTable);
+  }
 
   const metadataOptions = {
     schema: transcodedSchema,
-    propertyTables: [propertyTable],
+    propertyTables: propertyTables,
     propertyAttributes: propertyAttributes,
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
@@ -151,7 +169,10 @@ function partitionProperties(batchTable) {
     hierarchyExtension = extensions["3DTILES_batch_table_hierarchy"];
   }
 
-  const jsonProperties = {};
+  // A JsonMetadataTable is only allocated as needed.
+  let jsonProperties;
+  // A MetadataTable or PropertyAttribute will always be created, even if
+  // there are no properties.
   const binaryProperties = {};
   for (const propertyId in batchTable) {
     if (
@@ -166,6 +187,7 @@ function partitionProperties(batchTable) {
 
     const property = batchTable[propertyId];
     if (Array.isArray(property)) {
+      jsonProperties = defined(jsonProperties) ? jsonProperties : {};
       jsonProperties[propertyId] = property;
     } else {
       binaryProperties[propertyId] = property;
@@ -411,25 +433,7 @@ function transcodeComponentType(componentType) {
   }
 }
 
-/**
- * Construct a batch table hierarchy object if the <code>3DTILES_batch_table_hierarchy</code> extension is present
- *
- * @param {Object} [hierarchyExtension] The <code>3DTILES_batch_table_hierarchy</code> extension object.
- * @param {Uint8Array} binaryBody The binary body of the batch table
- * @return {BatchTableHierarchy} A batch table hierarchy, or <code>undefined</code> if the extension is not present.
- *
- * @private
- */
-function initializeHierarchy(hierarchyExtension, binaryBody) {
-  if (defined(hierarchyExtension)) {
-    return new BatchTableHierarchy({
-      extension: hierarchyExtension,
-      binaryBody: binaryBody,
-    });
-  }
-
-  return undefined;
-}
-
 // exposed for testing
 parseBatchTable._deprecationWarning = deprecationWarning;
+
+export default parseBatchTable;

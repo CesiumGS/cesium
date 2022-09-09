@@ -12,7 +12,7 @@ import LightingModel from "./LightingModel.js";
  *
  * @private
  */
-export default function ModelLightingOptions(options) {
+function ModelLightingOptions(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
@@ -25,3 +25,5 @@ export default function ModelLightingOptions(options) {
    */
   this.lightingModel = defaultValue(options.lightingModel, LightingModel.UNLIT);
 }
+
+export default ModelLightingOptions;

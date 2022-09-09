@@ -17,7 +17,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function TextureManager() {
+function TextureManager() {
   this._defaultTexture = undefined;
   this._textures = {};
   this._loadedImages = [];
@@ -240,3 +240,5 @@ TextureManager.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
+
+export default TextureManager;

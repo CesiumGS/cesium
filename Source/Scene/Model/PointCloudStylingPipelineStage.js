@@ -117,9 +117,17 @@ PointCloudStylingPipelineStage.process = function (
   }
 
   const pointCloudShading = model.pointCloudShading;
-  if (model._attenuation) {
+  if (pointCloudShading.attenuation) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_ATTENUATION",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+  }
+
+  if (pointCloudShading.backFaceCulling) {
+    shaderBuilder.addDefine(
+      "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       undefined,
       ShaderDestination.VERTEX
     );
@@ -141,7 +149,7 @@ PointCloudStylingPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([PointCloudStylingStageVS]);
+  shaderBuilder.addVertexLines(PointCloudStylingStageVS);
 
   const uniformMap = renderResources.uniformMap;
   uniformMap.model_pointCloudParameters = function () {
@@ -313,7 +321,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
       undefined,
       ShaderDestination.BOTH
     );
-    shaderBuilder.addVertexLines([colorStyleFunction]);
+    shaderBuilder.addVertexLines(colorStyleFunction);
 
     // The point cloud may not necessarily have a color attribute.
     // Use a custom varying to account for this.
@@ -327,7 +335,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
       undefined,
       ShaderDestination.VERTEX
     );
-    shaderBuilder.addVertexLines([showStyleFunction]);
+    shaderBuilder.addVertexLines(showStyleFunction);
   }
 
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;
@@ -337,7 +345,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
       undefined,
       ShaderDestination.VERTEX
     );
-    shaderBuilder.addVertexLines([pointSizeStyleFunction]);
+    shaderBuilder.addVertexLines(pointSizeStyleFunction);
   }
 }
 

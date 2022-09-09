@@ -5,7 +5,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import Uri from "../ThirdParty/Uri.js";
+import Uri from "urijs";
 
 const mobileWidth = 576;
 const lightboxHeight = 100;

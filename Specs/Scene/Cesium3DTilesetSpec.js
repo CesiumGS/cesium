@@ -1004,7 +1004,9 @@ describe(
     });
 
     it("verify memory usage statistics", function () {
-      // Calculations in Batched3DModel3DTileContentSpec, minus uvs
+      // 10 buildings, 36 ushort indices and 24 vertices per building, 6 float
+      // components (position, normal) and 1 uint component (batchId) per vertex
+      // 10 * [(24 * (6 * 4 + 1 * 4)) + (36 * 2)] = 7440 bytes
       const singleTileGeometryMemory = 7440;
       const singleTileTextureMemory = 0;
       const singleTileBatchTextureMemory = 40;
@@ -3883,7 +3885,7 @@ describe(
       });
     });
 
-    xit("creates duplicate backface commands", function () {
+    it("creates duplicate backface commands", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url,

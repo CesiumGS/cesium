@@ -1,18 +1,18 @@
+import Uri from "urijs";
 import {
   appendForwardSlash,
-  defined,
-  queryToObject,
-  RequestScheduler,
-  Resource,
-  WebMercatorTilingScheme,
   BingMapsImageryProvider,
   BingMapsStyle,
+  defined,
   DiscardEmptyTileImagePolicy,
   Imagery,
   ImageryLayer,
   ImageryProvider,
   ImageryState,
-  Uri,
+  queryToObject,
+  RequestScheduler,
+  Resource,
+  WebMercatorTilingScheme,
 } from "../../../Source/Cesium.js";
 
 import pollToPromise from "../pollToPromise.js";

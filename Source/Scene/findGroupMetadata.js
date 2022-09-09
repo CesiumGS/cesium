@@ -14,7 +14,7 @@ import hasExtension from "./hasExtension.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function findGroupMetadata(tileset, contentHeader) {
+function findGroupMetadata(tileset, contentHeader) {
   const metadataExtension = tileset.metadataExtension;
   if (!defined(metadataExtension)) {
     return undefined;
@@ -35,3 +35,5 @@ export default function findGroupMetadata(tileset, contentHeader) {
 
   return index >= 0 ? groups[index] : undefined;
 }
+
+export default findGroupMetadata;

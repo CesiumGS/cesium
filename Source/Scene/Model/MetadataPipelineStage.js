@@ -102,8 +102,8 @@ MetadataPipelineStage.process = function (
   // Always declare the Metadata, MetadataClass, and MetadataStatistics structs
   // and the initializeMetadata() function, even if not used
   declareStructsAndFunctions(shaderBuilder);
-  shaderBuilder.addVertexLines([MetadataStageVS]);
-  shaderBuilder.addFragmentLines([MetadataStageFS]);
+  shaderBuilder.addVertexLines(MetadataStageVS);
+  shaderBuilder.addFragmentLines(MetadataStageFS);
 
   for (let i = 0; i < propertyAttributesInfo.length; i++) {
     const info = propertyAttributesInfo[i];

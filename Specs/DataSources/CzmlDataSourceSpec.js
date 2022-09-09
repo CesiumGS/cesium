@@ -5234,7 +5234,7 @@ describe("DataSources/CzmlDataSource", function () {
         minimumPixelSize: 5.0,
         maximumScale: 4.0,
         gltf:
-          "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf",
+          "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf",
         incrementallyLoadTextures: true,
         shadows: "ENABLED",
         heightReference: "CLAMP_TO_GROUND",
@@ -5366,7 +5366,7 @@ describe("DataSources/CzmlDataSource", function () {
         scale: 3.0,
         minimumPixelSize: 5.0,
         gltf:
-          "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf",
+          "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf",
         incrementallyLoadTextures: true,
         shadows: "ENABLED",
         heightReference: "CLAMP_TO_GROUND",

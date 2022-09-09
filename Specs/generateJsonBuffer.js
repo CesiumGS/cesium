@@ -1,6 +1,6 @@
 import { defaultValue } from "../Source/Cesium.js";
 
-export default function generateJsonBuffer(json, byteOffset, boundary) {
+function generateJsonBuffer(json, byteOffset, boundary) {
   let i;
   const jsonString = JSON.stringify(json);
 
@@ -22,3 +22,5 @@ export default function generateJsonBuffer(json, byteOffset, boundary) {
 
   return buffer;
 }
+
+export default generateJsonBuffer;

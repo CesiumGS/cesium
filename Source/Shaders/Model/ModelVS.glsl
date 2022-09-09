@@ -112,6 +112,10 @@ void main()
     float show = 1.0;
     #endif
 
+    #ifdef HAS_POINT_CLOUD_BACK_FACE_CULLING
+    show *= pointCloudBackFaceCullingStage();
+    #endif
+
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
     v_pointCloudColor = pointCloudColorStylingStage(attributes, metadata);
     #endif

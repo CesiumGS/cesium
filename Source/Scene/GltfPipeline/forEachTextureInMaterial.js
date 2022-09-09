@@ -56,7 +56,7 @@ function forEachTextureInMaterial(material, handler) {
 
     // Materials common extension (may be present in models converted from glTF 1.0)
     const materialsCommon = material.extensions.KHR_materials_common;
-    if (defined(materialsCommon)) {
+    if (defined(materialsCommon) && defined(materialsCommon.values)) {
       const diffuse = materialsCommon.values.diffuse;
       const ambient = materialsCommon.values.ambient;
       const emission = materialsCommon.values.emission;

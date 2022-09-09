@@ -27,7 +27,9 @@ import {
   SkinningPipelineStage,
   VertexAttributeSemantic,
   WireframePipelineStage,
+  ClassificationType,
 } from "../../../Source/Cesium.js";
+import ClassificationPipelineStage from "../../../Source/Scene/Model/ClassificationPipelineStage.js";
 
 describe("Scene/Model/ModelRuntimePrimitive", function () {
   const mockPrimitive = {
@@ -667,7 +669,7 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
-  it("configures pipeline for debugWireframe (WebGL 1)", function () {
+  it("configures pipeline for debugWireframe if model.enableDebugWireframe is true(WebGL 1)", function () {
     const primitive = new ModelRuntimePrimitive({
       primitive: {
         featureIds: [],
@@ -933,6 +935,36 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
 
     const expectedStages = [
       GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures pipeline stages for classification", function () {
+    const primitive = new ModelRuntimePrimitive({
+      primitive: {
+        featureIds: [],
+        featureIdTextures: [],
+        primitiveType: PrimitiveType.TRIANGLES,
+      },
+      node: mockNode,
+      model: {
+        type: ModelType.GLTF,
+        featureIdLabel: "featureId_0",
+        classificationType: ClassificationType.BOTH,
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      ClassificationPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,

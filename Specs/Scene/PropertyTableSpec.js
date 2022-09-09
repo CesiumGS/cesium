@@ -176,9 +176,15 @@ describe("Scene/PropertyTable", function () {
     expect(propertyTable.getProperty(0, "height")).toEqual(10.0);
   });
 
-  it("setProperty does not create property if it doesn't exist", function () {
+  it("setProperty creates properties if they don't exist", function () {
     const propertyTable = createPropertyTable();
-    expect(propertyTable.setProperty(0, "numberOfPoints", 10)).toBe(false);
+
+    // Since this property table didn't have any properties, it should create
+    // a new JsonMetadataTable before creating the new property
+    expect(propertyTable._jsonMetadataTable).not.toBeDefined();
+    propertyTable.setProperty(0, "numberOfPoints", 10);
+    expect(propertyTable._jsonMetadataTable).toBeDefined();
+    expect(propertyTable.getProperty(0, "numberOfPoints")).toBe(10);
   });
 
   it("setProperty sets property value", function () {
@@ -502,13 +508,13 @@ describe("Scene/PropertyTable", function () {
 
     it("setProperty uses structural metadata", function () {
       expect(batchTable.getProperty(0, "itemCount")).toBe(25);
-      expect(batchTable.setProperty(0, "itemCount", 24)).toBe(true);
+      batchTable.setProperty(0, "itemCount", 24);
       expect(batchTable.getProperty(0, "itemCount")).toBe(24);
     });
 
     it("setProperty uses JSON metadata", function () {
       expect(batchTable.getProperty(0, "uri")).toBe("tree.las");
-      expect(batchTable.setProperty(0, "uri", "tree_final.las")).toBe(true);
+      batchTable.setProperty(0, "uri", "tree_final.las");
       expect(batchTable.getProperty(0, "uri")).toBe("tree_final.las");
     });
 
@@ -519,8 +525,8 @@ describe("Scene/PropertyTable", function () {
       expect(batchTable.getProperty(2, "tireLocation")).not.toBeDefined();
       expect(batchTable.getProperty(2, "color")).toBe("blue");
 
-      expect(batchTable.setProperty(0, "tireLocation", "back")).toBe(true);
-      expect(batchTable.setProperty(2, "color", "navy")).toBe(true);
+      batchTable.setProperty(0, "tireLocation", "back");
+      batchTable.setProperty(2, "color", "navy");
 
       expect(batchTable.getProperty(0, "tireLocation")).toBe("back");
       expect(batchTable.getProperty(0, "color")).toBe("navy");
@@ -529,8 +535,10 @@ describe("Scene/PropertyTable", function () {
       expect(batchTable.getProperty(2, "color")).toBe("navy");
     });
 
-    it("setProperty returns false for unknown propertyId", function () {
-      expect(batchTable.setProperty(0, "widgets", 5)).toBe(false);
+    it("setProperty creates a new property for unknown propertyId", function () {
+      expect(batchTable.getProperty(0, "widgets")).not.toBeDefined();
+      batchTable.setProperty(0, "widgets", 5);
+      expect(batchTable.getProperty(0, "widgets")).toBe(5);
     });
 
     it("getPropertyTypedArray returns undefined for JSON and hierarchy properties", function () {
