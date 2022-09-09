@@ -1015,111 +1015,6 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     buildOctree(rootNode, 0, 0, 0, 0);
   }
 
-  /**
-   * @ignore
-   * @param {Number[]} data
-   * @param {Number} texelsPerTile
-   * @param {Number} tilesPerRow
-   * @param {Texture} texture
-   */
-  function copyToInternalNodeTexture(
-    data,
-    texelsPerTile,
-    tilesPerRow,
-    texture
-  ) {
-    const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
-    const tileCount = Math.ceil(data.length / texelsPerTile);
-    const copyWidth = Math.max(
-      1,
-      texelsPerTile * Math.min(tileCount, tilesPerRow)
-    );
-    const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
-
-    const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
-    for (let i = 0; i < data.length; i++) {
-      const val = data[i];
-      const startIndex = i * channelCount;
-      for (let j = 0; j < channelCount; j++) {
-        textureData[startIndex + j] = (val >>> (j * 8)) & 0xff;
-      }
-    }
-
-    const source = {
-      arrayBufferView: textureData,
-      width: copyWidth,
-      height: copyHeight,
-    };
-
-    const copyOptions = {
-      source: source,
-      xOffset: 0,
-      yOffset: 0,
-    };
-
-    texture.copyFrom(copyOptions);
-  }
-
-  /**
-   * @ignore
-   * @param {Number[]} data
-   * @param {Number} texelsPerTile
-   * @param {Number} tilesPerRow
-   * @param {Texture} texture
-   */
-  function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
-    const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
-    const datasPerTile = 5;
-    const tileCount = Math.ceil(data.length / datasPerTile);
-    const copyWidth = Math.max(
-      1,
-      texelsPerTile * Math.min(tileCount, tilesPerRow)
-    );
-    const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
-
-    const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
-    for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-      const timeLerp = data[tileIndex * datasPerTile + 0];
-      const previousKeyframeLevelsAbove = data[tileIndex * datasPerTile + 1];
-      const nextKeyframeLevelsAbove = data[tileIndex * datasPerTile + 2];
-      const previousKeyframeMegatextureIndex =
-        data[tileIndex * datasPerTile + 3];
-      const nextKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 4];
-
-      const timeLerpCompressed = CesiumMath.clamp(
-        Math.floor(65536 * timeLerp),
-        0,
-        65535
-      );
-      textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
-      textureData[tileIndex * 8 + 2] = previousKeyframeLevelsAbove & 0xff;
-      textureData[tileIndex * 8 + 3] = nextKeyframeLevelsAbove & 0xff;
-      textureData[tileIndex * 8 + 4] =
-        (previousKeyframeMegatextureIndex >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 5] =
-        (previousKeyframeMegatextureIndex >>> 8) & 0xff;
-      textureData[tileIndex * 8 + 6] =
-        (nextKeyframeMegatextureIndex >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 7] =
-        (nextKeyframeMegatextureIndex >>> 8) & 0xff;
-    }
-
-    const source = {
-      arrayBufferView: textureData,
-      width: copyWidth,
-      height: copyHeight,
-    };
-
-    const copyOptions = {
-      source: source,
-      xOffset: 0,
-      yOffset: 0,
-    };
-
-    texture.copyFrom(copyOptions);
-  }
-
   copyToInternalNodeTexture(
     internalNodeOctreeData,
     9,
@@ -1134,6 +1029,107 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       that.leafNodeTexture
     );
   }
+}
+
+/**
+ *
+ * @param {Number[]} data
+ * @param {Number} texelsPerTile
+ * @param {Number} tilesPerRow
+ * @param {Texture} texture
+ * @private
+ */
+function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+  const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
+  const tileCount = Math.ceil(data.length / texelsPerTile);
+  const copyWidth = Math.max(
+    1,
+    texelsPerTile * Math.min(tileCount, tilesPerRow)
+  );
+  const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
+
+  const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
+  for (let i = 0; i < data.length; i++) {
+    const val = data[i];
+    const startIndex = i * channelCount;
+    for (let j = 0; j < channelCount; j++) {
+      textureData[startIndex + j] = (val >>> (j * 8)) & 0xff;
+    }
+  }
+
+  const source = {
+    arrayBufferView: textureData,
+    width: copyWidth,
+    height: copyHeight,
+  };
+
+  const copyOptions = {
+    source: source,
+    xOffset: 0,
+    yOffset: 0,
+  };
+
+  texture.copyFrom(copyOptions);
+}
+
+/**
+ *
+ * @param {Number[]} data
+ * @param {Number} texelsPerTile
+ * @param {Number} tilesPerRow
+ * @param {Texture} texture
+ * @private
+ */
+function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+  const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
+  const datasPerTile = 5;
+  const tileCount = Math.ceil(data.length / datasPerTile);
+  const copyWidth = Math.max(
+    1,
+    texelsPerTile * Math.min(tileCount, tilesPerRow)
+  );
+  const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
+
+  const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
+  for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+    const timeLerp = data[tileIndex * datasPerTile + 0];
+    const previousKeyframeLevelsAbove = data[tileIndex * datasPerTile + 1];
+    const nextKeyframeLevelsAbove = data[tileIndex * datasPerTile + 2];
+    const previousKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 3];
+    const nextKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 4];
+
+    const timeLerpCompressed = CesiumMath.clamp(
+      Math.floor(65536 * timeLerp),
+      0,
+      65535
+    );
+    textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
+    textureData[tileIndex * 8 + 2] = previousKeyframeLevelsAbove & 0xff;
+    textureData[tileIndex * 8 + 3] = nextKeyframeLevelsAbove & 0xff;
+    textureData[tileIndex * 8 + 4] =
+      (previousKeyframeMegatextureIndex >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 5] =
+      (previousKeyframeMegatextureIndex >>> 8) & 0xff;
+    textureData[tileIndex * 8 + 6] =
+      (nextKeyframeMegatextureIndex >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 7] =
+      (nextKeyframeMegatextureIndex >>> 8) & 0xff;
+  }
+
+  const source = {
+    arrayBufferView: textureData,
+    width: copyWidth,
+    height: copyHeight,
+  };
+
+  const copyOptions = {
+    source: source,
+    xOffset: 0,
+    yOffset: 0,
+  };
+
+  texture.copyFrom(copyOptions);
 }
 
 /**
