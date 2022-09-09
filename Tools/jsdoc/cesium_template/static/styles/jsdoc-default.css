@@ -666,3 +666,14 @@ div.tag-experimental > h5 {
 div.tag-experimental > p {
   margin: 0 0 5px;
 }
+
+div.notice {
+  padding: 10px;
+  background-color: #9dd7f1;
+  color: #26363d;
+}
+
+/* Match the background color of the notice div */
+div.notice code {
+  background-color: inherit;
+}

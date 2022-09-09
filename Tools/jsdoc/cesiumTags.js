@@ -42,4 +42,12 @@ exports.defineTags = function (dictionary) {
       doclet.experimental.push(tag.value);
     },
   });
+
+  // @privateParam looks just like @param in the code, but is ignored
+  // in the output
+  dictionary.defineTag("privateParam", {
+    canHaveType: true,
+    canHaveName: true,
+    mustHaveValue: true,
+  });
 };
