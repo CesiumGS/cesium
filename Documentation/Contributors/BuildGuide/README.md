@@ -169,7 +169,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
 - In `travis.yml`, edit the following line:
 
@@ -178,7 +178,7 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 ```
 
 - Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
-- In `gulpfile.cjs`, edit the following line:
+- In `gulpfile.js`, edit the following line:
 
 ```javascript
 const travisDeployUrl =
