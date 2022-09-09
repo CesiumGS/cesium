@@ -287,6 +287,13 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
   }
 }
 
+const floatConversions = {
+  int: "float",
+  ivec2: "vec2",
+  ivec3: "vec3",
+  ivec4: "vec4",
+};
+
 /**
  * For a type with integer components, find a corresponding float-component type
  * @param {String} type The name of a GLSL type with integer components
@@ -294,13 +301,7 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
  * @private
  */
 function convertToFloatComponents(type) {
-  const conversions = {
-    int: "float",
-    ivec2: "vec2",
-    ivec3: "vec3",
-    ivec4: "vec4",
-  };
-  const converted = conversions[type];
+  const converted = floatConversions[type];
   return defined(converted) ? converted : type;
 }
 
@@ -421,7 +422,7 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
 /**
  * Update the shader for a single PropertyTextureProperty
  * @param {PrimitiveRenderResources} renderResources
- * @param {Array<Object>} propertyInfo
+ * @param {Object[]} propertyInfo
  * @private
  */
 function processPropertyTextureProperty(renderResources, propertyInfo) {
@@ -588,7 +589,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
  * @param {Object} values A source of property values, keyed on fieldNames[].specName
  * @param {String} struct The name of the struct to which values will be assigned
  * @param {String} type The type of the values to be assigned
- * @returns {Array<{name: String, value}>}
+ * @returns {Array.<{name: String, value}>}
  * @private
  */
 function getStructAssignments(fieldNames, values, struct, type) {
