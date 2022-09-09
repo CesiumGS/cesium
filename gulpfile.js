@@ -577,7 +577,8 @@ export async function deployS3() {
       },
       "cache-control": {
         alias: "c",
-        description: "Only print file paths and S3 keys.",
+        description:
+          "The cache control option set on the objects uploaded to S3.",
         type: "string",
         default: "max-age=3600",
       },

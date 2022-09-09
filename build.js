@@ -631,7 +631,7 @@ export async function createJsHintOptions() {
 }
 
 /**
- * Bundles
+ * Bundles spec files for testing in the browser and on the command line with karma.
  * @param {Object} options
  * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
  * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers

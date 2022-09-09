@@ -479,7 +479,7 @@ const serveResult = (result, fileName, res, next) => {
         "Error: Port %d is already in use, select a different port.",
         argv.port
       );
-      console.log("Example: node server.cjs --port %d", argv.port + 1);
+      console.log("Example: node server.js --port %d", argv.port + 1);
     } else if (e.code === "EACCES") {
       console.log(
         "Error: This process does not have permission to listen on port %d.",
