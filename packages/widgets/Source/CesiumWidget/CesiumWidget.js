@@ -1,23 +1,25 @@
-import buildModuleUrl from "../../Core/buildModuleUrl.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Clock from "../../Core/Clock.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import FeatureDetection from "../../Core/FeatureDetection.js";
-import formatError from "../../Core/formatError.js";
-import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
-import createWorldImagery from "../../Scene/createWorldImagery.js";
-import Globe from "../../Scene/Globe.js";
-import Moon from "../../Scene/Moon.js";
-import Scene from "../../Scene/Scene.js";
-import SceneMode from "../../Scene/SceneMode.js";
-import ShadowMode from "../../Scene/ShadowMode.js";
-import SkyAtmosphere from "../../Scene/SkyAtmosphere.js";
-import SkyBox from "../../Scene/SkyBox.js";
-import Sun from "../../Scene/Sun.js";
+import {
+  buildModuleUrl,
+  createWorldImagery,
+  Cartesian3,
+  Clock,
+  defaultValue,
+  defined,
+  destroyObject,
+  DeveloperError,
+  Ellipsoid,
+  FeatureDetection,
+  formatError,
+  Globe,
+  Moon,
+  Scene,
+  SceneMode,
+  ScreenSpaceEventHandler,
+  ShadowMode,
+  SkyAtmosphere,
+  SkyBox,
+  Sun
+} from "@cesium/engine";
 import getElement from "../getElement.js";
 
 function getDefaultSkyBoxUrl(suffix) {

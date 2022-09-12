@@ -1,9 +1,12 @@
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  defined,
+  destroyObject,
+  DeveloperError,
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import getElement from "../getElement.js";
 import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
+
 
 /**
  * A widget for displaying an indicator on a selected object.

@@ -1,8 +1,10 @@
-import ClockRange from "../../Core/ClockRange.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import JulianDate from "../../Core/JulianDate.js";
+import {
+  ClockRange,
+  defined,
+  destroyObject,
+  DeveloperError,
+  JulianDate,
+} from "@cesium/engine";
 import getElement from "../getElement.js";
 import TimelineHighlightRange from "./TimelineHighlightRange.js";
 import TimelineTrack from "./TimelineTrack.js";

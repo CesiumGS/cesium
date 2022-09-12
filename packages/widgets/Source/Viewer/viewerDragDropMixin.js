@@ -1,12 +1,14 @@
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Event from "../../Core/Event.js";
-import wrapFunction from "../../Core/wrapFunction.js";
-import CzmlDataSource from "../../DataSources/CzmlDataSource.js";
-import GeoJsonDataSource from "../../DataSources/GeoJsonDataSource.js";
-import KmlDataSource from "../../DataSources/KmlDataSource.js";
-import GpxDataSource from "../../DataSources/GpxDataSource.js";
+import {
+  CzmlDataSource,
+  defaultValue,
+  defined,
+  DeveloperError,
+  Event,
+  GeoJsonDataSource,
+  GpxDataSource,
+  KmlDataSource,
+  wrapFunction
+} from "@cesium/engine";
 import getElement from "../getElement.js";
 
 /**

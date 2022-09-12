@@ -1,10 +1,12 @@
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import EventHelper from "../../Core/EventHelper.js";
-import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
-import SceneMode from "../../Scene/SceneMode.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  defined,
+  destroyObject,
+  DeveloperError,
+  EventHelper,
+  OrthographicFrustum,
+  SceneMode
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
 /**

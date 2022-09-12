@@ -1,6 +1,8 @@
-import defined from "../../Core/defined.js";
-import Event from "../../Core/Event.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  defined,
+  Event,
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 
 const cameraEnabledPath =
   "M 13.84375 7.03125 C 11.412798 7.03125 9.46875 8.975298 9.46875 11.40625 L 9.46875 11.59375 L 2.53125 7.21875 L 2.53125 24.0625 L 9.46875 19.6875 C 9.4853444 22.104033 11.423165 24.0625 13.84375 24.0625 L 25.875 24.0625 C 28.305952 24.0625 30.28125 22.087202 30.28125 19.65625 L 30.28125 11.40625 C 30.28125 8.975298 28.305952 7.03125 25.875 7.03125 L 13.84375 7.03125 z";

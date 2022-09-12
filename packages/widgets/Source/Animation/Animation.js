@@ -1,7 +1,9 @@
-
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import { 
+  Color,
+  defined,
+  destroyObject,
+  DeveloperError
+} from "@cesium/engine";
 import getElement from "../getElement.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 

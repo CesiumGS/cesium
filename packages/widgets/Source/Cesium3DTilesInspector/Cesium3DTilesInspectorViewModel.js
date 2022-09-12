@@ -1,17 +1,20 @@
-import Check from "../../Core/Check.js";
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
-import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
-import Cesium3DTileColorBlendMode from "../../Scene/Cesium3DTileColorBlendMode.js";
-import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
-import Cesium3DTilePass from "../../Scene/Cesium3DTilePass.js";
-import Cesium3DTileset from "../../Scene/Cesium3DTileset.js";
-import Cesium3DTileStyle from "../../Scene/Cesium3DTileStyle.js";
-import PerformanceDisplay from "../../Scene/PerformanceDisplay.js";
-import ResourceCache from "../../Scene/ResourceCache.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  Check,
+  Color,
+  defined,
+  defined,
+  destroyObject,
+  Cesium3DTileColorBlendMode,
+  Cesium3DTileFeature,
+  Cesium3DTilePass,
+  Cesium3DTileset,
+  Cesium3DTileStyle,
+  PerformanceDisplay,
+  ResourceCache,
+  ScreenSpaceEventHandler,
+  ScreenSpaceEventType,
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 
 function getPickTileset(viewModel) {
   return function (e) {

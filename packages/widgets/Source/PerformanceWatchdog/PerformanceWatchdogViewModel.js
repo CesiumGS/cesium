@@ -1,10 +1,13 @@
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import FrameRateMonitor from "../../Scene/FrameRateMonitor.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  defaultValue,
+  defined,
+  destroyObject,
+  DeveloperError,
+  FrameRateMonitor
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
+
 
 /**
  * The view model for {@link PerformanceWatchdog}.

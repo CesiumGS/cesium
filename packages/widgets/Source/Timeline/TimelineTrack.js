@@ -1,6 +1,8 @@
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import JulianDate from "../../Core/JulianDate.js";
+import {
+  Color,
+  defined,
+  JulianDate,
+} from "@cesium/engine";
 
 /**
  * @private

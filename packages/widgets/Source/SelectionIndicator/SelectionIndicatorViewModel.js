@@ -1,10 +1,13 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import EasingFunction from "../../Core/EasingFunction.js";
-import SceneTransforms from "../../Scene/SceneTransforms.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  Cartesian2,
+  defaultValue,
+  defined,
+  DeveloperError,
+  EasingFunction,
+  SceneTransforms
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
+
 
 const screenSpacePos = new Cartesian2();
 const offScreen = "-1000px";

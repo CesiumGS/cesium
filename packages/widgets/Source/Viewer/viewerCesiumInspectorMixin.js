@@ -1,5 +1,7 @@
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import { 
+  defined,
+  DeveloperError  
+} from "@cesium/engine";
 import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
 
 /**

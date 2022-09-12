@@ -1,6 +1,8 @@
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import {
+  defaultValue,
+  defined,
+  DeveloperError
+} from "@cesium/engine";
 import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
 
 /**

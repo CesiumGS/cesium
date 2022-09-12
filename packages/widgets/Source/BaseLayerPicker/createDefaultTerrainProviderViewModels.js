@@ -1,7 +1,9 @@
-import buildModuleUrl from "../../Core/buildModuleUrl.js";
-import createWorldTerrain from "../../Core/createWorldTerrain.js";
-import EllipsoidTerrainProvider from "../../Core/EllipsoidTerrainProvider.js";
-import ProviderViewModel from "../BaseLayerPicker/ProviderViewModel.js";
+import {
+  buildModuleUrl,
+  createWorldTerrain,
+  EllipsoidTerrainProvider,
+} from "@cesium/engine";
+import ProviderViewModel from "./ProviderViewModel.js";
 
 /**
  * @private

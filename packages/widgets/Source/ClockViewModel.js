@@ -1,8 +1,10 @@
-import Clock from "../Core/Clock.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import EventHelper from "../Core/EventHelper.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Clock,
+  defined,
+  destroyObject,
+  EventHelper,
+  JulianDate
+} from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
 /**

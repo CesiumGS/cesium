@@ -1,5 +1,7 @@
-import defaultValue from "../../Core/defaultValue.js";
-import JulianDate from "../../Core/JulianDate.js";
+import {
+  defaultValue,
+  JulianDate,
+} from "@cesium/engine";
 
 /**
  * @private

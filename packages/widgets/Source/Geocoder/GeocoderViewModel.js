@@ -1,16 +1,18 @@
-import CartographicGeocoderService from "../../Core/CartographicGeocoderService.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Event from "../../Core/Event.js";
-import GeocodeType from "../../Core/GeocodeType.js";
-import IonGeocoderService from "../../Core/IonGeocoderService.js";
-import CesiumMath from "../../Core/Math.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Rectangle from "../../Core/Rectangle.js";
-import sampleTerrainMostDetailed from "../../Core/sampleTerrainMostDetailed.js";
-import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationForRectangle.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  CartographicGeocoderService,
+  computeFlyToLocationForRectangle,
+  defaultValue,
+  defined,
+  DeveloperError,
+  Event,
+  GeocodeType,
+  IonGeocoderService,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  sampleTerrainMostDetailed
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 

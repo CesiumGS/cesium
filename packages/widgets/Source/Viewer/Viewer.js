@@ -1,29 +1,34 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Clock from "../../Core/Clock.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Event from "../../Core/Event.js";
-import EventHelper from "../../Core/EventHelper.js";
-import HeadingPitchRange from "../../Core/HeadingPitchRange.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
-import BoundingSphereState from "../../DataSources/BoundingSphereState.js";
-import ConstantPositionProperty from "../../DataSources/ConstantPositionProperty.js";
-import DataSourceCollection from "../../DataSources/DataSourceCollection.js";
-import DataSourceDisplay from "../../DataSources/DataSourceDisplay.js";
-import Entity from "../../DataSources/Entity.js";
-import EntityView from "../../DataSources/EntityView.js";
-import Property from "../../DataSources/Property.js";
-import Cesium3DTileset from "../../Scene/Cesium3DTileset.js";
-import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationForRectangle.js";
-import ImageryLayer from "../../Scene/ImageryLayer.js";
-import SceneMode from "../../Scene/SceneMode.js";
-import TimeDynamicPointCloud from "../../Scene/TimeDynamicPointCloud.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  BoundingSphere,
+  BoundingSphereState,
+  Cartesian3,
+  Cartographic,
+  Cesium3DTileFeature,
+  Cesium3DTileset,
+  Clock,
+  computeFlyToLocationForRectangle,
+  ConstantPositionProperty,
+  DataSourceCollection,
+  DataSourceDisplay,
+  defaultValue,
+  defined,
+  destroyObject,
+  DeveloperError,
+  Entity,
+  EntityView,
+  Event,
+  EventHelper,
+  HeadingPitchRange,
+  ImageryLayer,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  Property,
+  SceneMode,
+  ScreenSpaceEventType,
+  TimeDynamicPointCloud,
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";
@@ -43,9 +48,6 @@ import SelectionIndicator from "../SelectionIndicator/SelectionIndicator.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
-import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
-import JulianDate from "../../Core/JulianDate.js";
-import CesiumMath from "../../Core/Math.js";
 
 const boundingSphereScratch = new BoundingSphere();
 

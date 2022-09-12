@@ -1,5 +1,7 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { 
+  Check,
+  defined
+ } from "@cesium/engine";
 
 /**
  * A static class with helper functions used by the CesiumInspector and Cesium3DTilesInspector

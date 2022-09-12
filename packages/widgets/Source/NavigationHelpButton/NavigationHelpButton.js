@@ -1,12 +1,20 @@
-import buildModuleUrl from "../../Core/buildModuleUrl.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import FeatureDetection from "../../Core/FeatureDetection.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  buildModuleUrl,
+  defaultValue,
+  defined,
+  destroyObject,
+  DeveloperError,
+  FeatureDetection
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import getElement from "../getElement.js";
 import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
+
+import {
+  buildModuleUrl,
+  defined,
+  Event,
+} from "@cesium/engine";
 
 /**
  * <p>The NavigationHelpButton is a single button widget for displaying instructions for
