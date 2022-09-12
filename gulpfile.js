@@ -750,20 +750,21 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   async function readAndUpload(file) {
     const blobName = `${uploadDirectory}/${file}`;
 
-    let content, etag, contentType, contentEncoding;
+    let fileContents;
     try {
-      const fileContents = await getContents(file, blobName);
-      content = fileContents.content;
-      etag = fileContents.etag;
-      contentType = fileContents.contentType;
-      contentEncoding = fileContents.encoding;
+      fileContents = await getContents(file, blobName);
     } catch (e) {
       errors.push(e);
     }
 
-    if (!content) {
+    if (!fileContents) {
       return;
     }
+
+    const content = fileContents.content;
+    const etag = fileContents.etag;
+    const contentType = fileContents.contentType;
+    const contentEncoding = fileContents.encoding;
 
     if (verbose) {
       console.log(`Uploading ${blobName}...`);
