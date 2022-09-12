@@ -4,6 +4,8 @@ node_js:
 addons:
   chrome: stable
   firefox: latest
+notifications:
+  slack: cesium:$SLACK_TOKEN
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
