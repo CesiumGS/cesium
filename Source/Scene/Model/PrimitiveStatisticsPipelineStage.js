@@ -15,8 +15,9 @@ import ModelUtility from "./ModelUtility.js";
  *
  * @private
  */
-const PrimitiveStatisticsPipelineStage = {};
-PrimitiveStatisticsPipelineStage.name = "PrimitiveStatisticsPipelineStage"; // Helps with debugging
+const PrimitiveStatisticsPipelineStage = {
+  name: "PrimitiveStatisticsPipelineStage", // Helps with debugging
+};
 
 PrimitiveStatisticsPipelineStage.process = function (
   renderResources,

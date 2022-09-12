@@ -30,8 +30,9 @@ const modelView2DScratch = new Matrix4();
  * @namespace InstancingPipelineStage
  * @private
  */
-const InstancingPipelineStage = {};
-InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debugging
+const InstancingPipelineStage = {
+  name: "InstancingPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a node. This modifies the following parts of the render resources:

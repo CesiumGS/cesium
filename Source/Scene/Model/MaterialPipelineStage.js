@@ -29,8 +29,9 @@ const SpecularGlossiness = ModelComponents.SpecularGlossiness;
  *
  * @private
  */
-const MaterialPipelineStage = {};
-MaterialPipelineStage.name = "MaterialPipelineStage"; // Helps with debugging
+const MaterialPipelineStage = {
+  name: "MaterialPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
