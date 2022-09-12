@@ -228,49 +228,49 @@ async function buildWorkspace(options) {
   await createIndexJs(workspace);
 }
 
+// TODO: This needs to be redone to avoid duplicating tasks.
 async function buildCesium(options) {
   options = options || {};
+  mkdirp.sync("Build");
 
-  return Promise.resolve();
+  const outputDirectory = join(
+    "Build",
+    `Cesium${!options.minify ? "Unminified" : ""}`
+  );
+  rimraf.sync(outputDirectory);
 
-  // const outputDirectory = join(
-  //   "Build",
-  //   `Cesium${!options.minify ? "Unminified" : ""}`
-  // );
-  // rimraf.sync(outputDirectory);
+  writeFileSync(
+    "Build/package.json",
+    JSON.stringify({
+      type: "commonjs",
+    }),
+    "utf8"
+  );
 
-  // writeFileSync(
-  //   "Build/package.json",
-  //   JSON.stringify({
-  //     type: "commonjs",
-  //   }),
-  //   "utf8"
-  // );
+  await glslToJavaScript(options.minify, "Build/minifyShaders.state");
+  await createCesiumJs();
+  await createSpecList();
+  await Promise.all([
+    createJsHintOptions(),
+    buildCesiumJs({
+      minify: options.minify,
+      iife: true,
+      sourcemap: options.sourcemap,
+      removePragmas: options.removePragmas,
+      path: outputDirectory,
+      node: options.node,
+    }),
+    buildWorkers({
+      minify: options.minify,
+      sourcemap: options.sourcemap,
+      path: outputDirectory,
+      removePragmas: options.removePragmas,
+    }),
+    createGalleryList(noDevelopmentGallery),
+    buildSpecs(),
+  ]);
 
-  // await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-  // await createCesiumJs();
-  //await createSpecList();
-  // await Promise.all([
-  //   createJsHintOptions(),
-  //   buildCesiumJs({
-  //     minify: options.minify,
-  //     iife: true,
-  //     sourcemap: options.sourcemap,
-  //     removePragmas: options.removePragmas,
-  //     path: outputDirectory,
-  //     node: options.node,
-  //   }),
-  //   buildWorkers({
-  //     minify: options.minify,
-  //     sourcemap: options.sourcemap,
-  //     path: outputDirectory,
-  //     removePragmas: options.removePragmas,
-  //   }),
-  //   createGalleryList(noDevelopmentGallery),
-  //   buildSpecs(),
-  // ]);
-
-  // return copyAssets(outputDirectory);
+  return copyAssets(outputDirectory);
 }
 
 export function build() {

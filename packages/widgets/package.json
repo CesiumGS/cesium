@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "devDependencies": {},
+  "types": "widgets.d.ts",
+  "devDependencies": {
+    "@cesium/engine": "*"
+  },
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets"
   },
@@ -19,6 +22,5 @@
   },
   "bugs": {
     "url": "https://github.com/CesiumGS/cesium/issues"
-  },
-  "types": "widgets.d.ts"
+  }
 }

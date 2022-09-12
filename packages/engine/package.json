@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "types": "engine.d.ts",
   "devDependencies": {},
   "scripts": {
     "build": "gulp build --workspace @cesium/engine"
@@ -19,6 +20,5 @@
   },
   "bugs": {
     "url": "https://github.com/CesiumGS/cesium/issues"
-  },
-  "types": "engine.d.ts"
+  }
 }
