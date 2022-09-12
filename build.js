@@ -1,31 +1,31 @@
 /*eslint-env node*/
-"use strict";
+import child_process from "child_process";
+import { readFileSync, existsSync, statSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
+import { EOL } from "os";
+import path from "path";
+import { createRequire } from "module";
 
-const child_process = require("child_process");
-const fs = require("fs");
-const { readFile } = require("fs/promises");
-const os = require("os");
-const path = require("path");
+import esbuild from "esbuild";
+import { globby } from "globby";
+import glslStripComments from "glsl-strip-comments";
+import gulp from "gulp";
+import rimraf from "rimraf";
+import { rollup } from "rollup";
+import rollupPluginStripPragma from "rollup-plugin-strip-pragma";
+import { terser } from "rollup-plugin-terser";
+import rollupCommonjs from "@rollup/plugin-commonjs";
+import rollupResolve from "@rollup/plugin-node-resolve";
+import streamToPromise from "stream-to-promise";
 
-const esbuild = require("esbuild");
-const globby = require("globby");
-const glslStripComments = require("glsl-strip-comments");
-const gulp = require("gulp");
-const rimraf = require("rimraf");
-const rollup = require("rollup");
-const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
-const rollupPluginTerser = require("rollup-plugin-terser");
-const rollupCommonjs = require("@rollup/plugin-commonjs");
-const rollupResolve = require("@rollup/plugin-node-resolve").default;
-const streamToPromise = require("stream-to-promise");
-
+const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
 let version = packageJson.version;
 if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 
-let copyrightHeader = fs.readFileSync(
+let copyrightHeader = readFileSync(
   path.join("Source", "copyrightHeader.js"),
   "utf8"
 );
@@ -56,7 +56,7 @@ const stripPragmaPlugin = {
   name: "strip-pragmas",
   setup: (build) => {
     build.onLoad({ filter: /\.js$/ }, async (args) => {
-      let source = await readFile(args.path, "utf8");
+      let source = await readFile(args.path, { encoding: "utf8" });
 
       try {
         for (const key in pragmas) {
@@ -106,7 +106,7 @@ function handleBuildWarnings(result) {
 }
 
 const cssFiles = "Source/**/*.css";
-const esbuildBaseConfig = () => {
+export function esbuildBaseConfig() {
   return {
     target: "es2020",
     legalComments: "inline",
@@ -114,7 +114,7 @@ const esbuildBaseConfig = () => {
       js: copyrightHeader,
     },
   };
-};
+}
 
 /**
  * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
@@ -129,7 +129,7 @@ const esbuildBaseConfig = () => {
  * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise.<Array>}
  */
-async function buildCesiumJs(options) {
+export async function buildCesiumJs(options) {
   const css = await globby(cssFiles);
 
   const buildConfig = esbuildBaseConfig();
@@ -224,9 +224,10 @@ const sourceFiles = [
  * Creates a single entry point file, Cesium.js, which imports all individual modules exported from the Cesium API.
  * @returns {Buffer} contents
  */
-function createCesiumJs() {
+export async function createCesiumJs() {
   let contents = `export const VERSION = '${version}';\n`;
-  globby.sync(sourceFiles).forEach(function (file) {
+  const files = await globby(sourceFiles);
+  files.forEach(function (file) {
     file = path.relative("Source", file);
 
     let moduleId = file;
@@ -237,10 +238,10 @@ function createCesiumJs() {
       assignmentName = `_shaders${assignmentName}`;
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${os.EOL}`;
+    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
   });
 
-  fs.writeFileSync("Source/Cesium.js", contents);
+  await writeFile("Source/Cesium.js", contents, { encoding: "utf-8" });
 
   return contents;
 }
@@ -249,8 +250,8 @@ function createCesiumJs() {
  * Creates a single entry point file, SpecList.js, which imports all individual spec files.
  * @returns {Buffer} contents
  */
-function createSpecList() {
-  const files = globby.sync(["Specs/**/*Spec.js"]);
+export async function createSpecList() {
+  const files = await globby(["Specs/**/*Spec.js"]);
 
   let contents = "";
   files.forEach(function (file) {
@@ -260,7 +261,9 @@ function createSpecList() {
     )}.js';\n`;
   });
 
-  fs.writeFileSync(path.join("Specs", "SpecList.js"), contents);
+  await writeFile(path.join("Specs", "SpecList.js"), contents, {
+    encoding: "utf-8",
+  });
 
   return contents;
 }
@@ -283,7 +286,7 @@ function rollupWarning(message) {
  * @param {String} options.path output directory
  * @returns {Promise.<*>}
  */
-async function buildWorkers(options) {
+export async function buildWorkers(options) {
   // Copy existing workers
   const workers = await globby([
     "Source/Workers/**",
@@ -312,10 +315,10 @@ async function buildWorkers(options) {
   }
 
   if (options.minify) {
-    plugins.push(rollupPluginTerser.terser());
+    plugins.push(terser());
   }
 
-  const bundle = await rollup.rollup({
+  const bundle = await rollup({
     input: files,
     plugins: plugins,
     onwarn: rollupWarning,
@@ -334,91 +337,95 @@ const shaderFiles = [
   "Source/Shaders/**/*.glsl",
   "Source/ThirdParty/Shaders/*.glsl",
 ];
-function glslToJavaScript(minify, minifyStateFilePath) {
-  fs.writeFileSync(minifyStateFilePath, minify.toString());
-  const minifyStateFileLastModified = fs.existsSync(minifyStateFilePath)
-    ? fs.statSync(minifyStateFilePath).mtime.getTime()
+export async function glslToJavaScript(minify, minifyStateFilePath) {
+  await writeFile(minifyStateFilePath, minify.toString());
+  const minifyStateFileLastModified = existsSync(minifyStateFilePath)
+    ? statSync(minifyStateFilePath).mtime.getTime()
     : 0;
 
   // collect all currently existing JS files into a set, later we will remove the ones
   // we still are using from the set, then delete any files remaining in the set.
   const leftOverJsFiles = {};
 
-  globby
-    .sync(["Source/Shaders/**/*.js", "Source/ThirdParty/Shaders/*.js"])
-    .forEach(function (file) {
-      leftOverJsFiles[path.normalize(file)] = true;
-    });
+  const files = await globby([
+    "Source/Shaders/**/*.js",
+    "Source/ThirdParty/Shaders/*.js",
+  ]);
+  files.forEach(function (file) {
+    leftOverJsFiles[path.normalize(file)] = true;
+  });
 
   const builtinFunctions = [];
   const builtinConstants = [];
   const builtinStructs = [];
 
-  const glslFiles = globby.sync(shaderFiles);
-  glslFiles.forEach(function (glslFile) {
-    glslFile = path.normalize(glslFile);
-    const baseName = path.basename(glslFile, ".glsl");
-    const jsFile = `${path.join(path.dirname(glslFile), baseName)}.js`;
+  const glslFiles = await globby(shaderFiles);
+  await Promise.all(
+    glslFiles.map(async function (glslFile) {
+      glslFile = path.normalize(glslFile);
+      const baseName = path.basename(glslFile, ".glsl");
+      const jsFile = `${path.join(path.dirname(glslFile), baseName)}.js`;
 
-    // identify built in functions, structs, and constants
-    const baseDir = path.join("Source", "Shaders", "Builtin");
-    if (
-      glslFile.indexOf(path.normalize(path.join(baseDir, "Functions"))) === 0
-    ) {
-      builtinFunctions.push(baseName);
-    } else if (
-      glslFile.indexOf(path.normalize(path.join(baseDir, "Constants"))) === 0
-    ) {
-      builtinConstants.push(baseName);
-    } else if (
-      glslFile.indexOf(path.normalize(path.join(baseDir, "Structs"))) === 0
-    ) {
-      builtinStructs.push(baseName);
-    }
+      // identify built in functions, structs, and constants
+      const baseDir = path.join("Source", "Shaders", "Builtin");
+      if (
+        glslFile.indexOf(path.normalize(path.join(baseDir, "Functions"))) === 0
+      ) {
+        builtinFunctions.push(baseName);
+      } else if (
+        glslFile.indexOf(path.normalize(path.join(baseDir, "Constants"))) === 0
+      ) {
+        builtinConstants.push(baseName);
+      } else if (
+        glslFile.indexOf(path.normalize(path.join(baseDir, "Structs"))) === 0
+      ) {
+        builtinStructs.push(baseName);
+      }
 
-    delete leftOverJsFiles[jsFile];
+      delete leftOverJsFiles[jsFile];
 
-    const jsFileExists = fs.existsSync(jsFile);
-    const jsFileModified = jsFileExists
-      ? fs.statSync(jsFile).mtime.getTime()
-      : 0;
-    const glslFileModified = fs.statSync(glslFile).mtime.getTime();
+      const jsFileExists = existsSync(jsFile);
+      const jsFileModified = jsFileExists
+        ? statSync(jsFile).mtime.getTime()
+        : 0;
+      const glslFileModified = statSync(glslFile).mtime.getTime();
 
-    if (
-      jsFileExists &&
-      jsFileModified > glslFileModified &&
-      jsFileModified > minifyStateFileLastModified
-    ) {
-      return;
-    }
+      if (
+        jsFileExists &&
+        jsFileModified > glslFileModified &&
+        jsFileModified > minifyStateFileLastModified
+      ) {
+        return;
+      }
 
-    let contents = fs.readFileSync(glslFile, "utf8");
-    contents = contents.replace(/\r\n/gm, "\n");
+      let contents = await readFile(glslFile, { encoding: "utf8" });
+      contents = contents.replace(/\r\n/gm, "\n");
 
-    let copyrightComments = "";
-    const extractedCopyrightComments = contents.match(
-      /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm
-    );
-    if (extractedCopyrightComments) {
-      copyrightComments = `${extractedCopyrightComments.join("\n")}\n`;
-    }
+      let copyrightComments = "";
+      const extractedCopyrightComments = contents.match(
+        /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm
+      );
+      if (extractedCopyrightComments) {
+        copyrightComments = `${extractedCopyrightComments.join("\n")}\n`;
+      }
 
-    if (minify) {
-      contents = glslStripComments(contents);
-      contents = contents
-        .replace(/\s+$/gm, "")
-        .replace(/^\s+/gm, "")
-        .replace(/\n+/gm, "\n");
-      contents += "\n";
-    }
+      if (minify) {
+        contents = glslStripComments(contents);
+        contents = contents
+          .replace(/\s+$/gm, "")
+          .replace(/^\s+/gm, "")
+          .replace(/\n+/gm, "\n");
+        contents += "\n";
+      }
 
-    contents = contents.split('"').join('\\"').replace(/\n/gm, "\\n\\\n");
-    contents = `${copyrightComments}\
+      contents = contents.split('"').join('\\"').replace(/\n/gm, "\\n\\\n");
+      contents = `${copyrightComments}\
 //This file is automatically rebuilt by the Cesium build process.\n\
 export default "${contents}";\n`;
 
-    fs.writeFileSync(jsFile, contents);
-  });
+      return writeFile(jsFile, contents);
+    })
+  );
 
   // delete any left over JS files from old shaders
   Object.keys(leftOverJsFiles).forEach(function (filepath) {
@@ -448,7 +455,7 @@ export default "${contents}";\n`;
     "\n"
   )}\n\nexport default {\n    ${contents.builtinLookup.join(",\n    ")}\n};\n`;
 
-  fs.writeFileSync(
+  return writeFile(
     path.join("Source", "Shaders", "Builtin", "CzmBuiltins.js"),
     fileContents
   );
@@ -484,7 +491,7 @@ const externalResolvePlugin = {
  * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
  * @returns {Promise.<*>}
  */
-function createGalleryList(noDevelopmentGallery) {
+export async function createGalleryList(noDevelopmentGallery) {
   const demoObjects = [];
   const demoJSONs = [];
   const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
@@ -518,7 +525,8 @@ function createGalleryList(noDevelopmentGallery) {
   }
 
   let helloWorld;
-  globby.sync(fileList).forEach(function (file) {
+  const files = await globby(fileList);
+  files.forEach(function (file) {
     const demo = filePathToModuleId(
       path.relative("Apps/Sandcastle/gallery", file)
     );
@@ -528,7 +536,7 @@ function createGalleryList(noDevelopmentGallery) {
       isNew: newDemos.includes(file),
     };
 
-    if (fs.existsSync(`${file.replace(".html", "")}.jpg`)) {
+    if (existsSync(`${file.replace(".html", "")}.jpg`)) {
       demoObject.img = `${demo}.jpg`;
     }
 
@@ -561,7 +569,7 @@ const VERSION = '${version}';\n\
 const gallery_demos = [${demoJSONs.join(", ")}];\n\
 const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 
-  fs.writeFileSync(output, contents);
+  await writeFile(output, contents);
 
   // Compile CSS for Sandcastle
   return esbuild.build({
@@ -577,81 +585,74 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
   });
 }
 
-module.exports = {
-  esbuildBaseConfig,
-  createCesiumJs,
-  buildCesiumJs,
-  buildWorkers,
-  glslToJavaScript,
-  createSpecList,
-  /**
-   * Bundles
-   * @param {Object} options
-   * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
-   * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
-   * @returns {Promise.<*>}
-   */
-  buildSpecs: async (options) => {
-    options = options || {};
+/**
+ * Copies non-js assets to the output directory
+ *
+ * @param {String} outputDirectory
+ * @returns {Promise.<*>}
+ */
+export function copyAssets(outputDirectory) {
+  const everythingElse = [
+    "Source/**",
+    "!**/*.js",
+    "!**/*.glsl",
+    "!**/*.css",
+    "!**/*.md",
+  ];
 
-    const results = await esbuild.build({
-      entryPoints: [
-        "Specs/spec-main.js",
-        "Specs/SpecList.js",
-        "Specs/karma-main.js",
-      ],
-      bundle: true,
-      format: "esm",
-      sourcemap: true,
-      target: "es2020",
-      outdir: path.join("Build", "Specs"),
-      plugins: [externalResolvePlugin],
-      incremental: options.incremental,
-      write: options.write,
-    });
+  const stream = gulp
+    .src(everythingElse, { nodir: true })
+    .pipe(gulp.dest(outputDirectory));
 
-    return results;
-  },
-  /**
-   * Copies non-js assets to the output directory
-   *
-   * @param {String} outputDirectory
-   * @returns {Promise.<*>}
-   */
-  copyAssets: (outputDirectory) => {
-    const everythingElse = [
-      "Source/**",
-      "!**/*.js",
-      "!**/*.glsl",
-      "!**/*.css",
-      "!**/*.md",
-    ];
+  return streamToPromise(stream);
+}
 
-    const stream = gulp
-      .src(everythingElse, { nodir: true })
-      .pipe(gulp.dest(outputDirectory));
+/**
+ * Creates .jshintrc for use in Sandcastle
+ * @returns {Buffer} contents
+ */
+export async function createJsHintOptions() {
+  const jshintrc = JSON.parse(
+    await readFile(path.join("Apps", "Sandcastle", ".jshintrc"), {
+      encoding: "utf8",
+    })
+  );
 
-    return streamToPromise(stream);
-  },
-  /**
-   * Creates .jshintrc for use in Sandcastle
-   * @returns {Buffer} contents
-   */
-  createJsHintOptions: () => {
-    const jshintrc = JSON.parse(
-      fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")
-    );
+  const contents = `\
+  // This file is automatically rebuilt by the Cesium build process.\n\
+  const sandcastleJsHintOptions = ${JSON.stringify(jshintrc, null, 4)};\n`;
 
-    const contents = `\
-    // This file is automatically rebuilt by the Cesium build process.\n\
-    const sandcastleJsHintOptions = ${JSON.stringify(jshintrc, null, 4)};\n`;
+  await writeFile(
+    path.join("Apps", "Sandcastle", "jsHintOptions.js"),
+    contents
+  );
 
-    fs.writeFileSync(
-      path.join("Apps", "Sandcastle", "jsHintOptions.js"),
-      contents
-    );
+  return contents;
+}
 
-    return contents;
-  },
-  createGalleryList,
-};
+/**
+ * Bundles spec files for testing in the browser and on the command line with karma.
+ * @param {Object} options
+ * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
+ * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ * @returns {Promise.<*>}
+ */
+export function buildSpecs(options) {
+  options = options || {};
+
+  return esbuild.build({
+    entryPoints: [
+      "Specs/spec-main.js",
+      "Specs/SpecList.js",
+      "Specs/karma-main.js",
+    ],
+    bundle: true,
+    format: "esm",
+    sourcemap: true,
+    target: "es2020",
+    outdir: path.join("Build", "Specs"),
+    plugins: [externalResolvePlugin],
+    incremental: options.incremental,
+    write: options.write,
+  });
+}

@@ -1,42 +1,39 @@
 /*eslint-env node*/
-"use strict";
+import fs from "fs";
+import path from "path";
+import { performance } from "perf_hooks";
+import request from "request";
+import { URL } from "url";
 
-const fs = require("fs");
-const path = require("path");
-const { performance } = require("perf_hooks");
-const request = require("request");
-const { URL } = require("url");
+import chokidar from "chokidar";
+import compression from "compression";
+import express from "express";
+import mkdirp from "mkdirp";
+import rimraf from "rimraf";
+import yargs from "yargs";
 
-const chokidar = require("chokidar");
-const compression = require("compression");
-const express = require("express");
-const mkdirp = require("mkdirp");
-const rimraf = require("rimraf");
-const yargs = require("yargs").options({
-  port: {
-    default: 8080,
-    description: "Port to listen on.",
-  },
-  public: {
-    type: "boolean",
-    description: "Run a public server that listens on all interfaces.",
-  },
-  "upstream-proxy": {
-    description:
-      'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
-  },
-  "bypass-upstream-proxy-hosts": {
-    description:
-      'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
-  },
-  help: {
-    alias: "h",
-    type: "boolean",
-    description: "Show this help.",
-  },
-});
+const argv = yargs(process.argv)
+  .options({
+    port: {
+      default: 8080,
+      description: "Port to listen on.",
+    },
+    public: {
+      type: "boolean",
+      description: "Run a public server that listens on all interfaces.",
+    },
+    "upstream-proxy": {
+      description:
+        'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
+    },
+    "bypass-upstream-proxy-hosts": {
+      description:
+        'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
+    },
+  })
+  .help().argv;
 
-const {
+import {
   buildCesiumJs,
   buildSpecs,
   buildWorkers,
@@ -46,7 +43,7 @@ const {
   createJsHintOptions,
   createSpecList,
   glslToJavaScript,
-} = require("./build.cjs");
+} from "./build.js";
 
 const sourceFiles = [
   "Source/**/*.js",
@@ -89,10 +86,10 @@ async function buildDev() {
     "utf8"
   );
 
-  glslToJavaScript(false, "Build/minifyShaders.state");
-  createCesiumJs();
-  createSpecList();
-  createJsHintOptions();
+  await glslToJavaScript(false, "Build/minifyShaders.state");
+  await createCesiumJs();
+  await createSpecList();
+  await createJsHintOptions();
 
   const [esmResult, iifeResult] = await buildCesiumJs({
     iife: true,
@@ -146,12 +143,6 @@ const serveResult = (result, fileName, res, next) => {
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
-  const argv = yargs.argv;
-
-  if (argv.help) {
-    return yargs.showHelp();
-  }
-
   let { esmResult, iifeResult, specResult } = await buildDev();
 
   // eventually this mime type configuration will need to change
@@ -242,7 +233,7 @@ const serveResult = (result, fileName, res, next) => {
     if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
-        createCesiumJs();
+        await createCesiumJs();
         iifeResult = await iifeResult.rebuild();
         console.log(
           `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
@@ -264,7 +255,7 @@ const serveResult = (result, fileName, res, next) => {
     if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
-        createCesiumJs();
+        await createCesiumJs();
         iifeResult = await iifeResult.rebuild();
         console.log(
           `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
@@ -282,7 +273,7 @@ const serveResult = (result, fileName, res, next) => {
     if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
-        createCesiumJs();
+        await createCesiumJs();
         esmResult = await esmResult.rebuild();
         console.log(
           `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
@@ -303,7 +294,7 @@ const serveResult = (result, fileName, res, next) => {
     if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
       try {
         const start = performance.now();
-        createCesiumJs();
+        await createCesiumJs();
         esmResult = await esmResult.rebuild();
         console.log(
           `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
@@ -318,7 +309,7 @@ const serveResult = (result, fileName, res, next) => {
 
   const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
   glslWatcher.on("all", async () => {
-    glslToJavaScript(false, "Build/minifyShaders.state");
+    await glslToJavaScript(false, "Build/minifyShaders.state");
     esmResult.outputFiles = [];
     iifeResult.outputFiles = [];
   });
@@ -336,7 +327,7 @@ const serveResult = (result, fileName, res, next) => {
   //eslint-disable-next-line no-unused-vars
   app.get("/Apps/Sandcastle/jsHintOptions.js", async function (req, res, next) {
     if (!jsHintOptionsCache) {
-      jsHintOptionsCache = createJsHintOptions();
+      jsHintOptionsCache = await createJsHintOptions();
     }
 
     res.append("Cache-Control", "max-age=0");
@@ -370,13 +361,13 @@ const serveResult = (result, fileName, res, next) => {
   const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
   specWatcher.on("all", async (event) => {
     if (event === "add" || event === "unlink") {
-      createSpecList();
+      await createSpecList();
     }
 
     specResult.outputFiles = [];
   });
 
-  app.use(express.static(__dirname));
+  app.use(express.static(path.resolve(".")));
 
   function getRemoteUrlFromParam(req) {
     let remoteUrl = req.params[0];
@@ -488,7 +479,7 @@ const serveResult = (result, fileName, res, next) => {
         "Error: Port %d is already in use, select a different port.",
         argv.port
       );
-      console.log("Example: node server.cjs --port %d", argv.port + 1);
+      console.log("Example: node server.js --port %d", argv.port + 1);
     } else if (e.code === "EACCES") {
       console.log(
         "Error: This process does not have permission to listen on port %d.",
