@@ -118,10 +118,10 @@ MetadataPipelineStage.process = function (
 /**
  * Collect info about all properties of all propertyAttributes, and
  * return as a flattened Array
- * @param {PropertyAttribute[]} propertyAttributes
- * @param {ModelComponents.Primitive} primitive
- * @param {Object} statistics
- * @returns {Object[]}
+ * @param {PropertyAttribute[]} propertyAttributes The PropertyAttributes with properties to be described
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {Object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
+ * @returns {Object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
 function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
@@ -134,11 +134,11 @@ function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
 }
 
 /**
- * Collect info about the properties of a PropertyAttribute
- * @param {PropertyAttribute} propertyAttribute
- * @param {ModelComponents.Primitive} primitive
- * @param {Object} statistics
- * @returns {Object[]}
+ * Collect info about the properties of a single PropertyAttribute
+ * @param {PropertyAttribute} propertyAttribute The PropertyAttribute with properties to be described
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {Object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
+ * @returns {Object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
 function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
@@ -176,9 +176,9 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
 /**
  * Collect info about all properties of all propertyTextures, and
  * return as a flattened Array
- * @param {PropertyTexture[]} propertyTextures
- * @param {Object} statistics
- * @returns {Object[]}
+ * @param {PropertyTexture[]} propertyTextures The PropertyTextures with properties to be described
+ * @param {Object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
+ * @returns {Object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
 function getPropertyTexturesInfo(propertyTextures, statistics) {
@@ -191,10 +191,10 @@ function getPropertyTexturesInfo(propertyTextures, statistics) {
 }
 
 /**
- * Collect info about the properties of a PropertyTexture
- * @param {PropertyTexture} propertyTexture
- * @param {Object} statistics
- * @returns {Object[]}
+ * Collect info about the properties of a single PropertyTexture
+ * @param {PropertyTexture} propertyTexture The PropertyTexture with properties to be described
+ * @param {Object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
+ * @returns {Object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
 function getPropertyTextureInfo(propertyTexture, statistics) {
@@ -225,10 +225,9 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
 }
 
 /**
- * Declare <type>MetadataClass structs in the shader
+ * Declare <type>MetadataClass structs in the shader for each PropertyAttributeProperty and PropertyTextureProperty
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
- * @param {Set<String>} metadataTypes The types of metadata used in the shaders
- * @param {Object} statistics Statistics about the metadata.
+ * @param {Object[]} propertyInfos Information about the PropertyAttributeProperties and PropertyTextureProperties
  * @private
  */
 function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
@@ -280,7 +279,7 @@ const floatConversions = {
 /**
  * For a type with integer components, find a corresponding float-component type
  * @param {String} type The name of a GLSL type with integer components
- * @returns {String}
+ * @returns {String} The name of a GLSL type of the same dimension with float components, if available; otherwise the input type
  * @private
  */
 function convertToFloatComponents(type) {
@@ -288,6 +287,12 @@ function convertToFloatComponents(type) {
   return defined(converted) ? converted : type;
 }
 
+/**
+ * Declare the main Metadata, MetadataClass, and MetadataStatistics structs
+ * and the initializeMetadata() function.
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @private
+ */
 function declareStructsAndFunctions(shaderBuilder) {
   // Declare the Metadata struct.
   shaderBuilder.addStruct(
@@ -348,8 +353,8 @@ function declareStructsAndFunctions(shaderBuilder) {
 
 /**
  * Update the shader for a single PropertyAttributeProperty
- * @param {PrimitiveRenderResources} renderResources
- * @param {Object} propertyInfo
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {Object} propertyInfo Info about the PropertyAttributeProperty
  * @private
  */
 function processPropertyAttributeProperty(renderResources, propertyInfo) {
@@ -361,8 +366,8 @@ function processPropertyAttributeProperty(renderResources, propertyInfo) {
 /**
  * Add fields to the Metadata struct, and metadata value assignments to the
  * initializeMetadata function, for a PropertyAttributeProperty
- * @param {PrimitiveRenderResources} renderResources
- * @param {Object} propertyInfo
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {Object} propertyInfo Info about the PropertyAttributeProperty
  * @private
  */
 function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
@@ -404,8 +409,8 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
 
 /**
  * Update the shader for a single PropertyTextureProperty
- * @param {PrimitiveRenderResources} renderResources
- * @param {Object[]} propertyInfo
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {Object[]} propertyInfo Info about the PropertyTextureProperty
  * @private
  */
 function processPropertyTextureProperty(renderResources, propertyInfo) {
@@ -417,8 +422,8 @@ function processPropertyTextureProperty(renderResources, propertyInfo) {
 /**
  * Add fields to the Metadata struct, and metadata value expressions to the
  * initializeMetadata function, for a PropertyTextureProperty
- * @param {PrimitiveRenderResources} renderResources
- * @param {Object} propertyInfo
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {Object} propertyInfo Info about the PropertyTextureProperty
  * @private
  */
 function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
@@ -474,8 +479,8 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
  * Add fields to the MetadataClass struct, and metadataClass value expressions
  * to the initializeMetadata function, for a PropertyAttributeProperty or
  * PropertyTextureProperty
- * @param {ShaderBuilder} shaderBuilder
- * @param {Object} propertyInfo
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @param {Object} propertyInfo Info about the PropertyAttributeProperty or PropertyTextureProperty
  * @private
  */
 function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
@@ -519,8 +524,8 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
  * Add fields to the MetadataStatistics struct, and metadataStatistics value
  * expressions to the initializeMetadata function, for a
  * PropertyAttributeProperty or PropertyTextureProperty
- * @param {ShaderBuilder} shaderBuilder
- * @param {Object} propertyInfo
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @param {Object} propertyInfo Info about the PropertyAttributeProperty or PropertyTextureProperty
  * @private
  */
 function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
@@ -571,13 +576,13 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
 
 /**
  * Construct GLSL assignment statements to set metadata spec values in a struct
- * @param {Object[]} fieldNames
+ * @param {Object[]} fieldNames An object with the following properties:
  * @param {String} fieldNames[].specName The name of the property in the spec
  * @param {String} fieldNames[].shaderName The name of the property in the shader
  * @param {Object} values A source of property values, keyed on fieldNames[].specName
  * @param {String} struct The name of the struct to which values will be assigned
  * @param {String} type The type of the values to be assigned
- * @returns {Array.<{name: String, value}>}
+ * @returns {Array.<{name: String, value}>} Objects containing the property name (in the shader) and a GLSL assignment statement for the property value
  * @private
  */
 function getStructAssignments(fieldNames, values, struct, type) {
@@ -604,7 +609,7 @@ function getStructAssignments(fieldNames, values, struct, type) {
  * @param {ShaderDestination} options.shaderDestination Which shader(s) use this variable
  * @param {PrimitiveRenderResources} options.renderResources The render resources for this primitive
  * @param {(PropertyAttributeProperty|PropertyTextureProperty)} options.property The property from which the value is derived
- * @returns {String}
+ * @returns {String} A wrapped GLSL value expression
  * @private
  */
 function addValueTransformUniforms(options) {
