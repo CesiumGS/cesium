@@ -93,6 +93,14 @@ const workspaceSourceFiles = {
   "@cesium/widgets": ["Source/**/*.js"],
 };
 
+const workspaceShaderFiles = {
+  "@cesium/engine": [
+    "Source/Shaders/**/*.glsl",
+    "Source/ThirdParty/Shaders/*.glsl",
+  ],
+  "@cesium/widgets": [],
+};
+
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
   "Specs/**/*Spec.js",
@@ -174,7 +182,7 @@ async function createIndexJs(workspace) {
     // Rename shader files, such that ViewportQuadFS.glsl is exported as _shadersViewportQuadFS in JS.
 
     let assignmentName = basename(file, extname(file));
-    if (moduleId.indexOf("Shaders/") === 0) {
+    if (moduleId.indexOf("Source/Shaders/") === 0) {
       assignmentName = `_shaders${assignmentName}`;
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
@@ -205,9 +213,19 @@ async function buildWorkspace(options) {
     process.exit(-1);
   }
 
+  // Build shaders, if needed.
+
+  if (workspace === "@cesium/engine") {
+    // TODO: Use workspaceShaderFiles to make this more generic.
+    await glslToJavaScript(
+      options.minify,
+      "../../Build/minifyShaders.state"
+    );
+  }
+
   // Create index.js for workspace.
 
-  createIndexJs(workspace);
+  await createIndexJs(workspace);
 }
 
 async function buildCesium(options) {

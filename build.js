@@ -334,8 +334,8 @@ export async function buildWorkers(options) {
 }
 
 const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  "Source/Shaders/**/*.glsl",
+  "Source/ThirdParty/Shaders/*.glsl",
 ];
 export async function glslToJavaScript(minify, minifyStateFilePath) {
   await writeFile(minifyStateFilePath, minify.toString());
@@ -348,8 +348,8 @@ export async function glslToJavaScript(minify, minifyStateFilePath) {
   const leftOverJsFiles = {};
 
   const files = await globby([
-    "packages/engine/Source/Shaders/**/*.js",
-    "packages/engine/Source/ThirdParty/Shaders/*.js",
+    "Source/Shaders/**/*.js",
+    "Source/ThirdParty/Shaders/*.js",
   ]);
   files.forEach(function (file) {
     leftOverJsFiles[path.normalize(file)] = true;
@@ -367,7 +367,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath) {
       const jsFile = `${path.join(path.dirname(glslFile), baseName)}.js`;
 
       // identify built in functions, structs, and constants
-      const baseDir = path.join("packages/engine/Source", "Shaders", "Builtin");
+      const baseDir = path.join("Source", "Shaders", "Builtin");
       if (
         glslFile.indexOf(path.normalize(path.join(baseDir, "Functions"))) === 0
       ) {
@@ -456,7 +456,7 @@ export default "${contents}";\n`;
   )}\n\nexport default {\n    ${contents.builtinLookup.join(",\n    ")}\n};\n`;
 
   return writeFile(
-    path.join("packages/engine/Source", "Shaders", "Builtin", "CzmBuiltins.js"),
+    path.join("Source", "Shaders", "Builtin", "CzmBuiltins.js"),
     fileContents
   );
 }

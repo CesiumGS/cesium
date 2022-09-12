@@ -45,3 +45,14 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
+
+# @cesium/engine
+packages/engine/index.js
+packages/engine/engine.d.ts
+packages/engine/Source/Shaders/**/*.js
+packages/engine/Source/Workers/**
+packages/engine/Source/ThirdParty/Shaders/**/*.js
+
+# @cesium/widgets
+packages/widgets/index.js
+packages/widgets/widgets.d.ts
