@@ -764,7 +764,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     const content = fileContents.content;
     const etag = fileContents.etag;
     const contentType = fileContents.contentType;
-    const contentEncoding = fileContents.encoding;
+    const contentEncoding = fileContents.contentEncoding;
 
     if (verbose) {
       console.log(`Uploading ${blobName}...`);
