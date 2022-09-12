@@ -83,7 +83,7 @@ MetadataPipelineStage.process = function (
 ) {
   const { shaderBuilder, model } = renderResources;
   const { structuralMetadata = {}, content } = model;
-  const statistics = content?.tileset?.metadataExtension?.statistics;
+  const statistics = content?.tileset.metadataExtension?.statistics;
 
   const propertyAttributesInfo = getPropertyAttributesInfo(
     structuralMetadata.propertyAttributes,
