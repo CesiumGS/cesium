@@ -174,5 +174,9 @@
       "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md",
       "prettier --write"
     ]
-  }
+  },
+  "workspaces": [
+    "packages\\engine",
+    "packages\\widgets"
+  ]
 }

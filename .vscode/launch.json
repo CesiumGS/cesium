@@ -2,6 +2,45 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "args": [
+                "build",
+                "--workspace",
+                "@cesium/engine"
+            ],
+            "name": "Gulp task - build - engine",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "args": [
+                "build",
+                "--workspaces"
+            ],
+            "name": "Gulp task - build - workspaces",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "args": [
+                "build-ts"
+            ],
+            "name": "Gulp task - build-ts",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "Launch Server",

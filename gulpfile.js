@@ -2,7 +2,7 @@
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve } from "path";
-import { cpus } from "os";
+import { cpus, EOL } from "os";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -74,10 +74,26 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "!pSource/ThirdParty/_*",
 ];
 
-const workerSourceFiles = ["Source/WorkersES6/**"];
+// Files and globs are relative to root of each workspace.
+
+const workspaceSourceFiles = {
+  "@cesium/engine": [
+    "Source/**/*.js",
+    "!Source/*.js",
+    "!Source/Workers/**",
+    "!Source/WorkersES6/**",
+    "Source/WorkersES6/createTaskProcessorWorker.js",
+    "!Source/ThirdParty/Workers/**",
+    "!Source/ThirdParty/google-earth-dbroot-parser.js",
+    "!Source/ThirdParty/_*",
+  ],
+  "@cesium/widgets": ["Source/**/*.js"],
+};
+
+const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
   "Specs/**/*Spec.js",
   "Specs/*.js",
@@ -85,8 +101,8 @@ const watchedSpecFiles = [
   "Specs/TestWorkers/*.js",
 ];
 const shaderFiles = [
-  "Source/Shaders/**/*.glsl",
-  "Source/ThirdParty/Shaders/*.glsl",
+  "packages/engine/Source/Shaders/**/*.glsl",
+  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 
 // Print an esbuild warning
@@ -117,48 +133,126 @@ function handleBuildWarnings(result) {
   }
 }
 
+function getVersionFromPackageJson(json) {
+  let version = json.version;
+  if (/\.0$/.test(version)) {
+    version = version.substring(0, version.length - 2);
+  }
+  return version;
+}
+
+async function createIndexJs(workspace) {
+  // Read package.json from current working directory.
+
+  let workspacePackageJson;
+  try {
+    const workspacePackageJsonData = await readFile(`package.json`);
+    workspacePackageJson = JSON.parse(workspacePackageJsonData);
+  } catch (e) {
+    console.error(`Unable to read package.json from ${process.cwd()}: ${e}`);
+    process.exit(-1);
+  }
+
+  // Extract version from package.json and write it at the top of the index.js file.
+
+  const version = getVersionFromPackageJson(workspacePackageJson);
+  let contents = `export const VERSION = '${version}';\n`;
+
+  // Iterate over all provided source files for the workspace and export the assignment based on file name.
+
+  const workspaceSources = workspaceSourceFiles[workspace];
+  if (!workspaceSources) {
+    console.error(`Unable to find source files for workspace: ${workspace}`);
+    process.exit(-1);
+  }
+
+  const files = await globby(workspaceSources);
+  files.forEach(function (file) {
+    let moduleId = file;
+    moduleId = filePathToModuleId(moduleId);
+
+    // Rename shader files, such that ViewportQuadFS.glsl is exported as _shadersViewportQuadFS in JS.
+
+    let assignmentName = basename(file, extname(file));
+    if (moduleId.indexOf("Shaders/") === 0) {
+      assignmentName = `_shaders${assignmentName}`;
+    }
+    assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
+  });
+
+  await writeFile("index.js", contents, { encoding: "utf-8" });
+
+  return contents;
+}
+
+async function buildWorkspace(options) {
+  // Extract the workspace name and path, and change working directory to root of workspace.
+
+  const workspace = options.workspace;
+
+  if (!workspace) {
+    console.error(`Workspace is undefined.`);
+    process.exit(-1);
+  }
+
+  const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+  try {
+    process.chdir(workspacePath);
+    console.log(`Changed working directory to: ${workspacePath}`);
+  } catch (e) {
+    console.error(`Unable to change directory to workspace: ${e}`);
+    process.exit(-1);
+  }
+
+  // Create index.js for workspace.
+
+  createIndexJs(workspace);
+}
+
 async function buildCesium(options) {
   options = options || {};
-  mkdirp.sync("Build");
 
-  const outputDirectory = join(
-    "Build",
-    `Cesium${!options.minify ? "Unminified" : ""}`
-  );
-  rimraf.sync(outputDirectory);
+  return Promise.resolve();
 
-  writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
-  );
+  // const outputDirectory = join(
+  //   "Build",
+  //   `Cesium${!options.minify ? "Unminified" : ""}`
+  // );
+  // rimraf.sync(outputDirectory);
 
-  await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-  await createCesiumJs();
-  await createSpecList();
-  await Promise.all([
-    createJsHintOptions(),
-    buildCesiumJs({
-      minify: options.minify,
-      iife: true,
-      sourcemap: options.sourcemap,
-      removePragmas: options.removePragmas,
-      path: outputDirectory,
-      node: options.node,
-    }),
-    buildWorkers({
-      minify: options.minify,
-      sourcemap: options.sourcemap,
-      path: outputDirectory,
-      removePragmas: options.removePragmas,
-    }),
-    createGalleryList(noDevelopmentGallery),
-    buildSpecs(),
-  ]);
+  // writeFileSync(
+  //   "Build/package.json",
+  //   JSON.stringify({
+  //     type: "commonjs",
+  //   }),
+  //   "utf8"
+  // );
 
-  return copyAssets(outputDirectory);
+  // await glslToJavaScript(options.minify, "Build/minifyShaders.state");
+  // await createCesiumJs();
+  //await createSpecList();
+  // await Promise.all([
+  //   createJsHintOptions(),
+  //   buildCesiumJs({
+  //     minify: options.minify,
+  //     iife: true,
+  //     sourcemap: options.sourcemap,
+  //     removePragmas: options.removePragmas,
+  //     path: outputDirectory,
+  //     node: options.node,
+  //   }),
+  //   buildWorkers({
+  //     minify: options.minify,
+  //     sourcemap: options.sourcemap,
+  //     path: outputDirectory,
+  //     removePragmas: options.removePragmas,
+  //   }),
+  //   createGalleryList(noDevelopmentGallery),
+  //   buildSpecs(),
+  // ]);
+
+  // return copyAssets(outputDirectory);
 }
 
 export function build() {
@@ -166,12 +260,18 @@ export function build() {
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
   const node = argv.node ? argv.node : true;
+  const workspace = argv.workspace ? argv.workspace : undefined;
 
-  return buildCesium({
+  if (!workspace) {
+    return Promise.resolve();
+  }
+
+  return buildWorkspace({
     minify: minify,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     node: node,
+    workspace: workspace,
   });
 }
 export default build;
@@ -283,7 +383,20 @@ export const buildWatch = gulp.series(build, async function () {
 });
 
 export function buildTs() {
-  return createTypeScriptDefinitions();
+  return Promise.all([
+    generateTypeScriptDefinitions(
+      "engine",
+      "packages/engine/engine.d.ts",
+      "packages/engine/tsd-conf.json",
+      processEngineSource,
+      processEngineModules
+    ),
+    generateTypeScriptDefinitions(
+      "widgets",
+      "packages/widgets/widgets.d.ts",
+      "packages/widgets/tsd-conf.json"
+    ),
+  ]);
 }
 
 export function buildApps() {
@@ -357,25 +470,25 @@ export async function prepare() {
   // Copy Draco3D files from node_modules into Source
   copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
-    "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
+    "packages/engine/Source/ThirdParty/Workers/draco_decoder_nodejs.js"
   );
   copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
-    "Source/ThirdParty/draco_decoder.wasm"
+    "packages/engine/Source/ThirdParty/draco_decoder.wasm"
   );
 
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
-    "Source/ThirdParty/Workers/pako_inflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js"
   );
   copyFileSync(
     "node_modules/pako/dist/pako_deflate.min.js",
-    "Source/ThirdParty/Workers/pako_deflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js"
   );
   copyFileSync(
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
-    "Source/ThirdParty/Workers/z-worker-pako.js"
+    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js"
   );
 
   // Copy prism.js and prism.css files into Tools
@@ -1209,13 +1322,163 @@ export async function test() {
   });
 }
 
+function generateTypeScriptDefinitions(
+  workspaceName,
+  definitionsPath,
+  configurationPath,
+  processSourceFunc,
+  processModulesFunc
+) {
+  // Run JSDoc with tsd-jsdoc to generate an initial definition file.
+  execSync(`npx jsdoc --configure ${configurationPath}`, {
+    stdio: `inherit`,
+  });
+
+  let source = readFileSync(definitionsPath).toString();
+
+  if (processSourceFunc) {
+    source = processSourceFunc(definitionsPath, source);
+  }
+
+  // The next step is to find the list of Cesium modules exported by the Cesium API
+  // So that we can map these modules with a link back to their original source file.
+
+  const regex = /^declare (function|class|namespace|enum) (.+)/gm;
+  let matches;
+  let publicModules = new Set();
+  //eslint-disable-next-line no-cond-assign
+  while ((matches = regex.exec(source))) {
+    const moduleName = matches[2].match(/([^<\s|\(]+)/);
+    publicModules.add(moduleName[1]);
+  }
+
+  if (processModulesFunc) {
+    publicModules = processModulesFunc(publicModules);
+  }
+
+  // Fix up the output to match what we need
+  // declare => export since we are wrapping everything in a namespace
+  source = source
+    .replace(/^declare /gm, "export ")
+    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
+    .replace(/String\[]/gm, "string[]")
+    .replace(/Boolean\[]/gm, "boolean[]")
+    .replace(/Object\[]/gm, "object[]")
+    .replace(/<Number>/gm, "<number>")
+    .replace(/<String>/gm, "<string>")
+    .replace(/<Boolean>/gm, "<boolean>")
+    .replace(/<Object>/gm, "<object>");
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  source = `declare module "@cesium/${workspaceName}" {
+${source}
+}
+`;
+
+  // Map individual modules back to their source file so that TS still works
+  // when importing individual files instead of the entire cesium module.
+  globbySync(sourceFiles).forEach(function (file) {
+    file = relative(`packages/${workspaceName}/Source`, file);
+
+    let moduleId = file;
+    moduleId = filePathToModuleId(moduleId);
+
+    const assignmentName = basename(file, extname(file));
+    if (publicModules.has(assignmentName)) {
+      publicModules.delete(assignmentName);
+      source += `declare module "@cesium/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/${workspaceName}'; export default ${assignmentName}; }\n`;
+    }
+  });
+
+  // Write the final source file back out
+  writeFileSync(definitionsPath, source);
+
+  return Promise.resolve();
+}
+
+function processEngineModules(modules) {
+  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
+  // It fails the above regex so just add it directly here.
+  modules.add("Math");
+  return modules;
+}
+
+function processEngineSource(definitionsPath, source) {
+  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // end up as enum strings instead of actually mapping values to WebGLConstants.
+  // We fix this with a simple regex replace later on, but it means the
+  // WebGLConstants constants enum needs to be defined in the file before it can
+  // be used.  This block of code reads in the TS file, finds the WebGLConstants
+  // declaration, and then writes the file back out (in memory to source) with
+  // WebGLConstants being the first module.
+  const node = typeScript.createSourceFile(
+    definitionsPath,
+    source,
+    typeScript.ScriptTarget.Latest
+  );
+  let firstNode;
+  node.forEachChild((child) => {
+    if (
+      typeScript.SyntaxKind[child.kind] === "EnumDeclaration" &&
+      child.name.escapedText === "WebGLConstants"
+    ) {
+      firstNode = child;
+    }
+  });
+
+  const printer = typeScript.createPrinter({
+    removeComments: false,
+    newLine: typeScript.NewLineKind.LineFeed,
+  });
+
+  let newSource = "";
+  newSource += printer.printNode(
+    typeScript.EmitHint.Unspecified,
+    firstNode,
+    node
+  );
+  newSource += "\n\n";
+  node.forEachChild((child) => {
+    if (
+      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
+      child.name.escapedText !== "WebGLConstants"
+    ) {
+      newSource += printer.printNode(
+        typeScript.EmitHint.Unspecified,
+        child,
+        node
+      );
+      newSource += "\n\n";
+    }
+  });
+  source = newSource;
+
+  // Fix up the output to match what we need
+  // declare => export since we are wrapping everything in a namespace
+  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
+  source = source
+    .replace(/module "Math"/gm, "namespace Math")
+    .replace(/CesiumMath/gm, "Math")
+    .replace(
+      /= "WebGLConstants\.(.+)"/gm,
+      // eslint-disable-next-line no-unused-vars
+      (match, p1) => `= WebGLConstants.${p1}`
+    )
+    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
+
+  return source;
+}
+
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
+  execSync("npx jsdoc --configure packages/engine/tsd-conf.json", {
     stdio: "inherit",
   });
 
-  let source = readFileSync("Source/Cesium.d.ts").toString();
+  let source = readFileSync("packages/engine/engine.d.ts").toString();
 
   // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
@@ -1225,7 +1488,7 @@ function createTypeScriptDefinitions() {
   // declaration, and then writes the file back out (in memory to source) with
   // WebGLConstants being the first module.
   const node = typeScript.createSourceFile(
-    "Source/Cesium.d.ts",
+    "package/engine/Cesium.d.ts",
     source,
     typeScript.ScriptTarget.Latest
   );
@@ -1308,7 +1571,7 @@ function createTypeScriptDefinitions() {
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "cesium" {
+  source = `declare module "@cesium/engine" {
 ${source}
 }
 
@@ -1317,7 +1580,7 @@ ${source}
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
   globbySync(sourceFiles).forEach(function (file) {
-    file = relative("Source", file);
+    file = relative("package/engine/Source", file);
 
     let moduleId = file;
     moduleId = filePathToModuleId(moduleId);
@@ -1325,22 +1588,22 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "cesium/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
+      source += `declare module "@cesium/engine/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
     }
   });
 
   // Write the final source file back out
-  writeFileSync("Source/Cesium.d.ts", source);
+  writeFileSync("packages/engine/engine.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
-    stdio: "inherit",
-  });
+  // execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+  //   stdio: "inherit",
+  // });
 
   // Also compile our smokescreen to make sure interfaces work as expected.
-  execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
-    stdio: "inherit",
-  });
+  // execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
+  //   stdio: "inherit",
+  // });
 
   // Below is a sanity check to make sure we didn't leave anything out that
   // we don't already know about
