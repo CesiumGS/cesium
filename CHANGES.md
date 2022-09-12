@@ -2,9 +2,14 @@
 
 ### 1.98 - 2022-10-03
 
+#### Breaking Changes :mega:
+
+- `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+
 ##### Additions :tada:
 
-- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models.
+- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models. [#10758](https://github.com/CesiumGS/cesium/pull/10758)
+- Update JSDoc template to mark internal constructors more clearly. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
 
 ##### Fixes :wrench:
 
