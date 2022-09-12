@@ -7,14 +7,15 @@ import ModelAnimationState from "../ModelAnimationState.js";
 import ModelAnimationChannel from "./ModelAnimationChannel.js";
 
 /**
+ * <div class="notice">
+ * Create animations by calling {@link ModelAnimationCollection#add}. Do not call the constructor directly.
+ * </div>
+ *
  * An active animation derived from a glTF asset. An active animation is an
  * animation that is either currently playing or scheduled to be played due to
  * being added to a model's {@link ModelAnimationCollection}. An active animation
  * is an instance of an animation; for example, there can be multiple active
  * animations for the same glTF animation, each with a different start time.
- * <p>
- * Create this by calling {@link ModelAnimationCollection#add}.
- * </p>
  *
  * @alias ModelAnimation
  * @internalConstructor

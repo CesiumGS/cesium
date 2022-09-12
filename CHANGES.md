@@ -2,9 +2,13 @@
 
 ### 1.98 - 2022-10-03
 
+#### Breaking Changes :mega:
+
+- As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+
 ##### Additions :tada:
 
-- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models.
+- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models. [#10758](https://github.com/CesiumGS/cesium/pull/10758)
 
 ##### Fixes :wrench:
 
@@ -35,6 +39,7 @@
 - Support for rendering instanced models on the CPU has been removed.
 - `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
 - `ModelMesh` and `ModelMaterial` have been removed.
+- `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
 
 ##### Additions :tada:
 
