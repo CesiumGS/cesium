@@ -332,3 +332,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Meerson](https://github.com/yonzmeer)
 - [Jiang Heng](https://github.com/jiangheng90)
 - [Xin Chen](https://github.com/nshen)
+- [Ilya Shevelev](https://github.com/ilyaly)
