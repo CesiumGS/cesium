@@ -8,7 +8,7 @@ import FeatureIdStageFS from "../../Shaders/Model/FeatureIdStageFS.js";
 import FeatureIdStageVS from "../../Shaders/Model/FeatureIdStageVS.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import ModelUtility from "./ModelUtility.js"; // Helps with debugging
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * The feature ID pipeline stage is responsible for processing feature IDs
