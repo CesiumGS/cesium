@@ -101,6 +101,10 @@ const workspaceShaderFiles = {
   "@cesium/widgets": [],
 };
 
+const workspaceCssFiles = {
+  "@cesium/engine": "Source/**/*.css"
+};
+
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
   "Specs/**/*Spec.js",
@@ -205,6 +209,12 @@ async function buildWorkspace(options) {
   }
 
   const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+
+  options = {
+    ...options,
+    path: join(workspacePath, `Build`)
+  };
+
   try {
     process.chdir(workspacePath);
     console.log(`Changed working directory to: ${workspacePath}`);
@@ -226,6 +236,50 @@ async function buildWorkspace(options) {
   // Create index.js for workspace.
 
   await createIndexJs(workspace);
+
+  const outputDirectory = join(process.cwd(), `Build`);
+  rimraf.sync(outputDirectory);
+
+  // Bundle ESM
+
+  await esBuildWorkspace(workspace, options);
+}
+
+export async function esBuildWorkspace(workspace, options) {
+
+  if (!workspace) {
+    console.error(`Workspace is undefined.`);
+    process.exit(-1);
+  }
+
+  // TODO: Try analyze option 
+  // TODO: Add banner 
+
+  const buildConfig = {
+    bundle: true,
+    color: true,
+    entryPoints: [join(process.cwd(), `index.js`)],
+    external: [`https`, `http`, `url`, `zlib`, `@cesium/engine`],
+    legalComments: `inline`,
+    logLevel: `info`,
+    logLimit: 0, // TODO: Remove extra logging
+    metafile: true,
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    target: `es2020`,
+    write: options.write 
+  };
+
+
+  // ESM Build
+
+  const result = await esbuild({
+    ...buildConfig,
+    format: `esm`,
+    outfile: join(options.path, `index.js`),
+  });
+
+  return result;
 }
 
 // TODO: This needs to be redone to avoid duplicating tasks.

@@ -1,10 +1,10 @@
 import {
   defined,
   destroyObject,
-  DeveloperError
+  DeveloperError,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import HomeButtonViewModel from "./HomeButtonViewModel.js";
 
 /**

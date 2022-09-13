@@ -3,11 +3,11 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  Fullscreen
+  Fullscreen,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
-import getElement from "../getElement.js";
 
 
 /**

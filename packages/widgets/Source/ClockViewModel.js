@@ -5,7 +5,7 @@ import {
   EventHelper,
   JulianDate
 } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./ThirdParty/knockout.js";
 
 /**
  * A view model which exposes a {@link Clock} for user interfaces.

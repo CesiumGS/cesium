@@ -43,7 +43,7 @@ import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "autolinker";
 import Uri from "urijs";
 import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
-import getElement from "../Widgets/getElement.js";
+import getElement from "./getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";

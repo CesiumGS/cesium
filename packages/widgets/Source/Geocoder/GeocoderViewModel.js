@@ -6,6 +6,7 @@ import {
   DeveloperError,
   Event,
   GeocodeType,
+  getElement,
   IonGeocoderService,
   Math as CesiumMath,
   Matrix4,
@@ -14,7 +15,6 @@ import {
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
-import getElement from "../getElement.js";
 
 // The height we use if geocoding to a specific point instead of an rectangle.
 const DEFAULT_HEIGHT = 1000;

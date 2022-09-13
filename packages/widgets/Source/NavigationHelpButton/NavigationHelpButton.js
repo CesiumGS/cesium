@@ -4,17 +4,12 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  FeatureDetection
+  FeatureDetection,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
 
-import {
-  buildModuleUrl,
-  defined,
-  Event,
-} from "@cesium/engine";
 
 /**
  * <p>The NavigationHelpButton is a single button widget for displaying instructions for

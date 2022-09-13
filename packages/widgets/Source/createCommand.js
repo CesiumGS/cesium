@@ -4,7 +4,7 @@ import {
   DeveloperError, 
   Event  
 } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./ThirdParty/knockout.js";
 
 /**
  * Create a Command from a given function, for use with ViewModels.

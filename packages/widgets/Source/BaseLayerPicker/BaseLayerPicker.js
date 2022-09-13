@@ -1,10 +1,10 @@
 import {
   defined,
   DeveloperError,
-  FeatureDetection
+  FeatureDetection,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
 
 /**

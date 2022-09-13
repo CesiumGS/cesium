@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "types": "widgets.d.ts",
-  "devDependencies": {
+  "dependencies": {
     "@cesium/engine": "*"
   },
   "scripts": {

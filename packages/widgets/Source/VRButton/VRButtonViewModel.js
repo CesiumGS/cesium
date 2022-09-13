@@ -5,12 +5,12 @@ import {
   DeveloperError,
   EventHelper,
   Fullscreen,
+  getElement,
   OrthographicFrustum
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import NoSleep from "nosleep.js";
 import createCommand from "../createCommand.js";
-import getElement from "../getElement.js";
 
 function lockScreen(orientation) {
   let locked = false;

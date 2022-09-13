@@ -49,6 +49,7 @@ yarn.lock
 # @cesium/engine
 packages/engine/index.js
 packages/engine/engine.d.ts
+packages/engine/Build
 packages/engine/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/Shaders/**/*.js
 packages/engine/Source/ThirdParty/_commonjsHelpers*
@@ -65,3 +66,4 @@ packages/engine/Source/Workers/**
 # @cesium/widgets
 packages/widgets/index.js
 packages/widgets/widgets.d.ts
+packages/widgets/Build

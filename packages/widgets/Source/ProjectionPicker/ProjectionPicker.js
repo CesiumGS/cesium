@@ -2,10 +2,10 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  FeatureDetection
+  FeatureDetection,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import ProjectionPickerViewModel from "./ProjectionPickerViewModel.js";
 
 const perspectivePath =

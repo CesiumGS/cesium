@@ -3,9 +3,9 @@ import {
   destroyObject,
   DeveloperError,
   FeatureDetection,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import SceneModePickerViewModel from "./SceneModePickerViewModel.js";
 
 const globePath =

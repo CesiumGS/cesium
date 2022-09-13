@@ -3,10 +3,10 @@ import {
   Check,
   Color,
   defined,
-  destroyObject
+  destroyObject,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import InfoBoxViewModel from "./InfoBoxViewModel.js";
 

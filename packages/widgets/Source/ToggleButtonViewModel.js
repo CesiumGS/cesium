@@ -3,7 +3,7 @@ import {
   defined,
   DeveloperError
  } from "@cesium/engine";
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./ThirdParty/knockout.js";
 
 /**
  * A view model which exposes the properties of a toggle button.

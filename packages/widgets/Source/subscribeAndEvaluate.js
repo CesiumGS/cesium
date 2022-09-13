@@ -1,4 +1,4 @@
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./ThirdParty/knockout.js";
 
 /**
  * Subscribe to a Knockout observable ES5 property, and immediately fire

@@ -2,9 +2,9 @@ import {
   defined,
   destroyObject,
   DeveloperError,
+  getElement
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
 import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
 
 

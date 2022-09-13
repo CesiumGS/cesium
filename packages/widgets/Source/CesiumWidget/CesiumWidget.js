@@ -10,6 +10,7 @@ import {
   Ellipsoid,
   FeatureDetection,
   formatError,
+  getElement,
   Globe,
   Moon,
   Scene,
@@ -20,7 +21,6 @@ import {
   SkyBox,
   Sun
 } from "@cesium/engine";
-import getElement from "../getElement.js";
 
 function getDefaultSkyBoxUrl(suffix) {
   return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);

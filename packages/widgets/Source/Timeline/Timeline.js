@@ -3,9 +3,9 @@ import {
   defined,
   destroyObject,
   DeveloperError,
+  getElement,
   JulianDate,
 } from "@cesium/engine";
-import getElement from "../getElement.js";
 import TimelineHighlightRange from "./TimelineHighlightRange.js";
 import TimelineTrack from "./TimelineTrack.js";
 

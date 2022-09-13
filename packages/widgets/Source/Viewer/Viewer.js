@@ -18,6 +18,7 @@ import {
   EntityView,
   Event,
   EventHelper,
+  getElement,
   HeadingPitchRange,
   ImageryLayer,
   JulianDate,
@@ -38,7 +39,6 @@ import CesiumWidget from "../CesiumWidget/CesiumWidget.js";
 import ClockViewModel from "../ClockViewModel.js";
 import FullscreenButton from "../FullscreenButton/FullscreenButton.js";
 import Geocoder from "../Geocoder/Geocoder.js";
-import getElement from "../getElement.js";
 import HomeButton from "../HomeButton/HomeButton.js";
 import InfoBox from "../InfoBox/InfoBox.js";
 import NavigationHelpButton from "../NavigationHelpButton/NavigationHelpButton.js";

@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getTimestamp from "../Core/getTimestamp.js";
-import getElement from "../Widgets/getElement.js";
+import getElement from "../DataSources/getElement.js";
 
 /**
  * @private

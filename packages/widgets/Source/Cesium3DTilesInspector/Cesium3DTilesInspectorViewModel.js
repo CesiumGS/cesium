@@ -2,7 +2,6 @@ import {
   Check,
   Color,
   defined,
-  defined,
   destroyObject,
   Cesium3DTileColorBlendMode,
   Cesium3DTileFeature,
