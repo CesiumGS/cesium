@@ -46,7 +46,8 @@ void main()
 
     Metadata metadata;
     MetadataClass metadataClass;
-    metadataStage(metadata, metadataClass, attributes);
+    MetadataStatistics metadataStatistics;
+    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
@@ -57,7 +58,7 @@ void main()
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes, featureIds, metadata, metadataClass);
+    customShaderStage(material, attributes, featureIds, metadata, metadataClass, metadataStatistics);
     #endif
 
     lightingStage(material, attributes);

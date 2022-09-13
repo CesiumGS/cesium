@@ -6,7 +6,11 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  HeadingPitchRange,
+  Cartesian3,
+  Transforms,
 } from "../../../Source/Cesium.js";
+import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -22,10 +26,11 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWithVectorProperties/glTF/PropertyTextureWithVectorProperties.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
+    const tilesetWithMetadataStatistics =
+      "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
     let scene;
     const gltfLoaders = [];
-    const resources = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -46,8 +51,8 @@ describe(
     }
 
     afterEach(function () {
-      cleanup(resources);
       cleanup(gltfLoaders);
+      scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -78,8 +83,6 @@ describe(
       // These are constructed in both vertex and fragment shaders
       for (const metadataType of metadataTypes) {
         const structName = `${metadataType}MetadataClass`;
-        const structIdVs = `${structName}VS`;
-        const structIdFs = `${structName}FS`;
         const structFields = [
           `    ${metadataType} noData;`,
           `    ${metadataType} defaultValue;`,
@@ -88,13 +91,13 @@ describe(
         ];
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          structIdVs,
+          structName,
           structName,
           structFields
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          structIdFs,
+          structName,
           structName,
           structFields
         );
@@ -377,8 +380,8 @@ describe(
         // required by this test dataset
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATACLASS_FS,
-          MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
           [
             "    vec2MetadataClass vec2Property;",
             "    intMetadataClass uint8Property;",
@@ -440,6 +443,150 @@ describe(
         );
         expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
           new Cartesian2(2, 2)
+        );
+      });
+    });
+
+    it("Handles a tileset with metadata statistics", function () {
+      const modelPos = Cartesian3.fromDegrees(-75.152325, 39.94704);
+
+      const offset = new HeadingPitchRange(0, 0, 5.0);
+      scene.camera.lookAt(modelPos, offset);
+
+      const tilesetOptions = {
+        modelMatrix: Transforms.eastNorthUpToFixedFrame(modelPos),
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetWithMetadataStatistics,
+        tilesetOptions
+      ).then(function (tileset) {
+        expect(tileset).toBeDefined();
+        expect(tileset.tilesLoaded).toBe(true);
+
+        const metadataExtension = tileset.metadataExtension;
+        expect(metadataExtension).toBeDefined();
+        expect(metadataExtension.statistics).toBeDefined();
+
+        const model = tileset.root.children[1].content._model;
+        expect(model).toBeDefined();
+
+        const shaderBuilder = new ShaderBuilder();
+        const renderResources = {
+          shaderBuilder: shaderBuilder,
+          model: model,
+          uniformMap: {},
+        };
+
+        const primitive = model.sceneGraph.components.nodes[0].primitives[0];
+        expect(primitive).toBeDefined();
+
+        const frameState = scene.frameState;
+
+        MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+        // Confirm MetadataClass sub-structs were all declared
+        const metadataTypes = ["float"];
+        checkMetadataClassStructs(shaderBuilder, metadataTypes);
+
+        // Confirm MetadataStatistics sub-structs were all declared
+        const structName = `floatMetadataStatistics`;
+        const structFields = [
+          `    float minValue;`,
+          `    float maxValue;`,
+          `    float mean;`,
+          `    float median;`,
+          `    float standardDeviation;`,
+          `    float variance;`,
+          `    float sum;`,
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          structName,
+          structName,
+          structFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          structName,
+          structName,
+          structFields
+        );
+
+        // Check main metadata, metadataClass, metadataStatistics structs
+        const metadataFields = [
+          "    float classification;",
+          "    float intensity;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          metadataFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          metadataFields
+        );
+
+        const metadataClassFields = [
+          "    floatMetadataClass classification;",
+          "    floatMetadataClass intensity;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+          metadataClassFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+          metadataClassFields
+        );
+
+        const metadataStatisticsFields = [
+          "    floatMetadataStatistics intensity;",
+        ];
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+          metadataStatisticsFields
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+          metadataStatisticsFields
+        );
+
+        // Check that the correct values are set in the initializeMetadata function
+        const assignments = [
+          "    metadata.classification = attributes.classification;",
+          "    metadata.intensity = attributes.intensity;",
+          "    metadataStatistics.intensity.mean = float(0.28973701532415364);",
+          "    metadataStatistics.intensity.median = float(0.25416669249534607);",
+          "    metadataStatistics.intensity.standardDeviation = float(0.18222664489583626);",
+          "    metadataStatistics.intensity.variance = float(0.03320655011);",
+          "    metadataStatistics.intensity.sum = float(8500.30455558002);",
+          "    metadataStatistics.intensity.minValue = float(0);",
+          "    metadataStatistics.intensity.maxValue = float(0.6333333849906921);",
+        ];
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
+          renderResources.shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          assignments
+        );
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+          renderResources.shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          assignments
         );
       });
     });
