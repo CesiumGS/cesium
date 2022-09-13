@@ -38,6 +38,9 @@ const CustomShaderPipelineStage = {
   FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS: "initializeInputStructFS",
   FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS:
     "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)",
+
+  // Expose method for testing.
+  _oneTimeWarning: oneTimeWarning,
 };
 
 /**
@@ -635,8 +638,5 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
     shaderBuilder.addFragmentLines(shaderLines);
   }
 }
-
-// exposed for testing.
-CustomShaderPipelineStage._oneTimeWarning = oneTimeWarning;
 
 export default CustomShaderPipelineStage;

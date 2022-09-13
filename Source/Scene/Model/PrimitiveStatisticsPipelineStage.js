@@ -17,6 +17,14 @@ import ModelUtility from "./ModelUtility.js";
  */
 const PrimitiveStatisticsPipelineStage = {
   name: "PrimitiveStatisticsPipelineStage", // Helps with debugging
+
+  // Expose some methods for testing
+  _countGeometry: countGeometry,
+  _count2DPositions: count2DPositions,
+  _countMorphTargetAttributes: countMorphTargetAttributes,
+  _countMaterialTextures: countMaterialTextures,
+  _countFeatureIdTextures: countFeatureIdTextures,
+  _countBinaryMetadata: countBinaryMetadata,
 };
 
 PrimitiveStatisticsPipelineStage.process = function (
@@ -241,13 +249,5 @@ function countPropertyTextures(statistics, structuralMetadata) {
     }
   }
 }
-
-// Exposed for testing
-PrimitiveStatisticsPipelineStage._countGeometry = countGeometry;
-PrimitiveStatisticsPipelineStage._count2DPositions = count2DPositions;
-PrimitiveStatisticsPipelineStage._countMorphTargetAttributes = countMorphTargetAttributes;
-PrimitiveStatisticsPipelineStage._countMaterialTextures = countMaterialTextures;
-PrimitiveStatisticsPipelineStage._countFeatureIdTextures = countFeatureIdTextures;
-PrimitiveStatisticsPipelineStage._countBinaryMetadata = countBinaryMetadata;
 
 export default PrimitiveStatisticsPipelineStage;

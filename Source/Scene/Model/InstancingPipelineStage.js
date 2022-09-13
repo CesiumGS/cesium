@@ -32,6 +32,10 @@ const modelView2DScratch = new Matrix4();
  */
 const InstancingPipelineStage = {
   name: "InstancingPipelineStage", // Helps with debugging
+
+  // Expose some methods for testing
+  _getInstanceTransformsAsMatrices: getInstanceTransformsAsMatrices,
+  _transformsToTypedArray: transformsToTypedArray,
 };
 
 /**
@@ -1035,9 +1039,5 @@ function processFeatureIdAttributes(
     );
   }
 }
-
-// Exposed for testing
-InstancingPipelineStage._getInstanceTransformsAsMatrices = getInstanceTransformsAsMatrices;
-InstancingPipelineStage._transformsToTypedArray = transformsToTypedArray;
 
 export default InstancingPipelineStage;
