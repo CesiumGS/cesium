@@ -50,8 +50,17 @@ yarn.lock
 packages/engine/index.js
 packages/engine/engine.d.ts
 packages/engine/Source/Shaders/**/*.js
-packages/engine/Source/Workers/**
 packages/engine/Source/ThirdParty/Shaders/**/*.js
+packages/engine/Source/ThirdParty/_commonjsHelpers*
+packages/engine/Source/ThirdParty/draco_decoder.wasm
+packages/engine/Source/ThirdParty/Workers/draco_decoder_nodejs.js
+packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js
+packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js
+packages/engine/Source/ThirdParty/Workers/z-worker-pako.js
+packages/engine/Source/Workers/**
+!packages/engine/Source/Workers/cesiumWorkerBootstrapper.js
+!packages/engine/Source/Workers/transferTypedArrayTest.js
+!packages/engine/Source/Workers/package.json
 
 # @cesium/widgets
 packages/widgets/index.js
