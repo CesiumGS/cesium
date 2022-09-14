@@ -25,11 +25,7 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 
-let copyrightHeader = readFileSync(
-  path.join("Source", "copyrightHeader.js"),
-  "utf8"
-);
-copyrightHeader = copyrightHeader.replace("${version}", version);
+let copyrightHeader = "";
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -247,11 +243,11 @@ function generateDeclaration(workspace, file) {
   let moduleId = file;
   moduleId = filePathToModuleId(moduleId);
 
-  if (moduleId.indexOf("Shaders/") === 0) {
+  if (moduleId.indexOf("Source/Shaders") > -1) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-  return `export { default as ${assignmentName} } from '${workspace}';`;
+  return `export { ${assignmentName} } from '${workspace}';`;
 }
 
 /**
@@ -266,12 +262,17 @@ export async function createCesiumJs() {
     // Since workspace source files are provided relative to the workspace,
     // the workspace path needs to be prepended.
     const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
-    const filesPaths = workspaceSourceFiles[workspace].map((glob) =>
-      workspacePath.concat("/", glob)
-    );
+    const filesPaths = workspaceSourceFiles[workspace].map((glob) => {
+      if (glob.indexOf(`!`) === 0) {
+        return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
+      }
+      return workspacePath.concat("/", glob);
+    });
 
     const files = await globby(filesPaths);
-    const declarations = files.map((file) => generateDeclaration(workspace, file));
+    const declarations = files.map((file) =>
+      generateDeclaration(workspace, file)
+    );
     contents += declarations.join(`${EOL}`);
     contents += "\n";
   }

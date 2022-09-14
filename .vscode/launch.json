@@ -3,13 +3,12 @@
     "configurations": [
         {
             "args": [
-                "build",
-                "--workspace",
-                "@cesium/engine"
+                "buildEngine"
             ],
-            "name": "Gulp task - build - engine",
+            "name": "Gulp task - buildEngine",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "request": "launch",
+            "cwd": "${workspaceFolder}/packages/engine",
             "skipFiles": [
                 "<node_internals>/**"
             ],

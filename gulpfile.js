@@ -74,7 +74,7 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!pSource/ThirdParty/_*",
+  "!Source/ThirdParty/_*",
 ];
 
 // Files and globs are relative to root of each workspace.
@@ -102,7 +102,7 @@ const workspaceShaderFiles = {
 };
 
 const workspaceCssFiles = {
-  "@cesium/engine": "Source/**/*.css"
+  "@cesium/engine": "Source/**/*.css",
 };
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
@@ -212,7 +212,7 @@ async function buildWorkspace(options) {
 
   options = {
     ...options,
-    path: join(workspacePath, `Build`)
+    path: join(workspacePath, `Build`),
   };
 
   try {
@@ -225,38 +225,95 @@ async function buildWorkspace(options) {
 
   //const outputDirectory = join(process.cwd(), `Build`);
   // TODO: Fix the minifyShaders.state hack
-  mkdirp.sync('Build');
+  mkdirp.sync("Build");
   //rimraf.sync(outputDirectory);
 
   // Build shaders, if needed.
 
   if (workspace === "@cesium/engine") {
     // TODO: Use workspaceShaderFiles to make this more generic.
-    await glslToJavaScript(
-      options.minify,
-      "Build/minifyShaders.state"
-    );
+    await glslToJavaScript(options.minify, "Build/minifyShaders.state");
   }
 
   // Create index.js for workspace.
 
   await createIndexJs(workspace);
 
-
   // Bundle ESM
 
   await esBuildWorkspace(workspace, options);
 }
 
-export async function esBuildWorkspace(workspace, options) {
+const defaultESBuildOptions = () => {
+  return {
+    bundle: true,
+    color: true,
+    entryPoints: [`index.js`],
+    external: [`http`, `https`, `url`, `zlib`],
+    legalComments: `inline`,
+    logLevel: `info`,
+    logLimit: 0,
+    target: `es2020`,
+  };
+};
 
+export const buildEngine = async () => {
+
+  // Generate Build folder to place build artifacts.
+  mkdirp.sync("Build");
+
+  // Convert GLSL files to JavaScript modules.
+  //await glslToJavaScript(false, "Build/minifyShaders.state");
+
+  // Create index.js
+  await createIndexJs("@cesium/engine");
+
+  // Generate bundle using esbuild.
+  const esBuildOptions = defaultESBuildOptions();
+  await esbuild({
+    ...esBuildOptions,
+    format: `esm`,
+    outfile: join(`Build`, "index.js"),
+  });
+  
+  await buildWorkers({
+    path: "Build"
+  });
+};
+
+export const buildWidgets = async () => {
+  // Generate Build folder to place build artifacts.
+  mkdirp.sync("Build");
+
+  // Create index.js
+  await createIndexJs("@cesium/widgets");
+};
+
+const buildCesium = async (options) => {
+  // Generate Build folder to place build artifacts.
+  mkdirp.sync("Build");
+
+  // Create Cesium.js
+  await createCesiumJs();
+
+  // Generate bundle using esbuild.
+  const esBuildOptions = defaultESBuildOptions();
+  esBuildOptions.entryPoints = [`Source/Cesium.js`];
+  await esbuild({
+    ...esBuildOptions,
+    format: `esm`,
+    outfile: join(`Build`, "Cesium.js")
+  });
+};
+
+export async function esBuildWorkspace(workspace, options) {
   if (!workspace) {
     console.error(`Workspace is undefined.`);
     process.exit(-1);
   }
 
-  // TODO: Try analyze option 
-  // TODO: Add banner 
+  // TODO: Try analyze option
+  // TODO: Add banner
 
   const buildConfig = {
     bundle: true,
@@ -270,9 +327,8 @@ export async function esBuildWorkspace(workspace, options) {
     minify: options.minify,
     sourcemap: options.sourcemap,
     target: `es2020`,
-    write: options.write 
+    write: options.write,
   };
-
 
   // ESM Build
 
@@ -286,49 +342,49 @@ export async function esBuildWorkspace(workspace, options) {
 }
 
 // TODO: This needs to be redone to avoid duplicating tasks.
-async function buildCesium(options) {
-  options = options || {};
-  mkdirp.sync("Build");
+// async function buildCesium(options) {
+//   options = options || {};
+//   mkdirp.sync("Build");
 
-  const outputDirectory = join(
-    "Build",
-    `Cesium${!options.minify ? "Unminified" : ""}`
-  );
-  rimraf.sync(outputDirectory);
+//   const outputDirectory = join(
+//     "Build",
+//     `Cesium${!options.minify ? "Unminified" : ""}`
+//   );
+//   rimraf.sync(outputDirectory);
 
-  writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
-  );
+//   writeFileSync(
+//     "Build/package.json",
+//     JSON.stringify({
+//       type: "commonjs",
+//     }),
+//     "utf8"
+//   );
 
-  await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-  await createCesiumJs();
-  await createSpecList();
-  await Promise.all([
-    createJsHintOptions(),
-    buildCesiumJs({
-      minify: options.minify,
-      iife: true,
-      sourcemap: options.sourcemap,
-      removePragmas: options.removePragmas,
-      path: outputDirectory,
-      node: options.node,
-    }),
-    buildWorkers({
-      minify: options.minify,
-      sourcemap: options.sourcemap,
-      path: outputDirectory,
-      removePragmas: options.removePragmas,
-    }),
-    createGalleryList(noDevelopmentGallery),
-    buildSpecs(),
-  ]);
+//   await glslToJavaScript(options.minify, "Build/minifyShaders.state");
+//   await createCesiumJs();
+//   await createSpecList();
+//   await Promise.all([
+//     createJsHintOptions(),
+//     buildCesiumJs({
+//       minify: options.minify,
+//       iife: true,
+//       sourcemap: options.sourcemap,
+//       removePragmas: options.removePragmas,
+//       path: outputDirectory,
+//       node: options.node,
+//     }),
+//     buildWorkers({
+//       minify: options.minify,
+//       sourcemap: options.sourcemap,
+//       path: outputDirectory,
+//       removePragmas: options.removePragmas,
+//     }),
+//     createGalleryList(noDevelopmentGallery),
+//     buildSpecs(),
+//   ]);
 
-  return copyAssets(outputDirectory);
-}
+//   return copyAssets(outputDirectory);
+// }
 
 export function build() {
   const minify = argv.minify ? argv.minify : false;
@@ -337,17 +393,11 @@ export function build() {
   const node = argv.node ? argv.node : true;
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (!workspace) {
-    createCesiumJs();
-    return Promise.resolve();
-  }
-
-  return buildWorkspace({
+  return buildCesium({
     minify: minify,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     node: node,
-    workspace: workspace,
   });
 }
 export default build;

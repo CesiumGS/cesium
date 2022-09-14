@@ -51,25 +51,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@tweenjs/tween.js": "^18.6.4",
-    "@zip.js/zip.js": "2.4.x",
-    "autolinker": "^3.14.3",
-    "bitmap-sdf": "^1.0.3",
-    "dompurify": "^2.2.2",
-    "earcut": "^2.2.4",
-    "grapheme-splitter": "^1.0.4",
-    "jsep": "^0.3.1",
-    "kdbush": "^3.0.0",
-    "ktx-parse": "^0.4.5",
-    "lerc": "^2.0.0",
-    "mersenne-twister": "^1.1.0",
-    "meshoptimizer": "^0.18.1",
-    "nosleep.js": "^0.12.0",
-    "pako": "^2.0.4",
-    "protobufjs": "^7.1.0",
-    "rbush": "^3.0.1",
-    "topojson-client": "^3.1.0",
-    "urijs": "^1.19.7"
+    "@cesium/engine": "*",
+    "@cesium/widgets": "*"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -135,7 +118,7 @@
     "prepare": "gulp prepare && husky install",
     "start": "node server.js",
     "start-public": "node server.js --public",
-    "build": "gulp build",
+    "build": "npm run build -w @cesium/engine && npm run build -w @cesium/widgets && gulp build",
     "build-watch": "gulp buildWatch",
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",

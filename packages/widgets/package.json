@@ -5,10 +5,12 @@
   "main": "index.js",
   "types": "widgets.d.ts",
   "dependencies": {
-    "@cesium/engine": "*"
+    "@cesium/engine": "*",
+    "@cesium/widgets": "*",
+    "nosleep.js": "^0.12.0"
   },
   "scripts": {
-    "build": "gulp build --workspace @cesium/widgets"
+    "build": "gulp buildWidgets --cwd ."
   },
   "repository": {
     "type": "git",
