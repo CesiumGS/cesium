@@ -176,7 +176,7 @@
     ]
   },
   "workspaces": [
-    "packages\\engine",
-    "packages\\widgets"
+    "packages/engine",
+    "packages/widgets"
   ]
 }
