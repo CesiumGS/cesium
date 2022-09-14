@@ -11,8 +11,9 @@ import ModelSilhouetteStageVS from "../../Shaders/Model/ModelSilhouetteStageVS.j
  *
  * @private
  */
-const ModelSilhouettePipelineStage = {};
-ModelSilhouettePipelineStage.name = "ModelSilhouettePipelineStage"; // Helps with debugging
+const ModelSilhouettePipelineStage = {
+  name: "ModelSilhouettePipelineStage", // Helps with debugging
+};
 
 /**
  * Tracks how many silhouettes have been created. This value is used to

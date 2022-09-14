@@ -7,8 +7,9 @@ import defaultValue from "../../Core/defaultValue.js";
  * @namespace BatchTexturePipelineStage
  * @private
  */
-const BatchTexturePipelineStage = {};
-BatchTexturePipelineStage.name = "BatchTexturePipelineStage"; // Helps with debugging
+const BatchTexturePipelineStage = {
+  name: "BatchTexturePipelineStage", // Helps with debugging
+};
 
 /**
  * Processes a primitive. This modifies the following parts of the render resources:
