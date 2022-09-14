@@ -338,6 +338,7 @@ export function build() {
   const workspace = argv.workspace ? argv.workspace : undefined;
 
   if (!workspace) {
+    createCesiumJs();
     return Promise.resolve();
   }
 

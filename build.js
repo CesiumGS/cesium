@@ -220,27 +220,61 @@ const sourceFiles = [
   "!packages/engine/Source/ThirdParty/_*",
 ];
 
+const workspaceSourceFiles = {
+  "@cesium/engine": [
+    "Source/**/*.js",
+    "!Source/*.js",
+    "!Source/Workers/**",
+    "!Source/WorkersES6/**",
+    "Source/WorkersES6/createTaskProcessorWorker.js",
+    "!Source/ThirdParty/Workers/**",
+    "!Source/ThirdParty/google-earth-dbroot-parser.js",
+    "!Source/ThirdParty/_*",
+  ],
+  "@cesium/widgets": ["Source/**/*.js"],
+};
+
+/**
+ * Generates export declaration from a file from a workspace.
+ *
+ * @param {String} workspace The workspace the file belongs to.
+ * @param {String} file The file.
+ * @returns {String} The export declaration.
+ */
+function generateDeclaration(workspace, file) {
+  let assignmentName = path.basename(file, path.extname(file));
+
+  let moduleId = file;
+  moduleId = filePathToModuleId(moduleId);
+
+  if (moduleId.indexOf("Shaders/") === 0) {
+    assignmentName = `_shaders${assignmentName}`;
+  }
+  assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+  return `export { default as ${assignmentName} } from '${workspace}';`;
+}
+
 /**
  * Creates a single entry point file, Cesium.js, which imports all individual modules exported from the Cesium API.
  * @returns {Buffer} contents
  */
 export async function createCesiumJs() {
   let contents = `export const VERSION = '${version}';\n`;
-  const files = await globby(sourceFiles);
-  files.forEach(function (file) {
-    file = path.relative("Source", file);
 
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
+  // Iterate over each workspace and generate declarations for each file.
+  for (const workspace of Object.keys(workspaceSourceFiles)) {
+    // Since workspace source files are provided relative to the workspace,
+    // the workspace path needs to be prepended.
+    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const filesPaths = workspaceSourceFiles[workspace].map((glob) =>
+      workspacePath.concat("/", glob)
+    );
 
-    let assignmentName = path.basename(file, path.extname(file));
-    if (moduleId.indexOf("Shaders/") === 0) {
-      assignmentName = `_shaders${assignmentName}`;
-    }
-    assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
-  });
-
+    const files = await globby(filesPaths);
+    const declarations = files.map((file) => generateDeclaration(workspace, file));
+    contents += declarations.join(`${EOL}`);
+    contents += "\n";
+  }
   await writeFile("Source/Cesium.js", contents, { encoding: "utf-8" });
 
   return contents;

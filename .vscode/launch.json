@@ -30,6 +30,18 @@
         },
         {
             "args": [
+                "build"
+            ],
+            "name": "Gulp task - build",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "args": [
                 "build-ts"
             ],
             "name": "Gulp task - build-ts",
