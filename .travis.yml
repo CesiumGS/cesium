@@ -21,7 +21,7 @@ script:
 
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - travis_wait 20 npm --silent run make-zip -- --concurrency 1
+  - npm --silent run make-zip
   - npm pack &> /dev/null
 
   - npm --silent run build-apps
