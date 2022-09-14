@@ -223,13 +223,18 @@ async function buildWorkspace(options) {
     process.exit(-1);
   }
 
+  //const outputDirectory = join(process.cwd(), `Build`);
+  // TODO: Fix the minifyShaders.state hack
+  mkdirp.sync('Build');
+  //rimraf.sync(outputDirectory);
+
   // Build shaders, if needed.
 
   if (workspace === "@cesium/engine") {
     // TODO: Use workspaceShaderFiles to make this more generic.
     await glslToJavaScript(
       options.minify,
-      "../../Build/minifyShaders.state"
+      "Build/minifyShaders.state"
     );
   }
 
@@ -237,8 +242,6 @@ async function buildWorkspace(options) {
 
   await createIndexJs(workspace);
 
-  const outputDirectory = join(process.cwd(), `Build`);
-  rimraf.sync(outputDirectory);
 
   // Bundle ESM
 
