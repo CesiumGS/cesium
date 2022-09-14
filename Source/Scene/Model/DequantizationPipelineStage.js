@@ -12,13 +12,13 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * @private
  */
-const DequantizationPipelineStage = {};
-DequantizationPipelineStage.name = "DequantizationPipelineStage"; // Helps with debugging
+const DequantizationPipelineStage = {
+  name: "DequantizationPipelineStage", // Helps with debugging
 
-DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS =
-  "dequantizationStage";
-DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS =
-  "void dequantizationStage(inout ProcessedAttributes attributes)";
+  FUNCTION_ID_DEQUANTIZATION_STAGE_VS: "dequantizationStage",
+  FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS:
+    "void dequantizationStage(inout ProcessedAttributes attributes)",
+};
 
 /**
  * Process a primitive with quantized attributes. This stage modifies the

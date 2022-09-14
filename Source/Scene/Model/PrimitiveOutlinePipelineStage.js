@@ -12,8 +12,9 @@ import PrimitiveOutlineStageFS from "../../Shaders/Model/PrimitiveOutlineStageFS
  *
  * @private
  */
-const PrimitiveOutlinePipelineStage = {};
-PrimitiveOutlinePipelineStage.name = "PrimitiveOutlinePipelineStage";
+const PrimitiveOutlinePipelineStage = {
+  name: "PrimitiveOutlinePipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
