@@ -2,7 +2,6 @@
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve } from "path";
-import { cpus } from "os";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -62,10 +61,6 @@ const noDevelopmentGallery = taskName === "release" || taskName === "makeZip";
 const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
-let concurrency = argv.concurrency;
-if (!concurrency) {
-  concurrency = cpus().length;
-}
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
