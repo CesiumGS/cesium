@@ -7,7 +7,7 @@ addons:
 notifications:
   slack:
     secure: JKzk2sJSbZ9h2PUVWj6KtOAdFbEEnOtv/VZy05pJ2H41xRgUHiGdtMW/vMSeq6XX3IJN8eW2zd0cJTgkFn0ioAlYvID8zRhcvkFHg60QXquoqtp5y65dxjtVz79hefxSo7FO1NhMZBQWE9Tg6R7XkoyTMth62+T9vqOgu2Hms6M=
-    if: branch = main
+    if: (branch = main) AND (type = push)
     on_success: change # default: always
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
