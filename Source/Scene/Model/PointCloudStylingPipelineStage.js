@@ -29,8 +29,9 @@ const scratchUniform = new Cartesian4();
  *
  * @private
  */
-const PointCloudStylingPipelineStage = {};
-PointCloudStylingPipelineStage.name = "PointCloudStylingPipelineStage"; // Helps with debugging
+const PointCloudStylingPipelineStage = {
+  name: "PointCloudStylingPipelineStage", // Helps with debugging
+};
 
 /**
  * Processes a primitive. If the model that owns it has a style, then

@@ -12,17 +12,16 @@ import ModelUtility from "./ModelUtility.js";
  * @namespace SelectedFeatureIdPipelineStage
  * @private
  */
-const SelectedFeatureIdPipelineStage = {};
-SelectedFeatureIdPipelineStage.name = "SelectedFeatureIdPipelineStage"; // Helps with debugging
+const SelectedFeatureIdPipelineStage = {
+  name: "SelectedFeatureIdPipelineStage", // Helps with debugging
 
-SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE = "SelectedFeature";
-SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE = "SelectedFeature";
-SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS =
-  "updateFeatureStructVS";
-SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS =
-  "updateFeatureStructFS";
-SelectedFeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE =
-  "void updateFeatureStruct(inout SelectedFeature feature)";
+  STRUCT_ID_SELECTED_FEATURE: "SelectedFeature",
+  STRUCT_NAME_SELECTED_FEATURE: "SelectedFeature",
+  FUNCTION_ID_FEATURE_VARYINGS_VS: "updateFeatureStructVS",
+  FUNCTION_ID_FEATURE_VARYINGS_FS: "updateFeatureStructFS",
+  FUNCTION_SIGNATURE_UPDATE_FEATURE:
+    "void updateFeatureStruct(inout SelectedFeature feature)",
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:

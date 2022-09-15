@@ -15,6 +15,7 @@
 - Fixed a bug where instanced models without normals would not render. [#10765](https://github.com/CesiumGS/cesium/pull/10765)
 - Fixed a regression where instanced feature IDs were not processed correctly [#10771](https://github.com/CesiumGS/cesium/pull/10771)
 - Fixed a regression where `Cesium3DTileFeature.setProperty()` was not creating properties for unknown property IDs. [#10775](https://github.com/CesiumGS/cesium/pull/10775)
+- Fixed a regression where `pnts` tiles with `3DTILES_draco_point_compression` and <= 8 quantization bits were being rendered incorrectly. [#10794](https://github.com/CesiumGS/cesium/pull/10794)
 - Fixed a bug where KMLs with a NetworkLink with viewRefreshMode=='onRegion' would cause Cesium to make numerous resource requests and possibly trigger an out of memory error. [#10790](https://github.com/CesiumGS/cesium/pull/10790)
 
 ### 1.97 - 2022-09-01

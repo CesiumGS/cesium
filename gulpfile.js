@@ -2,7 +2,6 @@
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve } from "path";
-import { cpus } from "os";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -62,10 +61,6 @@ const noDevelopmentGallery = taskName === "release" || taskName === "makeZip";
 const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
-let concurrency = argv.concurrency;
-if (!concurrency) {
-  concurrency = cpus().length;
-}
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -679,32 +674,20 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
 
     totalFiles++;
 
+    let content = await readFile(file);
+
+    if (compress) {
+      const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
+      if (alreadyCompressed) {
+        console.log(`Skipping compressing already compressed file: ${file}`);
+      } else {
+        content = gzipSync(content);
+      }
+    }
+
     const computeEtag = (content) => {
       return createHash("md5").update(content).digest("base64");
     };
-
-    let content = await readFile(file);
-    if (!compress) {
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
-    if (alreadyCompressed) {
-      console.log(`Skipping compressing already compressed file: ${file}`);
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    content = gzipSync(content);
 
     const index = existingBlobs.indexOf(blobName);
     if (index <= -1) {
@@ -716,7 +699,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       };
     }
 
-    // remove files as we find them on disk
+    // remove files from the list to clean later
+    // as we find them on disk
     existingBlobs.splice(index, 1);
 
     // get file info
@@ -922,7 +906,7 @@ export async function deploySetVersion() {
   const buildVersion = argv.buildVersion;
   if (buildVersion) {
     // NPM versions can only contain alphanumeric and hyphen characters
-    version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
+    packageJson.version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
     return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
   }
 }

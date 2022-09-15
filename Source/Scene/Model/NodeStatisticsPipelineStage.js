@@ -12,8 +12,13 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-const NodeStatisticsPipelineStage = {};
-NodeStatisticsPipelineStage.name = "NodeStatisticsPipelineStage"; // Helps with debugging
+const NodeStatisticsPipelineStage = {
+  name: "NodeStatisticsPipelineStage", // Helps with debugging
+
+  // Expose some methods for testing
+  _countInstancingAttributes: countInstancingAttributes,
+  _countGeneratedBuffers: countGeneratedBuffers,
+};
 
 NodeStatisticsPipelineStage.process = function (
   renderResources,
@@ -66,9 +71,5 @@ function countGeneratedBuffers(statistics, runtimeNode) {
     statistics.addBuffer(runtimeNode.instancingTranslationBuffer2D, hasCpuCopy);
   }
 }
-
-// Exposed for testing
-NodeStatisticsPipelineStage._countInstancingAttributes = countInstancingAttributes;
-NodeStatisticsPipelineStage._countGeneratedBuffers = countGeneratedBuffers;
 
 export default NodeStatisticsPipelineStage;
