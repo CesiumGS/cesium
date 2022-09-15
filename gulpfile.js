@@ -906,7 +906,7 @@ export async function deploySetVersion() {
   const buildVersion = argv.buildVersion;
   if (buildVersion) {
     // NPM versions can only contain alphanumeric and hyphen characters
-    version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
+    packageJson.version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
     return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
   }
 }
