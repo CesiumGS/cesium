@@ -628,11 +628,11 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  */
 export function copyAssets(outputDirectory) {
   const everythingElse = [
-    "Source/**",
-    "!**/*.js",
-    "!**/*.glsl",
-    "!**/*.css",
-    "!**/*.md",
+    "packages/engine/Source/**",
+    "!packages/**/*.js",
+    "!packages/**/*.glsl",
+    "!packages/**/*.css",
+    "!packages/**/*.md"
   ];
 
   const stream = gulp
@@ -641,6 +641,8 @@ export function copyAssets(outputDirectory) {
 
   return streamToPromise(stream);
 }
+
+
 
 /**
  * Creates .jshintrc for use in Sandcastle

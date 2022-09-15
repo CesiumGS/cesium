@@ -15,7 +15,7 @@ import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
-import { globby, globbySync } from "globby";
+import { globby, globbyStream, globbySync } from "globby";
 import open from "open";
 import rimraf from "rimraf";
 import mkdirp from "mkdirp";
@@ -102,7 +102,16 @@ const workspaceShaderFiles = {
 };
 
 const workspaceCssFiles = {
-  "@cesium/engine": "Source/**/*.css",
+  "@cesium/engine": [
+    "Source/**/*.css",
+    "Source/ThirdParty/google-earth-dbroot-parser.js", // This file is bundled as is during the CSS bundling.
+  ],
+  "@cesium/widgets": ["Source/**/*.css"],
+};
+
+const workspaceWorkerFiles = {
+  "@cesium/engine": ["Build/Workers/*.js", "Build/ThirdParty/Workers/*.js"],
+  "@cesium/widgets": [""],
 };
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
@@ -257,13 +266,18 @@ const defaultESBuildOptions = () => {
   };
 };
 
+/**
+ * Builds the @cesium/engine workspace.
+ */
 export const buildEngine = async () => {
+  const iife = true;
+  const node = true;
 
-  // Generate Build folder to place build artifacts.
+  // Create Build folder to place build artifacts.
   mkdirp.sync("Build");
 
   // Convert GLSL files to JavaScript modules.
-  //await glslToJavaScript(false, "Build/minifyShaders.state");
+  await glslToJavaScript(false, "Build/minifyShaders.state");
 
   // Create index.js
   await createIndexJs("@cesium/engine");
@@ -275,11 +289,81 @@ export const buildEngine = async () => {
     format: `esm`,
     outfile: join(`Build`, "index.js"),
   });
-  
-  await buildWorkers({
-    path: "Build"
+
+  // Generate bundle for CSS and ThirdParty using esbuild.
+  const css = await globby(workspaceCssFiles[`@cesium/engine`]);
+  const cssESBuildOptions = defaultESBuildOptions();
+  cssESBuildOptions.entryPoints = [
+    "Source/ThirdParty/google-earth-dbroot-parser.js",
+    ...css,
+  ];
+  cssESBuildOptions.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  await esbuild({
+    ...cssESBuildOptions,
+    outdir: "Build",
   });
+
+  // Build workers.
+  await buildWorkers({
+    path: "Build",
+  });
+
+  if (iife) {
+    await esbuild({
+      ...esBuildOptions,
+      format: "iife",
+      globalName: "CesiumEngine",
+      outfile: join(`Build`, `CesiumEngine.js`),
+    });
+  }
+
+  if (node) {
+    await esbuild({
+      ...esBuildOptions,
+      format: "cjs",
+      define: {
+        TransformStream: "null",
+      },
+      outfile: join(`Build`, `index.cjs`),
+    });
+  }
 };
+
+function prepareWorkspacePaths(workspacePath, paths) {
+  return paths.map((glob) => {
+    if (glob.indexOf(`!`) === 0) {
+      return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
+    }
+    return workspacePath.concat("/", glob);
+  });
+}
+
+/**
+ * Bundles CSS files.
+ *
+ * @param {Object} options
+ * @param {Array.<String>} options.filePaths The file paths to bundle.
+ * @param {String} options.outdir The output directory.
+ * @param {String} options.outbase The
+ */
+async function bundleCSS(options) {
+  options = options || {};
+
+  // Configure options for esbuild.
+  const esBuildOptions = defaultESBuildOptions();
+  esBuildOptions.entryPoints = await globby(options.filePaths);
+  esBuildOptions.loader = {
+    ".gif": "text",
+    ".png": "text",
+  };
+  esBuildOptions.outdir = options.outdir;
+  esBuildOptions.outbase = options.outbase;
+
+  await esbuild(esBuildOptions);
+}
 
 export const buildWidgets = async () => {
   // Generate Build folder to place build artifacts.
@@ -289,7 +373,17 @@ export const buildWidgets = async () => {
   await createIndexJs("@cesium/widgets");
 };
 
+function copyFiles(from, to, base) {
+  const stream = gulp
+    .src(from, { nodir: true, allowEmpty: true, base: base })
+    .pipe(gulp.dest(to));
+  return streamToPromise(stream);
+}
+
 const buildCesium = async (options) => {
+  const iife = true;
+  const node = true;
+
   // Generate Build folder to place build artifacts.
   mkdirp.sync("Build");
 
@@ -302,8 +396,53 @@ const buildCesium = async (options) => {
   await esbuild({
     ...esBuildOptions,
     format: `esm`,
-    outfile: join(`Build`, "Cesium.js")
+    outfile: join(`Build`, "index.js"),
   });
+
+  // Bundle CSS files.
+  for (const workspace of Object.keys(workspaceCssFiles)) {
+    // Since workspace source files are provided relative to the workspace,
+    // the workspace path needs to be prepended.
+    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const filesPaths = prepareWorkspacePaths(
+      workspacePath,
+      workspaceCssFiles[workspace]
+    );
+
+    await bundleCSS({
+      filePaths: filesPaths,
+      outbase: `${workspacePath}/Source`,
+      outdir: `Build/${workspace === "@cesium/widgets" ? `Widgets` : ``}`, // To ensure that we conform to how Cesium.js has previously been built.
+    });
+
+    // Copy worker files.
+    const workerPaths = prepareWorkspacePaths(
+      workspacePath,
+      workspaceWorkerFiles[workspace]
+    );
+    await copyFiles(workerPaths, "Build", `${workspacePath}/Build`);
+  }
+  if (iife) {
+    await esbuild({
+      ...esBuildOptions,
+      format: "iife",
+      globalName: "Cesium",
+      outfile: join(`Build`, `Cesium.js`),
+    });
+  }
+
+  if (node) {
+    await esbuild({
+      ...esBuildOptions,
+      format: "cjs",
+      define: {
+        TransformStream: "null",
+      },
+      outfile: join(`Build`, `index.cjs`),
+    });
+  }
+
+  return copyAssets(`Build`);
 };
 
 export async function esBuildWorkspace(workspace, options) {
