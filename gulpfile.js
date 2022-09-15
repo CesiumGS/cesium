@@ -674,32 +674,20 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
 
     totalFiles++;
 
+    let content = await readFile(file);
+
+    if (compress) {
+      const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
+      if (alreadyCompressed) {
+        console.log(`Skipping compressing already compressed file: ${file}`);
+      } else {
+        content = gzipSync(content);
+      }
+    }
+
     const computeEtag = (content) => {
       return createHash("md5").update(content).digest("base64");
     };
-
-    let content = await readFile(file);
-    if (!compress) {
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
-    if (alreadyCompressed) {
-      console.log(`Skipping compressing already compressed file: ${file}`);
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    content = gzipSync(content);
 
     const index = existingBlobs.indexOf(blobName);
     if (index <= -1) {
@@ -711,7 +699,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       };
     }
 
-    // remove files as we find them on disk
+    // remove files from the list to clean later
+    // as we find them on disk
     existingBlobs.splice(index, 1);
 
     // get file info
