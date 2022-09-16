@@ -41,6 +41,7 @@ import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -828,6 +829,14 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.debugWireframe = defaultValue(options.debugWireframe, false);
+
+  //Warning for improper setup of debug wireframe
+  if (this.debugWireframe === true && this._enableDebugWireframe === false) {
+    oneTimeWarning(
+      "3DTileset debug wireframe not set properly.",
+      "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+    );
+  }
 
   /**
    * This property is for debugging only; it is not optimized for production use.

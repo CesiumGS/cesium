@@ -33,6 +33,7 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
@@ -354,6 +355,14 @@ function Model(options) {
   );
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
+
+  //Warning for improper setup of debug wireframe
+  if (this._debugWireframe === true && this._enableDebugWireframe === false) {
+    oneTimeWarning(
+      "Model debug wireframe not set properly.",
+      "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+    );
+  }
 
   // Credit specified by the user.
   let credit = options.credit;
