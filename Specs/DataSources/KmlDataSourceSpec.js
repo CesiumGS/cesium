@@ -5474,7 +5474,7 @@ describe("DataSources/KmlDataSource", function () {
       parser.parseFromString(kml, "text/xml"),
       options
     ).then(function (dataSource) {
-      expect(dataSource.entities.values.length).toEqual(2);
+      expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
         "KML - Unsupported viewRefreshMode: onRegion"
