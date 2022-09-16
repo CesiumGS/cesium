@@ -1176,6 +1176,17 @@ Object.defineProperties(Model.prototype, {
         this.resetDrawCommands();
       }
       this._debugWireframe = value;
+
+      //Warning for improper setup of debug wireframe
+      if (
+        this._debugWireframe === true &&
+        this._enableDebugWireframe === false
+      ) {
+        oneTimeWarning(
+          "Model debug wireframe not set properly.",
+          "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+        );
+      }
     },
   },
 
