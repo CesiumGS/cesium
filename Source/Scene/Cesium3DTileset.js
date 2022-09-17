@@ -834,7 +834,7 @@ function Cesium3DTileset(options) {
   if (this.debugWireframe === true && this._enableDebugWireframe === false) {
     oneTimeWarning(
       "3DTileset debug wireframe not set properly.",
-      "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+      "Warning: Cesium3DTileset's enableDebugWireframe needs to be true for debugWireframe to have any effect!"
     );
   }
 

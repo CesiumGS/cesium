@@ -1184,7 +1184,7 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "Model debug wireframe not set properly.",
-          "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+          "Warning: Model's enableDebugWireframe needs to be true for debugWireframe to have any effect!"
         );
       }
     },
