@@ -364,6 +364,7 @@ ModelUtility.supportedExtensions = {
   KHR_texture_basisu: true,
   KHR_texture_transform: true,
   EXT_primitive_voxels: true,
+  WEB3D_quantized_attributes: true,
 };
 
 /**

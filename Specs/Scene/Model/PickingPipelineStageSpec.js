@@ -17,10 +17,10 @@ describe(
   "Scene/Model/PickingPipelineStage",
   function () {
     const boxVertexColors =
-      "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+      "./Data/Models/glTF-2.0/BoxVertexColors/glTF/BoxVertexColors.gltf";
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
 
     const mockIdObject = {};
 
@@ -124,6 +124,46 @@ describe(
         renderResources.runtimePrimitive
       );
     }
+
+    it("returns model.pickObject if defined", function () {
+      const renderResources = mockRenderResources();
+      const customPickObject = {
+        primitive: {
+          id: "custom",
+        },
+      };
+      renderResources.model.pickObject = customPickObject;
+
+      return loadGltf(boxVertexColors).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+
+        const frameState = scene.frameState;
+        const context = frameState.context;
+        // Reset pick objects.
+        context._pickObjects = [];
+
+        PickingPipelineStage.process(renderResources, primitive, frameState);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform vec4 czm_pickColor;",
+        ]);
+
+        const pickObject =
+          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        expect(pickObject).toBe(customPickObject);
+
+        const uniformMap = renderResources.uniformMap;
+        expect(uniformMap.czm_pickColor).toBeDefined();
+        expect(uniformMap.czm_pickColor()).toBeDefined();
+
+        expect(renderResources.model._pipelineResources.length).toEqual(1);
+        expect(renderResources.model._pickIds.length).toEqual(1);
+
+        expect(renderResources.pickId).toEqual("czm_pickColor");
+      });
+    });
 
     it("sets the picking variables in render resources for 3D Tiles", function () {
       const renderResources = mockRenderResources();

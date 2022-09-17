@@ -1315,7 +1315,7 @@ MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR = 1.0;
 /**
  * Material properties for the PBR specular glossiness shading model.
  *
- * @alias ModelComponents.function SpecularGlossiness
+ * @alias ModelComponents.SpecularGlossiness
  * @constructor
  *
  * @private

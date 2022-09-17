@@ -670,7 +670,7 @@ Beware of too tightly coupling a test with an implementation; it makes engine co
 
 Sometimes, a test requires sample data, like a CZML file or glTF model, or a service. When possible, we try to procedurally create data or mock a response in the test instead of reading a local file or making an external request. For example, [loadArrayBufferSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Core/loadArrayBufferSpec.js) uses a spy to simulate an XHR response.
 
-When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/CesiumGS/cesium/tree/main/Specs/Data). Avoid bloating the repo with an unnecessarily large file. Update [LICENSE.md](https://github.com/CesiumGS/cesium/blob/main/LICENSE.md) if the data requires a license or attribution. Include a README file when useful, for example, see [Specs/Data/Models/GltfLoader/BoomBox](https://github.com/CesiumGS/cesium/tree/main/Specs/Data/Models/GltfLoader/BoomBox).
+When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/CesiumGS/cesium/tree/main/Specs/Data). Avoid bloating the repo with an unnecessarily large file. Update [LICENSE.md](https://github.com/CesiumGS/cesium/blob/main/LICENSE.md) if the data requires a license or attribution. Include a README file when useful, for example, see [Specs/Data/Models/glTF-2.0/BoomBox](https://github.com/CesiumGS/cesium/tree/main/Specs/Data/Models/glTF-2.0/BoomBox).
 
 Make external requests that assume the tests are being used with an Internet connection very sparingly. We anticipate being able to run the tests offline.
 
@@ -683,7 +683,7 @@ For asynchronous testing, Jasmine's `it` function uses a `done` callback. For be
 Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/ModelSpec.js):
 
 ```javascript
-const modelUrl = "./Data/Models/PBR/Box/Box.gltf";
+const modelUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
 
 let scene;
 beforeAll(function () {

@@ -16,7 +16,7 @@ describe(
   "Scene/Model/WireframePipelineStage",
   function () {
     const boxTexturedBinary =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
 
     const resources = [];
     const gltfLoaders = [];

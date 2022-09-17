@@ -216,9 +216,9 @@ VoxelBoxShape.prototype.update = function (
   const scale = Matrix4.getScale(modelMatrix, scratchScale);
 
   // Box is not visible if:
-  // - any of the min bounds exceed the max bounds
+  // - any of the min render bounds exceed the max render bounds
   // - two or more of the min bounds equal the max bounds (line / point)
-  // - same as above, but for clip bounds
+  // - any of the min clip bounds exceed the max clip bounds
   // - scale is 0 for any component (too annoying to reconstruct rotation matrix)
   if (
     renderMinBounds.x > renderMaxBounds.x ||
@@ -228,6 +228,9 @@ VoxelBoxShape.prototype.update = function (
       (renderMinBounds.y === renderMaxBounds.y) +
       (renderMinBounds.z === renderMaxBounds.z) >=
       2 ||
+    clipMinBounds.x > clipMaxBounds.x ||
+    clipMinBounds.y > clipMaxBounds.y ||
+    clipMinBounds.z > clipMaxBounds.z ||
     scale.x === 0.0 ||
     scale.y === 0.0 ||
     scale.z === 0.0

@@ -47,76 +47,79 @@ describe(
   "Scene/GltfLoader",
   function () {
     const boxWithCredits =
-      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
+      "./Data/Models/glTF-2.0/BoxWithCopyright/glTF/Box.gltf";
     const boxInterleaved =
-      "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
+      "./Data/Models/glTF-2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
     const boxTextured =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
     const boxTexturedBinary =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedEmbedded =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Embedded/BoxTextured.gltf";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Embedded/BoxTextured.gltf";
     const boxTexturedKtx2Basis =
-      "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf";
+      "./Data/Models/glTF-2.0/BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf";
     const boxTexturedKtx2BasisBinary =
-      "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF-Binary/BoxTexturedKtx2Basis.glb";
+      "./Data/Models/glTF-2.0/BoxTexturedKtx2Basis/glTF-Binary/BoxTexturedKtx2Basis.glb";
     const boxVertexColors =
-      "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+      "./Data/Models/glTF-2.0/BoxVertexColors/glTF/BoxVertexColors.gltf";
     const simpleMorph =
-      "./Data/Models/GltfLoader/SimpleMorph/glTF/SimpleMorph.gltf";
-    const simpleSkin =
-      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+      "./Data/Models/glTF-2.0/SimpleMorph/glTF/SimpleMorph.gltf";
+    const simpleSkin = "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
     const animatedTriangle =
-      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+      "./Data/Models/glTF-2.0/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
     const animatedMorphCube =
-      "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
+      "./Data/Models/glTF-2.0/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
     const interpolationTest =
-      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
-    const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
+      "./Data/Models/glTF-2.0/InterpolationTest/glTF-Binary/InterpolationTest.glb";
+    const triangle = "./Data/Models/glTF-2.0/Triangle/glTF/Triangle.gltf";
     const triangleWithoutIndices =
-      "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
+      "./Data/Models/glTF-2.0/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
     const twoSidedPlane =
-      "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
-    const unlitTest = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+      "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+    const unlitTest = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
     const microcosmLegacy =
-      "./Data/Models/GltfLoader/Microcosm/glTF/microcosm_EXT_feature_metadata.gltf";
+      "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm_EXT_feature_metadata.gltf";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const buildingsMetadataLegacy =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata_EXT_feature_metadata.gltf";
-    const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata_EXT_feature_metadata.gltf";
+    const weather = "./Data/Models/glTF-2.0/Weather/glTF/weather.gltf";
     const weatherLegacy =
-      "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
+      "./Data/Models/glTF-2.0/Weather/glTF/weather_EXT_feature_metadata.gltf";
     const pointCloudWithPropertyAttributes =
-      "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+      "./Data/Models/glTF-2.0/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
     const boxWithPropertyAttributes =
-      "./Data/Models/GltfLoader/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
+      "./Data/Models/glTF-2.0/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
     const boxInstancedLegacy =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced_EXT_feature_metadata.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced_EXT_feature_metadata.gltf";
     const boxInstancedInterleaved =
-      "./Data/Models/GltfLoader/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
     const boxInstancedTranslation =
-      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
     const boxInstancedTranslationMinMax =
-      "./Data/Models/GltfLoader/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
-    const duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
+    const duckDraco = "./Data/Models/glTF-2.0/Duck/glTF-Draco/Duck.gltf";
     const boomBoxSpecularGlossiness =
-      "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
-      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+      "./Data/Models/glTF-2.0/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
     const boxArticulations =
-      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+      "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     const boxWithPrimitiveOutline =
-      "./Data/Models/GltfLoader/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
+      "./Data/Models/glTF-2.0/BoxWithPrimitiveOutline/glTF/BoxWithPrimitiveOutline.gltf";
     const boxWithPrimitiveOutlineSharedVertices =
-      "./Data/Models/GltfLoader/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
+      "./Data/Models/glTF-2.0/BoxWithPrimitiveOutlineSharedVertices/glTF/BoxWithPrimitiveOutlineSharedVertices.gltf";
     const multiUvTest =
-      "./Data/Models/GltfLoader/MultiUVTest/glTF-Binary/MultiUVTest.glb";
+      "./Data/Models/glTF-2.0/MultiUVTest/glTF-Binary/MultiUVTest.glb";
     const boxCesiumRtc =
-      "./Data/Models/GltfLoader/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+      "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+    const torusQuantized =
+      "./Data/Models/glTF-2.0/TorusQuantized/glTF/TorusQuantized.gltf";
+    const boxWeb3dQuantizedAttributes =
+      "./Data/Models/glTF-2.0/BoxWeb3dQuantizedAttributes/glTF/BoxWeb3dQuantizedAttributes.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -2860,12 +2863,12 @@ describe(
 
         expect(components.upAxis).toBe(Axis.Y);
         expect(components.forwardAxis).toBe(Axis.Z);
-        expect(material.occlusionTexture.texture.width).toBe(128);
-        expect(material.normalTexture.texture.width).toBe(128);
-        expect(material.emissiveTexture.texture.width).toBe(128);
-        expect(specularGlossiness.diffuseTexture.texture.width).toBe(128);
+        expect(material.occlusionTexture.texture.width).toBe(256);
+        expect(material.normalTexture.texture.width).toBe(256);
+        expect(material.emissiveTexture.texture.width).toBe(256);
+        expect(specularGlossiness.diffuseTexture.texture.width).toBe(256);
         expect(specularGlossiness.specularGlossinessTexture.texture.width).toBe(
-          128
+          256
         );
 
         expect(specularGlossiness.diffuseFactor).toEqual(
@@ -2874,7 +2877,7 @@ describe(
         expect(specularGlossiness.specularFactor).toEqual(
           new Cartesian3(1.0, 1.0, 1.0)
         );
-        expect(specularGlossiness.glossinessFactor).toBe(1.0);
+        expect(specularGlossiness.glossinessFactor).toBe(0.5);
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
@@ -2978,6 +2981,95 @@ describe(
           new Cartesian3(6378137, 0, 0)
         );
         expect(components.transform).toEqual(expectedTransform);
+      });
+    });
+
+    it("loads TorusQuantized", function () {
+      return loadGltf(torusQuantized).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const primitive = scene.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(0);
+        expect(positionAttribute.byteStride).toBe(4);
+        expect(positionAttribute.normalized).toBe(true);
+
+        // For KHR_mesh_quantization with a normalized POSITION attribute,
+        // the min and max must be dequantized.
+        const dequantizedValue = 127 / 255.0;
+        expect(positionAttribute.min).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+        expect(positionAttribute.max).toEqual(
+          new Cartesian3(dequantizedValue, dequantizedValue, dequantizedValue)
+        );
+
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(4);
+        expect(normalAttribute.min).not.toBeDefined();
+        expect(normalAttribute.max).not.toBeDefined();
+      });
+    });
+
+    it("loads WEB3D_quantized_attributes extension", function () {
+      return loadGltf(boxWeb3dQuantizedAttributes).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const primitive = scene.nodes[0].primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const scalarAttribute = getAttributeByName(attributes, "_SCALAR_TEST");
+
+        const positionQuantization = positionAttribute.quantization;
+        expect(positionQuantization).toBeDefined();
+        expect(positionQuantization.quantizedVolumeOffset).toEqual(
+          new Cartesian3(-0.5, -0.5, -0.5)
+        );
+        expect(positionQuantization.quantizedVolumeStepSize).toEqual(
+          new Cartesian3(
+            0.000015259021896696422,
+            0.000015259021896696422,
+            0.000015259021896696422
+          )
+        );
+        expect(positionAttribute.min).toEqual(new Cartesian3(-0.5, -0.5, -0.5));
+        expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
+
+        const normalQuantization = normalAttribute.quantization;
+        expect(normalQuantization).toBeDefined();
+        expect(normalQuantization.quantizedVolumeOffset).toEqual(
+          new Cartesian3(-1.0, -1.0, -1.0)
+        );
+        expect(normalQuantization.quantizedVolumeStepSize).toEqual(
+          new Cartesian3(
+            0.000030518043793392844,
+            0.000030518043793392844,
+            0.000030518043793392844
+          )
+        );
+
+        const scalarQuantization = scalarAttribute.quantization;
+        expect(scalarQuantization).toBeDefined();
+        expect(scalarQuantization.quantizedVolumeOffset).toBe(1);
+        expect(scalarQuantization.quantizedVolumeStepSize).toBe(0);
+        expect(scalarAttribute.min).toEqual(1);
+        expect(scalarAttribute.max).toEqual(1);
       });
     });
 

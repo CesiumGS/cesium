@@ -1,4 +1,5 @@
 import ArticulationStageType from "../Core/ArticulationStageType.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -21,6 +22,7 @@ import ModelUtility from "./Model/ModelUtility.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import hasExtension from "./hasExtension.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveLoadPlan from "./PrimitiveLoadPlan.js";
@@ -223,6 +225,12 @@ function GltfLoader(options) {
   this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
+
+  // This flag will be set in parse() if the KHR_mesh_quantization extension is
+  // present in extensionsRequired. This flag is used later when parsing
+  // attributes. When the extension is present, attributes may be stored as
+  // quantized integer values instead of floats.
+  this._hasKhrMeshQuantization = false;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
@@ -563,7 +571,6 @@ function loadVertexBuffer(
   accessorId,
   semantic,
   draco,
-  dequantize,
   loadBuffer,
   loadTypedArray
 ) {
@@ -579,7 +586,6 @@ function loadVertexBuffer(
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
-    dequantize: dequantize,
     loadBuffer: loadBuffer,
     loadTypedArray: loadTypedArray,
   });
@@ -760,9 +766,118 @@ function getDefault(MathType) {
   return new MathType(); // defaults to 0.0 for all types
 }
 
-function createAttribute(gltf, accessorId, name, semantic, setIndex) {
+function getQuantizationDivisor(componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return 127;
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return 255;
+    case ComponentDatatype.SHORT:
+      return 32767;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return 65535;
+    default:
+      return 1.0;
+  }
+}
+
+const minimumBoundsByType = {
+  VEC2: new Cartesian2(-1.0, -1.0),
+  VEC3: new Cartesian3(-1.0, -1.0, -1.0),
+  VEC4: new Cartesian4(-1.0, -1.0, -1.0, -1.0),
+};
+
+function dequantizeMinMax(attribute, VectorType) {
+  const divisor = getQuantizationDivisor(attribute.componentDatatype);
+  const minimumBound = minimumBoundsByType[attribute.type];
+
+  // dequantized = max(quantized / divisor, -1.0)
+  let min = attribute.min;
+  if (defined(min)) {
+    min = VectorType.divideByScalar(min, divisor, min);
+    min = VectorType.maximumByComponent(min, minimumBound, min);
+  }
+
+  let max = attribute.max;
+  if (defined(max)) {
+    max = VectorType.divideByScalar(max, divisor, max);
+    max = VectorType.maximumByComponent(max, minimumBound, max);
+  }
+
+  attribute.min = min;
+  attribute.max = max;
+}
+
+function setQuantizationFromWeb3dQuantizedAttributes(
+  extension,
+  attribute,
+  MathType
+) {
+  const decodeMatrix = extension.decodeMatrix;
+  const decodedMin = fromArray(MathType, extension.decodedMin);
+  const decodedMax = fromArray(MathType, extension.decodedMax);
+
+  if (defined(decodedMin) && defined(decodedMax)) {
+    attribute.min = decodedMin;
+    attribute.max = decodedMax;
+  }
+
+  const quantization = new ModelComponents.Quantization();
+  quantization.componentDatatype = attribute.componentDatatype;
+  quantization.type = attribute.type;
+
+  if (decodeMatrix.length === 4) {
+    quantization.quantizedVolumeOffset = decodeMatrix[2];
+    quantization.quantizedVolumeStepSize = decodeMatrix[0];
+  } else if (decodeMatrix.length === 9) {
+    quantization.quantizedVolumeOffset = new Cartesian2(
+      decodeMatrix[6],
+      decodeMatrix[7]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian2(
+      decodeMatrix[0],
+      decodeMatrix[4]
+    );
+  } else if (decodeMatrix.length === 16) {
+    quantization.quantizedVolumeOffset = new Cartesian3(
+      decodeMatrix[12],
+      decodeMatrix[13],
+      decodeMatrix[14]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian3(
+      decodeMatrix[0],
+      decodeMatrix[5],
+      decodeMatrix[10]
+    );
+  } else if (decodeMatrix.length === 25) {
+    quantization.quantizedVolumeOffset = new Cartesian4(
+      decodeMatrix[20],
+      decodeMatrix[21],
+      decodeMatrix[22],
+      decodeMatrix[23]
+    );
+    quantization.quantizedVolumeStepSize = new Cartesian4(
+      decodeMatrix[0],
+      decodeMatrix[6],
+      decodeMatrix[12],
+      decodeMatrix[18]
+    );
+  }
+
+  attribute.quantization = quantization;
+}
+
+function createAttribute(
+  gltf,
+  accessorId,
+  name,
+  semantic,
+  setIndex,
+  hasKhrMeshQuantization
+) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
+  const normalized = defaultValue(accessor.normalized, false);
 
   const attribute = new Attribute();
   attribute.name = name;
@@ -770,13 +885,34 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   attribute.setIndex = setIndex;
   attribute.constant = getDefault(MathType);
   attribute.componentDatatype = accessor.componentType;
-  attribute.normalized = defaultValue(accessor.normalized, false);
+  attribute.normalized = normalized;
   attribute.count = accessor.count;
   attribute.type = accessor.type;
   attribute.min = fromArray(MathType, accessor.min);
   attribute.max = fromArray(MathType, accessor.max);
   attribute.byteOffset = accessor.byteOffset;
   attribute.byteStride = getAccessorByteStride(gltf, accessor);
+
+  if (hasExtension(accessor, "WEB3D_quantized_attributes")) {
+    setQuantizationFromWeb3dQuantizedAttributes(
+      accessor.extensions.WEB3D_quantized_attributes,
+      attribute,
+      MathType
+    );
+  }
+
+  const isQuantizable =
+    attribute.semantic === VertexAttributeSemantic.POSITION ||
+    attribute.semantic === VertexAttributeSemantic.NORMAL ||
+    attribute.semantic === VertexAttributeSemantic.TANGENT ||
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+
+  // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
+  // However, for KHR_mesh_quantization, min and max must be dequantized for
+  // normalized values, else the bounding sphere will be computed incorrectly.
+  if (hasKhrMeshQuantization && normalized && isQuantizable) {
+    dequantizeMinMax(attribute, MathType);
+  }
 
   return attribute;
 }
@@ -893,7 +1029,6 @@ function loadAttribute(
   accessorId,
   semanticInfo,
   draco,
-  dequantize,
   loadBuffer,
   loadTypedArray
 ) {
@@ -914,7 +1049,8 @@ function loadAttribute(
     accessorId,
     name,
     modelSemantic,
-    setIndex
+    setIndex,
+    loader._hasKhrMeshQuantization
   );
 
   if (!defined(draco) && !defined(bufferViewId)) {
@@ -927,7 +1063,6 @@ function loadAttribute(
     accessorId,
     gltfSemantic,
     draco,
-    dequantize,
     loadBuffer,
     loadTypedArray
   );
@@ -1016,7 +1151,6 @@ function loadVertexAttribute(
     accessorId,
     semanticInfo,
     draco,
-    false,
     loadBuffer,
     loadTypedArray
   );
@@ -1086,7 +1220,6 @@ function loadInstancedAttribute(
     accessorId,
     semanticInfo,
     undefined,
-    true,
     loadBuffer,
     loadTypedArray
   );
@@ -2007,6 +2140,10 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
 }
 
 function loadNodes(loader, gltf, supportedImageFormats, frameState) {
+  if (!defined(gltf.nodes)) {
+    return [];
+  }
+
   let i;
   let j;
 
@@ -2301,6 +2438,12 @@ function parse(
   const extensionsRequired = gltf.extensionsRequired;
   if (defined(extensionsRequired)) {
     ModelUtility.checkSupportedExtensions(extensionsRequired);
+
+    // Check for the KHR_mesh_quantization extension here, it will be used later
+    // in loadAttribute().
+    loader._hasKhrMeshQuantization = extensionsRequired.includes(
+      "KHR_mesh_quantization"
+    );
   }
 
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);

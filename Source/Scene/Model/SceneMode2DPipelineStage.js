@@ -22,8 +22,9 @@ const scratchModelView2D = new Matrix4();
  *
  * @private
  */
-const SceneMode2DPipelineStage = {};
-SceneMode2DPipelineStage.name = "SceneMode2DPipelineStage"; // Helps with debugging
+const SceneMode2DPipelineStage = {
+  name: "SceneMode2DPipelineStage", // Helps with debugging
+};
 
 /**
  * This pipeline stage processes the position attribute of a primitive and adds the relevant

@@ -20,9 +20,12 @@ import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 
 /**
+ * <div class="notice">
+ * A billboard is created and its initial
+ * properties are set by calling {@link BillboardCollection#add}. Do not call the constructor directly.
+ * </div>
  * A viewport-aligned image positioned in the 3D scene, that is created
- * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
- * properties are set by calling {@link BillboardCollection#add}.
+ * and rendered using a {@link BillboardCollection}.
  * <br /><br />
  * <div align='center'>
  * <img src='Images/Billboard.png' width='400' height='300' /><br />

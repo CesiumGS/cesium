@@ -2,6 +2,7 @@ import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -635,12 +636,50 @@ function createInstances(loader, components, frameState) {
   instances.featureIds.push(featureIdInstanceAttribute);
 
   // Apply instancing to every node that has at least one primitive.
-  for (i = 0; i < components.nodes.length; i++) {
-    const node = components.nodes[i];
+  const nodes = components.nodes;
+  const nodesLength = nodes.length;
+  let makeInstancesCopy = false;
+  for (i = 0; i < nodesLength; i++) {
+    const node = nodes[i];
     if (node.primitives.length > 0) {
-      node.instances = instances;
+      // If the instances have not been assigned to a node already, assign
+      // it to the first node encountered. Otherwise, make a copy of them
+      // for each subsequent node.
+      node.instances = makeInstancesCopy
+        ? createInstancesCopy(instances)
+        : instances;
+
+      makeInstancesCopy = true;
     }
   }
+}
+
+/**
+ * Returns a copy of the instances that contains shallow copies of the instanced
+ * attributes. That is, the instances and attribute objects will be new copies,
+ * but they will point to the same buffers and typed arrays. This is so each
+ * node can manage memory separately, such that unloading memory for one
+ * node does not unload it for another.
+ *
+ * @returns {ModelComponents.Instances}
+ *
+ * @private
+ */
+function createInstancesCopy(instances) {
+  const instancesCopy = new Instances();
+  instancesCopy.transformInWorldSpace = instances.transformInWorldSpace;
+
+  const attributes = instances.attributes;
+  const attributesLength = attributes.length;
+
+  for (let i = 0; i < attributesLength; i++) {
+    const attributeCopy = clone(attributes[i], false);
+    instancesCopy.attributes.push(attributeCopy);
+  }
+
+  instancesCopy.featureIds = instances.featureIds;
+
+  return instancesCopy;
 }
 
 /**
