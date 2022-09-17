@@ -91,4 +91,46 @@ describe("Renderer/ShaderSource", function () {
     expect(clone.pickColorQualifier).toEqual(source.pickColorQualifier);
     expect(clone.includeBuiltIns).toEqual(source.includeBuiltIns);
   });
+
+  it("creates cache key for empty shader", function () {
+    const source = new ShaderSource();
+    expect(source.getCacheKey()).toBe(":undefined:true:");
+  });
+
+  it("creates cache key", function () {
+    const source = new ShaderSource({
+      defines: ["A", "B", "C"],
+      sources: ["void main() { gl_FragColor = vec4(1.0); }"],
+      pickColorQualifier: "varying",
+      includeBuiltIns: false,
+    });
+
+    expect(source.getCacheKey()).toBe(
+      "A,B,C:varying:false:void main() { gl_FragColor = vec4(1.0); }"
+    );
+  });
+
+  it("uses sorted list of defines in cache key", function () {
+    const defines1 = ["A", "B", "C"];
+    const defines2 = ["B", "C", "A"];
+
+    const source1 = new ShaderSource({ defines: defines1 });
+    const source2 = new ShaderSource({ defines: defines2 });
+    const key1 = source1.getCacheKey();
+    expect(key1).toBe(source2.getCacheKey());
+    expect(key1).toBe("A,B,C:undefined:true:");
+  });
+
+  it("cache key includes all sources", function () {
+    const source = new ShaderSource({
+      sources: [
+        "vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }",
+        "void main() { gl_fragColor = getColor(); }",
+      ],
+    });
+
+    expect(source.getCacheKey()).toBe(
+      ":undefined:true:vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }\nvoid main() { gl_fragColor = getColor(); }"
+    );
+  });
 });

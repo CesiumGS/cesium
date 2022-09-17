@@ -15,8 +15,7 @@ import loadAndZoomToModel from "./loadAndZoomToModel.js";
 describe(
   "Scene/Model/ModelMatrixUpdateStage",
   function () {
-    const simpleSkin =
-      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+    const simpleSkin = "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
 
     // These functions are specific to the SimpleSkin model.
     // The child leaf node is transformed relative to its parent,
@@ -60,11 +59,18 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
+    const mockPrimitive = {
+      material: {
+        doubleSided: false,
+      },
+    };
+
     function mockRenderResources(model) {
       return {
         model: model,
         runtimePrimitive: {
           boundingSphere: new BoundingSphere(),
+          primitive: mockPrimitive,
         },
       };
     }
@@ -92,6 +98,7 @@ describe(
           command: rootDrawCommand,
           primitiveRenderResources: renderResources,
         }),
+        primitive: mockPrimitive,
       });
       rootNode._transformDirty = true;
 
@@ -105,6 +112,7 @@ describe(
           command: leafDrawCommand,
           primitiveRenderResources: renderResources,
         }),
+        primitive: mockPrimitive,
       });
       leafNode._transformDirty = true;
     }

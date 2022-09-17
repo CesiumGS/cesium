@@ -9,8 +9,10 @@ import defaultValue from "../Core/defaultValue.js";
  *
  * @private
  */
-export default function SupportedImageFormats(options) {
+function SupportedImageFormats(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   this.webp = defaultValue(options.webp, false);
   this.basis = defaultValue(options.basis, false);
 }
+
+export default SupportedImageFormats;

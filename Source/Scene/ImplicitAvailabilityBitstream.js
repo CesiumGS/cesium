@@ -20,7 +20,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitAvailabilityBitstream(options) {
+function ImplicitAvailabilityBitstream(options) {
   const lengthBits = options.lengthBits;
   let availableCount = options.availableCount;
 
@@ -133,3 +133,5 @@ ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
 
   return ((this._bitstream[byteIndex] >> bitIndex) & 1) === 1;
 };
+
+export default ImplicitAvailabilityBitstream;

@@ -6,7 +6,7 @@
  *
  * @private
  */
-export default function ModelAlphaOptions() {
+function ModelAlphaOptions() {
   /**
    * Which render pass will render the model.
    *
@@ -22,3 +22,5 @@ export default function ModelAlphaOptions() {
    */
   this.alphaCutoff = undefined;
 }
+
+export default ModelAlphaOptions;

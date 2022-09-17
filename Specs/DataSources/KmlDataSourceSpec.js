@@ -429,6 +429,13 @@ describe("DataSources/KmlDataSource", function () {
       });
   });
 
+  it("can handle embedded data tags with missing source attributes", function () {
+    const dataSource = new KmlDataSource(options);
+    return Resource.fetchBlob("Data/KML/simpleScriptMissingSrcAttribute.kmz")
+      .then((blob) => dataSource.load(blob))
+      .catch(fail);
+  });
+
   it("sets DataSource name from Document", function () {
     const kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
@@ -5467,7 +5474,7 @@ describe("DataSources/KmlDataSource", function () {
       parser.parseFromString(kml, "text/xml"),
       options
     ).then(function (dataSource) {
-      expect(dataSource.entities.values.length).toEqual(2);
+      expect(dataSource.entities.values.length).toEqual(1);
       expect(console.warn.calls.count()).toEqual(1);
       expect(console.warn).toHaveBeenCalledWith(
         "KML - Unsupported viewRefreshMode: onRegion"

@@ -4,8 +4,9 @@ import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingSta
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import OctahedralProjectedCubeMap from "../OctahedralProjectedCubeMap.js";
 
-const ImageBasedLightingPipelineStage = {};
-ImageBasedLightingPipelineStage.name = "ImageBasedLightingPipelineStage"; // Helps with debugging
+const ImageBasedLightingPipelineStage = {
+  name: "ImageBasedLightingPipelineStage", // Helps with debugging
+};
 
 ImageBasedLightingPipelineStage.process = function (
   renderResources,
@@ -114,7 +115,7 @@ ImageBasedLightingPipelineStage.process = function (
     );
   }
 
-  shaderBuilder.addFragmentLines([ImageBasedLightingStageFS]);
+  shaderBuilder.addFragmentLines(ImageBasedLightingStageFS);
 
   const uniformMap = {
     model_iblFactor: function () {

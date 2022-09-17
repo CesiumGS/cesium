@@ -29,8 +29,13 @@ const SpecularGlossiness = ModelComponents.SpecularGlossiness;
  *
  * @private
  */
-const MaterialPipelineStage = {};
-MaterialPipelineStage.name = "MaterialPipelineStage"; // Helps with debugging
+const MaterialPipelineStage = {
+  name: "MaterialPipelineStage", // Helps with debugging
+
+  // Expose some methods for testing
+  _processTexture: processTexture,
+  _processTextureTransform: processTextureTransform,
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -122,13 +127,13 @@ MaterialPipelineStage.process = function (
     alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
-  shaderBuilder.addFragmentLines([MaterialStageFS]);
+  shaderBuilder.addFragmentLines(MaterialStageFS);
 
   if (material.doubleSided) {
     shaderBuilder.addDefine(
       "HAS_DOUBLE_SIDED_MATERIAL",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.BOTH
     );
   }
 };
@@ -501,9 +506,5 @@ function processMetallicRoughnessUniforms(
     );
   }
 }
-
-// Exposed for testing
-MaterialPipelineStage._processTexture = processTexture;
-MaterialPipelineStage._processTextureTransform = processTextureTransform;
 
 export default MaterialPipelineStage;

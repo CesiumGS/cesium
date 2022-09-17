@@ -25,7 +25,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  *
  * @private
  */
-export default function ModelRuntimeNode(options) {
+function ModelRuntimeNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const node = options.node;
@@ -112,9 +112,42 @@ export default function ModelRuntimeNode(options) {
   /**
    * Update stages to apply to this node.
    *
+   * @type {Object[]}
+   * @readonly
+   *
    * @private
    */
   this.updateStages = [];
+
+  /**
+   * The component-wise minimum value of the translations of the instances.
+   * This value is set by InstancingPipelineStage.
+   *
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  this.instancingTranslationMin = undefined;
+
+  /**
+   * The component-wise maximum value of the translations of the instances.
+   * This value is set by InstancingPipelineStage.
+   *
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  this.instancingTranslationMax = undefined;
+
+  /**
+   * A buffer containing the instanced transforms. The memory is managed
+   * by Model; this is just a reference.
+   *
+   * @type {Buffer}
+   *
+   * @private
+   */
+  this.instancingTransformsBuffer = undefined;
 
   /**
    * A buffer containing the instanced transforms projected to 2D world
@@ -122,7 +155,6 @@ export default function ModelRuntimeNode(options) {
    * by Model; this is just a reference.
    *
    * @type {Buffer}
-   * @readonly
    *
    * @private
    */
@@ -134,11 +166,24 @@ export default function ModelRuntimeNode(options) {
    * managed by Model; this is just a reference.
    *
    * @type {Buffer}
-   * @readonly
    *
    * @private
    */
   this.instancingTranslationBuffer2D = undefined;
+
+  /**
+   * If the model is instanced and projected to 2D, the reference point is the
+   * average of the instancing translation max and min. The 2D translations are
+   * defined relative to this point to avoid precision issues on the GPU.
+   * <p>
+   * This value is set by InstancingPipelineStage.
+   * </p>
+   *
+   * @type {Cartesian3}
+   *
+   * @private
+   */
+  this.instancingReferencePoint2D = undefined;
 
   initialize(this);
 }
@@ -599,3 +644,5 @@ ModelRuntimeNode.prototype.updateJointMatrices = function () {
     );
   }
 };
+
+export default ModelRuntimeNode;

@@ -1,9 +1,16 @@
+import Uri from "urijs";
 import {
   Cartographic,
   Clock,
   ClockStep,
   Ellipsoid,
   GeographicTilingScheme,
+  GetFeatureInfoFormat,
+  Imagery,
+  ImageryLayer,
+  ImageryLayerFeatureInfo,
+  ImageryProvider,
+  ImageryState,
   JulianDate,
   queryToObject,
   Rectangle,
@@ -12,15 +19,8 @@ import {
   RequestState,
   Resource,
   TimeIntervalCollection,
-  WebMercatorTilingScheme,
-  GetFeatureInfoFormat,
-  Imagery,
-  ImageryLayer,
-  ImageryLayerFeatureInfo,
-  ImageryProvider,
-  ImageryState,
   WebMapServiceImageryProvider,
-  Uri,
+  WebMercatorTilingScheme,
 } from "../../../Source/Cesium.js";
 
 import { Math as CesiumMath } from "../../Source/Cesium.js";

@@ -64,7 +64,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  *
  * @private
  */
-export default function PrimitiveOutlineGenerator(options) {
+function PrimitiveOutlineGenerator(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const triangleIndices = options.triangleIndices;
   const outlineIndices = options.outlineIndices;
@@ -685,3 +685,5 @@ EdgeSet.prototype.hasEdge = function (a, b) {
   const hash = small * this._originalVertexCount + big;
   return this._edges.has(hash);
 };
+
+export default PrimitiveOutlineGenerator;

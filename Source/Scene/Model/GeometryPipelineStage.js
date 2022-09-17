@@ -19,24 +19,20 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * @private
  */
-const GeometryPipelineStage = {};
-GeometryPipelineStage.name = "GeometryPipelineStage"; // Helps with debugging
+const GeometryPipelineStage = {
+  name: "GeometryPipelineStage", // Helps with debugging
 
-GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS =
-  "ProcessedAttributesVS";
-GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS =
-  "ProcessedAttributesFS";
-GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES = "ProcessedAttributes";
-GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES =
-  "initializeAttributes";
-GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES =
-  "void initializeAttributes(out ProcessedAttributes attributes)";
-GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS =
-  "setDynamicVaryingsVS";
-GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS =
-  "setDynamicVaryingsFS";
-GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
-  "void setDynamicVaryings(inout ProcessedAttributes attributes)";
+  STRUCT_ID_PROCESSED_ATTRIBUTES_VS: "ProcessedAttributesVS",
+  STRUCT_ID_PROCESSED_ATTRIBUTES_FS: "ProcessedAttributesFS",
+  STRUCT_NAME_PROCESSED_ATTRIBUTES: "ProcessedAttributes",
+  FUNCTION_ID_INITIALIZE_ATTRIBUTES: "initializeAttributes",
+  FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES:
+    "void initializeAttributes(out ProcessedAttributes attributes)",
+  FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS: "setDynamicVaryingsVS",
+  FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS: "setDynamicVaryingsFS",
+  FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS:
+    "void setDynamicVaryings(inout ProcessedAttributes attributes)",
+};
 
 /**
  * This pipeline stage processes the vertex attributes of a primitive,
@@ -69,16 +65,6 @@ GeometryPipelineStage.process = function (
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
-  const hasClassification = defined(model.classificationType);
-
-  // Some shader stages must be handled differently for classification models.
-  if (hasClassification) {
-    shaderBuilder.addDefine(
-      "HAS_CLASSIFICATION",
-      undefined,
-      ShaderDestination.BOTH
-    );
-  }
 
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
@@ -177,19 +163,8 @@ GeometryPipelineStage.process = function (
     }
     //>>includeEnd('debug');
 
-    // Classification models only use the position, texcoord, and feature ID attributes.
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
-    const isFeatureIdAttribute =
-      attribute.semantic === VertexAttributeSemantic.FEATURE_ID;
-    const isTexcoordAttribute =
-      attribute.semantic === VertexAttributeSemantic.TEXCOORD;
-
-    const isClassificationAttribute =
-      isPositionAttribute || isFeatureIdAttribute || isTexcoordAttribute;
-    if (hasClassification && !isClassificationAttribute) {
-      continue;
-    }
 
     let index;
     if (attributeLocationCount > 1) {
@@ -211,16 +186,14 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  if (!hasClassification) {
-    handleBitangents(shaderBuilder, primitive.attributes);
-  }
+  handleBitangents(shaderBuilder, primitive.attributes);
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryStageVS]);
-  shaderBuilder.addFragmentLines([GeometryStageFS]);
+  shaderBuilder.addVertexLines(GeometryStageVS);
+  shaderBuilder.addFragmentLines(GeometryStageFS);
 };
 
 function processAttribute(
@@ -350,8 +323,8 @@ function addAttributeToRenderResources(
     count: attribute.count,
     componentsPerAttribute: componentsPerAttribute,
     componentDatatype: ComponentDatatype.FLOAT, // Projected positions will always be floats.
-    offsetInBytes: attribute.byteOffset,
-    strideInBytes: attribute.byteStride,
+    offsetInBytes: 0,
+    strideInBytes: undefined,
     normalize: attribute.normalized,
   };
 

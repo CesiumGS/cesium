@@ -22,24 +22,26 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  *
  * @private
  */
-const CustomShaderPipelineStage = {};
-CustomShaderPipelineStage.name = "CustomShaderPipelineStage"; // Helps with debugging
+const CustomShaderPipelineStage = {
+  name: "CustomShaderPipelineStage", // Helps with debugging
 
-CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS = "AttributesVS";
-CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS = "AttributesFS";
-CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES = "Attributes";
-CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT = "VertexInput";
-CustomShaderPipelineStage.STRUCT_NAME_VERTEX_INPUT = "VertexInput";
-CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT = "FragmentInput";
-CustomShaderPipelineStage.STRUCT_NAME_FRAGMENT_INPUT = "FragmentInput";
-CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS =
-  "initializeInputStructVS";
-CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS =
-  "void initializeInputStruct(out VertexInput vsInput, ProcessedAttributes attributes)";
-CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS =
-  "initializeInputStructFS";
-CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS =
-  "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)";
+  STRUCT_ID_ATTRIBUTES_VS: "AttributesVS",
+  STRUCT_ID_ATTRIBUTES_FS: "AttributesFS",
+  STRUCT_NAME_ATTRIBUTES: "Attributes",
+  STRUCT_ID_VERTEX_INPUT: "VertexInput",
+  STRUCT_NAME_VERTEX_INPUT: "VertexInput",
+  STRUCT_ID_FRAGMENT_INPUT: "FragmentInput",
+  STRUCT_NAME_FRAGMENT_INPUT: "FragmentInput",
+  FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS: "initializeInputStructVS",
+  FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS:
+    "void initializeInputStruct(out VertexInput vsInput, ProcessedAttributes attributes)",
+  FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS: "initializeInputStructFS",
+  FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS:
+    "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)",
+
+  // Expose method for testing.
+  _oneTimeWarning: oneTimeWarning,
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -525,8 +527,14 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     "metadataClass"
+  );
+  // Add MetadataStatistics struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+    "metadataStatistics"
   );
 
   const functionId =
@@ -587,8 +595,14 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
-    MetadataPipelineStage.STRUCT_NAME_METADATACLASS,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
     "metadataClass"
+  );
+  // Add MetadataStatistics struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+    "metadataStatistics"
   );
 
   const functionId =
@@ -603,31 +617,38 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   shaderBuilder.addFunctionLines(functionId, initializationLines);
 }
 
+const scratchShaderLines = [];
+
 function addLinesToShader(shaderBuilder, customShader, generatedCode) {
   const vertexLines = generatedCode.vertexLines;
+  const shaderLines = scratchShaderLines;
+
   if (vertexLines.enabled) {
     addVertexLinesToShader(shaderBuilder, vertexLines);
 
-    shaderBuilder.addVertexLines([
+    shaderLines.length = 0;
+    shaderLines.push(
       "#line 0",
       customShader.vertexShaderText,
-      CustomShaderStageVS,
-    ]);
+      CustomShaderStageVS
+    );
+
+    shaderBuilder.addVertexLines(shaderLines);
   }
 
   const fragmentLines = generatedCode.fragmentLines;
   if (fragmentLines.enabled) {
     addFragmentLinesToShader(shaderBuilder, fragmentLines);
 
-    shaderBuilder.addFragmentLines([
+    shaderLines.length = 0;
+    shaderLines.push(
       "#line 0",
       customShader.fragmentShaderText,
-      CustomShaderStageFS,
-    ]);
+      CustomShaderStageFS
+    );
+
+    shaderBuilder.addFragmentLines(shaderLines);
   }
 }
-
-// exposed for testing.
-CustomShaderPipelineStage._oneTimeWarning = oneTimeWarning;
 
 export default CustomShaderPipelineStage;

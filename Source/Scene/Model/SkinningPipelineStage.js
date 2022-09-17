@@ -11,12 +11,12 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  * @private
  */
 
-const SkinningPipelineStage = {};
-SkinningPipelineStage.name = "SkinningPipelineStage"; // Helps with debugging
+const SkinningPipelineStage = {
+  name: "SkinningPipelineStage", // Helps with debugging
 
-SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX = "getSkinningMatrix";
-SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX =
-  "mat4 getSkinningMatrix()";
+  FUNCTION_ID_GET_SKINNING_MATRIX: "getSkinningMatrix",
+  FUNCTION_SIGNATURE_GET_SKINNING_MATRIX: "mat4 getSkinningMatrix()",
+};
 
 /**
  * This pipeline stage processes the joint matrices of a skinned primitive, adding
@@ -48,7 +48,7 @@ SkinningPipelineStage.process = function (renderResources, primitive) {
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([SkinningStageVS]);
+  shaderBuilder.addVertexLines(SkinningStageVS);
 
   const uniformMap = {
     u_jointMatrices: function () {

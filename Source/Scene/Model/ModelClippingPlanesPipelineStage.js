@@ -12,8 +12,9 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  *
  * @private
  */
-const ModelClippingPlanesPipelineStage = {};
-ModelClippingPlanesPipelineStage.name = "ModelClippingPlanesPipelineStage"; // Helps with debugging
+const ModelClippingPlanesPipelineStage = {
+  name: "ModelClippingPlanesPipelineStage", // Helps with debugging
+};
 
 const textureResolutionScratch = new Cartesian2();
 /**
@@ -103,7 +104,7 @@ ModelClippingPlanesPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  shaderBuilder.addFragmentLines([ModelClippingPlanesStageFS]);
+  shaderBuilder.addFragmentLines(ModelClippingPlanesStageFS);
 
   const uniformMap = {
     model_clippingPlanes: function () {

@@ -291,6 +291,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -302,6 +303,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -374,6 +376,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -385,6 +388,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -458,6 +462,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -469,6 +474,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -539,6 +545,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -550,6 +557,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -610,6 +618,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
   });
@@ -663,6 +672,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -674,6 +684,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -737,6 +748,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -748,6 +760,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 
@@ -790,8 +803,8 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     // once for the vertex shader, once for the fragment shader
     expect(CustomShaderPipelineStage._oneTimeWarning.calls.count()).toBe(2);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
   });
 
   it("disables vertex shader if vertexShaderText is not provided", function () {
@@ -803,17 +816,17 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(renderResources, primitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "HAS_CUSTOM_FRAGMENT_SHADER",
       "CUSTOM_SHADER_MODIFY_MATERIAL",
     ]);
 
-    expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
-    const fragmentShaderIndex = shaderBuilder._fragmentShaderParts.shaderLines.indexOf(
+    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+    ShaderBuilderTester.expectFragmentLinesContains(
+      shaderBuilder,
       emptyFragmentShader
     );
-    expect(fragmentShaderIndex).not.toBe(-1);
   });
 
   it("disables fragment shader if fragmentShaderText is not provided", function () {
@@ -825,16 +838,16 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(renderResources, primitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
 
-    const vertexShaderIndex = shaderBuilder._vertexShaderParts.shaderLines.indexOf(
+    ShaderBuilderTester.expectVertexLinesContains(
+      shaderBuilder,
       emptyVertexShader
     );
-    expect(vertexShaderIndex).not.toBe(-1);
-    expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([]);
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, []);
   });
 
   it("disables custom shader if neither fragmentShaderText nor vertexShaderText are provided", function () {
@@ -889,6 +902,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    FeatureIds featureIds;",
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
+        "    MetadataStatistics metadataStatistics;",
       ]
     );
 

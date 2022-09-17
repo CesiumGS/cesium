@@ -18,28 +18,23 @@ import ModelUtility from "./ModelUtility.js";
  * @namespace FeatureIdPipelineStage
  * @private
  */
-const FeatureIdPipelineStage = {};
-FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
+const FeatureIdPipelineStage = {
+  name: "FeatureIdPipelineStage", // Helps with debugging
 
-FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS = "FeatureIdsVS";
-FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS = "FeatureIdsFS";
-FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS = "FeatureIds";
-FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS =
-  "initializeFeatureIdsVS";
-FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS =
-  "initializeFeatureIdsFS";
-FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS =
-  "initializeFeatureIdAliasesVS";
-FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS =
-  "initializeFeatureIdAliasesFS";
-FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS =
-  "void initializeFeatureIds(out FeatureIds featureIds, ProcessedAttributes attributes)";
-FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES =
-  "void initializeFeatureIdAliases(inout FeatureIds featureIds)";
-FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS =
-  "setFeatureIdVaryings";
-FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS =
-  "void setFeatureIdVaryings()";
+  STRUCT_ID_FEATURE_IDS_VS: "FeatureIdsVS",
+  STRUCT_ID_FEATURE_IDS_FS: "FeatureIdsFS",
+  STRUCT_NAME_FEATURE_IDS: "FeatureIds",
+  FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS: "initializeFeatureIdsVS",
+  FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS: "initializeFeatureIdsFS",
+  FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS: "initializeFeatureIdAliasesVS",
+  FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS: "initializeFeatureIdAliasesFS",
+  FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS:
+    "void initializeFeatureIds(out FeatureIds featureIds, ProcessedAttributes attributes)",
+  FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES:
+    "void initializeFeatureIdAliases(inout FeatureIds featureIds)",
+  FUNCTION_ID_SET_FEATURE_ID_VARYINGS: "setFeatureIdVaryings",
+  FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS: "void setFeatureIdVaryings()",
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:
@@ -68,8 +63,8 @@ FeatureIdPipelineStage.process = function (
   }
   processPrimitiveFeatureIds(renderResources, primitive, frameState);
 
-  shaderBuilder.addVertexLines([FeatureIdStageVS]);
-  shaderBuilder.addFragmentLines([FeatureIdStageFS]);
+  shaderBuilder.addVertexLines(FeatureIdStageVS);
+  shaderBuilder.addFragmentLines(FeatureIdStageFS);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {

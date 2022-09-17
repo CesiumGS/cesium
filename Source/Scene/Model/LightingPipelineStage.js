@@ -12,8 +12,9 @@ import LightingModel from "./LightingModel.js";
  *
  * @private
  */
-const LightingPipelineStage = {};
-LightingPipelineStage.name = "LightingPipelineStage"; // Helps with debugging
+const LightingPipelineStage = {
+  name: "LightingPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -68,7 +69,7 @@ LightingPipelineStage.process = function (renderResources, primitive) {
     );
   }
 
-  shaderBuilder.addFragmentLines([LightingStageFS]);
+  shaderBuilder.addFragmentLines(LightingStageFS);
 };
 
 export default LightingPipelineStage;

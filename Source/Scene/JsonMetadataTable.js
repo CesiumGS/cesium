@@ -20,7 +20,7 @@ import MetadataEntity from "./MetadataEntity.js";
 // that does not have a class definition.
 const emptyClass = {};
 
-export default function JsonMetadataTable(options) {
+function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", options.count, 0);
   Check.typeOf.object("options.properties", options.properties);
@@ -81,12 +81,12 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
 };
 
 /**
- * Sets the value of the property with the given ID.
+ * Sets the value of the property with the given ID. If the property did not
+ * exist, it will be created.
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @exception {DeveloperError} index is out of bounds
  * @private
@@ -101,11 +101,14 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   }
   //>>includeEnd('debug');
 
-  const property = this._properties[propertyId];
-  if (defined(property)) {
-    property[index] = clone(value, true);
-    return true;
+  let property = this._properties[propertyId];
+  if (!defined(property)) {
+    // Property does not exist. Create it.
+    property = new Array(this._count);
+    this._properties[propertyId] = property;
   }
 
-  return false;
+  property[index] = clone(value, true);
 };
+
+export default JsonMetadataTable;

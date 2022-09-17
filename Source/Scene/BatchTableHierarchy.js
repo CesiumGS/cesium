@@ -21,7 +21,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-export default function BatchTableHierarchy(options) {
+function BatchTableHierarchy(options) {
   this._classes = undefined;
   this._classIds = undefined;
   this._classIndexes = undefined;
@@ -552,3 +552,5 @@ BatchTableHierarchy.prototype.getClassName = function (batchId) {
   const instanceClass = this._classes[classId];
   return instanceClass.name;
 };
+
+export default BatchTableHierarchy;

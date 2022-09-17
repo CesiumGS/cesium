@@ -20,7 +20,7 @@ import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import Autolinker from "../ThirdParty/Autolinker.js";
+import Autolinker from "autolinker";
 import BillboardGraphics from "./BillboardGraphics.js";
 import ConstantProperty from "./ConstantProperty.js";
 import DataSource from "./DataSource.js";

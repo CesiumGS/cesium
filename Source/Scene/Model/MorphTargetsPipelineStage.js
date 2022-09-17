@@ -12,18 +12,19 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * @private
  */
-const MorphTargetsPipelineStage = {};
-MorphTargetsPipelineStage.name = "MorphTargetsPipelineStage"; // Helps with debugging
-MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION =
-  "getMorphedPosition";
-MorphTargetsPipelineStage.FUNCTION_SIGNATURE_GET_MORPHED_POSITION =
-  "vec3 getMorphedPosition(in vec3 position)";
-MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_NORMAL = "getMorphedNormal";
-MorphTargetsPipelineStage.FUNCTION_SIGNATURE_GET_MORPHED_NORMAL =
-  "vec3 getMorphedNormal(in vec3 normal)";
-MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_TANGENT = "getMorphedTangent";
-MorphTargetsPipelineStage.FUNCTION_SIGNATURE_GET_MORPHED_TANGENT =
-  "vec3 getMorphedTangent(in vec3 tangent)";
+const MorphTargetsPipelineStage = {
+  name: "MorphTargetsPipelineStage", // Helps with debugging
+
+  FUNCTION_ID_GET_MORPHED_POSITION: "getMorphedPosition",
+  FUNCTION_SIGNATURE_GET_MORPHED_POSITION:
+    "vec3 getMorphedPosition(in vec3 position)",
+  FUNCTION_ID_GET_MORPHED_NORMAL: "getMorphedNormal",
+  FUNCTION_SIGNATURE_GET_MORPHED_NORMAL:
+    "vec3 getMorphedNormal(in vec3 normal)",
+  FUNCTION_ID_GET_MORPHED_TANGENT: "getMorphedTangent",
+  FUNCTION_SIGNATURE_GET_MORPHED_TANGENT:
+    "vec3 getMorphedTangent(in vec3 tangent)",
+};
 
 /**
  * This pipeline stage processes the morph targets and weights of a primitive,
@@ -90,7 +91,7 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines([MorphTargetsStageVS]);
+  shaderBuilder.addVertexLines(MorphTargetsStageVS);
 
   const uniformMap = {
     u_morphWeights: function () {

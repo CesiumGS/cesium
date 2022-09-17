@@ -7,7 +7,9 @@ function customizeJasmine(
   excludedCategory,
   webglValidation,
   webglStub,
-  release
+  release,
+  debugCanvasWidth,
+  debugCanvasHeight
 ) {
   // set this for uniform test resolution across devices
   window.devicePixelRatio = 1;
@@ -44,6 +46,9 @@ function customizeJasmine(
   if (webglStub) {
     window.webglStub = true;
   }
+
+  window.debugCanvasWidth = debugCanvasWidth;
+  window.debugCanvasHeight = debugCanvasHeight;
 
   env.beforeEach(function () {
     addDefaultMatchers(!release).call(env);

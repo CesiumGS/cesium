@@ -6,6 +6,7 @@ import {
   ShaderBuilder,
   Cartesian3,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/Model/LightingPipelineStage", function () {
   const mockPrimitive = {};
@@ -27,10 +28,19 @@ describe("Scene/Model/LightingPipelineStage", function () {
     };
     LightingPipelineStage.process(renderResources, mockPrimitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "USE_CUSTOM_LIGHT_COLOR",
       "LIGHTING_UNLIT",
+    ]);
+
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform vec3 model_lightColorHdr;",
+    ]);
+
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersLightingStageFS,
     ]);
 
     expect(renderResources.uniformMap.model_lightColorHdr).toBeDefined();
@@ -45,9 +55,16 @@ describe("Scene/Model/LightingPipelineStage", function () {
     };
     LightingPipelineStage.process(renderResources, mockPrimitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "LIGHTING_UNLIT",
+    ]);
+
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersLightingStageFS,
     ]);
   });
 
@@ -63,23 +80,15 @@ describe("Scene/Model/LightingPipelineStage", function () {
     };
     LightingPipelineStage.process(renderResources, mockPrimitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "LIGHTING_PBR",
     ]);
-  });
 
-  it("adds the lighting shader function to the shader", function () {
-    const shaderBuilder = new ShaderBuilder();
-    const renderResources = {
-      model: mockModel,
-      shaderBuilder: shaderBuilder,
-      lightingOptions: optionsUnlit,
-    };
-    LightingPipelineStage.process(renderResources, mockPrimitive);
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
-    expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
-    expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
       _shadersLightingStageFS,
     ]);
   });

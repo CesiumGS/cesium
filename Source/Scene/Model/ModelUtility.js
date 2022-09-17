@@ -15,7 +15,7 @@ import Matrix3 from "../../Core/Matrix3.js";
  *
  * @private
  */
-export default function ModelUtility() {}
+function ModelUtility() {}
 
 /**
  * Create a function for reporting when a model fails to load
@@ -87,6 +87,8 @@ ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
       return attribute;
     }
   }
+
+  return undefined;
 };
 
 /**
@@ -108,6 +110,8 @@ ModelUtility.getAttributeByName = function (object, name) {
       return attribute;
     }
   }
+
+  return undefined;
 };
 
 /**
@@ -350,13 +354,17 @@ ModelUtility.supportedExtensions = {
   EXT_meshopt_compression: true,
   EXT_structural_metadata: true,
   EXT_texture_webp: true,
+  KHR_blend: true,
   KHR_draco_mesh_compression: true,
+  KHR_techniques_webgl: true,
+  KHR_materials_common: true,
   KHR_materials_pbrSpecularGlossiness: true,
   KHR_materials_unlit: true,
   KHR_mesh_quantization: true,
   KHR_texture_basisu: true,
   KHR_texture_transform: true,
   EXT_primitive_voxels: true,
+  WEB3D_quantized_attributes: true,
 };
 
 /**
@@ -375,3 +383,5 @@ ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
     }
   }
 };
+
+export default ModelUtility;

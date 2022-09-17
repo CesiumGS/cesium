@@ -23,7 +23,7 @@ import ModelType from "./ModelType.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ModelFeatureTable(options) {
+function ModelFeatureTable(options) {
   const model = options.model;
   const propertyTable = options.propertyTable;
 
@@ -318,3 +318,5 @@ ModelFeatureTable.prototype.destroy = function (frameState) {
   this._batchTexture = this._batchTexture && this._batchTexture.destroy();
   destroyObject(this);
 };
+
+export default ModelFeatureTable;

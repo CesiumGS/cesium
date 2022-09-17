@@ -1,11 +1,19 @@
+import Uri from "urijs";
 import {
   appendForwardSlash,
+  ArcGisMapServerImageryProvider,
   Cartesian2,
   Cartesian3,
   Cartographic,
   defined,
+  DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
   getAbsoluteUri,
+  Imagery,
+  ImageryLayer,
+  ImageryLayerFeatureInfo,
+  ImageryProvider,
+  ImageryState,
   objectToQuery,
   queryToObject,
   Rectangle,
@@ -14,14 +22,6 @@ import {
   Resource,
   WebMercatorProjection,
   WebMercatorTilingScheme,
-  ArcGisMapServerImageryProvider,
-  DiscardMissingTileImagePolicy,
-  Imagery,
-  ImageryLayer,
-  ImageryLayerFeatureInfo,
-  ImageryProvider,
-  ImageryState,
-  Uri,
 } from "../../../Source/Cesium.js";
 
 import pollToPromise from "../pollToPromise.js";

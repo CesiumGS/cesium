@@ -1,4 +1,4 @@
-export default function ShaderBuilderTester() {}
+function ShaderBuilderTester() {}
 
 function expectHasLine(linesArray, line) {
   expect(linesArray.indexOf(line)).not.toBe(-1);
@@ -74,6 +74,13 @@ ShaderBuilderTester.expectHasVaryings = function (
   );
 };
 
+ShaderBuilderTester.expectHasVertexStructIds = function (
+  shaderBuilder,
+  expectedStructIds
+) {
+  expect(shaderBuilder._vertexShaderParts.structIds).toEqual(expectedStructIds);
+};
+
 ShaderBuilderTester.expectHasVertexStruct = function (
   shaderBuilder,
   structId,
@@ -87,6 +94,15 @@ ShaderBuilderTester.expectHasVertexStruct = function (
   expectEqualUnordered(struct.fields, expectedFields);
 };
 
+ShaderBuilderTester.expectHasFragmentStructIds = function (
+  shaderBuilder,
+  expectedStructIds
+) {
+  expect(shaderBuilder._fragmentShaderParts.structIds).toEqual(
+    expectedStructIds
+  );
+};
+
 ShaderBuilderTester.expectHasFragmentStruct = function (
   shaderBuilder,
   structId,
@@ -98,6 +114,15 @@ ShaderBuilderTester.expectHasFragmentStruct = function (
 
   expect(struct.name).toEqual(structName);
   expectEqualUnordered(struct.fields, expectedFields);
+};
+
+ShaderBuilderTester.expectHasVertexFunctionIds = function (
+  shaderBuilder,
+  expectedFunctionIds
+) {
+  expect(shaderBuilder._vertexShaderParts.functionIds).toEqual(
+    expectedFunctionIds
+  );
 };
 
 ShaderBuilderTester.expectHasVertexFunction = function (
@@ -124,6 +149,15 @@ ShaderBuilderTester.expectHasVertexFunctionUnordered = function (
 
   expect(func.signature).toEqual(signature);
   expectEqualUnordered(func.body, bodyLines);
+};
+
+ShaderBuilderTester.expectHasFragmentFunctionIds = function (
+  shaderBuilder,
+  expectedFunctionIds
+) {
+  expect(shaderBuilder._fragmentShaderParts.functionIds).toEqual(
+    expectedFunctionIds
+  );
 };
 
 ShaderBuilderTester.expectHasFragmentFunction = function (
@@ -198,3 +232,5 @@ ShaderBuilderTester.expectFragmentLinesEqual = function (
     expectedFragmentLines
   );
 };
+
+export default ShaderBuilderTester;

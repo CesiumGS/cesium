@@ -3,44 +3,44 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
-import ColorBlendMode from "../ColorBlendMode.js";
-import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Resource from "../../Core/Resource.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import Pass from "../../Renderer/Pass.js";
+import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
-import ModelAnimationCollection from "./ModelAnimationCollection.js";
-import ModelSceneGraph from "./ModelSceneGraph.js";
-import ModelStatistics from "./ModelStatistics.js";
-import ModelType from "./ModelType.js";
-import ModelUtility from "./ModelUtility.js";
-import Pass from "../../Renderer/Pass.js";
-import Resource from "../../Core/Resource.js";
-import destroyObject from "../../Core/destroyObject.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
-import B3dmLoader from "./B3dmLoader.js";
-import GeoJsonLoader from "./GeoJsonLoader.js";
-import I3dmLoader from "./I3dmLoader.js";
-import PntsLoader from "./PntsLoader.js";
-import Color from "../../Core/Color.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
+import B3dmLoader from "./B3dmLoader.js";
+import GeoJsonLoader from "./GeoJsonLoader.js";
+import I3dmLoader from "./I3dmLoader.js";
+import ModelAnimationCollection from "./ModelAnimationCollection.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
+import ModelSceneGraph from "./ModelSceneGraph.js";
+import ModelStatistics from "./ModelStatistics.js";
+import ModelType from "./ModelType.js";
+import ModelUtility from "./ModelUtility.js";
+import PntsLoader from "./PntsLoader.js";
+import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
+ * <div class="notice">
+ * To construct a Model, call {@link Model.fromGltf}. Do not call the constructor directly.
+ * </div>
  * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
- * <p>
- * Do not call this function directly, instead use the `from` functions to create
- * the Model from your source data type.
- * </p>
  * <p>
  * Cesium supports glTF assets with the following extensions:
  * <ul>
@@ -74,49 +74,52 @@ import SplitDirection from "../SplitDirection.js";
  * </p>
  *
  * @alias Model
- * @constructor
+ * @internalConstructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource} options.resource The Resource to the 3D model.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
- * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
- * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
- * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
- * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
- * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
- * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
- * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
- * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
- * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
- * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
- * @param {Color} [options.color] A color that blends with the model's rendered color.
- * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
- * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
- * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
- * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
- * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
- * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
- * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
- * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
- * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
- * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
- * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
- * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
+ * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
+ * @privateParam {Object} options Object with the following properties:
+ * @privateParam {Resource} options.resource The Resource to the 3D model.
+ * @privateParam {Boolean} [options.show=true] Whether or not to render the model.
+ * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @privateParam {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @privateParam {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @privateParam {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @privateParam {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+ * @privateParam {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @privateParam {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @privateParam {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @privateParam {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @privateParam {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @privateParam {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
+ * @privateParam {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @privateParam {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @privateParam {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+ * @privateParam {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @privateParam {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @privateParam {Scene} [options.scene] Must be passed in for models that use the height reference property.
+ * @privateParam {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+ * @privateParam {Color} [options.color] A color that blends with the model's rendered color.
+ * @privateParam {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @privateParam {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @privateParam {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @privateParam {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @privateParam {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @privateParam {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @privateParam {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
+ * @privateParam {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @privateParam {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @privateParam {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @privateParam {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @privateParam {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @privateParam {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @privateParam {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @privateParam {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @privateParam {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ 
  *
  * @see Model.fromGltf
  *
@@ -131,8 +134,6 @@ function Model(options) {
 
   /**
    * The loader used to load resources for this model.
-   * The corresponding constructor parameter is undocumented, since
-   * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
    * @private
@@ -142,8 +143,7 @@ function Model(options) {
 
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
-   * internally. The corresponding constructor parameter is undocumented, since
-   * ModelType is part of the private API.
+   * internally.
    *
    * @type {ModelType}
    * @readonly
@@ -253,6 +253,8 @@ function Model(options) {
   this._show = defaultValue(options.show, true);
 
   this._style = undefined;
+  this._styleDirty = false;
+  this._styleCommandsNeeded = undefined;
 
   let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
   if (typeof featureIdLabel === "number") {
@@ -314,6 +316,7 @@ function Model(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._pointCloudShading = pointCloudShading;
   this._attenuation = pointCloudShading.attenuation;
+  this._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
 
   // If the given clipping planes don't have an owner, make this model its owner.
   // Otherwise, the clipping planes are passed down from a tileset.
@@ -396,10 +399,15 @@ function Model(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
+  this._classificationType = options.classificationType;
+
   this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+
+  this._skipLevelOfDetail = false;
+  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
   this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
@@ -408,9 +416,12 @@ function Model(options) {
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
 
-  this._classificationType = options.classificationType;
-
-  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+  /**
+   * Used for picking primitives that wrap a model.
+   *
+   * @private
+   */
+  this.pickObject = options.pickObject;
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -956,7 +967,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   * The style to apply to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
    * @memberof Model.prototype
    *
@@ -967,8 +978,8 @@ Object.defineProperties(Model.prototype, {
       return this._style;
     },
     set: function (value) {
-      this.applyStyle(value);
       this._style = value;
+      this._styleDirty = true;
     },
   },
 
@@ -1101,6 +1112,11 @@ Object.defineProperties(Model.prototype, {
         );
       }
       //>>includeEnd('debug');
+
+      const modelMatrix = defined(this._clampedModelMatrix)
+        ? this._clampedModelMatrix
+        : this.modelMatrix;
+      updateBoundingSphere(this, modelMatrix);
 
       return this._boundingSphere;
     },
@@ -1518,6 +1534,35 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Gets the model's classification type. This determines whether terrain,
+   * 3D Tiles, or both will be classified by this model.
+   * <p>
+   * Additionally, there are a few requirements/limitations:
+   * <ul>
+   *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
+   *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
+   *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The position attribute is required.</li>
+   *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
+   * </ul>
+   * </p>
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ClassificationType}
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   * @readonly
+   */
+  classificationType: {
+    get: function () {
+      return this._classificationType;
+    },
+  },
+
+  /**
    * Reference to the pick IDs. This is only used internally, e.g. for
    * per-feature post-processing in {@link PostProcessStage}.
    *
@@ -1535,17 +1580,20 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Gets the model's classification type. This indicates whether terrain,
-   * 3D Tiles or both will be classified by this model.
+   * The {@link StyleCommandsNeeded} for the style currently applied to
+   * the features in the model. This is used internally by the {@link ModelDrawCommand}
+   * when determining which commands to submit in an update.
    *
    * @memberof Model.prototype
    *
-   * @type {ClassificationType}
+   * @type {StyleCommandsNeeded}
    * @readonly
+   *
+   * @private
    */
-  classificationType: {
+  styleCommandsNeeded: {
     get: function () {
-      return this._classificationType;
+      return this._styleCommandsNeeded;
     },
   },
 });
@@ -1626,6 +1674,14 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
+ * Marks the model's {@link Model#style} as dirty, which forces all features
+ * to re-evaluate the style in the next frame the model is visible.
+ */
+Model.prototype.makeStyleDirty = function () {
+  this._styleDirty = true;
+};
+
+/**
  * Resets the draw commands for this model.
  *
  * @private
@@ -1667,12 +1723,14 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  updatePointCloudAttenuation(this);
+  updateFeatureTableId(this);
+  updateStyle(this);
+  updateFeatureTables(this, frameState);
+  updatePointCloudShading(this);
   updateSilhouette(this, frameState);
+  updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
-  updateFeatureTableId(this);
-  updateFeatureTables(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1725,12 +1783,76 @@ function updateImageBasedLighting(model, frameState) {
   }
 }
 
-function updatePointCloudAttenuation(model) {
+function updateFeatureTableId(model) {
+  if (!model._featureTableIdDirty) {
+    return;
+  }
+  model._featureTableIdDirty = false;
+
+  const components = model._sceneGraph.components;
+  const structuralMetadata = components.structuralMetadata;
+
+  if (
+    defined(structuralMetadata) &&
+    structuralMetadata.propertyTableCount > 0
+  ) {
+    model.featureTableId = selectFeatureTableId(components, model);
+
+    // Mark the style dirty to re-apply it and reflect the new feature ID table.
+    model._styleDirty = true;
+
+    // Trigger a rebuild of the draw commands.
+    model.resetDrawCommands();
+  }
+}
+
+function updateStyle(model) {
+  if (model._styleDirty) {
+    model.applyStyle(model._style);
+    model._styleDirty = false;
+  }
+}
+
+function updateFeatureTables(model, frameState) {
+  const featureTables = model._featureTables;
+  const length = featureTables.length;
+
+  let styleCommandsNeededDirty = false;
+  for (let i = 0; i < length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      styleCommandsNeededDirty = true;
+    }
+  }
+
+  if (styleCommandsNeededDirty) {
+    updateStyleCommandsNeeded(model);
+  }
+}
+
+function updateStyleCommandsNeeded(model) {
+  const featureTable = model.featureTables[model.featureTableId];
+  model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    featureTable.featuresLength,
+    featureTable.batchTexture.translucentFeaturesLength
+  );
+}
+
+function updatePointCloudShading(model) {
+  const pointCloudShading = model.pointCloudShading;
+
   // Check if the shader needs to be updated for point cloud attenuation
   // settings.
-  if (model.pointCloudShading.attenuation !== model._attenuation) {
+  if (pointCloudShading.attenuation !== model._attenuation) {
     model.resetDrawCommands();
-    model._attenuation = model.pointCloudShading.attenuation;
+    model._attenuation = pointCloudShading.attenuation;
+  }
+
+  if (pointCloudShading.backFaceCulling !== model._pointCloudBackFaceCulling) {
+    model.resetDrawCommands();
+    model._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
   }
 }
 
@@ -1742,6 +1864,14 @@ function updateSilhouette(model, frameState) {
     }
 
     model._silhouetteDirty = false;
+  }
+}
+
+function updateSkipLevelOfDetail(model, frameState) {
+  const skipLevelOfDetail = model.hasSkipLevelOfDetail(frameState);
+  if (skipLevelOfDetail !== model._skipLevelOfDetail) {
+    model.resetDrawCommands();
+    model._skipLevelOfDetail = skipLevelOfDetail;
   }
 }
 
@@ -1769,40 +1899,6 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
-  }
-}
-
-function updateFeatureTables(model, frameState) {
-  const featureTables = model._featureTables;
-  const length = featureTables.length;
-  for (let i = 0; i < length; i++) {
-    featureTables[i].update(frameState);
-    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-    // to ensure that translucent and opaque features are handled in the correct passes.
-    if (featureTables[i].styleCommandsNeededDirty) {
-      model.resetDrawCommands();
-    }
-  }
-}
-
-function updateFeatureTableId(model) {
-  if (!model._featureTableIdDirty) {
-    return;
-  }
-  model._featureTableIdDirty = false;
-
-  const components = model._sceneGraph.components;
-  const structuralMetadata = components.structuralMetadata;
-
-  if (
-    defined(structuralMetadata) &&
-    structuralMetadata.propertyTableCount > 0
-  ) {
-    model.featureTableId = selectFeatureTableId(components, model);
-
-    // Re-apply the style to reflect the new feature ID table.
-    // This in turn triggers a rebuild of the draw commands.
-    model.applyStyle(model._style);
   }
 }
 
@@ -1911,17 +2007,67 @@ function updateBoundingSphereAndScale(model, frameState) {
     ? model._clampedModelMatrix
     : model.modelMatrix;
 
-  model._clampedScale = defined(model._maximumScale)
-    ? Math.min(model._scale, model._maximumScale)
-    : model._scale;
+  updateBoundingSphere(model, modelMatrix);
+  updateComputedScale(model, modelMatrix, frameState);
+}
 
+function updateBoundingSphere(model, modelMatrix) {
   model._boundingSphere = BoundingSphere.transform(
     model._sceneGraph.boundingSphere,
     modelMatrix,
     model._boundingSphere
   );
+
+  model._clampedScale = defined(model._maximumScale)
+    ? Math.min(model._scale, model._maximumScale)
+    : model._scale;
+
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
-  model._computedScale = getScale(model, modelMatrix, frameState);
+}
+
+function updateComputedScale(model, modelMatrix, frameState) {
+  let scale = model.scale;
+
+  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
+    // Compute size of bounding sphere in pixels
+    const context = frameState.context;
+    const maxPixelSize = Math.max(
+      context.drawingBufferWidth,
+      context.drawingBufferHeight
+    );
+    scratchPosition.x = modelMatrix[12];
+    scratchPosition.y = modelMatrix[13];
+    scratchPosition.z = modelMatrix[14];
+
+    if (model._sceneMode !== SceneMode.SCENE3D) {
+      SceneTransforms.computeActualWgs84Position(
+        frameState,
+        scratchPosition,
+        scratchPosition
+      );
+    }
+
+    const radius = model._boundingSphere.radius;
+    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / metersPerPixel;
+    const diameterInPixels = Math.min(
+      pixelsPerMeter * (2.0 * radius),
+      maxPixelSize
+    );
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale =
+        (model.minimumPixelSize * metersPerPixel) /
+        (2.0 * model._initialRadius);
+    }
+  }
+
+  model._computedScale = defined(model.maximumScale)
+    ? Math.min(model.maximumScale, scale)
+    : scale;
 }
 
 function updatePickIds(model) {
@@ -2075,8 +2221,7 @@ function submitDrawCommands(model, frameState) {
 
   if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
-    const drawCommands = model._sceneGraph.getDrawCommands(frameState);
-    frameState.commandList.push.apply(frameState.commandList, drawCommands);
+    model._sceneGraph.pushDrawCommands(frameState);
   }
 }
 
@@ -2090,51 +2235,6 @@ function scaleInPixels(positionWC, radius, frameState) {
     frameState.context.drawingBufferWidth,
     frameState.context.drawingBufferHeight
   );
-}
-
-function getScale(model, modelMatrix, frameState) {
-  let scale = model.scale;
-
-  if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
-    // Compute size of bounding sphere in pixels
-    const context = frameState.context;
-    const maxPixelSize = Math.max(
-      context.drawingBufferWidth,
-      context.drawingBufferHeight
-    );
-    scratchPosition.x = modelMatrix[12];
-    scratchPosition.y = modelMatrix[13];
-    scratchPosition.z = modelMatrix[14];
-
-    if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
-        frameState,
-        scratchPosition,
-        scratchPosition
-      );
-    }
-
-    const radius = model._boundingSphere.radius;
-    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
-    // metersPerPixel is always > 0.0
-    const pixelsPerMeter = 1.0 / metersPerPixel;
-    const diameterInPixels = Math.min(
-      pixelsPerMeter * (2.0 * radius),
-      maxPixelSize
-    );
-
-    // Maintain model's minimum pixel size
-    if (diameterInPixels < model.minimumPixelSize) {
-      scale =
-        (model.minimumPixelSize * metersPerPixel) /
-        (2.0 * model._initialRadius);
-    }
-  }
-
-  return defined(model.maximumScale)
-    ? Math.min(model.maximumScale, scale)
-    : scale;
 }
 
 function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
@@ -2223,7 +2323,7 @@ function addCreditsToCreditDisplay(model, frameState) {
  * If the model color's alpha is equal to zero, then it is considered invisible,
  * not translucent.
  *
- * @returns {Boolean} <code>true</code> if the model is translucent, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is translucent, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.isTranslucent = function () {
@@ -2235,7 +2335,7 @@ Model.prototype.isTranslucent = function () {
  * Gets whether or not the model is invisible, i.e. if the model color's alpha
  * is equal to zero.
  *
- * @returns {Boolean} <code>true</code> if the model is invisible, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the model is invisible, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.isInvisible = function () {
@@ -2254,7 +2354,8 @@ function supportsSilhouettes(frameState) {
  * If the model classifies another model, its silhouette will be disabled.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if the model has silhouettes, <code>false</code>.
+ * @param {FrameState} The frame state.
+ * @returns {Boolean} <code>true</code> if the model has silhouettes, otherwise <code>false</code>.
  * @private
  */
 Model.prototype.hasSilhouette = function (frameState) {
@@ -2264,6 +2365,29 @@ Model.prototype.hasSilhouette = function (frameState) {
     this._silhouetteColor.alpha > 0.0 &&
     !defined(this._classificationType)
   );
+};
+
+function supportsSkipLevelOfDetail(frameState) {
+  return frameState.context.stencilBuffer;
+}
+
+/**
+ * Gets whether or not the model is part of a tileset that uses the
+ * skipLevelOfDetail optimization. This accounts for whether skipLevelOfDetail
+ * is supported (i.e. the context supports stencil buffers).
+ *
+ * @param {FrameState} frameState The frame state.
+ * @returns {Boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, <code>false</code> otherwise.
+ * @private
+ */
+Model.prototype.hasSkipLevelOfDetail = function (frameState) {
+  const is3DTiles = ModelType.is3DTiles(this.type);
+  if (!is3DTiles) {
+    return false;
+  }
+
+  const tileset = this._content.tileset;
+  return supportsSkipLevelOfDetail(frameState) && tileset.skipLevelOfDetail;
 };
 
 /**
@@ -2470,6 +2594,7 @@ Model.fromGltf = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const basePath = defaultValue(options.basePath, "");
@@ -2516,6 +2641,7 @@ Model.fromB3dm = function (options) {
     loadAttributesFor2D: options.projectTo2D,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
   };
 
   const loader = new B3dmLoader(loaderOptions);
@@ -2586,6 +2712,7 @@ Model.fromGeoJson = function (options) {
  * @private
  */
 Model.prototype.applyColorAndShow = function (style) {
+  const previousColor = this._color;
   const hasColorStyle = defined(style) && defined(style.color);
   const hasShowStyle = defined(style) && defined(style.show);
 
@@ -2593,14 +2720,16 @@ Model.prototype.applyColorAndShow = function (style) {
     ? style.color.evaluateColor(undefined, this._color)
     : Color.clone(Color.WHITE, this._color);
   this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+
+  if (isColorAlphaDirty(previousColor, this._color)) {
+    this.resetDrawCommands();
+  }
 };
 
 /**
  * @private
  */
 Model.prototype.applyStyle = function (style) {
-  this.resetDrawCommands();
-
   const isPnts = this.type === ModelType.TILE_PNTS;
 
   const hasFeatureTable =
@@ -2613,11 +2742,14 @@ Model.prototype.applyStyle = function (style) {
   const hasPropertyAttributes =
     defined(propertyAttributes) && defined(propertyAttributes[0]);
 
-  // Point clouds will be styled on the GPU unless they contain
-  // a batch table. That is, CPU styling will not be applied if
+  // Point clouds will be styled on the GPU unless they contain a batch table.
+  // That is, CPU styling will not be applied if:
   // - points have no metadata at all, or
   // - points have metadata stored as a property attribute
   if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+    // Commands are rebuilt for point cloud styling since the new style may
+    // contain different shader functions.
+    this.resetDrawCommands();
     return;
   }
 
@@ -2626,8 +2758,10 @@ Model.prototype.applyStyle = function (style) {
   if (hasFeatureTable) {
     const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
+    updateStyleCommandsNeeded(this, style);
   } else {
     this.applyColorAndShow(style);
+    this._styleCommandsNeeded = undefined;
   }
 };
 
@@ -2675,6 +2809,7 @@ function makeModelOptions(loader, modelType, options) {
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
+    pickObject: options.pickObject,
   };
 }
 

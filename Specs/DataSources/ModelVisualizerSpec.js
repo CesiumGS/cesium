@@ -20,7 +20,10 @@ import {
   NodeTransformationProperty,
   ClippingPlane,
   ClippingPlaneCollection,
+  CustomShader,
   Globe,
+  Cartographic,
+  createWorldTerrain,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -28,9 +31,9 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "DataSources/ModelVisualizer",
   function () {
-    const boxUrl = "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    const boxUrl = "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
     const boxArticulationsUrl =
-      "./Data/Models/GltfLoader/BoxArticulations/glTF/BoxArticulations.gltf";
+      "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
 
     let scene;
     let entityCollection;
@@ -134,6 +137,9 @@ describe(
       });
       model.clippingPlanes = new ConstantProperty(clippingPlanes);
 
+      const customShader = new CustomShader();
+      model.customShader = new ConstantProperty(customShader);
+
       model.imageBasedLightingFactor = new ConstantProperty(
         new Cartesian2(0.5, 0.5)
       );
@@ -175,6 +181,9 @@ describe(
       expect(primitive.clippingPlanes._planes[0].distance).toEqual(
         clippingPlanes._planes[0].distance
       );
+
+      expect(primitive.customShader).toEqual(customShader);
+
       expect(primitive.imageBasedLighting.imageBasedLightingFactor).toEqual(
         new Cartesian2(0.5, 0.5)
       );
@@ -371,37 +380,251 @@ describe(
       });
     });
 
-    it("Computes bounding sphere with height reference", function () {
+    it("Computes bounding sphere with height reference clamp to ground", function () {
+      // Setup a position for the model.
+      const position = Cartesian3.fromDegrees(149.515332, -34.984799);
+      const positionCartographic = Cartographic.fromCartesian(position);
+
+      // Setup a spy so we can track how often sampleTerrain is called.
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callThrough();
+
+      // Initialize the Entity and the ModelGraphics.
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics({
         heightReference: HeightReference.CLAMP_TO_GROUND,
       });
       testObject.model = model;
-
-      testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
-      );
+      testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
+
       visualizer.update(time);
 
-      const modelPrimitive = scene.primitives.get(0);
+      // Request the bounding sphere once.
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
+      // Assign a tiled terrain provider to the globe.
+      const globe = scene.globe;
+      const previousTerrainProvider = globe.terrainProvider;
+      globe.terrainProvider = createWorldTerrain();
+
+      let sampledResultCartographic;
+      let sampledResult;
+
+      return ModelVisualizer._sampleTerrainMostDetailed(globe.terrainProvider, [
+        positionCartographic,
+      ])
+        .then((updatedCartographics) => {
+          sampledResultCartographic = updatedCartographics[0];
+          sampledResult = globe.ellipsoid.cartographicToCartesian(
+            sampledResultCartographic
+          );
+
+          // Repeatedly request the bounding sphere until it's ready.
+          return pollToPromise(function () {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+          });
+        })
+        .then(() => {
+          expect(state).toBe(BoundingSphereState.DONE);
+
+          // Ensure that we only sample the terrain once from the visualizer.
+          // We check for 2 calls here because we call it once in the test.
+          expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
+
+          // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+          // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
+          const distance = Cartesian3.distance(result.center, sampledResult);
+          const errorMargin = 100.0;
+          expect(distance).toBeLessThan(errorMargin);
+
+          // Reset the terrain provider.
+          globe.terrainProvider = previousTerrainProvider;
+        });
+    });
+
+    it("Computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
+      // Setup a position for the model.
+      const longitude = CesiumMath.toRadians(149.515332);
+      const latitude = CesiumMath.toRadians(-34.984799);
+      const height = 1000;
+      const position = Cartesian3.fromRadians(longitude, latitude, height);
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      // Ensure that the terrain provider does not have availability.
+      const globe = scene.globe;
+      const terrainProvider = globe.terrainProvider;
+      expect(terrainProvider.availability).toBe(undefined);
+
+      // Repeatedly request the bounding sphere until it's ready.
       return pollToPromise(function () {
         scene.render();
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
-      }).then(function () {
+      }).then(() => {
         expect(state).toBe(BoundingSphereState.DONE);
-        expect(modelPrimitive._clampedModelMatrix).toBeDefined();
-        const expected = BoundingSphere.clone(
-          modelPrimitive.boundingSphere,
-          new BoundingSphere()
+        // Ensure that the clamped position has height set to 0.
+        const cartographic = globe.ellipsoid.cartesianToCartographic(
+          result.center
         );
-        expect(result).toEqual(expected);
+        expect(cartographic.height).toEqualEpsilon(0, CesiumMath.EPSILON6);
+        expect(cartographic.latitude).toEqualEpsilon(
+          latitude,
+          CesiumMath.EPSILON6
+        );
+        expect(cartographic.longitude).toEqualEpsilon(
+          longitude,
+          CesiumMath.EPSILON6
+        );
+      });
+    });
+
+    it("Computes bounding sphere with height reference relative to ground", function () {
+      // Setup a position for the model.
+      const heightOffset = 1000.0;
+      const position = Cartesian3.fromDegrees(
+        149.515332,
+        -34.984799,
+        heightOffset
+      );
+      const positionCartographic = Cartographic.fromCartesian(position);
+
+      // Setup a spy so we can track how often sampleTerrain is called.
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callThrough();
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      // Assign a tiled terrain provider to the globe.
+      const globe = scene.globe;
+      const previousTerrainProvider = globe.terrainProvider;
+      globe.terrainProvider = createWorldTerrain();
+
+      let sampledResultCartographic;
+      let sampledResult;
+
+      return ModelVisualizer._sampleTerrainMostDetailed(globe.terrainProvider, [
+        positionCartographic,
+      ])
+        .then((updatedCartographics) => {
+          sampledResultCartographic = updatedCartographics[0];
+          sampledResult = globe.ellipsoid.cartographicToCartesian(
+            sampledResultCartographic
+          );
+
+          // Repeatedly request the bounding sphere until it's ready.
+          return pollToPromise(function () {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+          });
+        })
+        .then(() => {
+          expect(state).toBe(BoundingSphereState.DONE);
+
+          // Ensure that we only sample the terrain once from the visualizer.
+          // We check for 2 calls here because we call it once in the test.
+          expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
+
+          // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+          // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
+          const distance =
+            Cartesian3.distance(result.center, sampledResult) - heightOffset;
+          const errorMargin = 100.0;
+          expect(distance).toBeLessThan(errorMargin);
+
+          // Reset the terrain provider.
+          globe.terrainProvider = previousTerrainProvider;
+        });
+    });
+
+    it("Computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
+      // Setup a position for the model.
+      const longitude = CesiumMath.toRadians(149.515332);
+      const latitude = CesiumMath.toRadians(-34.984799);
+      const height = 1000;
+      const position = Cartesian3.fromRadians(longitude, latitude, height);
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      // Ensure that the terrain provider does not have availability.
+      const globe = scene.globe;
+      const terrainProvider = globe.terrainProvider;
+      expect(terrainProvider.availability).toBe(undefined);
+
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        const cartographic = globe.ellipsoid.cartesianToCartographic(
+          result.center
+        );
+        expect(cartographic.height).toEqualEpsilon(height, CesiumMath.EPSILON6);
+        expect(cartographic.latitude).toEqualEpsilon(
+          latitude,
+          CesiumMath.EPSILON6
+        );
+        expect(cartographic.longitude).toEqualEpsilon(
+          longitude,
+          CesiumMath.EPSILON6
+        );
       });
     });
 
@@ -434,6 +657,58 @@ describe(
         return state !== BoundingSphereState.PENDING;
       }).then(function () {
         expect(state).toBe(BoundingSphereState.FAILED);
+      });
+    });
+
+    it("Fails bounding sphere when sampleTerrainMostDetailed fails.", function () {
+      // Setup a position for the model.
+      const heightOffset = 1000.0;
+      const position = Cartesian3.fromDegrees(
+        149.515332,
+        -34.984799,
+        heightOffset
+      );
+
+      // Setup a spy so we can track how often sampleTerrain is called.
+      const sampleTerrainSpy = spyOn(
+        ModelVisualizer,
+        "_sampleTerrainMostDetailed"
+      ).and.callFake(() => {
+        return Promise.reject();
+      });
+
+      // Initialize the Entity and the ModelGraphics.
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics({
+        heightReference: HeightReference.RELATIVE_TO_GROUND,
+      });
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      visualizer.update(time);
+
+      // Assign a tiled terrain provider to the globe.
+      const globe = scene.globe;
+      const previousTerrainProvider = globe.terrainProvider;
+      globe.terrainProvider = createWorldTerrain();
+
+      // Request the bounding sphere once.
+      const result = new BoundingSphere();
+      let state;
+
+      // Repeatedly request the bounding sphere until it's ready.
+      return pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      }).then(() => {
+        expect(state).toBe(BoundingSphereState.FAILED);
+        // Ensure that we only sample the terrain once from the visualizer.
+        expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
+        // Reset the terrain provider.
+        globe.terrainProvider = previousTerrainProvider;
       });
     });
 

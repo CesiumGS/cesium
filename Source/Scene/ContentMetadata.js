@@ -18,7 +18,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ContentMetadata(options) {
+function ContentMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const content = options.content;
   const metadataClass = options.class;
@@ -180,3 +180,5 @@ ContentMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
     this._class
   );
 };
+
+export default ContentMetadata;

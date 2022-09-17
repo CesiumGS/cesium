@@ -9,7 +9,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
-import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
+import MersenneTwister from "mersenne-twister";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AlphaMode from "../AlphaMode.js";
@@ -47,7 +47,7 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
  * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
-export default function PntsLoader(options) {
+function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const arrayBuffer = options.arrayBuffer;
@@ -239,7 +239,10 @@ function processDracoAttributes(loader, draco, result) {
       attribute.quantizedRange = quantizedRange;
       attribute.quantizedVolumeOffset = quantizedVolumeOffset;
       attribute.quantizedVolumeScale = quantizedVolumeScale;
-      attribute.quantizedComponentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+      attribute.quantizedComponentDatatype =
+        quantizedRange <= 255
+          ? ComponentDatatype.UNSIGNED_BYTE
+          : ComponentDatatype.UNSIGNED_SHORT;
       attribute.quantizedType = AttributeType.VEC3;
     }
 
@@ -663,8 +666,9 @@ function makeComponents(loader, context) {
 
   loader._components = components;
 
-  // Free the parsed content so we don't hold onto the large typed arrays.
+  // Free the parsed content and array buffer so we don't hold onto the large arrays.
   loader._parsedContent = undefined;
+  loader._arrayBuffer = undefined;
 }
 
 function addPropertyAttributesToPrimitive(
@@ -707,4 +711,7 @@ PntsLoader.prototype.unload = function () {
 
   this._components = undefined;
   this._parsedContent = undefined;
+  this._arrayBuffer = undefined;
 };
+
+export default PntsLoader;

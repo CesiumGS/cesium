@@ -11,7 +11,7 @@ import Check from "../../Core/Check.js";
  *
  * @private
  */
-export default function ModelStatistics() {
+function ModelStatistics() {
   /**
    * Total number of points across all POINTS primitives in this model.
    *
@@ -193,3 +193,5 @@ ModelStatistics.prototype.addBatchTexture = function (batchTexture) {
     this._batchTextureIdMap.set(batchTexture._id, batchTexture);
   }
 };
+
+export default ModelStatistics;

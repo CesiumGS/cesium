@@ -6,7 +6,6 @@ import {
   ModelAlphaOptions,
   Pass,
   ShaderBuilder,
-  StyleCommandsNeeded,
   _shadersCPUStylingStageFS,
   _shadersCPUStylingStageVS,
 } from "../../../Source/Cesium.js";
@@ -121,50 +120,5 @@ describe("Scene/Model/CPUStylingPipelineStage", function () {
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
 
     expect(uniformMap.model_commandTranslucent()).toBe(true);
-  });
-
-  it("sets the style commands needed when only opaque commands are needed", function () {
-    const renderResources = clone(defaultRenderResources, true);
-    const batchTexture = {
-      translucentFeaturesLength: 0,
-      featuresLength: 10,
-    };
-    renderResources.model.featureTables[0].batchTexture = batchTexture;
-
-    CPUStylingPipelineStage.process(renderResources);
-
-    expect(renderResources.styleCommandsNeeded).toEqual(
-      StyleCommandsNeeded.ALL_OPAQUE
-    );
-  });
-
-  it("sets the style commands needed when only translucent commands are needed", function () {
-    const renderResources = clone(defaultRenderResources, true);
-    const batchTexture = {
-      translucentFeaturesLength: 10,
-    };
-    renderResources.model.featureTables[0].batchTexture = batchTexture;
-
-    CPUStylingPipelineStage.process(renderResources);
-
-    expect(renderResources.styleCommandsNeeded).toEqual(
-      StyleCommandsNeeded.ALL_TRANSLUCENT
-    );
-    expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
-  });
-
-  it("sets the style commands needed when both opaque and translucent commands are needed", function () {
-    const renderResources = clone(defaultRenderResources, true);
-    const batchTexture = {
-      translucentFeaturesLength: 5,
-    };
-    renderResources.model.featureTables[0].batchTexture = batchTexture;
-
-    CPUStylingPipelineStage.process(renderResources);
-
-    expect(renderResources.styleCommandsNeeded).toEqual(
-      StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
-    );
-    expect(renderResources.alphaOptions.pass).toBeUndefined();
   });
 });

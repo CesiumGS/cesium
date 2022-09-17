@@ -9,8 +9,6 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import AttributeCompression from "../Core/AttributeCompression.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -33,7 +31,6 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * @param {Number} [options.accessorId] The accessor id.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {Boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {Boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  *
@@ -43,7 +40,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  *
  * @private
  */
-export default function GltfVertexBufferLoader(options) {
+function GltfVertexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -55,7 +52,6 @@ export default function GltfVertexBufferLoader(options) {
   const accessorId = options.accessorId;
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
-  const dequantize = defaultValue(options.dequantize, false);
   const loadBuffer = defaultValue(options.loadBuffer, false);
   const loadTypedArray = defaultValue(options.loadTypedArray, false);
 
@@ -110,7 +106,6 @@ export default function GltfVertexBufferLoader(options) {
   this._accessorId = accessorId;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
-  this._dequantize = dequantize;
   this._loadBuffer = loadBuffer;
   this._loadTypedArray = loadTypedArray;
   this._bufferViewLoader = undefined;
@@ -224,7 +219,6 @@ GltfVertexBufferLoader.prototype.load = function () {
       }
 
       const typedArray = loader._typedArray;
-      const dequantize = loader._dequantize;
 
       if (defined(loader._dracoLoader)) {
         loader._dracoLoader.process(frameState);
@@ -239,19 +233,10 @@ GltfVertexBufferLoader.prototype.load = function () {
         return;
       }
 
-      const accessor = loader._gltf.accessors[loader._accessorId];
-
       let buffer;
       if (loader._loadBuffer && loader._asynchronous) {
         const vertexBufferJob = scratchVertexBufferJob;
-        vertexBufferJob.set(
-          typedArray,
-          dequantize,
-          accessor.componentType,
-          accessor.type,
-          accessor.count,
-          frameState.context
-        );
+        vertexBufferJob.set(typedArray, frameState.context);
         const jobScheduler = frameState.jobScheduler;
         if (!jobScheduler.execute(vertexBufferJob, JobType.BUFFER)) {
           // Job scheduler is full. Try again next frame.
@@ -259,14 +244,7 @@ GltfVertexBufferLoader.prototype.load = function () {
         }
         buffer = vertexBufferJob.buffer;
       } else if (loader._loadBuffer) {
-        buffer = createVertexBuffer(
-          typedArray,
-          dequantize,
-          accessor.componentType,
-          accessor.type,
-          accessor.count,
-          frameState.context
-        );
+        buffer = createVertexBuffer(typedArray, frameState.context);
       }
 
       // Unload everything except the vertex buffer
@@ -426,58 +404,20 @@ function handleError(vertexBufferLoader, error) {
 
 function CreateVertexBufferJob() {
   this.typedArray = undefined;
-  this.dequantize = undefined;
-  this.componentType = undefined;
-  this.type = undefined;
-  this.count = undefined;
   this.context = undefined;
   this.buffer = undefined;
 }
 
-CreateVertexBufferJob.prototype.set = function (
-  typedArray,
-  dequantize,
-  componentType,
-  type,
-  count,
-  context
-) {
+CreateVertexBufferJob.prototype.set = function (typedArray, context) {
   this.typedArray = typedArray;
-  this.dequantize = dequantize;
-  this.componentType = componentType;
-  this.type = type;
-  this.count = count;
   this.context = context;
 };
 
 CreateVertexBufferJob.prototype.execute = function () {
-  this.buffer = createVertexBuffer(
-    this.typedArray,
-    this.dequantize,
-    this.componentType,
-    this.type,
-    this.count,
-    this.context
-  );
+  this.buffer = createVertexBuffer(this.typedArray, this.context);
 };
 
-function createVertexBuffer(
-  typedArray,
-  dequantize,
-  componentType,
-  type,
-  count,
-  context
-) {
-  if (dequantize && componentType !== ComponentDatatype.FLOAT) {
-    typedArray = AttributeCompression.dequantize(
-      typedArray,
-      componentType,
-      type,
-      count
-    );
-  }
-
+function createVertexBuffer(typedArray, context) {
   const buffer = Buffer.createVertexBuffer({
     typedArray: typedArray,
     context: context,
@@ -526,3 +466,5 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._buffer = undefined;
   this._gltf = undefined;
 };
+
+export default GltfVertexBufferLoader;

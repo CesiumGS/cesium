@@ -12,8 +12,9 @@ import PrimitiveOutlineStageFS from "../../Shaders/Model/PrimitiveOutlineStageFS
  *
  * @private
  */
-const PrimitiveOutlinePipelineStage = {};
-PrimitiveOutlinePipelineStage.name = "PrimitiveOutlinePipelineStage";
+const PrimitiveOutlinePipelineStage = {
+  name: "PrimitiveOutlinePipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -91,8 +92,8 @@ PrimitiveOutlinePipelineStage.process = function (
     return model.showOutline;
   };
 
-  shaderBuilder.addVertexLines([PrimitiveOutlineStageVS]);
-  shaderBuilder.addFragmentLines([PrimitiveOutlineStageFS]);
+  shaderBuilder.addVertexLines(PrimitiveOutlineStageVS);
+  shaderBuilder.addFragmentLines(PrimitiveOutlineStageFS);
 };
 
 export default PrimitiveOutlinePipelineStage;
