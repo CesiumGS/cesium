@@ -117,7 +117,17 @@ function Cesium3DTilesInspector(container, scene) {
   tilesetPanelContents.appendChild(createCheckbox("Enable Picking", "picking"));
 
   displayPanelContents.appendChild(createCheckbox("Colorize", "colorize"));
-  displayPanelContents.appendChild(createCheckbox("Wireframe", "wireframe"));
+  displayPanelContents.appendChild(
+    createCheckbox("Wireframe", "wireframe", "enableDebugWireframe")
+  );
+  //Allow the checkbox made above to be disabled when enableDebugWireframe is false
+  //Look into data binding method for this as it could be simpler? Knockout JS track and defineProperty
+  //if (this.)  {
+  //  displayPanelContents.lastChild.childNodes[0].childNodes[0].enabled = false;
+  //  const infoText = displayPanelContents.appendChild(document.createElement('p'));
+  //  infoText.innerText = "enableDebugWireframe should be true for the wireframe checkbox to be active!"
+  //}
+
   displayPanelContents.appendChild(
     createCheckbox("Bounding Volumes", "showBoundingVolumes")
   );

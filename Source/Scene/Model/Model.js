@@ -360,7 +360,7 @@ function Model(options) {
   if (this._debugWireframe === true && this._enableDebugWireframe === false) {
     oneTimeWarning(
       "Model debug wireframe not set properly.",
-      "Warning: enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+      "Warning: Model's enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
     );
   }
 
