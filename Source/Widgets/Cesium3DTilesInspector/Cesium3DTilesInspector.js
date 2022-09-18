@@ -118,7 +118,7 @@ function Cesium3DTilesInspector(container, scene) {
 
   displayPanelContents.appendChild(createCheckbox("Colorize", "colorize"));
   displayPanelContents.appendChild(
-    createCheckbox("Wireframe", "wireframe", "enableDebugWireframe")
+    createCheckbox("Wireframe", "wireframe", "hasEnabledWireframe")
   );
   //Allow the checkbox made above to be disabled when enableDebugWireframe is false
   //Look into data binding method for this as it could be simpler? Knockout JS track and defineProperty
