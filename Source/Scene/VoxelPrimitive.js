@@ -15,6 +15,7 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import Material from "./Material.js";
 import MetadataComponentType from "./MetadataComponentType.js";
@@ -1238,7 +1239,9 @@ function initFromProvider(primitive, provider, context) {
 
       //>>includeStart('debug', pragmas.debug);
       if (defined(uniformMap[name])) {
-        throw new DeveloperError(`Uniform name "${name}" is already defined`);
+        oneTimeWarning(
+          `VoxelPrimitive: Uniform name "${name}" is already defined`
+        );
       }
       //>>includeEnd('debug');
 
