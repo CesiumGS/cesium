@@ -43,6 +43,8 @@
           animation: false,
           timeline: false,
         });
+        //supress terrain data to avoid clashing with IntegratedMesh layer geometry
+        viewer.scene.globe.depthTestAgainstTerrain = false;
         // More datasets to tour can be added here..
         // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
         const tours = {
