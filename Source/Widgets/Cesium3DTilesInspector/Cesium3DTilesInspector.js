@@ -120,13 +120,13 @@ function Cesium3DTilesInspector(container, scene) {
   displayPanelContents.appendChild(
     createCheckbox("Wireframe", "wireframe", "hasEnabledWireframe")
   );
-  //Allow the checkbox made above to be disabled when enableDebugWireframe is false
-  //Look into data binding method for this as it could be simpler? Knockout JS track and defineProperty
-  //if (this.)  {
-  //  displayPanelContents.lastChild.childNodes[0].childNodes[0].enabled = false;
-  //  const infoText = displayPanelContents.appendChild(document.createElement('p'));
-  //  infoText.innerText = "enableDebugWireframe should be true for the wireframe checkbox to be active!"
-  //}
+
+  //Create warning text when the Wireframe checkbox is disabled
+  const warningText = document.createElement("p");
+  warningText.setAttribute("data-bind", `visible: !hasEnabledWireframe`);
+  warningText.setAttribute("style", "margin: 5px 0 0 0; padding: 0 0 0 20px");
+  warningText.innerText = "enableDebugWireframe must be true for this to work!";
+  displayPanelContents.lastChild.appendChild(warningText);
 
   displayPanelContents.appendChild(
     createCheckbox("Bounding Volumes", "showBoundingVolumes")
