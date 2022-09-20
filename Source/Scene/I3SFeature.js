@@ -10,35 +10,25 @@ function I3SFeature(parent, uri) {
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
   this._layer = parent._layer;
-  this._uri = uri;
-  let query = "";
-  if (this._dataProvider._query && this._dataProvider._query !== "") {
-    query = `?${this._dataProvider._query}`;
-  }
 
-  this._completeUriWithoutQuery = `${this._parent._completeUriWithoutQuery}/${this._uri}`;
-  this._completeUri = this._completeUriWithoutQuery + query;
+  if (this._parent._nodeIndex) {
+    this._resource = this._parent._layer.resource.getDerivedResource({
+      url: `nodes/${this._parent._data.mesh.attribute.resource}/${uri}`,
+    });
+  } else {
+    this._resource = this._parent.resource.getDerivedResource({ url: uri });
+  }
 }
 
 Object.defineProperties(I3SFeature.prototype, {
   /**
-   * Gets the uri for the feature.
+   * Gets the resource for the feature
    * @memberof I3SFeature.prototype
-   * @type {String}
+   * @type {Resource}
    */
-  uri: {
+  resource: {
     get: function () {
-      return this._uri;
-    },
-  },
-  /**
-   * Gets the complete uri for the feature.
-   * @memberof I3SFeature.prototype
-   * @type {String}
-   */
-  completeUri: {
-    get: function () {
-      return this._completeUri;
+      return this._resource;
     },
   },
   /**
@@ -59,16 +49,10 @@ Object.defineProperties(I3SFeature.prototype, {
  */
 I3SFeature.prototype.load = function () {
   const that = this;
-  return this._dataProvider._loadJson(
-    this._completeUri,
-    function (data, resolve) {
-      that._data = data;
-      resolve();
-    },
-    function (reject) {
-      reject();
-    }
-  );
+  return this._dataProvider._loadJson(this._resource).then(function (data) {
+    that._data = data;
+    return data;
+  });
 };
 
 export default I3SFeature;

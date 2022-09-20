@@ -2,6 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTile from "../Scene/Cesium3DTile.js";
 import CesiumMath from "../Core/Math.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
@@ -25,6 +26,7 @@ function I3SNode(parent, ref, isRoot) {
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
 
+  this._isRoot = isRoot;
   if (isRoot) {
     this._level = 0;
     this._layer = this._parent;
@@ -33,29 +35,15 @@ function I3SNode(parent, ref, isRoot) {
     this._layer = this._parent._layer;
   }
 
-  if (this._level === 0) {
-    if (typeof ref === "number") {
-      this._nodeIndex = ref;
-    } else {
-      this._uri = ref;
-    }
-  } else if (typeof ref === "number") {
+  if (typeof ref === "number") {
     this._nodeIndex = ref;
   } else {
-    this._uri = ref;
+    this._resource = this._parent.resource.getDerivedResource({
+      url: `${ref}/`,
+    });
   }
 
-  if (this._uri !== undefined) {
-    let query = "";
-    if (this._dataProvider._query && this._dataProvider._query !== "") {
-      query = `?${this._dataProvider._query}`;
-    }
-
-    this._completeUriWithoutQuery = `${this._parent._completeUriWithoutQuery}/${this._uri}`;
-    this._completeUri = this._completeUriWithoutQuery + query;
-  }
-
-  this._tile = null;
+  this._tile = undefined;
   this._geometryData = [];
   this._featureData = [];
   this._fields = {};
@@ -64,23 +52,13 @@ function I3SNode(parent, ref, isRoot) {
 
 Object.defineProperties(I3SNode.prototype, {
   /**
-   * Gets the uri for the node.
+   * Gets the resource for the node
    * @memberof I3SNode.prototype
-   * @type {String}
+   * @type {Resource}
    */
-  uri: {
+  resource: {
     get: function () {
-      return this._uri;
-    },
-  },
-  /**
-   * Gets the complete uri for the node.
-   * @memberof I3SNode.prototype
-   * @type {String}
-   */
-  completeUri: {
-    get: function () {
-      return this._completeUri;
+      return this._resource;
     },
   },
   /**
@@ -169,11 +147,11 @@ Object.defineProperties(I3SNode.prototype, {
  * Loads the node definition.
  * @returns {Promise<void>} a promise that is resolved when the I3S Node data is loaded
  */
-I3SNode.prototype.load = function (isRoot) {
+I3SNode.prototype.load = function () {
   const that = this;
 
   function processData() {
-    if (!isRoot) {
+    if (!that._isRoot) {
       // Create a new tile
       const tileDefinition = that._create3DTileDefinition();
 
@@ -196,47 +174,27 @@ I3SNode.prototype.load = function (isRoot) {
   }
 
   // if we don't have a nodepage index load from json
-  if (this._nodeIndex === undefined) {
-    return this._dataProvider._loadJson(
-      this._completeUri,
-      function (data, resolve) {
-        // Success
-        that._data = data;
-        processData();
-        resolve();
-      },
-      function (reject) {
-        // Fail
-        reject();
-      }
-    );
+  if (!defined(this._nodeIndex)) {
+    return this._dataProvider._loadJson(this.resource).then(function (data) {
+      // Success
+      that._data = data;
+      processData();
+      return data;
+    });
   }
 
   return new Promise(function (resolve, reject) {
-    that._layer._getNodeInNodePages(that._nodeIndex).then(function (data) {
-      that._data = data;
-
-      const pageSize = that._layer._data.nodePages.nodesPerPage;
-      const node =
-        that._layer._nodePages[Math.floor(that._nodeIndex / pageSize)][
-          that._nodeIndex % pageSize
-        ];
-      if (isRoot) {
-        that._uri = "nodes/root";
-      } else if (node.mesh !== undefined) {
-        const uriIndex =
-          that._layer._nodePages[Math.floor(that._nodeIndex / pageSize)][
-            that._nodeIndex % pageSize
-          ].mesh.geometry.resource;
-        that._uri = `../${uriIndex}`;
+    that._layer._getNodeInNodePages(that._nodeIndex).then(function (node) {
+      that._data = node;
+      let uri;
+      if (that._isRoot) {
+        uri = "nodes/root/";
+      } else if (defined(node.mesh)) {
+        const uriIndex = node.mesh.geometry.resource;
+        uri = `../${uriIndex}/`;
       }
-      if (that._uri !== undefined) {
-        that._completeUriWithoutQuery = `${that._parent._completeUriWithoutQuery}/${that._uri}`;
-        let query = "";
-        if (that._dataProvider._query && that._dataProvider._query !== "") {
-          query = `?${that._dataProvider._query}`;
-        }
-        that._completeUri = that._completeUriWithoutQuery + query;
+      if (defined(uri)) {
+        that._resource = that._parent.resource.getDerivedResource({ url: uri });
       }
 
       processData();
@@ -273,51 +231,45 @@ I3SNode.prototype.loadFields = function () {
 /**
  * @private
  */
-I3SNode.prototype._loadChildren = function (waitAllChildren) {
+I3SNode.prototype._loadChildren = function () {
   const that = this;
-  return new Promise(function (resolve, reject) {
-    if (!that._childrenAreLoaded) {
-      that._childrenAreLoaded = true;
-      const childPromises = [];
-      if (that._data.children) {
-        for (
-          let childIndex = 0;
-          childIndex < that._data.children.length;
-          childIndex++
-        ) {
-          const child = that._data.children[childIndex];
-          const newChild = new I3SNode(
-            that,
-            child.href ? child.href : child,
-            false
-          );
-          that._children.push(newChild);
-          const childIsLoaded = newChild.load();
-          if (waitAllChildren) {
-            childPromises.push(childIsLoaded);
-          }
-          childIsLoaded.then(
-            (function (theChild) {
-              return function () {
-                that._tile.children.push(theChild._tile);
-              };
-            })(newChild)
-          );
-        }
-        if (waitAllChildren) {
-          Promise.all(childPromises).then(function () {
-            resolve();
-          });
-        } else {
-          resolve();
-        }
-      } else {
-        resolve();
+  //If the promise for loading the children was already created, just return it
+  if (this._childrenReadyPromise) {
+    return this._childrenReadyPromise;
+  }
+
+  this._childrenReadyPromise = new Promise(function (resolve, reject) {
+    const childPromises = [];
+    if (that._data.children) {
+      for (
+        let childIndex = 0;
+        childIndex < that._data.children.length;
+        childIndex++
+      ) {
+        const child = that._data.children[childIndex];
+        const newChild = new I3SNode(
+          that,
+          child.href ? child.href : child,
+          false
+        );
+        that._children.push(newChild);
+        childPromises.push(newChild.load());
       }
-    } else {
-      resolve();
     }
+
+    Promise.all(childPromises).then(
+      function () {
+        for (let i = 0; i < that._children.length; i++) {
+          that._tile.children.push(that._children[i]._tile);
+        }
+        resolve();
+      },
+      function (reason) {
+        reject(reason);
+      }
+    );
   });
+  return this._childrenReadyPromise;
 };
 
 /**
@@ -347,7 +299,7 @@ I3SNode.prototype._loadGeometryData = function () {
       ["position", "uv0"]
     );
 
-    const geometryURI = `./geometries/${geometryDefinition.bufferIndex}`;
+    const geometryURI = `./geometries/${geometryDefinition.bufferIndex}/`;
     const newGeometryData = new I3SGeometry(this, geometryURI);
     newGeometryData._geometryDefinitions = geometryDefinition.definition;
     newGeometryData._geometryBufferInfo = geometryDefinition.geometryBufferInfo;
@@ -372,13 +324,18 @@ I3SNode.prototype._loadFeatureData = function () {
       featureIndex < this._data.featureData.length;
       featureIndex++
     ) {
-      const newfeatureData = new I3SFeature(
+      const newFeatureData = new I3SFeature(
         this,
         this._data.featureData[featureIndex].href
       );
-      this._featureData.push(newfeatureData);
-      featurePromises.push(newfeatureData.load());
+      this._featureData.push(newFeatureData);
+      featurePromises.push(newFeatureData.load());
     }
+  } else if (this._data.mesh && this._data.mesh.attribute) {
+    const featureURI = `./features/0`;
+    const newFeatureData = new I3SFeature(this, featureURI);
+    this._featureData.push(newFeatureData);
+    featurePromises.push(newFeatureData.load());
   }
 
   return Promise.all(featurePromises);
@@ -398,9 +355,12 @@ I3SNode.prototype._create3DTileDefinition = function () {
   const obb = this._data.obb;
   const mbs = this._data.mbs;
 
-  let boundingVolume = {};
+  if (!defined(obb) && !defined(mbs)) {
+    console.error("Failed to load I3S node. Bounding volume is required.");
+    return undefined;
+  }
+
   let geoPosition;
-  let position;
 
   if (obb) {
     geoPosition = Cartographic.fromDegrees(
@@ -408,15 +368,12 @@ I3SNode.prototype._create3DTileDefinition = function () {
       obb.center[1],
       obb.center[2]
     );
-  } else if (mbs) {
+  } else {
     geoPosition = Cartographic.fromDegrees(mbs[0], mbs[1], mbs[2]);
   }
 
   //Offset bounding box position if we have a geoid service defined
-  if (
-    defined(this._dataProvider._geoidTiledTerrainProvider) &&
-    defined(geoPosition)
-  ) {
+  if (defined(this._dataProvider._geoidDataList) && defined(geoPosition)) {
     for (let i = 0; i < this._dataProvider._geoidDataList.length; i++) {
       const tile = this._dataProvider._geoidDataList[i];
       const projectedPos = tile.projection.project(geoPosition);
@@ -432,6 +389,9 @@ I3SNode.prototype._create3DTileDefinition = function () {
     }
   }
 
+  let boundingVolume = {};
+  let position;
+  let span = 0;
   if (obb) {
     boundingVolume = {
       box: [
@@ -449,37 +409,31 @@ I3SNode.prototype._create3DTileDefinition = function () {
         obb.halfSize[2],
       ],
     };
-    position = Ellipsoid.WGS84.cartographicToCartesian(geoPosition);
-  } else if (mbs) {
-    boundingVolume = {
-      sphere: [0, 0, 0, mbs[3]],
-    };
-    position = Ellipsoid.WGS84.cartographicToCartesian(geoPosition);
-  } else {
-    console.error(this);
-  }
-
-  // compute the geometric error
-  let metersPerPixel = Infinity;
-
-  let span = 0;
-  if (this._data.mbs) {
-    span = this._data.mbs[3];
-  } else if (this._data.obb) {
     span = Math.max(
       Math.max(this._data.obb.halfSize[0], this._data.obb.halfSize[1]),
       this._data.obb.halfSize[2]
     );
+    position = Ellipsoid.WGS84.cartographicToCartesian(geoPosition);
+  } else {
+    boundingVolume = {
+      sphere: [0, 0, 0, mbs[3]],
+    };
+    position = Ellipsoid.WGS84.cartographicToCartesian(geoPosition);
+    span = this._data.mbs[3];
   }
+  span *= 2;
+  // compute the geometric error
+  let metersPerPixel = Infinity;
 
   // get the meters/pixel density required to pop the next LOD
-  if (this._data.lodThreshold !== undefined) {
+  if (defined(this._data.lodThreshold)) {
     if (
       this._layer._data.nodePages.lodSelectionMetricType ===
       "maxScreenThresholdSQ"
     ) {
-      const maxScreenThreshold =
-        Math.sqrt(this._data.lodThreshold) / (Math.PI * 0.25);
+      const maxScreenThreshold = Math.sqrt(
+        this._data.lodThreshold / (Math.PI * 0.25)
+      );
       metersPerPixel = span / maxScreenThreshold;
     } else if (
       this._layer._data.nodePages.lodSelectionMetricType ===
@@ -491,7 +445,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
       //Other LOD selection types can only be used for point cloud data
       console.error("Invalid lodSelectionMetricType in Layer");
     }
-  } else if (this._data.lodSelection !== undefined) {
+  } else if (defined(this._data.lodSelection)) {
     for (
       let lodIndex = 0;
       lodIndex < this._data.lodSelection.length;
@@ -593,7 +547,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
       localTransforms[15],
     ],
     content: {
-      uri: this._completeUriWithoutQuery,
+      uri: defined(this.resource) ? this.resource.url : undefined,
     },
     geometricError: geometricError,
   };
@@ -611,7 +565,10 @@ I3SNode.prototype._scheduleCreateContentURL = function () {
   });
 };
 
-function createI3SDecoderTask(dataProvider, data) {
+/**
+ * @private
+ */
+I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
   // Prepare the data to send to the worker
   const parentData = data.geometryData._parent._data;
   const parentRotationInverseMatrix =
@@ -654,7 +611,9 @@ function createI3SDecoderTask(dataProvider, data) {
   const payload = {
     binaryData: data.geometryData._data,
     featureData:
-      data.featureData && data.featureData[0] ? data.featureData[0].data : null,
+      data.featureData && data.featureData[0]
+        ? data.featureData[0].data
+        : undefined,
     schema: data.defaultGeometrySchema,
     bufferInfo: data.geometryData._geometryBufferInfo,
     ellipsoidRadiiSquare: Ellipsoid.WGS84._radiiSquared,
@@ -671,7 +630,7 @@ function createI3SDecoderTask(dataProvider, data) {
   return dataProvider._taskProcessorReadyPromise.then(function () {
     return decodeI3STaskProcessor.scheduleTask(payload, transferrableObjects);
   });
-}
+};
 
 /**
  * @private
@@ -714,11 +673,11 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
           geometryData: that._geometryData[0],
           featureData: that._featureData,
           defaultGeometrySchema: that._layer._data.store.defaultGeometrySchema,
-          url: that._geometryData[0]._completeUri,
+          url: that._geometryData[0].resource.url,
           tile: that._tile,
         };
 
-        const task = createI3SDecoderTask(that._dataProvider, parameters);
+        const task = that._createI3SDecoderTask(that._dataProvider, parameters);
         if (!defined(task)) {
           // Postponed
           resolve();
@@ -768,42 +727,28 @@ function I3SGeometry(parent, uri) {
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
   this._layer = parent._layer;
-  this._uri = uri;
-  let query = "";
-  if (this._dataProvider._query && this._dataProvider._query !== "") {
-    query = `?${this._dataProvider._query}`;
-  }
 
   if (this._parent._nodeIndex) {
-    this._completeUriWithoutQuery = `${this._layer._completeUriWithoutQuery}/nodes/${this._parent._data.mesh.geometry.resource}/${this._uri}`;
-    this._completeUri = this._completeUriWithoutQuery + query;
+    this._resource = this._layer.resource.getDerivedResource({
+      url: `nodes/${this._parent._data.mesh.geometry.resource}/${uri}`,
+    });
   } else {
-    this._completeUriWithoutQuery = `${this._parent._completeUriWithoutQuery}/${this._uri}`;
-    this._completeUri = this._completeUriWithoutQuery + query;
+    this._resource = this._parent.resource.getDerivedResource({ url: uri });
   }
 }
 
 Object.defineProperties(I3SGeometry.prototype, {
   /**
-   * Gets the uri for the geometry.
+   * Gets the resource for the geometry
    * @memberof I3SGeometry.prototype
-   * @type {String}
+   * @type {Resource}
    */
-  uri: {
+  resource: {
     get: function () {
-      return this._uri;
+      return this._resource;
     },
   },
-  /**
-   * Gets the complete uri for the geometry.
-   * @memberof I3SGeometry.prototype
-   * @type {String}
-   */
-  completeUri: {
-    get: function () {
-      return this._completeUri;
-    },
-  },
+
   /**
    * Gets the I3S data for this object.
    * @memberof I3SGeometry.prototype
@@ -822,16 +767,10 @@ Object.defineProperties(I3SGeometry.prototype, {
  */
 I3SGeometry.prototype.load = function () {
   const that = this;
-  return this._dataProvider._loadBinary(
-    this._completeUri,
-    function (data, resolve) {
-      that._data = data;
-      resolve();
-    },
-    function (reject) {
-      reject();
-    }
-  );
+  return this._dataProvider._loadBinary(this.resource).then(function (data) {
+    that._data = data;
+    return data;
+  });
 };
 
 function sameSide(p1, p2, a, b) {
@@ -897,8 +836,8 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
         i2 = indices[triIndex + 2];
       } else {
         i0 = triIndex * 3;
-        i1 = triIndex * 3 + 3;
-        i2 = triIndex * 3 + 6;
+        i1 = triIndex * 3 + 1;
+        i2 = triIndex * 3 + 2;
       }
 
       const v0 = new Cartesian3(
@@ -976,7 +915,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
       }
     }
 
-    if (bestTri !== undefined) {
+    if (defined(bestTri)) {
       return {
         index: bestIndex,
         distanceSquared: bestDistSq,
@@ -1014,17 +953,7 @@ I3SGeometry.prototype._generateGltf = function (
   bufferViews,
   accessors
 ) {
-  let query = "";
-  if (this._dataProvider._query && this._dataProvider._query !== "") {
-    query = `?${this._dataProvider._query}`;
-  }
-
   // Get the material definition
-  const materialInfo = this._parent._data.mesh
-    ? this._parent._data.mesh.material
-    : null;
-  let materialIndex = 0;
-  let isTextured = false;
   let gltfMaterial = {
     pbrMetallicRoughness: {
       metallicFactor: 0.0,
@@ -1033,61 +962,68 @@ I3SGeometry.prototype._generateGltf = function (
     name: "Material",
   };
 
-  if (materialInfo) {
-    materialIndex = materialInfo.definition;
-  }
-
+  let isTextured = false;
   let materialDefinition;
-  if (this._layer._data.materialDefinitions) {
-    materialDefinition = this._layer._data.materialDefinitions[materialIndex];
-  }
-
-  if (materialDefinition) {
-    gltfMaterial = materialDefinition;
-
-    // Textured. @TODO: extend to other textured cases
+  let texturePath = "";
+  if (this._parent._data.mesh && this._layer._data.materialDefinitions) {
+    const materialInfo = this._parent._data.mesh.material;
+    const materialIndex = materialInfo.definition;
     if (
-      materialDefinition.pbrMetallicRoughness &&
-      materialDefinition.pbrMetallicRoughness.baseColorTexture
+      materialIndex >= 0 &&
+      materialIndex < this._layer._data.materialDefinitions.length
     ) {
-      isTextured = true;
-    }
-  }
+      materialDefinition = this._layer._data.materialDefinitions[materialIndex];
+      gltfMaterial = materialDefinition;
 
-  let texturePath;
-
-  if (this._parent._data.textureData) {
-    texturePath = `${this._parent._completeUriWithoutQuery}/${this._parent._data.textureData[0].href}${query}`;
-  } else {
-    // Choose the JPG for the texture
-    let textureName = "0";
-
-    if (this._layer._data.textureSetDefinitions) {
-      for (
-        let defIndex = 0;
-        defIndex < this._layer._data.textureSetDefinitions.length;
-        defIndex++
+      if (
+        gltfMaterial.pbrMetallicRoughness &&
+        gltfMaterial.pbrMetallicRoughness.baseColorTexture
       ) {
-        const textureSetDefinition = this._layer._data.textureSetDefinitions[
-          defIndex
-        ];
-        for (
-          let formatIndex = 0;
-          formatIndex < textureSetDefinition.formats.length;
-          formatIndex++
-        ) {
-          const textureFormat = textureSetDefinition.formats[formatIndex];
-          if (textureFormat.format === "jpg") {
-            textureName = textureFormat.name;
-            break;
+        isTextured = true;
+        gltfMaterial.pbrMetallicRoughness.baseColorTexture.index = 0;
+
+        // Choose the JPG for the texture
+        let textureName = "0";
+
+        if (this._layer._data.textureSetDefinitions) {
+          for (
+            let defIndex = 0;
+            defIndex < this._layer._data.textureSetDefinitions.length;
+            defIndex++
+          ) {
+            const textureSetDefinition = this._layer._data
+              .textureSetDefinitions[defIndex];
+            for (
+              let formatIndex = 0;
+              formatIndex < textureSetDefinition.formats.length;
+              formatIndex++
+            ) {
+              const textureFormat = textureSetDefinition.formats[formatIndex];
+              if (textureFormat.format === "jpg") {
+                textureName = textureFormat.name;
+                break;
+              }
+            }
           }
+        }
+
+        if (
+          this._parent._data.mesh &&
+          this._parent._data.mesh.material.resource >= 0
+        ) {
+          texturePath = this._layer.resource.getDerivedResource({
+            url: `nodes/${this._parent._data.mesh.material.resource}/textures/${textureName}`,
+          }).url;
         }
       }
     }
-
-    if (this._parent._data.mesh) {
-      texturePath = `${this._layer._completeUriWithoutQuery}/nodes/${this._parent._data.mesh.material.resource}/textures/${textureName}${query}`;
-    }
+  } else if (this._parent._data.textureData) {
+    //No material definition, but if there's a texture reference, we can create a simple material using it (verison 1.6 support)
+    isTextured = true;
+    texturePath = this._parent.resource.getDerivedResource({
+      url: `${this._parent._data.textureData[0].href}`,
+    }).url;
+    gltfMaterial.pbrMetallicRoughness.baseColorTexture = { index: 0 };
   }
 
   let gltfTextures = [];
@@ -1116,8 +1052,6 @@ I3SGeometry.prototype._generateGltf = function (
         wrapT: 10497,
       },
     ];
-
-    gltfMaterial.pbrMetallicRoughness.baseColorTexture.index = 0;
   }
 
   const gltfData = {
@@ -1198,36 +1132,26 @@ function I3SField(parent, storageInfo) {
   this._storageInfo = storageInfo;
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
-  this._uri = `/attributes/${storageInfo.key}/0`;
-  let query = "";
-  if (this._dataProvider._query && this._dataProvider._query !== "") {
-    query = `?${this._dataProvider._query}`;
-  }
+  const uri = `attributes/${storageInfo.key}/0`;
 
-  this._completeUriWithoutQuery =
-    this._parent._completeUriWithoutQuery + this._uri;
-  this._completeUri = this._completeUriWithoutQuery + query;
+  if (this._parent._nodeIndex) {
+    this._resource = this._parent._layer.resource.getDerivedResource({
+      url: `nodes/${this._parent._data.mesh.attribute.resource}/${uri}`,
+    });
+  } else {
+    this._resource = this._parent.resource.getDerivedResource({ url: uri });
+  }
 }
 
 Object.defineProperties(I3SField.prototype, {
   /**
-   * Gets the uri for the field.
+   * Gets the resource for the fields
    * @memberof I3SField.prototype
-   * @type {String}
+   * @type {Resource}
    */
-  uri: {
+  resource: {
     get: function () {
-      return this._uri;
-    },
-  },
-  /**
-   * Gets the complete uri for the field.
-   * @memberof I3SField.prototype
-   * @type {String}
-   */
-  completeUri: {
-    get: function () {
-      return this._completeUri;
+      return this._resource;
     },
   },
   /**
@@ -1264,56 +1188,67 @@ Object.defineProperties(I3SField.prototype, {
   },
 });
 
+function getNumericTypeSize(type) {
+  if (type === "UInt8" || type === "Int8") {
+    return 1;
+  } else if (type === "UInt16" || type === "Int16") {
+    return 2;
+  } else if (
+    type === "UInt32" ||
+    type === "Int32" ||
+    type === "Oid32" ||
+    type === "Float32"
+  ) {
+    return 4;
+  } else if (type === "UInt64" || type === "Int64" || type === "Float64") {
+    return 8;
+  }
+
+  //Not a numerice type
+  return 0;
+}
+
 /**
  * Loads the content.
  * @returns {Promise<void>} a promise that is resolved when the geometry data is loaded
  */
 I3SField.prototype.load = function () {
   const that = this;
-  return this._dataProvider._loadBinary(
-    this._completeUri,
-    function (data, resolve) {
-      // check if we have a 404
-      const dataView = new DataView(data);
-      let success = true;
-      if (dataView.getUint8(0) === "{".charCodeAt(0)) {
-        const textContent = new TextDecoder();
-        const str = textContent.decode(data);
-        if (str.includes("404")) {
-          success = false;
-          console.error("Failed to load:", that._completeUri);
-        }
+  return this._dataProvider._loadBinary(this.resource).then(function (data) {
+    // check if we have a 404
+    const dataView = new DataView(data);
+    let success = true;
+    if (dataView.getUint8(0) === "{".charCodeAt(0)) {
+      const textContent = new TextDecoder();
+      const str = textContent.decode(data);
+      if (str.includes("404")) {
+        success = false;
+        console.error(`Failed to load: ${that.resource.url}`);
       }
-
-      if (success) {
-        that._data = data;
-        let offset = that._parseHeader(dataView);
-
-        // @TODO: find out why we must skip 4 bytes when the value type is float 64
-        if (
-          that._storageInfo &&
-          that._storageInfo.attributeValues &&
-          that._storageInfo.attributeValues.valueType === "Float64"
-        ) {
-          offset += 4;
-        }
-
-        that._parseBody(dataView, offset);
-      }
-
-      resolve();
-    },
-    function (reject) {
-      reject();
     }
-  );
+
+    if (success) {
+      that._data = data;
+      let offset = that._parseHeader(dataView);
+
+      const valueSize = getNumericTypeSize(
+        that._storageInfo.attributeValues.valueType
+      );
+      if (valueSize > 0) {
+        //Values will be padded to align the addresses with the data size
+        offset = Math.ceil(offset / valueSize) * valueSize;
+      }
+
+      that._parseBody(dataView, offset);
+    }
+  });
 };
 
 /**
  * @private
  */
 I3SField.prototype._parseValue = function (dataView, type, offset) {
-  let value = null;
+  let value;
   if (type === "UInt8") {
     value = dataView.getUint8(offset);
     offset += 1;
@@ -1335,15 +1270,26 @@ I3SField.prototype._parseValue = function (dataView, type, offset) {
   } else if (type === "Int32") {
     value = dataView.getInt32(offset, true);
     offset += 4;
+  } else if (type === "UInt64") {
+    const left = dataView.getUint32(offset, true);
+    const right = dataView.getUint32(offset + 4, true);
+    value = left + Math.pow(2, 32) * right;
+    offset += 8;
+  } else if (type === "Int64") {
+    const left = dataView.getUint32(offset, true);
+    const right = dataView.getUint32(offset + 4, true);
+    if (right < Math.pow(2, 31)) {
+      //Positive number
+      value = left + Math.pow(2, 32) * right;
+    } else {
+      //Negative
+      value = left + Math.pow(2, 32) * (right - Math.pow(2, 32)); ///TODO
+    }
+
+    offset += 8;
   } else if (type === "Float32") {
     value = dataView.getFloat32(offset, true);
     offset += 4;
-  } else if (type === "UInt64") {
-    value = dataView.getUint64(offset, true);
-    offset += 8;
-  } else if (type === "Int64") {
-    value = dataView.getInt64(offset, true);
-    offset += 8;
   } else if (type === "Float64") {
     value = dataView.getFloat64(offset, true);
     offset += 8;
@@ -1409,14 +1355,82 @@ I3SField.prototype._parseBody = function (dataView, offset) {
               desc.valueType,
               offset
             );
-            stringContent += curParsedValue.value;
+            if (curParsedValue.value.charCodeAt(0) !== 0) {
+              stringContent += curParsedValue.value;
+            }
             offset = curParsedValue.offset;
           }
+          //We skip the last character of the string since it's a null terminator
           this._values[item].push(stringContent);
         }
       }
     }
   }
 };
+
+// Reimplement Cesium3DTile.prototype.requestContent so that
+// We get a chance to load our own gltf from I3S data
+Cesium3DTile.prototype._hookedRequestContent =
+  Cesium3DTile.prototype.requestContent;
+
+/**
+ * @private
+ */
+Cesium3DTile.prototype._resolveHookedObject = function () {
+  const that = this;
+  // Keep a handle on the early promises
+  // Call the real requestContent function
+  this._hookedRequestContent();
+
+  // Fulfill the promises
+  this._contentReadyToProcessPromise.then(function () {
+    that._contentReadyToProcessDefer.resolve();
+  });
+
+  this._contentReadyPromise.then(function (content) {
+    that._isLoading = false;
+    that._contentReadyDefer.resolve(content);
+  });
+};
+
+Cesium3DTile.prototype.requestContent = function () {
+  const that = this;
+  if (!this.tileset._isI3STileSet) {
+    return this._hookedRequestContent();
+  }
+
+  if (!this._isLoading) {
+    this._isLoading = true;
+
+    // Create early promises that will be fulfilled later
+    this._contentReadyToProcessDefer = defer();
+    this._contentReadyDefer = defer();
+    this._contentReadyToProcessPromise = this._contentReadyToProcessDefer.promise;
+    this._contentReadyPromise = this._contentReadyDefer.promise;
+
+    this._i3sNode._scheduleCreateContentURL().then(function () {
+      that._contentResource = new Resource({ url: that._i3sNode._glbURL });
+      that._resolveHookedObject();
+    });
+
+    // Returns the number of requests
+    return 0;
+  }
+
+  return 1;
+};
+
+Object.defineProperties(Cesium3DTile.prototype, {
+  /**
+   * Gets the I3S Node for the tile content.
+   * @memberof Batched3DModel3DTileContent.prototype
+   * @type {String}
+   */
+  i3sNode: {
+    get: function () {
+      return this._i3sNode;
+    },
+  },
+});
 
 export default I3SNode;

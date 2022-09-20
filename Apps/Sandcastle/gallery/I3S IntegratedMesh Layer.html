@@ -43,11 +43,8 @@
           animation: false,
           timeline: false,
         });
-
-        viewer.scene.globe.depthTestAgainstTerrain = false;
-
         // More datasets to tour can be added here..
-        // I3SDataProvider.loadurl api supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
+        // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
         const tours = {
           Frankfurt:
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0",
@@ -62,25 +59,43 @@
         });
 
         // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-        const i3sOptions = {
-          traceFetches: false, // for tracing I3S fetches
-          autoCenterCameraOnStart: true, // auto center to the location of the i3s
-          geoidTiledTerrainProvider: geoidService, // pass the geoid service
-        };
-        const cesiumTilesetOptions = {
-          show: true,
+        const cesium3dTilesetOptions = {
           skipLevelOfDetail: false,
           debugShowBoundingVolume: false,
+        };
+        const i3sOptions = {
+          traceFetches: false, // for tracing I3S fetches
+          geoidTiledTerrainProvider: geoidService, // pass the geoid service
+          cesium3dTilesetOptions: cesium3dTilesetOptions,
         };
         // Create I3S data provider
         const i3sProvider = new Cesium.I3SDataProvider(
           "",
-          viewer.scene,
-          i3sOptions,
-          cesiumTilesetOptions
+          tours["Frankfurt"],
+          i3sOptions
         );
-        i3sProvider.camera = viewer.camera; // for debug
-        i3sProvider.loadUrl(tours["Frankfurt"]);
+        i3sProvider.load();
+
+        //Center camera on I3S once it's loaded
+        i3sProvider.readyPromise.then(function () {
+          const midLon =
+            (i3sProvider.extent.minLongitude +
+              i3sProvider.extent.maxLongitude) /
+            2;
+          const midLat =
+            (i3sProvider.extent.minLatitude + i3sProvider.extent.maxLatitude) /
+            2;
+          viewer.camera.setView({
+            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+              new Cesium.Cartographic(
+                Cesium.Math.toRadians(midLon),
+                Cesium.Math.toRadians(midLat),
+                10000.0
+              )
+            ),
+          });
+        });
+
         // Add the i3s layer provider as a primitive data type
         viewer.scene.primitives.add(i3sProvider);
         //Sandcastle_End

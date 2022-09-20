@@ -127,7 +127,7 @@ function transformToLocal(
   scale_x,
   scale_y
 ) {
-  if (vertexCount === 0 || positions === undefined || positions.length === 0) {
+  if (vertexCount === 0 || !defined(positions) || positions.length === 0) {
     return;
   }
 
@@ -265,8 +265,8 @@ function generateGltfBuffer(
   const positionsURL = URL.createObjectURL(positionsBlob);
 
   // NORMALS
-  const meshNormals = normals ? normals.subarray(0, endIndex * 3) : null;
-  let normalsURL = null;
+  const meshNormals = normals ? normals.subarray(0, endIndex * 3) : undefined;
+  let normalsURL;
   if (meshNormals) {
     const normalsBlob = new Blob([meshNormals], {
       type: "application/binary",
@@ -275,8 +275,8 @@ function generateGltfBuffer(
   }
 
   // UV0s
-  const meshUv0s = uv0s ? uv0s.subarray(0, endIndex * 2) : null;
-  let uv0URL = null;
+  const meshUv0s = uv0s ? uv0s.subarray(0, endIndex * 2) : undefined;
+  let uv0URL;
   if (meshUv0s) {
     const uv0Blob = new Blob([meshUv0s], { type: "application/binary" });
     uv0URL = URL.createObjectURL(uv0Blob);
@@ -285,9 +285,11 @@ function generateGltfBuffer(
   // Colors
   // @TODO: check we can directly import vertex colors as bytes instead
   // of having to convert to float
-  const meshColorsInBytes = colors ? colors.subarray(0, endIndex * 4) : null;
-  let meshColors = null;
-  let colorsURL = null;
+  const meshColorsInBytes = colors
+    ? colors.subarray(0, endIndex * 4)
+    : undefined;
+  let meshColors;
+  let colorsURL;
   if (meshColorsInBytes) {
     const colorCount = meshColorsInBytes.length;
     meshColors = new Float32Array(colorCount);
@@ -577,7 +579,7 @@ function decodeDracoEncodedGeometry(data, bufferInfo) {
         }
       }
 
-      if (decodedGeometry[attributei3sName] !== undefined) {
+      if (defined(decodedGeometry[attributei3sName])) {
         console.log("Attribute already exists", attributei3sName);
       }
 
@@ -605,7 +607,7 @@ function decodeDracoAttribute(
   vertexCount
 ) {
   const bufferSize = dracoAttribute.num_components() * vertexCount;
-  let dracoAttributeData = null;
+  let dracoAttributeData;
 
   const handlers = [
     function () {}, // DT_INVALID - 0
@@ -969,7 +971,7 @@ function decodeI3S(parameters, transferableObjects) {
   if (geometryData["feature-index"]) {
     customAttributes.positions = geometryData.positions;
     customAttributes.indices = geometryData.indices;
-    customAttributes["feature-index"] = geometryData["feature-index"];
+    customAttributes.featureIndex = geometryData["feature-index"];
     customAttributes.cartesianCenter = parameters.cartesianCenter;
     customAttributes.parentRotation = parameters.parentRotation;
   } else if (geometryData["faceRange"]) {
@@ -980,9 +982,7 @@ function decodeI3S(parameters, transferableObjects) {
     customAttributes.parentRotation = parameters.parentRotation;
 
     //Build the feature index array from the faceRange. This should store the
-    customAttributes["feature-index"] = new Array(
-      geometryData.positions.length
-    );
+    customAttributes.featureIndex = new Array(geometryData.positions.length);
     for (
       let range = 0;
       range < geometryData["faceRange"].length - 1;
@@ -992,9 +992,9 @@ function decodeI3S(parameters, transferableObjects) {
       const rangeStart = geometryData["faceRange"][range];
       const rangeEnd = geometryData["faceRange"][range + 1];
       for (let i = rangeStart; i <= rangeEnd; i++) {
-        customAttributes["feature-index"][i * 3] = curIndex;
-        customAttributes["feature-index"][i * 3 + 1] = curIndex;
-        customAttributes["feature-index"][i * 3 + 2] = curIndex;
+        customAttributes.featureIndex[i * 3] = curIndex;
+        customAttributes.featureIndex[i * 3 + 1] = curIndex;
+        customAttributes.featureIndex[i * 3 + 2] = curIndex;
       }
     }
   }
