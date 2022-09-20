@@ -10,7 +10,7 @@ import Resource from "../Core/Resource.js";
  * </p>
  * @alias I3SLayer
  * @constructor
- * @param {I3SSceneLayer} sceneLayer The scene layer
+ * @param {I3SDataProvider} dataProvider The i3s data provider
  * @param {Object} layerData The layer data that is loaded from the scene layer
  * @param {Number} index The index of the layer to be reflected
  */
