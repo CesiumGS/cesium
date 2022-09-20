@@ -333,3 +333,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jiang Heng](https://github.com/jiangheng90)
 - [Xin Chen](https://github.com/nshen)
 - [Ilya Shevelev](https://github.com/ilyaly)
+- [Gabriel Aldous](https://github.com/Sn00pyW00dst0ck)
