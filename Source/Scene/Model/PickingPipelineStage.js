@@ -14,8 +14,9 @@ import ModelUtility from "./ModelUtility.js";
  * @namespace PickingPipelineStage
  * @private
  */
-const PickingPipelineStage = {};
-PickingPipelineStage.name = "PickingPipelineStage"; // Helps with debugging
+const PickingPipelineStage = {
+  name: "PickingPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:
@@ -73,6 +74,11 @@ PickingPipelineStage.process = function (
  */
 function buildPickObject(renderResources, instanceId) {
   const model = renderResources.model;
+
+  // Primitives that wrap Model may define the pickObject differently.
+  if (defined(model.pickObject)) {
+    return model.pickObject;
+  }
 
   const detailPickObject = {
     model: model,

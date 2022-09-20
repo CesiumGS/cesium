@@ -1,3 +1,4 @@
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
@@ -29,8 +30,13 @@ const modelView2DScratch = new Matrix4();
  * @namespace InstancingPipelineStage
  * @private
  */
-const InstancingPipelineStage = {};
-InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debugging
+const InstancingPipelineStage = {
+  name: "InstancingPipelineStage", // Helps with debugging
+
+  // Expose some methods for testing
+  _getInstanceTransformsAsMatrices: getInstanceTransformsAsMatrices,
+  _transformsToTypedArray: transformsToTypedArray,
+};
 
 /**
  * Process a node. This modifies the following parts of the render resources:
@@ -535,9 +541,19 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
   // Rotations get initialized to (0, 0, 0, 0).
   // The w-component is set to 1 in the loop below.
-  const rotationTypedArray = hasRotation
+  let rotationTypedArray = hasRotation
     ? rotationAttribute.typedArray
     : new Float32Array(count * 4);
+
+  // The rotation attribute may be normalized
+  if (hasRotation && rotationAttribute.normalized) {
+    rotationTypedArray = AttributeCompression.dequantize(
+      rotationTypedArray,
+      rotationAttribute.componentDatatype,
+      rotationAttribute.type,
+      count
+    );
+  }
 
   // Scales get initialized to (1, 1, 1).
   let scaleTypedArray;
@@ -992,8 +1008,6 @@ function processFeatureIdAttributes(
   const attributes = instances.attributes;
   const shaderBuilder = renderResources.shaderBuilder;
 
-  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
-  // because we want to expose the instance feature ID when picking.
   for (let i = 0; i < attributes.length; i++) {
     const attribute = attributes[i];
     if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
@@ -1025,9 +1039,5 @@ function processFeatureIdAttributes(
     );
   }
 }
-
-// Exposed for testing
-InstancingPipelineStage._getInstanceTransformsAsMatrices = getInstanceTransformsAsMatrices;
-InstancingPipelineStage._transformsToTypedArray = transformsToTypedArray;
 
 export default InstancingPipelineStage;

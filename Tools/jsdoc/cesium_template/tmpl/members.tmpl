@@ -1,11 +1,12 @@
 <?js
 var data = obj;
 var self = this;
+var internalConstructorTag = data.isInternalConstructor ? "<span class=\"signature-internal-constructor\">internal constructor</span> " : "";
 ?>
 <div class="nameContainer">
 <h4 class="name" id="<?js= id ?>">
     <a href="#<?js= id ?>" class="doc-link"></a>
-    <?js= data.attribs + (kind === 'class' ? 'new ' : '') + ((kind === 'class' || data.scope === 'static') ? 'Cesium.' : '') + (data.scope === 'static' ? longname : name) + (data.signature ? data.signature : '') ?>
+    <?js= data.attribs + internalConstructorTag + (kind === 'class' ? 'new ' : '') + ((kind === 'class' || data.scope === 'static') ? 'Cesium.' : '') + (data.scope === 'static' ? longname : name) + (data.signature ? data.signature : '') ?>
     <?js= this.partial('sourceLink.tmpl', data) ?>
 </h4>
 

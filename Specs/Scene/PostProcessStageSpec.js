@@ -2,6 +2,8 @@ import {
   BoundingRectangle,
   Color,
   defined,
+  HeadingPitchRange,
+  Math as CesiumMath,
   PixelFormat,
   PixelDatatype,
   PostProcessStage,
@@ -233,9 +235,15 @@ describe(
     });
 
     it("per-feature post process stage", function () {
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModel(
         {
-          url: "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf",
+          url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
+          offset: offset,
+          incrementallyLoadTextures: false,
         },
         scene
       ).then(function (model) {

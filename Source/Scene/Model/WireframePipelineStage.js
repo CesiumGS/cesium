@@ -15,8 +15,9 @@ import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
  * @namespace WireframePipelineStage
  * @private
  */
-const WireframePipelineStage = {};
-WireframePipelineStage.name = "WireframePipelineStage"; // Helps with debugging
+const WireframePipelineStage = {
+  name: "WireframePipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the render resources as follows:

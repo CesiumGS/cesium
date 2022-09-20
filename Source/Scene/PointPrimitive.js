@@ -13,9 +13,11 @@ import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 
 /**
+ * <div class="notice">
+ * A point is created and its initial properties are set by calling {@link PointPrimitiveCollection#add}. Do not call the constructor directly.
+ * </div>
  * A graphical point positioned in the 3D scene, that is created
- * and rendered using a {@link PointPrimitiveCollection}.  A point is created and its initial
- * properties are set by calling {@link PointPrimitiveCollection#add}.
+ * and rendered using a {@link PointPrimitiveCollection}.
  *
  * @alias PointPrimitive
  *
